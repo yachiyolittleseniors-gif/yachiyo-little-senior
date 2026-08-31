@@ -1925,9 +1925,11 @@ function openProtectedArea(type){
     const [schedule,results,gallery]=await Promise.all([get('schedule'),get('results'),get('gallery')]);
     const now=new Date(); now.setHours(0,0,0,0);
 
+    const dateKey=v=>String(v??'').trim().replace(/[./]/g,'-').replace(/年|月/g,'-').replace(/日/g,'').split('T')[0];
+    const todayKey=[now.getFullYear(),String(now.getMonth()+1).padStart(2,'0'),String(now.getDate()).padStart(2,'0')].join('-');
     const upcoming=schedule
-      .filter(x=>x.date && new Date(x.date+'T00:00:00')>=now)
-      .sort((a,b)=>a.date.localeCompare(b.date))[0];
+      .filter(x=>x && x.date && dateKey(x.date)>=todayKey)
+      .sort((a,b)=>dateKey(a.date).localeCompare(dateKey(b.date)))[0];
     const sc=document.querySelector('#latestScheduleCard .latest-meta');
     sc.innerHTML=upcoming
       ? `<strong>${esc(upcoming.date.replace(/-/g,'/'))}</strong><br>${esc(upcoming.title)}${upcoming.time?'<br>'+esc(upcoming.time):''}${upcoming.place?'<br>'+esc(upcoming.place):''}<br><a class="latest-link" href="./schedule.html">予定を見る →</a>`
@@ -1951,87 +1953,5 @@ function openProtectedArea(type){
 })();
 </script>
 
-<script>(async function(){const sc=document.getElementById('topLatestResultScore'),nt=document.getElementById('topLatestResultNote');if(!sc)return;try{const r=await fetch('/.netlify/functions/site-data?section=results',{cache:'no-store'}),j=await r.json(),d=Array.isArray(j.data)?j.data:[],f=d.filter(v=>String(v.tournament||'').trim()!=='テスト'&&String(v.opponent||'').trim()!=='テスト'),x=f.slice().sort((a,b)=>String(b.date||'').localeCompare(String(a.date||'')))[0];if(!x){sc.textContent='まだ試合結果は登録されていません。';nt.textContent='試合結果ページから登録できます。';return}const e=s=>String(s??'').replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m])),g=x.grade?'<span style="display:inline-block;margin-right:8px;border:1px solid #d7b457;color:#9b771e;border-radius:999px;padding:3px 8px;font-size:.45em;font-weight:800">'+e(x.grade)+'</span>':'';sc.innerHTML=g+'八千代リトルシニア <strong>'+e(x.ourScore)+' - '+e(x.oppScore)+'</strong> '+e(x.opponent||'');nt.textContent=[x.date?String(x.date).replace(/-/g,'/'):'',x.tournament||''].filter(Boolean).join('　')}catch(e){sc.textContent='試合結果を見る'}})();</script>
-<script>
-/* Final homepage result sync: load shared results independently with retry. */
-(function(){
-  const API='/.netlify/functions/site-data?section=results';
-  const esc=s=>String(s??'').replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));
-
-  async function loadResults(){
-    let lastErr;
-    for(let attempt=0; attempt<4; attempt++){
-      try{
-        const controller=new AbortController();
-        const timer=setTimeout(()=>controller.abort(),10000);
-        const r=await fetch(API+'&_='+Date.now(),{
-          cache:'no-store',
-          headers:{'accept':'application/json'},
-          signal:controller.signal
-        });
-        clearTimeout(timer);
-        if(!r.ok) throw new Error('HTTP '+r.status);
-        const j=await r.json();
-        const data=Array.isArray(j)?j:(Array.isArray(j.data)?j.data:[]);
-        return data;
-      }catch(e){
-        lastErr=e;
-        if(attempt<3) await new Promise(resolve=>setTimeout(resolve,700*(attempt+1)));
-      }
-    }
-    throw lastErr||new Error('load failed');
-  }
-
-  function latestRealResult(data){
-    return data
-      .filter(v=>String(v?.tournament||'').trim()!=='テスト' && String(v?.opponent||'').trim()!=='テスト')
-      .slice()
-      .sort((a,b)=>String(b?.date||'').localeCompare(String(a?.date||'')))[0] || null;
-  }
-
-  function renderTop(x){
-    const sc=document.getElementById('topLatestResultScore');
-    const nt=document.getElementById('topLatestResultNote');
-    if(!sc) return;
-    if(!x){
-      sc.textContent='まだ試合結果は登録されていません。';
-      if(nt) nt.textContent='試合結果ページから登録できます。';
-      return;
-    }
-    const grade=x.grade?'<span style="display:inline-block;margin-right:8px;border:1px solid #d7b457;color:#9b771e;border-radius:999px;padding:3px 8px;font-size:.45em;font-weight:800">'+esc(x.grade)+'</span>':'';
-    sc.innerHTML=grade+'八千代リトルシニア <strong>'+esc(x.ourScore)+' - '+esc(x.oppScore)+'</strong> '+esc(x.opponent||'');
-    if(nt) nt.textContent=[x.date?String(x.date).replace(/-/g,'/'):'',x.tournament||''].filter(Boolean).join('　');
-  }
-
-  function renderLatestBoard(x){
-    const rc=document.querySelector('#latestResultCard .latest-meta');
-    if(!rc) return;
-    if(!x){
-      rc.innerHTML='まだ試合結果は登録されていません。<br><a class="latest-link" href="./results.html">試合結果を見る →</a>';
-      return;
-    }
-    const grade=x.grade?'<strong>'+esc(x.grade)+'</strong><br>':'';
-    rc.innerHTML=grade+'<strong>'+esc(x.date||'')+'</strong><br>'+esc(x.tournament||'試合')+'<br>八千代 '+esc(x.ourScore)+' - '+esc(x.oppScore)+' '+esc(x.opponent||'')+'<br><a class="latest-link" href="./results.html">試合結果を見る →</a>';
-  }
-
-  async function sync(){
-    try{
-      const data=await loadResults();
-      const x=latestRealResult(data);
-      renderTop(x);
-      renderLatestBoard(x);
-    }catch(e){
-      const sc=document.getElementById('topLatestResultScore');
-      const rc=document.querySelector('#latestResultCard .latest-meta');
-      if(sc && /読み込み中/.test(sc.textContent||'')) sc.textContent='試合結果を見る';
-      if(rc && /読み込み中/.test(rc.textContent||'')) rc.innerHTML='<a class="latest-link" href="./results.html">試合結果を見る →</a>';
-    }
-  }
-
-  if(document.readyState==='loading') document.addEventListener('DOMContentLoaded',sync,{once:true});
-  else sync();
-})();
-</script>
-
-</body>
+<script>(async function(){const sc=document.getElementById('topLatestResultScore'),nt=document.getElementById('topLatestResultNote');if(!sc)return;try{const r=await fetch('/.netlify/functions/site-data?section=results',{cache:'no-store'}),j=await r.json(),d=Array.isArray(j.data)?j.data:[],f=d.filter(v=>String(v.tournament||'').trim()!=='テスト'&&String(v.opponent||'').trim()!=='テスト'),x=f.slice().sort((a,b)=>String(b.date||'').localeCompare(String(a.date||'')))[0];if(!x){sc.textContent='まだ試合結果は登録されていません。';nt.textContent='試合結果ページから登録できます。';return}const e=s=>String(s??'').replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m])),g=x.grade?'<span style="display:inline-block;margin-right:8px;border:1px solid #d7b457;color:#9b771e;border-radius:999px;padding:3px 8px;font-size:.45em;font-weight:800">'+e(x.grade)+'</span>':'';sc.innerHTML=g+'八千代リトルシニア <strong>'+e(x.ourScore)+' - '+e(x.oppScore)+'</strong> '+e(x.opponent||'');nt.textContent=[x.date?String(x.date).replace(/-/g,'/'):'',x.tournament||''].filter(Boolean).join('　')}catch(e){sc.textContent='試合結果を見る'}})();</script></body>
 </html>
