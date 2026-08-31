@@ -2278,5 +2278,61 @@ function openProtectedArea(type){
  load();
 })();
 </script>
+
+<style>
+@media(max-width:700px){
+  .footer-news-link{color:#fff!important;text-decoration:none!important}
+  .footer-news-link:visited{color:#fff!important}
+  .footer-ground-link{color:#fff!important;font-weight:700!important;opacity:1!important}
+}
+</style>
+<script>
+document.addEventListener('DOMContentLoaded',function(){
+  const footer=[...document.querySelectorAll('footer')][0];
+  if(!footer)return;
+  const links=[...footer.querySelectorAll('a')];
+  const find=t=>links.find(a=>(a.textContent||'').replace(/\s+/g,'').includes(t));
+  const insta=find('Instagram');
+  const office=find('事務局');
+  const board=find('チーム内案内板');
+  const ground=links.find(a=>(a.textContent||'').includes('千葉県八千代市島田台'));
+  if(!insta||!office||!board)return;
+
+  // Find the footer grid containing these links.
+  let grid=insta.parentElement;
+  while(grid && grid!==footer){
+    if(grid.contains(office)&&grid.contains(board)) break;
+    grid=grid.parentElement;
+  }
+  if(!grid||grid===footer)return;
+
+  // Work with direct children that contain each item.
+  const childOf=(el)=>{
+    let n=el;
+    while(n.parentElement && n.parentElement!==grid)n=n.parentElement;
+    return n;
+  };
+  const iBox=childOf(insta), oBox=childOf(office), bBox=childOf(board);
+
+  // New NEWS cell next to Instagram.
+  let news=grid.querySelector('.footer-news-cell');
+  if(!news){
+    news=document.createElement(iBox.tagName.toLowerCase());
+    news.className=(iBox.className?iBox.className+' ':'')+'footer-news-cell';
+    news.innerHTML='<a class="footer-news-link" href="#homeNews">新着NEWS</a>';
+  }
+
+  // Desired order: Instagram | 新着NEWS / 事務局 | チーム内案内板
+  iBox.after(news);
+  news.after(oBox);
+  oBox.after(bBox);
+
+  // Keep ground address bright white; no lock and no separate ground-menu item.
+  if(ground){
+    ground.classList.add('footer-ground-link');
+    ground.innerHTML='グラウンド案内：千葉県八千代市島田台７７５';
+  }
+});
+</script>
 </body>
 </html>
