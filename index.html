@@ -24,10 +24,11 @@ a{color:inherit;text-decoration:none} button{font:inherit}
 .links{display:flex;align-items:center;gap:22px;margin-left:auto;font-size:13px;white-space:nowrap}
 .links a{padding:28px 0;position:relative}.links a.active:after{content:"";position:absolute;left:0;right:0;bottom:16px;height:2px;background:var(--gold)}
 .menu{display:none;background:none;border:1px solid var(--line);color:#fff;border-radius:6px;padding:9px 11px}
-.hero{min-height:620px;display:flex;align-items:center;position:relative;overflow:hidden;color:#fff;background:
+.hero{min-height:620px;display:flex;align-items:center;position:relative;overflow:hidden;color:#fff;background-image:
 linear-gradient(90deg,rgba(4,12,22,.93) 0%,rgba(4,12,22,.70) 43%,rgba(4,12,22,.25) 100%),
 radial-gradient(circle at 78% 40%,rgba(205,158,61,.35),transparent 24%),
-linear-gradient(135deg,#1b324a 0%,#081321 60%,#17130c 100%)}
+var(--hero-photo,linear-gradient(135deg,#1b324a 0%,#081321 60%,#17130c 100%));
+background-size:auto,auto,cover;background-position:center,center,center;background-repeat:no-repeat}
 .hero:after{content:"⚾";position:absolute;right:7%;bottom:-35px;font-size:210px;opacity:.05;transform:rotate(-18deg)}
 .hero-inner{max-width:1180px;width:100%;margin:auto;padding:80px 22px;position:relative;z-index:1}
 .eyebrow{color:var(--gold2);letter-spacing:.28em;font-size:14px;margin-bottom:20px}
@@ -1651,7 +1652,16 @@ img,video,iframe{max-width:100%}
 }
 </style>
 
-<link rel="canonical" href="https://yachiyo-little-senior.netlify.app/"><meta property="og:url" content="https://yachiyo-little-senior.netlify.app/"><meta name="google-site-verification" content="T1XM5tLnO98PFJmNH4EkjlTaFScseBGyacqptIwxgj8" /></head>
+<link rel="canonical" href="https://yachiyo-little-senior.netlify.app/"><meta property="og:url" content="https://yachiyo-little-senior.netlify.app/"><meta name="google-site-verification" content="T1XM5tLnO98PFJmNH4EkjlTaFScseBGyacqptIwxgj8" />
+<style>
+#heroPhotoAdmin{position:fixed;right:16px;bottom:16px;z-index:9998;display:flex;gap:8px;align-items:center}
+#heroPhotoAdmin button,#heroPhotoAdmin label{border:1px solid rgba(212,175,55,.75);background:#071426;color:#fff;border-radius:999px;padding:10px 14px;font-size:12px;font-weight:700;box-shadow:0 5px 18px rgba(0,0,0,.22);cursor:pointer}
+#heroPhotoAdmin label{display:none;background:#b48a32;color:#fff}
+#heroPhotoInput{display:none}
+@media(max-width:600px){#heroPhotoAdmin{right:12px;bottom:12px}#heroPhotoAdmin button,#heroPhotoAdmin label{padding:9px 12px;font-size:11px}}
+</style>
+
+</head>
 <body>
 <header class="header">
 <nav class="nav">
@@ -1975,5 +1985,90 @@ function openProtectedArea(type){
 })();
 </script>
 
-<script>(async function(){const sc=document.getElementById('topLatestResultScore'),nt=document.getElementById('topLatestResultNote');if(!sc)return;try{const r=await fetch('/.netlify/functions/site-data?section=results',{cache:'no-store'}),j=await r.json(),d=Array.isArray(j.data)?j.data:[],f=d.filter(v=>String(v.tournament||'').trim()!=='テスト'&&String(v.opponent||'').trim()!=='テスト'),x=f.slice().sort((a,b)=>String(b.date||'').localeCompare(String(a.date||'')))[0];if(!x){sc.textContent='まだ試合結果は登録されていません。';nt.textContent='試合結果ページから登録できます。';return}const e=s=>String(s??'').replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m])),g=x.grade?'<span style="display:inline-block;margin-right:8px;border:1px solid #d7b457;color:#9b771e;border-radius:999px;padding:3px 8px;font-size:.45em;font-weight:800">'+e(x.grade)+'</span>':'';sc.innerHTML=g+'八千代リトルシニア <strong>'+e(x.ourScore)+' - '+e(x.oppScore)+'</strong> '+e(x.opponent||'');nt.textContent=[x.date?String(x.date).replace(/-/g,'/'):'',x.tournament||''].filter(Boolean).join('　')}catch(e){sc.textContent='試合結果を見る'}})();</script></body>
+<script>(async function(){const sc=document.getElementById('topLatestResultScore'),nt=document.getElementById('topLatestResultNote');if(!sc)return;try{const r=await fetch('/.netlify/functions/site-data?section=results',{cache:'no-store'}),j=await r.json(),d=Array.isArray(j.data)?j.data:[],f=d.filter(v=>String(v.tournament||'').trim()!=='テスト'&&String(v.opponent||'').trim()!=='テスト'),x=f.slice().sort((a,b)=>String(b.date||'').localeCompare(String(a.date||'')))[0];if(!x){sc.textContent='まだ試合結果は登録されていません。';nt.textContent='試合結果ページから登録できます。';return}const e=s=>String(s??'').replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m])),g=x.grade?'<span style="display:inline-block;margin-right:8px;border:1px solid #d7b457;color:#9b771e;border-radius:999px;padding:3px 8px;font-size:.45em;font-weight:800">'+e(x.grade)+'</span>':'';sc.innerHTML=g+'八千代リトルシニア <strong>'+e(x.ourScore)+' - '+e(x.oppScore)+'</strong> '+e(x.opponent||'');nt.textContent=[x.date?String(x.date).replace(/-/g,'/'):'',x.tournament||''].filter(Boolean).join('　')}catch(e){sc.textContent='試合結果を見る'}})();</script>
+<div id="heroPhotoAdmin">
+  <button id="heroAdminToggle" type="button">管理</button>
+  <label id="heroPhotoChange" for="heroPhotoInput">写真を変更</label>
+  <input id="heroPhotoInput" type="file" accept="image/*">
+</div>
+
+<script>
+(async function(){
+  const api='/.netlify/functions/site-data';
+  const hero=document.querySelector('.hero');
+  const toggle=document.getElementById('heroAdminToggle');
+  const change=document.getElementById('heroPhotoChange');
+  const input=document.getElementById('heroPhotoInput');
+  if(!hero||!toggle||!change||!input)return;
+
+  async function loadHero(){
+    try{
+      const r=await fetch(api+'?section=hero',{cache:'no-store'});
+      if(!r.ok)return;
+      const j=await r.json();
+      const d=Array.isArray(j.data)?j.data:[];
+      if(d[0]&&d[0].image) hero.style.setProperty('--hero-photo',`url("${d[0].image}")`);
+    }catch(e){}
+  }
+  loadHero();
+
+  function setAdmin(on){
+    sessionStorage.setItem('yachiyoAdminMode',on?'1':'0');
+    change.style.display=on?'inline-block':'none';
+    toggle.textContent=on?'管理終了':'管理';
+  }
+  if(sessionStorage.getItem('yachiyoAdminMode')==='1' && sessionStorage.getItem('yachiyoAdminPassword')) setAdmin(true);
+
+  toggle.addEventListener('click',function(){
+    if(sessionStorage.getItem('yachiyoAdminMode')==='1'){setAdmin(false);return;}
+    const saved=sessionStorage.getItem('yachiyoAdminPassword')||'';
+    const pw=saved||prompt('管理パスワードを入力してください');
+    if(!pw)return;
+    sessionStorage.setItem('yachiyoAdminPassword',pw);
+    setAdmin(true);
+  });
+
+  function compress(file){
+    return new Promise((resolve,reject)=>{
+      const reader=new FileReader();
+      reader.onerror=reject;
+      reader.onload=()=>{
+        const img=new Image();
+        img.onerror=reject;
+        img.onload=()=>{
+          const max=1920, scale=Math.min(1,max/Math.max(img.width,img.height));
+          const c=document.createElement('canvas');
+          c.width=Math.round(img.width*scale); c.height=Math.round(img.height*scale);
+          c.getContext('2d').drawImage(img,0,0,c.width,c.height);
+          resolve(c.toDataURL('image/jpeg',.82));
+        };
+        img.src=reader.result;
+      };
+      reader.readAsDataURL(file);
+    });
+  }
+
+  input.addEventListener('change',async function(){
+    const file=input.files&&input.files[0]; if(!file)return;
+    change.textContent='保存中…';
+    try{
+      const image=await compress(file);
+      const pw=sessionStorage.getItem('yachiyoAdminPassword')||'';
+      const r=await fetch(api+'?section=hero',{
+        method:'POST',
+        headers:{'content-type':'application/json','x-admin-password':pw},
+        body:JSON.stringify({data:[{image,updatedAt:new Date().toISOString()}]})
+      });
+      if(!r.ok)throw new Error('save failed');
+      hero.style.setProperty('--hero-photo',`url("${image}")`);
+      alert('ホーム写真を変更しました。');
+    }catch(e){
+      alert('保存できませんでした。管理パスワードを確認してください。');
+    }finally{
+      change.textContent='写真を変更'; input.value='';
+    }
+  });
+})();
+</script>
+</body>
 </html>
