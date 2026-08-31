@@ -1625,6 +1625,15 @@ img,video,iframe{max-width:100%}
   input,select,textarea,button{max-width:100%;box-sizing:border-box}
   .mobile-links{max-height:calc(100vh - 70px);overflow-y:auto}
 }
+
+/* ギャラリー削除後：5つのメニューをバランス良く配置 */
+@media (min-width:901px){
+  .quick{grid-template-columns:repeat(5,minmax(0,1fr))!important;}
+}
+@media (max-width:900px){
+  .quick{grid-template-columns:repeat(2,minmax(0,1fr))!important;}
+  .quick a:last-child{grid-column:1 / -1;}
+}
 </style>
 
 <link rel="canonical" href="https://yachiyo-little-senior.netlify.app/"><meta property="og:url" content="https://yachiyo-little-senior.netlify.app/"><meta name="google-site-verification" content="T1XM5tLnO98PFJmNH4EkjlTaFScseBGyacqptIwxgj8" /></head>
