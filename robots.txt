@@ -1,4 +1,3 @@
 User-agent: *
 Allow: /
-
 Sitemap: https://yachiyo-little-senior.netlify.app/sitemap.xml
