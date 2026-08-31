@@ -1917,9 +1917,18 @@ function openProtectedArea(type){
   const api='/.netlify/functions/site-data';
   const esc=s=>String(s??'').replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));
   async function get(section){
-    const r=await fetch(`${api}?section=${section}`,{cache:'no-store'});
-    if(!r.ok) return [];
-    const j=await r.json(); return Array.isArray(j.data)?j.data:[];
+    try{
+      const r=await fetch(`${api}?section=${section}`,{cache:'no-store'});
+      if(r.ok){
+        const j=await r.json();
+        const data=Array.isArray(j.data)?j.data:[];
+        if(data.length || section!=='schedule') return data;
+      }
+    }catch(e){}
+    if(section==='schedule'){
+      try{return JSON.parse(localStorage.getItem('yachiyo_schedule')||'[]');}catch(e){return [];}
+    }
+    return [];
   }
   try{
     const [schedule,results,gallery]=await Promise.all([get('schedule'),get('results'),get('gallery')]);
