@@ -1712,16 +1712,6 @@ body.photo-admin-on .news-delete{display:block}
 .instagram-official-icon{width:42px!important;height:42px!important;min-width:42px!important;max-width:42px!important;margin:0 auto!important}
 .instagram-official-icon svg{width:42px!important;height:42px!important;display:block!important}
 </style>
-
-<style>
-@media(max-width:600px){
-  .ground-address{
-    color:#fff !important;
-    font-weight:700 !important;
-    opacity:1 !important;
-  }
-}
-</style>
 </head>
 <body>
 <header class="header">
@@ -2289,7 +2279,18 @@ function openProtectedArea(type){
  load();
 })();
 </script>
-
-
 </body>
 </html>
+<style>
+@media(max-width:700px){
+  footer .footer-nav,
+  footer .links,
+  footer nav{
+    grid-auto-flow:row !important;
+  }
+  footer a[href="#homeNews"]{
+    color:#fff !important;
+    text-decoration:none !important;
+  }
+}
+</style>
