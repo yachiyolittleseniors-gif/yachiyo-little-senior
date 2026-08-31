@@ -1,0 +1,20 @@
+八千代リトルシニア 公式サイト 総点検結果
+
+・旧サイト/参照元表現: 全ページ確認・該当表現を削除
+・ローカルリンク: 検査実施
+・スマホ横スクロール対策: 全HTMLへ最終安全CSSを追加
+・予定/試合結果/ギャラリー: 共有データ用スクリプトと管理モードを確認
+・お問い合わせ: Netlify Forms構成を確認、入力補助を追加
+・404ページ: HOME導線を確認
+・「次回の予定」表記: 「今週の予定」へ統一
+・本番URL未確定部分: sitemap.xml / robots.txt の example.com は本番URL確定後に置換が必要
+
+検出されたローカルリンク切れ:
+なし
+
+不足ファイル:
+なし
+
+SEO保留:
+sitemap.xml: production URL placeholder remains
+robots.txt: production URL placeholder remains
