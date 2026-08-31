@@ -1642,13 +1642,13 @@ img,video,iframe{max-width:100%}
   .mobile-links{max-height:calc(100vh - 70px);overflow-y:auto}
 }
 
-/* ギャラリー削除後：5つのメニューをバランス良く配置 */
+/* 6つのメニューを均等配置 */
 @media (min-width:901px){
-  .quick{grid-template-columns:repeat(5,minmax(0,1fr))!important;}
+  .quick{grid-template-columns:repeat(6,minmax(0,1fr))!important;}
 }
 @media (max-width:900px){
   .quick{grid-template-columns:repeat(2,minmax(0,1fr))!important;}
-  .quick a:last-child{grid-column:1 / -1;}
+  .quick a:last-child{grid-column:auto!important;}
 }
 </style>
 
@@ -1669,19 +1669,7 @@ img,video,iframe{max-width:100%}
 body.photo-admin-on .adminPhotoBtn{display:block}
 </style>
 
-<style>
-.instagram-follow{max-width:1180px;margin:24px auto 28px;padding:0 24px}
-.instagram-follow-link{display:block;text-decoration:none;color:#101827;background:#fff;border:1px solid #e7e2d8;border-radius:18px;padding:20px 28px;box-shadow:0 8px 24px rgba(4,12,22,.06)}
-.instagram-follow-title{display:flex;align-items:center;gap:18px;justify-content:center;color:#b58a31;font-size:14px;font-weight:800;letter-spacing:.22em;margin-bottom:16px}
-.instagram-follow-title span{height:1px;background:#cba54e;flex:1}
-.instagram-follow-row{display:flex;align-items:center;gap:18px}
-.instagram-mark{width:54px;height:54px;border-radius:14px;display:grid;place-items:center;font-size:42px;font-weight:700;color:#b58a31;border:2px solid #b58a31;line-height:1}
-.instagram-follow-copy{display:flex;flex-direction:column;gap:4px;flex:1}
-.instagram-follow-copy strong{font-size:20px}
-.instagram-follow-copy small{font-size:14px;color:#596273}
-.instagram-follow-arrow{font-size:34px;color:#b58a31}
-@media(max-width:600px){.instagram-follow{padding:0 26px;margin:18px auto 26px}.instagram-follow-link{padding:16px 18px}.instagram-mark{width:46px;height:46px;font-size:35px}.instagram-follow-copy strong{font-size:17px}.instagram-follow-copy small{font-size:12px}.instagram-follow-arrow{font-size:28px}}
-</style>
+
 </head>
 <body>
 <header class="header">
@@ -1753,19 +1741,11 @@ body.photo-admin-on .adminPhotoBtn{display:block}
 <a href="./results.html"><div><div class="ico">♜</div><b>試合結果</b><small>RESULT</small></div></a>
 <a href="./schedule.html"><div><div class="ico">▦</div><b>予定</b><small>SCHEDULE</small></div></a>
 <a href="./join.html"><div><div class="ico">●</div><b>入団案内</b><small>JOIN US</small></div></a>
+<a href="https://www.instagram.com/yachiyo_little_senior?igsi=MTl4N3dneG9uY2ZxcA==" target="_blank" rel="noopener noreferrer"><div><div class="ico">◎</div><b>Instagram</b><small>INSTAGRAM</small></div></a>
 
 </div>
 
-<section class="instagram-follow" aria-label="Instagram">
-  <a href="https://www.instagram.com/yachiyo_little_senior?igsi=MTl4N3dneG9uY2ZxcA==" target="_blank" rel="noopener noreferrer" class="instagram-follow-link">
-    <div class="instagram-follow-title"><span></span>FOLLOW US<span></span></div>
-    <div class="instagram-follow-row">
-      <div class="instagram-mark">◎</div>
-      <div class="instagram-follow-copy"><strong>Instagram</strong><small>公式Instagramで最新情報をチェック！</small></div>
-      <div class="instagram-follow-arrow">↗</div>
-    </div>
-  </a>
-</section>
+
 <section class="container"><div class="grid3">
 <div class="card" id="topLatestResultCard"><h2>LATEST RESULT</h2><div class="en">試合結果</div><div class="score" id="topLatestResultScore">最新の試合結果を読み込み中…</div><p id="topLatestResultNote">最新の試合結果を掲載しています。</p><a class="more" href="./results.html">試合結果を見る ›</a></div>
 <div class="card"><h2>ABOUT US</h2><div class="en">チームについて</div><p>1982年設立。40年以上の歴史を持つ伝統あるチーム。伝統にとらわれず、現役選手を第一に考えた育成を行っています。</p><a class="more" href="./team.html">詳しく見る ›</a></div>
