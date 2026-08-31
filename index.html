@@ -1627,7 +1627,7 @@ img,video,iframe{max-width:100%}
 }
 </style>
 
-<link rel="canonical" href="https://yachiyo-little-senior.netlify.app/"><meta property="og:url" content="https://yachiyo-little-senior.netlify.app/"><meta name="google-site-verification" content="R-MbB4kaV2Dhr7PjP_zCNCNVyXpXbGdEF7SNuZYIQE0" /></head>
+<link rel="canonical" href="https://yachiyo-little-senior.netlify.app/"><meta property="og:url" content="https://yachiyo-little-senior.netlify.app/"><meta name="google-site-verification" content="T1XM5tLnO98PFJmNH4EkjlTaFScseBGyacqptIwxgj8" /></head>
 <body>
 <header class="header">
 <nav class="nav">
@@ -1641,7 +1641,7 @@ img,video,iframe{max-width:100%}
 <a href="./results.html">試合結果</a>
 <a href="./schedule.html">予定</a>
 <a href="./join.html">入団案内</a>
-<a href="./gallery.html">ギャラリー</a>
+
 <a href="./alumni.html">卒団生</a>
 <a href="./contact.html">お問い合わせ</a>
 <a href="./privacy.html">プライバシーポリシー</a>
@@ -1660,7 +1660,7 @@ img,video,iframe{max-width:100%}
 <a href="./results.html" onclick="toggleMenu()">試合結果</a>
 <a href="./schedule.html" onclick="toggleMenu()">予定</a>
 <a href="./join.html" onclick="toggleMenu()">入団案内</a>
-<a href="./gallery.html" onclick="toggleMenu()">ギャラリー</a>
+
 <a href="./alumni.html" onclick="toggleMenu()">卒団生</a>
 <a href="./contact.html" onclick="toggleMenu()">お問い合わせ</a>
 </div>
@@ -1698,7 +1698,7 @@ img,video,iframe{max-width:100%}
 <a href="./results.html"><div><div class="ico">♜</div><b>試合結果</b><small>RESULT</small></div></a>
 <a href="./schedule.html"><div><div class="ico">▦</div><b>予定</b><small>SCHEDULE</small></div></a>
 <a href="./join.html"><div><div class="ico">●</div><b>入団案内</b><small>JOIN US</small></div></a>
-<a href="./gallery.html"><div><div class="ico">▣</div><b>ギャラリー</b><small>GALLERY</small></div></a>
+
 </div>
 <section class="container"><div class="grid3">
 <div class="card" id="topLatestResultCard"><h2>LATEST RESULT</h2><div class="en">試合結果</div><div class="score" id="topLatestResultScore">最新の試合結果を読み込み中…</div><p id="topLatestResultNote">最新の試合結果を掲載しています。</p><a class="more" href="./results.html">試合結果を見る ›</a></div>
@@ -1814,11 +1814,6 @@ function closeModal(){
       <div class="latest-title">最新の試合結果</div>
       <div class="latest-meta">読み込み中...</div>
     </article>
-    <article class="latest-card" id="latestGalleryCard">
-      <div class="latest-kicker">LATEST PHOTO</div>
-      <div class="latest-title">最新写真</div>
-      <div class="latest-meta">読み込み中...</div>
-    </article>
   </div>
 </section>
 
@@ -1831,7 +1826,7 @@ function closeModal(){
 <a href="./results.html">試合結果</a>
 <a href="./schedule.html">予定</a>
 <a href="./join.html">入団案内</a>
-<a href="./gallery.html">ギャラリー</a>
+
 <a href="./alumni.html">卒団生</a>
 <a href="./contact.html">お問い合わせ</a>
 <a href="https://www.instagram.com/yachiyo_little_senior?igsi=MTl4N3dneG9uY2ZxcA==" rel="noopener noreferrer" target="_blank">Instagram</a>
@@ -1931,7 +1926,7 @@ function openProtectedArea(type){
     return [];
   }
   try{
-    const [schedule,results,gallery]=await Promise.all([get('schedule'),get('results'),get('gallery')]);
+    const [schedule,results]=await Promise.all([get('schedule'),get('results')]);
     const now=new Date(); now.setHours(0,0,0,0);
 
     const dateKey=v=>String(v??'').trim().replace(/[./]/g,'-').replace(/年|月/g,'-').replace(/日/g,'').split('T')[0];
@@ -1950,12 +1945,6 @@ function openProtectedArea(type){
     rc.innerHTML=latestR
       ? `<strong>${esc(latestR.date||'')}</strong><br>${esc(latestR.tournament||'試合')}<br>八千代 ${Number(latestR.ourScore)} - ${Number(latestR.oppScore)} ${esc(latestR.opponent||'')}<br><a class="latest-link" href="./results.html">試合結果を見る →</a>`
       : `まだ試合結果は登録されていません。<br><a class="latest-link" href="./results.html">試合結果を見る →</a>`;
-
-    const latestG=[...gallery].sort((a,b)=>(b.date||'').localeCompare(a.date||''))[0];
-    const gc=document.getElementById('latestGalleryCard');
-    gc.querySelector('.latest-meta').innerHTML=latestG
-      ? `${latestG.image?`<img class="latest-thumb" src="${latestG.image}" alt="${esc(latestG.title||'最新写真')}" loading="lazy" decoding="async">`:''}<strong>${esc(latestG.title||'最新写真')}</strong>${latestG.date?'<br>'+esc(latestG.date):''}<br><a class="latest-link" href="./gallery.html">ギャラリーを見る →</a>`
-      : `まだ写真は登録されていません。<br><a class="latest-link" href="./gallery.html">ギャラリーを見る →</a>`;
   }catch(e){
     document.querySelectorAll('.latest-meta').forEach(el=>el.textContent='最新情報を読み込めませんでした。');
   }
