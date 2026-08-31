@@ -1333,7 +1333,7 @@ body{background:var(--bg)!important;color:var(--ink)!important}
 <meta property="og:type" content="website">
 <meta property="og:site_name" content="八千代リトルシニア">
 <meta property="og:title" content="選手紹介｜八千代リトルシニア">
-<meta property="og:description" content="八千代リトルシニア公式サイト。選手紹介、試合結果、予定、入団案内、ギャラリーなどを掲載しています。">
+<meta property="og:description" content="八千代リトルシニア所属選手の情報を学年別に掲載しています。">
 <meta property="og:locale" content="ja_JP">
 <meta name="twitter:card" content="summary_large_image">
 <meta name="twitter:title" content="選手紹介｜八千代リトルシニア">
@@ -1410,7 +1410,9 @@ img,video,iframe{max-width:100%}
 }
 </style>
 
-<style>.admin-only{display:none!important}body.admin-mode .admin-only{display:inline-flex!important}body.admin-mode .admin-only.block{display:flex!important}.player-admin{justify-content:flex-end;margin:0 0 12px}.player-editor{background:#fff;border:1px solid rgba(7,20,38,.10);border-radius:14px;padding:16px;margin:0 0 18px;box-shadow:0 10px 28px rgba(7,20,38,.07)}body.admin-mode .player-editor:not([hidden]){display:block!important}.player-form-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}.player-form-grid label{display:block;font-size:12px;font-weight:800;margin-bottom:6px}.player-form-grid input,.player-form-grid select{width:100%;padding:11px 12px;border:1px solid #cfd6df;border-radius:10px;background:#fff;box-sizing:border-box}.player-form-actions{display:flex;gap:8px;margin-top:14px}.player-delete{display:none;border:0;background:transparent;color:#b42318;font-weight:800;font-size:12px}.admin-mode .player-delete{display:inline-block}.player-name-wrap{display:flex;align-items:center;justify-content:space-between;gap:8px}.admin-toggle{position:fixed;right:18px;bottom:18px;z-index:9999;border:1px solid rgba(215,180,87,.7);background:#071426;color:#fff;border-radius:999px;padding:10px 13px;font-size:12px;font-weight:800;opacity:.82}@media(max-width:650px){.player-form-grid{grid-template-columns:1fr}.admin-toggle{bottom:74px}}</style><link rel="canonical" href="https://yachiyo-little-senior.netlify.app/players.html"><meta property="og:url" content="https://yachiyo-little-senior.netlify.app/players.html"></head>
+<link rel="canonical" href="https://yachiyo-little-senior.netlify.app/players.html">
+<meta property="og:url" content="https://yachiyo-little-senior.netlify.app/players.html">
+</head>
 <body>
 <header class="header">
 <nav class="nav">
@@ -1472,8 +1474,8 @@ img,video,iframe{max-width:100%}
 <main class="wrap">
 <h1>選手<span class="gold">紹介</span></h1>
 <div class="sub">PLAYERS / MEMBER</div>
-<p class="count" id="playerCount">読み込み中…</p>
-<div class="player-admin admin-only block"><button class="admin-btn" type="button" onclick="togglePlayerPanel()">＋ 選手を追加</button></div><div class="player-editor admin-only" id="playerEditor" hidden><div class="player-form-grid"><div><label for="playerGrade">学年</label><select id="playerGrade"><option value="1年">1年</option><option value="2年">2年</option><option value="3年">3年</option></select></div><div><label for="playerName">選手名</label><input id="playerName" type="text"></div><div><label for="playerBirth">生年度</label><input id="playerBirth" type="text" placeholder="例：2013年度"></div><div><label for="playerTeam">出身チーム</label><input id="playerTeam" type="text"></div></div><div class="player-form-actions"><button class="admin-btn" type="button" onclick="savePlayer()">登録する</button><button class="admin-btn" type="button" onclick="togglePlayerPanel(false)">閉じる</button></div></div><div class="tabs">
+<p class="count">3年 15名 ／ 2年 18名 ／ 1年 25名</p>
+<div class="tabs">
 <button class="active" onclick="filterGrade('all',this)">全選手</button>
 <button onclick="filterGrade('3年',this)">3年</button>
 <button onclick="filterGrade('2年',this)">2年</button>
@@ -1482,7 +1484,64 @@ img,video,iframe{max-width:100%}
 <div class="card">
 <table>
 <thead><tr><th>学年</th><th>選手名</th><th>生年度</th><th>出身チーム</th></tr></thead>
-<tbody id="playersBody"></tbody>
+<tbody><tr data-grade="3年"><td>3年</td><td><strong>長島 理徒</strong></td><td>2011年度</td><td>八千代東南クラブ</td></tr>
+<tr data-grade="3年"><td>3年</td><td><strong>松田 惺吾</strong></td><td>2011年度</td><td>南志津ツインズ</td></tr>
+<tr data-grade="3年"><td>3年</td><td><strong>浅野 高輝</strong></td><td>2011年度</td><td>向山ファイターズ</td></tr>
+<tr data-grade="3年"><td>3年</td><td><strong>佐藤 蓮</strong></td><td>2011年度</td><td>キングファイターズ</td></tr>
+<tr data-grade="3年"><td>3年</td><td><strong>谷川 航世</strong></td><td>2011年度</td><td>八千代ドラゴンズ</td></tr>
+<tr data-grade="3年"><td>3年</td><td><strong>向山 奏介</strong></td><td>2011年度</td><td>南高津クラブ</td></tr>
+<tr data-grade="3年"><td>3年</td><td><strong>亀井 菜々波</strong></td><td>2011年度</td><td>いなげパイレーツ</td></tr>
+<tr data-grade="3年"><td>3年</td><td><strong>山口 明良</strong></td><td>2011年度</td><td>大和田タイガース</td></tr>
+<tr data-grade="3年"><td>3年</td><td><strong>山口 勇有</strong></td><td>2011年度</td><td>新木戸ヤングミヤコシ</td></tr>
+<tr data-grade="3年"><td>3年</td><td><strong>安本 星渚</strong></td><td>2011年度</td><td>新木戸ヤングミヤコシ</td></tr>
+<tr data-grade="3年"><td>3年</td><td><strong>南 陽仁</strong></td><td>2011年度</td><td>検見川クラブ</td></tr>
+<tr data-grade="3年"><td>3年</td><td><strong>山澤 時央</strong></td><td>2011年度</td><td>大和田タイガース</td></tr>
+<tr data-grade="3年"><td>3年</td><td><strong>杉山 燎</strong></td><td>2011年度</td><td>大和田タイガース</td></tr>
+<tr data-grade="3年"><td>3年</td><td><strong>舘 太良</strong></td><td>2011年度</td><td>大和田タイガース</td></tr>
+<tr data-grade="3年"><td>3年</td><td><strong>吉岡 大輝</strong></td><td>2011年度</td><td>佐倉ビクトリー</td></tr>
+<tr data-grade="2年"><td>2年</td><td><strong>矢羽田 晴天</strong></td><td>2012年度</td><td>志津アブレイズ</td></tr>
+<tr data-grade="2年"><td>2年</td><td><strong>森田 幸人</strong></td><td>2012年度</td><td>愛生グレート</td></tr>
+<tr data-grade="2年"><td>2年</td><td><strong>本村 蒼汰</strong></td><td>2012年度</td><td>新木戸ヤングミヤコシ</td></tr>
+<tr data-grade="2年"><td>2年</td><td><strong>藤澤 獅徒</strong></td><td>2012年度</td><td>鎌ヶ谷スカイラーク</td></tr>
+<tr data-grade="2年"><td>2年</td><td><strong>永井 悠貴</strong></td><td>2012年度</td><td>磯部トータス</td></tr>
+<tr data-grade="2年"><td>2年</td><td><strong>筒井 王輝</strong></td><td>2012年度</td><td>大南ファイターズ</td></tr>
+<tr data-grade="2年"><td>2年</td><td><strong>竹内 岳</strong></td><td>2012年度</td><td>西高根ラッキーズ</td></tr>
+<tr data-grade="2年"><td>2年</td><td><strong>髙橋 湊</strong></td><td>2012年度</td><td>鎌ヶ谷スカイラーク</td></tr>
+<tr data-grade="2年"><td>2年</td><td><strong>椙浦 佑成</strong></td><td>2012年度</td><td>新木戸ヤングミヤコシ</td></tr>
+<tr data-grade="2年"><td>2年</td><td><strong>篠崎 彩人</strong></td><td>2012年度</td><td>愛生グレート</td></tr>
+<tr data-grade="2年"><td>2年</td><td><strong>佐藤 暖弥</strong></td><td>2012年度</td><td>新木戸ヤングミヤコシ</td></tr>
+<tr data-grade="2年"><td>2年</td><td><strong>齋藤 護</strong></td><td>2012年度</td><td>西高根ラッキーズ</td></tr>
+<tr data-grade="2年"><td>2年</td><td><strong>古賀 爽太</strong></td><td>2012年度</td><td>新木戸ヤングミヤコシ</td></tr>
+<tr data-grade="2年"><td>2年</td><td><strong>加藤 真悠</strong></td><td>2012年度</td><td>八千代イーストスピリッツ</td></tr>
+<tr data-grade="2年"><td>2年</td><td><strong>大谷部 翔太</strong></td><td>2012年度</td><td>ホワイトビーストロング</td></tr>
+<tr data-grade="2年"><td>2年</td><td><strong>石山 綾志郎</strong></td><td>2012年度</td><td>八千代ドラゴンズ</td></tr>
+<tr data-grade="2年"><td>2年</td><td><strong>石川 圭仁</strong></td><td>2012年度</td><td>すみれ少年野球部</td></tr>
+<tr data-grade="2年"><td>2年</td><td><strong>荒木 淳平</strong></td><td>2012年度</td><td>西高根ラッキーズ</td></tr>
+<tr data-grade="1年"><td>1年</td><td><strong>山本 諒</strong></td><td>2013年度</td><td>エースライオンズ</td></tr>
+<tr data-grade="1年"><td>1年</td><td><strong>山本 要</strong></td><td>2013年度</td><td>村上ファイターズ</td></tr>
+<tr data-grade="1年"><td>1年</td><td><strong>山澤 奏時</strong></td><td>2013年度</td><td>大和田タイガース</td></tr>
+<tr data-grade="1年"><td>1年</td><td><strong>本吉 拓翔</strong></td><td>2013年度</td><td>西高根ラッキーズ</td></tr>
+<tr data-grade="1年"><td>1年</td><td><strong>村山 慶太</strong></td><td>2013年度</td><td>高郷スターズ</td></tr>
+<tr data-grade="1年"><td>1年</td><td><strong>溝上 蒼</strong></td><td>2013年度</td><td>新木戸ヤングミヤコシ</td></tr>
+<tr data-grade="1年"><td>1年</td><td><strong>松浦 陽菜</strong></td><td>2013年度</td><td>西高根ラッキーズ</td></tr>
+<tr data-grade="1年"><td>1年</td><td><strong>松井 慧</strong></td><td>2013年度</td><td>高郷スターズ</td></tr>
+<tr data-grade="1年"><td>1年</td><td><strong>長峰 六花</strong></td><td>2013年度</td><td>大和田スカーレット</td></tr>
+<tr data-grade="1年"><td>1年</td><td><strong>中濱 杏南</strong></td><td>2013年度</td><td>大和田スカーレット</td></tr>
+<tr data-grade="1年"><td>1年</td><td><strong>内藤 旭</strong></td><td>2013年度</td><td>すみれ少年野球部</td></tr>
+<tr data-grade="1年"><td>1年</td><td><strong>紺野 陽輝</strong></td><td>2013年度</td><td>新木戸ヤングミヤコシ</td></tr>
+<tr data-grade="1年"><td>1年</td><td><strong>小堀 颯太</strong></td><td>2013年度</td><td>愛生グレート</td></tr>
+<tr data-grade="1年"><td>1年</td><td><strong>高祖 蒼生</strong></td><td>2013年度</td><td>愛生グレート</td></tr>
+<tr data-grade="1年"><td>1年</td><td><strong>小池 航平</strong></td><td>2013年度</td><td>大南タイガース</td></tr>
+<tr data-grade="1年"><td>1年</td><td><strong>川村 敬太</strong></td><td>2013年度</td><td>習志野台スターズ</td></tr>
+<tr data-grade="1年"><td>1年</td><td><strong>亀井 碧</strong></td><td>2013年度</td><td>七次台ジャガーズ</td></tr>
+<tr data-grade="1年"><td>1年</td><td><strong>加賀原 洸</strong></td><td>2013年度</td><td>つばめ少年野球団</td></tr>
+<tr data-grade="1年"><td>1年</td><td><strong>粕谷 匡吾</strong></td><td>2013年度</td><td>大南タイガース</td></tr>
+<tr data-grade="1年"><td>1年</td><td><strong>江見 太一</strong></td><td>2013年度</td><td>エースライオンズ</td></tr>
+<tr data-grade="1年"><td>1年</td><td><strong>宇山 翔大</strong></td><td>2013年度</td><td>ホワイトビーストロング</td></tr>
+<tr data-grade="1年"><td>1年</td><td><strong>井上 竜澄</strong></td><td>2013年度</td><td>習志野台スターズ</td></tr>
+<tr data-grade="1年"><td>1年</td><td><strong>井上 遥人</strong></td><td>2013年度</td><td>西高根ラッキーズ</td></tr>
+<tr data-grade="1年"><td>1年</td><td><strong>石川 晃司朗</strong></td><td>2013年度</td><td>薬円台リトルスター</td></tr>
+<tr data-grade="1年"><td>1年</td><td><strong>秋葉 俊太</strong></td><td>2013年度</td><td>エースライオンズ</td></tr></tbody>
 </table>
 </div>
 <p class="note">八千代リトルシニアの選手情報を掲載しています。</p>
@@ -1512,7 +1571,13 @@ img,video,iframe{max-width:100%}
 <div class="restored-footer-copy">© YACHIYO LITTLE SENIOR. All Rights Reserved.</div>
 </div>
 </footer>
-
+<script>
+function filterGrade(g,b){
+ document.querySelectorAll('tbody tr').forEach(r=>r.style.display=(g==='all'||r.dataset.grade===g)?'':'none');
+ document.querySelectorAll('.tabs button').forEach(x=>x.classList.remove('active'));
+ b.classList.add('active');
+}
+</script>
 <script>
 (function(){
   const btn=document.querySelector('.menu');
@@ -1644,5 +1709,5 @@ function openProtectedArea(type){
   });
 })();
 </script>
-<script>const SHARED_API='/.netlify/functions/site-data';const DEFAULT_PLAYERS=[{"id":"p1","grade":"3年","name":"長島 理徒","birth":"2011年度","team":"八千代東南クラブ"},{"id":"p2","grade":"3年","name":"松田 惺吾","birth":"2011年度","team":"南志津ツインズ"},{"id":"p3","grade":"3年","name":"浅野 高輝","birth":"2011年度","team":"向山ファイターズ"},{"id":"p4","grade":"3年","name":"佐藤 蓮","birth":"2011年度","team":"キングファイターズ"},{"id":"p5","grade":"3年","name":"谷川 航世","birth":"2011年度","team":"八千代ドラゴンズ"},{"id":"p6","grade":"3年","name":"向山 奏介","birth":"2011年度","team":"南高津クラブ"},{"id":"p7","grade":"3年","name":"亀井 菜々波","birth":"2011年度","team":"いなげパイレーツ"},{"id":"p8","grade":"3年","name":"山口 明良","birth":"2011年度","team":"大和田タイガース"},{"id":"p9","grade":"3年","name":"山口 勇有","birth":"2011年度","team":"新木戸ヤングミヤコシ"},{"id":"p10","grade":"3年","name":"安本 星渚","birth":"2011年度","team":"新木戸ヤングミヤコシ"},{"id":"p11","grade":"3年","name":"南 陽仁","birth":"2011年度","team":"検見川クラブ"},{"id":"p12","grade":"3年","name":"山澤 時央","birth":"2011年度","team":"大和田タイガース"},{"id":"p13","grade":"3年","name":"杉山 燎","birth":"2011年度","team":"大和田タイガース"},{"id":"p14","grade":"3年","name":"舘 太良","birth":"2011年度","team":"大和田タイガース"},{"id":"p15","grade":"3年","name":"吉岡 大輝","birth":"2011年度","team":"佐倉ビクトリー"},{"id":"p16","grade":"2年","name":"矢羽田 晴天","birth":"2012年度","team":"志津アブレイズ"},{"id":"p17","grade":"2年","name":"森田 幸人","birth":"2012年度","team":"愛生グレート"},{"id":"p18","grade":"2年","name":"本村 蒼汰","birth":"2012年度","team":"新木戸ヤングミヤコシ"},{"id":"p19","grade":"2年","name":"藤澤 獅徒","birth":"2012年度","team":"鎌ヶ谷スカイラーク"},{"id":"p20","grade":"2年","name":"永井 悠貴","birth":"2012年度","team":"磯部トータス"},{"id":"p21","grade":"2年","name":"筒井 王輝","birth":"2012年度","team":"大南ファイターズ"},{"id":"p22","grade":"2年","name":"竹内 岳","birth":"2012年度","team":"西高根ラッキーズ"},{"id":"p23","grade":"2年","name":"髙橋 湊","birth":"2012年度","team":"鎌ヶ谷スカイラーク"},{"id":"p24","grade":"2年","name":"椙浦 佑成","birth":"2012年度","team":"新木戸ヤングミヤコシ"},{"id":"p25","grade":"2年","name":"篠崎 彩人","birth":"2012年度","team":"愛生グレート"},{"id":"p26","grade":"2年","name":"佐藤 暖弥","birth":"2012年度","team":"新木戸ヤングミヤコシ"},{"id":"p27","grade":"2年","name":"齋藤 護","birth":"2012年度","team":"西高根ラッキーズ"},{"id":"p28","grade":"2年","name":"古賀 爽太","birth":"2012年度","team":"新木戸ヤングミヤコシ"},{"id":"p29","grade":"2年","name":"加藤 真悠","birth":"2012年度","team":"八千代イーストスピリッツ"},{"id":"p30","grade":"2年","name":"大谷部 翔太","birth":"2012年度","team":"ホワイトビーストロング"},{"id":"p31","grade":"2年","name":"石山 綾志郎","birth":"2012年度","team":"八千代ドラゴンズ"},{"id":"p32","grade":"2年","name":"石川 圭仁","birth":"2012年度","team":"すみれ少年野球部"},{"id":"p33","grade":"2年","name":"荒木 淳平","birth":"2012年度","team":"西高根ラッキーズ"},{"id":"p34","grade":"1年","name":"山本 諒","birth":"2013年度","team":"エースライオンズ"},{"id":"p35","grade":"1年","name":"山本 要","birth":"2013年度","team":"村上ファイターズ"},{"id":"p36","grade":"1年","name":"山澤 奏時","birth":"2013年度","team":"大和田タイガース"},{"id":"p37","grade":"1年","name":"本吉 拓翔","birth":"2013年度","team":"西高根ラッキーズ"},{"id":"p38","grade":"1年","name":"村山 慶太","birth":"2013年度","team":"高郷スターズ"},{"id":"p39","grade":"1年","name":"溝上 蒼","birth":"2013年度","team":"新木戸ヤングミヤコシ"},{"id":"p40","grade":"1年","name":"松浦 陽菜","birth":"2013年度","team":"西高根ラッキーズ"},{"id":"p41","grade":"1年","name":"松井 慧","birth":"2013年度","team":"高郷スターズ"},{"id":"p42","grade":"1年","name":"長峰 六花","birth":"2013年度","team":"大和田スカーレット"},{"id":"p43","grade":"1年","name":"中濱 杏南","birth":"2013年度","team":"大和田スカーレット"},{"id":"p44","grade":"1年","name":"内藤 旭","birth":"2013年度","team":"すみれ少年野球部"},{"id":"p45","grade":"1年","name":"紺野 陽輝","birth":"2013年度","team":"新木戸ヤングミヤコシ"},{"id":"p46","grade":"1年","name":"小堀 颯太","birth":"2013年度","team":"愛生グレート"},{"id":"p47","grade":"1年","name":"高祖 蒼生","birth":"2013年度","team":"愛生グレート"},{"id":"p48","grade":"1年","name":"小池 航平","birth":"2013年度","team":"大南タイガース"},{"id":"p49","grade":"1年","name":"川村 敬太","birth":"2013年度","team":"習志野台スターズ"},{"id":"p50","grade":"1年","name":"亀井 碧","birth":"2013年度","team":"七次台ジャガーズ"},{"id":"p51","grade":"1年","name":"加賀原 洸","birth":"2013年度","team":"つばめ少年野球団"},{"id":"p52","grade":"1年","name":"粕谷 匡吾","birth":"2013年度","team":"大南タイガース"},{"id":"p53","grade":"1年","name":"江見 太一","birth":"2013年度","team":"エースライオンズ"},{"id":"p54","grade":"1年","name":"宇山 翔大","birth":"2013年度","team":"ホワイトビーストロング"},{"id":"p55","grade":"1年","name":"井上 竜澄","birth":"2013年度","team":"習志野台スターズ"},{"id":"p56","grade":"1年","name":"井上 遥人","birth":"2013年度","team":"西高根ラッキーズ"},{"id":"p57","grade":"1年","name":"石川 晃司朗","birth":"2013年度","team":"薬円台リトルスター"},{"id":"p58","grade":"1年","name":"秋葉 俊太","birth":"2013年度","team":"エースライオンズ"}];let playersData=[],currentGrade='all';function ep(v){return String(v??'').replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]))}function ap(){let p=sessionStorage.getItem('yachiyoAdminPassword')||'';if(!p){p=prompt('管理者パスワードを入力してください')||'';if(p)sessionStorage.setItem('yachiyoAdminPassword',p)}return p}async function loadP(){const r=await fetch(SHARED_API+'?section=players',{cache:'no-store'});if(!r.ok)throw 0;const j=await r.json();return Array.isArray(j.data)&&j.data.length?j.data:DEFAULT_PLAYERS}async function saveP(data){const p=ap();if(!p)throw Error('パスワードが必要です。');const r=await fetch(SHARED_API+'?section=players',{method:'POST',headers:{'content-type':'application/json','x-admin-password':p},body:JSON.stringify({data})});if(r.status===401){sessionStorage.removeItem('yachiyoAdminPassword');throw Error('管理者パスワードが違います。')}if(!r.ok)throw Error('保存できませんでした。')}function countP(){const c={'1年':0,'2年':0,'3年':0};playersData.forEach(p=>{if(c[p.grade]!=null)c[p.grade]++});document.getElementById('playerCount').textContent=`3年 ${c['3年']}名 ／ 2年 ${c['2年']}名 ／ 1年 ${c['1年']}名`}function renderP(){const o={'3年':3,'2年':2,'1年':1},b=document.getElementById('playersBody');b.innerHTML=playersData.slice().sort((a,c)=>(o[c.grade]||0)-(o[a.grade]||0)).filter(p=>currentGrade==='all'||p.grade===currentGrade).map(p=>`<tr data-grade="${ep(p.grade)}"><td>${ep(p.grade)}</td><td><div class="player-name-wrap"><strong>${ep(p.name)}</strong><button class="player-delete" type="button" onclick="deletePlayer('${ep(p.id)}')">削除</button></div></td><td>${ep(p.birth||'')}</td><td>${ep(p.team||'')}</td></tr>`).join('');countP()}function filterGrade(g,b){currentGrade=g;document.querySelectorAll('.tabs button').forEach(x=>x.classList.remove('active'));if(b)b.classList.add('active');renderP()}function togglePlayerPanel(f){const e=document.getElementById('playerEditor'),o=typeof f==='boolean'?f:e.hasAttribute('hidden');o?e.removeAttribute('hidden'):e.setAttribute('hidden','')}async function savePlayer(){const grade=playerGrade.value,name=playerName.value.trim(),birth=playerBirth.value.trim(),team=playerTeam.value.trim();if(!name)return alert('選手名を入力してください。');const n=playersData.concat([{id:'p'+Date.now(),grade,name,birth,team}]);try{await saveP(n);playersData=n;renderP();playerName.value=playerBirth.value=playerTeam.value='';togglePlayerPanel(false)}catch(e){alert(e.message)}}async function deletePlayer(id){if(!confirm('この選手を削除しますか？'))return;const n=playersData.filter(p=>String(p.id)!==String(id));try{await saveP(n);playersData=n;renderP()}catch(e){alert(e.message)}}loadP().then(x=>{playersData=x;renderP()}).catch(()=>{playersData=DEFAULT_PLAYERS;renderP()});</script><button class="admin-toggle" id="adminToggle" type="button">管理</button><script>(function(){const K='yachiyoAdminMode',b=document.getElementById('adminToggle');function a(on){document.body.classList.toggle('admin-mode',on);sessionStorage.setItem(K,on?'1':'0');b.textContent=on?'管理終了':'管理'}a(sessionStorage.getItem(K)==='1');b.onclick=function(){if(document.body.classList.contains('admin-mode'))return a(false);const p=prompt('管理者パスワードを入力してください');if(!p)return;sessionStorage.setItem('yachiyoAdminPassword',p);a(true)}})();</script></body>
+</body>
 </html>

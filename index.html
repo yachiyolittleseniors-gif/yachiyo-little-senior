@@ -6,7 +6,6 @@
 <meta content="width=device-width, initial-scale=1.0, viewport-fit=cover" name="viewport"/>
 <meta content="#071426" name="theme-color"/>
 <title>八千代リトルシニア｜公式サイト</title>
-<meta name="google-site-verification" content="T1XM5tLnO98PFJmNH4EkjlTaFScseBGyacqptIwxgj8" />
 <style>
 :root{
   --navy:#071426; --navy2:#0c1d33; --gold:#c79a3b; --gold2:#e2bd67;
@@ -1545,7 +1544,7 @@ img[alt*="八千代リトルシニア"]{
 <meta property="og:type" content="website">
 <meta property="og:site_name" content="八千代リトルシニア">
 <meta property="og:title" content="八千代リトルシニア｜公式サイト">
-<meta property="og:description" content="八千代リトルシニア公式サイト。選手紹介、試合結果、予定、入団案内、ギャラリーなどを掲載しています。">
+<meta property="og:description" content="千葉県八千代市を拠点に活動する中学硬式野球チーム、八千代リトルシニアの公式サイト。チーム紹介、選手紹介、試合結果、予定、入団・体験案内などを掲載しています。">
 <meta property="og:locale" content="ja_JP">
 <meta name="twitter:card" content="summary_large_image">
 <meta name="twitter:title" content="八千代リトルシニア｜公式サイト">
@@ -1628,7 +1627,28 @@ img,video,iframe{max-width:100%}
 }
 </style>
 
-<link rel="canonical" href="https://yachiyo-little-senior.netlify.app/"><meta property="og:url" content="https://yachiyo-little-senior.netlify.app/"><meta name="google-site-verification" content="R-MbB4kaV2Dhr7PjP_zCNCNVyXpXbGdEF7SNuZYIQE0" /></head>
+<link rel="canonical" href="https://yachiyo-little-senior.netlify.app/">
+<meta property="og:url" content="https://yachiyo-little-senior.netlify.app/">
+<script type="application/ld+json">
+{
+  "@context":"https://schema.org",
+  "@type":"SportsOrganization",
+  "name":"八千代リトルシニア",
+  "url":"https://yachiyo-little-senior.netlify.app/",
+  "sport":"Baseball",
+  "foundingDate":"1982",
+  "address":{
+    "@type":"PostalAddress",
+    "streetAddress":"島田台775",
+    "addressLocality":"八千代市",
+    "addressRegion":"千葉県",
+    "addressCountry":"JP"
+  },
+  "sameAs":["https://www.instagram.com/yachiyo_little_senior"]
+}
+</script>
+<meta name="google-site-verification" content="R-MbB4kaV2Dhr7PjP_zCNCNVyXpXbGdEF7SNuZYIQE0" />
+</head>
 <body>
 <header class="header">
 <nav class="nav">
@@ -1914,42 +1934,62 @@ function openProtectedArea(type){
 </script>
 
 <script>
-(async function(){
-  const api='/.netlify/functions/site-data';
+(function(){
   const esc=s=>String(s??'').replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));
-  async function get(section){
-    const r=await fetch(`${api}?section=${section}`,{cache:'no-store'});
-    if(!r.ok) return [];
-    const j=await r.json(); return Array.isArray(j.data)?j.data:[];
-  }
-  try{
-    const [schedule,results,gallery]=await Promise.all([get('schedule'),get('results'),get('gallery')]);
-    const now=new Date(); now.setHours(0,0,0,0);
-
-    const upcoming=schedule
-      .filter(x=>x.date && new Date(x.date+'T00:00:00')>=now)
-      .sort((a,b)=>a.date.localeCompare(b.date))[0];
-    const sc=document.querySelector('#latestScheduleCard .latest-meta');
-    sc.innerHTML=upcoming
-      ? `<strong>${esc(upcoming.date.replace(/-/g,'/'))}</strong><br>${esc(upcoming.title)}${upcoming.time?'<br>'+esc(upcoming.time):''}${upcoming.place?'<br>'+esc(upcoming.place):''}<br><a class="latest-link" href="./schedule.html">予定を見る →</a>`
-      : `現在、公開予定はありません。<br><a class="latest-link" href="./schedule.html">予定を見る →</a>`;
-
-    const latestR=[...results].sort((a,b)=>(b.date||'').localeCompare(a.date||''))[0];
-    const rc=document.querySelector('#latestResultCard .latest-meta');
-    rc.innerHTML=latestR
-      ? `<strong>${esc(latestR.date||'')}</strong><br>${esc(latestR.tournament||'試合')}<br>八千代 ${Number(latestR.ourScore)} - ${Number(latestR.oppScore)} ${esc(latestR.opponent||'')}<br><a class="latest-link" href="./results.html">試合結果を見る →</a>`
-      : `まだ試合結果は登録されていません。<br><a class="latest-link" href="./results.html">試合結果を見る →</a>`;
-
-    const latestG=[...gallery].sort((a,b)=>(b.date||'').localeCompare(a.date||''))[0];
-    const gc=document.getElementById('latestGalleryCard');
-    gc.querySelector('.latest-meta').innerHTML=latestG
-      ? `${latestG.image?`<img class="latest-thumb" src="${latestG.image}" alt="${esc(latestG.title||'最新写真')}" loading="lazy" decoding="async">`:''}<strong>${esc(latestG.title||'最新写真')}</strong>${latestG.date?'<br>'+esc(latestG.date):''}<br><a class="latest-link" href="./gallery.html">ギャラリーを見る →</a>`
-      : `まだ写真は登録されていません。<br><a class="latest-link" href="./gallery.html">ギャラリーを見る →</a>`;
-  }catch(e){
-    document.querySelectorAll('.latest-meta').forEach(el=>el.textContent='最新情報を読み込めませんでした。');
-  }
+  const get=section=>{try{return JSON.parse(localStorage.getItem('yachiyo_'+section)||'[]')}catch(e){return[]}};
+  const schedule=get('schedule'),results=get('results'),gallery=get('gallery');
+  const now=new Date();now.setHours(0,0,0,0);
+  const upcoming=schedule.filter(x=>x.date&&new Date(x.date+'T00:00:00')>=now).sort((a,b)=>a.date.localeCompare(b.date))[0];
+  const sc=document.querySelector('#latestScheduleCard .latest-meta');
+  if(sc) sc.innerHTML=upcoming?`<strong>${esc(upcoming.date.replace(/-/g,'/'))}</strong><br>${esc(upcoming.title)}${upcoming.time?'<br>'+esc(upcoming.time):''}${upcoming.place?'<br>'+esc(upcoming.place):''}<br><a class="latest-link" href="./schedule.html">予定を見る →</a>`:`現在、登録予定はありません。<br><a class="latest-link" href="./schedule.html">予定を見る →</a>`;
+  const latestR=[...results].sort((a,b)=>(b.date||'').localeCompare(a.date||''))[0];
+  const rc=document.querySelector('#latestResultCard .latest-meta');
+  if(rc) rc.innerHTML=latestR?`<strong>${esc(latestR.date||'')}</strong><br>${latestR.grade?'<span style="display:inline-block;margin-right:6px;border:1px solid #d7b457;border-radius:999px;padding:2px 7px;font-size:12px;font-weight:800">'+esc(latestR.grade)+'</span>':''}${esc(latestR.tournament||'試合')}<br>八千代 ${Number(latestR.ourScore)} - ${Number(latestR.oppScore)} ${esc(latestR.opponent||'')}<br><a class="latest-link" href="./results.html">試合結果を見る →</a>`:`まだ試合結果は登録されていません。<br><a class="latest-link" href="./results.html">試合結果を見る →</a>`;
+  const latestG=[...gallery].sort((a,b)=>(b.date||'').localeCompare(a.date||''))[0];
+  const gc=document.getElementById('latestGalleryCard');
+  if(gc) gc.querySelector('.latest-meta').innerHTML=latestG?`${latestG.image?`<img class="latest-thumb" src="${latestG.image}" alt="${esc(latestG.title||'最新写真')}">`:''}<strong>${esc(latestG.title||'最新写真')}</strong>${latestG.date?'<br>'+esc(latestG.date):''}<br><a class="latest-link" href="./gallery.html">ギャラリーを見る →</a>`:`まだ写真は登録されていません。<br><a class="latest-link" href="./gallery.html">ギャラリーを見る →</a>`;
 })();
 </script>
 
-<script>(async function(){const sc=document.getElementById('topLatestResultScore'),nt=document.getElementById('topLatestResultNote');if(!sc)return;try{const r=await fetch('/.netlify/functions/site-data?section=results',{cache:'no-store'}),j=await r.json(),d=Array.isArray(j.data)?j.data:[],x=d.slice().sort((a,b)=>String(b.date||'').localeCompare(String(a.date||'')))[0];if(!x){sc.textContent='まだ試合結果は登録されていません。';nt.textContent='試合結果ページから登録できます。';return}const e=s=>String(s??'').replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m])),g=x.grade?'<span style="display:inline-block;margin-right:8px;border:1px solid #d7b457;color:#9b771e;border-radius:999px;padding:3px 8px;font-size:.45em;font-weight:800">'+e(x.grade)+'</span>':'';sc.innerHTML=g+'八千代リトルシニア <strong>'+e(x.ourScore)+' - '+e(x.oppScore)+'</strong> '+e(x.opponent||'');nt.textContent=[x.date?String(x.date).replace(/-/g,'/'):'',x.tournament||''].filter(Boolean).join('　')}catch(e){sc.textContent='試合結果を見る'}})();</script></body>
+
+<script>
+(function(){
+  function esc(s){
+    return String(s ?? '').replace(/[&<>"']/g, function(m){
+      return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m];
+    });
+  }
+  function loadTopLatestResult(){
+    var score = document.getElementById('topLatestResultScore');
+    var note = document.getElementById('topLatestResultNote');
+    if(!score) return;
+    var data = [];
+    try { data = JSON.parse(localStorage.getItem('yachiyo_results') || '[]'); } catch(e) {}
+    var latest = data.slice().sort(function(a,b){
+      return String(b.date || '').localeCompare(String(a.date || ''));
+    })[0];
+
+    if(!latest){
+      score.textContent = 'まだ試合結果は登録されていません。';
+      if(note) note.textContent = '試合結果ページから登録できます。';
+      return;
+    }
+
+    var our = latest.ourScore ?? '';
+    var opp = latest.oppScore ?? '';
+    var opponent = esc(latest.opponent || '対戦相手');
+    score.innerHTML = (latest.grade ? '<span style="display:inline-block;margin-right:8px;border:1px solid #d7b457;color:#9b771e;border-radius:999px;padding:3px 8px;font-size:.45em;font-weight:800;vertical-align:middle">' + esc(latest.grade) + '</span>' : '') + '八千代リトルシニア <strong>' + esc(our) + ' - ' + esc(opp) + '</strong> ' + opponent;
+    if(note){
+      var parts = [];
+      if(latest.date) parts.push(String(latest.date).replace(/-/g,'/'));
+      if(latest.tournament) parts.push(latest.tournament);
+      note.textContent = parts.length ? parts.join('　') : '最新の試合結果を掲載しています。';
+    }
+  }
+  document.addEventListener('DOMContentLoaded', loadTopLatestResult);
+  window.addEventListener('pageshow', loadTopLatestResult);
+})();
+</script>
+
+</body>
 </html>
