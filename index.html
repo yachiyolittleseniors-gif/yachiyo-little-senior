@@ -2334,5 +2334,34 @@ document.addEventListener('DOMContentLoaded',function(){
   }
 });
 </script>
+
+<style>
+@media(max-width:700px){
+  footer .footer-news-cell{grid-column:auto!important;grid-row:auto!important;}
+  footer .footer-news-cell,
+  footer .footer-news-cell + *{width:auto!important;}
+}
+</style>
+<script>
+document.addEventListener('DOMContentLoaded',function(){
+ const footer=document.querySelector('footer'); if(!footer)return;
+ const links=[...footer.querySelectorAll('a')];
+ const find=t=>links.find(a=>(a.textContent||'').replace(/\s+/g,'').includes(t));
+ const insta=find('Instagram'), office=find('事務局'), board=find('チーム内案内板');
+ const news=footer.querySelector('.footer-news-link');
+ if(!insta||!office||!board||!news)return;
+ let grid=insta.parentElement;
+ while(grid&&grid!==footer){if(grid.contains(office)&&grid.contains(board)&&grid.contains(news))break;grid=grid.parentElement;}
+ if(!grid||grid===footer)return;
+ const box=el=>{let n=el;while(n.parentElement&&n.parentElement!==grid)n=n.parentElement;return n};
+ const ib=box(insta), nb=box(news), ob=box(office), bb=box(board);
+ [ib,nb,ob,bb].forEach(x=>{x.style.gridColumn='auto';x.style.width='auto';x.style.margin='0';});
+ grid.style.display='grid';
+ grid.style.gridTemplateColumns='1fr 1fr';
+ grid.style.alignItems='stretch';
+ ib.style.gridColumn='1'; nb.style.gridColumn='2'; ob.style.gridColumn='1'; bb.style.gridColumn='2';
+ ib.style.gridRow='1'; nb.style.gridRow='1'; ob.style.gridRow='2'; bb.style.gridRow='2';
+});
+</script>
 </body>
 </html>
