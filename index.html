@@ -1680,6 +1680,34 @@ body.photo-admin-on .adminPhotoBtn{display:block}
 .recruitPhotoChangeBtn{display:none;position:absolute;right:8px;bottom:8px;z-index:20;border:1px solid rgba(212,175,55,.8);background:#071426;color:#fff;border-radius:999px;padding:8px 11px;font-size:11px;font-weight:700;box-shadow:0 4px 14px rgba(0,0,0,.28)}
 body.photo-admin-on .recruitPhotoChangeBtn{display:block}
 </style>
+
+<style>
+.home-news{max-width:1180px;margin:34px auto;padding:0 26px}
+.home-news-head{display:flex;align-items:end;justify-content:space-between;gap:16px;margin-bottom:18px}
+.home-news-en{color:#b58a31;font-size:13px;font-weight:800;letter-spacing:.24em}
+.home-news h2{margin:4px 0 0;color:#101827;font-size:34px;font-family:serif;font-weight:500}
+.home-news-list{background:#fff;border:1px solid #e5dfd3;border-radius:18px;padding:4px 24px;box-shadow:0 8px 24px rgba(4,12,22,.05)}
+.news-item{padding:20px 0;border-bottom:1px solid #e9e5dc;position:relative}
+.news-item:last-child{border-bottom:0}
+.news-date{font-size:12px;color:#b58a31;font-weight:800;letter-spacing:.1em;margin-bottom:6px}
+.news-title{font-size:19px;color:#101827;font-weight:800;margin-bottom:7px}
+.news-body{font-size:14px;line-height:1.8;color:#596273;white-space:pre-wrap}
+.news-empty{padding:22px 0;color:#727b89}
+.news-admin-btn,.news-delete{display:none}
+body.photo-admin-on .news-admin-btn{display:block}
+body.photo-admin-on .news-delete{display:block}
+.news-admin-btn{border:1px solid #c9a548;background:#071426;color:#fff;border-radius:999px;padding:9px 14px;font-size:12px;font-weight:800}
+.news-delete{position:absolute;right:0;top:18px;border:1px solid #c9a548;background:#071426;color:#fff;border-radius:999px;padding:6px 10px;font-size:10px;font-weight:800}
+.news-modal{position:fixed;inset:0;z-index:9999;background:rgba(0,0,0,.58);padding:20px;display:grid;place-items:center}
+.news-modal[hidden]{display:none}
+.news-modal-card{width:min(520px,100%);background:#fff;border-radius:18px;padding:24px;position:relative}
+.news-modal-card h3{margin:0 0 18px}
+.news-modal-card label{display:block;font-size:13px;font-weight:700;margin:12px 0}
+.news-modal-card input,.news-modal-card textarea{box-sizing:border-box;width:100%;margin-top:6px;border:1px solid #ccd1d8;border-radius:10px;padding:11px;font:inherit}
+.news-close{position:absolute;right:14px;top:10px;border:0;background:none;font-size:28px}
+.news-save{width:100%;border:0;border-radius:12px;background:#071426;color:#fff;padding:13px;font-weight:800}
+@media(max-width:600px){.home-news{padding:0 26px;margin:26px auto}.home-news h2{font-size:29px}.home-news-list{padding:2px 18px}.news-title{font-size:17px}}
+</style>
 </head>
 <body>
 <header class="header">
@@ -1756,6 +1784,25 @@ body.photo-admin-on .recruitPhotoChangeBtn{display:block}
 </div>
 
 
+
+<section class="home-news" id="homeNews">
+  <div class="home-news-head">
+    <div><div class="home-news-en">NEWS</div><h2>新着NEWS</h2></div>
+    <button type="button" id="newsAddBtn" class="news-admin-btn">＋ NEWSを追加</button>
+  </div>
+  <div id="newsList" class="home-news-list"><p class="news-empty">現在、新着NEWSはありません。</p></div>
+</section>
+
+<div id="newsModal" class="news-modal" hidden>
+  <div class="news-modal-card">
+    <button type="button" id="newsClose" class="news-close">×</button>
+    <h3>新着NEWSを追加</h3>
+    <label>日付<input id="newsDate" type="date"></label>
+    <label>タイトル<input id="newsTitle" type="text" maxlength="80" placeholder="例：体験練習会のお知らせ"></label>
+    <label>本文<textarea id="newsBody" rows="5" maxlength="500" placeholder="お知らせ内容を入力"></textarea></label>
+    <button type="button" id="newsSave" class="news-save">保存する</button>
+  </div>
+</div>
 <section class="container"><div class="grid3">
 <div class="card" id="topLatestResultCard"><h2>LATEST RESULT</h2><div class="en">試合結果</div><div class="score" id="topLatestResultScore">最新の試合結果を読み込み中…</div><p id="topLatestResultNote">最新の試合結果を掲載しています。</p><a class="more" href="./results.html">試合結果を見る ›</a></div>
 <div class="card"><h2>ABOUT US</h2><div class="en">チームについて</div><p>1982年設立。40年以上の歴史を持つ伝統あるチーム。伝統にとらわれず、現役選手を第一に考えた育成を行っています。</p><a class="more" href="./team.html">詳しく見る ›</a></div>
@@ -2193,6 +2240,37 @@ function openProtectedArea(type){
    }catch(e){alert('写真を保存できませんでした。')}
    inp.value='';
  };
+ load();
+})();
+</script>
+
+<script>
+(function(){
+ const api='/.netlify/functions/site-data';
+ const list=document.getElementById('newsList'), modal=document.getElementById('newsModal');
+ const add=document.getElementById('newsAddBtn'), close=document.getElementById('newsClose'), save=document.getElementById('newsSave');
+ const date=document.getElementById('newsDate'), title=document.getElementById('newsTitle'), body=document.getElementById('newsBody');
+ let data=[];
+ const esc=s=>String(s||'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+ function render(){
+   data.sort((a,b)=>String(b.date||'').localeCompare(String(a.date||'')));
+   if(!data.length){list.innerHTML='<p class="news-empty">現在、新着NEWSはありません。</p>';return}
+   list.innerHTML=data.map((x,i)=>'<article class="news-item"><div class="news-date">'+esc(x.date||'')+'</div><div class="news-title">'+esc(x.title)+'</div><div class="news-body">'+esc(x.body)+'</div><button class="news-delete" data-i="'+i+'">削除</button></article>').join('');
+   list.querySelectorAll('.news-delete').forEach(b=>b.onclick=()=>remove(Number(b.dataset.i)));
+ }
+ async function load(){
+   try{const r=await fetch(api+'?section=news',{cache:'no-store'});if(!r.ok)return;const j=await r.json();data=Array.isArray(j.data)?j.data:[];render()}catch(e){}
+ }
+ async function persist(){
+   const pw=sessionStorage.getItem('yachiyoAdminPassword')||'';
+   const r=await fetch(api+'?section=news',{method:'POST',headers:{'content-type':'application/json','x-admin-password':pw},body:JSON.stringify({data})});
+   if(!r.ok)throw new Error();
+ }
+ add.onclick=()=>{date.value=new Date().toISOString().slice(0,10);title.value='';body.value='';modal.hidden=false};
+ close.onclick=()=>modal.hidden=true;
+ modal.onclick=e=>{if(e.target===modal)modal.hidden=true};
+ save.onclick=async()=>{if(!title.value.trim()){alert('タイトルを入力してください。');return}data.push({id:Date.now(),date:date.value,title:title.value.trim(),body:body.value.trim()});try{await persist();modal.hidden=true;render();alert('NEWSを保存しました。')}catch(e){data.pop();alert('保存できませんでした。')}};
+ async function remove(i){if(!confirm('このNEWSを削除しますか？'))return;const old=data.slice();data.splice(i,1);try{await persist();render()}catch(e){data=old;alert('削除できませんでした。')}}
  load();
 })();
 </script>
