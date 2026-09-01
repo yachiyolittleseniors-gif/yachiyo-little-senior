@@ -1621,8 +1621,7 @@ function openProtectedArea(type){
    }catch(e){alert('管理機能に接続できませんでした。')}
  }
  const adminBtn=document.getElementById('staffEditBtn');
- const footer=document.querySelector('.restored-footer');
- let footerTapCount=0, footerTapTimer=null;
+ let cornerCount=0, cornerTimer=null;
 
  function hideAdminButton(){
    adminBtn.textContent='管理';
@@ -1630,28 +1629,29 @@ function openProtectedArea(type){
    sessionStorage.removeItem('yachiyoAdminMode');
  }
 
- function footerSecretTap(e){
-   if(adminBtn.classList.contains('admin-revealed') || !footer) return;
-   const r=footer.getBoundingClientRect();
-   let x=e.clientX;
-   if(e.changedTouches && e.changedTouches.length) x=e.changedTouches[0].clientX;
-   if(x < r.left + r.width*0.65) return;
-   footerTapCount++;
-   clearTimeout(footerTapTimer);
-   footerTapTimer=setTimeout(()=>footerTapCount=0,1600);
-   if(footerTapCount>=3){
-     footerTapCount=0;
-     clearTimeout(footerTapTimer);
+ function cornerTap(e){
+   if(adminBtn.classList.contains('admin-revealed')) return;
+   let x=e.clientX, y=e.clientY;
+   if(e.changedTouches && e.changedTouches.length){
+     x=e.changedTouches[0].clientX;
+     y=e.changedTouches[0].clientY;
+   }
+   // 画面の「一番右下の角」80px四方だけ反応
+   if(x < window.innerWidth-80 || y < window.innerHeight-80) return;
+   cornerCount++;
+   clearTimeout(cornerTimer);
+   cornerTimer=setTimeout(()=>cornerCount=0,1500);
+   if(cornerCount>=3){
+     cornerCount=0;
+     clearTimeout(cornerTimer);
      adminBtn.classList.add('admin-revealed');
    }
  }
 
- if(footer){
-   footer.addEventListener('touchend',footerSecretTap,{passive:true});
-   footer.addEventListener('click',e=>{
-     if(!('ontouchstart' in window)) footerSecretTap(e);
-   });
- }
+ document.addEventListener('touchend',cornerTap,true);
+ document.addEventListener('click',e=>{
+   if(!('ontouchstart' in window)) cornerTap(e);
+ },true);
 
  adminBtn.onclick=async()=>{
    if(document.body.classList.contains('staff-editing')){
