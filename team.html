@@ -1346,31 +1346,6 @@ img,video,iframe{max-width:100%}
 @media(max-width:600px){.staff-panel{padding:22px 15px;border-radius:17px}.staff-row{grid-template-columns:105px 1fr;gap:12px}.staff-role{font-size:13px;padding:9px 5px}.staff-name{font-size:16px}.staff-editor-row{grid-template-columns:1fr}.staff-delete{justify-self:end}}
 </style>
 
-
-<style>
-.staff-panel{
-  background:#fff!important;
-  color:#07182c!important;
-  border:1.5px solid #c9a24c!important;
-  box-shadow:0 16px 36px rgba(7,24,44,.10)!important;
-}
-.staff-head h2{color:#07182c!important}
-.staff-head .en{color:#c79a3b!important}
-.staff-row{border-bottom:1px solid #d9dde2!important}
-.staff-role{
-  background:#071f39!important;
-  color:#ddb75e!important;
-  border:1px solid #c9a24c!important;
-}
-.staff-name{color:#07182c!important}
-.staff-admin{border-top:1px solid #d9dde2!important}
-.staff-edit-btn{
-  background:#071f39!important;
-  color:#ddb75e!important;
-  border:1px solid #c9a24c!important;
-}
-</style>
-
 </head>
 <body>
 <header class="header">
@@ -1658,7 +1633,13 @@ function openProtectedArea(type){
    editor.innerHTML=staff.map((x,i)=>`<div class="staff-editor-row"><input data-i="${i}" data-k="role" value="${esc(x.role)}" placeholder="役職"><input data-i="${i}" data-k="name" value="${esc(x.name)}" placeholder="名前"><button type="button" class="staff-delete" data-del="${i}">削除</button></div>`).join('');
  }
  async function load(){
-   try{const r=await fetch(API,{cache:'no-store'}); if(r.ok){const j=await r.json(); if(Array.isArray(j.data)&&j.data.length) staff=j.data;}}catch(e){}
+   try{const r=await fetch(API,{cache:'no-store'}); if(r.ok){const j=await r.json(); if(Array.isArray(j.data)&&j.data.length){
+  const fallbackByRole={'監督':'早坂 徹','ヘッドコーチ':'平田 祥之','コーチ':'河野 剛','学生コーチ':'学生コーチ'};
+  staff=j.data.map(x=>({
+    role:String(x.role||'').trim(),
+    name:String(x.name||'').trim() || fallbackByRole[String(x.role||'').trim()] || ''
+  }));
+}}}catch(e){}
    render();
  }
  async function verifyAndOpen(){
@@ -1692,5 +1673,14 @@ function openProtectedArea(type){
 })();
 </script>
 
+<style id="staff-white-final">
+#staffPanel.staff-panel{background:#fff!important;background-image:none!important;color:#07182c!important;border:1.5px solid #c9a24c!important;box-shadow:0 16px 36px rgba(7,24,44,.10)!important}
+#staffPanel .staff-head h2{color:#07182c!important}#staffPanel .staff-head .en{color:#c79a3b!important}
+#staffPanel .staff-row{border-bottom:1px solid #d9dde2!important}
+#staffPanel .staff-role{background:#071f39!important;color:#ddb75e!important;border:1px solid #c9a24c!important}
+#staffPanel .staff-name{color:#07182c!important}
+#staffPanel .staff-admin{border-top:1px solid #d9dde2!important}
+#staffPanel .staff-edit-btn{background:#071f39!important;color:#ddb75e!important;border:1px solid #c9a24c!important}
+</style>
 </body>
 </html>
