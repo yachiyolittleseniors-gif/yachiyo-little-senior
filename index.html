@@ -2332,7 +2332,7 @@ function openProtectedArea(type){
      const r=await fetch(api+'?section=photos',{cache:'no-store'}); if(!r.ok)return;
      const j=await r.json(),a=Array.isArray(j.data)?j.data:[];
      const x=a.find(v=>v.key==='photo_recruit');
-     if(x&&x.image)box.style.backgroundImage='url("'+x.image+'")';
+     if(x&&x.image)box.style.setProperty('background-image','url("'+x.image+'")','important');
    }catch(e){}
  }
  inp.onchange=async()=>{
@@ -2345,7 +2345,7 @@ function openProtectedArea(type){
      const pw=sessionStorage.getItem('yachiyoAdminPassword')||'';
      const r=await fetch(api+'?section=photos',{method:'POST',headers:{'content-type':'application/json','x-admin-password':pw},body:JSON.stringify({data:a})});
      if(!r.ok)throw new Error();
-     box.style.backgroundImage='url("'+image+'")';
+     box.style.setProperty('background-image','url("'+image+'")','important');
      alert('写真を変更しました。');
    }catch(e){alert('写真を保存できませんでした。')}
    inp.value='';
