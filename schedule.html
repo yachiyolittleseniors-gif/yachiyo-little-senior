@@ -1727,7 +1727,7 @@ function openProtectedArea(type){
   function apply(on){
     document.body.classList.toggle('admin-mode',!!on);
     const b=document.getElementById('adminModeToggle');
-    if(b) b.textContent=on?'管理モード終了':'管理';
+    if(b) b.textContent=on?'管理終了':'管理';
   }
 
   async function verifyAdminPassword(password){
