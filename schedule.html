@@ -1727,7 +1727,7 @@ function openProtectedArea(type){
   function apply(on){
     document.body.classList.toggle('admin-mode',!!on);
     const b=document.getElementById('adminModeToggle');
-    if(b) b.textContent=on?'管理モード終了':'管理者';
+    if(b) b.textContent=on?'管理モード終了':'管理';
   }
 
   async function verifyAdminPassword(password){
@@ -1780,7 +1780,7 @@ function openProtectedArea(type){
   });
 })();
 </script>
-<button id="adminModeToggle" class="admin-toggle" type="button" onclick="enableAdminMode()">管理者</button>
+<button id="adminModeToggle" class="admin-toggle" type="button" onclick="enableAdminMode()">管理</button>
 
 </body>
 </html>
