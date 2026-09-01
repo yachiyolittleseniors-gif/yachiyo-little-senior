@@ -1330,7 +1330,7 @@ img,video,iframe{max-width:100%}
 .staff-row:last-child{border-bottom:0}.staff-role{border:1px solid #c9a24c;background:#071f39;color:#e1bc65;border-radius:8px;padding:10px 8px;text-align:center;font-weight:800}.staff-name{font-size:18px;font-weight:800;letter-spacing:.05em;color:#07182c}
 .staff-admin{display:none;margin-top:20px;padding-top:18px;border-top:1px solid rgba(255,255,255,.14)}body.staff-editing .staff-admin{display:block}
 .staff-edit-btn,.staff-add,.staff-save,.staff-cancel,.staff-delete{border:0;border-radius:999px;font-weight:800;cursor:pointer}
-.staff-edit-btn{position:fixed;right:18px;bottom:18px;z-index:9998;margin:0;padding:9px 12px;background:#071426;border:1px solid rgba(199,154,59,.65);color:#e2bd67;border-radius:999px;font-size:12px;font-weight:800;box-shadow:0 8px 22px rgba(0,0,0,.18);cursor:pointer;opacity:.82}.staff-edit-btn:hover{opacity:1}@media(max-width:650px){.staff-edit-btn{right:12px;bottom:74px;padding:8px 10px;font-size:11px}}
+.staff-edit-btn{position:fixed;right:18px;bottom:18px;z-index:9998;margin:0;padding:9px 12px;background:#071426;border:1px solid rgba(199,154,59,.65);color:#e2bd67;border-radius:999px;font-size:12px;font-weight:800;box-shadow:0 8px 22px rgba(0,0,0,.18);cursor:pointer;opacity:.82;display:none}.staff-edit-btn.admin-revealed{display:block}.staff-edit-btn:hover{opacity:1}@media(max-width:650px){.staff-edit-btn{right:12px;bottom:74px;padding:8px 10px;font-size:11px}}
 .staff-admin-actions{display:flex;gap:9px;justify-content:center;flex-wrap:wrap}.staff-add,.staff-save,.staff-cancel{padding:10px 16px}.staff-add,.staff-save{background:#c9a24c;color:#071426}.staff-cancel{background:#fff;color:#17202b}.staff-delete{padding:7px 11px;background:#fff;color:#9d2633}
 .staff-editor-row{display:grid;grid-template-columns:1fr 1.5fr auto;gap:8px;margin:9px 0}.staff-editor-row input{width:100%;box-sizing:border-box;border:1px solid #d8dde3;border-radius:9px;padding:11px;font-size:16px}
 @media(max-width:600px){.staff-panel{padding:22px 15px;border-radius:17px}.staff-row{grid-template-columns:105px 1fr;gap:12px}.staff-role{font-size:13px;padding:9px 5px}.staff-name{font-size:16px}.staff-editor-row{grid-template-columns:1fr}.staff-delete{justify-self:end}}
@@ -1449,6 +1449,7 @@ img,video,iframe{max-width:100%}
 </div>
 <div class="staff-list" id="staffPublic"></div>
 <button class="staff-edit-btn" id="staffEditBtn" type="button">管理</button>
+<div id="adminRevealHotspot" aria-hidden="true" style="position:fixed;right:0;bottom:0;width:96px;height:96px;z-index:9997;background:transparent;touch-action:manipulation"></div>
 <div class="staff-admin" id="staffAdmin">
 <div id="staffEditor"></div>
 <div class="staff-admin-actions">
@@ -1620,11 +1621,45 @@ function openProtectedArea(type){
      document.body.classList.add('staff-editing'); renderEditor();
    }catch(e){alert('管理機能に接続できませんでした。')}
  }
- document.getElementById('staffEditBtn').onclick=verifyAndOpen;
+ const adminBtn=document.getElementById('staffEditBtn');
+ const hotspot=document.getElementById('adminRevealHotspot');
+ let tapCount=0, tapTimer=null;
+
+ function hideAdminButton(){
+   adminBtn.textContent='管理';
+   adminBtn.classList.remove('admin-revealed');
+   sessionStorage.removeItem('yachiyoAdminMode');
+ }
+
+ hotspot.addEventListener('click',()=>{
+   tapCount++;
+   clearTimeout(tapTimer);
+   tapTimer=setTimeout(()=>{tapCount=0},900);
+   if(tapCount>=3){
+     tapCount=0;
+     clearTimeout(tapTimer);
+     adminBtn.classList.add('admin-revealed');
+   }
+ });
+
+ adminBtn.onclick=async()=>{
+   if(document.body.classList.contains('staff-editing')){
+     document.body.classList.remove('staff-editing');
+     hideAdminButton();
+     load();
+     return;
+   }
+   await verifyAndOpen();
+   if(document.body.classList.contains('staff-editing')){
+     adminBtn.textContent='管理終了';
+     sessionStorage.setItem('yachiyoAdminMode','1');
+   }
+ };
+
  document.getElementById('staffAdd').onclick=()=>{staff.push({role:'',name:''});renderEditor()};
  editor.onclick=e=>{const b=e.target.closest('[data-del]');if(!b)return;staff.splice(Number(b.dataset.del),1);renderEditor()};
  editor.oninput=e=>{if(!e.target.dataset.k)return;staff[Number(e.target.dataset.i)][e.target.dataset.k]=e.target.value};
- document.getElementById('staffCancel').onclick=()=>{document.body.classList.remove('staff-editing');load()};
+ document.getElementById('staffCancel').onclick=()=>{document.body.classList.remove('staff-editing');hideAdminButton();load()};
  document.getElementById('staffSave').onclick=async()=>{
    const p=sessionStorage.getItem('yachiyoAdminPassword')||'';
    const clean=staff.map(x=>({role:String(x.role||'').trim(),name:String(x.name||'').trim()})).filter(x=>x.role||x.name);
@@ -1632,7 +1667,7 @@ function openProtectedArea(type){
      const r=await fetch(API,{method:'POST',headers:{'content-type':'application/json','x-admin-password':p},body:JSON.stringify({data:clean})});
      if(r.status===401){alert('管理者パスワードが違います。');return}
      if(!r.ok){alert('保存できませんでした。');return}
-     staff=clean;render();document.body.classList.remove('staff-editing');alert('保存しました。');
+     staff=clean;render();document.body.classList.remove('staff-editing');hideAdminButton();alert('保存しました。');
    }catch(e){alert('保存できませんでした。')}
  };
  load();
