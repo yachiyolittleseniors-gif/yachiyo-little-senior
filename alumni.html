@@ -1487,6 +1487,13 @@ function openProtectedArea(type){
  const $=id=>document.getElementById(id);
  function render(){ $('alumniChiba').textContent=data.chiba||defaults.chiba; $('alumniTokyo').textContent=data.tokyo||defaults.tokyo; $('alumniOther').textContent=data.other||defaults.other; $('editChiba').value=data.chiba||defaults.chiba; $('editTokyo').value=data.tokyo||defaults.tokyo; $('editOther').value=data.other||defaults.other; }
  async function load(){ try{ const r=await fetch(API+'?section=alumni',{cache:'no-store'}); if(r.ok){ const j=await r.json(); const v=(j&&j.data!==undefined)?j.data:j; if(v&&typeof v==='object'&&!Array.isArray(v)) data={...data,...v}; } }catch(e){} render(); }
+ // ページ更新・再読み込み時は必ず管理状態とパスワードを解除
+ sessionStorage.removeItem('yachiyoAdminMode');
+ sessionStorage.removeItem('yachiyoAdminPassword');
+ $('alumniEditor').style.display='none';
+ $('alumniAdminBtn').textContent='管理';
+ $('alumniAdminBtn').style.display='none';
+
  $('alumniAdminBtn').addEventListener('click',function(){
   const editor=$('alumniEditor');
   const btn=$('alumniAdminBtn');
