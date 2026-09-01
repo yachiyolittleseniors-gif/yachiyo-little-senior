@@ -1622,14 +1622,24 @@ function openProtectedArea(type){
  }
  const staffToggle=document.getElementById('staffEditBtn');
 
- // ホームと同じ：画面右下を3回タップで管理ボタン表示
- if(sessionStorage.getItem('yachiyoAdminMode')==='1' && sessionStorage.getItem('yachiyoAdminPassword')){
-   staffToggle.style.display='block';
-   staffToggle.textContent='管理終了';
-   document.body.classList.add('staff-editing');
-   renderEditor();
+ function setStaffAdmin(on){
+   sessionStorage.setItem('yachiyoAdminMode',on?'1':'0');
+   staffToggle.textContent=on?'管理終了':'管理';
+   if(on){
+     staffToggle.style.display='block';
+     document.body.classList.add('staff-editing');
+     renderEditor();
+   }else{
+     document.body.classList.remove('staff-editing');
+     staffToggle.style.display='none';
+   }
  }
 
+ if(sessionStorage.getItem('yachiyoAdminMode')==='1' && sessionStorage.getItem('yachiyoAdminPassword')){
+   setStaffAdmin(true);
+ }
+
+ // ホームと全く同じ：画面右下を3回タップ
  let secretTapCount=0, secretTapTimer=null;
  document.addEventListener('pointerup',function(e){
    const cornerX=window.innerWidth-90;
@@ -1647,12 +1657,9 @@ function openProtectedArea(type){
    }
  },{passive:true});
 
- staffToggle.onclick=async()=>{
+ staffToggle.addEventListener('click',async function(){
    if(sessionStorage.getItem('yachiyoAdminMode')==='1'){
-     sessionStorage.setItem('yachiyoAdminMode','0');
-     document.body.classList.remove('staff-editing');
-     staffToggle.textContent='管理';
-     staffToggle.style.display='none';
+     setStaffAdmin(false);
      load();
      return;
    }
@@ -1660,8 +1667,9 @@ function openProtectedArea(type){
    if(document.body.classList.contains('staff-editing')){
      sessionStorage.setItem('yachiyoAdminMode','1');
      staffToggle.textContent='管理終了';
+     staffToggle.style.display='block';
    }
- };
+ });
  document.getElementById('staffAdd').onclick=()=>{staff.push({role:'',name:''});renderEditor()};
  editor.onclick=e=>{const b=e.target.closest('[data-del]');if(!b)return;staff.splice(Number(b.dataset.del),1);renderEditor()};
  editor.oninput=e=>{if(!e.target.dataset.k)return;staff[Number(e.target.dataset.i)][e.target.dataset.k]=e.target.value};
