@@ -1884,7 +1884,7 @@ function openProtectedArea(type){
     const on=sessionStorage.getItem(KEY)==='1';
     document.body.classList.toggle('admin-mode',on);
     const b=document.getElementById('adminModeToggle');
-    if(b) b.textContent=on?'管理モード終了':'管理者';
+    if(b) b.textContent=on?'管理モード終了':'管理';
   }
   window.enableAdminMode=function(){
     if(document.body.classList.contains('admin-mode')){
