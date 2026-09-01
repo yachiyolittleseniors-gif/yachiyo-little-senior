@@ -110,13 +110,8 @@ async function verify(p){
       headers:{'content-type':'application/json','x-admin-password':p},
       body:JSON.stringify({data:[rules]})
     });
-    if(r.ok) return {ok:true};
-    let detail='';
-    try{ detail=(await r.json()).error||''; }catch(e){}
-    return {ok:false,status:r.status,detail};
-  }catch(e){
-    return {ok:false,status:0,detail:'network'};
-  }
+    return r.ok;
+  }catch(e){return false}
 }
 async function toggleAdmin(){
   if(document.body.classList.contains('admin-mode')){
@@ -128,14 +123,9 @@ async function toggleAdmin(){
   const p=prompt('管理者パスワードを入力してください');
   if(!p)return;
   document.getElementById('status').textContent='確認中...';
-  const result=await verify(p);
-  if(!result.ok){
+  if(!(await verify(p))){
+    alert('管理者パスワードが違います。');
     document.getElementById('status').textContent='';
-    if(result.status===401){
-      alert('管理者パスワードが違います。');
-    }else{
-      alert('管理機能の接続設定を確認してください。');
-    }
     return;
   }
   sessionStorage.setItem('yachiyoAdminPassword',p);
