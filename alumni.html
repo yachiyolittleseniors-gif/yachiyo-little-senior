@@ -1293,6 +1293,20 @@ img,video,iframe{max-width:100%}
   .restored-footer-nav>a.footer-board-full{grid-column:1/-1!important}
 }
 </style>
+
+<style id="alumni-edit-style">
+.alumni-edit-btn{display:block;margin:26px auto 0;border:1px solid #c79a3b;background:#071426;color:#d8b45c;border-radius:999px;padding:12px 24px;font-weight:800}
+.alumni-admin{display:none;margin-top:24px;padding-top:20px;border-top:1px solid #dedbd4}
+body.alumni-editing .alumni-admin{display:block}
+.alumni-editor-group{margin:0 0 18px}
+.alumni-editor-group label{display:block;font-weight:800;color:#101827;margin-bottom:7px}
+.alumni-editor-group textarea{width:100%;box-sizing:border-box;min-height:120px;border:1px solid #cfd4db;border-radius:12px;padding:13px;font:inherit;line-height:1.8;resize:vertical}
+.alumni-actions{display:flex;gap:10px;justify-content:center;flex-wrap:wrap}
+.alumni-actions button{border:0;border-radius:999px;padding:11px 18px;font-weight:800}
+#alumniSave{background:#c79a3b;color:#071426}#alumniCancel{background:#e9edf2;color:#101827}
+#alumniPublic p{white-space:pre-wrap;overflow-wrap:anywhere}
+</style>
+
 </head>
 <body>
 <header class="header">
@@ -1360,7 +1374,7 @@ img,video,iframe{max-width:100%}
 </div>
 
 
-<section class="page show" id="alumni"><div class="pagehero"><div class="pagehero-inner"><div class="eyebrow">ALUMNI</div><h1>卒団生の進学先</h1><div class="crumb">HOME / 卒団生</div></div></div><div class="container"><div class="card"><p>公式サイト掲載の主な進学先をカテゴリー表示するページです。</p><div class="grid3"><div><h3>千葉県内</h3><p>八千代東・市立習志野・千葉英和・東海大市原望洋・東海大浦安・流経大柏・拓大紅陵・市立船橋・八千代松陰・佐倉・日大習志野・八千代 ほか</p></div><div><h3>東京都内</h3><p>修徳高校・日本大学第一高校 ほか</p></div><div><h3>他県</h3><p>江戸川学園取手・日南学園 ほか</p></div></div></div></div></section>
+<section class="page show" id="alumni"><div class="pagehero"><div class="pagehero-inner"><div class="eyebrow">ALUMNI</div><h1>卒団生の進学先</h1><div class="crumb">HOME / 卒団生</div></div></div><div class="container"><div class="card alumni-card"><p>公式サイト掲載の主な進学先をカテゴリー表示するページです。</p><div id="alumniPublic" class="grid3"></div><button type="button" id="alumniEditBtn" class="alumni-edit-btn">管理者編集</button><div id="alumniAdmin" class="alumni-admin"><div id="alumniEditor"></div><div class="alumni-actions"><button type="button" id="alumniSave">保存</button><button type="button" id="alumniCancel">キャンセル</button></div></div></div></div></section>
 
 
 <script>
@@ -1465,5 +1479,66 @@ function openProtectedArea(type){
   });
 })();
 </script>
+
+<script>
+(function(){
+ const API='/.netlify/functions/site-data?section=alumni';
+ const defaults=[
+  {category:'千葉県内',text:'八千代東・市立習志野・千葉英和・東海大市原望洋・東海大浦安・流経大柏・拓大紅陵・市立船橋・八千代松陰・佐倉・日大習志野・八千代 ほか'},
+  {category:'東京都内',text:'修徳高校・日本大学第一高校 ほか'},
+  {category:'他県',text:'江戸川学園取手・日南学園 ほか'}
+ ];
+ let data=defaults.map(x=>({...x}));
+ const pub=document.getElementById('alumniPublic');
+ const editor=document.getElementById('alumniEditor');
+ const esc=s=>String(s??'').replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));
+ function render(){
+   pub.innerHTML=data.map(x=>`<div><h3>${esc(x.category)}</h3><p>${esc(x.text)}</p></div>`).join('');
+ }
+ function renderEditor(){
+   editor.innerHTML=data.map((x,i)=>`<div class="alumni-editor-group"><label>${esc(x.category)}</label><textarea data-i="${i}">${esc(x.text)}</textarea></div>`).join('');
+ }
+ async function load(){
+   try{
+     const r=await fetch(API,{cache:'no-store'});
+     if(r.ok){
+       const j=await r.json();
+       if(Array.isArray(j.data)&&j.data.length) data=j.data;
+     }
+   }catch(e){}
+   render();
+ }
+ async function openAdmin(){
+   let pw=sessionStorage.getItem('yachiyoAdminPassword')||'';
+   if(!pw) pw=prompt('管理者パスワードを入力してください')||'';
+   if(!pw)return;
+   try{
+     const r=await fetch(API,{method:'POST',headers:{'content-type':'application/json','x-admin-password':pw},body:JSON.stringify({data})});
+     if(r.status===401){alert('管理者パスワードが違います。');return}
+     if(!r.ok){alert('管理機能の接続設定を確認してください。');return}
+     sessionStorage.setItem('yachiyoAdminPassword',pw);
+     document.body.classList.add('alumni-editing');
+     renderEditor();
+   }catch(e){alert('管理機能に接続できませんでした。')}
+ }
+ document.getElementById('alumniEditBtn').onclick=openAdmin;
+ editor.oninput=e=>{
+   if(e.target.tagName!=='TEXTAREA')return;
+   data[Number(e.target.dataset.i)].text=e.target.value;
+ };
+ document.getElementById('alumniCancel').onclick=()=>{document.body.classList.remove('alumni-editing');load()};
+ document.getElementById('alumniSave').onclick=async()=>{
+   const pw=sessionStorage.getItem('yachiyoAdminPassword')||'';
+   try{
+     const r=await fetch(API,{method:'POST',headers:{'content-type':'application/json','x-admin-password':pw},body:JSON.stringify({data})});
+     if(r.status===401){alert('管理者パスワードが違います。');return}
+     if(!r.ok){alert('保存できませんでした。');return}
+     document.body.classList.remove('alumni-editing');render();alert('保存しました。');
+   }catch(e){alert('保存できませんでした。')}
+ };
+ load();
+})();
+</script>
+
 </body>
 </html>
