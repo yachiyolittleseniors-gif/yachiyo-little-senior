@@ -1372,7 +1372,24 @@ img,video,iframe{max-width:100%}
 </div>
 
 
-<section class="page show" id="alumni"><div class="pagehero"><div class="pagehero-inner"><div class="eyebrow">ALUMNI</div><h1>卒団生の進学先</h1><div class="crumb">HOME / 卒団生</div></div></div><div class="container"><div class="card"><p>卒団生の主な進学先</p><div class="grid3 alumni-public"><div><h3>千葉県内</h3><p id="alumniChiba">八千代東・市立習志野・千葉英和・東海大市原望洋・東海大浦安・流経大柏・拓大紅陵・市立船橋・八千代松陰・佐倉・日大習志野・八千代 ほか</p></div><div><h3>東京都内</h3><p id="alumniTokyo">修徳高校・日本大学第一高校 ほか</p></div><div><h3>他県</h3><p id="alumniOther">江戸川学園取手・日南学園 ほか</p></div></div><div id="alumniEditor" style="display:none;margin-top:28px;border-top:1px solid #ddd;padding-top:22px"><h3 style="margin-top:0">進学先を編集</h3><label style="display:block;font-weight:700;margin:14px 0 6px">千葉県内</label><textarea id="editChiba" style="width:100%;min-height:110px;padding:12px;font:inherit"></textarea><label style="display:block;font-weight:700;margin:14px 0 6px">東京都内</label><textarea id="editTokyo" style="width:100%;min-height:90px;padding:12px;font:inherit"></textarea><label style="display:block;font-weight:700;margin:14px 0 6px">他県</label><textarea id="editOther" style="width:100%;min-height:90px;padding:12px;font:inherit"></textarea><button id="saveAlumni" type="button" style="margin-top:16px;border:0;background:#c79a3b;color:#071426;font-weight:800;padding:13px 24px;border-radius:6px">保存する</button><span id="alumniStatus" style="margin-left:12px;font-size:13px"></span></div></div></div></section><button id="alumniAdminBtn" type="button" style="position:fixed;right:18px;bottom:18px;z-index:9998;border:1px solid #c79a3b;background:#071426;color:#e2bd67;padding:11px 15px;border-radius:999px;font-weight:700;box-shadow:0 5px 18px rgba(0,0,0,.25)">管理</button>
+<section class="page show" id="alumni"><div class="pagehero"><div class="pagehero-inner"><div class="eyebrow">ALUMNI</div><h1>卒団生の進学先</h1><div class="crumb">HOME / 卒団生</div></div></div><div class="container"><div class="card"><p>卒団生の主な進学先</p><div class="grid3 alumni-public"><div><h3>千葉県内</h3><p id="alumniChiba">八千代東・市立習志野・千葉英和・東海大市原望洋・東海大浦安・流経大柏・拓大紅陵・市立船橋・八千代松陰・佐倉・日大習志野・八千代 ほか</p></div><div><h3>東京都内</h3><p id="alumniTokyo">修徳高校・日本大学第一高校 ほか</p></div><div><h3>他県</h3><p id="alumniOther">江戸川学園取手・日南学園 ほか</p></div></div><div id="alumniEditor" style="display:none;margin-top:28px;border-top:1px solid #ddd;padding-top:22px"><h3 style="margin-top:0">進学先を編集</h3><label style="display:block;font-weight:700;margin:14px 0 6px">千葉県内</label><textarea id="editChiba" style="width:100%;min-height:110px;padding:12px;font:inherit"></textarea><label style="display:block;font-weight:700;margin:14px 0 6px">東京都内</label><textarea id="editTokyo" style="width:100%;min-height:90px;padding:12px;font:inherit"></textarea><label style="display:block;font-weight:700;margin:14px 0 6px">他県</label><textarea id="editOther" style="width:100%;min-height:90px;padding:12px;font:inherit"></textarea><button id="saveAlumni" type="button" style="margin-top:16px;border:0;background:#c79a3b;color:#071426;font-weight:800;padding:13px 24px;border-radius:6px">保存する</button><span id="alumniStatus" style="margin-left:12px;font-size:13px"></span></div></div></div></section><button id="alumniAdminBtn" type="button" onclick="openAlumniAdmin()" style="position:fixed;right:18px;bottom:18px;z-index:9998;border:1px solid #c79a3b;background:#071426;color:#e2bd67;padding:11px 15px;border-radius:999px;font-weight:700;box-shadow:0 5px 18px rgba(0,0,0,.25);cursor:pointer;-webkit-tap-highlight-color:transparent;touch-action:manipulation">管理</button>
+<script>
+function openAlumniAdmin(){
+  var editor=document.getElementById('alumniEditor');
+  if(!editor){ alert('編集画面を開けませんでした。'); return; }
+  var pw=sessionStorage.getItem('yachiyoAdminPassword')||'';
+  if(!pw){
+    pw=prompt('管理者パスワードを入力してください')||'';
+    if(!pw) return;
+    sessionStorage.setItem('yachiyoAdminPassword',pw);
+  }
+  sessionStorage.setItem('yachiyoAdminMode','1');
+  editor.style.display='block';
+  setTimeout(function(){
+    editor.scrollIntoView({behavior:'smooth',block:'start'});
+  },50);
+}
+</script>
 
 
 <script>
@@ -1486,7 +1503,7 @@ function openProtectedArea(type){
  const $=id=>document.getElementById(id);
  function render(){ $('alumniChiba').textContent=data.chiba||defaults.chiba; $('alumniTokyo').textContent=data.tokyo||defaults.tokyo; $('alumniOther').textContent=data.other||defaults.other; $('editChiba').value=data.chiba||defaults.chiba; $('editTokyo').value=data.tokyo||defaults.tokyo; $('editOther').value=data.other||defaults.other; }
  async function load(){ try{ const r=await fetch(API+'?section=alumni',{cache:'no-store'}); if(r.ok){ const j=await r.json(); const v=(j&&j.data!==undefined)?j.data:j; if(v&&typeof v==='object'&&!Array.isArray(v)) data={...data,...v}; } }catch(e){} render(); }
- $('alumniAdminBtn').addEventListener('click',function(){ let pw=sessionStorage.getItem('yachiyoAdminPassword')||''; if(!pw) pw=prompt('管理者パスワードを入力してください')||''; if(!pw)return; sessionStorage.setItem('yachiyoAdminPassword',pw); sessionStorage.setItem('yachiyoAdminMode','1'); $('alumniEditor').style.display='block'; $('alumniEditor').scrollIntoView({behavior:'smooth',block:'center'}); });
+ 
  $('saveAlumni').addEventListener('click',async function(){ const pw=sessionStorage.getItem('yachiyoAdminPassword')||''; if(!pw){alert('管理者ログインが必要です');return;} const next={chiba:$('editChiba').value.trim(),tokyo:$('editTokyo').value.trim(),other:$('editOther').value.trim()}; $('alumniStatus').textContent='保存中…'; try{ const r=await fetch(API+'?section=alumni',{method:'POST',headers:{'Content-Type':'application/json','x-admin-password':pw},body:JSON.stringify({data:next})}); if(!r.ok) throw new Error('save failed'); data=next; render(); $('alumniStatus').textContent='保存しました'; setTimeout(()=>$('alumniStatus').textContent='',2500); }catch(e){ $('alumniStatus').textContent='保存できませんでした'; alert('保存できませんでした。管理者パスワードまたは設定を確認してください。'); } });
  if(sessionStorage.getItem('yachiyoAdminMode')==='1'&&sessionStorage.getItem('yachiyoAdminPassword')) $('alumniEditor').style.display='block';
  load();
