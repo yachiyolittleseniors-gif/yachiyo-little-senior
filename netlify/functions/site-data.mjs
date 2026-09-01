@@ -1,6 +1,6 @@
 import { getStore } from "@netlify/blobs";
 
-const allowed = new Set(["schedule", "results", "gallery", "players", "hero", "photos", "news", "rules", "staff"]);
+const allowed = new Set(["schedule", "results", "gallery", "players", "hero", "photos", "news", "rules", "staff", "alumni"]);
 
 function json(data, status = 200) {
   return new Response(JSON.stringify(data), {
