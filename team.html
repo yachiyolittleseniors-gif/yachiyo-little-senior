@@ -1330,7 +1330,7 @@ img,video,iframe{max-width:100%}
 .staff-row:last-child{border-bottom:0}.staff-role{border:1px solid #c9a24c;background:#071f39;color:#e1bc65;border-radius:8px;padding:10px 8px;text-align:center;font-weight:800}.staff-name{font-size:18px;font-weight:800;letter-spacing:.05em;color:#07182c}
 .staff-admin{display:none;margin-top:20px;padding-top:18px;border-top:1px solid rgba(255,255,255,.14)}body.staff-editing .staff-admin{display:block}
 .staff-edit-btn,.staff-add,.staff-save,.staff-cancel,.staff-delete{border:0;border-radius:999px;font-weight:800;cursor:pointer}
-.staff-edit-btn{position:fixed;right:18px;bottom:18px;z-index:9998;margin:0;padding:9px 12px;background:#071426;border:1px solid rgba(199,154,59,.65);color:#e2bd67;border-radius:999px;font-size:12px;font-weight:800;box-shadow:0 8px 22px rgba(0,0,0,.18);cursor:pointer;opacity:.82;display:none!important}.staff-edit-btn:hover{opacity:1}@media(max-width:650px){.staff-edit-btn{right:12px;bottom:74px;padding:8px 10px;font-size:11px}}
+.staff-edit-btn{position:fixed;right:18px;bottom:18px;z-index:10050;margin:0;padding:9px 12px;background:#071426;border:1px solid rgba(199,154,59,.65);color:#e2bd67;border-radius:999px;font-size:12px;font-weight:800;box-shadow:0 8px 22px rgba(0,0,0,.18);cursor:pointer;opacity:.82;display:none}.staff-edit-btn.admin-revealed{display:block!important}.staff-edit-btn:hover{opacity:1}@media(max-width:650px){.staff-edit-btn{right:12px;bottom:74px;padding:8px 10px;font-size:11px}}
 .staff-admin-actions{display:flex;gap:9px;justify-content:center;flex-wrap:wrap}.staff-add,.staff-save,.staff-cancel{padding:10px 16px}.staff-add,.staff-save{background:#c9a24c;color:#071426}.staff-cancel{background:#fff;color:#17202b}.staff-delete{padding:7px 11px;background:#fff;color:#9d2633}
 .staff-editor-row{display:grid;grid-template-columns:1fr 1.5fr auto;gap:8px;margin:9px 0}.staff-editor-row input{width:100%;box-sizing:border-box;border:1px solid #d8dde3;border-radius:9px;padding:11px;font-size:16px}
 @media(max-width:600px){.staff-panel{padding:22px 15px;border-radius:17px}.staff-row{grid-template-columns:105px 1fr;gap:12px}.staff-role{font-size:13px;padding:9px 5px}.staff-name{font-size:16px}.staff-editor-row{grid-template-columns:1fr}.staff-delete{justify-self:end}}
@@ -1620,11 +1620,56 @@ function openProtectedArea(type){
      document.body.classList.add('staff-editing'); renderEditor();
    }catch(e){alert('管理機能に接続できませんでした。')}
  }
- document.getElementById('staffEditBtn').onclick=verifyAndOpen;
+ const adminBtn=document.getElementById('staffEditBtn');
+ const footer=document.querySelector('.restored-footer');
+ let footerTapCount=0, footerTapTimer=null;
+
+ function hideAdminButton(){
+   adminBtn.textContent='管理';
+   adminBtn.classList.remove('admin-revealed');
+   sessionStorage.removeItem('yachiyoAdminMode');
+ }
+
+ function footerSecretTap(e){
+   if(adminBtn.classList.contains('admin-revealed') || !footer) return;
+   const r=footer.getBoundingClientRect();
+   let x=e.clientX;
+   if(e.changedTouches && e.changedTouches.length) x=e.changedTouches[0].clientX;
+   if(x < r.left + r.width*0.65) return;
+   footerTapCount++;
+   clearTimeout(footerTapTimer);
+   footerTapTimer=setTimeout(()=>footerTapCount=0,1600);
+   if(footerTapCount>=3){
+     footerTapCount=0;
+     clearTimeout(footerTapTimer);
+     adminBtn.classList.add('admin-revealed');
+   }
+ }
+
+ if(footer){
+   footer.addEventListener('touchend',footerSecretTap,{passive:true});
+   footer.addEventListener('click',e=>{
+     if(!('ontouchstart' in window)) footerSecretTap(e);
+   });
+ }
+
+ adminBtn.onclick=async()=>{
+   if(document.body.classList.contains('staff-editing')){
+     document.body.classList.remove('staff-editing');
+     hideAdminButton();
+     load();
+     return;
+   }
+   await verifyAndOpen();
+   if(document.body.classList.contains('staff-editing')){
+     adminBtn.textContent='管理終了';
+     sessionStorage.setItem('yachiyoAdminMode','1');
+   }
+ };
  document.getElementById('staffAdd').onclick=()=>{staff.push({role:'',name:''});renderEditor()};
  editor.onclick=e=>{const b=e.target.closest('[data-del]');if(!b)return;staff.splice(Number(b.dataset.del),1);renderEditor()};
  editor.oninput=e=>{if(!e.target.dataset.k)return;staff[Number(e.target.dataset.i)][e.target.dataset.k]=e.target.value};
- document.getElementById('staffCancel').onclick=()=>{document.body.classList.remove('staff-editing');load()};
+ document.getElementById('staffCancel').onclick=()=>{document.body.classList.remove('staff-editing');hideAdminButton();load()};
  document.getElementById('staffSave').onclick=async()=>{
    const p=sessionStorage.getItem('yachiyoAdminPassword')||'';
    const clean=staff.map(x=>({role:String(x.role||'').trim(),name:String(x.name||'').trim()})).filter(x=>x.role||x.name);
@@ -1632,84 +1677,11 @@ function openProtectedArea(type){
      const r=await fetch(API,{method:'POST',headers:{'content-type':'application/json','x-admin-password':p},body:JSON.stringify({data:clean})});
      if(r.status===401){alert('管理者パスワードが違います。');return}
      if(!r.ok){alert('保存できませんでした。');return}
-     staff=clean;render();document.body.classList.remove('staff-editing');alert('保存しました。');
+     staff=clean;render();document.body.classList.remove('staff-editing');hideAdminButton();alert('保存しました。');
    }catch(e){alert('保存できませんでした。')}
  };
  load();
 })();
 </script>
-
-<style>
-#adminSecretCorner{
-  position:fixed;
-  right:0;
-  bottom:0;
-  width:120px;
-  height:120px;
-  z-index:10040;
-  background:transparent;
-  -webkit-tap-highlight-color:transparent;
-  touch-action:manipulation;
-}
-#staffEditBtn.admin-secret-visible{
-  display:block!important;
-  visibility:visible!important;
-  opacity:1!important;
-  z-index:10050!important;
-}
-</style>
-<div id="adminSecretCorner" aria-hidden="true"></div>
-<script>
-(function(){
-  const corner=document.getElementById('adminSecretCorner');
-  const btn=document.getElementById('staffEditBtn');
-  if(!corner || !btn) return;
-
-  let count=0;
-  let timer=null;
-
-  function tap(){
-    count++;
-    clearTimeout(timer);
-    timer=setTimeout(function(){ count=0; },1500);
-    if(count>=3){
-      count=0;
-      clearTimeout(timer);
-      btn.classList.add('admin-secret-visible');
-      corner.style.display='none';
-    }
-  }
-
-  corner.addEventListener('touchend',function(e){
-    e.preventDefault();
-    tap();
-  },{passive:false});
-
-  corner.addEventListener('click',function(e){
-    e.preventDefault();
-    tap();
-  });
-
-  const originalClick=btn.onclick;
-  btn.addEventListener('click',function(){
-    setTimeout(function(){
-      if(document.body.classList.contains('staff-editing')){
-        btn.textContent='管理終了';
-      }
-    },50);
-  });
-
-  // 管理終了後は再び隠して秘密領域を戻す
-  const observer=new MutationObserver(function(){
-    if(!document.body.classList.contains('staff-editing') && btn.textContent==='管理終了'){
-      btn.textContent='管理';
-      btn.classList.remove('admin-secret-visible');
-      corner.style.display='block';
-    }
-  });
-  observer.observe(document.body,{attributes:true,attributeFilter:['class']});
-})();
-</script>
-
 </body>
 </html>
