@@ -1332,6 +1332,20 @@ img,video,iframe{max-width:100%}
   .restored-footer-nav>a.footer-board-full{grid-column:1/-1!important}
 }
 </style>
+
+<style>
+.staff-panel{margin-top:22px;background:linear-gradient(145deg,#07182c,#0b2744);border:1px solid #c9a24c;border-radius:20px;padding:26px 22px;color:#fff;box-shadow:0 18px 42px rgba(5,20,38,.16)}
+.staff-head{text-align:center;margin-bottom:18px}.staff-head .en{color:#d3ad58;letter-spacing:.16em}.staff-head h2{margin:5px 0 2px;color:#fff}
+.staff-list{max-width:760px;margin:auto}.staff-row{display:grid;grid-template-columns:145px 1fr auto;align-items:center;gap:16px;padding:16px 0;border-bottom:1px solid rgba(211,173,88,.34)}
+.staff-row:last-child{border-bottom:0}.staff-role{border:1px solid #d3ad58;color:#e1bc65;border-radius:8px;padding:10px 8px;text-align:center;font-weight:800}.staff-name{font-size:18px;font-weight:800;letter-spacing:.05em}
+.staff-admin{display:none;margin-top:20px;padding-top:18px;border-top:1px solid rgba(255,255,255,.14)}body.staff-editing .staff-admin{display:block}
+.staff-edit-btn,.staff-add,.staff-save,.staff-cancel,.staff-delete{border:0;border-radius:999px;font-weight:800;cursor:pointer}
+.staff-edit-btn{display:block;margin:20px auto 0;padding:11px 20px;background:transparent;border:1px solid #d3ad58;color:#e1bc65}
+.staff-admin-actions{display:flex;gap:9px;justify-content:center;flex-wrap:wrap}.staff-add,.staff-save,.staff-cancel{padding:10px 16px}.staff-add,.staff-save{background:#c9a24c;color:#071426}.staff-cancel{background:#fff;color:#17202b}.staff-delete{padding:7px 11px;background:#fff;color:#9d2633}
+.staff-editor-row{display:grid;grid-template-columns:1fr 1.5fr auto;gap:8px;margin:9px 0}.staff-editor-row input{width:100%;box-sizing:border-box;border:1px solid #d8dde3;border-radius:9px;padding:11px;font-size:16px}
+@media(max-width:600px){.staff-panel{padding:22px 15px;border-radius:17px}.staff-row{grid-template-columns:105px 1fr;gap:12px}.staff-role{font-size:13px;padding:9px 5px}.staff-name{font-size:16px}.staff-editor-row{grid-template-columns:1fr}.staff-delete{justify-self:end}}
+</style>
+
 </head>
 <body>
 <header class="header">
@@ -1445,6 +1459,24 @@ img,video,iframe{max-width:100%}
     </div>
   </div>
 </div>
+
+<div class="staff-panel" id="staffPanel">
+  <div class="staff-head">
+    <div class="en">COACH &amp; STAFF</div>
+    <h2>指導者・スタッフ一覧</h2>
+  </div>
+  <div class="staff-list" id="staffPublic"></div>
+  <button type="button" class="staff-edit-btn" id="staffEditBtn">管理者編集</button>
+  <div class="staff-admin" id="staffAdmin">
+    <div id="staffEditor"></div>
+    <div class="staff-admin-actions">
+      <button type="button" class="staff-add" id="staffAdd">＋ 追加</button>
+      <button type="button" class="staff-save" id="staffSave">保存</button>
+      <button type="button" class="staff-cancel" id="staffCancel">キャンセル</button>
+    </div>
+  </div>
+</div>
+
 </div></section>
 
 
@@ -1581,5 +1613,59 @@ function openProtectedArea(type){
   });
 })();
 </script>
+
+<script>
+(function(){
+ const API='/.netlify/functions/site-data?section=staff';
+ const defaults=[
+  {role:'監督',name:'早坂 徹'},
+  {role:'ヘッドコーチ',name:'平田 祥之'},
+  {role:'コーチ',name:'河野 剛'},
+  {role:'学生コーチ',name:'学生コーチ'}
+ ];
+ let staff=defaults.slice();
+ const pub=document.getElementById('staffPublic'), editor=document.getElementById('staffEditor');
+ const esc=s=>String(s??'').replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));
+ function render(){
+   pub.innerHTML=staff.map(x=>`<div class="staff-row"><div class="staff-role">${esc(x.role)}</div><div class="staff-name">${esc(x.name)}</div></div>`).join('');
+ }
+ function renderEditor(){
+   editor.innerHTML=staff.map((x,i)=>`<div class="staff-editor-row"><input data-i="${i}" data-k="role" value="${esc(x.role)}" placeholder="役職"><input data-i="${i}" data-k="name" value="${esc(x.name)}" placeholder="名前"><button type="button" class="staff-delete" data-del="${i}">削除</button></div>`).join('');
+ }
+ async function load(){
+   try{const r=await fetch(API,{cache:'no-store'}); if(r.ok){const j=await r.json(); if(Array.isArray(j.data)&&j.data.length) staff=j.data;}}catch(e){}
+   render();
+ }
+ async function verifyAndOpen(){
+   let p=sessionStorage.getItem('yachiyoAdminPassword')||'';
+   if(!p) p=prompt('管理者パスワードを入力してください')||'';
+   if(!p) return;
+   try{
+     const r=await fetch(API,{method:'POST',headers:{'content-type':'application/json','x-admin-password':p},body:JSON.stringify({data:staff})});
+     if(r.status===401){alert('管理者パスワードが違います。');return}
+     if(!r.ok){alert('管理機能の接続設定を確認してください。');return}
+     sessionStorage.setItem('yachiyoAdminPassword',p);
+     document.body.classList.add('staff-editing'); renderEditor();
+   }catch(e){alert('管理機能に接続できませんでした。')}
+ }
+ document.getElementById('staffEditBtn').onclick=verifyAndOpen;
+ document.getElementById('staffAdd').onclick=()=>{staff.push({role:'',name:''});renderEditor()};
+ editor.onclick=e=>{const b=e.target.closest('[data-del]');if(!b)return;staff.splice(Number(b.dataset.del),1);renderEditor()};
+ editor.oninput=e=>{if(!e.target.dataset.k)return;staff[Number(e.target.dataset.i)][e.target.dataset.k]=e.target.value};
+ document.getElementById('staffCancel').onclick=()=>{document.body.classList.remove('staff-editing');load()};
+ document.getElementById('staffSave').onclick=async()=>{
+   const p=sessionStorage.getItem('yachiyoAdminPassword')||'';
+   const clean=staff.map(x=>({role:String(x.role||'').trim(),name:String(x.name||'').trim()})).filter(x=>x.role||x.name);
+   try{
+     const r=await fetch(API,{method:'POST',headers:{'content-type':'application/json','x-admin-password':p},body:JSON.stringify({data:clean})});
+     if(r.status===401){alert('管理者パスワードが違います。');return}
+     if(!r.ok){alert('保存できませんでした。');return}
+     staff=clean;render();document.body.classList.remove('staff-editing');alert('保存しました。');
+   }catch(e){alert('保存できませんでした。')}
+ };
+ load();
+})();
+</script>
+
 </body>
 </html>
