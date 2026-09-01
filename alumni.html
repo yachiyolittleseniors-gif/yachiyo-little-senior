@@ -1488,9 +1488,11 @@ function openProtectedArea(type){
  async function load(){ try{ const r=await fetch(API+'?section=alumni',{cache:'no-store'}); if(r.ok){ const j=await r.json(); const v=(j&&j.data!==undefined)?j.data:j; if(v&&typeof v==='object'&&!Array.isArray(v)) data={...data,...v}; } }catch(e){} render(); }
  $('alumniAdminBtn').addEventListener('click',function(){
   const editor=$('alumniEditor');
+  const btn=$('alumniAdminBtn');
 
   if(editor.style.display==='block'){
     editor.style.display='none';
+    btn.textContent='管理';
     sessionStorage.removeItem('yachiyoAdminMode');
     sessionStorage.removeItem('yachiyoAdminPassword');
     return;
@@ -1502,6 +1504,7 @@ function openProtectedArea(type){
   sessionStorage.setItem('yachiyoAdminPassword',pw);
   sessionStorage.setItem('yachiyoAdminMode','1');
   editor.style.display='block';
+  btn.textContent='管理終了';
 
   setTimeout(()=>{
     editor.scrollIntoView({behavior:'smooth',block:'start'});
