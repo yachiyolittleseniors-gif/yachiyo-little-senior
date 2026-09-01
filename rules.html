@@ -1,0 +1,146 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>チーム規約 | 八千代リトルシニア</title>
+<meta name="description" content="八千代リトルシニアのチーム規約です。">
+<style>
+*{box-sizing:border-box}body{margin:0;background:#f6f5f1;color:#0a1729;font-family:-apple-system,BlinkMacSystemFont,"Noto Sans JP","Yu Gothic",sans-serif}
+header{background:#07162b;color:#fff;border-top:2px solid #caa64b;padding:22px 18px}
+.head{max-width:1050px;margin:auto;display:flex;justify-content:space-between;align-items:center}
+.head a{color:#fff;text-decoration:none;font-weight:800}.gold{color:#d7b45c}
+.hero{background:#07162b;color:#fff;padding:48px 20px 54px;border-bottom:1px solid #caa64b}
+.hero>div{max-width:1050px;margin:auto}.eyebrow{letter-spacing:.22em;color:#d7b45c;font-weight:800}.hero h1{font-family:serif;font-size:clamp(40px,8vw,68px);margin:18px 0 0}
+main{max-width:900px;margin:0 auto;padding:36px 18px 80px}
+.card{background:#fff;border:1px solid #ddd8cd;border-radius:22px;padding:28px 22px;box-shadow:0 12px 32px rgba(0,0,0,.06)}
+#rulesText{white-space:pre-wrap;line-height:2;font-size:16px}
+.empty{color:#697383}
+.pdfbox{margin-top:24px}.pdfbox iframe{width:100%;height:70vh;border:1px solid #ddd;border-radius:14px;background:#fff}
+.pdf-link{display:inline-block;margin-top:12px;color:#8d6819;font-weight:800}
+.admin{display:none;margin-top:26px;padding-top:24px;border-top:1px solid #ddd}.admin-mode .admin{display:block}
+textarea{width:100%;min-height:260px;padding:14px;border:1px solid #c9c9c9;border-radius:12px;font:inherit;line-height:1.7}
+input[type=file]{width:100%;margin:14px 0}
+button{border:0;border-radius:12px;padding:13px 18px;font-weight:800;cursor:pointer}
+.save{background:#caa64b;color:#07162b}.remove{background:#eee;color:#222;margin-left:8px}
+.adminToggle{position:fixed;right:18px;bottom:18px;z-index:50;border:1px solid #caa64b;background:#07162b;color:#fff;border-radius:999px;padding:14px 18px}
+.status{margin-top:10px;font-size:14px}
+@media(max-width:600px){main{padding:24px 14px 70px}.card{padding:22px 16px}.pdfbox iframe{height:58vh}}
+</style>
+</head>
+<body>
+<header><div class="head"><a href="./index.html">八千代リトルシニア</a><a href="./index.html">HOME</a></div></header>
+<section class="hero"><div><div class="eyebrow">TEAM RULES</div><h1>チーム規約</h1></div></section>
+<main>
+  <div class="card">
+    <div id="rulesText" class="empty">現在、公開中のチーム規約はありません。</div>
+    <div id="pdfBox" class="pdfbox" hidden>
+      <iframe id="pdfFrame" title="チーム規約PDF"></iframe>
+      <a id="pdfLink" class="pdf-link" target="_blank" rel="noopener">PDFを開く →</a>
+    </div>
+
+    <div class="admin">
+      <h2>チーム規約を編集</h2>
+      <p>文章を入力するか、PDFを選択できます。両方の掲載も可能です。</p>
+      <textarea id="rulesInput" placeholder="チーム規約を入力してください"></textarea>
+      <input id="pdfInput" type="file" accept="application/pdf">
+      <div>
+        <button class="save" type="button" onclick="saveRules()">保存</button>
+        <button class="remove" type="button" onclick="removePdf()">PDFを削除</button>
+      </div>
+      <div id="status" class="status"></div>
+    </div>
+  </div>
+</main>
+<button id="adminBtn" class="adminToggle" type="button" onclick="toggleAdmin()">管理者</button>
+
+<script>
+let rules={text:'',pdf:'',pdfName:''};
+
+async function loadRules(){
+  try{
+    const r=await fetch('/.netlify/functions/site-data?section=rules',{cache:'no-store'});
+    if(r.ok){
+      const j=await r.json();
+      const d=Array.isArray(j.data)?j.data:[];
+      if(d[0]) rules={text:d[0].text||'',pdf:d[0].pdf||'',pdfName:d[0].pdfName||''};
+    }
+  }catch(e){}
+  renderRules();
+}
+function renderRules(){
+  const t=document.getElementById('rulesText');
+  t.textContent=rules.text || '現在、公開中のチーム規約はありません。';
+  t.classList.toggle('empty',!rules.text);
+  document.getElementById('rulesInput').value=rules.text||'';
+  const box=document.getElementById('pdfBox');
+  if(rules.pdf){
+    box.hidden=false;
+    document.getElementById('pdfFrame').src=rules.pdf;
+    document.getElementById('pdfLink').href=rules.pdf;
+  }else{
+    box.hidden=true;
+    document.getElementById('pdfFrame').removeAttribute('src');
+  }
+}
+async function verify(p){
+  try{
+    const r=await fetch('/.netlify/functions/site-data?section=rules',{
+      method:'POST',
+      headers:{'content-type':'application/json','x-admin-password':p},
+      body:JSON.stringify({data:[rules]})
+    });
+    return r.ok;
+  }catch(e){return false}
+}
+async function toggleAdmin(){
+  if(document.body.classList.contains('admin-mode')){
+    document.body.classList.remove('admin-mode');
+    sessionStorage.removeItem('yachiyoAdminPassword');
+    document.getElementById('adminBtn').textContent='管理者';
+    return;
+  }
+  const p=prompt('管理者パスワードを入力してください');
+  if(!p)return;
+  document.getElementById('status').textContent='確認中...';
+  if(!(await verify(p))){
+    alert('管理者パスワードが違います。');
+    document.getElementById('status').textContent='';
+    return;
+  }
+  sessionStorage.setItem('yachiyoAdminPassword',p);
+  document.body.classList.add('admin-mode');
+  document.getElementById('adminBtn').textContent='管理終了';
+  document.getElementById('status').textContent='';
+}
+function fileToDataURL(file){
+  return new Promise((resolve,reject)=>{
+    const fr=new FileReader();fr.onload=()=>resolve(fr.result);fr.onerror=reject;fr.readAsDataURL(file);
+  });
+}
+async function saveRules(){
+  const p=sessionStorage.getItem('yachiyoAdminPassword');
+  if(!p)return alert('管理者ログインが必要です。');
+  const f=document.getElementById('pdfInput').files[0];
+  if(f){
+    if(f.type!=='application/pdf')return alert('PDFファイルを選択してください。');
+    if(f.size>5*1024*1024)return alert('PDFは5MB以下にしてください。');
+    rules.pdf=await fileToDataURL(f);rules.pdfName=f.name;
+  }
+  rules.text=document.getElementById('rulesInput').value.trim();
+  const st=document.getElementById('status');st.textContent='保存中...';
+  const r=await fetch('/.netlify/functions/site-data?section=rules',{
+    method:'POST',headers:{'content-type':'application/json','x-admin-password':p},
+    body:JSON.stringify({data:[rules]})
+  });
+  if(!r.ok){st.textContent='保存できませんでした。';return}
+  st.textContent='保存しました。';document.getElementById('pdfInput').value='';renderRules();
+}
+async function removePdf(){
+  if(!confirm('掲載中のPDFを削除しますか？'))return;
+  rules.pdf='';rules.pdfName='';await saveRules();
+}
+document.addEventListener('DOMContentLoaded',()=>{sessionStorage.removeItem('yachiyoAdminPassword');loadRules()});
+</script>
+</body>
+</html>
