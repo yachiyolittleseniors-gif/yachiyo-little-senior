@@ -139,7 +139,7 @@ async function toggleAdmin(){
     b.style.display='none';
     return;
   }
-  const p=sessionStorage.getItem('yachiyoAdminPassword')||prompt('管理者パスワードを入力してください');
+  const p=prompt('管理者パスワードを入力してください');
   if(!p)return;
   document.getElementById('status').textContent='確認中...';
   if(!(await verify(p))){
@@ -186,14 +186,13 @@ async function removePdf(){
 document.addEventListener('DOMContentLoaded',()=>{
   loadRules();
   const b=document.getElementById('adminBtn');
-  if(sessionStorage.getItem('yachiyoAdminMode')==='1' && sessionStorage.getItem('yachiyoAdminPassword')){
-    document.body.classList.add('admin-mode');
-    b.textContent='管理終了';
-    b.style.display='block';
-  }else{
-    b.textContent='管理';
-    b.style.display='none';
-  }
+
+  // ページ更新・再読み込み時は必ず管理状態とパスワードを解除
+  sessionStorage.removeItem('yachiyoAdminMode');
+  sessionStorage.removeItem('yachiyoAdminPassword');
+  document.body.classList.remove('admin-mode');
+  b.textContent='管理';
+  b.style.display='none';
 
   let tapCount=0,tapTimer=null;
   document.addEventListener('pointerup',function(e){
