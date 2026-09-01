@@ -2117,7 +2117,7 @@ function openProtectedArea(type){
     const latestR=cleanResults.sort((a,b)=>(b.date||'').localeCompare(a.date||''))[0];
     const rc=document.querySelector('#latestResultCard .latest-meta');
     rc.innerHTML=latestR
-      ? `<strong>${esc(latestR.date||'')}</strong><br>${esc(latestR.tournament||'試合')}<br>八千代 ${Number(latestR.ourScore)} - ${Number(latestR.oppScore)} ${esc(latestR.opponent||'')}<br><a class="latest-link" href="./results.html">試合結果を見る →</a>`
+      ? `${latestR.grade?'<span style="display:inline-block;margin-bottom:10px;border:1px solid #d7b457;color:#9b771e;border-radius:999px;padding:4px 10px;font-weight:800">'+esc(latestR.grade)+'</span><br>':''}<strong>${esc(latestR.date||'')}</strong><br>${esc(latestR.tournament||'試合')}<br>八千代 ${Number(latestR.ourScore)} - ${Number(latestR.oppScore)} ${esc(latestR.opponent||'')}<br><a class="latest-link" href="./results.html">試合結果を見る →</a>`
       : `まだ試合結果は登録されていません。<br><a class="latest-link" href="./results.html">試合結果を見る →</a>`;
   }catch(e){
     document.querySelectorAll('.latest-meta').forEach(el=>el.textContent='最新情報を読み込めませんでした。');
