@@ -2161,14 +2161,25 @@ function openProtectedArea(type){
   loadHero();
 
   function setAdmin(on){
-    sessionStorage.setItem('yachiyoAdminMode',on?'1':'0');
-    change.style.display=on?'inline-block':'none';
-    toggle.textContent=on?'管理終了':'管理';
+    if(on){
+      sessionStorage.setItem('yachiyoAdminMode','1');
+      change.style.display='inline-block';
+      toggle.textContent='管理終了';
+    }else{
+      sessionStorage.removeItem('yachiyoAdminMode');
+      sessionStorage.removeItem('yachiyoAdminPassword');
+      change.style.display='none';
+      toggle.textContent='管理';
+    }
   }
-  if(sessionStorage.getItem('yachiyoAdminMode')==='1' && sessionStorage.getItem('yachiyoAdminPassword')){
-    document.getElementById('heroPhotoAdmin').style.display='flex';
-    setAdmin(true);
-  }
+
+  // ページ更新・再読み込み時は必ず管理状態とパスワードを解除
+  sessionStorage.removeItem('yachiyoAdminMode');
+  sessionStorage.removeItem('yachiyoAdminPassword');
+  document.body.classList.remove('photo-admin-on');
+  document.getElementById('heroPhotoAdmin').style.display='none';
+  change.style.display='none';
+  toggle.textContent='管理';
 
   // Hidden admin entrance: tap the bottom-right corner 3 times.
   let secretTapCount=0, secretTapTimer=null;
@@ -2190,8 +2201,7 @@ function openProtectedArea(type){
 
   toggle.addEventListener('click',function(){
     if(sessionStorage.getItem('yachiyoAdminMode')==='1'){setAdmin(false);document.getElementById('heroPhotoAdmin').style.display='none';return;}
-    const saved=sessionStorage.getItem('yachiyoAdminPassword')||'';
-    const pw=saved||prompt('管理パスワードを入力してください');
+    const pw=prompt('管理パスワードを入力してください');
     if(!pw)return;
     sessionStorage.setItem('yachiyoAdminPassword',pw);
     setAdmin(true);
