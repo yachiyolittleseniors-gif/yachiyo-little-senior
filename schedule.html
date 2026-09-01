@@ -6,7 +6,7 @@
 <meta content="width=device-width, initial-scale=1.0, viewport-fit=cover" name="viewport"/>
 <meta content="#071426" name="theme-color"/>
 <meta content="八千代リトルシニア｜硬式野球6年間計画。野球を通じて未来につながる人間力を育てる。" name="description"/>
-<title>予定 | 八千代リトルシニア</title>
+<title>スケジュール | 八千代リトルシニア</title>
 <style>
 :root{
   --navy:#071426; --navy2:#0c1d33; --gold:#c79a3b; --gold2:#e2bd67;
@@ -1253,7 +1253,7 @@ nav a *,
 <a href="./team.html">チーム紹介</a>
 <a href="./players.html">選手紹介</a>
 <a href="./results.html">試合結果</a>
-<a class="active" href="./schedule.html">予定</a>
+<a class="active" href="./schedule.html">スケジュール</a>
 <a href="./join.html">入団案内</a>
 <a href="./alumni.html">卒団生</a>
 <a href="./contact.html">お問い合わせ</a>
@@ -1269,7 +1269,7 @@ nav a *,
 <a href="./team.html" onclick="toggleMenu()">チーム紹介</a>
 <a href="./players.html" onclick="toggleMenu()">選手紹介</a>
 <a href="./results.html" onclick="toggleMenu()">試合結果</a>
-<a href="./schedule.html" onclick="toggleMenu()">予定</a>
+<a href="./schedule.html" onclick="toggleMenu()">スケジュール</a>
 <a href="./join.html" onclick="toggleMenu()">入団案内</a>
 <a href="./alumni.html" onclick="toggleMenu()">卒団生</a>
 <a href="./contact.html" onclick="toggleMenu()">お問い合わせ</a>
@@ -1283,8 +1283,8 @@ nav a *,
 <div class="pagehero">
 <div class="pagehero-inner">
 <div class="eyebrow">CALENDAR</div>
-<h1>予定</h1>
-<div class="crumb">HOME / 予定</div>
+<h1>スケジュール</h1>
+<div class="crumb">HOME / スケジュール</div>
 </div>
 </div>
 <div class="container">
@@ -1293,7 +1293,7 @@ nav a *,
 <button aria-label="前の月" class="cal-nav" id="calPrev" type="button">‹</button>
 <div>
 <div class="calendar-title" id="calTitle"></div>
-<div class="calendar-sub">日付をクリックすると予定を入力・編集できます</div>
+<div class="calendar-sub">日付をクリックするとスケジュールを入力・編集できます</div>
 </div>
 <button aria-label="次の月" class="cal-nav" id="calNext" type="button">›</button>
 </div>
@@ -1302,7 +1302,7 @@ nav a *,
 </div>
 <div class="calendar-grid" id="calendarGrid"></div>
 <div class="calendar-note">
-        入力した予定は公開サイトに共有保存され、閲覧者全員に反映されます。
+        入力したスケジュールは公開サイトに共有保存され、閲覧者全員に反映されます。
       </div>
 </div>
 </div>
@@ -1310,9 +1310,9 @@ nav a *,
 <div aria-hidden="true" class="calendar-editor" id="calendarEditor">
 <div class="calendar-editor-box">
 <button aria-label="閉じる" class="calendar-editor-close" id="calendarEditorClose" type="button">×</button>
-<h2 id="calendarEditorDate">予定入力</h2>
+<h2 id="calendarEditorDate">スケジュール入力</h2>
 <form id="calendarForm">
-<label>予定名
+<label>スケジュール名
         <input id="calendarEventTitle" maxlength="50" placeholder="例：練習／公式戦／遠征" required="" type="text"/>
 </label>
 <label>時間
@@ -1459,7 +1459,7 @@ document.getElementById('calendarForm').addEventListener('submit',async e=>{
   catch(err){if(err.message!=='cancelled'&&err.message!=='unauthorized'&&err.message!=='not configured')alert('保存に失敗しました。');}
 });
 document.getElementById('calendarDelete').addEventListener('click',async()=>{
-  if(!selectedDate||!confirm('この予定を削除しますか？'))return;
+  if(!selectedDate||!confirm('このスケジュールを削除しますか？'))return;
   const next=scheduleData.filter(x=>x.date!==selectedDate);
   try{await sharedSave('schedule',next);scheduleData=next;closeEditor();renderCalendar();}
   catch(err){if(err.message!=='cancelled'&&err.message!=='unauthorized'&&err.message!=='not configured')alert('削除に失敗しました。');}
@@ -1476,7 +1476,7 @@ document.getElementById('calendarDelete').addEventListener('click',async()=>{
 <a href="./team.html">チーム紹介</a>
 <a href="./players.html">選手紹介</a>
 <a href="./results.html">試合結果</a>
-<a href="./schedule.html">予定</a>
+<a class="active" href="./schedule.html">スケジュール</a>
 <a href="./join.html">入団案内</a>
 <a href="./alumni.html">卒団生</a>
 <a href="./contact.html">お問い合わせ</a>
