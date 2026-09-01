@@ -58,17 +58,9 @@ export default async (request) => {
 
     const body = await request.json();
 
-    if (!Array.isArray(body.data)) {
-      return json({
-        error: "data must be an array"
-      }, 400);
-    }
+    
 
-    if (body.data.length > 500) {
-      return json({
-        error: "too many records"
-      }, 413);
-    }
+    
 
     const serialized = JSON.stringify(body.data);
 
