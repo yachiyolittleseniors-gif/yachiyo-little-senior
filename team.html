@@ -1634,15 +1634,20 @@ function openProtectedArea(type){
     }
   }
 
-  if(sessionStorage.getItem('yachiyoAdminMode')==='1' && sessionStorage.getItem('yachiyoAdminPassword')){
-    document.body.classList.add('staff-editing');
-    renderEditor();
-    setStaffAdmin(true);
-  }
+  // ページ更新・再読み込み時は必ず管理状態とパスワードを解除
+  sessionStorage.removeItem('yachiyoAdminMode');
+  sessionStorage.removeItem('yachiyoAdminPassword');
+  document.body.classList.remove('staff-editing');
+  staffToggle.textContent='管理';
+  staffToggle.style.display='none';
 
   staffToggle.addEventListener('click',async function(){
     if(sessionStorage.getItem('yachiyoAdminMode')==='1'){
-      setStaffAdmin(false);
+      sessionStorage.removeItem('yachiyoAdminMode');
+      sessionStorage.removeItem('yachiyoAdminPassword');
+      document.body.classList.remove('staff-editing');
+      staffToggle.textContent='管理';
+      staffToggle.style.display='none';
       load();
       return;
     }
