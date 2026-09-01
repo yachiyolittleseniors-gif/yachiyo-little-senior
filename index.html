@@ -1715,6 +1715,28 @@ body.photo-admin-on .news-delete{display:block}
 <meta name="twitter:title" content="八千代リトルシニア｜千葉県八千代市の中学硬式野球チーム">
 <meta name="twitter:description" content="八千代リトルシニア（八千代シニア）は、千葉県八千代市を拠点に活動する中学硬式野球チームです。予定、試合結果、選手紹介、入団・体験練習の情報を掲載しています。">
 <script type="application/ld+json">{"@context":"https://schema.org","@type":"SportsTeam","name":"八千代リトルシニア","alternateName":"八千代シニア","url":"https://yachiyo-little-senior.netlify.app/","foundingDate":"1982","sport":"Baseball","sameAs":["https://www.instagram.com/yachiyo_little_senior?igsi=MTl4N3dneG9uY2ZxcA=="],"address":{"@type":"PostalAddress","streetAddress":"島田台775","addressLocality":"八千代市","addressRegion":"千葉県","addressCountry":"JP"}}</script>
+
+<style>
+@media(max-width:700px){
+  .restored-footer-nav{
+    display:grid!important;
+    grid-template-columns:repeat(2,minmax(0,1fr))!important;
+    grid-auto-flow:row!important;
+  }
+  .restored-footer-nav>a{
+    grid-column:auto!important;
+    width:auto!important;
+    min-width:0!important;
+    display:flex!important;
+    align-items:center!important;
+    justify-content:center!important;
+    text-align:center!important;
+  }
+  .restored-footer-nav>a:last-child{
+    grid-column:1 / -1!important;
+  }
+}
+</style>
 </head>
 <body>
 <header class="header">
@@ -1939,7 +1961,8 @@ function closeModal(){
 <a href="./join.html">入団案内</a>
 <a href="./alumni.html">卒団生</a>
 <a href="./contact.html">お問い合わせ</a>
-<a href="https://www.instagram.com/yachiyo_little_senior?igsi=MTl4N3dneG9uY2ZxcA==" rel="noopener noreferrer" target="_blank">Instagram</a><a href="https://www.facebook.com/share/1DakdBtEv6/?mibextid=wwXIfr" rel="noopener noreferrer" target="_blank">Facebook</a>
+<a href="https://www.instagram.com/yachiyo_little_senior?igsi=MTl4N3dneG9uY2ZxcA==" rel="noopener noreferrer" target="_blank">Instagram</a>
+<a href="https://www.facebook.com/share/1DakdBtEv6/?mibextid=wwXIfr" rel="noopener noreferrer" target="_blank">Facebook</a>
 <a href="#homeNews">新着NEWS</a>
 <a href="./rules.html">チーム規約</a>
 <a href="#" onclick="return openProtectedArea('board')">チーム内案内板 🔒</a>
