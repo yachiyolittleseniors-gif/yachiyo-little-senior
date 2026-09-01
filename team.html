@@ -1330,7 +1330,7 @@ img,video,iframe{max-width:100%}
 .staff-row:last-child{border-bottom:0}.staff-role{border:1px solid #c9a24c;background:#071f39;color:#e1bc65;border-radius:8px;padding:10px 8px;text-align:center;font-weight:800}.staff-name{font-size:18px;font-weight:800;letter-spacing:.05em;color:#07182c}
 .staff-admin{display:none;margin-top:20px;padding-top:18px;border-top:1px solid rgba(255,255,255,.14)}body.staff-editing .staff-admin{display:block}
 .staff-edit-btn,.staff-add,.staff-save,.staff-cancel,.staff-delete{border:0;border-radius:999px;font-weight:800;cursor:pointer}
-.staff-edit-btn{position:fixed;right:18px;bottom:18px;z-index:9998;margin:0;padding:9px 12px;background:#071426;border:1px solid rgba(199,154,59,.65);color:#e2bd67;border-radius:999px;font-size:12px;font-weight:800;box-shadow:0 8px 22px rgba(0,0,0,.18);cursor:pointer;opacity:.82;display:none}.staff-edit-btn:hover{opacity:1}@media(max-width:650px){.staff-edit-btn{right:12px;bottom:74px;padding:8px 10px;font-size:11px}}
+.staff-edit-btn{display:none;position:static;z-index:1;margin:14px 0 0 auto;padding:9px 12px;background:#071426;border:1px solid rgba(199,154,59,.65);color:#e2bd67;border-radius:999px;font-size:12px;font-weight:800;box-shadow:0 8px 22px rgba(0,0,0,.18);cursor:pointer;opacity:.82}.staff-edit-btn:hover{opacity:1}@media(max-width:650px){.staff-edit-btn{padding:8px 10px;font-size:11px}}
 .staff-admin-actions{display:flex;gap:9px;justify-content:center;flex-wrap:wrap}.staff-add,.staff-save,.staff-cancel{padding:10px 16px}.staff-add,.staff-save{background:#c9a24c;color:#071426}.staff-cancel{background:#fff;color:#17202b}.staff-delete{padding:7px 11px;background:#fff;color:#9d2633}
 .staff-editor-row{display:grid;grid-template-columns:1fr 1.5fr auto;gap:8px;margin:9px 0}.staff-editor-row input{width:100%;box-sizing:border-box;border:1px solid #d8dde3;border-radius:9px;padding:11px;font-size:16px}
 @media(max-width:600px){.staff-panel{padding:22px 15px;border-radius:17px}.staff-row{grid-template-columns:105px 1fr;gap:12px}.staff-role{font-size:13px;padding:9px 5px}.staff-name{font-size:16px}.staff-editor-row{grid-template-columns:1fr}.staff-delete{justify-self:end}}
@@ -1448,7 +1448,7 @@ img,video,iframe{max-width:100%}
 <h2>指導者・スタッフ一覧</h2>
 </div>
 <div class="staff-list" id="staffPublic"></div>
-<button class="staff-edit-btn" id="staffEditBtn" type="button">管理</button>
+
 <div class="staff-admin" id="staffAdmin">
 <div id="staffEditor"></div>
 <div class="staff-admin-actions">
@@ -1515,6 +1515,7 @@ function closeModal(){
 <a class="footer-board-full" href="#" onclick="return openProtectedArea('board')">チーム内案内板 🔒</a>
 </nav>
 <div class="ground-address"><a href="https://www.google.com/maps/search/?api=1&amp;query=%E5%8D%83%E8%91%89%E7%9C%8C%E5%85%AB%E5%8D%83%E4%BB%A3%E5%B8%82%E5%B3%B6%E7%94%B0%E5%8F%B0%EF%BC%97%EF%BC%97%EF%BC%95" rel="noopener noreferrer" style="color:inherit;text-decoration:none;" target="_blank">グラウンド：千葉県八千代市島田台７７５</a></div>
+<button class="staff-edit-btn" id="staffEditBtn" type="button">管理</button>
 <div class="restored-footer-copy">© YACHIYO LITTLE SENIOR. All Rights Reserved.</div>
 </div>
 </footer>
@@ -1625,45 +1626,29 @@ function openProtectedArea(type){
   function setStaffAdmin(on){
     sessionStorage.setItem('yachiyoAdminMode',on?'1':'0');
     staffToggle.textContent=on?'管理終了':'管理';
+    if(on){
+      staffToggle.style.display='block';
+    }else{
+      document.body.classList.remove('staff-editing');
+      staffToggle.style.display='none';
+    }
   }
 
   if(sessionStorage.getItem('yachiyoAdminMode')==='1' && sessionStorage.getItem('yachiyoAdminPassword')){
-    staffToggle.style.display='block';
     document.body.classList.add('staff-editing');
     renderEditor();
     setStaffAdmin(true);
   }
 
-  // Hidden admin entrance: tap the bottom-right corner 3 times.
-  let secretTapCount=0, secretTapTimer=null;
-  document.addEventListener('pointerup',function(e){
-    const cornerX=window.innerWidth-90;
-    const cornerY=window.innerHeight-110;
-    if(e.clientX<cornerX || e.clientY<cornerY){
-      secretTapCount=0;
-      return;
-    }
-    secretTapCount++;
-    clearTimeout(secretTapTimer);
-    secretTapTimer=setTimeout(()=>{secretTapCount=0},1200);
-    if(secretTapCount>=3){
-      secretTapCount=0;
-      staffToggle.style.display='block';
-    }
-  },{passive:true});
-
   staffToggle.addEventListener('click',async function(){
     if(sessionStorage.getItem('yachiyoAdminMode')==='1'){
       setStaffAdmin(false);
-      document.body.classList.remove('staff-editing');
-      staffToggle.style.display='none';
       load();
       return;
     }
     await verifyAndOpen();
     if(document.body.classList.contains('staff-editing')){
       setStaffAdmin(true);
-      staffToggle.style.display='block';
     }
   });
  document.getElementById('staffAdd').onclick=()=>{staff.push({role:'',name:''});renderEditor()};
@@ -1683,5 +1668,34 @@ function openProtectedArea(type){
  load();
 })();
 </script>
+
+<script>
+(function(){
+  const footer=document.querySelector('.restored-footer');
+  const adminBtn=document.getElementById('staffEditBtn');
+  if(!footer || !adminBtn) return;
+
+  let tapCount=0, tapTimer=null;
+  footer.addEventListener('pointerup',function(e){
+    if(e.target.closest('#staffEditBtn')) return;
+    const r=footer.getBoundingClientRect();
+    const inRight=Math.max(0,r.right-e.clientX) <= 130;
+    const inBottom=Math.max(0,r.bottom-e.clientY) <= 130;
+    if(!inRight || !inBottom){
+      tapCount=0;
+      return;
+    }
+    tapCount++;
+    clearTimeout(tapTimer);
+    tapTimer=setTimeout(function(){tapCount=0;},1500);
+    if(tapCount>=3){
+      tapCount=0;
+      clearTimeout(tapTimer);
+      adminBtn.style.display='block';
+    }
+  },{passive:true});
+})();
+</script>
+
 </body>
 </html>
