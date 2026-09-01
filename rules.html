@@ -23,7 +23,7 @@ textarea{width:100%;min-height:260px;padding:14px;border:1px solid #c9c9c9;borde
 input[type=file]{width:100%;margin:14px 0}
 button{border:0;border-radius:12px;padding:13px 18px;font-weight:800;cursor:pointer}
 .save{background:#caa64b;color:#07162b}.remove{background:#eee;color:#222;margin-left:8px}
-.adminToggle{display:none;position:static;margin:14px 0 0 auto;border:1px solid rgba(199,154,59,.65);background:#071426;color:#e2bd67;border-radius:999px;padding:9px 12px;font-size:12px;font-weight:800;box-shadow:0 8px 22px rgba(0,0,0,.18)}
+.adminToggle{display:none;position:fixed;right:18px;bottom:18px;z-index:9998;border:1px solid rgba(199,154,59,.65);background:#071426;color:#e2bd67;border-radius:999px;padding:9px 12px;font-size:12px;font-weight:800;box-shadow:0 8px 22px rgba(0,0,0,.18)}@media(max-width:600px){.adminToggle{right:12px;bottom:74px;padding:8px 10px;font-size:11px}}
 .status{margin-top:10px;font-size:14px}
 @media(max-width:600px){main{padding:24px 14px 70px}.card{padding:22px 16px}.pdfbox iframe{height:58vh}}
 </style>
@@ -195,12 +195,12 @@ document.addEventListener('DOMContentLoaded',()=>{
     b.style.display='none';
   }
 
-  const zone=document.getElementById('rulesAdminBottom');
   let tapCount=0,tapTimer=null;
-  zone.addEventListener('pointerup',function(e){
+  document.addEventListener('pointerup',function(e){
     if(e.target.closest('#adminBtn'))return;
-    const r=zone.getBoundingClientRect();
-    if(Math.max(0,r.right-e.clientX)>130 || Math.max(0,r.bottom-e.clientY)>130){
+    const rightGap=window.innerWidth-e.clientX;
+    const bottomGap=window.innerHeight-e.clientY;
+    if(rightGap>130 || bottomGap>130){
       tapCount=0;return;
     }
     tapCount++;
