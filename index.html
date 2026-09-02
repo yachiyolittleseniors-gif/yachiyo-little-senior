@@ -2710,6 +2710,28 @@ window.__loadYachiyoPhotos = function(){
 }
 </style>
 
+
+<style id="recruit-photo-match-hero">
+/* グラウンド風景を上の写真と同じ表示サイズ・比率に統一 */
+#recruitEditablePhoto{
+  width:100% !important;
+  height:auto !important;
+  aspect-ratio:16 / 9 !important;
+  min-height:0 !important;
+  border-radius:0 !important;
+  background-size:cover !important;
+  background-position:center !important;
+}
+@media(max-width:600px){
+  #recruitEditablePhoto{
+    aspect-ratio:16 / 9 !important;
+    height:auto !important;
+    min-height:0 !important;
+    border-radius:0 !important;
+  }
+}
+</style>
+
 </head>
 <body>
 <header class="header">
