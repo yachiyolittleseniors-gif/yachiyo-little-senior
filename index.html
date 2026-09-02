@@ -3124,6 +3124,18 @@ document.addEventListener('DOMContentLoaded',function(){
   footer .footer-news-cell,
   footer .footer-news-cell + *{width:auto!important;}
 }
+
+/* Footer: keep Team Rules and Team Board side-by-side */
+@media (min-width:901px){
+  .restored-footer-nav a:last-child{grid-column:auto!important;}
+}
+@media (max-width:900px) and (min-width:601px){
+  .restored-footer-nav a:nth-last-child(2),
+  .restored-footer-nav a:last-child{grid-column:auto!important;}
+}
+@media (max-width:600px){
+  .restored-footer-nav a:last-child{grid-column:auto!important;}
+}
 </style>
 <script>
 document.addEventListener('DOMContentLoaded',function(){
