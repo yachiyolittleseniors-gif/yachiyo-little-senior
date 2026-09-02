@@ -1570,6 +1570,28 @@ img[alt*="八千代リトルシニア"]{
   .seniorcup-home-link:after{right:12px;font-size:62px}
 }
 
+
+.seniorcup-admin-control{
+  display:none;
+  max-width:1180px;
+  margin:8px auto 0;
+  padding:0 22px;
+  text-align:right;
+}
+body.photo-admin-on .seniorcup-admin-control{display:block}
+.seniorcup-admin-control button{
+  border:1px solid rgba(199,154,59,.7);
+  background:#071426;
+  color:#e2bd67;
+  border-radius:999px;
+  padding:9px 14px;
+  font-size:12px;
+  font-weight:800;
+}
+@media(max-width:600px){
+  .seniorcup-admin-control{padding:0 12px}
+}
+
 </style>
 <style>
 /* Photo-enhanced final version */
@@ -2517,6 +2539,61 @@ document.addEventListener('DOMContentLoaded',function(){
   const y=new Date().getFullYear();
   document.querySelectorAll('.current-year').forEach(el=>el.textContent=y);
 });
+</script>
+
+
+<script>
+(function(){
+  const api='/.netlify/functions/site-data';
+  const banner=document.querySelector('.seniorcup-home-banner');
+  const btn=document.getElementById('seniorcupVisibilityBtn');
+  if(!banner||!btn)return;
+
+  let visible=true;
+
+  function apply(){
+    banner.style.display=visible?'block':'none';
+    btn.textContent=visible?'八千代シニア杯を非表示':'八千代シニア杯を表示';
+  }
+
+  async function load(){
+    try{
+      const r=await fetch(api+'?section=seniorcup-settings',{cache:'no-store'});
+      if(!r.ok){apply();return}
+      const j=await r.json();
+      if(j.data && typeof j.data.visible==='boolean') visible=j.data.visible;
+    }catch(e){}
+    apply();
+  }
+
+  btn.addEventListener('click',async function(){
+    const next=!visible;
+    const pw=sessionStorage.getItem('yachiyoAdminPassword')||'';
+    if(!pw){alert('管理者パスワードを入力し直してください。');return}
+    btn.disabled=true;
+    const old=btn.textContent;
+    btn.textContent='保存中…';
+    try{
+      const r=await fetch(api+'?section=seniorcup-settings',{
+        method:'POST',
+        headers:{'content-type':'application/json','x-admin-password':pw},
+        body:JSON.stringify({data:{visible:next,updatedAt:new Date().toISOString()}})
+      });
+      if(r.status===401)throw new Error('PASSWORD');
+      if(!r.ok)throw new Error('SAVE');
+      visible=next;
+      apply();
+    }catch(e){
+      btn.textContent=old;
+      if(e.message==='PASSWORD') alert('管理者パスワードが違います。');
+      else alert('表示設定を保存できませんでした。');
+    }finally{
+      btn.disabled=false;
+    }
+  });
+
+  load();
+})();
 </script>
 
 </body>
