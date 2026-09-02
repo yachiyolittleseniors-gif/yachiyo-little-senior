@@ -1584,6 +1584,22 @@ table thead th.cohort-col{
 }
 </style>
 
+
+<style id="grade-auto-color-fix">
+/* 学年連動カラー：学年更新後も自動で切り替わります */
+.cohort-badge.grade-3{background:linear-gradient(135deg,#b8892d,#d8ad4c)!important;color:#fff!important;}
+.cohort-badge.grade-2{background:linear-gradient(135deg,#9b9b9b,#d7d7d7)!important;color:#fff!important;}
+.cohort-badge.grade-1{background:linear-gradient(135deg,#a85e24,#d6975c)!important;color:#fff!important;}
+
+.grade-text.grade-3{color:#9a701d!important;}
+.grade-text.grade-2{color:#707070!important;}
+.grade-text.grade-1{color:#9a531f!important;}
+
+.tabs button.grade-3:not(.active){border-color:#c59a3b!important;color:#8d681d!important;background:#fffaf0!important;}
+.tabs button.grade-2:not(.active){border-color:#aaa!important;color:#666!important;background:#f7f7f7!important;}
+.tabs button.grade-1:not(.active){border-color:#b8733c!important;color:#8e4d1e!important;background:#fff7f0!important;}
+</style>
+
 </head>
 <body>
 <header class="header">
@@ -1646,9 +1662,9 @@ table thead th.cohort-col{
 <p class="count" id="playerCount">読み込み中…</p>
 <div class="player-admin admin-only block"><button class="admin-btn" type="button" onclick="togglePlayerPanel()">＋ 選手を追加</button><button class="admin-btn" type="button" onclick="promoteGrades()">学年繰り上げ</button></div><div class="player-editor admin-only" id="playerEditor" hidden><div class="player-form-grid"><div><label for="playerGrade">学年</label><select id="playerGrade"><option value="1年">1年</option><option value="2年">2年</option><option value="3年">3年</option></select></div><div><label for="playerName">選手名</label><input id="playerName" type="text"></div><div><label for="playerBirth">生年度</label><input id="playerBirth" type="text" placeholder="例：2013年度"></div><div><label for="playerTeam">出身チーム</label><input id="playerTeam" type="text"></div></div><div class="player-form-actions"><button class="admin-btn" type="button" onclick="savePlayer()">登録する</button><button class="admin-btn" type="button" onclick="togglePlayerPanel(false)">閉じる</button></div></div><div class="tabs">
 <button class="active" onclick="filterGrade('all',this)">全選手</button>
-<button onclick="filterGrade('3年',this)" id="tabGrade3"><span class="tab-cohort">44期</span><span class="tab-grade">3年</span></button>
-<button onclick="filterGrade('2年',this)" id="tabGrade2"><span class="tab-cohort">45期</span><span class="tab-grade">2年</span></button>
-<button onclick="filterGrade('1年',this)" id="tabGrade1"><span class="tab-cohort">46期</span><span class="tab-grade">1年</span></button>
+<button onclick="filterGrade('3年',this)" id="tabGrade3" class="grade-3"><span class="tab-cohort">44期</span><span class="tab-grade">3年</span></button>
+<button onclick="filterGrade('2年',this)" id="tabGrade2" class="grade-2"><span class="tab-cohort">45期</span><span class="tab-grade">2年</span></button>
+<button onclick="filterGrade('1年',this)" id="tabGrade1" class="grade-1"><span class="tab-cohort">46期</span><span class="tab-grade">1年</span></button>
 </div>
 <div class="card">
 <table>
@@ -1837,17 +1853,21 @@ function gradeDisplay(p){
   const c=Number(p.cohort)||cohortForGrade(p.grade);
   return c?`${c}期 ${p.grade}`:p.grade;
 }
+function gradeClass(grade){
+  return grade==='3年'?'grade-3':grade==='2年'?'grade-2':grade==='1年'?'grade-1':'';
+}
 function gradeDisplayHtml(p){
   const c=Number(p.cohort)||cohortForGrade(p.grade);
-  if(!c)return `<span class="grade-only">${ep(p.grade)}</span>`;
-  return `<span class="cohort-badge">${ep(c)}期</span><span class="grade-text">${ep(p.grade)}</span>`;
+  const cls=gradeClass(p.grade);
+  if(!c)return `<span class="grade-only ${cls}">${ep(p.grade)}</span>`;
+  return `<span class="cohort-badge ${cls}">${ep(c)}期</span><span class="grade-text ${cls}">${ep(p.grade)}</span>`;
 }
 function updateGradeTabs(){
   const first=currentFirstCohort();
   const t3=document.getElementById('tabGrade3'),t2=document.getElementById('tabGrade2'),t1=document.getElementById('tabGrade1');
-  if(t3)t3.innerHTML=`<span class="tab-cohort">${first-2}期</span><span class="tab-grade">3年</span>`;
-  if(t2)t2.innerHTML=`<span class="tab-cohort">${first-1}期</span><span class="tab-grade">2年</span>`;
-  if(t1)t1.innerHTML=`<span class="tab-cohort">${first}期</span><span class="tab-grade">1年</span>`;
+  if(t3){t3.classList.add('grade-3');t3.innerHTML=`<span class="tab-cohort">${first-2}期</span><span class="tab-grade">3年</span>`;}
+  if(t2){t2.classList.add('grade-2');t2.innerHTML=`<span class="tab-cohort">${first-1}期</span><span class="tab-grade">2年</span>`;}
+  if(t1){t1.classList.add('grade-1');t1.innerHTML=`<span class="tab-cohort">${first}期</span><span class="tab-grade">1年</span>`;}
 }
 function countP(){const c={'1年':0,'2年':0,'3年':0};playersData.forEach(p=>{if(c[p.grade]!=null)c[p.grade]++});document.getElementById('playerCount').textContent=`3年 ${c['3年']}名 ／ 2年 ${c['2年']}名 ／ 1年 ${c['1年']}名`}
 function renderP(){updateGradeTabs();const o={'3年':3,'2年':2,'1年':1},b=document.getElementById('playersBody');b.innerHTML=playersData.slice().sort((a,c)=>{
