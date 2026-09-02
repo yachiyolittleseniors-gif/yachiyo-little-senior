@@ -1678,13 +1678,17 @@ function openProtectedArea(type){
  async function load(){
    try{const r=await fetch(API,{cache:'no-store'}); if(r.ok){const j=await r.json(); if(Array.isArray(j.data)&&j.data.length){
   const incoming=j.data.map(x=>({role:String(x.role||'').trim(),name:String(x.name||'').trim()}));
-  const legacy = incoming.length===4 &&
+  const legacyThree = incoming.length===3 &&
+    incoming[0]?.role==='監督' && incoming[0]?.name==='早坂 徹' &&
+    incoming[1]?.role==='ヘッドコーチ' && incoming[1]?.name==='平田 祥之' &&
+    incoming[2]?.role==='コーチ' && incoming[2]?.name==='河野 剛';
+  const legacyFour = incoming.length===4 &&
     incoming[0]?.role==='監督' && incoming[0]?.name==='早坂 徹' &&
     incoming[1]?.role==='ヘッドコーチ' && incoming[1]?.name==='平田 祥之' &&
     incoming[2]?.role==='コーチ' && incoming[2]?.name==='河野 剛' &&
     incoming[3]?.role==='学生コーチ' && incoming[3]?.name==='学生コーチ';
   const groupedCoach = incoming.some(x=>x.role==='コーチ' && x.name.includes('村山 清隆') && x.name.includes('齋川 英司'));
-  staff = (legacy || groupedCoach) ? defaults.slice() : incoming;
+  staff = (legacyThree || legacyFour || groupedCoach) ? defaults.slice() : incoming;
 }}}catch(e){}
    render();
  }
