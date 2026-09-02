@@ -2384,6 +2384,28 @@ body.photo-admin-on .news-delete{display:block}
 }
 </style>
 
+
+<style>
+/* HOME：新着NEWSの内容量に追従しつつ、ACTIVITYとの余白をコンパクトに */
+#homeNews{
+  padding-bottom:0 !important;
+  margin-bottom:0 !important;
+}
+#homeNews + section,
+#homeNews + .section,
+#homeNews ~ #activity{
+  margin-top:0 !important;
+  padding-top:36px !important;
+}
+@media(max-width:600px){
+  #homeNews + section,
+  #homeNews + .section,
+  #homeNews ~ #activity{
+    padding-top:32px !important;
+  }
+}
+</style>
+
 </head>
 <body>
 <header class="header">
