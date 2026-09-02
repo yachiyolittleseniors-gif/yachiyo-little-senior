@@ -1207,6 +1207,75 @@ nav a *,
   .menu{display:flex!important}
 }
 
+
+
+/* 公開閲覧用：予定詳細ポップアップ */
+.calendar-viewer{
+  display:none;
+  position:fixed;
+  inset:0;
+  z-index:9998;
+  padding:20px;
+  background:rgba(3,12,24,.72);
+  align-items:center;
+  justify-content:center;
+}
+.calendar-viewer.show{display:flex}
+.calendar-viewer-box{
+  position:relative;
+  width:min(520px,100%);
+  max-height:90vh;
+  overflow:auto;
+  background:#fff;
+  border-radius:12px;
+  padding:26px 22px 22px;
+  box-shadow:0 20px 60px rgba(0,0,0,.28);
+  border-top:4px solid #c79a3b;
+}
+.calendar-viewer-close{
+  position:absolute;
+  top:10px;
+  right:10px;
+  width:40px;
+  height:40px;
+  border:0;
+  border-radius:50%;
+  background:#f0f2f5;
+  color:#071426;
+  font-size:25px;
+  cursor:pointer;
+}
+.calendar-viewer-date{
+  padding-right:46px;
+  color:#9b7623;
+  font-size:13px;
+  font-weight:800;
+  letter-spacing:.05em;
+}
+.calendar-viewer-box h2{
+  margin:7px 46px 18px 0;
+  color:#071426;
+  font-size:24px;
+  line-height:1.45;
+}
+.calendar-viewer-row{
+  display:grid;
+  grid-template-columns:64px 1fr;
+  gap:12px;
+  padding:12px 0;
+  border-top:1px solid #e2e5e9;
+  font-size:15px;
+  line-height:1.65;
+}
+.calendar-viewer-row b{color:#9b7623}
+.calendar-viewer-row span{white-space:pre-wrap;overflow-wrap:anywhere}
+@media(max-width:600px){
+  .calendar-viewer{padding:12px}
+  .calendar-viewer-box{padding:24px 16px 18px}
+  .calendar-viewer-box h2{font-size:21px}
+  .calendar-viewer-row{grid-template-columns:56px 1fr;font-size:14px}
+}
+
 </style>
 <style>
 /* Photo-enhanced final version */
@@ -1457,6 +1526,17 @@ img,video,iframe{max-width:100%}
 </div>
 </div>
 </section>
+<div aria-hidden="true" class="calendar-viewer" id="calendarViewer">
+<div class="calendar-viewer-box">
+<button aria-label="閉じる" class="calendar-viewer-close" id="calendarViewerClose" type="button">×</button>
+<div class="calendar-viewer-date" id="calendarViewerDate"></div>
+<h2 id="calendarViewerTitle"></h2>
+<div class="calendar-viewer-row" id="calendarViewerCategoryRow"><b>種類</b><span id="calendarViewerCategory"></span></div>
+<div class="calendar-viewer-row" id="calendarViewerTimeRow"><b>時間</b><span id="calendarViewerTime"></span></div>
+<div class="calendar-viewer-row" id="calendarViewerPlaceRow"><b>場所</b><span id="calendarViewerPlace"></span></div>
+<div class="calendar-viewer-row" id="calendarViewerMemoRow"><b>詳細</b><span id="calendarViewerMemo"></span></div>
+</div>
+</div>
 <div aria-hidden="true" class="calendar-editor" id="calendarEditor">
 <div class="calendar-editor-box">
 <button aria-label="閉じる" class="calendar-editor-close" id="calendarEditorClose" type="button">×</button>
@@ -1578,9 +1658,58 @@ function renderCalendar(){
   }
   grid.innerHTML=html;
   grid.querySelectorAll('[data-date]').forEach(b=>b.addEventListener('click',()=>{
-    if(document.body.classList.contains('admin-mode')) openEditor(b.dataset.date);
+    const date=b.dataset.date;
+    if(document.body.classList.contains('admin-mode')){
+      openEditor(date);
+    }else if(eventFor(date)){
+      openViewer(date);
+    }
   }));
 }
+function openViewer(date){
+  const ev=eventFor(date);
+  if(!ev)return;
+
+  const labels={
+    practice:'練習',
+    official:'公式戦',
+    friendly:'練習試合',
+    other:'その他'
+  };
+
+  document.getElementById('calendarViewerDate').textContent=date.replace(/-/g,'/');
+  document.getElementById('calendarViewerTitle').textContent=ev.title||'予定';
+  document.getElementById('calendarViewerCategory').textContent=labels[ev.category]||ev.category||'その他';
+
+  const setRow=(rowId,valueId,value)=>{
+    const row=document.getElementById(rowId);
+    const el=document.getElementById(valueId);
+    if(value){
+      el.textContent=value;
+      row.style.display='grid';
+    }else{
+      el.textContent='';
+      row.style.display='none';
+    }
+  };
+  setRow('calendarViewerTimeRow','calendarViewerTime',ev.time||'');
+  setRow('calendarViewerPlaceRow','calendarViewerPlace',ev.place||'');
+  setRow('calendarViewerMemoRow','calendarViewerMemo',ev.memo||'');
+
+  const viewer=document.getElementById('calendarViewer');
+  viewer.classList.add('show');
+  viewer.setAttribute('aria-hidden','false');
+}
+function closeViewer(){
+  const viewer=document.getElementById('calendarViewer');
+  viewer.classList.remove('show');
+  viewer.setAttribute('aria-hidden','true');
+}
+document.getElementById('calendarViewerClose').addEventListener('click',closeViewer);
+document.getElementById('calendarViewer').addEventListener('click',e=>{
+  if(e.target.id==='calendarViewer')closeViewer();
+});
+
 function openEditor(date){
   selectedDate=date;
   const ev=eventFor(date)||{};
