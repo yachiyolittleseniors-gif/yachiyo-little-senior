@@ -2465,6 +2465,40 @@ img.photo-loading{
 }
 </style>
 
+
+<script id="photo-load-speed-fix">
+/* 写真読み込み高速化：同じ photos API を複数回呼ばず、1回の取得結果を共有 */
+window.__yachiyoPhotoDataPromise = null;
+window.__loadYachiyoPhotos = function(){
+  if(!window.__yachiyoPhotoDataPromise){
+    window.__yachiyoPhotoDataPromise = fetch('/.netlify/functions/site-data?section=photos')
+      .then(r=>r.ok?r.json():{data:[]})
+      .then(j=>Array.isArray(j.data)?j.data:[])
+      .catch(()=>[]);
+  }
+  return window.__yachiyoPhotoDataPromise;
+};
+</script>
+
+
+<style id="photo-load-visual-speed">
+.hero.photo-loading,
+#recruitEditablePhoto.photo-loading{
+  background-color:#ece9e2 !important;
+}
+img.photo-loading{
+  visibility:visible !important;
+  opacity:0 !important;
+}
+img[data-edit-photo]{
+  transition:opacity .16s ease;
+}
+.hero,
+#recruitEditablePhoto{
+  transition:background-image .01s linear, opacity .16s ease;
+}
+</style>
+
 </head>
 <body>
 <header class="header">
@@ -2842,7 +2876,7 @@ function openProtectedArea(type){
 
   async function loadHero(){
     try{
-      const r=await fetch(api+'?section=hero',{cache:'no-store'});
+      const r=await fetch(api+'?section=hero');
       if(r.ok){
         const j=await r.json();
         const d=Array.isArray(j.data)?j.data:[];
@@ -2940,6 +2974,8 @@ function openProtectedArea(type){
         body:JSON.stringify({data:[{image,updatedAt:new Date().toISOString()}]})
       });
       if(!r.ok)throw new Error('save failed');
+     window.__yachiyoPhotoDataPromise=null;
+       window.__yachiyoPhotoDataPromise=null;
       hero.style.setProperty('--hero-photo',`url("${image}")`);
       alert('ホーム写真を変更しました。');
     }catch(e){
@@ -2971,11 +3007,8 @@ function openProtectedArea(type){
  }
  async function load(){
    try{
-     const r=await fetch(api+'?section=photos',{cache:'no-store'});
-     if(r.ok){
-       const j=await r.json(), arr=Array.isArray(j.data)?j.data:[];
-       arr.forEach(x=>{const el=document.querySelector('[data-edit-photo="'+x.key+'"]'); if(el&&x.image)el.src=x.image});
-     }
+     const arr=await window.__loadYachiyoPhotos();
+     arr.forEach(x=>{const el=document.querySelector('[data-edit-photo="'+x.key+'"]'); if(el&&x.image)el.src=x.image});
    }catch(e){}
    finally{
      document.querySelectorAll('[data-edit-photo].photo-loading').forEach(el=>el.classList.remove('photo-loading'));
@@ -3035,12 +3068,9 @@ function openProtectedArea(type){
  }
  async function load(){
    try{
-     const r=await fetch(api+'?section=photos',{cache:'no-store'});
-     if(r.ok){
-       const j=await r.json(),a=Array.isArray(j.data)?j.data:[];
-       const x=a.find(v=>v.key==='photo_recruit');
-       if(x&&x.image)box.style.setProperty('background-image','url("'+x.image+'")','important');
-     }
+     const a=await window.__loadYachiyoPhotos();
+     const x=a.find(v=>v.key==='photo_recruit');
+     if(x&&x.image)box.style.setProperty('background-image','url("'+x.image+'")','important');
    }catch(e){}
    finally{
      box.classList.remove('photo-loading');
