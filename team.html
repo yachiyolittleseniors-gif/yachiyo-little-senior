@@ -1828,7 +1828,10 @@ function openProtectedArea(type){
       data=next; render(); fillEditor(); alert('進路を保存しました。');
     }catch(e){alert('進路を保存できませんでした。');}
   });
-  document.getElementById('graduatePathCancel').addEventListener('click',()=>fillEditor());
+  document.getElementById('graduatePathCancel').addEventListener('click',()=>{
+    fillEditor();
+    document.body.classList.remove('staff-editing');
+  });
   const observer=new MutationObserver(()=>{if(document.body.classList.contains('staff-editing')) fillEditor();});
   observer.observe(document.body,{attributes:true,attributeFilter:['class']});
   load();
