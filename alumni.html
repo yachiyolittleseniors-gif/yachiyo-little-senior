@@ -6,7 +6,7 @@
 <meta charset="utf-8"/>
 <meta content="width=device-width, initial-scale=1.0, viewport-fit=cover" name="viewport"/>
 <meta content="#071426" name="theme-color"/>
-<title>スケジュール｜八千代リトルシニア（八千代シニア）</title>
+<title>卒団生・進学先｜八千代リトルシニア（八千代シニア）</title>
 <style>
 :root{
   --navy:#071426; --navy2:#0c1d33; --gold:#c79a3b; --gold2:#e2bd67;
@@ -1208,75 +1208,6 @@ nav a *,
   .menu{display:flex!important}
 }
 
-
-
-/* 公開閲覧用：予定詳細ポップアップ */
-.calendar-viewer{
-  display:none;
-  position:fixed;
-  inset:0;
-  z-index:9998;
-  padding:20px;
-  background:rgba(3,12,24,.72);
-  align-items:center;
-  justify-content:center;
-}
-.calendar-viewer.show{display:flex}
-.calendar-viewer-box{
-  position:relative;
-  width:min(520px,100%);
-  max-height:90vh;
-  overflow:auto;
-  background:#fff;
-  border-radius:12px;
-  padding:26px 22px 22px;
-  box-shadow:0 20px 60px rgba(0,0,0,.28);
-  border-top:4px solid #c79a3b;
-}
-.calendar-viewer-close{
-  position:absolute;
-  top:10px;
-  right:10px;
-  width:40px;
-  height:40px;
-  border:0;
-  border-radius:50%;
-  background:#f0f2f5;
-  color:#071426;
-  font-size:25px;
-  cursor:pointer;
-}
-.calendar-viewer-date{
-  padding-right:46px;
-  color:#9b7623;
-  font-size:13px;
-  font-weight:800;
-  letter-spacing:.05em;
-}
-.calendar-viewer-box h2{
-  margin:7px 46px 18px 0;
-  color:#071426;
-  font-size:24px;
-  line-height:1.45;
-}
-.calendar-viewer-row{
-  display:grid;
-  grid-template-columns:64px 1fr;
-  gap:12px;
-  padding:12px 0;
-  border-top:1px solid #e2e5e9;
-  font-size:15px;
-  line-height:1.65;
-}
-.calendar-viewer-row b{color:#9b7623}
-.calendar-viewer-row span{white-space:pre-wrap;overflow-wrap:anywhere}
-@media(max-width:600px){
-  .calendar-viewer{padding:12px}
-  .calendar-viewer-box{padding:24px 16px 18px}
-  .calendar-viewer-box h2{font-size:21px}
-  .calendar-viewer-row{grid-template-columns:56px 1fr;font-size:14px}
-}
-
 </style>
 <style>
 /* Photo-enhanced final version */
@@ -1297,77 +1228,14 @@ nav a *,
 @media(max-width:600px){.hero{min-height:610px;background-position:58% center!important}.hero-inner{background:linear-gradient(90deg,rgba(7,20,38,.18),transparent);}.activity-stack{grid-template-columns:1fr}.activity-main,.activity-side{min-height:250px}.gallery{grid-template-columns:1fr!important}.gallery .g{aspect-ratio:16/10}.photo{min-height:260px}}
 </style>
 
-<meta property="og:locale" content="ja_JP">
+
 <link rel="icon" href="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCA2NCA2NCI+CjxyZWN0IHdpZHRoPSI2NCIgaGVpZ2h0PSI2NCIgcng9IjE0IiBmaWxsPSIjMDcxNDI2Ii8+CjxjaXJjbGUgY3g9IjMyIiBjeT0iMzIiIHI9IjIwIiBmaWxsPSIjZmZmIi8+CjxwYXRoIGQ9Ik0yMCAyMmM1IDQgOCA5IDkgMTVNNDQgMjJjLTUgNC04IDktOSAxNU0yMCA0MmM1LTQgOC05IDktMTVNNDQgNDJjLTUtNC04LTktOS0xNSIgc3Ryb2tlPSIjYzc5YTNiIiBzdHJva2Utd2lkdGg9IjMiIGZpbGw9Im5vbmUiIHN0cm9rZS1saW5lY2FwPSJyb3VuZCIvPgo8L3N2Zz4=">
-
-
-<style>
-/* ===== Admin-only editing controls ===== */
-.admin-only{display:none!important}
-body.admin-mode .admin-only{display:inline-flex!important}
-body.admin-mode .admin-only.block{display:flex!important}
-body.admin-mode .delete{display:inline-block!important}
-body:not(.admin-mode) .delete{display:none!important}
-.admin-toggle{
-  display:none;position:static;z-index:1;margin:14px 0 0 auto;
-  border:1px solid rgba(199,154,59,.65);background:#071426;color:#e2bd67;
-  border-radius:999px;padding:9px 12px;font-size:12px;font-weight:800;
-  box-shadow:0 8px 22px rgba(0,0,0,.18);cursor:pointer
-}
-@media(max-width:600px){.admin-toggle{padding:8px 10px;font-size:11px}}
-</style>
-
-
-<style>
-/* ===== Final mobile polish ===== */
-@media(max-width:650px){
-  table{font-size:12px}
-  th,td{padding:10px 7px!important}
-  .scoreline{grid-template-columns:1fr auto 1fr!important;gap:8px!important}
-  .score{font-size:25px!important}
-  .team{font-size:13px}
-  .gallery{grid-template-columns:1fr!important}
-  .gallery .card{border-radius:14px!important}
-  .gallery .card img{aspect-ratio:16/10!important}
-  .tabs{gap:6px!important}
-  .tabs button{padding:8px 12px!important;font-size:12px!important}
-  .mobile-links a{padding:13px 16px!important}
-}
-</style>
-
-
-<style>
-/* ===== Schedule category colors ===== */
-.calendar-event-title{border-radius:6px;padding:3px 5px!important}
-.calendar-event-title.cat-practice{background:#eaf1fb;color:#284d7b}
-.calendar-event-title.cat-official{background:#fff0d1;color:#7a5610}
-.calendar-event-title.cat-friendly{background:#eaf7ee;color:#2f6b42}
-.calendar-event-title.cat-other{background:#f0f1f3;color:#555f69}
-.calendar-legend{display:flex;gap:8px;flex-wrap:wrap;margin-top:12px;font-size:11px;color:#5f6975}
-.calendar-legend span{display:inline-flex;align-items:center;gap:5px}
-.calendar-legend i{width:10px;height:10px;border-radius:3px;display:inline-block}
-.legend-practice{background:#eaf1fb}.legend-official{background:#fff0d1}.legend-friendly{background:#eaf7ee}.legend-other{background:#f0f1f3}
-</style>
 
 
 <style>
 /* ===== Performance polish ===== */
 section:not(.hero):not(.pagehero){content-visibility:auto;contain-intrinsic-size:1px 700px}
 img{height:auto}
-</style>
-
-
-<style>
-/* ===== Admin button final position ===== */
-.admin-toggle{
-  right:18px!important;
-  bottom:18px!important;
-  opacity:.82;
-}
-.admin-toggle:hover{opacity:1}
-@media(max-width:650px){
-  .admin-toggle{right:12px!important;bottom:74px!important}
-}
 </style>
 
 
@@ -1395,64 +1263,49 @@ img,video,iframe{max-width:100%}
 }
 </style>
 
-<meta name="description" content="八千代リトルシニアの活動予定を掲載。土曜日・日曜日・祝日の練習、公式戦、練習試合などの予定をご確認いただけます。">
-<link rel="canonical" href="https://yachiyo-little-senior.netlify.app/schedule.html">
+
+
+
+
+
+
+
+
+
+
+<script type="application/ld+json">{"@context":"https://schema.org","@type":"BreadcrumbList","itemListElement":[{"@type":"ListItem","position":1,"name":"HOME","item":"https://yachiyo-little-senior.netlify.app/"},{"@type":"ListItem","position":2,"name":"卒団生","item":"https://yachiyo-little-senior.netlify.app/alumni.html"}]}</script>
+
+<style id="footer-layout-only-fix">
+@media(max-width:700px){
+  .restored-footer-nav{
+    display:grid!important;
+    grid-template-columns:repeat(2,minmax(0,1fr))!important;
+    grid-auto-flow:row!important;
+  }
+  .restored-footer-nav>a{
+    grid-column:auto!important;
+    width:auto!important;
+    min-width:0!important;
+    display:flex!important;
+    align-items:center!important;
+    justify-content:center!important;
+    text-align:center!important;
+  }
+  .restored-footer-nav>a.footer-board-full{grid-column:1/-1!important}
+}
+</style>
+
+<meta name="description" content="八千代リトルシニア卒団生の主な進学先を掲載しています。千葉県内・東京都内・他県の高校への進学実績をご覧いただけます。">
+<link rel="canonical" href="https://yachiyo-little-senior.netlify.app/alumni.html">
 <meta property="og:type" content="website">
 <meta property="og:site_name" content="八千代リトルシニア">
-<meta property="og:title" content="予定｜八千代リトルシニア（八千代シニア）">
-<meta property="og:description" content="八千代リトルシニアの活動予定を掲載。土曜日・日曜日・祝日の練習、公式戦、練習試合などの予定をご確認いただけます。">
-<meta property="og:url" content="https://yachiyo-little-senior.netlify.app/schedule.html">
-<meta name="twitter:card" content="summary">
-<meta name="twitter:title" content="予定｜八千代リトルシニア（八千代シニア）">
-<meta name="twitter:description" content="八千代リトルシニアの活動予定を掲載。土曜日・日曜日・祝日の練習、公式戦、練習試合などの予定をご確認いただけます。">
-<script type="application/ld+json">{"@context":"https://schema.org","@type":"BreadcrumbList","itemListElement":[{"@type":"ListItem","position":1,"name":"HOME","item":"https://yachiyo-little-senior.netlify.app/"},{"@type":"ListItem","position":2,"name":"予定","item":"https://yachiyo-little-senior.netlify.app/schedule.html"}]}</script>
-
-<style>
-/* 予定：1か月カレンダー表示 */
-.calendar-wrap{
-  width:100% !important;
-  overflow-x:auto;
-  -webkit-overflow-scrolling:touch;
-}
-.calendar-grid{
-  display:grid !important;
-  grid-template-columns:repeat(7,minmax(0,1fr)) !important;
-  width:100% !important;
-}
-.calendar-grid > *{
-  min-width:0 !important;
-}
-@media(max-width:600px){
-  .calendar-grid{
-    grid-template-columns:repeat(7,minmax(42px,1fr)) !important;
-    min-width:100% !important;
-  }
-  .calendar-day,
-  .day{
-    min-height:72px !important;
-    padding:5px 3px !important;
-    font-size:11px !important;
-  }
-}
-</style>
-
-<style>
-@media(max-width:600px){
-  #calendarGrid{
-    display:grid!important;
-    grid-template-columns:repeat(7,minmax(0,1fr))!important;
-    width:100%!important;
-  }
-  #calendarGrid .calendar-day{
-    display:block!important;
-    min-width:0!important;
-    min-height:64px!important;
-    padding:5px 3px!important;
-    font-size:11px!important;
-  }
-  #calTitle{display:block!important}
-}
-</style>
+<meta property="og:title" content="卒団生・進学先｜八千代リトルシニア（八千代シニア）">
+<meta property="og:description" content="八千代リトルシニア卒団生の主な進学先を掲載しています。千葉県内・東京都内・他県の高校への進学実績をご覧いただけます。">
+<meta property="og:url" content="https://yachiyo-little-senior.netlify.app/alumni.html">
+<meta property="og:locale" content="ja_JP">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="卒団生・進学先｜八千代リトルシニア（八千代シニア）">
+<meta name="twitter:description" content="八千代リトルシニア卒団生の主な進学先を掲載しています。千葉県内・東京都内・他県の高校への進学実績をご覧いただけます。">
 </head>
 <body>
 <header class="header">
@@ -1465,14 +1318,14 @@ img,video,iframe{max-width:100%}
 <a href="./team.html">チーム紹介</a>
 <a href="./players.html">選手紹介</a>
 <a href="./results.html">試合結果</a>
-<a class="active" href="./schedule.html">スケジュール</a>
+<a href="./schedule.html">スケジュール</a>
 <a href="./join.html">入団案内</a>
-<a href="./alumni.html">卒団生</a>
+<a class="active" href="./alumni.html">卒団生</a>
 <a href="./contact.html">お問い合わせ</a>
 <a href="./privacy.html">プライバシーポリシー</a>
 <a href="./terms.html">サイト利用について</a>
 <a href="https://www.instagram.com/yachiyo_little_senior?igsi=MTl4N3dneG9uY2ZxcA==" rel="noopener noreferrer" target="_blank">Instagram</a>
-<a href="#" onclick="return openProtectedArea('office')">事務局 🔒</a>
+<a href="./rules.html">チーム規約</a>
 <a href="#" onclick="return openProtectedArea('board')">チーム内案内板 🔒</a>
 <a href="https://www.google.com/maps/search/?api=1&amp;query=%E5%8D%83%E8%91%89%E7%9C%8C%E5%85%AB%E5%8D%83%E4%BB%A3%E5%B8%82%E5%B3%B6%E7%94%B0%E5%8F%B0%EF%BC%97%EF%BC%97%EF%BC%95" rel="noopener noreferrer" target="_blank">グラウンド案内</a>
 </div>
@@ -1493,61 +1346,14 @@ img,video,iframe{max-width:100%}
 
 
 
-<section class="page show" id="schedule">
-<div class="pagehero">
-<div class="pagehero-inner">
-<div class="eyebrow">CALENDAR</div>
-<h1>スケジュール</h1>
-<div class="crumb">HOME / スケジュール</div>
-</div>
-</div>
-<div class="container">
-<div class="card calendar-card">
-<div class="calendar-toolbar">
-<button aria-label="前の月" class="cal-nav" id="calPrev" type="button">‹</button>
-<div>
-<div class="calendar-title" id="calTitle">2026年 9月</div>
-<div class="calendar-sub">予定を確認できます</div>
-</div>
-<button aria-label="次の月" class="cal-nav" id="calNext" type="button">›</button>
-</div>
-<div class="calendar-week">
-<div class="sun">日</div><div>月</div><div>火</div><div>水</div><div>木</div><div>金</div><div class="sat">土</div>
-</div>
-<div class="calendar-grid" id="calendarGrid"><button type="button" class="calendar-day muted sun" data-date="2026-08-30"><span class="calendar-day-num">30</span></button><button type="button" class="calendar-day muted" data-date="2026-08-31"><span class="calendar-day-num">31</span></button><button type="button" class="calendar-day" data-date="2026-09-01"><span class="calendar-day-num">1</span></button><button type="button" class="calendar-day" data-date="2026-09-02"><span class="calendar-day-num">2</span></button><button type="button" class="calendar-day" data-date="2026-09-03"><span class="calendar-day-num">3</span></button><button type="button" class="calendar-day" data-date="2026-09-04"><span class="calendar-day-num">4</span></button><button type="button" class="calendar-day sat" data-date="2026-09-05"><span class="calendar-day-num">5</span></button><button type="button" class="calendar-day sun" data-date="2026-09-06"><span class="calendar-day-num">6</span></button><button type="button" class="calendar-day" data-date="2026-09-07"><span class="calendar-day-num">7</span></button><button type="button" class="calendar-day" data-date="2026-09-08"><span class="calendar-day-num">8</span></button><button type="button" class="calendar-day" data-date="2026-09-09"><span class="calendar-day-num">9</span></button><button type="button" class="calendar-day" data-date="2026-09-10"><span class="calendar-day-num">10</span></button><button type="button" class="calendar-day" data-date="2026-09-11"><span class="calendar-day-num">11</span></button><button type="button" class="calendar-day sat" data-date="2026-09-12"><span class="calendar-day-num">12</span></button><button type="button" class="calendar-day sun" data-date="2026-09-13"><span class="calendar-day-num">13</span></button><button type="button" class="calendar-day" data-date="2026-09-14"><span class="calendar-day-num">14</span></button><button type="button" class="calendar-day" data-date="2026-09-15"><span class="calendar-day-num">15</span></button><button type="button" class="calendar-day" data-date="2026-09-16"><span class="calendar-day-num">16</span></button><button type="button" class="calendar-day" data-date="2026-09-17"><span class="calendar-day-num">17</span></button><button type="button" class="calendar-day" data-date="2026-09-18"><span class="calendar-day-num">18</span></button><button type="button" class="calendar-day sat" data-date="2026-09-19"><span class="calendar-day-num">19</span></button><button type="button" class="calendar-day sun" data-date="2026-09-20"><span class="calendar-day-num">20</span></button><button type="button" class="calendar-day" data-date="2026-09-21"><span class="calendar-day-num">21</span></button><button type="button" class="calendar-day" data-date="2026-09-22"><span class="calendar-day-num">22</span></button><button type="button" class="calendar-day" data-date="2026-09-23"><span class="calendar-day-num">23</span></button><button type="button" class="calendar-day" data-date="2026-09-24"><span class="calendar-day-num">24</span></button><button type="button" class="calendar-day" data-date="2026-09-25"><span class="calendar-day-num">25</span></button><button type="button" class="calendar-day sat" data-date="2026-09-26"><span class="calendar-day-num">26</span></button><button type="button" class="calendar-day sun" data-date="2026-09-27"><span class="calendar-day-num">27</span></button><button type="button" class="calendar-day" data-date="2026-09-28"><span class="calendar-day-num">28</span></button><button type="button" class="calendar-day" data-date="2026-09-29"><span class="calendar-day-num">29</span></button><button type="button" class="calendar-day" data-date="2026-09-30"><span class="calendar-day-num">30</span></button><button type="button" class="calendar-day muted" data-date="2026-10-01"><span class="calendar-day-num">1</span></button><button type="button" class="calendar-day muted" data-date="2026-10-02"><span class="calendar-day-num">2</span></button><button type="button" class="calendar-day muted sat" data-date="2026-10-03"><span class="calendar-day-num">3</span></button><button type="button" class="calendar-day muted sun" data-date="2026-10-04"><span class="calendar-day-num">4</span></button><button type="button" class="calendar-day muted" data-date="2026-10-05"><span class="calendar-day-num">5</span></button><button type="button" class="calendar-day muted" data-date="2026-10-06"><span class="calendar-day-num">6</span></button><button type="button" class="calendar-day muted" data-date="2026-10-07"><span class="calendar-day-num">7</span></button><button type="button" class="calendar-day muted" data-date="2026-10-08"><span class="calendar-day-num">8</span></button><button type="button" class="calendar-day muted" data-date="2026-10-09"><span class="calendar-day-num">9</span></button><button type="button" class="calendar-day muted sat" data-date="2026-10-10"><span class="calendar-day-num">10</span></button></div>
-<div class="calendar-legend">
-<span><i class="legend-practice"></i>練習</span>
-<span><i class="legend-official"></i>公式戦</span>
-<span><i class="legend-friendly"></i>練習試合</span>
-<span><i class="legend-other"></i>その他</span>
-</div>
-<div class="calendar-note">
-        公開中の予定は閲覧者全員に表示されます。
-      </div>
-</div>
-</div>
-</section>
-<div aria-hidden="true" class="calendar-viewer" id="calendarViewer">
-<div class="calendar-viewer-box">
-<button aria-label="閉じる" class="calendar-viewer-close" id="calendarViewerClose" type="button">×</button>
-<div class="calendar-viewer-date" id="calendarViewerDate"></div>
-<h2 id="calendarViewerTitle"></h2>
-<div class="calendar-viewer-row" id="calendarViewerCategoryRow"><b>種類</b><span id="calendarViewerCategory"></span></div>
-<div class="calendar-viewer-row" id="calendarViewerTimeRow"><b>時間</b><span id="calendarViewerTime"></span></div>
-<div class="calendar-viewer-row" id="calendarViewerPlaceRow"><b>場所</b><span id="calendarViewerPlace"></span></div>
-<div class="calendar-viewer-row" id="calendarViewerMemoRow"><b>詳細</b><span id="calendarViewerMemo"></span></div>
-</div>
-</div>
+
 <div aria-hidden="true" class="calendar-editor" id="calendarEditor">
 <div class="calendar-editor-box">
 <button aria-label="閉じる" class="calendar-editor-close" id="calendarEditorClose" type="button">×</button>
-<h2 id="calendarEditorDate">予定入力</h2>
+<h2 id="calendarEditorDate">スケジュール入力</h2>
 <form id="calendarForm">
-<label>予定名
+<label>スケジュール名
         <input id="calendarEventTitle" maxlength="50" placeholder="例：練習／公式戦／遠征" required="" type="text"/>
-</label>
-<label>種類
-        <select id="calendarEventCategory"><option value="practice">練習</option><option value="official">公式戦</option><option value="friendly">練習試合</option><option value="other">その他</option></select>
 </label>
 <label>時間
         <input id="calendarEventTime" maxlength="30" placeholder="例：8:00集合" type="text"/>
@@ -1567,7 +1373,7 @@ img,video,iframe{max-width:100%}
 </div>
 
 
-
+<section class="page show" id="alumni"><div class="pagehero"><div class="pagehero-inner"><div class="eyebrow">ALUMNI</div><h1>卒団生の進学先</h1><div class="crumb">HOME / 卒団生</div></div></div><div class="container"><div class="card"><p>卒団生の主な進学先</p><div class="grid3 alumni-public"><div><h3>千葉県内</h3><p id="alumniChiba">八千代東・市立習志野・千葉英和・東海大市原望洋・東海大浦安・流経大柏・拓大紅陵・市立船橋・八千代松陰・佐倉・日大習志野・八千代 ほか</p></div><div><h3>東京都内</h3><p id="alumniTokyo">修徳高校・日本大学第一高校 ほか</p></div><div><h3>他県</h3><p id="alumniOther">江戸川学園取手・日南学園 ほか</p></div></div><div id="alumniEditor" style="display:none;margin-top:28px;border-top:1px solid #ddd;padding-top:22px"><h3 style="margin-top:0">進学先を編集</h3><label style="display:block;font-weight:700;margin:14px 0 6px">千葉県内</label><textarea id="editChiba" style="width:100%;min-height:110px;padding:12px;font:inherit"></textarea><label style="display:block;font-weight:700;margin:14px 0 6px">東京都内</label><textarea id="editTokyo" style="width:100%;min-height:90px;padding:12px;font:inherit"></textarea><label style="display:block;font-weight:700;margin:14px 0 6px">他県</label><textarea id="editOther" style="width:100%;min-height:90px;padding:12px;font:inherit"></textarea><button id="saveAlumni" type="button" style="margin-top:16px;border:0;background:#c79a3b;color:#071426;font-weight:800;padding:13px 24px;border-radius:6px">保存する</button><span id="alumniStatus" style="margin-left:12px;font-size:13px"></span></div></div></div></section>
 
 
 <script>
@@ -1584,185 +1390,6 @@ function closeModal(){
   if(modal) modal.classList.remove('show');
 }
 </script>
-<script>
-
-const SHARED_API='/.netlify/functions/site-data';
-
-function getAdminPassword(){
-  let p=sessionStorage.getItem('yachiyoAdminPassword')||'';
-  if(!p){
-    p=prompt('管理者パスワードを入力してください')||'';
-    if(p) sessionStorage.setItem('yachiyoAdminPassword',p);
-  }
-  return p;
-}
-async function sharedLoad(section){
-  const r=await fetch(`${SHARED_API}?section=${encodeURIComponent(section)}`,{cache:'no-store'});
-  if(!r.ok) throw new Error('load failed');
-  const j=await r.json();
-  return Array.isArray(j.data)?j.data:[];
-}
-async function sharedSave(section,data){
-  const password=getAdminPassword();
-  if(!password) throw new Error('cancelled');
-  const r=await fetch(`${SHARED_API}?section=${encodeURIComponent(section)}`,{
-    method:'POST',
-    headers:{'content-type':'application/json','x-admin-password':password},
-    body:JSON.stringify({data})
-  });
-  if(r.status===401){
-    sessionStorage.removeItem('yachiyoAdminPassword');
-    alert('管理者パスワードが違います。');
-    throw new Error('unauthorized');
-  }
-  if(r.status===503){
-    alert('Netlifyの管理者パスワード設定がまだ完了していません。');
-    throw new Error('not configured');
-  }
-  if(!r.ok) throw new Error('save failed');
-  return true;
-}
-function escHtml(s){
-  return String(s??'').replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));
-}
-
-let scheduleData=[];
-window.scheduleData=scheduleData;
-let currentMonth=new Date();
-currentMonth.setDate(1);
-let selectedDate='';
-
-function ymd(y,m,d){
-  return `${y}-${String(m+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
-}
-function eventFor(date){return scheduleData.find(x=>x.date===date)}
-function renderCalendar(){
-  const y=currentMonth.getFullYear(), m=currentMonth.getMonth();
-  document.getElementById('calTitle').textContent=`${y}年 ${m+1}月`;
-  const grid=document.getElementById('calendarGrid');
-  const first=new Date(y,m,1).getDay();
-  const days=new Date(y,m+1,0).getDate();
-  const prevDays=new Date(y,m,0).getDate();
-  let html='';
-  for(let i=0;i<42;i++){
-    let d, cm=m, cy=y, muted=false;
-    if(i<first){d=prevDays-first+i+1;cm=m-1;muted=true;if(cm<0){cm=11;cy=y-1}}
-    else if(i>=first+days){d=i-first-days+1;cm=m+1;muted=true;if(cm>11){cm=0;cy=y+1}}
-    else d=i-first+1;
-    const date=ymd(cy,cm,d);
-    const ev=eventFor(date);
-    const dow=i%7;
-    html+=`<button type="button" class="calendar-day ${muted?'muted':''} ${dow===0?'sun':''} ${dow===6?'sat':''}" data-date="${date}">
-      <span class="calendar-day-num">${d}</span>
-      ${ev?`<span class="calendar-event-title cat-${escHtml(ev.category||'other')}">${escHtml(ev.title)}</span>`:''}
-    </button>`;
-  }
-  grid.innerHTML=html;
-  grid.querySelectorAll('[data-date]').forEach(b=>b.addEventListener('click',()=>{
-    const date=b.dataset.date;
-    if(document.body.classList.contains('admin-mode')){
-      openEditor(date);
-    }else if(eventFor(date)){
-      openViewer(date);
-    }
-  }));
-}
-function openViewer(date){
-  const ev=eventFor(date);
-  if(!ev)return;
-
-  const labels={
-    practice:'練習',
-    official:'公式戦',
-    friendly:'練習試合',
-    other:'その他'
-  };
-
-  document.getElementById('calendarViewerDate').textContent=date.replace(/-/g,'/');
-  document.getElementById('calendarViewerTitle').textContent=ev.title||'予定';
-  document.getElementById('calendarViewerCategory').textContent=labels[ev.category]||ev.category||'その他';
-
-  const setRow=(rowId,valueId,value)=>{
-    const row=document.getElementById(rowId);
-    const el=document.getElementById(valueId);
-    if(value){
-      el.textContent=value;
-      row.style.display='grid';
-    }else{
-      el.textContent='';
-      row.style.display='none';
-    }
-  };
-  setRow('calendarViewerTimeRow','calendarViewerTime',ev.time||'');
-  setRow('calendarViewerPlaceRow','calendarViewerPlace',ev.place||'');
-  setRow('calendarViewerMemoRow','calendarViewerMemo',ev.memo||'');
-
-  const viewer=document.getElementById('calendarViewer');
-  viewer.classList.add('show');
-  viewer.setAttribute('aria-hidden','false');
-}
-function closeViewer(){
-  const viewer=document.getElementById('calendarViewer');
-  viewer.classList.remove('show');
-  viewer.setAttribute('aria-hidden','true');
-}
-document.getElementById('calendarViewerClose').addEventListener('click',closeViewer);
-document.getElementById('calendarViewer').addEventListener('click',e=>{
-  if(e.target.id==='calendarViewer')closeViewer();
-});
-
-function openEditor(date){
-  selectedDate=date;
-  const ev=eventFor(date)||{};
-  document.getElementById('calendarEditorDate').textContent=date.replace(/-/g,'/');
-  document.getElementById('calendarEventTitle').value=ev.title||'';
-  document.getElementById('calendarEventCategory').value=ev.category||'practice';
-  document.getElementById('calendarEventTime').value=ev.time||'';
-  document.getElementById('calendarEventPlace').value=ev.place||'';
-  document.getElementById('calendarEventMemo').value=ev.memo||'';
-  document.getElementById('calendarDelete').style.visibility=ev.date?'visible':'hidden';
-  const ed=document.getElementById('calendarEditor');
-  ed.classList.add('show');ed.setAttribute('aria-hidden','false');
-}
-function closeEditor(){
-  const ed=document.getElementById('calendarEditor');
-  ed.classList.remove('show');ed.setAttribute('aria-hidden','true');
-}
-document.getElementById('calPrev').addEventListener('click',()=>{currentMonth.setMonth(currentMonth.getMonth()-1);renderCalendar()});
-document.getElementById('calNext').addEventListener('click',()=>{currentMonth.setMonth(currentMonth.getMonth()+1);renderCalendar()});
-document.getElementById('calendarEditorClose').addEventListener('click',closeEditor);
-document.getElementById('calendarEditor').addEventListener('click',e=>{if(e.target.id==='calendarEditor')closeEditor()});
-document.getElementById('calendarForm').addEventListener('submit',async e=>{
-  e.preventDefault();
-  const item={
-    date:selectedDate,
-    title:document.getElementById('calendarEventTitle').value.trim(),
-    category:document.getElementById('calendarEventCategory').value,
-    time:document.getElementById('calendarEventTime').value.trim(),
-    place:document.getElementById('calendarEventPlace').value.trim(),
-    memo:document.getElementById('calendarEventMemo').value.trim()
-  };
-  const next=scheduleData.filter(x=>x.date!==selectedDate);next.push(item);
-  try{await sharedSave('schedule',next);scheduleData=next;window.scheduleData=scheduleData;closeEditor();renderCalendar();}
-  catch(err){if(err.message!=='cancelled'&&err.message!=='unauthorized'&&err.message!=='not configured')alert('保存に失敗しました。');}
-});
-document.getElementById('calendarDelete').addEventListener('click',async()=>{
-  if(!selectedDate||!confirm('この予定を削除しますか？'))return;
-  const next=scheduleData.filter(x=>x.date!==selectedDate);
-  try{await sharedSave('schedule',next);scheduleData=next;window.scheduleData=scheduleData;closeEditor();renderCalendar();}
-  catch(err){if(err.message!=='cancelled'&&err.message!=='unauthorized'&&err.message!=='not configured')alert('削除に失敗しました。');}
-});
-renderCalendar();
-(async()=>{
-  try{
-    scheduleData=await sharedLoad('schedule');
-    window.scheduleData=scheduleData;
-    renderCalendar();
-  }catch(e){
-    /* カレンダー自体は先に1か月分表示済み */
-  }
-})();
-</script>
 <footer class="restored-footer">
 <div class="restored-footer-inner">
 <nav aria-label="フッターナビゲーション" class="restored-footer-nav">
@@ -1774,15 +1401,19 @@ renderCalendar();
 <a href="./join.html">入団案内</a>
 <a href="./alumni.html">卒団生</a>
 <a href="./contact.html">お問い合わせ</a>
-<a href="https://www.instagram.com/yachiyo_little_senior?igsi=MTl4N3dneG9uY2ZxcA==" rel="noopener noreferrer" target="_blank">Instagram</a><a href="https://www.facebook.com/share/1DakdBtEv6/?mibextid=wwXIfr" rel="noopener noreferrer" target="_blank">Facebook</a>
-<a href="#" onclick="return openProtectedArea('office')">事務局 🔒</a>
-<a href="#" onclick="return openProtectedArea('board')">チーム内案内板 🔒</a>
+<a href="https://www.instagram.com/yachiyo_little_senior?igsi=MTl4N3dneG9uY2ZxcA==" rel="noopener noreferrer" target="_blank">Instagram</a>
+<a href="https://www.facebook.com/share/1DakdBtEv6/?mibextid=wwXIfr" rel="noopener noreferrer" target="_blank">Facebook</a>
+<a href="./index.html#homeNews">新着NEWS</a>
+<a href="./rules.html">チーム規約</a>
+<a class="footer-board-full" href="#" onclick="return openProtectedArea('board')">チーム内案内板 🔒</a>
 </nav>
 <div class="ground-address"><a href="https://www.google.com/maps/search/?api=1&query=%E5%8D%83%E8%91%89%E7%9C%8C%E5%85%AB%E5%8D%83%E4%BB%A3%E5%B8%82%E5%B3%B6%E7%94%B0%E5%8F%B0%EF%BC%97%EF%BC%97%EF%BC%95" target="_blank" rel="noopener noreferrer" style="color:inherit;text-decoration:none;">グラウンド案内：千葉県八千代市島田台７７５</a></div>
-<button id="adminModeToggle" class="admin-toggle" type="button" onclick="enableAdminMode()">管理</button>
+<button id="alumniAdminBtn" type="button" style="display:none;position:static;margin:14px 0 0 auto;border:1px solid #c79a3b;background:#071426;color:#e2bd67;padding:9px 12px;border-radius:999px;font-size:12px;font-weight:800;box-shadow:0 5px 18px rgba(0,0,0,.25)">管理</button>
 <div class="restored-footer-copy">© YACHIYO LITTLE SENIOR. All Rights Reserved.</div>
 </div>
 </footer>
+
+
 
 
 
@@ -1790,9 +1421,7 @@ renderCalendar();
 function openProtectedArea(type){
   const entered=prompt("パスワードを入力してください");
   if(entered===null) return false;
-  if(type==="office" && entered!=="yachiyo198208000"){ alert("パスワードが違います。"); return false; }
   if(type==="board" && entered!=="yachiyo20260800"){ alert("パスワードが違います。"); return false; }
-  if(type==="office") window.location.href="mailto:yachiyo.littleseniors@gmail.com";
   if(type==="board") window.location.href="https://teamyachiyo8740.web.fc2.com/8740.html";
   return false;
 }
@@ -1853,88 +1482,70 @@ function openProtectedArea(type){
 
 <script>
 (function(){
-  const KEY='yachiyoAdminMode';
+ const API='/.netlify/functions/site-data';
+ const defaults={chiba:'八千代東・市立習志野・千葉英和・東海大市原望洋・東海大浦安・流経大柏・拓大紅陵・市立船橋・八千代松陰・佐倉・日大習志野・八千代 ほか',tokyo:'修徳高校・日本大学第一高校 ほか',other:'江戸川学園取手・日南学園 ほか'};
+ let data={...defaults};
+ const $=id=>document.getElementById(id);
+ function render(){ $('alumniChiba').textContent=data.chiba||defaults.chiba; $('alumniTokyo').textContent=data.tokyo||defaults.tokyo; $('alumniOther').textContent=data.other||defaults.other; $('editChiba').value=data.chiba||defaults.chiba; $('editTokyo').value=data.tokyo||defaults.tokyo; $('editOther').value=data.other||defaults.other; }
+ async function load(){ try{ const r=await fetch(API+'?section=alumni',{cache:'no-store'}); if(r.ok){ const j=await r.json(); const v=(j&&j.data!==undefined)?j.data:j; if(v&&typeof v==='object'&&!Array.isArray(v)) data={...data,...v}; } }catch(e){} render(); }
+ // ページ更新・再読み込み時は必ず管理状態とパスワードを解除
+ sessionStorage.removeItem('yachiyoAdminMode');
+ sessionStorage.removeItem('yachiyoAdminPassword');
+ $('alumniEditor').style.display='none';
+ $('alumniAdminBtn').textContent='管理';
+ $('alumniAdminBtn').style.display='none';
 
-  function apply(on){
-    document.body.classList.toggle('admin-mode',!!on);
-    const b=document.getElementById('adminModeToggle');
-    if(b){
-      b.textContent=on?'管理終了':'管理';
-      b.style.display=on?'block':'none';
-    }
-  }
+ $('alumniAdminBtn').addEventListener('click',function(){
+  const editor=$('alumniEditor');
+  const btn=$('alumniAdminBtn');
 
-  async function verifyAdminPassword(password){
-    try{
-      const data = Array.isArray(window.scheduleData) ? window.scheduleData : [];
-      const r = await fetch('/.netlify/functions/site-data?section=schedule',{
-        method:'POST',
-        headers:{
-          'content-type':'application/json',
-          'x-admin-password':password
-        },
-        body:JSON.stringify({data})
-      });
-      return r.ok;
-    }catch(e){
-      return false;
-    }
-  }
-
-  window.enableAdminMode=async function(){
-    if(document.body.classList.contains('admin-mode')){
-      sessionStorage.removeItem(KEY);
-      sessionStorage.removeItem('yachiyoAdminPassword');
-      apply(false);
-      return;
-    }
-
-    const p=prompt('管理者パスワードを入力してください');
-    if(!p)return;
-
-    const ok=await verifyAdminPassword(p);
-    if(!ok){
-      sessionStorage.removeItem(KEY);
-      sessionStorage.removeItem('yachiyoAdminPassword');
-      apply(false);
-      alert('管理者パスワードが違います。');
-      return;
-    }
-
-    sessionStorage.setItem('yachiyoAdminPassword',p);
-    sessionStorage.setItem(KEY,'1');
-    apply(true);
-  };
-
-  document.addEventListener('DOMContentLoaded',function(){
-    // ページを開くたび必ず一般閲覧モードから開始
-    sessionStorage.removeItem(KEY);
+  if(editor.style.display==='block'){
+    editor.style.display='none';
+    btn.textContent='管理';
+    btn.style.display='none';
+    sessionStorage.removeItem('yachiyoAdminMode');
     sessionStorage.removeItem('yachiyoAdminPassword');
-    apply(false);
+    return;
+  }
 
-    const footer=document.querySelector('.restored-footer');
-    const b=document.getElementById('adminModeToggle');
-    if(!footer||!b)return;
-    let tapCount=0,tapTimer=null;
-    footer.addEventListener('pointerup',function(e){
-      if(e.target.closest('#adminModeToggle'))return;
-      const r=footer.getBoundingClientRect();
-      if(Math.max(0,r.right-e.clientX)>130||Math.max(0,r.bottom-e.clientY)>130){
-        tapCount=0;return;
-      }
-      tapCount++;
-      clearTimeout(tapTimer);
-      tapTimer=setTimeout(function(){tapCount=0;},1500);
-      if(tapCount>=3){
-        tapCount=0;
-        clearTimeout(tapTimer);
-        b.style.display='block';
-      }
-    },{passive:true});
-  });
+  const pw=prompt('管理者パスワードを入力してください')||'';
+  if(!pw)return;
+
+  sessionStorage.setItem('yachiyoAdminPassword',pw);
+  sessionStorage.setItem('yachiyoAdminMode','1');
+  editor.style.display='block';
+  btn.textContent='管理終了';
+
+  setTimeout(()=>{
+    editor.scrollIntoView({behavior:'smooth',block:'start'});
+  },50);
+});
+
+ const footer=document.querySelector('.restored-footer');
+ const adminBtn=$('alumniAdminBtn');
+ if(footer&&adminBtn){
+   let tapCount=0,tapTimer=null;
+   footer.addEventListener('pointerup',function(e){
+     if(e.target.closest('#alumniAdminBtn'))return;
+     const r=footer.getBoundingClientRect();
+     if(Math.max(0,r.right-e.clientX)>130||Math.max(0,r.bottom-e.clientY)>130){
+       tapCount=0;return;
+     }
+     tapCount++;
+     clearTimeout(tapTimer);
+     tapTimer=setTimeout(function(){tapCount=0;},1500);
+     if(tapCount>=3){
+       tapCount=0;
+       clearTimeout(tapTimer);
+       adminBtn.style.display='block';
+     }
+   },{passive:true});
+ }
+
+ $('saveAlumni').addEventListener('click',async function(){ const pw=sessionStorage.getItem('yachiyoAdminPassword')||''; if(!pw){alert('管理者ログインが必要です');return;} const next={chiba:$('editChiba').value.trim(),tokyo:$('editTokyo').value.trim(),other:$('editOther').value.trim()}; $('alumniStatus').textContent='保存中…'; try{ const r=await fetch(API+'?section=alumni',{method:'POST',headers:{'Content-Type':'application/json','x-admin-password':pw},body:JSON.stringify({data:next})}); if(!r.ok) throw new Error('save failed'); data=next; render(); $('alumniStatus').textContent='保存しました'; setTimeout(()=>$('alumniStatus').textContent='',2500); }catch(e){ $('alumniStatus').textContent='保存できませんでした'; alert('保存できませんでした。管理者パスワードまたは設定を確認してください。'); } });
+
+ load();
 })();
 </script>
-
-
 </body>
 </html>
