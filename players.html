@@ -1493,6 +1493,51 @@ body.admin-mode .player-editor:not([hidden]){display:block!important}
 }
 </style>
 
+
+<style id="cohort-column-design-fix">
+/* 期（学年）を1行で見やすく表示 */
+#playersBody td.cohort-col,
+table thead th.cohort-col{
+  white-space:nowrap !important;
+  word-break:keep-all !important;
+  overflow-wrap:normal !important;
+  width:118px !important;
+  min-width:118px !important;
+  text-align:center !important;
+}
+#playersBody td.cohort-col{
+  font-weight:800;
+  color:#16243a;
+  letter-spacing:.01em;
+}
+@media (max-width:600px){
+  .card{padding:14px 12px !important;}
+  table{
+    width:100% !important;
+    table-layout:auto !important;
+  }
+  table th, table td{
+    padding:14px 10px !important;
+    vertical-align:middle !important;
+  }
+  #playersBody td.cohort-col,
+  table thead th.cohort-col{
+    width:104px !important;
+    min-width:104px !important;
+    font-size:13px !important;
+  }
+  table th:nth-child(2), table td:nth-child(2){
+    min-width:108px !important;
+  }
+  table th:nth-child(3), table td:nth-child(3){
+    display:none !important;
+  }
+  table th:nth-child(4), table td:nth-child(4){
+    min-width:165px !important;
+  }
+}
+</style>
+
 </head>
 <body>
 <header class="header">
@@ -1561,7 +1606,7 @@ body.admin-mode .player-editor:not([hidden]){display:block!important}
 </div>
 <div class="card">
 <table>
-<thead><tr><th>学年（期）</th><th>選手名</th><th>生年度</th><th>出身チーム</th></tr></thead>
+<thead><tr><th class="cohort-col">期（学年）</th><th>選手名</th><th>生年度</th><th>出身チーム</th></tr></thead>
 <tbody id="playersBody"></tbody>
 </table>
 </div>
@@ -1758,7 +1803,7 @@ function renderP(){updateGradeTabs();const o={'3年':3,'2年':2,'1年':1},b=docu
   const gd=(o[c.grade]||0)-(o[a.grade]||0);
   if(gd!==0)return gd;
   return String(a.name||'').localeCompare(String(c.name||''),'ja',{sensitivity:'base'});
-}).filter(p=>currentGrade==='all'||p.grade===currentGrade).map(p=>`<tr data-grade="${ep(p.grade)}"><td>${ep(gradeDisplay(p))}</td><td><div class="player-name-wrap"><strong>${ep(p.name)}</strong><button class="player-delete" type="button" onclick="deletePlayer('${ep(p.id)}')">削除</button></div></td><td>${ep(p.birth||'')}</td><td>${ep(p.team||'')}</td></tr>`).join('');countP()}function filterGrade(g,b){currentGrade=g;document.querySelectorAll('.tabs button').forEach(x=>x.classList.remove('active'));if(b)b.classList.add('active');renderP()}function togglePlayerPanel(f){const e=document.getElementById('playerEditor'),o=typeof f==='boolean'?f:e.hasAttribute('hidden');o?e.removeAttribute('hidden'):e.setAttribute('hidden','')}async function savePlayer(){const grade=playerGrade.value,name=playerName.value.trim(),birth=playerBirth.value.trim(),team=playerTeam.value.trim();if(!name)return alert('選手名を入力してください。');const cohort=cohortForGrade(grade);const n=playersData.concat([{id:'p'+Date.now(),grade,cohort,name,birth,team}]);try{await saveP(n);playersData=n;renderP();playerName.value=playerBirth.value=playerTeam.value='';togglePlayerPanel(false)}catch(e){alert(e.message)}}async function promoteGrades(){
+}).filter(p=>currentGrade==='all'||p.grade===currentGrade).map(p=>`<tr data-grade="${ep(p.grade)}"><td class="cohort-col">${ep(gradeDisplay(p))}</td><td><div class="player-name-wrap"><strong>${ep(p.name)}</strong><button class="player-delete" type="button" onclick="deletePlayer('${ep(p.id)}')">削除</button></div></td><td>${ep(p.birth||'')}</td><td>${ep(p.team||'')}</td></tr>`).join('');countP()}function filterGrade(g,b){currentGrade=g;document.querySelectorAll('.tabs button').forEach(x=>x.classList.remove('active'));if(b)b.classList.add('active');renderP()}function togglePlayerPanel(f){const e=document.getElementById('playerEditor'),o=typeof f==='boolean'?f:e.hasAttribute('hidden');o?e.removeAttribute('hidden'):e.setAttribute('hidden','')}async function savePlayer(){const grade=playerGrade.value,name=playerName.value.trim(),birth=playerBirth.value.trim(),team=playerTeam.value.trim();if(!name)return alert('選手名を入力してください。');const cohort=cohortForGrade(grade);const n=playersData.concat([{id:'p'+Date.now(),grade,cohort,name,birth,team}]);try{await saveP(n);playersData=n;renderP();playerName.value=playerBirth.value=playerTeam.value='';togglePlayerPanel(false)}catch(e){alert(e.message)}}async function promoteGrades(){
   if(!playersData.length)return alert('選手データがありません。');
   const third=playersData.filter(p=>p.grade==='3年').length;
   const second=playersData.filter(p=>p.grade==='2年').length;
