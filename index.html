@@ -1714,6 +1714,34 @@ body.photo-admin-on .seniorcup-admin-control{display:block}
   }
 }
 
+
+/* ===== HOME latest result refinement: grade badge above scoreboard ===== */
+.home-result-grade{
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  min-width:58px;
+  height:34px;
+  padding:0 14px;
+  margin:12px 0 8px;
+  border:1.5px solid #c79a3b;
+  border-radius:999px;
+  color:#9b741e;
+  background:#fffdf8;
+  font-size:14px;
+  font-weight:800;
+  line-height:1;
+}
+@media(max-width:600px){
+  .home-result-grade{
+    min-width:52px;
+    height:30px;
+    padding:0 12px;
+    margin:10px 0 4px;
+    font-size:13px;
+  }
+}
+
 </style>
 <style>
 /* Photo-enhanced final version */
@@ -2734,19 +2762,35 @@ document.addEventListener('DOMContentLoaded',function(){
     if(!score || score.dataset.scoreboardDone==='1')return;
 
     const raw=(score.textContent||'').replace(/\s+/g,' ').trim();
-    const m=raw.match(/^(.*?)\s+(\d+)\s*[-－–—]\s*(\d+)\s+(.*?)$/);
+    const m=raw.match(/^(?:(\d+年)\s*)?(.*?)\s+(\d+)\s*[-－–—]\s*(\d+)\s+(.*?)$/);
     if(!m)return;
 
     score.dataset.scoreboardDone='1';
     score.classList.add('home-result-scoreboard');
+
+    const grade=m[1]||'';
+    const left=m[2].trim();
+    const s1=m[3];
+    const s2=m[4];
+    const right=m[5].trim();
+
+    if(grade){
+      const badge=document.createElement('div');
+      badge.className='home-result-grade';
+      badge.textContent=grade;
+      score.parentNode.insertBefore(badge,score);
+    }
+
     score.innerHTML=
-      '<span class="home-result-team">'+escapeHtml(m[1])+'</span>'+
-      '<span class="home-result-score"><strong>'+m[2]+'</strong><span class="dash">−</span><strong>'+m[3]+'</strong></span>'+
-      '<span class="home-result-team">'+escapeHtml(m[4])+'</span>';
+      '<span class="home-result-team">'+escapeHtml(left)+'</span>'+
+      '<span class="home-result-score"><strong>'+s1+'</strong><span class="dash">−</span><strong>'+s2+'</strong></span>'+
+      '<span class="home-result-team">'+escapeHtml(right)+'</span>';
   }
+
   function escapeHtml(s){
     return String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
   }
+
   const observer=new MutationObserver(()=>upgradeHomeResult());
   observer.observe(document.documentElement,{subtree:true,childList:true,characterData:true});
   if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',upgradeHomeResult);
