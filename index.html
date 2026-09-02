@@ -1663,6 +1663,57 @@ body.photo-admin-on .seniorcup-admin-control{display:block}
   .seniorcup-home-link:after{right:12px;font-size:66px}
 }
 
+
+/* ===== HOME latest result: scoreboard layout ===== */
+#homeLatestResult .score,
+.home-latest-result .score{
+  margin:22px 0 16px;
+}
+.home-result-scoreboard{
+  display:grid;
+  grid-template-columns:minmax(0,1fr) auto minmax(0,1fr);
+  align-items:center;
+  gap:14px;
+  margin:20px 0 16px;
+}
+.home-result-team{
+  min-width:0;
+  font-family:"Yu Mincho","Hiragino Mincho ProN","Hiragino Mincho Pro",serif;
+  font-size:22px;
+  line-height:1.45;
+  color:#071426;
+}
+.home-result-team:first-child{text-align:right}
+.home-result-team:last-child{text-align:left}
+.home-result-score{
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  gap:10px;
+  white-space:nowrap;
+  color:#071426;
+  font-family:Georgia,"Times New Roman",serif;
+  font-size:42px;
+  line-height:1;
+}
+.home-result-score .dash{font-size:.72em}
+@media(max-width:600px){
+  .home-result-scoreboard{
+    grid-template-columns:minmax(0,1fr) auto minmax(0,1fr);
+    gap:8px;
+    margin:18px 0 14px;
+  }
+  .home-result-team{
+    font-size:17px;
+    line-height:1.45;
+    overflow-wrap:anywhere;
+  }
+  .home-result-score{
+    gap:6px;
+    font-size:34px;
+  }
+}
+
 </style>
 <style>
 /* Photo-enhanced final version */
@@ -2666,6 +2717,42 @@ document.addEventListener('DOMContentLoaded',function(){
   });
 
   load();
+})();
+</script>
+
+
+<script>
+(function(){
+  function upgradeHomeResult(){
+    const candidates=[...document.querySelectorAll('.card')];
+    const card=candidates.find(el=>{
+      const t=(el.textContent||'');
+      return t.includes('LATEST RESULT') && t.includes('試合結果');
+    });
+    if(!card)return;
+    const score=card.querySelector('.score');
+    if(!score || score.dataset.scoreboardDone==='1')return;
+
+    const raw=(score.textContent||'').replace(/\s+/g,' ').trim();
+    const m=raw.match(/^(.*?)\s+(\d+)\s*[-－–—]\s*(\d+)\s+(.*?)$/);
+    if(!m)return;
+
+    score.dataset.scoreboardDone='1';
+    score.classList.add('home-result-scoreboard');
+    score.innerHTML=
+      '<span class="home-result-team">'+escapeHtml(m[1])+'</span>'+
+      '<span class="home-result-score"><strong>'+m[2]+'</strong><span class="dash">−</span><strong>'+m[3]+'</strong></span>'+
+      '<span class="home-result-team">'+escapeHtml(m[4])+'</span>';
+  }
+  function escapeHtml(s){
+    return String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+  }
+  const observer=new MutationObserver(()=>upgradeHomeResult());
+  observer.observe(document.documentElement,{subtree:true,childList:true,characterData:true});
+  if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',upgradeHomeResult);
+  else upgradeHomeResult();
+  setTimeout(upgradeHomeResult,500);
+  setTimeout(upgradeHomeResult,1500);
 })();
 </script>
 
