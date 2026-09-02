@@ -2451,6 +2451,16 @@ body.photo-admin-on .news-delete{display:block}
 }
 </style>
 
+
+<style id="footer-canonical-mobile-fix">
+@media (max-width:600px){
+  .restored-footer-nav{
+    display:grid!important;
+    grid-template-columns:repeat(2,minmax(0,1fr))!important;
+  }
+}
+</style>
+
 </head>
 <body>
 <header class="header">
@@ -2678,9 +2688,9 @@ function closeModal(){
 <a href="./schedule.html">スケジュール</a>
 <a href="./join.html">入団案内</a>
 <a href="./contact.html">お問い合わせ</a>
+<a href="./index.html#homeNews">新着NEWS</a>
 <a href="https://www.instagram.com/yachiyo_little_senior?igsi=MTl4N3dneG9uY2ZxcA==" rel="noopener noreferrer" target="_blank">Instagram</a>
 <a href="https://www.facebook.com/share/1DakdBtEv6/?mibextid=wwXIfr" rel="noopener noreferrer" target="_blank">Facebook</a>
-<a href="#homeNews">新着NEWS</a>
 <a href="./rules.html">チーム規約 🔒</a>
 <a href="#" onclick="return openProtectedArea('board')">チーム内案内板 🔒</a>
 </nav>
