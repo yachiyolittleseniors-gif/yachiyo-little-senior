@@ -2070,6 +2070,121 @@ body.photo-admin-on .news-delete{display:block}
 }
 </style>
 
+
+<style>
+/* ===== HOME latest result premium compact redesign ===== */
+#topLatestResultScore{
+  margin-top:18px!important;
+}
+.home-result-grade{
+  margin:0 0 14px!important;
+  min-width:50px!important;
+  height:30px!important;
+  padding:0 12px!important;
+  font-size:13px!important;
+}
+.home-result-scoreboard{
+  display:grid!important;
+  grid-template-columns:minmax(0,1fr) auto minmax(0,1fr)!important;
+  align-items:center!important;
+  gap:12px!important;
+  margin:6px 0 20px!important;
+  padding:22px 0!important;
+  border-top:1px solid #e5e1d8;
+  border-bottom:1px solid #e5e1d8;
+}
+.home-result-team{
+  font-family:-apple-system,BlinkMacSystemFont,"Hiragino Kaku Gothic ProN","Yu Gothic",sans-serif!important;
+  font-size:22px!important;
+  line-height:1.35!important;
+  font-weight:800!important;
+  color:#071426!important;
+}
+.home-result-team:first-child{text-align:right!important}
+.home-result-team:last-child{text-align:left!important}
+.home-result-score{
+  display:flex!important;
+  align-items:center!important;
+  justify-content:center!important;
+  gap:10px!important;
+  min-width:132px;
+  font-family:Georgia,"Times New Roman",serif!important;
+  font-size:44px!important;
+  line-height:1!important;
+  color:#071426!important;
+}
+.home-result-score strong{font-size:1em!important}
+.home-result-order{
+  display:inline-block!important;
+  margin-top:8px!important;
+  padding:4px 9px!important;
+  border:1px solid rgba(199,154,59,.55);
+  border-radius:999px;
+  color:#9b741e!important;
+  background:#fffaf0;
+  font-family:-apple-system,BlinkMacSystemFont,"Hiragino Kaku Gothic ProN","Yu Gothic",sans-serif!important;
+  font-size:10px!important;
+  line-height:1!important;
+  font-weight:800!important;
+}
+.home-result-detail{
+  margin-top:0!important;
+  padding-top:0!important;
+  color:#596574!important;
+  font-size:14px!important;
+  font-weight:700!important;
+  line-height:1.7!important;
+}
+.home-result-mainline{
+  display:flex;
+  flex-wrap:wrap;
+  gap:8px 16px;
+  align-items:center;
+}
+.home-result-date{
+  color:#071426;
+  font-weight:800;
+}
+.home-result-tournament{
+  color:#596574;
+}
+.home-result-venue{
+  display:flex!important;
+  align-items:center;
+  gap:8px;
+  margin-top:8px!important;
+  color:#596574;
+}
+.home-result-venue::before{
+  content:"●";
+  color:#c79a3b;
+  font-size:10px;
+}
+@media(max-width:600px){
+  .home-result-scoreboard{
+    gap:8px!important;
+    padding:18px 0!important;
+    margin-bottom:16px!important;
+  }
+  .home-result-team{
+    font-size:18px!important;
+  }
+  .home-result-score{
+    min-width:100px;
+    gap:6px!important;
+    font-size:36px!important;
+  }
+  .home-result-order{
+    margin-top:6px!important;
+    padding:3px 7px!important;
+    font-size:9px!important;
+  }
+  .home-result-detail{
+    font-size:12.5px!important;
+  }
+}
+</style>
+
 </head>
 <body>
 <header class="header">
@@ -2458,8 +2573,11 @@ function openProtectedArea(type){
 
     nt.innerHTML=
       '<div class="home-result-detail">'+
-        [x.date?e(String(x.date).replace(/-/g,'/')):'',e(x.tournament||'')].filter(Boolean).join('　')+
-        (x.venue?'<span class="home-result-venue">会場：'+e(x.venue)+'</span>':'')+
+        '<div class="home-result-mainline">'+
+          (x.date?'<span class="home-result-date">'+e(String(x.date).replace(/-/g,'/'))+'</span>':'')+
+          (x.tournament?'<span class="home-result-tournament">'+e(x.tournament)+'</span>':'')+
+        '</div>'+
+        (x.venue?'<span class="home-result-venue">'+e(x.venue)+'</span>':'')+
       '</div>';
   }catch(err){
     sc.textContent='試合結果を見る';
