@@ -1600,6 +1600,62 @@ table thead th.cohort-col{
 .tabs button.grade-1:not(.active){border-color:#b8733c!important;color:#8e4d1e!important;background:#fff7f0!important;}
 </style>
 
+
+
+<style id="team-name-mobile-fix">
+@media (max-width:600px){
+  table{
+    width:100% !important;
+    table-layout:fixed !important;
+  }
+
+  /* 期・学年と選手名を少し詰め、出身チームを最優先 */
+  table th:nth-child(1),
+  table td:nth-child(1){
+    width:27% !important;
+    min-width:0 !important;
+  }
+
+  table th:nth-child(2),
+  table td:nth-child(2){
+    width:25% !important;
+    min-width:0 !important;
+  }
+
+  table th:nth-child(3),
+  table td:nth-child(3){
+    display:none !important;
+  }
+
+  table th:nth-child(4),
+  table td:nth-child(4){
+    width:48% !important;
+    min-width:0 !important;
+    white-space:nowrap !important;
+    overflow:visible !important;
+    text-overflow:clip !important;
+    word-break:keep-all !important;
+    font-size:12px !important;
+    letter-spacing:-.035em !important;
+    line-height:1.35 !important;
+  }
+
+  #playersBody td:nth-child(2){
+    font-size:13px !important;
+    white-space:nowrap !important;
+    letter-spacing:-.02em !important;
+  }
+
+  .cohort-grade-wrap{gap:4px !important;}
+  .cohort-badge{
+    min-width:39px !important;
+    padding:5px 6px !important;
+    font-size:11px !important;
+  }
+  .grade-text{font-size:11px !important;}
+}
+</style>
+
 </head>
 <body>
 <header class="header">
