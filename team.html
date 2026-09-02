@@ -1420,6 +1420,38 @@ body.staff-editing .graduate-admin{display:block}
 }
 </style>
 
+
+<style id="staff-temporary-layout-fix">
+/* 臨時コーチ：氏名の下に補足を配置 */
+.staff-feature-name{
+  flex-direction:column !important;
+  align-items:flex-start !important;
+  justify-content:center !important;
+}
+.staff-main-name{
+  display:block !important;
+  white-space:nowrap !important;
+}
+.staff-sub-name{
+  display:block !important;
+  margin-top:5px !important;
+  white-space:nowrap !important;
+}
+@media(max-width:600px){
+  .staff-feature-name{
+    padding:14px 16px !important;
+  }
+  .staff-main-name{
+    font-size:17px !important;
+  }
+  .staff-sub-name{
+    margin-top:4px !important;
+    font-size:11px !important;
+    letter-spacing:.02em !important;
+  }
+}
+</style>
+
 </head>
 <body>
 <header class="header">
