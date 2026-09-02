@@ -1376,6 +1376,29 @@ body.staff-editing .graduate-admin{display:block}
 .graduate-path-cancel{border:1px solid #bdc4cc;background:#fff;color:#4b5662}
 @media(max-width:600px){.graduate-admin-actions{display:grid;grid-template-columns:1fr 1fr}.graduate-admin-actions button{width:100%}}
 </style>
+
+<style id="staff-premium-grouped-design">
+.staff-list{max-width:860px!important}
+.staff-feature-row{display:grid;grid-template-columns:270px 1fr;align-items:stretch;margin:0 0 22px;border:1px solid #c9a24c;border-radius:10px;overflow:hidden;background:#fff}
+.staff-feature-role{display:flex;align-items:center;padding:20px 26px;background:#071f39;color:#e1bc65;font-size:18px;font-weight:900;letter-spacing:.04em}
+.staff-feature-name{display:flex;align-items:center;padding:20px 38px;color:#07182c;font-size:21px;font-weight:900;letter-spacing:.06em}
+.staff-coach-group{margin:26px 0;border:1px solid #c9a24c;border-radius:10px;overflow:hidden;background:#fff}
+.staff-coach-title{display:flex;justify-content:space-between;align-items:center;padding:19px 28px;background:#071f39;color:#e1bc65;font-size:20px;font-weight:900;letter-spacing:.05em}
+.staff-coach-title b{font-size:17px}
+.staff-coach-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));column-gap:34px;padding:14px 28px 18px}
+.staff-coach-name{position:relative;padding:15px 10px 15px 27px;border-bottom:1px solid #e5dfd1;color:#07182c;font-size:17px;font-weight:800;letter-spacing:.05em}
+.staff-coach-name:before{content:'•';position:absolute;left:4px;color:#c79a3b;font-size:22px;top:10px}
+@media(max-width:600px){
+ .staff-feature-row{grid-template-columns:128px 1fr;margin-bottom:14px}
+ .staff-feature-role{padding:16px 10px;justify-content:center;text-align:center;font-size:14px}
+ .staff-feature-name{padding:16px 18px;font-size:17px}
+ .staff-coach-group{margin:18px 0}
+ .staff-coach-title{padding:16px 18px;font-size:17px}
+ .staff-coach-title b{font-size:14px}
+ .staff-coach-grid{grid-template-columns:1fr;padding:8px 18px 14px}
+ .staff-coach-name{padding:13px 8px 13px 25px;font-size:16px}
+}
+</style>
 </head>
 <body>
 <header class="header">
@@ -1670,7 +1693,19 @@ function openProtectedArea(type){
  const pub=document.getElementById('staffPublic'), editor=document.getElementById('staffEditor');
  const esc=s=>String(s??'').replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));
  function render(){
-   pub.innerHTML=staff.map(x=>`<div class="staff-row"><div class="staff-role">${esc(x.role)}</div><div class="staff-name">${esc(x.name)}</div></div>`).join('');
+   const managers=staff.filter(x=>x.role==='監督');
+   const heads=staff.filter(x=>x.role==='ヘッドコーチ');
+   const coaches=staff.filter(x=>x.role==='コーチ');
+   const temporary=staff.filter(x=>x.role==='臨時コーチ');
+   const others=staff.filter(x=>!['監督','ヘッドコーチ','コーチ','臨時コーチ'].includes(x.role));
+   const single=x=>`<div class="staff-feature-row"><div class="staff-feature-role">${esc(x.role)}</div><div class="staff-feature-name">${esc(x.name)}</div></div>`;
+   let html=[...managers,...heads].map(single).join('');
+   if(coaches.length){
+     html+=`<div class="staff-coach-group"><div class="staff-coach-title"><span>コーチ</span><b>${coaches.length}名</b></div><div class="staff-coach-grid">${coaches.map(x=>`<div class="staff-coach-name">${esc(x.name)}</div>`).join('')}</div></div>`;
+   }
+   html+=temporary.map(single).join('');
+   html+=others.map(single).join('');
+   pub.innerHTML=html;
  }
  function renderEditor(){
    editor.innerHTML=staff.map((x,i)=>`<div class="staff-editor-row"><input data-i="${i}" data-k="role" value="${esc(x.role)}" placeholder="役職"><input data-i="${i}" data-k="name" value="${esc(x.name)}" placeholder="名前"><button type="button" class="staff-delete" data-del="${i}">削除</button></div>`).join('');
