@@ -6,7 +6,7 @@
 <meta charset="utf-8"/>
 <meta content="width=device-width, initial-scale=1.0, viewport-fit=cover" name="viewport"/>
 <meta content="#071426" name="theme-color"/>
-<title>スケジュール｜八千代リトルシニア（八千代シニア）</title>
+<title>スケジュール｜八千代リトルシニア（八千代シニア）公式</title>
 <style>
 :root{
   --navy:#071426; --navy2:#0c1d33; --gold:#c79a3b; --gold2:#e2bd67;
@@ -1208,75 +1208,6 @@ nav a *,
   .menu{display:flex!important}
 }
 
-
-
-/* 公開閲覧用：予定詳細ポップアップ */
-.calendar-viewer{
-  display:none;
-  position:fixed;
-  inset:0;
-  z-index:9998;
-  padding:20px;
-  background:rgba(3,12,24,.72);
-  align-items:center;
-  justify-content:center;
-}
-.calendar-viewer.show{display:flex}
-.calendar-viewer-box{
-  position:relative;
-  width:min(520px,100%);
-  max-height:90vh;
-  overflow:auto;
-  background:#fff;
-  border-radius:12px;
-  padding:26px 22px 22px;
-  box-shadow:0 20px 60px rgba(0,0,0,.28);
-  border-top:4px solid #c79a3b;
-}
-.calendar-viewer-close{
-  position:absolute;
-  top:10px;
-  right:10px;
-  width:40px;
-  height:40px;
-  border:0;
-  border-radius:50%;
-  background:#f0f2f5;
-  color:#071426;
-  font-size:25px;
-  cursor:pointer;
-}
-.calendar-viewer-date{
-  padding-right:46px;
-  color:#9b7623;
-  font-size:13px;
-  font-weight:800;
-  letter-spacing:.05em;
-}
-.calendar-viewer-box h2{
-  margin:7px 46px 18px 0;
-  color:#071426;
-  font-size:24px;
-  line-height:1.45;
-}
-.calendar-viewer-row{
-  display:grid;
-  grid-template-columns:64px 1fr;
-  gap:12px;
-  padding:12px 0;
-  border-top:1px solid #e2e5e9;
-  font-size:15px;
-  line-height:1.65;
-}
-.calendar-viewer-row b{color:#9b7623}
-.calendar-viewer-row span{white-space:pre-wrap;overflow-wrap:anywhere}
-@media(max-width:600px){
-  .calendar-viewer{padding:12px}
-  .calendar-viewer-box{padding:24px 16px 18px}
-  .calendar-viewer-box h2{font-size:21px}
-  .calendar-viewer-row{grid-template-columns:56px 1fr;font-size:14px}
-}
-
 </style>
 <style>
 /* Photo-enhanced final version */
@@ -1399,13 +1330,13 @@ img,video,iframe{max-width:100%}
 <link rel="canonical" href="https://yachiyo-little-senior.netlify.app/schedule.html">
 <meta property="og:type" content="website">
 <meta property="og:site_name" content="八千代リトルシニア">
-<meta property="og:title" content="予定｜八千代リトルシニア（八千代シニア）">
+<meta property="og:title" content="スケジュール｜八千代リトルシニア（八千代シニア）公式">
 <meta property="og:description" content="八千代リトルシニアの活動予定を掲載。土曜日・日曜日・祝日の練習、公式戦、練習試合などの予定をご確認いただけます。">
 <meta property="og:url" content="https://yachiyo-little-senior.netlify.app/schedule.html">
 <meta name="twitter:card" content="summary">
-<meta name="twitter:title" content="予定｜八千代リトルシニア（八千代シニア）">
+<meta name="twitter:title" content="スケジュール｜八千代リトルシニア（八千代シニア）公式">
 <meta name="twitter:description" content="八千代リトルシニアの活動予定を掲載。土曜日・日曜日・祝日の練習、公式戦、練習試合などの予定をご確認いただけます。">
-<script type="application/ld+json">{"@context":"https://schema.org","@type":"BreadcrumbList","itemListElement":[{"@type":"ListItem","position":1,"name":"HOME","item":"https://yachiyo-little-senior.netlify.app/"},{"@type":"ListItem","position":2,"name":"予定","item":"https://yachiyo-little-senior.netlify.app/schedule.html"}]}</script>
+<script type="application/ld+json">{"@context":"https://schema.org","@type":"BreadcrumbList","itemListElement":[{"@type":"ListItem","position":1,"name":"HOME","item":"https://yachiyo-little-senior.netlify.app/"},{"@type":"ListItem","position":2,"name":"スケジュール","item":"https://yachiyo-little-senior.netlify.app/schedule.html"}]}</script>
 
 <style>
 /* 予定：1か月カレンダー表示 */
@@ -1453,16 +1384,6 @@ img,video,iframe{max-width:100%}
   #calTitle{display:block!important}
 }
 </style>
-
-<style id="footer-canonical-mobile-fix">
-@media (max-width:600px){
-  .restored-footer-nav{
-    display:grid!important;
-    grid-template-columns:repeat(2,minmax(0,1fr))!important;
-  }
-}
-</style>
-
 </head>
 <body>
 <header class="header">
@@ -1537,17 +1458,6 @@ img,video,iframe{max-width:100%}
 </div>
 </div>
 </section>
-<div aria-hidden="true" class="calendar-viewer" id="calendarViewer">
-<div class="calendar-viewer-box">
-<button aria-label="閉じる" class="calendar-viewer-close" id="calendarViewerClose" type="button">×</button>
-<div class="calendar-viewer-date" id="calendarViewerDate"></div>
-<h2 id="calendarViewerTitle"></h2>
-<div class="calendar-viewer-row" id="calendarViewerCategoryRow"><b>種類</b><span id="calendarViewerCategory"></span></div>
-<div class="calendar-viewer-row" id="calendarViewerTimeRow"><b>時間</b><span id="calendarViewerTime"></span></div>
-<div class="calendar-viewer-row" id="calendarViewerPlaceRow"><b>場所</b><span id="calendarViewerPlace"></span></div>
-<div class="calendar-viewer-row" id="calendarViewerMemoRow"><b>詳細</b><span id="calendarViewerMemo"></span></div>
-</div>
-</div>
 <div aria-hidden="true" class="calendar-editor" id="calendarEditor">
 <div class="calendar-editor-box">
 <button aria-label="閉じる" class="calendar-editor-close" id="calendarEditorClose" type="button">×</button>
@@ -1669,58 +1579,9 @@ function renderCalendar(){
   }
   grid.innerHTML=html;
   grid.querySelectorAll('[data-date]').forEach(b=>b.addEventListener('click',()=>{
-    const date=b.dataset.date;
-    if(document.body.classList.contains('admin-mode')){
-      openEditor(date);
-    }else if(eventFor(date)){
-      openViewer(date);
-    }
+    if(document.body.classList.contains('admin-mode')) openEditor(b.dataset.date);
   }));
 }
-function openViewer(date){
-  const ev=eventFor(date);
-  if(!ev)return;
-
-  const labels={
-    practice:'練習',
-    official:'公式戦',
-    friendly:'練習試合',
-    other:'その他'
-  };
-
-  document.getElementById('calendarViewerDate').textContent=date.replace(/-/g,'/');
-  document.getElementById('calendarViewerTitle').textContent=ev.title||'予定';
-  document.getElementById('calendarViewerCategory').textContent=labels[ev.category]||ev.category||'その他';
-
-  const setRow=(rowId,valueId,value)=>{
-    const row=document.getElementById(rowId);
-    const el=document.getElementById(valueId);
-    if(value){
-      el.textContent=value;
-      row.style.display='grid';
-    }else{
-      el.textContent='';
-      row.style.display='none';
-    }
-  };
-  setRow('calendarViewerTimeRow','calendarViewerTime',ev.time||'');
-  setRow('calendarViewerPlaceRow','calendarViewerPlace',ev.place||'');
-  setRow('calendarViewerMemoRow','calendarViewerMemo',ev.memo||'');
-
-  const viewer=document.getElementById('calendarViewer');
-  viewer.classList.add('show');
-  viewer.setAttribute('aria-hidden','false');
-}
-function closeViewer(){
-  const viewer=document.getElementById('calendarViewer');
-  viewer.classList.remove('show');
-  viewer.setAttribute('aria-hidden','true');
-}
-document.getElementById('calendarViewerClose').addEventListener('click',closeViewer);
-document.getElementById('calendarViewer').addEventListener('click',e=>{
-  if(e.target.id==='calendarViewer')closeViewer();
-});
-
 function openEditor(date){
   selectedDate=date;
   const ev=eventFor(date)||{};
@@ -1782,15 +1643,13 @@ renderCalendar();
 <a href="./results.html">試合結果</a>
 <a href="./schedule.html">スケジュール</a>
 <a href="./join.html">入団案内</a>
+<a href="./alumni.html">卒団生</a>
 <a href="./contact.html">お問い合わせ</a>
-<a href="./index.html#homeNews">新着NEWS</a>
-<a href="https://www.instagram.com/yachiyo_little_senior?igsi=MTl4N3dneG9uY2ZxcA==" rel="noopener noreferrer" target="_blank">Instagram</a>
-<a href="https://www.facebook.com/share/1DakdBtEv6/?mibextid=wwXIfr" rel="noopener noreferrer" target="_blank">Facebook</a>
-<a href="./rules.html">チーム規約 🔒</a>
+<a href="https://www.instagram.com/yachiyo_little_senior?igsi=MTl4N3dneG9uY2ZxcA==" rel="noopener noreferrer" target="_blank">Instagram</a><a href="https://www.facebook.com/share/1DakdBtEv6/?mibextid=wwXIfr" rel="noopener noreferrer" target="_blank">Facebook</a>
+<a href="#" onclick="return openProtectedArea('office')">事務局 🔒</a>
 <a href="#" onclick="return openProtectedArea('board')">チーム内案内板 🔒</a>
 </nav>
-<div class="ground-address"><a href="https://www.google.com/maps/search/?api=1&query=%E5%8D%83%E8%91%89%E7%9C%8C%E5%85%AB%E5%8D%83%E4%BB%A3%E5%B8%82%E5%B3%B6%E7%94%B0%E5%8F%B0%EF%BC%97%EF%BC%97%EF%BC%95" target="_blank" rel="noopener noreferrer" style="color:inherit;text-decoration:none;">グラウンド案内：千葉県八千代市島田台７７５</a></div>
-<div style="text-align:center;margin-top:10px;font-size:11px;"><a href="./privacy.html" style="color:#8f9aa7;text-decoration:none;">プライバシーポリシー</a></div>
+<div class="ground-address"><a href="https://www.google.com/maps/search/?api=1&query=%E5%8D%83%E8%91%89%E7%9C%8C%E5%85%AB%E5%8D%83%E4%BB%A3%E5%B8%82%E5%B3%B6%E7%94%B0%E5%8F%B0%EF%BC%97%EF%BC%97%EF%BC%95" target="_blank" rel="noopener noreferrer" style="color:inherit;text-decoration:none;">グラウンド：千葉県八千代市島田台７７５</a></div>
 <button id="adminModeToggle" class="admin-toggle" type="button" onclick="enableAdminMode()">管理</button>
 <div class="restored-footer-copy">© YACHIYO LITTLE SENIOR. All Rights Reserved.</div>
 </div>
