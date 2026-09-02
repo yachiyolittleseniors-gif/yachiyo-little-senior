@@ -1653,7 +1653,17 @@ function openProtectedArea(type){
  const defaults=[
   {role:'監督',name:'早坂 徹'},
   {role:'ヘッドコーチ',name:'平田 祥之'},
-  {role:'コーチ',name:'河野 剛、村山 清隆、杉山 弘明、蜂谷 和彦、小芦 健二、吉田 真也、川上 智久、阿部 俊友、山田 義喜、山田 寛貴、齋川 英司'},
+  {role:'コーチ',name:'河野 剛'},
+  {role:'コーチ',name:'村山 清隆'},
+  {role:'コーチ',name:'杉山 弘明'},
+  {role:'コーチ',name:'蜂谷 和彦'},
+  {role:'コーチ',name:'小芦 健二'},
+  {role:'コーチ',name:'吉田 真也'},
+  {role:'コーチ',name:'川上 智久'},
+  {role:'コーチ',name:'阿部 俊友'},
+  {role:'コーチ',name:'山田 義喜'},
+  {role:'コーチ',name:'山田 寛貴'},
+  {role:'コーチ',name:'齋川 英司'},
   {role:'臨時コーチ',name:'河野 良平（陸上トレーナー）'}
  ];
  let staff=defaults.slice();
@@ -1673,7 +1683,8 @@ function openProtectedArea(type){
     incoming[1]?.role==='ヘッドコーチ' && incoming[1]?.name==='平田 祥之' &&
     incoming[2]?.role==='コーチ' && incoming[2]?.name==='河野 剛' &&
     incoming[3]?.role==='学生コーチ' && incoming[3]?.name==='学生コーチ';
-  staff = legacy ? defaults.slice() : incoming;
+  const groupedCoach = incoming.some(x=>x.role==='コーチ' && x.name.includes('村山 清隆') && x.name.includes('齋川 英司'));
+  staff = (legacy || groupedCoach) ? defaults.slice() : incoming;
 }}}catch(e){}
    render();
  }
