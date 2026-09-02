@@ -1996,6 +1996,80 @@ body.photo-admin-on .news-delete{display:block}
 .affiliation-note{margin:8px 0 0;font-size:12px;font-weight:500;letter-spacing:.06em;line-height:1.6;color:rgba(255,255,255,.72)}
 @media(max-width:600px){.affiliation-note{font-size:10.5px;letter-spacing:.035em;margin-top:6px}}
 </style>
+
+<style>
+/* HOME 最新試合結果：先攻/後攻・会場対応 */
+#topLatestResultScore{
+  margin-top:14px;
+}
+.home-result-grade{
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  min-width:54px;
+  height:31px;
+  padding:0 12px;
+  margin:0 0 18px;
+  border:1.5px solid #c79a3b;
+  border-radius:999px;
+  color:#9b741e;
+  background:#fffdf8;
+  font-size:13px;
+  font-weight:800;
+}
+.home-result-scoreboard{
+  display:grid;
+  grid-template-columns:minmax(0,1fr) auto minmax(0,1fr);
+  align-items:center;
+  gap:10px;
+}
+.home-result-team{
+  min-width:0;
+  font-family:"Yu Mincho","Hiragino Mincho ProN","Hiragino Mincho Pro",serif;
+  font-size:21px;
+  line-height:1.35;
+  color:#071426;
+  font-weight:600;
+}
+.home-result-team:first-child{text-align:right}
+.home-result-team:last-child{text-align:left}
+.home-result-score{
+  display:flex;
+  align-items:center;
+  gap:7px;
+  white-space:nowrap;
+  color:#071426;
+  font-family:Georgia,"Times New Roman",serif;
+  font-size:38px;
+  line-height:1;
+}
+.home-result-order{
+  display:block;
+  margin-top:6px;
+  color:#a77d20;
+  font-family:system-ui,-apple-system,"Hiragino Kaku Gothic ProN","Yu Gothic",sans-serif;
+  font-size:10px;
+  font-weight:800;
+}
+.home-result-detail{
+  margin-top:20px;
+  color:#596574;
+  font-size:14px;
+  font-weight:700;
+  line-height:1.7;
+}
+.home-result-venue{
+  display:block;
+  margin-top:5px;
+}
+@media(max-width:600px){
+  .home-result-scoreboard{gap:7px}
+  .home-result-team{font-size:18px}
+  .home-result-score{font-size:34px;gap:5px}
+  .home-result-detail{font-size:13px}
+}
+</style>
+
 </head>
 <body>
 <header class="header">
@@ -2350,7 +2424,48 @@ function openProtectedArea(type){
 })();
 </script>
 
-<script>(async function(){const sc=document.getElementById('topLatestResultScore'),nt=document.getElementById('topLatestResultNote');if(!sc)return;try{const r=await fetch('/.netlify/functions/site-data?section=results',{cache:'no-store'}),j=await r.json(),d=Array.isArray(j.data)?j.data:[],f=d.filter(v=>String(v.tournament||'').trim()!=='テスト'&&String(v.opponent||'').trim()!=='テスト'),x=f.slice().sort((a,b)=>String(b.date||'').localeCompare(String(a.date||'')))[0];if(!x){sc.textContent='まだ試合結果は登録されていません。';nt.textContent='試合結果ページから登録できます。';return}const e=s=>String(s??'').replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m])),g=x.grade?'<span style="display:inline-block;margin-right:8px;border:1px solid #d7b457;color:#9b771e;border-radius:999px;padding:3px 8px;font-size:.45em;font-weight:800">'+e(x.grade)+'</span>':'';sc.innerHTML=g+'八千代リトルシニア <strong>'+e(x.ourScore)+' - '+e(x.oppScore)+'</strong> '+e(x.opponent||'');nt.textContent=[x.date?String(x.date).replace(/-/g,'/'):'',x.tournament||''].filter(Boolean).join('　')}catch(e){sc.textContent='試合結果を見る'}})();</script>
+<script>
+(async function(){
+  const sc=document.getElementById('topLatestResultScore');
+  const nt=document.getElementById('topLatestResultNote');
+  if(!sc)return;
+  const e=s=>String(s??'').replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));
+  try{
+    const r=await fetch('/.netlify/functions/site-data?section=results',{cache:'no-store'});
+    const j=await r.json();
+    const d=Array.isArray(j.data)?j.data:[];
+    const f=d.filter(v=>String(v.tournament||'').trim()!=='テスト'&&String(v.opponent||'').trim()!=='テスト');
+    const x=f.slice().sort((a,b)=>String(b.date||'').localeCompare(String(a.date||'')))[0];
+    if(!x){
+      sc.textContent='まだ試合結果は登録されていません。';
+      nt.textContent='試合結果ページから登録できます。';
+      return;
+    }
+
+    const yachiyoFirst=x.battingOrder!=='second';
+    const leftName=yachiyoFirst?'八千代':String(x.opponent||'');
+    const rightName=yachiyoFirst?String(x.opponent||''):'八千代';
+    const leftScore=yachiyoFirst?Number(x.ourScore):Number(x.oppScore);
+    const rightScore=yachiyoFirst?Number(x.oppScore):Number(x.ourScore);
+
+    sc.innerHTML=
+      (x.grade?'<div class="home-result-grade">'+e(x.grade)+'</div>':'')+
+      '<div class="home-result-scoreboard">'+
+        '<div class="home-result-team">'+e(leftName)+'<span class="home-result-order">先攻</span></div>'+
+        '<div class="home-result-score"><strong>'+leftScore+'</strong><span>−</span><strong>'+rightScore+'</strong></div>'+
+        '<div class="home-result-team">'+e(rightName)+'<span class="home-result-order">後攻</span></div>'+
+      '</div>';
+
+    nt.innerHTML=
+      '<div class="home-result-detail">'+
+        [x.date?e(String(x.date).replace(/-/g,'/')):'',e(x.tournament||'')].filter(Boolean).join('　')+
+        (x.venue?'<span class="home-result-venue">会場：'+e(x.venue)+'</span>':'')+
+      '</div>';
+  }catch(err){
+    sc.textContent='試合結果を見る';
+  }
+})();
+</script>
 <div id="heroPhotoAdmin">
   <button id="heroAdminToggle" type="button">管理</button>
   <label id="heroPhotoChange" for="heroPhotoInput">写真を変更</label>
@@ -2749,56 +2864,7 @@ document.addEventListener('DOMContentLoaded',function(){
 </script>
 
 
-<script>
-(function(){
-  function upgradeHomeResult(){
-    const candidates=[...document.querySelectorAll('.card')];
-    const card=candidates.find(el=>{
-      const t=(el.textContent||'');
-      return t.includes('LATEST RESULT') && t.includes('試合結果');
-    });
-    if(!card)return;
-    const score=card.querySelector('.score');
-    if(!score || score.dataset.scoreboardDone==='1')return;
 
-    const raw=(score.textContent||'').replace(/\s+/g,' ').trim();
-    const m=raw.match(/^(?:(\d+年)\s*)?(.*?)\s+(\d+)\s*[-－–—]\s*(\d+)\s+(.*?)$/);
-    if(!m)return;
-
-    score.dataset.scoreboardDone='1';
-    score.classList.add('home-result-scoreboard');
-
-    const grade=m[1]||'';
-    const left=m[2].trim();
-    const s1=m[3];
-    const s2=m[4];
-    const right=m[5].trim();
-
-    if(grade){
-      const badge=document.createElement('div');
-      badge.className='home-result-grade';
-      badge.textContent=grade;
-      score.parentNode.insertBefore(badge,score);
-    }
-
-    score.innerHTML=
-      '<span class="home-result-team">'+escapeHtml(left)+'</span>'+
-      '<span class="home-result-score"><strong>'+s1+'</strong><span class="dash">−</span><strong>'+s2+'</strong></span>'+
-      '<span class="home-result-team">'+escapeHtml(right)+'</span>';
-  }
-
-  function escapeHtml(s){
-    return String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
-  }
-
-  const observer=new MutationObserver(()=>upgradeHomeResult());
-  observer.observe(document.documentElement,{subtree:true,childList:true,characterData:true});
-  if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',upgradeHomeResult);
-  else upgradeHomeResult();
-  setTimeout(upgradeHomeResult,500);
-  setTimeout(upgradeHomeResult,1500);
-})();
-</script>
 
 </body>
 </html>
