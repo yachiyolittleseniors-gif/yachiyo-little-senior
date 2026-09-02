@@ -2185,6 +2185,99 @@ body.photo-admin-on .news-delete{display:block}
 }
 </style>
 
+
+<style>
+/* ===== HOME latest result: balanced mobile layout ===== */
+#topLatestResultScore{
+  margin-top:12px!important;
+}
+.home-result-grade{
+  margin:0 0 10px!important;
+}
+
+.home-result-scoreboard{
+  grid-template-columns:minmax(0,1fr) auto minmax(0,1fr)!important;
+  gap:8px!important;
+  padding:16px 0!important;
+  margin:0 0 14px!important;
+}
+
+.home-result-team{
+  font-size:19px!important;
+  line-height:1.25!important;
+  display:flex!important;
+  flex-direction:column!important;
+  align-items:center!important;
+  justify-content:center!important;
+  gap:6px!important;
+  text-align:center!important;
+}
+
+.home-result-team:first-child,
+.home-result-team:last-child{
+  text-align:center!important;
+}
+
+.home-result-score{
+  min-width:112px!important;
+  font-size:40px!important;
+  gap:7px!important;
+}
+
+.home-result-order{
+  margin-top:0!important;
+  padding:3px 8px!important;
+  font-size:9px!important;
+}
+
+.home-result-detail{
+  margin-top:0!important;
+  font-size:13px!important;
+}
+
+.home-result-mainline{
+  display:grid!important;
+  grid-template-columns:auto 1fr!important;
+  gap:8px 14px!important;
+  align-items:start!important;
+}
+
+.home-result-date{
+  white-space:nowrap!important;
+}
+
+.home-result-tournament{
+  min-width:0!important;
+}
+
+.home-result-venue{
+  margin-top:7px!important;
+  gap:7px!important;
+}
+
+@media(max-width:600px){
+  .home-result-scoreboard{
+    gap:6px!important;
+    padding:14px 0!important;
+  }
+  .home-result-team{
+    font-size:17px!important;
+  }
+  .home-result-score{
+    min-width:96px!important;
+    font-size:34px!important;
+    gap:5px!important;
+  }
+  .home-result-mainline{
+    grid-template-columns:1fr!important;
+    gap:2px!important;
+  }
+  .home-result-detail{
+    font-size:12.5px!important;
+  }
+}
+</style>
+
 </head>
 <body>
 <header class="header">
