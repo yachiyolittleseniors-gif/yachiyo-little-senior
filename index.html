@@ -2278,6 +2278,28 @@ body.photo-admin-on .news-delete{display:block}
 }
 </style>
 
+
+<style>
+/* HOME 最新試合結果：スコア数字を見やすいゴシック体に */
+.home-result-score{
+  font-family:-apple-system,BlinkMacSystemFont,"Helvetica Neue","Hiragino Kaku Gothic ProN","Yu Gothic",Arial,sans-serif!important;
+  font-size:38px!important;
+  font-weight:800!important;
+  letter-spacing:-0.02em!important;
+}
+.home-result-score strong{
+  font-family:inherit!important;
+  font-size:1em!important;
+  font-weight:800!important;
+  font-variant-numeric:tabular-nums;
+}
+@media(max-width:600px){
+  .home-result-score{
+    font-size:33px!important;
+  }
+}
+</style>
+
 </head>
 <body>
 <header class="header">
