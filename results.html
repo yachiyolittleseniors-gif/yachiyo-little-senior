@@ -1490,6 +1490,21 @@ img,video,iframe{max-width:100%}
 <meta name="twitter:card" content="summary_large_image">
 <meta name="twitter:title" content="試合結果｜八千代リトルシニア（八千代シニア）公式">
 <meta name="twitter:description" content="八千代リトルシニアの公式戦・練習試合の試合結果。千葉県八千代市の中学硬式野球チーム、八千代シニアの最新結果を掲載しています。">
+
+<style>
+/* 試合結果：チーム名を見やすく拡大 */
+.scoreline .team{
+  font-size:clamp(22px,3.2vw,30px) !important;
+  font-weight:800 !important;
+}
+@media(max-width:600px){
+  .scoreline .team{
+    font-size:22px !important;
+    line-height:1.35;
+  }
+}
+</style>
+
 </head>
 <body>
 <header class="header">
