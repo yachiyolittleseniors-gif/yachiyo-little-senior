@@ -1600,13 +1600,13 @@ table thead th.cohort-col{
 <p class="count" id="playerCount">読み込み中…</p>
 <div class="player-admin admin-only block"><button class="admin-btn" type="button" onclick="togglePlayerPanel()">＋ 選手を追加</button><button class="admin-btn" type="button" onclick="promoteGrades()">学年繰り上げ</button></div><div class="player-editor admin-only" id="playerEditor" hidden><div class="player-form-grid"><div><label for="playerGrade">学年</label><select id="playerGrade"><option value="1年">1年</option><option value="2年">2年</option><option value="3年">3年</option></select></div><div><label for="playerName">選手名</label><input id="playerName" type="text"></div><div><label for="playerBirth">生年度</label><input id="playerBirth" type="text" placeholder="例：2013年度"></div><div><label for="playerTeam">出身チーム</label><input id="playerTeam" type="text"></div></div><div class="player-form-actions"><button class="admin-btn" type="button" onclick="savePlayer()">登録する</button><button class="admin-btn" type="button" onclick="togglePlayerPanel(false)">閉じる</button></div></div><div class="tabs">
 <button class="active" onclick="filterGrade('all',this)">全選手</button>
-<button onclick="filterGrade('3年',this)" id="tabGrade3">44期（3年）</button>
-<button onclick="filterGrade('2年',this)" id="tabGrade2">45期（2年）</button>
-<button onclick="filterGrade('1年',this)" id="tabGrade1">46期（1年）</button>
+<button onclick="filterGrade('3年',this)" id="tabGrade3">44期 3年</button>
+<button onclick="filterGrade('2年',this)" id="tabGrade2">45期 2年</button>
+<button onclick="filterGrade('1年',this)" id="tabGrade1">46期 1年</button>
 </div>
 <div class="card">
 <table>
-<thead><tr><th class="cohort-col">期（学年）</th><th>選手名</th><th>生年度</th><th>出身チーム</th></tr></thead>
+<thead><tr><th class="cohort-col">期・学年</th><th>選手名</th><th>生年度</th><th>出身チーム</th></tr></thead>
 <tbody id="playersBody"></tbody>
 </table>
 </div>
@@ -1789,14 +1789,14 @@ function cohortForGrade(g){
 }
 function gradeDisplay(p){
   const c=Number(p.cohort)||cohortForGrade(p.grade);
-  return c?`${c}期（${p.grade}）`:p.grade;
+  return c?`${c}期 ${p.grade}`:p.grade;
 }
 function updateGradeTabs(){
   const first=currentFirstCohort();
   const t3=document.getElementById('tabGrade3'),t2=document.getElementById('tabGrade2'),t1=document.getElementById('tabGrade1');
-  if(t3)t3.textContent=`${first-2}期（3年）`;
-  if(t2)t2.textContent=`${first-1}期（2年）`;
-  if(t1)t1.textContent=`${first}期（1年）`;
+  if(t3)t3.textContent=`${first-2}期 3年`;
+  if(t2)t2.textContent=`${first-1}期 2年`;
+  if(t1)t1.textContent=`${first}期 1年`;
 }
 function countP(){const c={'1年':0,'2年':0,'3年':0};playersData.forEach(p=>{if(c[p.grade]!=null)c[p.grade]++});document.getElementById('playerCount').textContent=`3年 ${c['3年']}名 ／ 2年 ${c['2年']}名 ／ 1年 ${c['1年']}名`}
 function renderP(){updateGradeTabs();const o={'3年':3,'2年':2,'1年':1},b=document.getElementById('playersBody');b.innerHTML=playersData.slice().sort((a,c)=>{
