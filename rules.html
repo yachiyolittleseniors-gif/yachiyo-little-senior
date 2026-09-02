@@ -125,14 +125,16 @@ async function loadRules(){
 }
 function renderRules(){
   const t=document.getElementById('rulesText');
-  t.textContent=rules.text || '現在、公開中のチーム規約はありません。';
-  t.classList.toggle('empty',!rules.text);
+  t.textContent=rules.text || (rules.pdf ? '' : '現在、公開中のチーム規約はありません。');
+  t.classList.toggle('empty',!rules.text && !rules.pdf);
+  t.hidden=!rules.text && !!rules.pdf;
   document.getElementById('rulesInput').value=rules.text||'';
   const box=document.getElementById('pdfBox');
   if(rules.pdf){
     box.hidden=false;
-    document.getElementById('pdfFrame').src=rules.pdf;
-    document.getElementById('pdfLink').href=rules.pdf;
+    const pdfUrl=dataUrlToBlobUrl(rules.pdf);
+    document.getElementById('pdfFrame').src=pdfUrl;
+    document.getElementById('pdfLink').href=pdfUrl;
   }else{
     box.hidden=true;
     document.getElementById('pdfFrame').removeAttribute('src');
@@ -173,6 +175,21 @@ async function toggleAdmin(){
   b.textContent='管理終了';
   b.style.display='block';
   document.getElementById('status').textContent='';
+}
+
+let currentPdfBlobUrl='';
+function dataUrlToBlobUrl(dataUrl){
+  if(!dataUrl || !dataUrl.startsWith('data:')) return dataUrl;
+  try{
+    if(currentPdfBlobUrl) URL.revokeObjectURL(currentPdfBlobUrl);
+    const parts=dataUrl.split(',');
+    const mime=(parts[0].match(/data:([^;]+)/)||[])[1]||'application/pdf';
+    const bin=atob(parts[1]);
+    const bytes=new Uint8Array(bin.length);
+    for(let i=0;i<bin.length;i++) bytes[i]=bin.charCodeAt(i);
+    currentPdfBlobUrl=URL.createObjectURL(new Blob([bytes],{type:mime}));
+    return currentPdfBlobUrl;
+  }catch(e){ return dataUrl; }
 }
 
 function fileToDataURL(file){
