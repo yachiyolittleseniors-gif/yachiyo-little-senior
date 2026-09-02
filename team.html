@@ -1363,6 +1363,19 @@ img,video,iframe{max-width:100%}
   .coaching-policy-item p,.graduate-paths p{font-size:13px}
 }
 </style>
+
+<style>
+/* Graduate destinations admin editor */
+.graduate-admin{display:none;margin-top:22px;padding-top:20px;border-top:1px solid #ddd5c5}
+body.staff-editing .graduate-admin{display:block}
+.graduate-admin label{display:block;margin:0 0 14px;color:#263344;font-size:13px;font-weight:800}
+.graduate-admin textarea{display:block;width:100%;min-height:105px;margin-top:7px;padding:12px;border:1px solid #cfd5dc;border-radius:6px;background:#fff;color:#172233;font:inherit;font-size:16px;line-height:1.6;resize:vertical}
+.graduate-admin-actions{display:flex;justify-content:flex-end;gap:10px;margin-top:16px;flex-wrap:wrap}
+.graduate-admin-actions button{min-height:44px;padding:0 20px;border-radius:6px;font-weight:800;cursor:pointer}
+.graduate-path-save{border:1px solid #071426;background:#071426;color:#fff}
+.graduate-path-cancel{border:1px solid #bdc4cc;background:#fff;color:#4b5662}
+@media(max-width:600px){.graduate-admin-actions{display:grid;grid-template-columns:1fr 1fr}.graduate-admin-actions button{width:100%}}
+</style>
 </head>
 <body>
 <header class="header">
@@ -1488,22 +1501,31 @@ img,video,iframe{max-width:100%}
 </div>
 </div>
 </div>
-<div class="card graduate-paths">
+<div class="card graduate-paths" id="graduatePaths">
 <div class="eyebrow">AFTER GRADUATION</div>
 <h2>近年の主な卒団生の進路</h2>
 <div class="path-group">
   <h3>県外私立高校</h3>
-  <p>履正社高校、履正社高校（女子野球部）（大阪）、霞ヶ浦高校（茨城）、日本文理高校（新潟）、八戸学院光星高校（青森）、北照高校（北海道）、江戸川学園取手高校（茨城）など</p>
+  <p id="graduateOutsidePrivate">履正社高校、履正社高校（女子野球部）（大阪）、霞ヶ浦高校（茨城）、日本文理高校（新潟）、八戸学院光星高校（青森）、北照高校（北海道）、江戸川学園取手高校（茨城）など</p>
 </div>
 <div class="path-group">
   <h3>県内私立高校</h3>
-  <p>千葉経済高校、東京学館船橋高校、東京学館高校、千葉英和高校、千葉敬愛高校、日大習志野高校、中央学院高校、八千代松陰高校など</p>
+  <p id="graduateInsidePrivate">千葉経済高校、東京学館船橋高校、東京学館高校、千葉英和高校、千葉敬愛高校、日大習志野高校、中央学院高校、八千代松陰高校など</p>
 </div>
 <div class="path-group">
   <h3>県内公立高校</h3>
-  <p>市立習志野高校、市立松戸高校、八千代高校、佐倉高校、八千代東高校など</p>
+  <p id="graduatePublic">市立習志野高校、市立松戸高校、八千代高校、佐倉高校、八千代東高校など</p>
 </div>
 <p class="path-note">※一部抜粋となります。その他の進路はホームページに記載されています。</p>
+<div class="graduate-admin" id="graduateAdmin">
+  <label>県外私立高校<textarea id="graduateOutsidePrivateEdit"></textarea></label>
+  <label>県内私立高校<textarea id="graduateInsidePrivateEdit"></textarea></label>
+  <label>県内公立高校<textarea id="graduatePublicEdit"></textarea></label>
+  <div class="graduate-admin-actions">
+    <button class="graduate-path-cancel" id="graduatePathCancel" type="button">キャンセル</button>
+    <button class="graduate-path-save" id="graduatePathSave" type="button">進路を保存</button>
+  </div>
+</div>
 </div>
 </div></section>
 <div aria-hidden="true" class="calendar-editor" id="calendarEditor">
@@ -1751,5 +1773,66 @@ function openProtectedArea(type){
 })();
 </script>
 
+
+<script>
+(function(){
+  const API='/.netlify/functions/site-data?section=graduate-paths';
+  const defaults={
+    outsidePrivate:'履正社高校、履正社高校（女子野球部）（大阪）、霞ヶ浦高校（茨城）、日本文理高校（新潟）、八戸学院光星高校（青森）、北照高校（北海道）、江戸川学園取手高校（茨城）など',
+    insidePrivate:'千葉経済高校、東京学館船橋高校、東京学館高校、千葉英和高校、千葉敬愛高校、日大習志野高校、中央学院高校、八千代松陰高校など',
+    publicHigh:'市立習志野高校、市立松戸高校、八千代高校、佐倉高校、八千代東高校など'
+  };
+  let data={...defaults};
+  const outside=document.getElementById('graduateOutsidePrivate');
+  const inside=document.getElementById('graduateInsidePrivate');
+  const publicEl=document.getElementById('graduatePublic');
+  const outsideEdit=document.getElementById('graduateOutsidePrivateEdit');
+  const insideEdit=document.getElementById('graduateInsidePrivateEdit');
+  const publicEdit=document.getElementById('graduatePublicEdit');
+  if(!outside||!inside||!publicEl) return;
+  function render(){
+    outside.textContent=data.outsidePrivate||'';
+    inside.textContent=data.insidePrivate||'';
+    publicEl.textContent=data.publicHigh||'';
+  }
+  function fillEditor(){
+    outsideEdit.value=data.outsidePrivate||'';
+    insideEdit.value=data.insidePrivate||'';
+    publicEdit.value=data.publicHigh||'';
+  }
+  async function load(){
+    try{
+      const r=await fetch(API,{cache:'no-store'});
+      if(r.ok){
+        const j=await r.json();
+        if(j.data && !Array.isArray(j.data) && typeof j.data==='object'){
+          data={...defaults,...j.data};
+        }
+      }
+    }catch(e){}
+    render();
+    fillEditor();
+  }
+  document.getElementById('graduatePathSave').addEventListener('click',async()=>{
+    const p=sessionStorage.getItem('yachiyoAdminPassword')||'';
+    if(!p){alert('管理者認証をやり直してください。');return;}
+    const next={
+      outsidePrivate:outsideEdit.value.trim(),
+      insidePrivate:insideEdit.value.trim(),
+      publicHigh:publicEdit.value.trim()
+    };
+    try{
+      const r=await fetch(API,{method:'POST',headers:{'content-type':'application/json','x-admin-password':p},body:JSON.stringify({data:next})});
+      if(r.status===401){alert('管理者パスワードが違います。');return;}
+      if(!r.ok){alert('進路を保存できませんでした。');return;}
+      data=next; render(); fillEditor(); alert('進路を保存しました。');
+    }catch(e){alert('進路を保存できませんでした。');}
+  });
+  document.getElementById('graduatePathCancel').addEventListener('click',()=>fillEditor());
+  const observer=new MutationObserver(()=>{if(document.body.classList.contains('staff-editing')) fillEditor();});
+  observer.observe(document.body,{attributes:true,attributeFilter:['class']});
+  load();
+})();
+</script>
 </body>
 </html>
