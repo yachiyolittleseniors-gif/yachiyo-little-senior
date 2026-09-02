@@ -98,14 +98,10 @@ button{border:0;border-radius:12px;padding:13px 18px;font-weight:800;cursor:poin
 
 const RULES_VIEW_PASSWORD='yachiyo20260800';
 (function requireRulesPassword(){
-  if(sessionStorage.getItem('yachiyoRulesUnlocked')==='1') return;
   const p=prompt('パスワードを入力してください');
-  if(p===RULES_VIEW_PASSWORD){
-    sessionStorage.setItem('yachiyoRulesUnlocked','1');
-    return;
-  }
+  if(p===RULES_VIEW_PASSWORD) return;
   if(p!==null) alert('パスワードが違います。');
-  location.href='./index.html';
+  location.replace('./index.html');
 })();
 
 
