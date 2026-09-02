@@ -1569,6 +1569,14 @@ img,video,iframe{max-width:100%}
           </select>
         </div>
         <div class="field">
+          <label for="battingOrder">先攻・後攻</label>
+          <select id="battingOrder" required>
+            <option value="">選択してください</option>
+            <option value="first">八千代が先攻</option>
+            <option value="second">八千代が後攻</option>
+          </select>
+        </div>
+        <div class="field">
           <label for="tournament">大会名</label>
           <input id="tournament" type="text" placeholder="例：関東連盟 春季大会" required>
         </div>
@@ -1697,9 +1705,9 @@ function renderResults(){
         <span class="badge ${cls}">${label}</span>
       </div>
       <div class="scoreline">
-        <div class="team">八千代</div>
-        <div class="score">${Number(g.ourScore)} - ${Number(g.oppScore)}</div>
-        <div class="team">${escHtml(g.opponent)}</div>
+        ${g.battingOrder==='second'
+          ? `<div class="team">${escHtml(g.opponent)}</div><div class="score">${Number(g.oppScore)} - ${Number(g.ourScore)}</div><div class="team">八千代</div>`
+          : `<div class="team">八千代</div><div class="score">${Number(g.ourScore)} - ${Number(g.oppScore)}</div><div class="team">${escHtml(g.opponent)}</div>`}
       </div>
       ${g.note?`<div class="meta" style="margin-top:12px">${escHtml(g.note)}</div>`:''}
       <button class="delete" onclick="removeGame('${g.id}')">削除</button>
@@ -1720,6 +1728,7 @@ document.getElementById('resultForm').addEventListener('submit',async e=>{
     id:String(Date.now()),
     date:document.getElementById('date').value,
     grade:document.getElementById('grade').value,
+    battingOrder:document.getElementById('battingOrder').value,
     tournament:document.getElementById('tournament').value.trim(),
     opponent:document.getElementById('opponent').value.trim(),
     venue:document.getElementById('venue').value.trim(),
