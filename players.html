@@ -1713,8 +1713,6 @@ table thead th.cohort-col{
 
 
 <main class="wrap">
-<h1>選手<span class="gold">紹介</span></h1>
-<div class="sub">PLAYERS / MEMBER</div>
 <p class="count" id="playerCount">読み込み中…</p>
 <div class="player-admin admin-only block"><button class="admin-btn" type="button" onclick="togglePlayerPanel()">＋ 選手を追加</button><button class="admin-btn" type="button" onclick="promoteGrades()">学年繰り上げ</button></div><div class="player-editor admin-only" id="playerEditor" hidden><div class="player-form-grid"><div><label for="playerGrade">学年</label><select id="playerGrade"><option value="1年">1年</option><option value="2年">2年</option><option value="3年">3年</option></select></div><div><label for="playerName">選手名</label><input id="playerName" type="text"></div><div><label for="playerBirth">生年度</label><input id="playerBirth" type="text" placeholder="例：2013年度"></div><div><label for="playerTeam">出身チーム</label><input id="playerTeam" type="text"></div></div><div class="player-form-actions"><button class="admin-btn" type="button" onclick="savePlayer()">登録する</button><button class="admin-btn" type="button" onclick="togglePlayerPanel(false)">閉じる</button></div></div><div class="tabs">
 <button class="active" onclick="filterGrade('all',this)">全選手</button>
