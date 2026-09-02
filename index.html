@@ -2876,23 +2876,29 @@ function openProtectedArea(type){
   change.style.display='none';
   toggle.textContent='管理';
 
-  // Hidden admin entrance: tap the bottom-right corner 3 times.
+  // Hidden admin entrance: フッター右下を3回タップで管理ボタン表示
   let secretTapCount=0, secretTapTimer=null;
-  document.addEventListener('pointerup',function(e){
-    const cornerX=window.innerWidth-90;
-    const cornerY=window.innerHeight-110;
-    if(e.clientX<cornerX || e.clientY<cornerY){
-      secretTapCount=0;
-      return;
-    }
-    secretTapCount++;
-    clearTimeout(secretTapTimer);
-    secretTapTimer=setTimeout(()=>{secretTapCount=0},1200);
-    if(secretTapCount>=3){
-      secretTapCount=0;
-      document.getElementById('heroPhotoAdmin').style.display='flex';
-    }
-  },{passive:true});
+  const footer=document.querySelector('.restored-footer');
+  if(footer){
+    footer.addEventListener('pointerup',function(e){
+      if(e.target.closest('#heroPhotoAdmin'))return;
+      const r=footer.getBoundingClientRect();
+      const fromRight=Math.max(0,r.right-e.clientX);
+      const fromBottom=Math.max(0,r.bottom-e.clientY);
+      if(fromRight>150 || fromBottom>150){
+        secretTapCount=0;
+        return;
+      }
+      secretTapCount++;
+      clearTimeout(secretTapTimer);
+      secretTapTimer=setTimeout(()=>{secretTapCount=0},1500);
+      if(secretTapCount>=3){
+        secretTapCount=0;
+        clearTimeout(secretTapTimer);
+        document.getElementById('heroPhotoAdmin').style.display='flex';
+      }
+    },{passive:true});
+  }
 
   toggle.addEventListener('click',function(){
     if(sessionStorage.getItem('yachiyoAdminMode')==='1'){setAdmin(false);document.getElementById('heroPhotoAdmin').style.display='none';return;}
