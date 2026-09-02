@@ -2711,22 +2711,27 @@ window.__loadYachiyoPhotos = function(){
 </style>
 
 
-<style id="recruit-photo-match-hero">
-/* グラウンド風景を上の写真と同じ表示サイズ・比率に統一 */
+
+<style id="recruit-photo-exact-match">
+/* 「仲間と考え、成長する」の写真と同じ表示寸法 */
+.recruit{
+  max-width:1180px !important;
+}
 #recruitEditablePhoto{
   width:100% !important;
-  height:auto !important;
-  aspect-ratio:16 / 9 !important;
+  height:clamp(300px,48vw,560px) !important;
   min-height:0 !important;
+  aspect-ratio:auto !important;
   border-radius:0 !important;
   background-size:cover !important;
   background-position:center !important;
 }
 @media(max-width:600px){
   #recruitEditablePhoto{
-    aspect-ratio:16 / 9 !important;
-    height:auto !important;
+    width:100% !important;
+    height:clamp(250px,54vw,360px) !important;
     min-height:0 !important;
+    aspect-ratio:auto !important;
     border-radius:0 !important;
   }
 }
