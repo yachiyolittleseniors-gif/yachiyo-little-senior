@@ -18,8 +18,7 @@ main{max-width:900px;margin:0 auto;padding:36px 18px 80px}
 .card{background:#fff;border:1px solid #ddd8cd;border-radius:22px;padding:28px 22px;box-shadow:0 12px 32px rgba(0,0,0,.06)}
 #rulesText{white-space:pre-wrap;line-height:2;font-size:16px}
 .empty{color:#697383}
-.pdfbox{margin-top:24px}.pdfbox iframe{width:100%;height:70vh;border:1px solid #ddd;border-radius:14px;background:#fff}
-.pdf-link{display:inline-block;margin-top:12px;color:#8d6819;font-weight:800}
+.pdf-list{margin-top:24px;display:grid;gap:14px}.pdf-item{border:1px solid #ddd8cd;border-radius:14px;padding:16px;background:#fff}.pdf-name{font-weight:800;margin-bottom:10px;overflow-wrap:anywhere}.pdf-link{display:inline-flex;align-items:center;justify-content:center;min-height:46px;padding:11px 16px;border-radius:10px;background:#caa64b;color:#07162b;font-weight:800;text-decoration:none}.pdf-remove{display:none;margin:10px 0 0;background:#eee;color:#222}.admin-mode .pdf-remove{display:inline-block}
 .admin{display:none;margin-top:26px;padding-top:24px;border-top:1px solid #ddd}.admin-mode .admin{display:block}
 textarea{width:100%;min-height:260px;padding:14px;border:1px solid #c9c9c9;border-radius:12px;font:inherit;line-height:1.7}
 input[type=file]{width:100%;margin:14px 0}
@@ -27,7 +26,7 @@ button{border:0;border-radius:12px;padding:13px 18px;font-weight:800;cursor:poin
 .save{background:#caa64b;color:#07162b}.remove{background:#eee;color:#222;margin-left:8px}
 .adminToggle{display:none;position:fixed;right:18px;bottom:18px;z-index:9998;border:1px solid rgba(199,154,59,.65);background:#071426;color:#e2bd67;border-radius:999px;padding:9px 12px;font-size:12px;font-weight:800;box-shadow:0 8px 22px rgba(0,0,0,.18)}@media(max-width:600px){.adminToggle{right:12px;bottom:74px;padding:8px 10px;font-size:11px}}
 .status{margin-top:10px;font-size:14px}
-@media(max-width:600px){main{padding:24px 14px 70px}.card{padding:22px 16px}.pdfbox iframe{height:58vh}}
+@media(max-width:600px){main{padding:24px 14px 70px}.card{padding:22px 16px}}
 
 </style>
 
@@ -70,19 +69,15 @@ button{border:0;border-radius:12px;padding:13px 18px;font-weight:800;cursor:poin
 <main>
   <div class="card">
     <div id="rulesText" class="empty">現在、公開中のチーム規約はありません。</div>
-    <div id="pdfBox" class="pdfbox" hidden>
-      <iframe id="pdfFrame" title="チーム規約PDF"></iframe>
-      <a id="pdfLink" class="pdf-link" target="_blank" rel="noopener">PDFを開く →</a>
-    </div>
+    <div id="pdfList" class="pdf-list" hidden></div>
 
     <div class="admin">
       <h2>チーム規約を編集</h2>
-      <p>文章を入力するか、PDFを選択できます。両方の掲載も可能です。</p>
+      <p>文章の編集と、PDFの追加ができます。PDFは複数掲載できます。</p>
       <textarea id="rulesInput" placeholder="チーム規約を入力してください"></textarea>
-      <input id="pdfInput" type="file" accept="application/pdf">
+      <input id="pdfInput" type="file" accept="application/pdf" multiple>
       <div>
-        <button class="save" type="button" onclick="saveRules()">保存</button>
-        <button class="remove" type="button" onclick="removePdf()">PDFを削除</button>
+        <button class="save" type="button" onclick="saveRules()">保存・PDFを追加</button>
       </div>
       <div id="status" class="status"></div>
     </div>
@@ -110,7 +105,19 @@ const RULES_VIEW_PASSWORD='yachiyo20260800';
 })();
 
 
-let rules={text:'',pdf:'',pdfName:''};
+let rules={text:'',pdfs:[]};
+
+function normalizeRules(raw){
+  const out={text:(raw&&raw.text)||'',pdfs:[]};
+  if(raw && Array.isArray(raw.pdfs)){
+    out.pdfs=raw.pdfs.filter(x=>x&&x.data).map(x=>({name:x.name||'チーム規約.pdf',data:x.data}));
+  }
+  // 旧形式（PDF1件）もそのまま引き継ぐ
+  if(raw && raw.pdf && !out.pdfs.some(x=>x.data===raw.pdf)){
+    out.pdfs.unshift({name:raw.pdfName||'チーム規約.pdf',data:raw.pdf});
+  }
+  return out;
+}
 
 async function loadRules(){
   try{
@@ -118,28 +125,67 @@ async function loadRules(){
     if(r.ok){
       const j=await r.json();
       const d=Array.isArray(j.data)?j.data:[];
-      if(d[0]) rules={text:d[0].text||'',pdf:d[0].pdf||'',pdfName:d[0].pdfName||''};
+      if(d[0]) rules=normalizeRules(d[0]);
     }
   }catch(e){}
   renderRules();
 }
+
+let currentPdfBlobUrls=[];
+function dataUrlToBlobUrl(dataUrl){
+  if(!dataUrl || !dataUrl.startsWith('data:')) return dataUrl;
+  try{
+    const parts=dataUrl.split(',');
+    const mime=(parts[0].match(/data:([^;]+)/)||[])[1]||'application/pdf';
+    const bin=atob(parts[1]);
+    const bytes=new Uint8Array(bin.length);
+    for(let i=0;i<bin.length;i++) bytes[i]=bin.charCodeAt(i);
+    const url=URL.createObjectURL(new Blob([bytes],{type:mime}));
+    currentPdfBlobUrls.push(url);
+    return url;
+  }catch(e){ return dataUrl; }
+}
+
 function renderRules(){
   const t=document.getElementById('rulesText');
-  t.textContent=rules.text || (rules.pdf ? '' : '現在、公開中のチーム規約はありません。');
-  t.classList.toggle('empty',!rules.text && !rules.pdf);
-  t.hidden=!rules.text && !!rules.pdf;
+  const hasPdfs=rules.pdfs.length>0;
+  t.textContent=rules.text || (hasPdfs ? '' : '現在、公開中のチーム規約はありません。');
+  t.classList.toggle('empty',!rules.text && !hasPdfs);
+  t.hidden=!rules.text && hasPdfs;
   document.getElementById('rulesInput').value=rules.text||'';
-  const box=document.getElementById('pdfBox');
-  if(rules.pdf){
-    box.hidden=false;
-    const pdfUrl=dataUrlToBlobUrl(rules.pdf);
-    document.getElementById('pdfFrame').src=pdfUrl;
-    document.getElementById('pdfLink').href=pdfUrl;
-  }else{
-    box.hidden=true;
-    document.getElementById('pdfFrame').removeAttribute('src');
-  }
+
+  currentPdfBlobUrls.forEach(u=>URL.revokeObjectURL(u));
+  currentPdfBlobUrls=[];
+  const list=document.getElementById('pdfList');
+  list.innerHTML='';
+  list.hidden=!hasPdfs;
+
+  rules.pdfs.forEach((pdf,index)=>{
+    const url=dataUrlToBlobUrl(pdf.data);
+    const item=document.createElement('div');
+    item.className='pdf-item';
+
+    const name=document.createElement('div');
+    name.className='pdf-name';
+    name.textContent=pdf.name||`チーム規約PDF ${index+1}`;
+
+    const link=document.createElement('a');
+    link.className='pdf-link';
+    link.href=url;
+    link.textContent='PDFを表示 →';
+
+    const br=document.createElement('br');
+    const remove=document.createElement('button');
+    remove.type='button';
+    remove.className='pdf-remove';
+    remove.textContent='このPDFを削除';
+    remove.addEventListener('click',()=>removePdf(index));
+
+    item.append(name,link,br,remove);
+    list.appendChild(item);
+  });
 }
+
 async function verify(p){
   try{
     const r=await fetch('/.netlify/functions/site-data?section=rules',{
@@ -177,21 +223,6 @@ async function toggleAdmin(){
   document.getElementById('status').textContent='';
 }
 
-let currentPdfBlobUrl='';
-function dataUrlToBlobUrl(dataUrl){
-  if(!dataUrl || !dataUrl.startsWith('data:')) return dataUrl;
-  try{
-    if(currentPdfBlobUrl) URL.revokeObjectURL(currentPdfBlobUrl);
-    const parts=dataUrl.split(',');
-    const mime=(parts[0].match(/data:([^;]+)/)||[])[1]||'application/pdf';
-    const bin=atob(parts[1]);
-    const bytes=new Uint8Array(bin.length);
-    for(let i=0;i<bin.length;i++) bytes[i]=bin.charCodeAt(i);
-    currentPdfBlobUrl=URL.createObjectURL(new Blob([bytes],{type:mime}));
-    return currentPdfBlobUrl;
-  }catch(e){ return dataUrl; }
-}
-
 function fileToDataURL(file){
   return new Promise((resolve,reject)=>{
     const fr=new FileReader();fr.onload=()=>resolve(fr.result);fr.onerror=reject;fr.readAsDataURL(file);
@@ -200,24 +231,49 @@ function fileToDataURL(file){
 async function saveRules(){
   const p=sessionStorage.getItem('yachiyoAdminPassword');
   if(!p)return alert('管理者ログインが必要です。');
-  const f=document.getElementById('pdfInput').files[0];
-  if(f){
+  const files=[...document.getElementById('pdfInput').files];
+  for(const f of files){
     if(f.type!=='application/pdf')return alert('PDFファイルを選択してください。');
-    if(f.size>5*1024*1024)return alert('PDFは5MB以下にしてください。');
-    rules.pdf=await fileToDataURL(f);rules.pdfName=f.name;
+    if(f.size>5*1024*1024)return alert(`${f.name} は5MBを超えています。PDFは1ファイル5MB以下にしてください。`);
+  }
+  const additions=[];
+  for(const f of files){
+    additions.push({name:f.name,data:await fileToDataURL(f)});
   }
   rules.text=document.getElementById('rulesInput').value.trim();
+  if(additions.length) rules.pdfs.push(...additions);
+
   const st=document.getElementById('status');st.textContent='保存中...';
   const r=await fetch('/.netlify/functions/site-data?section=rules',{
     method:'POST',headers:{'content-type':'application/json','x-admin-password':p},
     body:JSON.stringify({data:[rules]})
   });
-  if(!r.ok){st.textContent='保存できませんでした。';return}
-  st.textContent='保存しました。';document.getElementById('pdfInput').value='';renderRules();
+  if(!r.ok){
+    if(additions.length) rules.pdfs.splice(rules.pdfs.length-additions.length,additions.length);
+    st.textContent='保存できませんでした。';return;
+  }
+  st.textContent=additions.length?'PDFを追加して保存しました。':'保存しました。';
+  document.getElementById('pdfInput').value='';
+  renderRules();
 }
-async function removePdf(){
-  if(!confirm('掲載中のPDFを削除しますか？'))return;
-  rules.pdf='';rules.pdfName='';await saveRules();
+async function removePdf(index){
+  const p=sessionStorage.getItem('yachiyoAdminPassword');
+  if(!p)return alert('管理者ログインが必要です。');
+  const target=rules.pdfs[index];
+  if(!target)return;
+  if(!confirm(`「${target.name}」を削除しますか？`))return;
+  const removed=rules.pdfs.splice(index,1)[0];
+  const st=document.getElementById('status');st.textContent='削除中...';
+  const r=await fetch('/.netlify/functions/site-data?section=rules',{
+    method:'POST',headers:{'content-type':'application/json','x-admin-password':p},
+    body:JSON.stringify({data:[rules]})
+  });
+  if(!r.ok){
+    rules.pdfs.splice(index,0,removed);
+    st.textContent='削除できませんでした。';return;
+  }
+  st.textContent='PDFを削除しました。';
+  renderRules();
 }
 document.addEventListener('DOMContentLoaded',()=>{
   loadRules();
