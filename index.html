@@ -2766,7 +2766,7 @@ window.__loadYachiyoPhotos = function(){
 <a href="./terms.html">サイト利用について</a>
 <a href="https://www.instagram.com/yachiyo_little_senior?igsi=MTl4N3dneG9uY2ZxcA==" rel="noopener noreferrer" target="_blank">Instagram</a>
 <a href="#" onclick="return openProtectedArea('office')">事務局 🔒</a>
-<a href="./board.html" onclick="return openProtectedArea('board')">チーム内案内板 🔒</a>
+<a href="./board.html">チーム内案内板 🔒</a>
 <a href="https://www.google.com/maps/search/?api=1&query=%E5%8D%83%E8%91%89%E7%9C%8C%E5%85%AB%E5%8D%83%E4%BB%A3%E5%B8%82%E5%B3%B6%E7%94%B0%E5%8F%B0775" target="_blank" rel="noopener noreferrer">グラウンド案内</a>
 </div>
 <button class="menu" onclick="toggleMenu()">☰</button>
@@ -2995,7 +2995,7 @@ function closeModal(){
 <a href="https://www.instagram.com/yachiyo_little_senior?igsi=MTl4N3dneG9uY2ZxcA==" rel="noopener noreferrer" target="_blank">Instagram</a>
 <a href="https://www.facebook.com/share/1DakdBtEv6/?mibextid=wwXIfr" rel="noopener noreferrer" target="_blank">Facebook</a>
 <a href="./rules.html">チーム規約 🔒</a>
-<a href="./board.html" onclick="return openProtectedArea('board')">チーム内案内板 🔒</a>
+<a href="./board.html">チーム内案内板 🔒</a>
 </nav>
 
 
@@ -3015,8 +3015,6 @@ function closeModal(){
 function openProtectedArea(type){
   const entered=prompt("パスワードを入力してください");
   if(entered===null) return false;
-  if(type==="board" && entered!=="yachiyo20260800"){ alert("パスワードが違います。"); return false; }
-  if(type==="board"){ sessionStorage.setItem("yachiyoAttendancePass",entered); window.location.href="./board.html"; }
   return false;
 }
 </script>
