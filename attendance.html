@@ -18,11 +18,7 @@
 @media(max-width:700px){.pagehero h1{font-size:29px}.wrap{padding-left:8px;padding-right:8px}.notice{margin-left:6px;margin-right:6px}.toolbar{padding:0 6px}.admin-grid{grid-template-columns:1fr}.brand{font-size:16px}.back{font-size:11px;padding:8px 9px}.status-btn{width:42px;height:39px}.name-col{min-width:116px}.event-head{min-width:90px}}
 </style>
 
-
-
-
 <style>
-/* attendance-no-second-password */
 #loginGate,.login-gate,.loginGate,.auth-gate,.password-gate,
 #loginPanel,.login-panel,.password-panel{display:none!important}
 </style>
@@ -30,7 +26,7 @@
 
 <script>
 (function(){
-  if(sessionStorage.getItem('yachiyoBoardAuthorized') !== '1'){
+  if(sessionStorage.getItem('yachiyoBoardAuthorized')!=='1'){
     location.replace('./index.html');
   }
 })();
@@ -38,7 +34,14 @@
 
 </head>
 <body>
-
+<div class="login" id="login">
+  <form class="login-card" id="loginForm">
+    <div class="eyebrow">TEAM ATTENDANCE</div>
+    <h2>保護者出欠確認</h2>
+    <p>チーム内案内板のパスワードを入力してください。入室後、各日程の「○・△・×」をタップすると保存されます。</p>
+    <input id="teamPassword" type="password" autocomplete="current-password" placeholder="パスワード" required>
+    <button class="primary" type="submit">出欠表を開く</button>
+    <div class="login-msg" id="loginMsg"></div>
   </form>
 </div>
 <header class="header"><div class="nav"><a class="brand" href="./index.html">八千代リトルシニア<small>YACHIYO LITTLE SENIOR</small></a><a class="back" href="./board.html">案内板へ</a></div></header>
@@ -54,7 +57,7 @@
 <footer class="footer"><strong class="tap-target" id="adminReveal">© YACHIYO LITTLE SENIOR. All Rights Reserved.</strong></footer>
 
 <div class="modal" id="adminModal" aria-hidden="true"><div class="modal-card"><button class="close" id="adminClose" type="button">×</button><h2>出欠表 管理</h2>
-  <div class="admin-login" id="adminLogin"><p>管理者パスワードを入力してください。</p><button class="small-btn" id="adminUnlock" type="button">管理を開く</button><div class="login-msg" id="adminMsg"></div></div>
+  <div class="admin-login" id="adminLogin"><p>管理者パスワードを入力してください。</p><input id="adminPassword" type="password" autocomplete="current-password" placeholder="管理者パスワード"><button class="small-btn" id="adminUnlock" type="button">管理を開く</button><div class="login-msg" id="adminMsg"></div></div>
   <div id="adminBody" style="display:none"><div class="admin-grid">
     <section class="admin-panel"><h3>日程</h3><form class="admin-form" id="eventForm"><input id="eventDate" type="date" required><input id="eventTitle" maxlength="40" placeholder="例：通常練習／公式戦" required><button class="small-btn" type="submit">日程を追加</button></form><div class="item-list" id="eventList"></div></section>
     <section class="admin-panel"><h3>回答者</h3><form class="admin-form" id="memberForm"><input id="memberName" maxlength="30" placeholder="例：山田 父／山田 母" required><button class="small-btn" type="submit">回答者を追加</button></form><div class="item-list" id="memberList"></div></section>
