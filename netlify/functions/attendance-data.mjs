@@ -4,121 +4,206 @@ const STORE = "yachiyo-public-site";
 const KEY = "content/attendance.json";
 const CONFIG_KEY = "content/attendance-config-v2.json";
 
-const DENSUKE_URL = "https://densuke.biz/list?cd=ZhxJNW9dPNGVtm7c";
-const DENSUKE_MOBILE_URL = "https://densuke.biz/m/list2?cd=ZhxJNW9dPNGVtm7c";
+const DENSUKE_URL =
+  "https://densuke.biz/list?cd=ZhxJNW9dPNGVtm7c";
 
+const DENSUKE_MOBILE_URL =
+  "https://densuke.biz/m/list2?cd=ZhxJNW9dPNGVtm7c";
+
+/*
+  伝助から名前を拾う際の補助リスト。
+  同姓同名がいる場合も人数を維持する。
+*/
 const KNOWN_NAMES = [
-  "吉岡父","杉山父","山澤父","山口明父","南父","山口勇父","安本父","浅野父","佐藤父","谷川父",
-  "向山父","亀井父","松田惺父","長島父","荒木父","加藤父","石山父","大谷部父","草野父","古賀父",
-  "齋藤父","佐藤父","篠崎父","竹内父","永井父","本村父","森田父","矢羽田父","赤羽父","秋葉父",
-  "石川晃父","井上遥父","井上竜父","宇山父","江見父","加賀原父","粕谷父","亀井碧父","川村父",
-  "小池父","高祖父","小堀父","紺野父","内藤父","中濱父","長峰父","松井父","溝上父","村山父",
-  "本吉父","山澤奏父","山本諒父","山本要父",
-  "吉岡母","杉山母","山澤母","舘母","山口明母","南母","山口勇母","安本母","谷川母","亀井母",
-  "向山母","浅野母","松田母","長島母","荒木母","石川母","石山母","大谷部母","加藤母","草野母",
-  "古賀母","齋藤母","佐藤母","篠崎母","椙浦母","高橋母","竹内母","筒井母","永井母","藤澤母",
-  "本村母","森田母","矢羽田母","赤羽母","秋葉母","石川晃母","井上遥母","井上竜母","宇山母",
-  "江見母","加賀原母","粕谷母","亀井碧母","川村母","小池母","高祖母","小堀母","紺野母","内藤母",
-  "中濱母","長峰母","松井母","松浦母","溝上母","村山母","本吉母","山澤奏母","山本要母","山本諒母"
+  "吉岡父","杉山父","山澤父","山口明父","南父","山口勇父",
+  "安本父","浅野父","佐藤父","谷川父","向山父","亀井父",
+  "松田惺父","長島父","荒木父","加藤父","石山父","大谷部父",
+  "草野父","古賀父","齋藤父","佐藤父","篠崎父","竹内父",
+  "永井父","本村父","森田父","矢羽田父","赤羽父","秋葉父",
+  "石川晃父","井上遥父","井上竜父","宇山父","江見父",
+  "加賀原父","粕谷父","亀井碧父","川村父","小池父","高祖父",
+  "小堀父","紺野父","内藤父","中濱父","長峰父","松井父",
+  "溝上父","村山父","本吉父","山澤奏父","山本諒父","山本要父",
+
+  "吉岡母","杉山母","山澤母","舘母","山口明母","南母",
+  "山口勇母","安本母","谷川母","亀井母","向山母","浅野母",
+  "松田母","長島母","荒木母","石川母","石山母","大谷部母",
+  "加藤母","草野母","古賀母","齋藤母","佐藤母","篠崎母",
+  "椙浦母","高橋母","竹内母","筒井母","永井母","藤澤母",
+  "本村母","森田母","矢羽田母","赤羽母","秋葉母","石川晃母",
+  "井上遥母","井上竜母","宇山母","江見母","加賀原母","粕谷母",
+  "亀井碧母","川村母","小池母","高祖母","小堀母","紺野母",
+  "内藤母","中濱母","長峰母","松井母","松浦母","溝上母",
+  "村山母","本吉母","山澤奏母","山本要母","山本諒母"
 ];
 
 function json(data, status = 200) {
-  return new Response(JSON.stringify(data), {
-    status,
-    headers: {
-      "content-type": "application/json; charset=utf-8",
-      "cache-control": "no-store",
-    },
-  });
+  return new Response(
+    JSON.stringify(data),
+    {
+      status,
+      headers: {
+        "content-type":
+          "application/json; charset=utf-8",
+
+        "cache-control":
+          "no-store"
+      }
+    }
+  );
 }
 
 function normalize(data = {}) {
   return {
-    events: Array.isArray(data.events) ? data.events : [],
-    members: Array.isArray(data.members) ? data.members : [],
+    events:
+      Array.isArray(data.events)
+        ? data.events
+        : [],
+
+    members:
+      Array.isArray(data.members)
+        ? data.members
+        : [],
+
     answers:
-      data.answers && typeof data.answers === "object"
+      data.answers &&
+      typeof data.answers === "object"
         ? data.answers
         : {},
-    comments: Array.isArray(data.comments) ? data.comments : [],
+
+    comments:
+      Array.isArray(data.comments)
+        ? data.comments
+        : []
   };
 }
 
+/*
+  現在から2か月前。
+*/
 function twoMonthsAgo(now = new Date()) {
-  const d = new Date(now);
+  const d =
+    new Date(now);
 
-  const day = d.getDate();
+  const day =
+    d.getDate();
 
   d.setDate(1);
-  d.setMonth(d.getMonth() - 2);
+  d.setMonth(
+    d.getMonth() - 2
+  );
 
-  const last = new Date(
-    d.getFullYear(),
-    d.getMonth() + 1,
-    0
-  ).getDate();
+  const last =
+    new Date(
+      d.getFullYear(),
+      d.getMonth() + 1,
+      0
+    ).getDate();
 
-  d.setDate(Math.min(day, last));
-  d.setHours(0, 0, 0, 0);
+  d.setDate(
+    Math.min(day, last)
+  );
+
+  d.setHours(
+    0, 0, 0, 0
+  );
 
   return d;
 }
 
-function cleanupOldData(data, now = new Date()) {
-  const cutoff = twoMonthsAgo(now);
+/*
+  2か月より古い
+  日程・コメントを自動削除。
+*/
+function cleanupOldData(
+  data,
+  now = new Date()
+) {
+  const cutoff =
+    twoMonthsAgo(now);
 
-  const removed = new Set();
+  const removed =
+    new Set();
 
   data.events =
-    data.events.filter(event => {
-      if (!event?.date) return true;
+    data.events.filter(
+      event => {
+        if (!event?.date)
+          return true;
 
-      const d =
-        new Date(
-          event.date + "T00:00:00"
-        );
+        const d =
+          new Date(
+            event.date +
+            "T00:00:00"
+          );
 
-      if (Number.isNaN(d.getTime()))
+        if (
+          Number.isNaN(
+            d.getTime()
+          )
+        ) {
+          return true;
+        }
+
+        if (d < cutoff) {
+          removed.add(
+            String(event.id)
+          );
+
+          return false;
+        }
+
         return true;
-
-      if (d < cutoff) {
-        removed.add(
-          String(event.id)
-        );
-
-        return false;
       }
+    );
 
-      return true;
-    });
-
+  /*
+    削除した日程の
+    ○△×も削除。
+  */
   if (removed.size) {
     for (
       const memberId
-      of Object.keys(data.answers)
+      of Object.keys(
+        data.answers
+      )
     ) {
       const row =
-        data.answers[memberId];
+        data.answers[
+          memberId
+        ];
 
       if (
         !row ||
-        typeof row !== "object"
-      ) continue;
+        typeof row !==
+          "object"
+      ) {
+        continue;
+      }
 
       for (
         const eventId
         of removed
       ) {
-        delete row[eventId];
+        delete row[
+          eventId
+        ];
       }
     }
   }
 
+  /*
+    2か月より古い
+    コメントを削除。
+  */
   data.comments =
     data.comments.filter(
       comment => {
-        if (!comment?.updatedAt)
+        if (
+          !comment?.updatedAt
+        ) {
           return true;
+        }
 
         const d =
           new Date(
@@ -137,36 +222,61 @@ function cleanupOldData(data, now = new Date()) {
   return data;
 }
 
+/*
+  移行状態を取得。
+
+  namesImported:
+  伝助から名前を一度でも
+  取得したかどうか。
+
+  これにより
+  「移行を再開」
+  ↓
+  「再び終了」
+  としても伝助を再取得しない。
+*/
 async function getConfig(store) {
   try {
     const saved =
       await store.get(
         CONFIG_KEY,
         {
-          type: "json",
+          type: "json"
         }
       );
 
     return {
       migrationEnded:
-        saved?.migrationEnded === true,
+        saved?.migrationEnded ===
+        true,
 
       endedAt:
         String(
           saved?.endedAt || ""
         ),
+
+      namesImported:
+        saved?.namesImported ===
+        true
     };
   } catch {
     return {
-      migrationEnded: false,
-      endedAt: "",
+      migrationEnded:
+        false,
+
+      endedAt:
+        "",
+
+      namesImported:
+        false
     };
   }
 }
 
 function adminOK(request) {
   const expected =
-    process.env.ADMIN_PASSWORD || "";
+    process.env
+      .ADMIN_PASSWORD || "";
 
   const received =
     request.headers.get(
@@ -254,7 +364,9 @@ function htmlToText(html) {
     .trim();
 }
 
-function cleanCandidateName(value) {
+function cleanCandidateName(
+  value
+) {
   const name =
     String(value || "")
       .trim()
@@ -287,7 +399,16 @@ function cleanCandidateName(value) {
   return name;
 }
 
-function extractNamesFromDensuke(html) {
+/*
+  伝助から
+  「名前だけ」を抽出。
+
+  日程・○△×・コメントは
+  保存しない。
+*/
+function extractNamesFromDensuke(
+  html
+) {
   const text =
     htmlToText(html);
 
@@ -302,27 +423,31 @@ function extractNamesFromDensuke(html) {
   const seen =
     new Set();
 
-  const ordered = [];
+  const ordered =
+    [];
 
-  const add = value => {
-    const name =
-      cleanCandidateName(value);
+  const add =
+    value => {
+      const name =
+        cleanCandidateName(
+          value
+        );
 
-    if (
-      !name ||
-      seen.has(name)
-    ) {
-      return;
-    }
+      if (
+        !name ||
+        seen.has(name)
+      ) {
+        return;
+      }
 
-    seen.add(name);
-    ordered.push(name);
-  };
+      seen.add(name);
+      ordered.push(name);
+    };
 
   /*
-    伝助終了時だけ、
-    現在の伝助ページに存在する
-    回答者名を拾う。
+    既知の回答者名から
+    現在ページに存在する
+    名前だけ拾う。
   */
   for (
     const name
@@ -336,9 +461,8 @@ function extractNamesFromDensuke(html) {
   }
 
   /*
-    ○△×の行から
-    名前だけを取得。
-    日程や回答内容自体は保存しない。
+    ○△×欄に名前が
+    表示されている場合。
   */
   for (
     const line
@@ -349,7 +473,8 @@ function extractNamesFromDensuke(html) {
         /^[○△×]\s*[：:]\s*(.+)$/u
       );
 
-    if (!m) continue;
+    if (!m)
+      continue;
 
     for (
       const token
@@ -362,12 +487,14 @@ function extractNamesFromDensuke(html) {
   }
 
   /*
-    コメント欄に
+    コメント等で
     （名前）
-    と出ている場合も
-    名前だけ候補にする。
+    表示される場合の補助。
+
+    コメント自体は
+    保存しない。
   */
-  const commentRe =
+  const re =
     /[（(]([^()（）\r\n]{1,30})[）)]/gu;
 
   let match;
@@ -375,16 +502,14 @@ function extractNamesFromDensuke(html) {
   while (
     (
       match =
-        commentRe.exec(text)
+        re.exec(text)
     )
   ) {
     add(match[1]);
   }
 
   /*
-    同じ名前が複数存在する
-    既存回答者については
-    人数を維持する。
+    同姓同名を維持。
   */
   const counts =
     new Map();
@@ -396,19 +521,22 @@ function extractNamesFromDensuke(html) {
     counts.set(
       name,
       (
-        counts.get(name) || 0
+        counts.get(name) ||
+        0
       ) + 1
     );
   }
 
-  const expanded = [];
+  const expanded =
+    [];
 
   for (
     const name
     of ordered
   ) {
     const n =
-      counts.get(name) || 1;
+      counts.get(name) ||
+      1;
 
     for (
       let i = 0;
@@ -422,13 +550,19 @@ function extractNamesFromDensuke(html) {
   return expanded;
 }
 
+/*
+  伝助へのアクセスは
+  初回の「伝助を終了」
+  実行時のみ。
+*/
 async function fetchDensukeNames() {
   const urls = [
     DENSUKE_URL,
-    DENSUKE_MOBILE_URL,
+    DENSUKE_MOBILE_URL
   ];
 
-  let lastError = null;
+  let lastError =
+    null;
 
   for (
     const target
@@ -454,14 +588,14 @@ async function fetchDensukeNames() {
                 "Mozilla/5.0 (compatible; YachiyoLittleSeniorAttendance/1.0)",
 
               "accept-language":
-                "ja,en;q=0.8",
+                "ja,en;q=0.8"
             },
 
             signal:
               controller.signal,
 
             redirect:
-              "follow",
+              "follow"
           }
         );
 
@@ -477,8 +611,8 @@ async function fetchDensukeNames() {
         );
 
       /*
-        名前取得に失敗した場合は
-        伝助終了を確定させない。
+        取得失敗時は
+        終了状態にしない。
       */
       if (
         names.length < 5
@@ -489,8 +623,11 @@ async function fetchDensukeNames() {
       }
 
       return names;
+
     } catch (e) {
-      lastError = e;
+      lastError =
+        e;
+
     } finally {
       clearTimeout(timer);
     }
@@ -504,30 +641,36 @@ async function fetchDensukeNames() {
   );
 }
 
-function makeMembers(names) {
+function makeMembers(
+  names
+) {
   return names.map(
     (name, i) => ({
       id:
         `member_${Date.now().toString(36)}_${i + 1}`,
 
-      name,
+      name
     })
   );
 }
 
-async function loadData(store) {
-  let saved = null;
+async function loadData(
+  store
+) {
+  let saved =
+    null;
 
   try {
     saved =
       await store.get(
         KEY,
         {
-          type: "json",
+          type: "json"
         }
       );
   } catch {
-    saved = null;
+    saved =
+      null;
   }
 
   return cleanupOldData(
@@ -540,34 +683,44 @@ async function loadData(store) {
 export default async request => {
   const store =
     getStore({
-      name: STORE,
-      consistency: "strong",
+      name:
+        STORE,
+
+      consistency:
+        "strong"
     });
 
   try {
     const config =
-      await getConfig(store);
+      await getConfig(
+        store
+      );
 
     /*
-      伝助終了前
-      ↓
-      保護者出欠確認は
-      閲覧も不可。
+      GET
+
+      伝助終了前は
+      attendanceデータ自体を
+      外へ返さない。
     */
     if (
-      request.method === "GET"
+      request.method ===
+      "GET"
     ) {
       if (
-        !config.migrationEnded
+        !config
+          .migrationEnded
       ) {
         return json({
           locked: true,
-          config,
+          config
         });
       }
 
       const data =
-        await loadData(store);
+        await loadData(
+          store
+        );
 
       await store.setJSON(
         KEY,
@@ -577,17 +730,18 @@ export default async request => {
       return json({
         locked: false,
         config,
-        data,
+        data
       });
     }
 
     if (
-      request.method !== "POST"
+      request.method !==
+      "POST"
     ) {
       return json(
         {
           error:
-            "Method not allowed",
+            "Method not allowed"
         },
         405
       );
@@ -602,7 +756,7 @@ export default async request => {
       return json(
         {
           error:
-            "Invalid JSON",
+            "Invalid JSON"
         },
         400
       );
@@ -613,8 +767,12 @@ export default async request => {
         body.action || ""
       );
 
+    /*
+      管理者認証確認。
+    */
     if (
-      action === "adminPing"
+      action ===
+      "adminPing"
     ) {
       if (
         !adminOK(request)
@@ -622,7 +780,7 @@ export default async request => {
         return json(
           {
             error:
-              "Unauthorized",
+              "Unauthorized"
           },
           401
         );
@@ -630,20 +788,24 @@ export default async request => {
 
       return json({
         ok: true,
-        config,
+        config
       });
     }
 
     /*
-      管理から
-      「伝助を終了」
+      ──────────────────
+      伝助を終了
+      ──────────────────
 
-      この瞬間だけ
-      伝助へアクセスして
-      名前だけ取得する。
+      初回のみ
+      伝助から名前を取得。
+
+      日程・○△×・コメントは
+      取得しない。
     */
     if (
-      action === "endDensuke"
+      action ===
+      "endDensuke"
     ) {
       if (
         !adminOK(request)
@@ -651,52 +813,91 @@ export default async request => {
         return json(
           {
             error:
-              "Unauthorized",
+              "Unauthorized"
           },
           401
         );
       }
 
       if (
-        config.migrationEnded
+        config
+          .migrationEnded
       ) {
         return json(
           {
             error:
-              "伝助はすでに終了しています",
+              "伝助はすでに終了しています"
           },
           409
         );
       }
 
+      let data =
+        await loadData(
+          store
+        );
+
+      let importedNames =
+        0;
+
       /*
-        名前だけ取得。
-        日程・○△×・コメントは
-        一切取得しない。
+        初回終了時だけ
+        伝助へアクセス。
       */
-      const names =
-        await fetchDensukeNames();
+      if (
+        !config
+          .namesImported
+      ) {
+        const names =
+          await fetchDensukeNames();
 
-      const data = {
-        events: [],
-        members:
-          makeMembers(names),
-        answers: {},
-        comments: [],
-      };
+        /*
+          名前だけで
+          新しい出欠データを
+          開始する。
 
+          日程
+          ○△×
+          コメント
+          は空。
+        */
+        data = {
+          events: [],
+
+          members:
+            makeMembers(
+              names
+            ),
+
+          answers: {},
+
+          comments: []
+        };
+
+        importedNames =
+          names.length;
+
+        await store.setJSON(
+          KEY,
+          data
+        );
+      }
+
+      /*
+        名前取得成功後にだけ
+        移行終了を確定。
+      */
       const nextConfig = {
-        migrationEnded: true,
+        migrationEnded:
+          true,
 
         endedAt:
           new Date()
             .toISOString(),
-      };
 
-      await store.setJSON(
-        KEY,
-        data
-      );
+        namesImported:
+          true
+      };
 
       await store.setJSON(
         CONFIG_KEY,
@@ -705,39 +906,36 @@ export default async request => {
 
       return json({
         ok: true,
-        locked: false,
-        config: nextConfig,
+
+        locked:
+          false,
+
+        config:
+          nextConfig,
+
         data,
-        importedNames:
-          names.length,
+
+        importedNames
       });
     }
 
     /*
-      伝助終了前は
-      ○△×・コメント・
-      日程・名前管理も不可。
+      ──────────────────
+      伝助移行を再開
+      ──────────────────
+
+      サイト側の状態だけ
+      「移行中」に戻す。
+
+      保存済みデータは
+      一切削除しない。
+
+      伝助そのものを
+      復元する機能ではない。
     */
     if (
-      !config.migrationEnded
-    ) {
-      return json(
-        {
-          error:
-            "伝助終了前は保護者出欠確認を使用できません",
-        },
-        423
-      );
-    }
-
-    let data =
-      await loadData(store);
-
-    /*
-      管理画面保存
-    */
-    if (
-      action === "adminSave"
+      action ===
+      "resumeDensuke"
     ) {
       if (
         !adminOK(request)
@@ -745,7 +943,86 @@ export default async request => {
         return json(
           {
             error:
-              "Unauthorized",
+              "Unauthorized"
+          },
+          401
+        );
+      }
+
+      const nextConfig = {
+        migrationEnded:
+          false,
+
+        endedAt:
+          "",
+
+        /*
+          ここをtrueのまま
+          保持することで、
+          再終了時に伝助へ
+          再アクセスしない。
+        */
+        namesImported:
+          config
+            .namesImported ===
+          true
+      };
+
+      await store.setJSON(
+        CONFIG_KEY,
+        nextConfig
+      );
+
+      return json({
+        ok: true,
+
+        locked:
+          true,
+
+        config:
+          nextConfig
+      });
+    }
+
+    /*
+      伝助終了前は
+      ○△×・コメント・
+      管理保存を禁止。
+    */
+    if (
+      !config
+        .migrationEnded
+    ) {
+      return json(
+        {
+          error:
+            "伝助終了前は保護者出欠確認を使用できません"
+        },
+        423
+      );
+    }
+
+    let data =
+      await loadData(
+        store
+      );
+
+    /*
+      管理画面保存。
+      日程追加・削除、
+      名前追加・削除など。
+    */
+    if (
+      action ===
+      "adminSave"
+    ) {
+      if (
+        !adminOK(request)
+      ) {
+        return json(
+          {
+            error:
+              "Unauthorized"
           },
           401
         );
@@ -754,7 +1031,8 @@ export default async request => {
       data =
         cleanupOldData(
           normalize(
-            body.data || {}
+            body.data ||
+            {}
           )
         );
 
@@ -765,29 +1043,33 @@ export default async request => {
 
       return json({
         ok: true,
-        data,
+        data
       });
     }
 
     /*
-      ○ △ ×
+      ○ △ × 保存
     */
     if (
-      action === "answer"
+      action ===
+      "answer"
     ) {
       const eventId =
         String(
-          body.eventId || ""
+          body.eventId ||
+          ""
         );
 
       const memberId =
         String(
-          body.memberId || ""
+          body.memberId ||
+          ""
         );
 
       const status =
         String(
-          body.status || ""
+          body.status ||
+          ""
         );
 
       if (
@@ -797,7 +1079,7 @@ export default async request => {
         return json(
           {
             error:
-              "Missing id",
+              "Missing id"
           },
           400
         );
@@ -808,13 +1090,15 @@ export default async request => {
         ![
           "○",
           "△",
-          "×",
-        ].includes(status)
+          "×"
+        ].includes(
+          status
+        )
       ) {
         return json(
           {
             error:
-              "Invalid status",
+              "Invalid status"
           },
           400
         );
@@ -830,7 +1114,7 @@ export default async request => {
         return json(
           {
             error:
-              "Member not found",
+              "Member not found"
           },
           404
         );
@@ -846,7 +1130,7 @@ export default async request => {
         return json(
           {
             error:
-              "Event not found",
+              "Event not found"
           },
           404
         );
@@ -880,24 +1164,27 @@ export default async request => {
 
       return json({
         ok: true,
-        data,
+        data
       });
     }
 
     /*
-      コメント
+      コメント追加。
     */
     if (
-      action === "comment"
+      action ===
+      "comment"
     ) {
       const memberId =
         String(
-          body.memberId || ""
+          body.memberId ||
+          ""
         );
 
       const text =
         String(
-          body.text || ""
+          body.text ||
+          ""
         ).trim();
 
       if (
@@ -907,7 +1194,7 @@ export default async request => {
         return json(
           {
             error:
-              "Missing comment",
+              "Missing comment"
           },
           400
         );
@@ -919,7 +1206,7 @@ export default async request => {
         return json(
           {
             error:
-              "Comment too long",
+              "Comment too long"
           },
           400
         );
@@ -935,7 +1222,7 @@ export default async request => {
         return json(
           {
             error:
-              "Member not found",
+              "Member not found"
           },
           404
         );
@@ -943,9 +1230,10 @@ export default async request => {
 
       data.comments.push({
         id:
-          `comment_${Date.now().toString(36)}_${Math.random().toString(36).slice(2, 8)}`,
+          `comment_${Date.now().toString(36)}_${Math.random().toString(36).slice(2,8)}`,
 
         memberId,
+
         text,
 
         updatedAt:
@@ -953,9 +1241,13 @@ export default async request => {
             .toISOString(),
 
         source:
-          "site",
+          "site"
       });
 
+      /*
+        念のため
+        最大300件。
+      */
       if (
         data.comments.length >
         300
@@ -967,7 +1259,9 @@ export default async request => {
       }
 
       data =
-        cleanupOldData(data);
+        cleanupOldData(
+          data
+        );
 
       await store.setJSON(
         KEY,
@@ -976,17 +1270,18 @@ export default async request => {
 
       return json({
         ok: true,
-        data,
+        data
       });
     }
 
     return json(
       {
         error:
-          "Unknown action",
+          "Unknown action"
       },
       400
     );
+
   } catch (error) {
     console.error(
       "attendance-data error:",
@@ -999,7 +1294,7 @@ export default async request => {
           String(
             error?.message ||
             "Server error"
-          ),
+          )
       },
       500
     );
