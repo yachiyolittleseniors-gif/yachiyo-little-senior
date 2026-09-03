@@ -18,14 +18,7 @@
 @media(max-width:700px){.pagehero h1{font-size:29px}.wrap{padding-left:8px;padding-right:8px}.notice{margin-left:6px;margin-right:6px}.toolbar{padding:0 6px}.admin-grid{grid-template-columns:1fr}.brand{font-size:16px}.back{font-size:11px;padding:8px 9px}.status-btn{width:42px;height:39px}.name-col{min-width:116px}.event-head{min-width:90px}}
 </style>
 
-<script>
-(function(){
-  const teamPass = sessionStorage.getItem('yachiyoAttendancePass') || '';
-  if(!teamPass){
-    location.replace('./board.html');
-  }
-})();
-</script>
+
 
 
 <style>
@@ -33,6 +26,15 @@
 #loginGate,.login-gate,.loginGate,.auth-gate,.password-gate,
 #loginPanel,.login-panel,.password-panel{display:none!important}
 </style>
+
+
+<script>
+(function(){
+  if(sessionStorage.getItem('yachiyoBoardAuthorized') !== '1'){
+    location.replace('./index.html');
+  }
+})();
+</script>
 
 </head>
 <body>
