@@ -137,7 +137,9 @@ const BOARD_VIEW_PASSWORD='yachiyo20260800';
 }
 #densukeAdminPanel.show{display:block}
 #densukeAdminPanel button{margin:6px;padding:10px 14px;border-radius:10px;border:1px solid #c79a3b;background:#071426;color:#fff}
+#densukeEndActions{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
 #densukeAdminPanel .danger{background:#5e1515}
+#cancelDensukeBtn,#closeDensukeAdminBtn{background:#4d5662!important}
 #densukeAdminPanel .restore{background:#173e24}
 #densukeWarning{display:none;margin:12px 6px;color:#ff5b5b;font-weight:800;line-height:1.6}
 #densukeAdminStatus{font-size:12px;line-height:1.7;color:#d5dbe3}
@@ -148,8 +150,12 @@ const BOARD_VIEW_PASSWORD='yachiyo20260800';
   <strong>伝助移行設定</strong>
   <p id="densukeAdminStatus">伝助終了前は、保護者出欠確認を開くことはできません。</p>
   <p id="densukeWarning">⚠ 伝助は復元できない可能性があります。</p>
-  <button id="endDensukeBtn" class="danger" type="button">伝助を終了</button>
+  <div id="densukeEndActions">
+    <button id="endDensukeBtn" class="danger" type="button">伝助を終了</button>
+    <button id="cancelDensukeBtn" type="button" style="display:none">キャンセル</button>
+  </div>
   <button id="resumeDensukeBtn" class="restore" type="button" style="display:none">伝助移行を再開</button>
+  <button id="closeDensukeAdminBtn" type="button">管理終了</button>
 </div>
 
 <script>
@@ -162,10 +168,12 @@ const BOARD_VIEW_PASSWORD='yachiyo20260800';
   const panel=document.getElementById('densukeAdminPanel');
   const endBtn=document.getElementById('endDensukeBtn');
   const resumeBtn=document.getElementById('resumeDensukeBtn');
+  const cancelBtn=document.getElementById('cancelDensukeBtn');
+  const closeAdminBtn=document.getElementById('closeDensukeAdminBtn');
   const warning=document.getElementById('densukeWarning');
   const adminStatus=document.getElementById('densukeAdminStatus');
 
-  if(!attendanceBtn || !legacyCard || !adminBtn || !panel || !endBtn || !resumeBtn || !warning) return;
+  if(!attendanceBtn || !legacyCard || !adminBtn || !panel || !endBtn || !resumeBtn || !cancelBtn || !closeAdminBtn || !warning) return;
 
   function setAttendanceEnabled(enabled){
     if(enabled){
@@ -184,6 +192,7 @@ const BOARD_VIEW_PASSWORD='yachiyo20260800';
   function setEndedUI(ended){
     setAttendanceEnabled(ended);
     warning.style.display='none';
+    cancelBtn.style.display='none';
     endBtn.dataset.warningShown='0';
     endBtn.textContent='伝助を終了';
 
@@ -274,14 +283,37 @@ const BOARD_VIEW_PASSWORD='yachiyo20260800';
     // 1回目は赤い警告を表示。2回目で終了処理へ進む。
     if(endBtn.dataset.warningShown!=='1'){
       warning.style.display='block';
+      cancelBtn.style.display='inline-block';
       endBtn.dataset.warningShown='1';
       endBtn.textContent='確認して伝助を終了';
       warning.scrollIntoView({behavior:'smooth',block:'nearest'});
       return;
     }
 
-    const adminPassword=panel.dataset.adminPassword || prompt('管理者パスワードを入力してください。');
+    const adminPassword=prompt('伝助を終了するには管理者パスワードを入力してください。');
     if(!adminPassword) return;
+
+    try{
+      const auth=await fetch(API,{
+        method:'POST',
+        headers:{
+          'content-type':'application/json',
+          'x-admin-password':adminPassword
+        },
+        body:JSON.stringify({action:'adminPing'})
+      });
+      if(auth.status===401){
+        alert('パスワードが違います。');
+        return;
+      }
+      if(!auth.ok){
+        alert('管理者認証を確認できませんでした。');
+        return;
+      }
+    }catch(e){
+      alert('管理者認証を確認できませんでした。');
+      return;
+    }
 
     const ok=confirm(
       '伝助を終了しますか？\n\n伝助は復元できない可能性があります。\n初回終了時のみ、伝助から回答者名だけを1回取得します。'
@@ -324,6 +356,23 @@ const BOARD_VIEW_PASSWORD='yachiyo20260800';
         endBtn.textContent='確認して伝助を終了';
       }
     }
+  });
+
+  cancelBtn.addEventListener('click',()=>{
+    warning.style.display='none';
+    cancelBtn.style.display='none';
+    endBtn.dataset.warningShown='0';
+    endBtn.textContent='伝助を終了';
+  });
+
+  closeAdminBtn.addEventListener('click',()=>{
+    panel.classList.remove('show');
+    panel.dataset.adminPassword='';
+    adminBtn.style.setProperty('display','none','important');
+    warning.style.display='none';
+    cancelBtn.style.display='none';
+    endBtn.dataset.warningShown='0';
+    endBtn.textContent='伝助を終了';
   });
 
   resumeBtn.addEventListener('click',async()=>{
