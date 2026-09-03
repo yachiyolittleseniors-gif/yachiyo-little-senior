@@ -8,7 +8,7 @@
 <title>チーム内案内板｜八千代リトルシニア</title>
 <style>
 :root{--navy:#071426;--navy2:#102741;--gold:#c79a3b;--gold2:#e2bd67;--bg:#f4f3ef;--ink:#17202b}
-*{box-sizing:border-box}
+*{box-sizing:border-box}html,body{overflow-x:hidden;overflow-y:auto;-webkit-overflow-scrolling:touch}
 body{margin:0;font-family:-apple-system,BlinkMacSystemFont,"Hiragino Kaku Gothic ProN","Yu Gothic",Meiryo,sans-serif;background:var(--bg);color:var(--ink)}
 a{text-decoration:none;color:inherit}
 .header{background:var(--navy);color:#fff;border-bottom:1px solid rgba(199,154,59,.4)}
@@ -95,28 +95,39 @@ const BOARD_VIEW_PASSWORD='yachiyo20260800';
 <style>
 #densukeToggleBtn{
   display:none;
-  position:fixed;
-  right:14px;
-  bottom:calc(14px + env(safe-area-inset-bottom));
-  z-index:1001;
-  margin:0;
+  position:fixed !important;
+  right:max(12px,env(safe-area-inset-right)) !important;
+  left:auto !important;
+  top:auto !important;
+  bottom:calc(12px + env(safe-area-inset-bottom)) !important;
+  z-index:10001 !important;
+  margin:0 !important;
+  transform:none !important;
   padding:10px 16px;
   border:1px solid #c79a3b;
   border-radius:999px;
   background:#071426;
   color:#c79a3b;
   font-weight:700;
+  width:auto !important;
+  max-width:none !important;
 }
 #densukeAdminPanel{
   display:none;
-  position:fixed;
-  right:14px;
-  bottom:calc(66px + env(safe-area-inset-bottom));
-  z-index:1000;
-  width:min(92vw,680px);
-  max-height:70vh;
-  overflow-y:auto;
+  position:fixed !important;
+  right:max(12px,env(safe-area-inset-right)) !important;
+  left:auto !important;
+  top:auto !important;
+  bottom:calc(66px + env(safe-area-inset-bottom)) !important;
+  z-index:10000 !important;
+  width:min(92vw,680px) !important;
+  max-width:calc(100vw - 24px) !important;
+  max-height:min(70vh,620px) !important;
+  overflow-y:auto !important;
+  overflow-x:hidden !important;
   -webkit-overflow-scrolling:touch;
+  overscroll-behavior:contain;
+  touch-action:pan-y;
   padding:16px;
   border:1px solid rgba(199,154,59,.45);
   border-radius:14px;
@@ -219,7 +230,7 @@ const BOARD_VIEW_PASSWORD='yachiyo20260800';
     if(taps>=3){
       taps=0;
       clearTimeout(timer);
-      adminBtn.style.display='block';
+      adminBtn.style.setProperty('display','block','important');
     }
   },{passive:true});
 
