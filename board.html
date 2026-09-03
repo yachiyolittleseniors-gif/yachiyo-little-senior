@@ -155,7 +155,7 @@ const BOARD_VIEW_PASSWORD='yachiyo20260800';
     <button id="cancelDensukeBtn" type="button" style="display:none">キャンセル</button>
   </div>
   <button id="resumeDensukeBtn" class="restore" type="button" style="display:none">伝助移行を再開</button>
-  <button id="closeDensukeAdminBtn" type="button">管理終了</button>
+  <button id="closeDensukeAdminBtn" type="button">キャンセル</button>
 </div>
 
 <script>
@@ -239,6 +239,7 @@ const BOARD_VIEW_PASSWORD='yachiyo20260800';
     if(taps>=3){
       taps=0;
       clearTimeout(timer);
+      adminBtn.textContent='管理';
       adminBtn.style.setProperty('display','block','important');
     }
   },{passive:true});
@@ -246,6 +247,13 @@ const BOARD_VIEW_PASSWORD='yachiyo20260800';
   adminBtn.addEventListener('click',async()=>{
     if(panel.classList.contains('show')){
       panel.classList.remove('show');
+      panel.dataset.adminPassword='';
+      adminBtn.textContent='管理';
+      adminBtn.style.setProperty('display','none','important');
+      warning.style.display='none';
+      cancelBtn.style.display='none';
+      endBtn.dataset.warningShown='0';
+      endBtn.textContent='伝助を終了';
       return;
     }
 
@@ -274,6 +282,7 @@ const BOARD_VIEW_PASSWORD='yachiyo20260800';
 
       panel.dataset.adminPassword=adminPassword;
       panel.classList.add('show');
+      adminBtn.textContent='管理終了';
     }catch(e){
       alert('管理者認証を確認できませんでした。');
     }
@@ -368,7 +377,8 @@ const BOARD_VIEW_PASSWORD='yachiyo20260800';
   closeAdminBtn.addEventListener('click',()=>{
     panel.classList.remove('show');
     panel.dataset.adminPassword='';
-    adminBtn.style.setProperty('display','none','important');
+    adminBtn.textContent='管理';
+    adminBtn.style.setProperty('display','block','important');
     warning.style.display='none';
     cancelBtn.style.display='none';
     endBtn.dataset.warningShown='0';
