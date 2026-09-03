@@ -5,7 +5,7 @@ const KEY = "content/attendance.json";
 const CONFIG_KEY = "content/attendance-config.json";
 
 const DENSUKE_URL =
-  "https://www.densuke.biz/m/list2?cd=ZhxJNW9dPNGVtm7c";
+  "https://www.densuke.biz/m/list?cd=ZhxJNW9dPNGVtm7c";
 
 function json(data, status = 200) {
   return new Response(JSON.stringify(data), {
