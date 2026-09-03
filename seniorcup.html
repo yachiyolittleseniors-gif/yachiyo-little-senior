@@ -307,8 +307,9 @@ document.addEventListener('DOMContentLoaded',function(){
 function openTeamBoardFromSeniorCup(){
   const entered=prompt("チーム内案内板のパスワードを入力してください。");
   if(entered===null)return false;
-  if(entered!=="yachiyo20260800"){alert("パスワードが違います。");return false;}
-  sessionStorage.setItem("yachiyoAttendancePass",entered);
+  const normalized=entered.trim().toLowerCase();
+  if(normalized!=="yachiyo20260800"){alert("パスワードが違います。");return false;}
+  sessionStorage.setItem("yachiyoAttendancePass","yachiyo20260800");
   sessionStorage.setItem("yachiyoBoardAuthorized","1");
   window.location.href="./board.html";
   return false;

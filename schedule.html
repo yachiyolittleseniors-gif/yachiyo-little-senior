@@ -1675,9 +1675,9 @@ function openProtectedArea(type){
   const entered=prompt("パスワードを入力してください");
   if(entered===null) return false;
   if(type==="office" && entered!=="yachiyo198208000"){ alert("パスワードが違います。"); return false; }
-  if(type==="board" && entered!=="yachiyo20260800"){ alert("パスワードが違います。"); return false; }
+  if(type==="board" && entered.trim().toLowerCase()!=="yachiyo20260800"){ alert("パスワードが違います。"); return false; }
   if(type==="office") window.location.href="mailto:yachiyo.littleseniors@gmail.com";
-  if(type==="board"){ sessionStorage.setItem("yachiyoAttendancePass",entered); sessionStorage.setItem("yachiyoBoardAuthorized","1"); window.location.href="./board.html"; return false; }
+  if(type==="board"){ sessionStorage.setItem("yachiyoAttendancePass","yachiyo20260800"); sessionStorage.setItem("yachiyoBoardAuthorized","1"); window.location.href="./board.html"; return false; }
   return false;
 }
 </script>

@@ -1843,8 +1843,9 @@ function closeModal(){
 function openProtectedArea(type){
   const entered=prompt("パスワードを入力してください");
   if(entered===null) return false;
-  if(type==="board" && entered!=="yachiyo20260800"){ alert("パスワードが違います。"); return false; }
-  if(type==="board"){ sessionStorage.setItem("yachiyoAttendancePass",entered); sessionStorage.setItem("yachiyoBoardAuthorized","1"); window.location.href="./board.html"; return false; }
+  const normalized=entered.trim().toLowerCase();
+  if(type==="board" && normalized!=="yachiyo20260800"){ alert("パスワードが違います。"); return false; }
+  if(type==="board"){ sessionStorage.setItem("yachiyoAttendancePass","yachiyo20260800"); sessionStorage.setItem("yachiyoBoardAuthorized","1"); window.location.href="./board.html"; return false; }
   return false;
 }
 </script>
