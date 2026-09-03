@@ -97,10 +97,13 @@ const RULES_VIEW_PASSWORD='yachiyo20260800';
   const p=prompt('パスワードを入力してください');
   if(p===RULES_VIEW_PASSWORD) return;
   if(p===null){
-    document.documentElement.innerHTML='';
-    window.stop();
-    return;
+  if(history.length>1){
+    history.back();
+  }else{
+    location.replace('./index.html');
   }
+  return;
+}
   alert('パスワードが違います。');
   location.replace('./index.html');
 })();
