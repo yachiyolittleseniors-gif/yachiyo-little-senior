@@ -193,10 +193,86 @@ function adminOK(request) {
 function mergeInitial(data) {
   let changed = false;
 
+  /*
+   * 前回の自動同期で作られた壊れたデータを検出。
+   * 7月・8月の日程や densuke_event_ が残っていたら
+   * 正常な移行データへ1回だけ強制復旧する。
+   */
+  const corrupted =
+    data.events.some(event => {
+      const date = String(event?.date || "");
+      const id = String(event?.id || "");
+
+      return (
+        /^2026-(0[1-8])-\d{2}$/.test(date) ||
+        id.startsWith("densuke_event_")
+      );
+    });
+
   if (
-    !data
-      .migrationInitialized
+    corrupted ||
+    !data.events.length ||
+    !data.members.length
   ) {
+    const migrated =
+      normalize(
+        structuredClone(
+          MIGRATED_DATA
+        )
+      );
+
+    data.events =
+      migrated.events;
+
+    data.members =
+      migrated.members;
+
+    data.answers =
+      migrated.answers;
+
+    data.comments =
+      structuredClone(
+        MIGRATED_COMMENTS
+      );
+
+    data.migrationInitialized =
+      true;
+
+    changed = true;
+
+    return {
+      data,
+      changed,
+    };
+  }
+
+  /*
+   * 壊れていない場合は
+   * 既存データをそのまま維持。
+   */
+  if (
+    !data.migrationInitialized
+  ) {
+    if (
+      !data.comments.length
+    ) {
+      data.comments =
+        structuredClone(
+          MIGRATED_COMMENTS
+        );
+    }
+
+    data.migrationInitialized =
+      true;
+
+    changed = true;
+  }
+
+  return {
+    data,
+    changed,
+  };
+}
     if (
       !data.events.length ||
       !data.members.length
