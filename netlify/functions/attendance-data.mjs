@@ -202,7 +202,7 @@ export default async request => {
         }
       }
 
-      return json(data);
+      return json({ data });
     }
 
     if (request.method !== "POST") {
