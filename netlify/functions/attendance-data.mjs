@@ -4,10 +4,9 @@ const STORE = "yachiyo-public-site";
 const KEY = "content/attendance.json";
 const CONFIG_KEY = "content/attendance-config.json";
 
-const DENSUKE_URL =
-  "https://www.densuke.biz/m/list2?cd=ZhxJNW9dPNGVtm7c&pw=";
+const MIGRATED_DATA = {"events":[{"id":"event-1","date":"2026-09-05","title":""},{"id":"event-2","date":"2026-09-06","title":""},{"id":"event-3","date":"2026-09-12","title":""},{"id":"event-4","date":"2026-09-13","title":""},{"id":"event-5","date":"2026-09-19","title":""},{"id":"event-6","date":"2026-09-20","title":""},{"id":"event-7","date":"2026-09-21","title":""},{"id":"event-8","date":"2026-09-22","title":""},{"id":"event-9","date":"2026-09-23","title":""},{"id":"event-10","date":"2026-09-26","title":""},{"id":"event-11","date":"2026-09-27","title":""},{"id":"event-12","date":"2026-10-03","title":""},{"id":"event-13","date":"2026-10-04","title":""},{"id":"event-14","date":"2026-10-10","title":""},{"id":"event-15","date":"2026-10-11","title":""},{"id":"event-16","date":"2026-10-12","title":""}],"members":[{"id":"member-1","name":"吉岡父"},{"id":"member-2","name":"杉山父"},{"id":"member-3","name":"山澤父"},{"id":"member-4","name":"山口明父"},{"id":"member-5","name":"南父"},{"id":"member-6","name":"山口勇父"},{"id":"member-7","name":"安本父"},{"id":"member-8","name":"浅野父"},{"id":"member-9","name":"佐藤父"},{"id":"member-10","name":"谷川父"},{"id":"member-11","name":"向山父"},{"id":"member-12","name":"亀井父"},{"id":"member-13","name":"松田惺父"},{"id":"member-14","name":"長島父"},{"id":"member-15","name":"荒木父"},{"id":"member-16","name":"加藤父"},{"id":"member-17","name":"石山父"},{"id":"member-18","name":"大谷部父"},{"id":"member-19","name":"草野父"},{"id":"member-20","name":"古賀父"},{"id":"member-21","name":"齋藤父"},{"id":"member-22","name":"佐藤父"},{"id":"member-23","name":"篠崎父"},{"id":"member-24","name":"竹内父"},{"id":"member-25","name":"永井父"},{"id":"member-26","name":"本村父"},{"id":"member-27","name":"森田父"},{"id":"member-28","name":"矢羽田父"},{"id":"member-29","name":"赤羽父"},{"id":"member-30","name":"秋葉父"},{"id":"member-31","name":"石川晃父"},{"id":"member-32","name":"井上遥父"},{"id":"member-33","name":"井上竜父"},{"id":"member-34","name":"宇山父"},{"id":"member-35","name":"江見父"},{"id":"member-36","name":"加賀原父"},{"id":"member-37","name":"粕谷父"},{"id":"member-38","name":"亀井碧父"},{"id":"member-39","name":"川村父"},{"id":"member-40","name":"小池父"},{"id":"member-41","name":"高祖父"},{"id":"member-42","name":"小堀父"},{"id":"member-43","name":"紺野父"},{"id":"member-44","name":"内藤父"},{"id":"member-45","name":"中濱父"},{"id":"member-46","name":"長峰父"},{"id":"member-47","name":"松井父"},{"id":"member-48","name":"溝上父"},{"id":"member-49","name":"村山父"},{"id":"member-50","name":"本吉父"},{"id":"member-51","name":"山澤奏父"},{"id":"member-52","name":"山本諒父"},{"id":"member-53","name":"山本要父"},{"id":"member-54","name":"吉岡母"},{"id":"member-55","name":"杉山母"},{"id":"member-56","name":"山澤母"},{"id":"member-57","name":"舘母"},{"id":"member-58","name":"山口明母"},{"id":"member-59","name":"南母"},{"id":"member-60","name":"山口勇母"},{"id":"member-61","name":"安本母"},{"id":"member-62","name":"谷川母"},{"id":"member-63","name":"亀井母"},{"id":"member-64","name":"向山母"},{"id":"member-65","name":"浅野母"},{"id":"member-66","name":"松田母"},{"id":"member-67","name":"長島母"},{"id":"member-68","name":"荒木母"},{"id":"member-69","name":"石川母"},{"id":"member-70","name":"石山母"},{"id":"member-71","name":"大谷部母"},{"id":"member-72","name":"加藤母"},{"id":"member-73","name":"草野母"},{"id":"member-74","name":"古賀母"},{"id":"member-75","name":"齋藤母"},{"id":"member-76","name":"佐藤母"},{"id":"member-77","name":"篠崎母"},{"id":"member-78","name":"椙浦母"},{"id":"member-79","name":"高橋母"},{"id":"member-80","name":"竹内母"},{"id":"member-81","name":"筒井母"},{"id":"member-82","name":"永井母"},{"id":"member-83","name":"藤澤母"},{"id":"member-84","name":"本村母"},{"id":"member-85","name":"森田母"},{"id":"member-86","name":"矢羽田母"},{"id":"member-87","name":"赤羽母"},{"id":"member-88","name":"秋葉母"},{"id":"member-89","name":"石川晃母"},{"id":"member-90","name":"井上遥母"},{"id":"member-91","name":"井上竜母"},{"id":"member-92","name":"宇山母"},{"id":"member-93","name":"江見母"},{"id":"member-94","name":"加賀原母"},{"id":"member-95","name":"粕谷母"},{"id":"member-96","name":"亀井碧母"},{"id":"member-97","name":"川村母"},{"id":"member-98","name":"小池母"},{"id":"member-99","name":"高祖母"},{"id":"member-100","name":"小堀母"},{"id":"member-101","name":"紺野母"},{"id":"member-102","name":"内藤母"},{"id":"member-103","name":"中濱母"},{"id":"member-104","name":"長峰母"},{"id":"member-105","name":"松井母"},{"id":"member-106","name":"松浦母"},{"id":"member-107","name":"溝上母"},{"id":"member-108","name":"村山母"},{"id":"member-109","name":"本吉母"},{"id":"member-110","name":"山澤奏母"},{"id":"member-111","name":"山本要母"},{"id":"member-112","name":"山本諒母"}],"answers":{"member-2":{"event-1":"×","event-2":"×","event-3":"×","event-4":"×","event-5":"×","event-6":"×","event-7":"×","event-8":"×","event-9":"×","event-10":"×","event-11":"×"},"member-3":{"event-1":"×","event-2":"×","event-3":"×","event-4":"×"},"member-4":{"event-1":"×","event-2":"×","event-3":"×","event-4":"×","event-5":"×","event-6":"×","event-7":"×","event-8":"×","event-9":"×","event-10":"×","event-11":"×"},"member-15":{"event-1":"×","event-2":"×","event-3":"×","event-4":"△","event-5":"×","event-6":"△","event-7":"×","event-8":"×","event-9":"×","event-10":"×","event-11":"△"},"member-16":{"event-1":"×","event-2":"×"},"member-24":{"event-1":"×","event-2":"×","event-3":"×"},"member-28":{"event-1":"×","event-2":"×","event-3":"×","event-4":"×","event-5":"×","event-6":"×","event-7":"×","event-8":"×","event-9":"×","event-10":"×","event-11":"×"},"member-29":{"event-1":"○","event-2":"○"},"member-30":{"event-1":"×","event-2":"×","event-3":"×","event-4":"×","event-5":"×","event-6":"×","event-7":"×","event-8":"×","event-9":"×","event-10":"×","event-11":"×","event-12":"×","event-13":"×","event-14":"×","event-15":"×","event-16":"×"},"member-31":{"event-1":"×","event-2":"×","event-3":"×","event-4":"×","event-5":"×","event-6":"×","event-7":"×","event-8":"×"},"member-35":{"event-1":"×","event-2":"×"},"member-39":{"event-1":"×","event-2":"○","event-3":"×"},"member-40":{"event-1":"×","event-2":"×"},"member-42":{"event-1":"○","event-2":"×"},"member-44":{"event-1":"×","event-2":"○"},"member-46":{"event-1":"×","event-2":"×","event-3":"×"},"member-49":{"event-1":"×","event-2":"×"},"member-50":{"event-1":"×","event-2":"×"},"member-51":{"event-1":"×","event-2":"×","event-3":"×","event-4":"×"},"member-52":{"event-1":"×","event-2":"×","event-3":"×","event-4":"×","event-5":"×","event-6":"×","event-7":"×","event-8":"×","event-9":"×","event-10":"×","event-11":"×","event-12":"×","event-13":"×","event-14":"×","event-15":"×","event-16":"×"},"member-56":{"event-1":"×","event-2":"×","event-3":"×","event-4":"×"},"member-68":{"event-1":"×","event-2":"×","event-3":"×","event-4":"○","event-5":"×","event-6":"○"},"member-71":{"event-1":"×","event-2":"×"},"member-74":{"event-1":"×","event-2":"×","event-4":"○","event-7":"○"},"member-77":{"event-1":"△","event-2":"○","event-3":"△","event-4":"△","event-5":"△","event-6":"△","event-7":"△","event-8":"△","event-9":"△","event-10":"△","event-11":"○"},"member-79":{"event-1":"×","event-2":"×","event-3":"○"},"member-80":{"event-1":"△","event-2":"△","event-3":"×"},"member-85":{"event-1":"×","event-2":"×"},"member-87":{"event-1":"×","event-2":"×","event-3":"×","event-4":"×","event-5":"×","event-6":"×"},"member-97":{"event-1":"×","event-2":"×","event-3":"×"},"member-98":{"event-1":"×","event-2":"×"},"member-99":{"event-1":"×","event-2":"○","event-9":"○"},"member-100":{"event-1":"×","event-2":"×"},"member-102":{"event-1":"×","event-2":"×","event-3":"×","event-4":"×"},"member-105":{"event-1":"○","event-2":"○","event-3":"×"},"member-106":{"event-1":"×","event-2":"×","event-3":"×","event-4":"×","event-5":"×","event-6":"×","event-7":"×","event-8":"△","event-9":"△","event-10":"×","event-11":"×"},"member-109":{"event-1":"×","event-2":"○"},"member-110":{"event-1":"△","event-2":"△","event-3":"△","event-4":"△"},"member-112":{"event-1":"×","event-2":"△","event-3":"○"},"member-17":{"event-2":"○"},"member-18":{"event-2":"○","event-3":"○"},"member-20":{"event-2":"×"},"member-21":{"event-2":"×"},"member-25":{"event-2":"×"},"member-26":{"event-2":"×"},"member-32":{"event-2":"×"},"member-33":{"event-2":"○","event-5":"×"},"member-34":{"event-2":"○"},"member-36":{"event-2":"×"},"member-37":{"event-2":"○"},"member-47":{"event-2":"○","event-3":"○"},"member-48":{"event-2":"×"},"member-53":{"event-2":"○","event-6":"×"},"member-69":{"event-2":"○"},"member-70":{"event-2":"○","event-3":"○","event-8":"○"},"member-72":{"event-2":"○"},"member-75":{"event-2":"○"},"member-78":{"event-2":"○","event-3":"○"},"member-82":{"event-2":"○"},"member-83":{"event-2":"×","event-3":"○","event-5":"○"},"member-84":{"event-2":"×","event-3":"○"},"member-88":{"event-2":"○"},"member-89":{"event-2":"○"},"member-90":{"event-2":"×"},"member-91":{"event-2":"×"},"member-92":{"event-2":"×"},"member-95":{"event-2":"○","event-3":"○"},"member-96":{"event-2":"○"},"member-107":{"event-2":"×"},"member-108":{"event-2":"×"},"member-111":{"event-2":"○"},"member-86":{"event-7":"○","event-8":"○","event-9":"○"}}};
 
-const SYNC_INTERVAL_MS = 60 * 1000;
+const MIGRATED_COMMENTS = [{"id":"densuke-comment-1","memberId":"member-1","text":"7/20車出し?? 運転手含めて7人。何でもOKです。","updatedAt":"2026-08-12T21:50:13","source":"densuke"},{"id":"densuke-comment-2","memberId":"member-2","text":"23日、夕方から予定があるため最後まではいられないかもしれないですが朝から行きます！よろしくお願い致します！","updatedAt":"2026-08-12T22:50:24","source":"densuke"},{"id":"densuke-comment-4","memberId":"member-4","text":"5/6　マイクロバス運転手でお願いします。","updatedAt":"2026-08-18T17:46:21","source":"densuke"},{"id":"densuke-comment-5","memberId":"member-5","text":"10/4 浦安市長杯帯同します。","updatedAt":"2026-08-16T13:42:48","source":"densuke"},{"id":"densuke-comment-6","memberId":"member-6","text":"7/20車出し?? セレナ運転手含め6名　道具・荷物・選手なんでもOKです。","updatedAt":"2026-08-12T21:31:59","source":"densuke"},{"id":"densuke-comment-7","memberId":"member-7","text":"8/1車出し??。運転手含め4名乗車可。なんでもOKです。","updatedAt":"2026-08-13T17:29:46","source":"densuke"},{"id":"densuke-comment-8","memberId":"member-8","text":"7/20車出し○。ノア、運転手含めて6名。何でも可。","updatedAt":"2026-08-14T15:41:51","source":"densuke"},{"id":"densuke-comment-9","memberId":"member-9","text":"8/1車出し??。ステップワゴンなんでも可。運転手含め6人乗り","updatedAt":"2026-08-16T12:53:50","source":"densuke"},{"id":"densuke-comment-12","memberId":"member-12","text":"5/2.6車だし??フリード運転手含4名。応援、選手◯","updatedAt":"2026-08-12T21:00:31","source":"densuke"},{"id":"densuke-comment-14","memberId":"member-14","text":"8/1(土)車出し??。ビアンテなんでも可。運転手含め7人乗り","updatedAt":"2026-08-16T07:51:23","source":"densuke"},{"id":"densuke-comment-15","memberId":"member-15","text":"8/30 車出し?? 運転手含め7名　何でも可。","updatedAt":"2026-09-02T20:10:57","source":"densuke"},{"id":"densuke-comment-16","memberId":"member-16","text":"8/30車出し??、何でも??デリカD5、運転手含め7人乗車可能です。","updatedAt":"2026-09-01T09:47:15","source":"densuke"},{"id":"densuke-comment-17","memberId":"member-17","text":"9/6(日)  車出し??7人乗り、何でも可","updatedAt":"2026-08-31T20:31:22","source":"densuke"},{"id":"densuke-comment-18","memberId":"member-18","text":"9/6 車出し??です。ノア運転手含め6人です。","updatedAt":"2026-09-03T08:48:56","source":"densuke"},{"id":"densuke-comment-19","memberId":"member-19","text":"12日車出し何でも◯、運転手入れて６人","updatedAt":"2026-08-24T15:42:50","source":"densuke"},{"id":"densuke-comment-21","memberId":"member-21","text":"8/30車出し◯ デリカミニ軽","updatedAt":"2026-09-03T16:11:04","source":"densuke"},{"id":"densuke-comment-23","memberId":"member-23","text":"8月30日車出し??です。デリカ運転手含め7人です。なんでも??です。","updatedAt":"2026-08-26T19:44:09","source":"densuke"},{"id":"densuke-comment-24","memberId":"member-24","text":"8/30 車出し??ステップワゴン運転手含めて6人可 なんでも??です。","updatedAt":"2026-09-02T19:07:40","source":"densuke"},{"id":"densuke-comment-33","memberId":"member-33","text":"9/6 車出し??　セレナ運転手含め6名乗車可　何でも可","updatedAt":"2026-09-02T19:09:50","source":"densuke"},{"id":"densuke-comment-34","memberId":"member-34","text":"9/6 車出し??アルファード運転手含め6人。荷物道具??","updatedAt":"2026-09-02T10:49:23","source":"densuke"},{"id":"densuke-comment-35","memberId":"member-35","text":"8/23 申し訳ありません　急遽葬儀参列となったので欠席させて下さい","updatedAt":"2026-09-02T10:51:33","source":"densuke"},{"id":"densuke-comment-37","memberId":"member-37","text":"9/6車出し??、セレナ運転手含め7人、なんでも可","updatedAt":"2026-09-01T20:17:45","source":"densuke"},{"id":"densuke-comment-39","memberId":"member-39","text":"9/6 車出し??　シエンタ運転手含めて4人乗りです。 なんでも??です。","updatedAt":"2026-09-02T18:40:58","source":"densuke"},{"id":"densuke-comment-40","memberId":"member-40","text":"4/18 車出し?? ヴォクシー6人乗れます。なんでも??です","updatedAt":"2026-09-02T19:22:55","source":"densuke"},{"id":"densuke-comment-44","memberId":"member-44","text":"9/6 車出し??アテンザ運転手含めて4人可 なんでも??です。","updatedAt":"2026-09-01T17:14:16","source":"densuke"},{"id":"densuke-comment-46","memberId":"member-46","text":"5月2日　車出し??　エルグランド　6人。何でも大丈夫です。","updatedAt":"2026-09-02T21:42:37","source":"densuke"},{"id":"densuke-comment-47","memberId":"member-47","text":"9/6車出し??です。セレナ8人乗りです。","updatedAt":"2026-09-02T07:59:23","source":"densuke"},{"id":"densuke-comment-50","memberId":"member-50","text":"7/19 午前中のみ参加します","updatedAt":"2026-09-03T13:31:23","source":"densuke"},{"id":"densuke-comment-53","memberId":"member-53","text":"9/6 練習試合　車出し??エクストレイル運転手含めて4人乗りです。 なんでも??です。","updatedAt":"2026-08-31T20:41:00","source":"densuke"},{"id":"densuke-comment-54","memberId":"member-54","text":"7/11 車出し??。運転手含め7人","updatedAt":"2026-08-12T21:49:56","source":"densuke"},{"id":"densuke-comment-55","memberId":"member-55","text":"23日　スコアラーとして帯同かグラウンド責任で人手が足りなければそちらの協力でも可。お任せいたします。スコアラーの場合は指導者号も兼ねます。","updatedAt":"2026-08-13T18:30:06","source":"densuke"},{"id":"densuke-comment-57","memberId":"member-57","text":"4/29（水）車出し??　N-BOX（軽）荷物、応援可。車足りなければ出せます。","updatedAt":"2026-08-12T22:29:35","source":"densuke"},{"id":"densuke-comment-58","memberId":"member-58","text":"7/20車だし??。何でも?です。","updatedAt":"2026-08-13T12:46:47","source":"densuke"},{"id":"densuke-comment-60","memberId":"member-60","text":"8/12運転手含め6名乗車可。なんでもOKです。","updatedAt":"2026-08-13T07:44:26","source":"densuke"},{"id":"densuke-comment-61","memberId":"member-61","text":"5/10 妹（莉央奈）帯同します。","updatedAt":"2026-08-12T23:29:47","source":"densuke"},{"id":"densuke-comment-62","memberId":"member-62","text":"7/20 車出し??です。なんでも??です。","updatedAt":"2026-08-12T21:35:29","source":"densuke"},{"id":"densuke-comment-63","memberId":"member-63","text":"7/11車だし◯運転手含4名","updatedAt":"2026-08-12T21:00:49","source":"densuke"},{"id":"densuke-comment-64","memberId":"member-64","text":"7/20 車出し??運転手含め4人です","updatedAt":"2026-08-13T08:55:24","source":"densuke"},{"id":"densuke-comment-68","memberId":"member-68","text":"7/12車出し??ステップワゴン　運転手含め7名 なんでもオッケーです。","updatedAt":"2026-09-03T19:08:22","source":"densuke"},{"id":"densuke-comment-70","memberId":"member-70","text":"7/12車出し?? エルグランド 7人乗り　何でも??です。","updatedAt":"2026-08-31T20:39:54","source":"densuke"},{"id":"densuke-comment-72","memberId":"member-72","text":"9/6車出し??、何でも??７人乗り、デリカD5です。","updatedAt":"2026-09-01T09:47:52","source":"densuke"},{"id":"densuke-comment-74","memberId":"member-74","text":"7/4 車出し??何でも可。ステップ運転手含め6人乗れます。","updatedAt":"2026-08-31T15:31:44","source":"densuke"},{"id":"densuke-comment-77","memberId":"member-77","text":"9/6車出せます5.6人乗れます何でもOK","updatedAt":"2026-09-03T10:41:00","source":"densuke"},{"id":"densuke-comment-78","memberId":"member-78","text":"9/7車出し??です。デリカ運転手含め７人です。","updatedAt":"2026-09-01T11:02:58","source":"densuke"},{"id":"densuke-comment-82","memberId":"member-82","text":"9/6車出し?? デリカ8人乗り 何でも??です。","updatedAt":"2026-09-02T07:27:50","source":"densuke"},{"id":"densuke-comment-85","memberId":"member-85","text":"8/23 車出しできます。荷物車??、道具車??、ヴォクシー、運転手母、5人乗れます。","updatedAt":"2026-08-24T17:35:32","source":"densuke"},{"id":"densuke-comment-89","memberId":"member-89","text":"9/6 石川晃母　エブリー　荷物車だせます。","updatedAt":"2026-09-02T16:30:38","source":"densuke"},{"id":"densuke-comment-90","memberId":"member-90","text":"5/2 車出し〇 ZRV 運転手含め4人。荷物・道具可です","updatedAt":"2026-09-03T18:24:51","source":"densuke"},{"id":"densuke-comment-96","memberId":"member-96","text":"9/6車だし◯クリッパーリオ3人乗車可　何でも◯","updatedAt":"2026-09-02T17:35:36","source":"densuke"},{"id":"densuke-comment-98","memberId":"member-98","text":"２日下の子の都合で2試合のみ参加しますm(_ _)m","updatedAt":"2026-09-02T19:33:23","source":"densuke"},{"id":"densuke-comment-99","memberId":"member-99","text":"9/6車出し??ノア6人乗りです。","updatedAt":"2026-09-01T19:54:14","source":"densuke"},{"id":"densuke-comment-105","memberId":"member-105","text":"松井母5/2車出し可ミラ4人(運転自信ないです)","updatedAt":"2026-09-01T07:22:51","source":"densuke"},{"id":"densuke-comment-109","memberId":"member-109","text":"7/19 午前中のみ参加します","updatedAt":"2026-09-03T13:31:01","source":"densuke"}];
 
 function json(data, status = 200) {
   return new Response(JSON.stringify(data), {
@@ -28,86 +27,162 @@ function normalize(data = {}) {
         ? data.answers
         : {},
     comments: Array.isArray(data.comments) ? data.comments : [],
-    syncMeta:
-      data.syncMeta && typeof data.syncMeta === "object"
-        ? data.syncMeta
-        : {},
+    migrationInitialized: data.migrationInitialized === true,
   };
 }
 
-function cutoffDate(now = new Date()) {
-  const d = new Date(
-    now.getFullYear(),
-    now.getMonth() - 2,
-    now.getDate()
+function twoMonthsAgo(now = new Date()) {
+  const d = new Date(now);
+  const originalDay = d.getDate();
+
+  d.setDate(1);
+  d.setMonth(d.getMonth() - 2);
+
+  const lastDay =
+    new Date(
+      d.getFullYear(),
+      d.getMonth() + 1,
+      0
+    ).getDate();
+
+  d.setDate(
+    Math.min(
+      originalDay,
+      lastDay
+    )
   );
+
   d.setHours(0, 0, 0, 0);
+
   return d;
 }
 
-function cleanupOldData(input, now = new Date()) {
-  const data = normalize(input);
-  const cutoff = cutoffDate(now);
-  const removed = new Set();
+function cleanupOldData(data, now = new Date()) {
+  const cutoff = twoMonthsAgo(now);
+  const removedEventIds = new Set();
 
   data.events = data.events.filter(event => {
     if (!event?.date) return true;
 
-    const d = new Date(`${event.date}T00:00:00`);
-    const old =
-      !Number.isNaN(d.getTime()) &&
-      d < cutoff;
+    const eventDate =
+      new Date(
+        event.date +
+          "T00:00:00"
+      );
 
-    if (old) removed.add(String(event.id));
-    return !old;
+    if (
+      Number.isNaN(
+        eventDate.getTime()
+      )
+    ) {
+      return true;
+    }
+
+    if (
+      eventDate < cutoff
+    ) {
+      removedEventIds.add(
+        String(event.id)
+      );
+
+      return false;
+    }
+
+    return true;
   });
 
-  for (const memberId of Object.keys(data.answers)) {
-    const row = data.answers[memberId];
+  if (
+    removedEventIds.size
+  ) {
+    for (
+      const memberId
+      of Object.keys(
+        data.answers
+      )
+    ) {
+      const row =
+        data.answers[
+          memberId
+        ];
 
-    if (!row || typeof row !== "object") continue;
+      if (
+        !row ||
+        typeof row !== "object"
+      ) {
+        continue;
+      }
 
-    for (const eventId of removed) {
-      delete row[eventId];
+      for (
+        const eventId
+        of removedEventIds
+      ) {
+        delete row[eventId];
+      }
     }
   }
 
-  data.comments = data.comments.filter(comment => {
-    const t = new Date(comment?.updatedAt || 0);
+  data.comments =
+    data.comments.filter(
+      comment => {
+        if (
+          !comment?.updatedAt
+        ) {
+          return true;
+        }
 
-    return (
-      !Number.isNaN(t.getTime()) &&
-      t >= cutoff
+        const updated =
+          new Date(
+            comment.updatedAt
+          );
+
+        if (
+          Number.isNaN(
+            updated.getTime()
+          )
+        ) {
+          return true;
+        }
+
+        return (
+          updated >= cutoff
+        );
+      }
     );
-  });
 
   return data;
 }
 
 async function getConfig(store) {
-  let saved = null;
-
   try {
-    saved = await store.get(CONFIG_KEY, {
-      type: "json",
-    });
-  } catch {}
+    const saved =
+      await store.get(
+        CONFIG_KEY,
+        {
+          type: "json",
+        }
+      );
 
-  const syncEndedAt = saved?.syncEndedAt || "";
-
-  return {
-    densukeVisible: saved?.densukeVisible !== false,
-    densukeSyncEnabled:
-      !syncEndedAt &&
-      saved?.densukeSyncEnabled !== false,
-    syncEndedAt,
-  };
+    return {
+      densukeVisible:
+        saved?.densukeVisible !==
+        false,
+    };
+  } catch {
+    return {
+      densukeVisible: true,
+    };
+  }
 }
 
 function adminOK(request) {
-  const expected = process.env.ADMIN_PASSWORD || "";
+  const expected =
+    process.env.ADMIN_PASSWORD ||
+    "";
+
   const received =
-    request.headers.get("x-admin-password") || "";
+    request.headers.get(
+      "x-admin-password"
+    ) || "";
 
   return Boolean(
     expected &&
@@ -115,854 +190,54 @@ function adminOK(request) {
   );
 }
 
-function decodeEntities(text) {
-  const named = {
-    amp: "&",
-    lt: "<",
-    gt: ">",
-    quot: '"',
-    apos: "'",
-    nbsp: " ",
-  };
+function mergeInitial(data) {
+  let changed = false;
 
-  return String(text || "")
-    .replace(/&#(\d+);/g, (_, n) =>
-      String.fromCodePoint(Number(n))
-    )
-    .replace(/&#x([0-9a-f]+);/gi, (_, n) =>
-      String.fromCodePoint(parseInt(n, 16))
-    )
-    .replace(/&([a-z]+);/gi, (m, n) =>
-      named[n.toLowerCase()] ?? m
-    );
-}
-
-function htmlToText(html) {
-  return decodeEntities(
-    String(html || "")
-      .replace(
-        /<script\b[^>]*>[\s\S]*?<\/script>/gi,
-        ""
-      )
-      .replace(
-        /<style\b[^>]*>[\s\S]*?<\/style>/gi,
-        ""
-      )
-      .replace(/<br\s*\/?>/gi, "\n")
-      .replace(
-        /<\/(?:li|p|div|tr|h[1-6]|section|article)>/gi,
-        "\n"
-      )
-      .replace(/<li\b[^>]*>/gi, "\n")
-      .replace(/<[^>]+>/g, "")
-  )
-    .replace(/\r/g, "")
-    .replace(/[\t\u00a0]+/g, " ")
-    .replace(/\n[ ]+/g, "\n")
-    .replace(/[ ]+\n/g, "\n")
-    .replace(/\n{3,}/g, "\n\n")
-    .trim();
-}
-
-function normalizeName(name) {
-  return String(name || "")
-    .replace(/[\u3000\s]+/g, " ")
-    .trim()
-    .toLowerCase();
-}
-
-function hashString(s) {
-  let h = 2166136261;
-
-  for (const ch of String(s)) {
-    h ^= ch.codePointAt(0);
-    h = Math.imul(h, 16777619);
-  }
-
-  return (h >>> 0).toString(36);
-}
-
-function parseDateFromLine(line, now = new Date()) {
-  const m = String(line).match(
-    /(?:^|[^\d])(\d{1,2})\s*[\/月]\s*(\d{1,2})(?:\s*日)?/
-  );
-
-  if (!m) return "";
-
-  const month = Number(m[1]);
-  const day = Number(m[2]);
-
-  const candidates = [
-    now.getFullYear() - 1,
-    now.getFullYear(),
-    now.getFullYear() + 1,
-  ]
-    .map(year =>
-      new Date(year, month - 1, day)
-    )
-    .filter(
-      d =>
-        d.getMonth() === month - 1 &&
-        d.getDate() === day
-    );
-
-  if (!candidates.length) return "";
-
-  candidates.sort(
-    (a, b) =>
-      Math.abs(a - now) -
-      Math.abs(b - now)
-  );
-
-  const d = candidates[0];
-
-  return (
-    `${d.getFullYear()}-` +
-    `${String(month).padStart(2, "0")}-` +
-    `${String(day).padStart(2, "0")}`
-  );
-}
-
-function splitNames(text, knownNames = []) {
-  let rest = String(text || "")
-    .replace(/^[：:\s]+/, "")
-    .trim();
-
-  if (!rest) return [];
-
-  const found = [];
-
-  const ordered = [...knownNames]
-    .filter(Boolean)
-    .sort((a, b) => b.length - a.length);
-
-  for (const name of ordered) {
-    const escaped = name.replace(
-      /[.*+?^${}()|[\]\\]/g,
-      "\\$&"
-    );
-
-    const re = new RegExp(
-      `(^|\\s)${escaped}(?=\\s|$)`,
-      "g"
-    );
-
-    if (re.test(rest)) {
-      found.push(name);
-      rest = rest.replace(re, " ");
-    }
-  }
-
-  for (
-    const token of rest
-      .split(/\s+/)
-      .filter(Boolean)
-  ) {
-    found.push(token);
-  }
-
-  return [
-    ...new Set(
-      found
-        .map(x => x.trim())
-        .filter(Boolean)
-    ),
-  ];
-}
-
-function commentDate(
-  month,
-  day,
-  hour,
-  minute,
-  now = new Date()
-) {
-  let year = now.getFullYear();
-
-  let d = new Date(
-    year,
-    month - 1,
-    day,
-    hour,
-    minute,
-    0
-  );
-
-  /*
-   * 1月に12月のコメントを読む場合など
-   * 明らかに未来なら前年として扱う
-   */
   if (
-    d.getTime() >
-    now.getTime() +
-      31 * 24 * 60 * 60 * 1000
+    !data
+      .migrationInitialized
   ) {
-    year--;
-
-    d = new Date(
-      year,
-      month - 1,
-      day,
-      hour,
-      minute,
-      0
-    );
-  }
-
-  return d.toISOString();
-}
-
-function parseDensuke(
-  html,
-  existingMembers = [],
-  now = new Date()
-) {
-  const text = htmlToText(html);
-
-  const lines = text
-    .split("\n")
-    .map(x => x.trim())
-    .filter(Boolean);
-
-  const knownNames = existingMembers
-    .map(m => String(m.name || "").trim())
-    .filter(Boolean);
-
-  const events = [];
-  let current = null;
-
-  /*
-   * ○△×取得
-   */
-  for (const raw of lines) {
-    const line = raw
-      .replace(/^[*・●◦]+\s*/, "")
-      .trim();
-
-    const status = line.match(
-      /^([○△×])\s*[：:]\s*(.*)$/
-    );
-
-    if (status && current) {
-      current.statuses[status[1]] =
-        splitNames(
-          status[2],
-          knownNames
+    if (
+      !data.events.length ||
+      !data.members.length
+    ) {
+      const migrated =
+        normalize(
+          structuredClone(
+            MIGRATED_DATA
+          )
         );
 
-      continue;
+      data.events =
+        migrated.events;
+
+      data.members =
+        migrated.members;
+
+      data.answers =
+        migrated.answers;
     }
-
-    const date =
-      parseDateFromLine(
-        line,
-        now
-      );
-
-    /*
-     * コメント行を日程として
-     * 誤認しないよう除外
-     */
-    if (
-      date &&
-      !/^[（(]/.test(line) &&
-      !/^\[/.test(line)
-    ) {
-      current = {
-        date,
-        title: line,
-
-        statuses: {
-          "○": [],
-          "△": [],
-          "×": [],
-        },
-      };
-
-      events.push(current);
-    }
-  }
-
-  if (!events.length) {
-    throw new Error(
-      "Densuke events were not found"
-    );
-  }
-
-  /*
-   * コメント取得
-   *
-   * 実際の伝助形式
-   *
-   * （篠崎父）9/6車出せます。
-   * [9/3 10:41]
-   *
-   * HTML→テキスト変換後に
-   * 同一行になっている場合にも対応
-   */
-  const comments = [];
-
-  const commentRegex =
-    /[（(]([^()（）\r\n]+)[）)]\s*([\s\S]*?)\s*\[(\d{1,2})\/(\d{1,2})\s+(\d{1,2}):(\d{2})\]/g;
-
-  let match;
-
-  while (
-    (match =
-      commentRegex.exec(text))
-  ) {
-    const memberName =
-      match[1].trim();
-
-    let commentText =
-      match[2].trim();
-
-    /*
-     * 次のコメントまで
-     * 飲み込んだ場合の防止
-     */
-    commentText =
-      commentText
-        .replace(
-          /\n?[・●]\s*$/,
-          ""
-        )
-        .trim();
 
     if (
-      !memberName ||
-      !commentText
+      !data.comments.length
     ) {
-      continue;
+      data.comments =
+        structuredClone(
+          MIGRATED_COMMENTS
+        );
     }
 
-    const updatedAt =
-      commentDate(
-        Number(match[3]),
-        Number(match[4]),
-        Number(match[5]),
-        Number(match[6]),
-        now
-      );
+    data
+      .migrationInitialized =
+      true;
 
-    comments.push({
-      memberName,
-      text: commentText,
-      updatedAt,
-    });
+    changed = true;
   }
 
   return {
-    events,
-    comments,
-  };
-}
-
-function findOrCreateMember(
-  data,
-  name,
-  meta
-) {
-  const key =
-    normalizeName(name);
-
-  let member =
-    data.members.find(
-      m =>
-        normalizeName(m.name) ===
-        key
-    );
-
-  if (!member) {
-    member = {
-      id:
-        "densuke_member_" +
-        hashString(key),
-
-      name:
-        String(name).trim(),
-
-      source:
-        "densuke",
-    };
-
-    data.members.push(member);
-  }
-
-  meta.densukeMemberNames[
-    key
-  ] = member.id;
-
-  return member;
-}
-
-function findOrCreateEvent(
-  data,
-  incoming
-) {
-  const key =
-    `${incoming.date}|${incoming.title}`;
-
-  let event =
-    data.events.find(
-      e =>
-        String(
-          e.densukeKey || ""
-        ) === key
-    );
-
-  if (!event) {
-    const sameDate =
-      data.events.filter(
-        e =>
-          String(e.date) ===
-          incoming.date
-      );
-
-    if (sameDate.length === 1) {
-      event = sameDate[0];
-    }
-  }
-
-  if (!event) {
-    event = {
-      id:
-        "densuke_event_" +
-        hashString(key),
-
-      date:
-        incoming.date,
-
-      title:
-        incoming.title,
-
-      source:
-        "densuke",
-    };
-
-    data.events.push(event);
-  }
-
-  event.densukeKey = key;
-
-  if (!event.title) {
-    event.title =
-      incoming.title;
-  }
-
-  return event;
-}
-
-function mergeDensuke(
-  input,
-  parsed,
-  now = new Date()
-) {
-  let data =
-    normalize(input);
-
-  const meta =
-    data.syncMeta;
-
-  meta.densukeMemberNames =
-    meta.densukeMemberNames &&
-    typeof meta
-      .densukeMemberNames ===
-      "object"
-      ? meta.densukeMemberNames
-      : {};
-
-  /*
-   * 現在登録済みの回答者を
-   * 伝助名との対応表へ登録
-   */
-  if (
-    !meta
-      .densukeMembersInitialized
-  ) {
-    for (
-      const member
-      of data.members
-    ) {
-      const key =
-        normalizeName(
-          member.name
-        );
-
-      if (key) {
-        meta
-          .densukeMemberNames[
-            key
-          ] = member.id;
-      }
-    }
-
-    meta
-      .densukeMembersInitialized =
-      true;
-  }
-
-  /*
-   * ○△×同期
-   */
-  for (
-    const incoming
-    of parsed.events
-  ) {
-    const event =
-      findOrCreateEvent(
-        data,
-        incoming
-      );
-
-    const eventId =
-      String(event.id);
-
-    /*
-     * 伝助同期対象者の
-     * 以前の回答を一度消す
-     */
-    for (
-      const memberId
-      of Object.values(
-        meta
-          .densukeMemberNames
-      )
-    ) {
-      if (
-        data.answers[
-          memberId
-        ]
-      ) {
-        delete data.answers[
-          memberId
-        ][eventId];
-      }
-    }
-
-    for (
-      const symbol
-      of ["○", "△", "×"]
-    ) {
-      for (
-        const name
-        of incoming
-          .statuses[
-            symbol
-          ] || []
-      ) {
-        const member =
-          findOrCreateMember(
-            data,
-            name,
-            meta
-          );
-
-        data.answers[
-          member.id
-        ] ??= {};
-
-        data.answers[
-          member.id
-        ][eventId] =
-          symbol;
-      }
-    }
-  }
-
-  /*
-   * サイトで入力したコメントは残す
-   */
-  const siteComments =
-    data.comments.filter(
-      c =>
-        c.source !==
-        "densuke"
-    );
-
-  /*
-   * 今回伝助から取得できた
-   * コメントを作り直す
-   */
-  const densukeComments = [];
-
-  for (
-    const item
-    of parsed.comments
-  ) {
-    const member =
-      findOrCreateMember(
-        data,
-        item.memberName,
-        meta
-      );
-
-    const key =
-      `${normalizeName(
-        item.memberName
-      )}|${item.text}|${item.updatedAt}`;
-
-    densukeComments.push({
-      id:
-        "densuke_live_" +
-        hashString(key),
-
-      memberId:
-        member.id,
-
-      text:
-        item.text,
-
-      updatedAt:
-        item.updatedAt,
-
-      source:
-        "densuke",
-    });
-  }
-
-  /*
-   * 伝助取得成功時のみ
-   * 伝助コメント一覧を更新
-   */
-  data.comments = [
-    ...siteComments,
-    ...densukeComments,
-  ];
-
-  meta.lastDensukeSyncAt =
-    now.toISOString();
-
-  meta.lastDensukeSyncError =
-    "";
-
-  return cleanupOldData(
     data,
-    now
-  );
-}
-
-async function fetchDensuke(data) {
-  const controller =
-    new AbortController();
-
-  const timer =
-    setTimeout(
-      () =>
-        controller.abort(),
-      10000
-    );
-
-  try {
-    const response =
-      await fetch(
-        DENSUKE_URL,
-        {
-          headers: {
-            "user-agent":
-              "Mozilla/5.0 (compatible; YachiyoLittleSeniorAttendance/1.0)",
-
-            "accept-language":
-              "ja,en;q=0.8",
-          },
-
-          signal:
-            controller.signal,
-
-          redirect:
-            "follow",
-        }
-      );
-
-    if (!response.ok) {
-      throw new Error(
-        `Densuke HTTP ${response.status}`
-      );
-    }
-
-    const html =
-      await response.text();
-
-    return parseDensuke(
-      html,
-      data.members
-    );
-  } finally {
-    clearTimeout(timer);
-  }
-}
-
-async function loadStoredData(
-  store
-) {
-  let saved = null;
-
-  try {
-    saved =
-      await store.get(
-        KEY,
-        {
-          type: "json",
-        }
-      );
-  } catch {}
-
-  return cleanupOldData(
-    normalize(
-      saved || {}
-    )
-  );
-}
-
-async function loadAndMaybeSync(
-  store,
-  force = false
-) {
-  const config =
-    await getConfig(store);
-
-  let data =
-    await loadStoredData(
-      store
-    );
-
-  const now =
-    new Date();
-
-  /*
-   * 伝助連携終了後
-   */
-  if (
-    !config
-      .densukeSyncEnabled
-  ) {
-    await store.setJSON(
-      KEY,
-      data
-    );
-
-    return {
-      data,
-      config,
-
-      sync: {
-        status:
-          "disabled",
-
-        at:
-          config
-            .syncEndedAt ||
-          "",
-      },
-    };
-  }
-
-  const last =
-    new Date(
-      data.syncMeta
-        ?.lastDensukeSyncAt ||
-        0
-    );
-
-  /*
-   * 1分以内なら
-   * 前回データを使用
-   */
-  if (
-    !force &&
-    !Number.isNaN(
-      last.getTime()
-    ) &&
-    now - last <
-      SYNC_INTERVAL_MS
-  ) {
-    return {
-      data,
-      config,
-
-      sync: {
-        status:
-          "cached",
-
-        at:
-          data.syncMeta
-            .lastDensukeSyncAt,
-      },
-    };
-  }
-
-  try {
-    const parsed =
-      await fetchDensuke(
-        data
-      );
-
-    data =
-      mergeDensuke(
-        data,
-        parsed,
-        now
-      );
-
-    await store.setJSON(
-      KEY,
-      data
-    );
-
-    return {
-      data,
-      config,
-
-      sync: {
-        status:
-          "synced",
-
-        at:
-          data.syncMeta
-            .lastDensukeSyncAt,
-
-        comments:
-          parsed.comments.length,
-      },
-    };
-  } catch (error) {
-    /*
-     * 同期失敗でも
-     * 現在の出欠データを消さない
-     */
-    data.syncMeta ??= {};
-
-    data.syncMeta
-      .lastDensukeSyncError =
-      String(
-        error?.message ||
-          error
-      );
-
-    await store.setJSON(
-      KEY,
-      data
-    );
-
-    return {
-      data,
-      config,
-
-      sync: {
-        status:
-          "failed",
-
-        at:
-          data.syncMeta
-            .lastDensukeSyncAt ||
-          "",
-
-        error:
-          data.syncMeta
-            .lastDensukeSyncError,
-      },
-    };
-  }
+    changed,
+  };
 }
 
 export default async request => {
@@ -979,9 +254,6 @@ export default async request => {
     );
 
   try {
-    /*
-     * 読み込み
-     */
     if (
       request.method ===
       "GET"
@@ -999,14 +271,41 @@ export default async request => {
         });
       }
 
-      return json(
-        await loadAndMaybeSync(
-          store,
-          url.searchParams.get(
-            "sync"
-          ) === "1"
-        )
+      let saved = null;
+
+      try {
+        saved =
+          await store.get(
+            KEY,
+            {
+              type: "json",
+            }
+          );
+      } catch {
+        saved = null;
+      }
+
+      let data =
+        normalize(
+          saved || {}
+        );
+
+      const merged =
+        mergeInitial(data);
+
+      data =
+        cleanupOldData(
+          merged.data
+        );
+
+      await store.setJSON(
+        KEY,
+        data
       );
+
+      return json({
+        data,
+      });
     }
 
     if (
@@ -1040,9 +339,6 @@ export default async request => {
     const action =
       body.action || "";
 
-    /*
-     * 管理者確認
-     */
     if (
       action ===
       "adminPing"
@@ -1064,9 +360,6 @@ export default async request => {
       });
     }
 
-    /*
-     * 伝助連携設定
-     */
     if (
       action ===
       "setConfig"
@@ -1083,103 +376,49 @@ export default async request => {
         );
       }
 
-      const current =
-        await getConfig(
-          store
-        );
-
-      const next = {
-        ...current,
-      };
-
-      if (
-        body.config
-          ?.densukeVisible !==
-        undefined
-      ) {
-        next.densukeVisible =
+      const config = {
+        densukeVisible:
           body.config
-            .densukeVisible !==
-          false;
-      }
-
-      /*
-       * 伝助連携終了
-       * 一度終了したら再開しない
-       */
-      if (
-        body.config
-          ?.densukeSyncEnabled ===
-          false &&
-        current
-          .densukeSyncEnabled
-      ) {
-        next.densukeSyncEnabled =
-          false;
-
-        next.syncEndedAt =
-          new Date()
-            .toISOString();
-      }
-
-      if (
-        current.syncEndedAt
-      ) {
-        next.densukeSyncEnabled =
-          false;
-
-        next.syncEndedAt =
-          current.syncEndedAt;
-      }
+            ?.densukeVisible !==
+          false,
+      };
 
       await store.setJSON(
         CONFIG_KEY,
-        next
+        config
       );
 
       return json({
         ok: true,
-        config: next,
+        config,
       });
     }
 
-    /*
-     * 管理から強制同期
-     */
-    if (
-      action ===
-      "syncNow"
-    ) {
-      if (
-        !adminOK(request)
-      ) {
-        return json(
-          {
-            error:
-              "Unauthorized",
-          },
-          401
-        );
-      }
+    let current = {};
 
-      return json({
-        ok: true,
-
-        ...await loadAndMaybeSync(
-          store,
-          true
-        ),
-      });
+    try {
+      current =
+        (
+          await store.get(
+            KEY,
+            {
+              type: "json",
+            }
+          )
+        ) || {};
+    } catch {
+      current = {};
     }
 
     let data =
-      await loadStoredData(
-        store
+      cleanupOldData(
+        mergeInitial(
+          normalize(
+            current
+          )
+        ).data
       );
 
-    /*
-     * 管理画面保存
-     */
     if (
       action ===
       "adminSave"
@@ -1196,22 +435,16 @@ export default async request => {
         );
       }
 
-      const incoming =
-        normalize(
-          body.data || {}
-        );
-
-      /*
-       * 同期状態は
-       * ブラウザから消させない
-       */
-      incoming.syncMeta =
-        data.syncMeta || {};
-
       data =
         cleanupOldData(
-          incoming
+          normalize(
+            body.data || {}
+          )
         );
+
+      data
+        .migrationInitialized =
+        true;
 
       await store.setJSON(
         KEY,
@@ -1224,9 +457,6 @@ export default async request => {
       });
     }
 
-    /*
-     * ○△×保存
-     */
     if (
       action ===
       "answer"
@@ -1280,40 +510,14 @@ export default async request => {
       }
 
       if (
-        !data.members.some(
-          m =>
-            String(m.id) ===
-            memberId
-        )
+        !data.answers[
+          memberId
+        ]
       ) {
-        return json(
-          {
-            error:
-              "Member not found",
-          },
-          404
-        );
+        data.answers[
+          memberId
+        ] = {};
       }
-
-      if (
-        !data.events.some(
-          e =>
-            String(e.id) ===
-            eventId
-        )
-      ) {
-        return json(
-          {
-            error:
-              "Event not found",
-          },
-          404
-        );
-      }
-
-      data.answers[
-        memberId
-      ] ??= {};
 
       if (status) {
         data.answers[
@@ -1326,11 +530,6 @@ export default async request => {
         ][eventId];
       }
 
-      data =
-        cleanupOldData(
-          data
-        );
-
       await store.setJSON(
         KEY,
         data
@@ -1342,9 +541,6 @@ export default async request => {
       });
     }
 
-    /*
-     * サイト側コメント保存
-     */
     if (
       action ===
       "comment"
@@ -1357,7 +553,8 @@ export default async request => {
 
       const text =
         String(
-          body.text || ""
+          body.text ||
+            ""
         ).trim();
 
       if (
@@ -1385,12 +582,15 @@ export default async request => {
         );
       }
 
-      if (
-        !data.members.some(
+      const memberExists =
+        data.members.some(
           m =>
             String(m.id) ===
             memberId
-        )
+        );
+
+      if (
+        !memberExists
       ) {
         return json(
           {
@@ -1403,13 +603,7 @@ export default async request => {
 
       const comment = {
         id:
-          "comment_" +
-          Date.now()
-            .toString(36) +
-          "_" +
-          Math.random()
-            .toString(36)
-            .slice(2, 8),
+          `comment_${Date.now().toString(36)}_${Math.random().toString(36).slice(2,8)}`,
 
         memberId,
 
@@ -1427,10 +621,15 @@ export default async request => {
         comment
       );
 
-      data =
-        cleanupOldData(
-          data
-        );
+      if (
+        data.comments.length >
+        300
+      ) {
+        data.comments =
+          data.comments.slice(
+            -300
+          );
+      }
 
       await store.setJSON(
         KEY,
