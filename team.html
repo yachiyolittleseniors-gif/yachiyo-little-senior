@@ -1363,6 +1363,112 @@ img,video,iframe{max-width:100%}
   .coaching-policy-item h3{font-size:16px}
   .coaching-policy-item p,.graduate-paths p{font-size:13px}
 }
+
+/* Team introduction movie */
+.team-youtube{
+  position:relative;
+  overflow:hidden;
+  margin-top:24px;
+  padding:28px 26px;
+  background:
+    radial-gradient(circle at 88% 20%,rgba(199,154,59,.17),transparent 28%),
+    linear-gradient(135deg,#071426 0%,#0d223a 62%,#081729 100%);
+  border:1px solid rgba(199,154,59,.55);
+  border-top:3px solid var(--gold);
+  border-radius:10px;
+  box-shadow:0 14px 34px rgba(7,20,38,.14);
+  color:#fff;
+}
+.team-youtube::after{
+  content:"";
+  position:absolute;
+  right:-42px;
+  bottom:-54px;
+  width:180px;
+  height:180px;
+  border:1px solid rgba(226,189,103,.12);
+  border-radius:50%;
+  box-shadow:0 0 0 28px rgba(226,189,103,.035),0 0 0 56px rgba(226,189,103,.025);
+  pointer-events:none;
+}
+.team-youtube-kicker{
+  position:relative;
+  z-index:1;
+  margin-bottom:8px;
+  color:var(--gold2);
+  font-size:10px;
+  font-weight:800;
+  letter-spacing:.22em;
+}
+.team-youtube-head{
+  position:relative;
+  z-index:1;
+  display:flex;
+  align-items:center;
+  gap:13px;
+}
+.team-youtube-icon{
+  flex:0 0 auto;
+  width:46px;
+  height:32px;
+  display:grid;
+  place-items:center;
+  background:#fff;
+  border-radius:8px;
+  box-shadow:0 5px 16px rgba(0,0,0,.22);
+}
+.team-youtube-icon::before{
+  content:"";
+  width:0;
+  height:0;
+  margin-left:3px;
+  border-top:7px solid transparent;
+  border-bottom:7px solid transparent;
+  border-left:11px solid #071426;
+}
+.team-youtube h2{
+  margin:0;
+  color:#fff;
+  font-family:serif;
+  font-size:25px;
+  font-weight:600;
+  letter-spacing:.06em;
+}
+.team-youtube p{
+  position:relative;
+  z-index:1;
+  margin:15px 0 20px;
+  max-width:620px;
+  color:#d9e0e8;
+  font-size:14px;
+  line-height:1.8;
+}
+.team-youtube-link{
+  position:relative;
+  z-index:1;
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  gap:12px;
+  min-height:48px;
+  padding:0 24px;
+  background:linear-gradient(180deg,#d2ad52,#b98a2e);
+  border:1px solid #e2c56f;
+  border-radius:5px;
+  color:#071426;
+  font-size:14px;
+  font-weight:900;
+  letter-spacing:.04em;
+  box-shadow:0 7px 18px rgba(0,0,0,.18);
+}
+.team-youtube-link::after{content:"›";font-size:22px;line-height:1}
+@media(max-width:600px){
+  .team-youtube{margin-top:18px;padding:22px 18px;border-radius:8px}
+  .team-youtube-icon{width:42px;height:30px}
+  .team-youtube h2{font-size:21px}
+  .team-youtube p{margin:13px 0 18px;font-size:13px}
+  .team-youtube-link{width:100%;padding:0 16px}
+}
 </style>
 
 <style>
@@ -1611,6 +1717,23 @@ body.staff-editing .graduate-admin{display:block}
   </div>
 </div>
 </div>
+
+<div class="team-youtube" aria-label="チーム紹介動画">
+  <div class="team-youtube-kicker">TEAM MOVIE</div>
+  <div class="team-youtube-head">
+    <span class="team-youtube-icon" aria-hidden="true"></span>
+    <h2>チーム紹介</h2>
+  </div>
+  <p>八千代リトルシニアのチーム紹介動画をご覧いただけます。</p>
+  <a class="team-youtube-link"
+     href="https://youtu.be/iOIV3r7_0do?si=mDDPpI4bv4RVQjaA"
+     target="_blank"
+     rel="noopener noreferrer"
+     aria-label="八千代リトルシニアのチーム紹介動画を開く">
+    チーム紹介動画を見る
+  </a>
+</div>
+
 </div></section>
 <div aria-hidden="true" class="calendar-editor" id="calendarEditor">
 <div class="calendar-editor-box">
