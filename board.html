@@ -1,0 +1,91 @@
+<!doctype html>
+<html lang="ja"><head><meta charset="utf-8"><meta name="author" content="tatsuki.saitoh"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><meta name="theme-color" content="#071426"><title>チーム内案内板｜八千代リトルシニア</title>
+<style>:root{--navy:#071426;--navy2:#102741;--gold:#c79a3b;--gold2:#e2bd67;--bg:#f4f3ef;--ink:#17202b}*{box-sizing:border-box}body{margin:0;font-family:-apple-system,BlinkMacSystemFont,"Hiragino Kaku Gothic ProN","Yu Gothic",Meiryo,sans-serif;background:var(--bg);color:var(--ink)}a{text-decoration:none;color:inherit}.header{background:var(--navy);color:#fff;border-bottom:1px solid rgba(199,154,59,.4)}.nav{max-width:1080px;height:70px;margin:auto;padding:0 18px;display:flex;align-items:center}.brand{font-family:serif;font-weight:700;letter-spacing:.06em}.home{margin-left:auto;border:1px solid rgba(199,154,59,.55);padding:9px 13px;border-radius:6px;font-size:12px}.hero{background:linear-gradient(135deg,var(--navy),#162d47);color:#fff}.hero>div{max-width:1080px;margin:auto;padding:38px 18px 34px}.eyebrow{font-size:11px;letter-spacing:.24em;color:var(--gold2)}h1{font-family:serif;font-weight:500;letter-spacing:.08em;margin:8px 0 6px;font-size:34px}.crumb{font-size:11px;color:#c9d0d9}.wrap{max-width:900px;margin:auto;padding:28px 16px 60px}.lead{background:#fff;border:1px solid #ddd9d0;padding:17px 18px;line-height:1.8;font-size:13px;margin-bottom:18px}.grid{display:grid;grid-template-columns:1fr 1fr;gap:16px}.card{background:#fff;border:1px solid #d7dbe0;border-top:4px solid var(--gold);padding:24px 20px;box-shadow:0 5px 20px rgba(0,0,0,.04)}.card h2{font-family:serif;margin:0 0 8px;font-size:24px}.card p{font-size:13px;line-height:1.7;color:#68727e;min-height:66px}.btn{display:block;text-align:center;background:var(--navy);color:var(--gold2);border:1px solid var(--gold);padding:14px 16px;border-radius:7px;font-weight:800;margin-top:16px}.btn.gold{background:var(--gold);color:#071426}.note{font-size:11px;color:#7b8490;margin-top:9px}.footer{background:var(--navy);color:#9aa5b1;text-align:center;padding:28px 15px;font-size:11px}@media(max-width:650px){.grid{grid-template-columns:1fr}.card p{min-height:0}h1{font-size:29px}}</style></head>
+<body><header class="header"><div class="nav"><a class="brand" href="./index.html">八千代リトルシニア</a><a class="home" href="./index.html">HOMEへ</a></div></header><section class="hero"><div><div class="eyebrow">TEAM BOARD</div><h1>チーム内案内板</h1><div class="crumb">HOME / チーム内案内板</div></div></section><main class="wrap"><div class="lead">チーム内の保護者出欠確認はこちらから行えます。伝助は移行期間中のみ旧画面確認用として残しています。伝助を削除した後も、保護者出欠確認はそのまま利用できます。</div><div class="grid"><section class="card"><div class="eyebrow">ATTENDANCE</div><h2>保護者出欠確認</h2><p>八千代リトルシニアのサイト内で、各日程の「○・△・×」を入力できます。日程ごとの人数も自動集計されます。</p><a class="btn gold" href="./attendance.html">保護者出欠確認を開く</a><div class="note">初回移行後のデータはサイト側に保存され、以後は伝助とは独立して運用されます。</div></section><section class="card"><div class="eyebrow">LEGACY</div><h2>伝助（移行期間中）</h2><p>これまで使用していた伝助を、移行期間中の確認用として残しています。将来この伝助を削除しても、新しい保護者出欠確認のデータには影響しません。</p><div id="densukeMigrationBlock">
+  <p class="attendance-transfer-note">伝助に入力した出欠データは保護者出欠確認に反映されます。</p>
+<a class="btn" href="https://densuke.biz/list?cd=ZhxJNW9dPNGVtm7c" target="_blank" rel="noopener noreferrer">旧伝助を開く</a>
+</div><!-- /densukeMigrationBlock --><div class="note">旧伝助は外部サイトです。削除後はこのボタンだけ不要になります。</div></section></div></main><footer class="footer">© YACHIYO LITTLE SENIOR. All Rights Reserved.</footer>
+<style>
+#densukeAdminPanel{display:none;margin:18px auto 0;max-width:680px;padding:16px;border:1px solid rgba(199,154,59,.45);border-radius:14px;background:rgba(7,20,38,.92)}
+#densukeAdminPanel.show{display:block}
+#densukeToggleBtn{display:none;margin:14px auto 0;padding:10px 16px;border:1px solid #c79a3b;border-radius:999px;background:#071426;color:#c79a3b;font-weight:700}
+#densukeAdminPanel button{margin:6px;padding:10px 14px;border-radius:10px;border:1px solid #c79a3b;background:#071426;color:#fff}
+#densukeAdminPanel .danger{background:#5e1515}
+#densukeAdminPanel .restore{background:#173e24}
+</style>
+
+<button id="densukeToggleBtn" type="button">管理</button>
+<div id="densukeAdminPanel">
+  <strong>伝助表示設定</strong>
+  <p>伝助を終了しても、保護者出欠確認の保存済みデータは削除されません。</p>
+  <button id="hideDensukeBtn" class="danger" type="button">伝助の表示を終了</button>
+  <button id="showDensukeBtn" class="restore" type="button">伝助を再表示</button>
+</div>
+
+<script>
+(function(){
+  const API='/.netlify/functions/attendance-data';
+  const block=document.getElementById('densukeMigrationBlock');
+  const adminBtn=document.getElementById('densukeToggleBtn');
+  const panel=document.getElementById('densukeAdminPanel');
+  const hideBtn=document.getElementById('hideDensukeBtn');
+  const showBtn=document.getElementById('showDensukeBtn');
+  if(!block || !adminBtn || !panel) return;
+
+  async function loadSetting(){
+    try{
+      const r=await fetch(API+'?config=1',{headers:{'x-team-password':sessionStorage.getItem('yachiyoAttendancePass')||''}});
+      if(!r.ok) return;
+      const j=await r.json();
+      block.style.display = j?.config?.densukeVisible === false ? 'none' : '';
+    }catch(e){}
+  }
+
+  // footer bottom-right 3 taps -> 管理表示
+  const footer=document.querySelector('footer') || document.body;
+  let taps=0,timer=null;
+  footer.addEventListener('pointerup',function(e){
+    const r=footer.getBoundingClientRect();
+    const inRight=Math.max(0,r.right-e.clientX)<=140;
+    const inBottom=Math.max(0,r.bottom-e.clientY)<=140;
+    if(!inRight || !inBottom){taps=0;return}
+    taps++;
+    clearTimeout(timer);
+    timer=setTimeout(()=>taps=0,1500);
+    if(taps>=3){taps=0;clearTimeout(timer);adminBtn.style.display='block'}
+  },{passive:true});
+
+  adminBtn.addEventListener('click',()=>panel.classList.toggle('show'));
+
+  async function setVisible(visible){
+    const adminPassword=prompt('管理者パスワードを入力してください。');
+    if(!adminPassword) return;
+    if(visible===false){
+      const ok=confirm('伝助の表示を終了しますか？\\n保護者出欠確認の保存済みデータは削除されません。');
+      if(!ok) return;
+    }
+    try{
+      const r=await fetch(API,{
+        method:'POST',
+        headers:{
+          'content-type':'application/json',
+          'x-team-password':sessionStorage.getItem('yachiyoAttendancePass')||'',
+          'x-admin-password':adminPassword
+        },
+        body:JSON.stringify({action:'setConfig',config:{densukeVisible:visible}})
+      });
+      if(r.status===401){alert('パスワードが違います。');return}
+      if(!r.ok){alert('設定を保存できませんでした。');return}
+      block.style.display=visible?'':'none';
+      alert(visible?'伝助を再表示しました。':'伝助の表示を終了しました。');
+    }catch(e){
+      alert('設定を保存できませんでした。');
+    }
+  }
+  hideBtn.addEventListener('click',()=>setVisible(false));
+  showBtn.addEventListener('click',()=>setVisible(true));
+  loadSetting();
+})();
+</script>
+
+</body></html>
