@@ -76,7 +76,7 @@ function render(){
 }
 function formatDate(d){if(!d)return'';const x=new Date(d+'T00:00:00');return `${x.getMonth()+1}/${x.getDate()}(${['日','月','火','水','木','金','土'][x.getDay()]})`}
 async function saveAnswer(ev){const b=ev.currentTarget,m=b.dataset.member,e=b.dataset.event,old=data.answers?.[m]?.[e]||'',s=nextStatus(old);data.answers[m]??={};if(s)data.answers[m][e]=s;else delete data.answers[m][e];render();const nb=document.querySelector(`[data-member="${CSS.escape(m)}"][data-event="${CSS.escape(e)}"]`);nb?.classList.add('saving');try{await api('POST',{action:'answer',memberId:m,eventId:e,status:s});$('#syncText').textContent='保存済み '+new Date().toLocaleTimeString('ja-JP',{hour:'2-digit',minute:'2-digit'})}catch(err){if(old)data.answers[m][e]=old;else delete data.answers[m][e];render();showError('保存できませんでした。通信状態を確認してもう一度お試しください。')}}
-teamPass=$('#teamPassword').value;$('#loginMsg').textContent='';load()});
+
 let taps=0,timer;$('#adminReveal').addEventListener('click',()=>{taps++;clearTimeout(timer);timer=setTimeout(()=>taps=0,1200);if(taps>=3){$('#manageBtn').classList.add('show');taps=0}});
 $('#manageBtn').addEventListener('click',()=>{$('#adminModal').classList.add('show');$('#adminModal').setAttribute('aria-hidden','false')});$('#adminClose').addEventListener('click',()=>{$('#adminModal').classList.remove('show');$('#adminModal').setAttribute('aria-hidden','true')});
 $('#adminUnlock').addEventListener('click',async()=>{adminPass=$('#adminPassword').value;$('#adminMsg').textContent='';try{await api('POST',{action:'adminPing'},true);$('#adminLogin').style.display='none';$('#adminBody').style.display='block';renderAdmin()}catch(e){$('#adminMsg').textContent='管理者パスワードが違います。'}});
