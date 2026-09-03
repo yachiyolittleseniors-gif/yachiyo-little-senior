@@ -4,37 +4,111 @@ const STORE = "yachiyo-public-site";
 const KEY = "content/attendance.json";
 const CONFIG_KEY = "content/attendance-config.json";
 
-// 今保存済みの出欠データはそのまま使用します。
-// コメント機能だけ追加します。
-
-function json(data, status = 200) {
-  return new Response(JSON.stringify(data), {
+const json = (data, status = 200) =>
+  new Response(JSON.stringify(data), {
     status,
     headers: {
       "content-type": "application/json; charset=utf-8",
       "cache-control": "no-store",
     },
   });
+
+function normalize(d = {}) {
+  return {
+    events: Array.isArray(d.events) ? d.events : [],
+    members: Array.isArray(d.members) ? d.members : [],
+    answers:
+      d.answers && typeof d.answers === "object"
+        ? d.answers
+        : {},
+    comments: Array.isArray(d.comments) ? d.comments : [],
+  };
 }
 
-function normalize(data = {}) {
+function cleanup(input) {
+  const data = normalize(input);
+
+  const now = new Date();
+
+  const cut = new Date(
+    now.getFullYear(),
+    now.getMonth() - 2,
+    now.getDate()
+  );
+
+  cut.setHours(0, 0, 0, 0);
+
+  const ids = new Set(
+    data.events
+      .filter(e => {
+        if (!e?.date) return false;
+
+        const d = new Date(
+          String(e.date) + "T00:00:00"
+        );
+
+        return (
+          !Number.isNaN(d.getTime()) &&
+          d < cut
+        );
+      })
+      .map(e => String(e.id))
+  );
+
+  if (!ids.size) {
+    return {
+      data,
+      changed: false,
+    };
+  }
+
+  // 2か月より前の日程を削除
+  data.events = data.events.filter(
+    e => !ids.has(String(e.id))
+  );
+
+  // 削除した日程の○△×も削除
+  for (const memberId of Object.keys(data.answers)) {
+    const row = data.answers[memberId];
+
+    if (
+      row &&
+      typeof row === "object"
+    ) {
+      for (const eventId of ids) {
+        delete row[eventId];
+      }
+    }
+  }
+
+  // 削除した日程に紐づくコメントも削除
+  data.comments = data.comments.filter(c => {
+    // eventIdのない一般コメントは残す
+    return (
+      !c?.eventId ||
+      !ids.has(String(c.eventId))
+    );
+  });
+
+  // 回答者名は削除しない
   return {
-    events: Array.isArray(data.events) ? data.events : [],
-    members: Array.isArray(data.members) ? data.members : [],
-    answers:
-      data.answers && typeof data.answers === "object"
-        ? data.answers
-        : {},
-    comments: Array.isArray(data.comments) ? data.comments : [],
+    data,
+    changed: true,
   };
 }
 
 async function getConfig(store) {
   try {
-    const saved = await store.get(CONFIG_KEY, { type: "json" });
+    const saved = await store.get(
+      CONFIG_KEY,
+      {
+        type: "json",
+      }
+    );
 
     return {
-      densukeVisible: saved?.densukeVisible !== false,
+      densukeVisible:
+        saved?.densukeVisible !== false,
     };
   } catch {
     return {
@@ -44,11 +118,42 @@ async function getConfig(store) {
 }
 
 function adminOK(request) {
-  const expected = process.env.ADMIN_PASSWORD || "";
-  const received =
-    request.headers.get("x-admin-password") || "";
+  const expected =
+    process.env.ADMIN_PASSWORD || "";
 
-  return Boolean(expected && received === expected);
+  const received =
+    request.headers.get(
+      "x-admin-password"
+    ) || "";
+
+  return Boolean(
+    expected &&
+    received === expected
+  );
+}
+
+async function loadCleanData(store) {
+  let current = {};
+
+  try {
+    current =
+      (await store.get(KEY, {
+        type: "json",
+      })) || {};
+  } catch {
+    current = {};
+  }
+
+  const cleaned = cleanup(current);
+
+  if (cleaned.changed) {
+    await store.setJSON(
+      KEY,
+      cleaned.data
+    );
+  }
+
+  return cleaned.data;
 }
 
 export default async request => {
@@ -63,31 +168,29 @@ export default async request => {
     // =========================
     // GET
     // =========================
+
     if (request.method === "GET") {
-      if (url.searchParams.get("config") === "1") {
+      if (
+        url.searchParams.get("config") === "1"
+      ) {
         return json({
-          config: await getConfig(store),
+          config:
+            await getConfig(store),
         });
       }
 
-      let saved = null;
+      const data =
+        await loadCleanData(store);
 
-      try {
-        saved = await store.get(KEY, {
-          type: "json",
-        });
-      } catch {
-        saved = null;
-      }
-
-      const data = normalize(saved || {});
-
-      return json({ data });
+      return json({
+        data,
+      });
     }
 
     // =========================
     // POST以外
     // =========================
+
     if (request.method !== "POST") {
       return json(
         {
@@ -110,11 +213,13 @@ export default async request => {
       );
     }
 
-    const action = body.action || "";
+    const action =
+      body.action || "";
 
     // =========================
     // 管理者確認
     // =========================
+
     if (action === "adminPing") {
       if (!adminOK(request)) {
         return json(
@@ -131,8 +236,9 @@ export default async request => {
     }
 
     // =========================
-    // 設定保存
+    // 伝助表示設定
     // =========================
+
     if (action === "setConfig") {
       if (!adminOK(request)) {
         return json(
@@ -159,23 +265,13 @@ export default async request => {
       });
     }
 
-    // 現在のデータを取得
-    let current = {};
-
-    try {
-      current =
-        (await store.get(KEY, {
-          type: "json",
-        })) || {};
-    } catch {
-      current = {};
-    }
-
-    let data = normalize(current);
+    let data =
+      await loadCleanData(store);
 
     // =========================
     // 管理画面から全体保存
     // =========================
+
     if (action === "adminSave") {
       if (!adminOK(request)) {
         return json(
@@ -186,9 +282,9 @@ export default async request => {
         );
       }
 
-      data = normalize(
+      data = cleanup(
         body.data || {}
-      );
+      ).data;
 
       await store.setJSON(
         KEY,
@@ -204,20 +300,27 @@ export default async request => {
     // =========================
     // ○ △ × 保存
     // =========================
+
     if (action === "answer") {
-      const eventId = String(
-        body.eventId || ""
-      );
+      const eventId =
+        String(
+          body.eventId || ""
+        );
 
-      const memberId = String(
-        body.memberId || ""
-      );
+      const memberId =
+        String(
+          body.memberId || ""
+        );
 
-      const status = String(
-        body.status || ""
-      );
+      const status =
+        String(
+          body.status || ""
+        );
 
-      if (!eventId || !memberId) {
+      if (
+        !eventId ||
+        !memberId
+      ) {
         return json(
           {
             error: "Missing id",
@@ -228,13 +331,47 @@ export default async request => {
 
       if (
         status &&
-        !["○", "△", "×"].includes(status)
+        !["○", "△", "×"].includes(
+          status
+        )
       ) {
         return json(
           {
             error: "Invalid status",
           },
           400
+        );
+      }
+
+      const memberExists =
+        data.members.some(
+          m =>
+            String(m.id) ===
+            memberId
+        );
+
+      if (!memberExists) {
+        return json(
+          {
+            error: "Member not found",
+          },
+          404
+        );
+      }
+
+      const eventExists =
+        data.events.some(
+          e =>
+            String(e.id) ===
+            eventId
+        );
+
+      if (!eventExists) {
+        return json(
+          {
+            error: "Event not found",
+          },
+          404
         );
       }
 
@@ -265,16 +402,27 @@ export default async request => {
     // =========================
     // コメント保存
     // =========================
+
     if (action === "comment") {
-      const memberId = String(
-        body.memberId || ""
-      );
+      const memberId =
+        String(
+          body.memberId || ""
+        );
 
-      const text = String(
-        body.text || ""
-      ).trim();
+      const eventId =
+        String(
+          body.eventId || ""
+        );
 
-      if (!memberId || !text) {
+      const text =
+        String(
+          body.text || ""
+        ).trim();
+
+      if (
+        !memberId ||
+        !text
+      ) {
         return json(
           {
             error: "Missing comment",
@@ -295,7 +443,8 @@ export default async request => {
       const memberExists =
         data.members.some(
           m =>
-            String(m.id) === memberId
+            String(m.id) ===
+            memberId
         );
 
       if (!memberExists) {
@@ -305,6 +454,24 @@ export default async request => {
           },
           404
         );
+      }
+
+      if (eventId) {
+        const eventExists =
+          data.events.some(
+            e =>
+              String(e.id) ===
+              eventId
+          );
+
+        if (!eventExists) {
+          return json(
+            {
+              error: "Event not found",
+            },
+            404
+          );
+        }
       }
 
       const comment = {
@@ -317,6 +484,7 @@ export default async request => {
             .slice(2, 8),
 
         memberId,
+        eventId,
         text,
 
         updatedAt:
@@ -325,11 +493,14 @@ export default async request => {
         source: "site",
       };
 
-      data.comments.push(comment);
+      data.comments.push(
+        comment
+      );
 
-      // コメントが増えすぎないよう
       // 最新300件まで保持
-      if (data.comments.length > 300) {
+      if (
+        data.comments.length > 300
+      ) {
         data.comments =
           data.comments.slice(-300);
       }
