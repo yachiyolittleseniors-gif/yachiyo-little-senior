@@ -168,7 +168,10 @@ function adminOK(request) {
 }
 
 export default async request => {
-  const store = getStore(STORE);
+  const store = getStore({
+  name: "yachiyo-public-site",
+  consistency: "strong"
+});
   const url = new URL(request.url);
 
   try {
