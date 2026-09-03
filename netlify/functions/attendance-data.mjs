@@ -3,123 +3,177 @@ import { getStore } from "@netlify/blobs";
 const STORE = "yachiyo-public-site";
 const KEY = "content/attendance.json";
 const CONFIG_KEY = "content/attendance-config.json";
+const DENSUKE_URL =
+  "https://www.densuke.biz/m/list2?cd=ZhxJNW9dPNGVtm7c&pw=";
 
-const json = (data, status = 200) =>
-  new Response(JSON.stringify(data), {
+const SYNC_INTERVAL_MS = 60 * 1000;
+
+function json(data, status = 200) {
+  return new Response(JSON.stringify(data), {
     status,
     headers: {
       "content-type": "application/json; charset=utf-8",
       "cache-control": "no-store",
     },
   });
+}
 
-function normalize(d = {}) {
+function normalize(data = {}) {
   return {
-    events: Array.isArray(d.events) ? d.events : [],
-    members: Array.isArray(d.members) ? d.members : [],
+    events: Array.isArray(data.events)
+      ? data.events
+      : [],
+
+    members: Array.isArray(data.members)
+      ? data.members
+      : [],
+
     answers:
-      d.answers && typeof d.answers === "object"
-        ? d.answers
+      data.answers &&
+      typeof data.answers === "object"
+        ? data.answers
         : {},
-    comments: Array.isArray(d.comments) ? d.comments : [],
+
+    comments: Array.isArray(data.comments)
+      ? data.comments
+      : [],
+
+    syncMeta:
+      data.syncMeta &&
+      typeof data.syncMeta === "object"
+        ? data.syncMeta
+        : {},
   };
 }
 
-function cleanup(input) {
-  const data = normalize(input);
-
-  const now = new Date();
-
-  const cut = new Date(
+function cutoffDate(now = new Date()) {
+  const d = new Date(
     now.getFullYear(),
     now.getMonth() - 2,
     now.getDate()
   );
 
-  cut.setHours(0, 0, 0, 0);
+  d.setHours(0, 0, 0, 0);
 
-  const ids = new Set(
-    data.events
-      .filter(e => {
-        if (!e?.date) return false;
+  return d;
+}
 
-        const d = new Date(
-          String(e.date) + "T00:00:00"
+function cleanupOldData(
+  input,
+  now = new Date()
+) {
+  const data = normalize(input);
+  const cutoff = cutoffDate(now);
+
+  const removedEventIds =
+    new Set();
+
+  data.events =
+    data.events.filter(event => {
+      if (!event?.date) {
+        return true;
+      }
+
+      const d = new Date(
+        String(event.date) +
+          "T00:00:00"
+      );
+
+      const old =
+        !Number.isNaN(
+          d.getTime()
+        ) &&
+        d < cutoff;
+
+      if (old) {
+        removedEventIds.add(
+          String(event.id)
         );
+      }
 
-        return (
-          !Number.isNaN(d.getTime()) &&
-          d < cut
-        );
-      })
-      .map(e => String(e.id))
-  );
+      return !old;
+    });
 
-  if (!ids.size) {
-    return {
-      data,
-      changed: false,
-    };
-  }
-
-  // 2か月より前の日程を削除
-  data.events = data.events.filter(
-    e => !ids.has(String(e.id))
-  );
-
-  // 削除した日程の○△×も削除
-  for (const memberId of Object.keys(data.answers)) {
-    const row = data.answers[memberId];
+  for (
+    const memberId
+    of Object.keys(data.answers)
+  ) {
+    const row =
+      data.answers[memberId];
 
     if (
-      row &&
-      typeof row === "object"
+      !row ||
+      typeof row !== "object"
     ) {
-      for (const eventId of ids) {
-        delete row[eventId];
-      }
+      continue;
+    }
+
+    for (
+      const eventId
+      of removedEventIds
+    ) {
+      delete row[eventId];
     }
   }
 
-  // 削除した日程に紐づくコメントも削除
-  data.comments = data.comments.filter(c => {
-    // eventIdのない一般コメントは残す
-    return (
-      !c?.eventId ||
-      !ids.has(String(c.eventId))
-    );
-  });
+  // コメントも2か月より
+  // 古いものは削除
+  data.comments =
+    data.comments.filter(
+      comment => {
+        const t =
+          new Date(
+            comment?.updatedAt || 0
+          );
 
-  // 回答者名は削除しない
-  return {
-    data,
-    changed: true,
-  };
-}
-
-async function getConfig(store) {
-  try {
-    const saved = await store.get(
-      CONFIG_KEY,
-      {
-        type: "json",
+        return (
+          !Number.isNaN(
+            t.getTime()
+          ) &&
+          t >= cutoff
+        );
       }
     );
 
-    return {
-      densukeVisible:
-        saved?.densukeVisible !== false,
-    };
+  return data;
+}
+
+async function getConfig(store) {
+  let saved = null;
+
+  try {
+    saved =
+      await store.get(
+        CONFIG_KEY,
+        {
+          type: "json",
+        }
+      );
   } catch {
-    return {
-      densukeVisible: true,
-    };
+    saved = null;
   }
+
+  const syncEndedAt =
+    saved?.syncEndedAt || "";
+
+  return {
+    densukeVisible:
+      saved?.densukeVisible !==
+      false,
+
+    densukeSyncEnabled:
+      !syncEndedAt &&
+      saved?.densukeSyncEnabled !==
+        false,
+
+    syncEndedAt,
+  };
 }
 
 function adminOK(request) {
   const expected =
-    process.env.ADMIN_PASSWORD || "";
+    process.env.ADMIN_PASSWORD ||
+    "";
 
   const received =
     request.headers.get(
@@ -132,408 +186,625 @@ function adminOK(request) {
   );
 }
 
-async function loadCleanData(store) {
-  let current = {};
+function decodeEntities(text) {
+  const named = {
+    amp: "&",
+    lt: "<",
+    gt: ">",
+    quot: '"',
+    apos: "'",
+    nbsp: " ",
+    copy: "©",
+    hellip: "…",
+  };
 
-  try {
-    current =
-      (await store.get(KEY, {
-        type: "json",
-      })) || {};
-  } catch {
-    current = {};
-  }
+  return String(text || "")
+    .replace(
+      /&#(\d+);/g,
+      (_, n) =>
+        String.fromCodePoint(
+          Number(n)
+        )
+    )
 
-  const cleaned = cleanup(current);
+    .replace(
+      /&#x([0-9a-f]+);/gi,
+      (_, n) =>
+        String.fromCodePoint(
+          parseInt(n, 16)
+        )
+    )
 
-  if (cleaned.changed) {
-    await store.setJSON(
-      KEY,
-      cleaned.data
+    .replace(
+      /&([a-z]+);/gi,
+      (m, n) =>
+        named[
+          n.toLowerCase()
+        ] ?? m
     );
-  }
-
-  return cleaned.data;
 }
 
-export default async request => {
-  const store = getStore({
-    name: STORE,
-    consistency: "strong",
-  });
+function htmlToText(html) {
+  return decodeEntities(
+    String(html || "")
 
-  const url = new URL(request.url);
+      .replace(
+        /<script\b[^>]*>[\s\S]*?<\/script>/gi,
+        ""
+      )
 
-  try {
-    // =========================
-    // GET
-    // =========================
+      .replace(
+        /<style\b[^>]*>[\s\S]*?<\/style>/gi,
+        ""
+      )
 
-    if (request.method === "GET") {
+      .replace(
+        /<br\s*\/?>/gi,
+        "\n"
+      )
+
+      .replace(
+        /<\/(?:li|p|div|tr|h[1-6]|section|article)>/gi,
+        "\n"
+      )
+
+      .replace(
+        /<li\b[^>]*>/gi,
+        "\n"
+      )
+
+      .replace(
+        /<[^>]+>/g,
+        ""
+      )
+  )
+
+    .replace(/\r/g, "")
+
+    .replace(
+      /[\t\u00a0]+/g,
+      " "
+    )
+
+    .replace(
+      /\n[ ]+/g,
+      "\n"
+    )
+
+    .replace(
+      /[ ]+\n/g,
+      "\n"
+    )
+
+    .replace(
+      /\n{3,}/g,
+      "\n\n"
+    )
+
+    .trim();
+}
+
+function normalizeName(name) {
+  return String(name || "")
+    .replace(
+      /[\u3000\s]+/g,
+      " "
+    )
+    .trim()
+    .toLowerCase();
+}
+
+function hashString(s) {
+  let h = 2166136261;
+
+  for (
+    const ch of String(s)
+  ) {
+    h ^= ch.codePointAt(0);
+
+    h =
+      Math.imul(
+        h,
+        16777619
+      );
+  }
+
+  return (
+    h >>> 0
+  ).toString(36);
+}
+
+function parseDateFromLine(
+  line,
+  now = new Date()
+) {
+  const m =
+    String(line).match(
+      /(?:^|[^\d])(\d{1,2})\s*[\/月]\s*(\d{1,2})(?:\s*日)?/
+    );
+
+  if (!m) {
+    return "";
+  }
+
+  const month =
+    Number(m[1]);
+
+  const day =
+    Number(m[2]);
+
+  if (
+    month < 1 ||
+    month > 12 ||
+    day < 1 ||
+    day > 31
+  ) {
+    return "";
+  }
+
+  const candidates = [
+    now.getFullYear() - 1,
+    now.getFullYear(),
+    now.getFullYear() + 1,
+  ]
+
+    .map(
+      year =>
+        new Date(
+          year,
+          month - 1,
+          day
+        )
+    )
+
+    .filter(
+      d =>
+        d.getMonth() ===
+          month - 1 &&
+        d.getDate() === day
+    );
+
+  if (!candidates.length) {
+    return "";
+  }
+
+  candidates.sort(
+    (a, b) =>
+      Math.abs(a - now) -
+      Math.abs(b - now)
+  );
+
+  const d =
+    candidates[0];
+
+  const y =
+    d.getFullYear();
+
+  return (
+    `${y}-` +
+    `${String(month).padStart(
+      2,
+      "0"
+    )}-` +
+    `${String(day).padStart(
+      2,
+      "0"
+    )}`
+  );
+}
+
+function splitNames(
+  text,
+  knownNames = []
+) {
+  let rest =
+    String(text || "")
+      .replace(
+        /^[：:\s]+/,
+        ""
+      )
+      .trim();
+
+  if (!rest) {
+    return [];
+  }
+
+  const matched = [];
+
+  const ordered = [
+    ...knownNames,
+  ]
+
+    .filter(Boolean)
+
+    .sort(
+      (a, b) =>
+        b.length -
+        a.length
+    );
+
+  for (
+    const name of ordered
+  ) {
+    const escaped =
+      name.replace(
+        /[.*+?^${}()|[\]\\]/g,
+        "\\$&"
+      );
+
+    const re =
+      new RegExp(
+        `(^|\\s)${escaped}(?=\\s|$)`,
+        "g"
+      );
+
+    if (re.test(rest)) {
+      matched.push(name);
+
+      rest =
+        rest.replace(
+          re,
+          " "
+        );
+    }
+  }
+
+  for (
+    const token
+    of rest
+      .split(/\s+/)
+      .filter(Boolean)
+  ) {
+    matched.push(token);
+  }
+
+  return [
+    ...new Set(
+      matched
+        .map(
+          x => x.trim()
+        )
+        .filter(Boolean)
+    ),
+  ];
+}
+
+function parseDensuke(
+  html,
+  existingMembers = [],
+  now = new Date()
+) {
+  const text =
+    htmlToText(html);
+
+  const lines =
+    text
+      .split("\n")
+      .map(
+        x => x.trim()
+      )
+      .filter(Boolean);
+
+  const knownNames =
+    existingMembers
+
+      .map(
+        m =>
+          String(
+            m.name || ""
+          ).trim()
+      )
+
+      .filter(Boolean);
+
+  const events = [];
+  const comments = [];
+
+  let current = null;
+  let inComments = false;
+
+  for (
+    const raw of lines
+  ) {
+    const line =
+      raw
+        .replace(
+          /^[*・●◦]+\s*/,
+          ""
+        )
+        .trim();
+
+    if (!line) {
+      continue;
+    }
+
+    if (
+      /^[〖【]\s*コメント\s*[〗】]$/.test(
+        line
+      ) ||
+      line === "コメント"
+    ) {
+      inComments = true;
+      current = null;
+
+      continue;
+    }
+
+    if (inComments) {
       if (
-        url.searchParams.get("config") === "1"
+        /^(登録内容変更|トップに戻る|このページについて)/.test(
+          line
+        )
       ) {
-        return json({
-          config:
-            await getConfig(store),
+        break;
+      }
+
+      const m =
+        line.match(
+          /^(.+?)\s*[（(]([^()（）]+)[）)]\s*$/
+        );
+
+      if (m) {
+        comments.push({
+          text:
+            m[1].trim(),
+
+          memberName:
+            m[2].trim(),
         });
       }
 
-      const data =
-        await loadCleanData(store);
-
-      return json({
-        data,
-      });
+      continue;
     }
 
-    // =========================
-    // POST以外
-    // =========================
-
-    if (request.method !== "POST") {
-      return json(
-        {
-          error: "Method not allowed",
-        },
-        405
+    const status =
+      line.match(
+        /^([○△×])\s*[：:]\s*(.*)$/
       );
+
+    if (
+      status &&
+      current
+    ) {
+      current.statuses[
+        status[1]
+      ] =
+        splitNames(
+          status[2],
+          knownNames
+        );
+
+      continue;
     }
 
-    let body = {};
-
-    try {
-      body = await request.json();
-    } catch {
-      return json(
-        {
-          error: "Invalid JSON",
-        },
-        400
+    const date =
+      parseDateFromLine(
+        line,
+        now
       );
-    }
 
-    const action =
-      body.action || "";
+    if (date) {
+      current = {
+        date,
+        title: line,
 
-    // =========================
-    // 管理者確認
-    // =========================
-
-    if (action === "adminPing") {
-      if (!adminOK(request)) {
-        return json(
-          {
-            error: "Unauthorized",
-          },
-          401
-        );
-      }
-
-      return json({
-        ok: true,
-      });
-    }
-
-    // =========================
-    // 伝助表示設定
-    // =========================
-
-    if (action === "setConfig") {
-      if (!adminOK(request)) {
-        return json(
-          {
-            error: "Unauthorized",
-          },
-          401
-        );
-      }
-
-      const config = {
-        densukeVisible:
-          body.config?.densukeVisible !== false,
+        statuses: {
+          "○": [],
+          "△": [],
+          "×": [],
+        },
       };
 
-      await store.setJSON(
-        CONFIG_KEY,
-        config
+      events.push(
+        current
       );
-
-      return json({
-        ok: true,
-        config,
-      });
     }
+  }
 
-    let data =
-      await loadCleanData(store);
-
-    // =========================
-    // 管理画面から全体保存
-    // =========================
-
-    if (action === "adminSave") {
-      if (!adminOK(request)) {
-        return json(
-          {
-            error: "Unauthorized",
-          },
-          401
-        );
-      }
-
-      data = cleanup(
-        body.data || {}
-      ).data;
-
-      await store.setJSON(
-        KEY,
-        data
-      );
-
-      return json({
-        ok: true,
-        data,
-      });
-    }
-
-    // =========================
-    // ○ △ × 保存
-    // =========================
-
-    if (action === "answer") {
-      const eventId =
-        String(
-          body.eventId || ""
-        );
-
-      const memberId =
-        String(
-          body.memberId || ""
-        );
-
-      const status =
-        String(
-          body.status || ""
-        );
-
-      if (
-        !eventId ||
-        !memberId
-      ) {
-        return json(
-          {
-            error: "Missing id",
-          },
-          400
-        );
-      }
-
-      if (
-        status &&
-        !["○", "△", "×"].includes(
-          status
-        )
-      ) {
-        return json(
-          {
-            error: "Invalid status",
-          },
-          400
-        );
-      }
-
-      const memberExists =
-        data.members.some(
-          m =>
-            String(m.id) ===
-            memberId
-        );
-
-      if (!memberExists) {
-        return json(
-          {
-            error: "Member not found",
-          },
-          404
-        );
-      }
-
-      const eventExists =
-        data.events.some(
-          e =>
-            String(e.id) ===
-            eventId
-        );
-
-      if (!eventExists) {
-        return json(
-          {
-            error: "Event not found",
-          },
-          404
-        );
-      }
-
-      if (!data.answers[memberId]) {
-        data.answers[memberId] = {};
-      }
-
-      if (status) {
-        data.answers[memberId][eventId] =
-          status;
-      } else {
-        delete data.answers[memberId][
-          eventId
-        ];
-      }
-
-      await store.setJSON(
-        KEY,
-        data
-      );
-
-      return json({
-        ok: true,
-        data,
-      });
-    }
-
-    // =========================
-    // コメント保存
-    // =========================
-
-    if (action === "comment") {
-      const memberId =
-        String(
-          body.memberId || ""
-        );
-
-      const eventId =
-        String(
-          body.eventId || ""
-        );
-
-      const text =
-        String(
-          body.text || ""
-        ).trim();
-
-      if (
-        !memberId ||
-        !text
-      ) {
-        return json(
-          {
-            error: "Missing comment",
-          },
-          400
-        );
-      }
-
-      if (text.length > 500) {
-        return json(
-          {
-            error: "Comment too long",
-          },
-          400
-        );
-      }
-
-      const memberExists =
-        data.members.some(
-          m =>
-            String(m.id) ===
-            memberId
-        );
-
-      if (!memberExists) {
-        return json(
-          {
-            error: "Member not found",
-          },
-          404
-        );
-      }
-
-      if (eventId) {
-        const eventExists =
-          data.events.some(
-            e =>
-              String(e.id) ===
-              eventId
-          );
-
-        if (!eventExists) {
-          return json(
-            {
-              error: "Event not found",
-            },
-            404
-          );
-        }
-      }
-
-      const comment = {
-        id:
-          "comment_" +
-          Date.now().toString(36) +
-          "_" +
-          Math.random()
-            .toString(36)
-            .slice(2, 8),
-
-        memberId,
-        eventId,
-        text,
-
-        updatedAt:
-          new Date().toISOString(),
-
-        source: "site",
-      };
-
-      data.comments.push(
-        comment
-      );
-
-      // 最新300件まで保持
-      if (
-        data.comments.length > 300
-      ) {
-        data.comments =
-          data.comments.slice(-300);
-      }
-
-      await store.setJSON(
-        KEY,
-        data
-      );
-
-      return json({
-        ok: true,
-        comment,
-        data,
-      });
-    }
-
-    return json(
-      {
-        error: "Unknown action",
-      },
-      400
-    );
-  } catch (error) {
-    console.error(
-      "attendance-data error:",
-      error
-    );
-
-    return json(
-      {
-        error: "Server error",
-      },
-      500
+  if (!events.length) {
+    throw new Error(
+      "Densuke events were not found"
     );
   }
-};
+
+  return {
+    events,
+    comments,
+  };
+}
+
+function findOrCreateMember(
+  data,
+  name,
+  syncMeta
+) {
+  const key =
+    normalizeName(name);
+
+  let member =
+    data.members.find(
+      m =>
+        normalizeName(
+          m.name
+        ) === key
+    );
+
+  if (!member) {
+    member = {
+      id:
+        `densuke_member_` +
+        hashString(key),
+
+      name:
+        String(
+          name
+        ).trim(),
+
+      source:
+        "densuke",
+    };
+
+    data.members.push(
+      member
+    );
+  }
+
+  syncMeta
+    .densukeMemberNames[
+      key
+    ] = member.id;
+
+  return member;
+}
+
+function findOrCreateEvent(
+  data,
+  incoming
+) {
+  const sameDate =
+    data.events.filter(
+      e =>
+        String(e.date) ===
+        incoming.date
+    );
+
+  let event =
+    sameDate.find(
+      e =>
+        String(
+          e.densukeKey ||
+            ""
+        ) ===
+        `${incoming.date}|${incoming.title}`
+    );
+
+  if (
+    !event &&
+    sameDate.length === 1
+  ) {
+    event =
+      sameDate[0];
+  }
+
+  if (!event) {
+    event = {
+      id:
+        `densuke_event_` +
+        hashString(
+          `${incoming.date}|${incoming.title}`
+        ),
+
+      date:
+        incoming.date,
+
+      title:
+        incoming.title,
+
+      source:
+        "densuke",
+    };
+
+    data.events.push(
+      event
+    );
+  }
+
+  event.densukeKey =
+    `${incoming.date}|${incoming.title}`;
+
+  if (!event.title) {
+    event.title =
+      incoming.title;
+  }
+
+  return event;
+}
+
+function mergeDensuke(
+  dataInput,
+  parsed,
+  now = new Date()
+) {
+  const data =
+    normalize(dataInput);
+
+  const meta =
+    data.syncMeta;
+
+  meta.densukeMemberNames =
+    meta.densukeMemberNames &&
+    typeof meta
+      .densukeMemberNames ===
+      "object"
+      ? meta.densukeMemberNames
+      : {};
+
+  meta.densukeCommentState =
+    meta.densukeCommentState &&
+    typeof meta
+      .densukeCommentState ===
+      "object"
+      ? meta.densukeCommentState
+      : {};
+
+  /*
+   * 初回同期時点の既存回答者は
+   * これまで伝助から移行した
+   * 回答者として扱う
+   */
+  if (
+    !meta
+      .densukeMembersInitialized
+  ) {
+    for (
+      const member
+      of data.members
+    ) {
+      const key =
+        normalizeName(
+          member.name
+        );
+
+      if (key) {
+        meta
+          .densukeMemberNames[
+            key
+          ] = member.id;
+      }
+    }
+
+    meta
+      .densukeMembersInitialized =
+      true;
+  }
+
+  for (
+    const incoming
+    of parsed.events
+  ) {
+    const event =
+      findOrCreateEvent(
+        data,
+        incoming
+      );
+
+    const eventId =
+      String(event.id);
+
+    /*
+     * 伝助側を同期中の
+     * 正式な回答として扱う
+     */
+    for (
+      const memberId
+      of Object.values(
+        meta
+          .densukeMemberNames
+      )
+    ) {
+      if (
+        data.answers[
+          memberId
+        ]
+      ) {
+        delete data.answers
