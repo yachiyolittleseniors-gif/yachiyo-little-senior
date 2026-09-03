@@ -93,9 +93,38 @@ const BOARD_VIEW_PASSWORD='yachiyo20260800';
 <footer class="footer">© YACHIYO LITTLE SENIOR. All Rights Reserved.</footer>
 
 <style>
-#densukeAdminPanel{display:none;margin:18px auto 0;max-width:680px;padding:16px;border:1px solid rgba(199,154,59,.45);border-radius:14px;background:rgba(7,20,38,.92);color:#fff}
+#densukeToggleBtn{
+  display:none;
+  position:fixed;
+  right:14px;
+  bottom:calc(14px + env(safe-area-inset-bottom));
+  z-index:1001;
+  margin:0;
+  padding:10px 16px;
+  border:1px solid #c79a3b;
+  border-radius:999px;
+  background:#071426;
+  color:#c79a3b;
+  font-weight:700;
+}
+#densukeAdminPanel{
+  display:none;
+  position:fixed;
+  right:14px;
+  bottom:calc(66px + env(safe-area-inset-bottom));
+  z-index:1000;
+  width:min(92vw,680px);
+  max-height:70vh;
+  overflow-y:auto;
+  -webkit-overflow-scrolling:touch;
+  padding:16px;
+  border:1px solid rgba(199,154,59,.45);
+  border-radius:14px;
+  background:rgba(7,20,38,.96);
+  color:#fff;
+  box-shadow:0 12px 35px rgba(0,0,0,.28);
+}
 #densukeAdminPanel.show{display:block}
-#densukeToggleBtn{display:none;margin:14px auto 0;padding:10px 16px;border:1px solid #c79a3b;border-radius:999px;background:#071426;color:#c79a3b;font-weight:700}
 #densukeAdminPanel button{margin:6px;padding:10px 14px;border-radius:10px;border:1px solid #c79a3b;background:#071426;color:#fff}
 #densukeAdminPanel .danger{background:#5e1515}
 #densukeAdminStatus{font-size:12px;line-height:1.7;color:#d5dbe3}
