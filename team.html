@@ -1376,8 +1376,18 @@ img,video,iframe{max-width:100%}
   border:1px solid rgba(199,154,59,.55);
   border-top:3px solid var(--gold);
   border-radius:10px;
-  box-shadow:0 14px 34px rgba(7,20,38,.14);
+  box-shadow:0 14px 34px rgba(7,20,38,.18);
   color:#fff;
+}
+.team-youtube::before{
+  content:"";
+  position:absolute;
+  inset:0;
+  background:
+    linear-gradient(135deg,rgba(226,189,103,.95) 0 26px,transparent 27px),
+    linear-gradient(315deg,rgba(226,189,103,.95) 0 26px,transparent 27px);
+  pointer-events:none;
+  opacity:.9;
 }
 .team-youtube::after{
   content:"";
@@ -1409,13 +1419,13 @@ img,video,iframe{max-width:100%}
 }
 .team-youtube-icon{
   flex:0 0 auto;
-  width:46px;
-  height:32px;
+  width:52px;
+  height:36px;
   display:grid;
   place-items:center;
-  background:#fff;
-  border-radius:8px;
-  box-shadow:0 5px 16px rgba(0,0,0,.22);
+  background:#ff0000;
+  border-radius:9px;
+  box-shadow:0 5px 16px rgba(0,0,0,.28);
 }
 .team-youtube-icon::before{
   content:"";
@@ -1424,7 +1434,7 @@ img,video,iframe{max-width:100%}
   margin-left:3px;
   border-top:7px solid transparent;
   border-bottom:7px solid transparent;
-  border-left:11px solid #071426;
+  border-left:11px solid #fff;
 }
 .team-youtube h2{
   margin:0;
@@ -1464,7 +1474,7 @@ img,video,iframe{max-width:100%}
 .team-youtube-link::after{content:"›";font-size:22px;line-height:1}
 @media(max-width:600px){
   .team-youtube{margin-top:18px;padding:22px 18px;border-radius:8px}
-  .team-youtube-icon{width:42px;height:30px}
+  .team-youtube-icon{width:48px;height:34px}
   .team-youtube h2{font-size:21px}
   .team-youtube p{margin:13px 0 18px;font-size:13px}
   .team-youtube-link{width:100%;padding:0 16px}
@@ -1718,19 +1728,19 @@ body.staff-editing .graduate-admin{display:block}
 </div>
 </div>
 
-<div class="team-youtube" aria-label="チーム紹介動画">
+<div class="team-youtube" aria-label="早坂監督インタビュー動画">
   <div class="team-youtube-kicker">TEAM MOVIE</div>
   <div class="team-youtube-head">
     <span class="team-youtube-icon" aria-hidden="true"></span>
-    <h2>チーム紹介</h2>
+    <h2>早坂監督インタビュー</h2>
   </div>
-  <p>八千代リトルシニアのチーム紹介動画をご覧いただけます。</p>
+  <p>八千代リトルシニアの早坂監督インタビュー動画をご覧いただけます。</p>
   <a class="team-youtube-link"
      href="https://youtu.be/iOIV3r7_0do?si=mDDPpI4bv4RVQjaA"
      target="_blank"
      rel="noopener noreferrer"
-     aria-label="八千代リトルシニアのチーム紹介動画を開く">
-    チーム紹介動画を見る
+     aria-label="八千代リトルシニア 早坂監督インタビュー動画を開く">
+    YouTube動画を見る
   </a>
 </div>
 
