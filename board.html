@@ -27,7 +27,7 @@ h1{font-family:serif;font-weight:500;letter-spacing:.08em;margin:8px 0 6px;font-
 .card h2{font-family:serif;margin:0 0 8px;font-size:24px}
 .card p{font-size:13px;line-height:1.7;color:#68727e;min-height:66px}
 .btn{display:block;text-align:center;background:var(--navy);color:var(--gold2);border:1px solid var(--gold);padding:14px 16px;border-radius:7px;font-weight:800;margin-top:16px}
-.btn.gold{background:var(--gold);color:#fff}
+.btn.gold{background:var(--gold);color:#fff}.btn.densuke-btn{background:var(--gold);color:#fff}.btn.gold.disabled{background:#b8b8b8;border-color:#a9a9a9;color:#f3f3f3;pointer-events:none;cursor:not-allowed}
 .note{font-size:11px;color:#7b8490;margin-top:9px}
 .footer{background:var(--navy);color:#9aa5b1;text-align:center;padding:28px 15px;font-size:11px}
 @media(max-width:650px){.grid{grid-template-columns:1fr}.card p{min-height:0}h1{font-size:29px}}
@@ -73,7 +73,7 @@ const BOARD_VIEW_PASSWORD='yachiyo20260800';
       <div class="eyebrow">ATTENDANCE</div>
       <h2>保護者出欠確認</h2>
       <p>八千代リトルシニアのサイト内で、各日程の「○・△・×」を入力できます。日程ごとの人数も自動集計されます。</p>
-      <a class="btn gold" href="./attendance.html">保護者出欠確認を開く</a>
+      <a id="attendanceOpenBtn" class="btn gold disabled" data-href="./attendance.html" aria-disabled="true" tabindex="-1">保護者出欠確認を開く</a>
       <div class="note">初回移行後のデータはサイト側に保存され、以後は伝助とは独立して運用されます。</div>
     </section>
 
@@ -83,7 +83,7 @@ const BOARD_VIEW_PASSWORD='yachiyo20260800';
       <p>これまで使用していた伝助を、移行期間中の確認用として残しています。将来この伝助を削除しても、新しい保護者出欠確認のデータには影響しません。</p>
       <div id="densukeMigrationBlock">
         <p class="attendance-transfer-note">伝助に入力した出欠データは保護者出欠確認に反映されます。</p>
-        <a class="btn" href="https://densuke.biz/list?cd=ZhxJNW9dPNGVtm7c" target="_blank" rel="noopener noreferrer">旧伝助を開く</a>
+        <a class="btn densuke-btn" href="https://densuke.biz/list?cd=ZhxJNW9dPNGVtm7c" target="_blank" rel="noopener noreferrer">伝助を開く</a>
       </div>
       <div class="note">旧伝助は外部サイトです。削除後はこのボタンだけ不要になります。</div>
     </section>
@@ -93,42 +93,75 @@ const BOARD_VIEW_PASSWORD='yachiyo20260800';
 <footer class="footer">© YACHIYO LITTLE SENIOR. All Rights Reserved.</footer>
 
 <style>
-#densukeAdminPanel{display:none;margin:18px auto 0;max-width:680px;padding:16px;border:1px solid rgba(199,154,59,.45);border-radius:14px;background:rgba(7,20,38,.92)}
+#densukeAdminPanel{display:none;margin:18px auto 0;max-width:680px;padding:16px;border:1px solid rgba(199,154,59,.45);border-radius:14px;background:rgba(7,20,38,.92);color:#fff}
 #densukeAdminPanel.show{display:block}
 #densukeToggleBtn{display:none;margin:14px auto 0;padding:10px 16px;border:1px solid #c79a3b;border-radius:999px;background:#071426;color:#c79a3b;font-weight:700}
 #densukeAdminPanel button{margin:6px;padding:10px 14px;border-radius:10px;border:1px solid #c79a3b;background:#071426;color:#fff}
 #densukeAdminPanel .danger{background:#5e1515}
-#densukeAdminPanel .restore{background:#173e24}
+#densukeAdminStatus{font-size:12px;line-height:1.7;color:#d5dbe3}
 </style>
 
 <button id="densukeToggleBtn" type="button">管理</button>
 <div id="densukeAdminPanel">
-  <strong>伝助表示設定</strong>
-  <p>伝助を終了しても、保護者出欠確認の保存済みデータは削除されません。</p>
-  <button id="hideDensukeBtn" class="danger" type="button">伝助の表示を終了</button>
-  <button id="showDensukeBtn" class="restore" type="button">伝助を再表示</button>
+  <strong>伝助移行設定</strong>
+  <p id="densukeAdminStatus">伝助終了前は、保護者出欠確認を開くことはできません。</p>
+  <button id="endDensukeBtn" class="danger" type="button">伝助を終了</button>
 </div>
 
 <script>
 // Created by tatsuki.saitoh
 (function(){
   const API='/.netlify/functions/attendance-data';
-  const block=document.getElementById('densukeMigrationBlock');
+  const attendanceBtn=document.getElementById('attendanceOpenBtn');
   const adminBtn=document.getElementById('densukeToggleBtn');
   const panel=document.getElementById('densukeAdminPanel');
-  const hideBtn=document.getElementById('hideDensukeBtn');
-  const showBtn=document.getElementById('showDensukeBtn');
-  if(!block || !adminBtn || !panel) return;
+  const endBtn=document.getElementById('endDensukeBtn');
+  const adminStatus=document.getElementById('densukeAdminStatus');
+
+  if(!attendanceBtn || !adminBtn || !panel || !endBtn) return;
+
+  function setAttendanceEnabled(enabled){
+    if(enabled){
+      attendanceBtn.classList.remove('disabled');
+      attendanceBtn.setAttribute('href',attendanceBtn.dataset.href || './attendance.html');
+      attendanceBtn.setAttribute('aria-disabled','false');
+      attendanceBtn.removeAttribute('tabindex');
+    }else{
+      attendanceBtn.classList.add('disabled');
+      attendanceBtn.removeAttribute('href');
+      attendanceBtn.setAttribute('aria-disabled','true');
+      attendanceBtn.setAttribute('tabindex','-1');
+    }
+  }
+
+  function setEndedUI(ended){
+    setAttendanceEnabled(ended);
+    if(ended){
+      endBtn.style.display='none';
+      adminStatus.textContent='伝助の移行は終了しています。保護者出欠確認を利用できます。';
+    }else{
+      endBtn.style.display='';
+      adminStatus.textContent='伝助終了前は、保護者出欠確認を開くことはできません。';
+    }
+  }
+
+  // 初期状態は必ずロック。サーバー確認後にのみ解除。
+  setAttendanceEnabled(false);
 
   async function loadSetting(){
     try{
-      const r=await fetch(API+'?config=1',{headers:{'x-team-password':sessionStorage.getItem('yachiyoAttendancePass')||''}});
+      const r=await fetch(API,{cache:'no-store'});
       if(!r.ok) return;
       const j=await r.json();
-      block.style.display = j?.config?.densukeVisible === false ? 'none' : '';
-    }catch(e){}
+      const ended = j?.config?.migrationEnded === true || j?.locked === false;
+      setEndedUI(ended);
+    }catch(e){
+      // 通信失敗時は安全側でロックのまま
+      setAttendanceEnabled(false);
+    }
   }
 
+  // footer bottom-right 3 taps -> 管理表示
   const footer=document.querySelector('footer') || document.body;
   let taps=0,timer=null;
   footer.addEventListener('pointerup',function(e){
@@ -139,39 +172,60 @@ const BOARD_VIEW_PASSWORD='yachiyo20260800';
     taps++;
     clearTimeout(timer);
     timer=setTimeout(()=>taps=0,1500);
-    if(taps>=3){taps=0;clearTimeout(timer);adminBtn.style.display='block'}
+    if(taps>=3){
+      taps=0;
+      clearTimeout(timer);
+      adminBtn.style.display='block';
+    }
   },{passive:true});
 
   adminBtn.addEventListener('click',()=>panel.classList.toggle('show'));
 
-  async function setVisible(visible){
+  endBtn.addEventListener('click',async()=>{
     const adminPassword=prompt('管理者パスワードを入力してください。');
     if(!adminPassword) return;
-    if(visible===false){
-      const ok=confirm('伝助の表示を終了しますか？\n保護者出欠確認の保存済みデータは削除されません。');
-      if(!ok) return;
-    }
+
+    const ok=confirm(
+      '伝助を終了しますか？\n\nこの操作時に伝助から回答者名だけを1回取得します。\n日程・○△×・コメントは取得しません。\n名前の取得に失敗した場合は終了しません。'
+    );
+    if(!ok) return;
+
+    endBtn.disabled=true;
+    endBtn.textContent='移行中...';
+
     try{
       const r=await fetch(API,{
         method:'POST',
         headers:{
           'content-type':'application/json',
-          'x-team-password':sessionStorage.getItem('yachiyoAttendancePass')||'',
           'x-admin-password':adminPassword
         },
-        body:JSON.stringify({action:'setConfig',config:{densukeVisible:visible}})
+        body:JSON.stringify({action:'endDensuke'})
       });
-      if(r.status===401){alert('パスワードが違います。');return}
-      if(!r.ok){alert('設定を保存できませんでした。');return}
-      block.style.display=visible?'':'none';
-      alert(visible?'伝助を再表示しました。':'伝助の表示を終了しました。');
-    }catch(e){
-      alert('設定を保存できませんでした。');
-    }
-  }
 
-  hideBtn.addEventListener('click',()=>setVisible(false));
-  showBtn.addEventListener('click',()=>setVisible(true));
+      let j={};
+      try{ j=await r.json(); }catch(e){}
+
+      if(r.status===401){
+        alert('パスワードが違います。');
+        return;
+      }
+
+      if(!r.ok){
+        alert(j?.error || '伝助から名前を取得できなかったため、終了していません。');
+        return;
+      }
+
+      setEndedUI(true);
+      alert('伝助の移行を終了しました。保護者出欠確認を利用できます。');
+    }catch(e){
+      alert('通信エラーのため、伝助は終了していません。');
+    }finally{
+      endBtn.disabled=false;
+      endBtn.textContent='伝助を終了';
+    }
+  });
+
   loadSetting();
 })();
 </script>
