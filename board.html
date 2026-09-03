@@ -234,7 +234,41 @@ const BOARD_VIEW_PASSWORD='yachiyo20260800';
     }
   },{passive:true});
 
-  adminBtn.addEventListener('click',()=>panel.classList.toggle('show'));
+  adminBtn.addEventListener('click',async()=>{
+    if(panel.classList.contains('show')){
+      panel.classList.remove('show');
+      return;
+    }
+
+    const adminPassword=prompt('管理者パスワードを入力してください。');
+    if(!adminPassword) return;
+
+    try{
+      const r=await fetch(API,{
+        method:'POST',
+        headers:{
+          'content-type':'application/json',
+          'x-admin-password':adminPassword
+        },
+        body:JSON.stringify({action:'adminPing'})
+      });
+
+      if(r.status===401){
+        alert('パスワードが違います。');
+        return;
+      }
+
+      if(!r.ok){
+        alert('管理者認証を確認できませんでした。');
+        return;
+      }
+
+      panel.dataset.adminPassword=adminPassword;
+      panel.classList.add('show');
+    }catch(e){
+      alert('管理者認証を確認できませんでした。');
+    }
+  });
 
   endBtn.addEventListener('click',async()=>{
     // 1回目は赤い警告を表示。2回目で終了処理へ進む。
@@ -246,7 +280,7 @@ const BOARD_VIEW_PASSWORD='yachiyo20260800';
       return;
     }
 
-    const adminPassword=prompt('管理者パスワードを入力してください。');
+    const adminPassword=panel.dataset.adminPassword || prompt('管理者パスワードを入力してください。');
     if(!adminPassword) return;
 
     const ok=confirm(
@@ -293,7 +327,7 @@ const BOARD_VIEW_PASSWORD='yachiyo20260800';
   });
 
   resumeBtn.addEventListener('click',async()=>{
-    const adminPassword=prompt('管理者パスワードを入力してください。');
+    const adminPassword=panel.dataset.adminPassword || prompt('管理者パスワードを入力してください。');
     if(!adminPassword) return;
 
     const ok=confirm(
