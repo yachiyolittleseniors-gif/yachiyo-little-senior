@@ -5,7 +5,7 @@
 const BOARD_VIEW_PASSWORD='yachiyo20260800';
 (function requireBoardPassword(){
   const p=prompt('パスワードを入力してください');
-  if(p===BOARD_VIEW_PASSWORD) return;
+  if(p===BOARD_VIEW_PASSWORD){ sessionStorage.setItem('yachiyoAttendancePass',p); return; }
   if(p===null){
     if(history.length>1){
       history.back();
