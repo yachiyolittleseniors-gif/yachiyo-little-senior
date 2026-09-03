@@ -52,10 +52,17 @@ function statusClass(s){return s==='○'?'status-o':s==='△'?'status-t':s==='×
 function nextStatus(s){return s==='○'?'△':s==='△'?'×':s==='×'?'':'○'}
 async function api(method,body,admin=false){
  const headers={'content-type':'application/json','x-team-password':teamPass}; if(admin)headers['x-admin-password']=adminPass;
- const r=await fetch(API,{method,headers,cache:'no-store',body:body?JSON.stringify(body):undefined});
+ const controller=new AbortController();
+ const timer=setTimeout(()=>controller.abort(),6000);
+ let r;
+ try{
+   r=await fetch(API,{method,headers,cache:'no-store',body:body?JSON.stringify(body):undefined,signal:controller.signal});
+ }finally{
+   clearTimeout(timer);
+ }
  let j={};try{j=await r.json()}catch{};if(!r.ok)throw new Error(j.error||'通信に失敗しました');return j;
 }
-async function load(){showError('');try{const j=await api('GET');data=normalize(j.data);render();$('#syncText').textContent='更新 '+new Date().toLocaleTimeString('ja-JP',{hour:'2-digit',minute:'2-digit'})}catch(e){if(e.message==='unauthorized'){showError('チーム内案内板から開いてください。')}else showError('出欠表を読み込めませんでした。')}}
+async function load(){showError('');try{const j=await api('GET');data=normalize(j.data);render();$('#syncText').textContent='更新 '+new Date().toLocaleTimeString('ja-JP',{hour:'2-digit',minute:'2-digit'})}catch(e){if(e.message==='unauthorized'){showError('チーム内案内板から開いてください。')}else showError('出欠表の読み込みに失敗しました。数秒後に再読み込みしてください。')}}
 function normalize(v){return {events:Array.isArray(v?.events)?v.events:[],members:Array.isArray(v?.members)?v.members:[],answers:v?.answers&&typeof v.answers==='object'?v.answers:{}}}
 function render(){
  const events=[...data.events].sort((a,b)=>String(a.date).localeCompare(String(b.date))); const members=data.members;
