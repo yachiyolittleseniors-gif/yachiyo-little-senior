@@ -1350,21 +1350,6 @@ img,video,iframe{max-width:100%}
 }
 </style>
 
-
-<style id="teamBoardGateStyle">
-#teamBoardGate{position:fixed;inset:0;z-index:99999;background:rgba(0,0,0,.58);display:none;align-items:center;justify-content:center;padding:20px}
-#teamBoardGate.show{display:flex}
-#teamBoardGateBox{width:min(430px,100%);background:#fff;border-top:5px solid #c79a3b;padding:26px 22px;box-shadow:0 20px 60px rgba(0,0,0,.3);color:#17202b}
-#teamBoardGateBox h2{margin:0 0 10px;font-size:24px}
-#teamBoardGateBox p{margin:0 0 16px;color:#626b76;line-height:1.7}
-#teamBoardPassword{width:100%;font-size:16px;padding:14px;border:1px solid #cfd3d8;border-radius:8px}
-#teamBoardGateActions{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:14px}
-#teamBoardGateActions button{padding:13px;border-radius:8px;font-weight:700;border:1px solid #c79a3b}
-#teamBoardGateOpen{background:#c79a3b;color:#101923}
-#teamBoardGateCancel{background:#fff;color:#17202b}
-#teamBoardGateError{display:none;color:#b42318;margin-top:10px;font-weight:700}
-</style>
-
 </head>
 <body>
 <header class="header">
@@ -1384,7 +1369,7 @@ img,video,iframe{max-width:100%}
 <a href="./terms.html">サイト利用について</a>
 <a href="https://www.instagram.com/yachiyo_little_senior?igsi=MTl4N3dneG9uY2ZxcA==" rel="noopener noreferrer" target="_blank">Instagram</a>
 <a href="./rules.html">チーム規約</a>
-<aboard')" href="#" onclick="return openTeamBoardGate()">チーム内案内板 🔒</a>
+<a href="./board.html" onclick="return openProtectedArea('board')">チーム内案内板 🔒</a>
 <a href="https://www.google.com/maps/search/?api=1&amp;query=%E5%8D%83%E8%91%89%E7%9C%8C%E5%85%AB%E5%8D%83%E4%BB%A3%E5%B8%82%E5%B3%B6%E7%94%B0%E5%8F%B0%EF%BC%97%EF%BC%97%EF%BC%95" rel="noopener noreferrer" target="_blank">グラウンド案内</a>
 </div>
 <button class="menu" onclick="toggleMenu()">☰</button>
@@ -1462,7 +1447,7 @@ function closeModal(){
 <a href="https://www.instagram.com/yachiyo_little_senior?igsi=MTl4N3dneG9uY2ZxcA==" rel="noopener noreferrer" target="_blank">Instagram</a>
 <a href="https://www.facebook.com/share/1DakdBtEv6/?mibextid=wwXIfr" rel="noopener noreferrer" target="_blank">Facebook</a>
 <a href="./rules.html">チーム規約 🔒</a>
-<aboard')" href="#" onclick="return openTeamBoardGate()">チーム内案内板 🔒</a>
+<a href="./board.html" onclick="return openProtectedArea('board')">チーム内案内板 🔒</a>
 </nav>
 
 
@@ -1481,8 +1466,8 @@ function closeModal(){
 function openProtectedArea(type){
   const entered=prompt("パスワードを入力してください");
   if(entered===null) return false;
-  const normalized=entered.trim().toLowerCase();
-
+  if(type==="board" && entered!=="yachiyo20260800"){ alert("パスワードが違います。"); return false; }
+  if(type==="board"){ sessionStorage.setItem("yachiyoAttendancePass",entered); window.location.href="./board.html"; }
   return false;
 }
 </script>
@@ -1560,51 +1545,5 @@ function openProtectedArea(type){
   });
 })();
 </script>
-
-<div id="teamBoardGate" aria-hidden="true">
-  <div id="teamBoardGateBox" role="dialog" aria-modal="true" aria-labelledby="teamBoardGateTitle">
-    <h2 id="teamBoardGateTitle">チーム内案内板</h2>
-    <p>パスワードを入力してください。</p>
-    <input id="teamBoardPassword" type="password" autocomplete="off" autocapitalize="none" spellcheck="false" inputmode="text" placeholder="パスワード">
-    <div id="teamBoardGateError">パスワードが違います。</div>
-    <div id="teamBoardGateActions">
-      <button id="teamBoardGateCancel" type="button">閉じる</button>
-      <button id="teamBoardGateOpen" type="button">開く</button>
-    </div>
-  </div>
-</div>
-
-
-<script id="teamBoardGateScript">
-(function(){
-  const PASSWORD="yachiyo20260800";
-  function gate(){return document.getElementById("teamBoardGate")}
-  window.openTeamBoardGate=function(){
-    const g=gate(), input=document.getElementById("teamBoardPassword"), err=document.getElementById("teamBoardGateError");
-    if(!g)return false;
-    input.value=""; err.style.display="none"; g.classList.add("show"); g.setAttribute("aria-hidden","false");
-    setTimeout(()=>input.focus(),50);
-    return false;
-  };
-  function closeGate(){
-    const g=gate(); if(g){g.classList.remove("show");g.setAttribute("aria-hidden","true")}
-  }
-  function submitGate(){
-    const input=document.getElementById("teamBoardPassword"), err=document.getElementById("teamBoardGateError");
-    const entered=(input.value||"").trim().toLowerCase();
-    if(entered!==PASSWORD){err.style.display="block";input.select();return}
-    sessionStorage.setItem("yachiyoAttendancePass",PASSWORD);
-    closeGate();
-    window.location.assign("./board.html");
-  }
-  document.addEventListener("DOMContentLoaded",function(){
-    document.getElementById("teamBoardGateCancel")?.addEventListener("click",closeGate);
-    document.getElementById("teamBoardGateOpen")?.addEventListener("click",submitGate);
-    document.getElementById("teamBoardPassword")?.addEventListener("keydown",e=>{if(e.key==="Enter")submitGate()});
-    gate()?.addEventListener("click",e=>{if(e.target===gate())closeGate()});
-  });
-})();
-</script>
-
 </body>
 </html>
