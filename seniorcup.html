@@ -31,7 +31,7 @@ h1{font-family:serif;font-weight:600;font-size:clamp(34px,6vw,58px);letter-spaci
 .download-card{background:#fff;border:1px solid #ddd9cf;border-top:3px solid var(--gold);padding:22px}
 .download-card h3{margin:0 0 8px;color:var(--navy);font-family:serif;font-size:21px}
 .file-name{min-height:43px;margin:0 0 15px;color:#697481;font-size:13px;line-height:1.65;overflow-wrap:anywhere}
-.download-btn{display:flex;align-items:center;justify-content:center;min-height:48px;background:var(--gold);border:1px solid var(--gold);color:var(--navy)!important;border-radius:7px;font-weight:900;font-size:16px;line-height:1.2;cursor:pointer;-webkit-tap-highlight-color:transparent;touch-action:manipulation}
+.download-btn{display:flex;align-items:center;justify-content:center;min-height:48px;background:var(--gold);border:1px solid var(--gold);color:var(--navy)!important;border-radius:7px;font-weight:900}
 .download-btn.is-empty{pointer-events:none;opacity:.42;background:#ece7dc}
 .admin-area{display:none;margin-top:22px;padding-top:20px;border-top:1px solid #ddd9cf}.admin-area.show{display:block}
 .admin-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px}
@@ -276,27 +276,6 @@ textarea[name="guideline"]{
 }
 
 </style>
-
-<style id="seniorcup-footer-simple">
-.restored-footer{
-  padding:16px 18px calc(16px + env(safe-area-inset-bottom))!important;
-  min-height:0!important;
-}
-.restored-footer-inner{
-  max-width:1180px;
-  margin:auto;
-}
-.restored-footer .copy{
-  margin:0!important;
-  padding:0!important;
-  border-top:0!important;
-  color:#9eabb9!important;
-  font-size:11px!important;
-  letter-spacing:.04em;
-  text-align:center;
-}
-</style>
-
 </head>
 <body>
 <header class="header">
@@ -343,7 +322,7 @@ textarea[name="guideline"]{
 <div class="partner-heading-small">八千代シニア杯</div>
 <div class="partner-heading-main">協力企業様紹介</div>
 </div>
-<p class="partner-lead">（当チームの活動にご賛同・ご協力をいただいている企業）</p>
+<p class="partner-lead">（当チームの活動にご賛同・ご協力をいただいている企業様）</p>
 <div class="partner-grid" id="partnerGrid"></div>
 </section>
 <div class="admin-area" id="cupAdminArea">
@@ -375,6 +354,21 @@ textarea[name="guideline"]{
 </main>
 <footer class="restored-footer">
 <div class="restored-footer-inner">
+<nav aria-label="フッターナビゲーション" class="restored-footer-nav">
+<a href="./index.html">HOME</a>
+<a href="./team.html">チーム紹介</a>
+<a href="./players.html">選手紹介</a>
+<a href="./results.html">試合結果</a>
+<a href="./schedule.html">スケジュール</a>
+<a href="./join.html">入団案内</a>
+<a href="./contact.html">お問い合わせ</a>
+<a href="https://www.instagram.com/yachiyo_little_senior?igsi=MTl4N3dneG9uY2ZxcA==" rel="noopener noreferrer" target="_blank">Instagram</a>
+<a href="https://www.facebook.com/share/1DakdBtEv6/?mibextid=wwXIfr" rel="noopener noreferrer" target="_blank">Facebook</a>
+<a href="./index.html#homeNews">新着NEWS</a>
+<a href="./rules.html">チーム規約 🔒</a>
+<a class="board-link" href="./board.html">チーム内案内板 🔒</a>
+</nav>
+<div class="ground-address"><a href="https://www.google.com/maps/search/?api=1&amp;query=千葉県八千代市島田台775" rel="noopener noreferrer" target="_blank">グラウンド案内：千葉県八千代市島田台７７５</a></div>
 <button id="cupAdminBtn" type="button">管理</button>
 <div class="copy">© YACHIYO LITTLE SENIOR</div>
 </div>
@@ -389,7 +383,7 @@ textarea[name="guideline"]{
 
 
   const DEFAULT_PARTNERS=[
-    {name:'超野球専門店CV',url:'https://spcv.jp/',description:'鎌ヶ谷市の野球道具専門店。関東最大級の品揃え。当チームのチーム道具、指導者、選手のアパレル関係も含めて、すべて超野球専門店CVで購入しています。ネット注文でグランドに配達も可能。'},
+    {name:'スポーツCV',url:'https://spcv.jp/',description:'鎌ヶ谷市の野球道具専門店。関東最大級の品揃え。当チームのチーム道具、指導者、選手のアパレル関係も含めて、すべてスポーツCVで購入しています。ネット注文でグランドに配達も可能。'},
     {name:'ZEROFITNESS',url:'https://zero.automarina.co.jp/',description:'八千代市大和田新田にあるスポーツジム。24時間365日トレーニング可能。各種トレーニング器具とランニングマシン、エアロバイク複数台完備。酸素カプセルもあり体のメンテナンスも可能。'},
     {name:'市原整骨院',url:'',description:'佐倉市の京成志津駅北口の目の前にある整骨院。小学生、中学生のみならず強豪校の高校球児も多く通っています。電気治療、マッサージに加えてテーピングで発達段階の筋肉、関節可動域の拡大をサポートしてくれます。院長先生の野球指導歴が長いので動作改善などのアドバイスもいただけます。'},
     {name:'合同会社ファミリー',url:'',description:'佐倉市上座にある訪問介護の会社。職員に当チームのOB父母が多く在籍しており、地域に根差した良心的な会社です。介護職員募集中。'}
@@ -502,24 +496,12 @@ textarea[name="guideline"]{
 
   guidelineSaveBtn.addEventListener('click',saveGuideline);
 
-  const downloadFiles={application:null,roster:null};
-
   function render(slot,data){
     const c=slots[slot], n=document.getElementById(c.name), a=document.getElementById(c.link);
     if(data&&data.fileName&&data.dataUrl){
-      downloadFiles[slot]=data;
-      n.textContent=data.fileName;
-      a.href='#';
-      a.removeAttribute('download');
-      a.classList.remove('is-empty');
-      a.setAttribute('aria-disabled','false');
+      n.textContent=data.fileName;a.href=data.dataUrl;a.download=data.fileName;a.classList.remove('is-empty');
     }else{
-      downloadFiles[slot]=null;
-      n.textContent='現在ダウンロードできるファイルはありません。';
-      a.href='#';
-      a.removeAttribute('download');
-      a.classList.add('is-empty');
-      a.setAttribute('aria-disabled','true');
+      n.textContent='現在ダウンロードできるファイルはありません。';a.href='#';a.removeAttribute('download');a.classList.add('is-empty');
     }
   }
   async function load(slot){
@@ -527,71 +509,6 @@ textarea[name="guideline"]{
     try{const r=await fetch(API+'?section='+encodeURIComponent(c.section),{cache:'no-store'});if(!r.ok)throw 0;const j=await r.json();render(slot,j.data)}
     catch(e){render(slot,null)}
   }
-
-  function dataUrlToFile(dataUrl,fileName,mimeType){
-    const parts=String(dataUrl||'').split(',');
-    if(parts.length<2) throw new Error('INVALID_DATA');
-    const header=parts[0];
-    const mime=mimeType||((header.match(/^data:([^;]+)/)||[])[1])||'application/octet-stream';
-    const binary=atob(parts.slice(1).join(','));
-    const bytes=new Uint8Array(binary.length);
-    for(let i=0;i<binary.length;i++) bytes[i]=binary.charCodeAt(i);
-    return new File([bytes],fileName,{type:mime});
-  }
-
-  async function startDownload(slot){
-    const data=downloadFiles[slot];
-    if(!data||!data.dataUrl||!data.fileName){
-      alert('現在ダウンロードできるファイルはありません。');
-      return;
-    }
-
-    let file;
-    try{
-      file=dataUrlToFile(data.dataUrl,data.fileName,data.mimeType);
-    }catch(e){
-      alert('ファイルデータを開けませんでした。もう一度アップロードしてください。');
-      return;
-    }
-
-    // iPhone / iPadでは共有シート経由が最も確実。
-    // 「ファイルに保存」を選べば端末へ保存できる。
-    try{
-      if(navigator.canShare && navigator.canShare({files:[file]})){
-        await navigator.share({
-          files:[file],
-          title:data.fileName
-        });
-        return;
-      }
-    }catch(e){
-      if(e && e.name==='AbortError') return;
-    }
-
-    // PC / Android等は通常のダウンロードへフォールバック
-    const url=URL.createObjectURL(file);
-    const a=document.createElement('a');
-    a.href=url;
-    a.download=data.fileName;
-    a.style.display='none';
-    document.body.appendChild(a);
-    a.click();
-    a.remove();
-    setTimeout(()=>URL.revokeObjectURL(url),30000);
-  }
-
-  document.getElementById('applicationDownload').addEventListener('click',function(e){
-    e.preventDefault();
-    if(this.classList.contains('is-empty')) return;
-    startDownload('application');
-  });
-
-  document.getElementById('rosterDownload').addEventListener('click',function(e){
-    e.preventDefault();
-    if(this.classList.contains('is-empty')) return;
-    startDownload('roster');
-  });
-
   function valid(f){
     if(!f)return 'ファイルを選択してください。';
     const ext=(f.name.split('.').pop()||'').toLowerCase();
