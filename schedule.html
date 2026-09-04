@@ -1392,6 +1392,156 @@ img,video,iframe{max-width:100%}
     grid-template-columns:repeat(2,minmax(0,1fr))!important;
   }
 }
+
+/* ===== 主な年間スケジュール ===== */
+.annual-schedule{
+  margin-top:28px;
+  background:#fff;
+  border:1px solid #d8d6d0;
+  border-top:4px solid var(--gold);
+  border-radius:12px;
+  box-shadow:0 8px 24px rgba(14,25,38,.06);
+  overflow:hidden;
+}
+.annual-schedule-head{
+  padding:24px 26px 18px;
+  background:linear-gradient(135deg,#071426,#102943);
+  color:#fff;
+}
+.annual-schedule-head .annual-kicker{
+  color:var(--gold2);
+  font-size:11px;
+  font-weight:800;
+  letter-spacing:.18em;
+  margin-bottom:7px;
+}
+.annual-schedule-head h2{
+  margin:0;
+  font-family:serif;
+  font-size:26px;
+  font-weight:500;
+  letter-spacing:.04em;
+}
+.annual-schedule-list{padding:8px 26px 20px}
+.annual-month{
+  display:grid;
+  grid-template-columns:72px 1fr;
+  gap:18px;
+  padding:17px 0;
+  border-bottom:1px solid #e5e3de;
+}
+.annual-month:last-of-type{border-bottom:0}
+.annual-month-label{
+  color:#9b741e;
+  font-size:18px;
+  font-weight:800;
+  white-space:nowrap;
+}
+.annual-month-events{
+  color:#344152;
+  font-size:14px;
+  line-height:1.9;
+}
+.annual-month-events div+div{margin-top:2px}
+.annual-other{
+  margin:4px 26px 0;
+  padding:20px 0;
+  border-top:1px solid rgba(199,154,59,.45);
+}
+.annual-other h3{
+  margin:0 0 10px;
+  color:#071426;
+  font-family:serif;
+  font-size:20px;
+}
+.annual-other p{
+  margin:4px 0;
+  color:#344152;
+  font-size:14px;
+  line-height:1.8;
+}
+.annual-note{
+  margin:0 26px 24px;
+  padding:13px 15px;
+  background:#f6f3eb;
+  border-left:3px solid var(--gold);
+  color:#5d6670;
+  font-size:12px;
+  line-height:1.7;
+}
+@media(max-width:600px){
+  .annual-schedule{margin-top:20px}
+  .annual-schedule-head{padding:20px 17px 16px}
+  .annual-schedule-head h2{font-size:21px;line-height:1.5}
+  .annual-schedule-list{padding:4px 17px 14px}
+  .annual-month{grid-template-columns:52px 1fr;gap:10px;padding:14px 0}
+  .annual-month-label{font-size:16px}
+  .annual-month-events{font-size:13px;line-height:1.8}
+  .annual-other{margin:2px 17px 0;padding:17px 0}
+  .annual-other p{font-size:13px}
+  .annual-note{margin:0 17px 18px;font-size:11px}
+}
+
+
+.annual-schedule-head{position:relative}
+.annual-admin-btn{
+  position:absolute;right:18px;top:18px;
+  border:1px solid var(--gold2);background:transparent;color:var(--gold2);
+  padding:8px 14px;border-radius:6px;font-weight:800;cursor:pointer;
+}
+.annual-editor{display:none;position:fixed;inset:0;z-index:10050;padding:18px;background:rgba(3,12,24,.76);align-items:center;justify-content:center}
+.annual-editor.show{display:flex}
+.annual-editor-box{position:relative;width:min(680px,100%);max-height:90vh;overflow:auto;background:#fff;border-top:4px solid var(--gold);border-radius:10px;padding:24px;box-shadow:0 20px 60px rgba(0,0,0,.3)}
+.annual-editor-box h2{margin:0 42px 8px 0;color:#071426;font-family:serif}
+.annual-editor-help{margin:0 0 18px;color:#66717e;font-size:12px;line-height:1.7}
+.annual-editor-box label{display:block;margin-top:15px;color:#263344;font-size:13px;font-weight:800}
+.annual-editor-box textarea,.annual-editor-box input{display:block;width:100%;margin-top:7px;padding:12px;border:1px solid #cfd5dc;border-radius:6px;background:#fff;color:#172233;font:inherit;font-size:16px}
+.annual-editor-box textarea{min-height:150px;resize:vertical}
+#annualOtherInput{min-height:100px}
+.annual-editor-close{position:absolute;right:12px;top:12px;width:40px;height:40px;border:0;border-radius:50%;background:#f0f2f5;font-size:25px;cursor:pointer}
+.annual-editor-actions{display:flex;justify-content:flex-end;gap:10px;margin-top:20px}
+.annual-editor-actions button{min-height:44px;padding:0 22px;border-radius:6px;font-weight:800;cursor:pointer}
+.annual-editor-cancel{border:1px solid #bdc4cc;background:#fff;color:#344152}
+.annual-editor-save{border:1px solid #071426;background:#071426;color:#fff}
+@media(max-width:600px){.annual-admin-btn{right:12px;top:12px;padding:7px 11px}.annual-editor{padding:10px}.annual-editor-box{padding:20px 15px}}
+
+
+/* ===== Unified management button ===== */
+#adminModeToggle.admin-toggle{
+  display:none;
+  position:fixed !important;
+  right:max(12px,env(safe-area-inset-right)) !important;
+  left:auto !important;
+  top:auto !important;
+  bottom:calc(12px + env(safe-area-inset-bottom)) !important;
+  z-index:10001 !important;
+  margin:0 !important;
+  transform:none !important;
+  border:1px solid rgba(199,154,59,.78) !important;
+  background:#071426 !important;
+  color:#e2bd67 !important;
+  border-radius:999px !important;
+  padding:10px 14px !important;
+  font-size:12px !important;
+  font-weight:800 !important;
+  box-shadow:0 8px 22px rgba(0,0,0,.24) !important;
+  cursor:pointer;
+  -webkit-tap-highlight-color:transparent;
+  touch-action:manipulation;
+}
+body.admin-mode #adminModeToggle.admin-toggle{
+  display:block !important;
+  color:#e2bd67 !important;
+}
+@media(max-width:600px){
+  #adminModeToggle.admin-toggle{
+    right:max(10px,env(safe-area-inset-right)) !important;
+    bottom:calc(10px + env(safe-area-inset-bottom)) !important;
+    padding:9px 12px !important;
+    font-size:11px !important;
+  }
+}
+
 </style>
 
 </head>
@@ -1464,6 +1614,35 @@ img,video,iframe{max-width:100%}
         公開中の予定は閲覧者全員に表示されます。
       </div>
 </div>
+
+<div class="annual-schedule">
+  <div class="annual-schedule-head">
+    <button type="button" id="annualAdminBtn" class="annual-admin-btn" hidden>編集</button>
+    <div class="annual-kicker">ANNUAL SCHEDULE</div>
+    <h2>主な年間スケジュール（学年は実学年）</h2>
+  </div>
+  <div class="annual-schedule-list" id="annualScheduleList">
+    <div class="annual-month"><div class="annual-month-label">4月</div><div class="annual-month-events"><div>新入生歓迎会（1年生）、3年生壮行会（3年生）</div><div>読売新聞社杯（3年生）</div></div></div>
+    <div class="annual-month"><div class="annual-month-label">5月</div><div class="annual-month-events"><div>リトルシニア関東連盟夏季大会（3年生）</div></div></div>
+    <div class="annual-month"><div class="annual-month-label">6月</div><div class="annual-month-events"><div>千葉日報杯新人戦（2年生）</div></div></div>
+    <div class="annual-month"><div class="annual-month-label">7月</div><div class="annual-month-events"><div>サマーフレンドリーカップ（1年生）←一泊二日合宿</div><div>サマーフレンドリー交流大会（2年生）←一泊二日合宿</div><div>千葉ロッテマリーンズカップ（3年生）</div></div></div>
+    <div class="annual-month"><div class="annual-month-label">9月</div><div class="annual-month-events"><div>東関東連盟秋季大会（2年生）</div></div></div>
+    <div class="annual-month"><div class="annual-month-label">10月</div><div class="annual-month-events"><div>浦安市長杯（3年生）</div></div></div>
+    <div class="annual-month"><div class="annual-month-label">11月</div><div class="annual-month-events"><div>フレッシュマン大会（1年生）</div><div>八千代リトルシニア杯（小学生大会）</div></div></div>
+    <div class="annual-month"><div class="annual-month-label">12月</div><div class="annual-month-events"><div>グランド納め</div></div></div>
+    <div class="annual-month"><div class="annual-month-label">1月</div><div class="annual-month-events"><div>グランド開き</div><div>鹿島市長杯（2年生）</div></div></div>
+    <div class="annual-month"><div class="annual-month-label">2月</div><div class="annual-month-events"><div>東関東連盟春季大会（2年生）</div></div></div>
+    <div class="annual-month"><div class="annual-month-label">3月</div><div class="annual-month-events"><div>いわきサンシャインCUP（2年生）←一泊二日合宿</div><div>卒団式（3年生）</div></div></div>
+  </div>
+  <div class="annual-other" id="annualOther">
+    <h3>その他</h3>
+    <p>不定期：陸上トレーニング日</p>
+    <p>年1回：栄養講座（4月）</p>
+    <p>年1回：やちよふるさと祭り出店（未定）</p>
+  </div>
+  <div class="annual-note" id="annualNote">※年間スケジュールは変更になることがあります。</div>
+</div>
+
 </div>
 </section>
 <div aria-hidden="true" class="calendar-editor" id="calendarEditor">
@@ -1642,6 +1821,28 @@ renderCalendar();
   }
 })();
 </script>
+
+<div class="annual-editor" id="annualEditor" aria-hidden="true">
+  <div class="annual-editor-box" role="dialog" aria-modal="true" aria-labelledby="annualEditorTitle">
+    <button type="button" class="annual-editor-close" id="annualEditorClose" aria-label="閉じる">×</button>
+    <h2 id="annualEditorTitle">年間スケジュール編集</h2>
+    <p class="annual-editor-help">1行につき「月|内容」の形式で入力してください。同じ月を複数行にしても表示できます。</p>
+    <label>年間スケジュール
+      <textarea id="annualScheduleInput"></textarea>
+    </label>
+    <label>その他
+      <textarea id="annualOtherInput"></textarea>
+    </label>
+    <label>注意書き
+      <input id="annualNoteInput" type="text">
+    </label>
+    <div class="annual-editor-actions">
+      <button type="button" class="annual-editor-cancel" id="annualEditorCancel">キャンセル</button>
+      <button type="button" class="annual-editor-save" id="annualEditorSave">保存</button>
+    </div>
+  </div>
+</div>
+
 <footer class="restored-footer">
 <div class="restored-footer-inner">
 <nav aria-label="フッターナビゲーション" class="restored-footer-nav">
@@ -1744,6 +1945,8 @@ function openProtectedArea(type){
       b.textContent=on?'管理終了':'管理';
       b.style.display=on?'block':'none';
     }
+    const annualBtn=document.getElementById('annualAdminBtn');
+    if(annualBtn) annualBtn.hidden=!on;
   }
 
   async function verifyAdminPassword(password){
@@ -1817,6 +2020,84 @@ function openProtectedArea(type){
 })();
 </script>
 
+
+
+<script>
+(function(){
+  const DEFAULT_ANNUAL = {
+    schedule: [
+      ["4月","新入生歓迎会（1年生）、3年生壮行会（3年生）"],["4月","読売新聞社杯（3年生）"],
+      ["5月","リトルシニア関東連盟夏季大会（3年生）"],
+      ["6月","千葉日報杯新人戦（2年生）"],
+      ["7月","サマーフレンドリーカップ（1年生）←一泊二日合宿"],["7月","サマーフレンドリー交流大会（2年生）←一泊二日合宿"],["7月","千葉ロッテマリーンズカップ（3年生）"],
+      ["9月","東関東連盟秋季大会（2年生）"],["10月","浦安市長杯（3年生）"],
+      ["11月","フレッシュマン大会（1年生）"],["11月","八千代リトルシニア杯（小学生大会）"],
+      ["12月","グランド納め"],["1月","グランド開き"],["1月","鹿島市長杯（2年生）"],
+      ["2月","東関東連盟春季大会（2年生）"],["3月","いわきサンシャインCUP（2年生）←一泊二日合宿"],["3月","卒団式（3年生）"]
+    ],
+    other:["不定期：陸上トレーニング日","年1回：栄養講座（4月）","年1回：やちよふるさと祭り出店（未定）"],
+    note:"※年間スケジュールは変更になることがあります。"
+  };
+  let annualData = JSON.parse(JSON.stringify(DEFAULT_ANNUAL));
+
+  const esc = v => String(v??"").replace(/[&<>"']/g,m=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[m]));
+  function normalize(v){
+    return {
+      schedule:Array.isArray(v?.schedule)?v.schedule.filter(x=>Array.isArray(x)&&x.length>=2).map(x=>[String(x[0]),String(x[1])]):DEFAULT_ANNUAL.schedule,
+      other:Array.isArray(v?.other)?v.other.map(String):DEFAULT_ANNUAL.other,
+      note:typeof v?.note==="string"?v.note:DEFAULT_ANNUAL.note
+    };
+  }
+  function renderAnnual(){
+    const list=document.getElementById("annualScheduleList");
+    const groups=[];
+    annualData.schedule.forEach(([month,text])=>{
+      let g=groups.find(x=>x.month===month);
+      if(!g){g={month,items:[]};groups.push(g)}
+      g.items.push(text);
+    });
+    list.innerHTML=groups.map(g=>`<div class="annual-month"><div class="annual-month-label">${esc(g.month)}</div><div class="annual-month-events">${g.items.map(t=>`<div>${esc(t)}</div>`).join("")}</div></div>`).join("");
+    document.getElementById("annualOther").innerHTML='<h3>その他</h3>'+annualData.other.map(t=>`<p>${esc(t)}</p>`).join("");
+    document.getElementById("annualNote").textContent=annualData.note;
+  }
+  async function loadAnnual(){
+    try{
+      if(typeof sharedLoad!=="function") return renderAnnual();
+      const saved=await sharedLoad("annualSchedule");
+      if(saved && (saved.schedule||saved.other||saved.note)) annualData=normalize(saved);
+    }catch(e){ console.warn("annualSchedule load",e); }
+    renderAnnual();
+  }
+  function openEditor(){
+    document.getElementById("annualScheduleInput").value=annualData.schedule.map(x=>x[0]+"|"+x[1]).join("\n");
+    document.getElementById("annualOtherInput").value=annualData.other.join("\n");
+    document.getElementById("annualNoteInput").value=annualData.note;
+    const m=document.getElementById("annualEditor");m.classList.add("show");m.setAttribute("aria-hidden","false");
+  }
+  function closeEditor(){const m=document.getElementById("annualEditor");m.classList.remove("show");m.setAttribute("aria-hidden","true")}
+  async function saveAnnual(){
+    const schedule=document.getElementById("annualScheduleInput").value.split(/\r?\n/).map(x=>x.trim()).filter(Boolean).map(line=>{
+      const i=line.indexOf("|"); return i<0?null:[line.slice(0,i).trim(),line.slice(i+1).trim()];
+    }).filter(x=>x&&x[0]&&x[1]);
+    const other=document.getElementById("annualOtherInput").value.split(/\r?\n/).map(x=>x.trim()).filter(Boolean);
+    const note=document.getElementById("annualNoteInput").value.trim();
+    if(!schedule.length){alert("年間スケジュールを1件以上入力してください。");return}
+    const next={schedule,other,note};
+    try{
+      if(typeof sharedSave!=="function") throw new Error("保存機能を確認できません");
+      await sharedSave("annualSchedule",next);
+      annualData=next;renderAnnual();closeEditor();alert("年間スケジュールを保存しました。");
+    }catch(e){alert("保存できませんでした。管理状態と通信を確認してください。");console.error(e)}
+  }
+
+  document.getElementById("annualAdminBtn")?.addEventListener("click",openEditor);
+  document.getElementById("annualEditorClose")?.addEventListener("click",closeEditor);
+  document.getElementById("annualEditorCancel")?.addEventListener("click",closeEditor);
+  document.getElementById("annualEditorSave")?.addEventListener("click",saveAnnual);
+
+  loadAnnual();
+})();
+</script>
 
 </body>
 </html>
