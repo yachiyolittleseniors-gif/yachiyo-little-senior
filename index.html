@@ -2749,13 +2749,19 @@ window.__loadYachiyoPhotos = function(){
 
 
 <style id="quick-icon-balance-fix">
-/* HOMEクイックメニュー6枚専用：アイコンの視覚サイズと位置を統一 */
+/* HOMEクイックメニュー6枚専用：見た目の大きさ・位置・余白を統一 */
+.quick > a > div{
+  display:flex!important;
+  flex-direction:column!important;
+  align-items:center!important;
+  justify-content:center!important;
+}
 .quick > a > div > .ico{
-  width:36px!important;
-  height:36px!important;
-  min-width:36px!important;
-  max-width:36px!important;
-  margin:0 auto 8px!important;
+  width:40px!important;
+  height:40px!important;
+  min-width:40px!important;
+  max-width:40px!important;
+  margin:0 auto 12px!important;
   display:flex!important;
   align-items:center!important;
   justify-content:center!important;
@@ -2763,25 +2769,33 @@ window.__loadYachiyoPhotos = function(){
   box-sizing:border-box!important;
   color:var(--gold2)!important;
 }
+.quick > a b{
+  margin:0!important;
+  line-height:1.25!important;
+}
+.quick > a small{
+  margin-top:7px!important;
+  line-height:1.2!important;
+}
 
-/* 文字記号は形ごとの差だけ微調整 */
-.quick > a[href="team.html"] .ico{font-size:31px!important}
-.quick > a[href="./players.html"] .player-pawn-gold{font-size:34px!important}
-.quick > a[href="./results.html"] .ico{font-size:31px!important}
-.quick > a[href="./schedule.html"] .ico{font-size:31px!important}
-.quick > a[href="./join.html"] .ico{font-size:31px!important}
+/* 形ごとの視覚補正 */
+.quick > a[href="team.html"] .ico{font-size:27px!important}
+.quick > a[href="./players.html"] .player-pawn-gold{font-size:39px!important}
+.quick > a[href="./results.html"] .ico{font-size:35px!important}
+.quick > a[href="./schedule.html"] .ico{font-size:34px!important}
+.quick > a[href="./join.html"] .ico{font-size:26px!important}
 
-/* Instagramも同じ36px枠の中に収める */
+/* Instagramは40px枠内で他アイコンと同程度の存在感に */
 .quick .instagram-official-icon{
-  width:36px!important;
-  height:36px!important;
-  min-width:36px!important;
-  max-width:36px!important;
-  margin:0 auto 8px!important;
+  width:40px!important;
+  height:40px!important;
+  min-width:40px!important;
+  max-width:40px!important;
+  margin:0 auto 12px!important;
 }
 .quick .instagram-official-icon svg{
-  width:30px!important;
-  height:30px!important;
+  width:27px!important;
+  height:27px!important;
   display:block!important;
 }
 </style>
