@@ -1302,9 +1302,6 @@ img,video,iframe{max-width:100%}
 <script type="application/ld+json">{"@context":"https://schema.org","@type":"BreadcrumbList","itemListElement":[{"@type":"ListItem","position":1,"name":"HOME","item":"https://yachiyo-little-senior.netlify.app/"},{"@type":"ListItem","position":2,"name":"入団案内・体験練習","item":"https://yachiyo-little-senior.netlify.app/join.html"}]}</script>
 
 <style id="footer-layout-only-fix">
-#join .container{padding-bottom:18px!important}
-.higashikanto-links{padding:0 12px 18px}
-.higashikanto-links .higashikanto-link-wrap{margin:12px 0!important}
 .footer-privacy{
   margin-top:20px;
   text-align:center;
@@ -1314,9 +1311,6 @@ img,video,iframe{max-width:100%}
 }
 .footer-privacy a{color:inherit!important;text-decoration:none}
 @media(max-width:700px){
-  #join .container{padding-bottom:14px!important}
-  .higashikanto-links{padding-bottom:16px}
-  .restored-footer{padding:20px 12px 16px!important}
   .restored-footer-nav{
     display:grid!important;
     grid-template-columns:repeat(2,minmax(0,1fr))!important;
@@ -1330,26 +1324,15 @@ img,video,iframe{max-width:100%}
     align-items:center!important;
     justify-content:center!important;
     text-align:center!important;
-    min-height:46px!important;
-    padding:11px 6px!important;
-    font-size:12px!important;
-    line-height:1.5!important;
   }
   .ground-address{
-    margin-top:0!important;
-    padding:22px 0 0!important;
-    border-top:0!important;
+    margin-top:28px!important;
+    padding:24px 0 4px!important;
+    border-top:1px solid rgba(255,255,255,.08);
     font-size:13px!important;
     font-weight:700;
-    line-height:1.6!important;
   }
-  .footer-privacy{margin-top:14px!important;font-size:12px;line-height:1.6}
-  .restored-footer-copy{
-    margin-top:18px!important;
-    padding-top:15px!important;
-    font-size:11px!important;
-    line-height:1.6!important;
-  }
+  .footer-privacy{margin-top:18px;font-size:12px}
 }
 </style>
 
@@ -1364,6 +1347,16 @@ img,video,iframe{max-width:100%}
 <meta name="twitter:card" content="summary_large_image">
 <meta name="twitter:title" content="入団案内・選手募集｜八千代リトルシニア（八千代シニア）">
 <meta name="twitter:description" content="八千代リトルシニアの入団案内・選手募集。千葉県八千代市で中学硬式野球に取り組みたい中学生・小学6年生へ、活動内容や入団情報をご案内します。">
+<style id="footer-ground-spacing-unified">
+@media(max-width:700px){
+  .restored-footer-nav{margin-bottom:0!important}
+  .ground-address{
+    margin-top:28px!important;
+    padding:24px 0 4px!important;
+    border-top:1px solid rgba(255,255,255,.08)!important;
+  }
+}
+</style>
 </head>
 <body>
 <header class="header">
@@ -1450,26 +1443,6 @@ function closeModal(){
 }
 </script>
 
-<div class="higashikanto-links">
-<div class="higashikanto-link-wrap">
-  <a class="higashikanto-link" href="https://www.kantoleague.net/shop/block/?action=detail&amp;b_id=3" target="_blank" rel="noopener noreferrer">
-    日本リトルシニア 関東連盟 東関東支部
-  </a>
-</div>
-
-<div class="higashikanto-link-wrap">
-  <a class="higashikanto-link" href="https://www.kantoleague.net/shop/sphone/" target="_blank" rel="noopener noreferrer">
-    日本リトルシニア中学硬式野球協会 関東連盟
-  </a>
-</div>
-
-<div class="higashikanto-link-wrap">
-  <a class="higashikanto-link" href="https://spcv.jp/index.html" target="_blank" rel="noopener noreferrer">
-    超野球専門店CV
-  </a>
-</div>
-</div>
-
 <footer class="restored-footer">
 <div class="restored-footer-inner">
 <nav aria-label="フッターナビゲーション" class="restored-footer-nav">
@@ -1491,6 +1464,24 @@ function closeModal(){
 <div class="restored-footer-copy">© YACHIYO LITTLE SENIOR. All Rights Reserved.</div>
 </div>
 </footer>
+
+<div class="higashikanto-link-wrap">
+  <a class="higashikanto-link" href="https://www.kantoleague.net/shop/block/?action=detail&amp;b_id=3" target="_blank" rel="noopener noreferrer">
+    日本リトルシニア 関東連盟 東関東支部
+  </a>
+</div>
+
+<div class="higashikanto-link-wrap">
+  <a class="higashikanto-link" href="https://www.kantoleague.net/shop/sphone/" target="_blank" rel="noopener noreferrer">
+    日本リトルシニア中学硬式野球協会 関東連盟
+  </a>
+</div>
+
+<div class="higashikanto-link-wrap">
+  <a class="higashikanto-link" href="https://spcv.jp/index.html" target="_blank" rel="noopener noreferrer">
+    超野球専門店CV
+  </a>
+</div>
 
 
 
