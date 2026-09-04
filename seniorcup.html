@@ -524,39 +524,13 @@ textarea[name="guideline"]{
 
   guidelineSaveBtn.addEventListener('click',saveGuideline);
 
-  function downloadDataFile(dataUrl,fileName,mimeType){
-    try{
-      const parts=String(dataUrl).split(',');
-      const meta=parts[0]||'';
-      const body=parts.slice(1).join(',');
-      const type=mimeType||(meta.match(/^data:([^;,]+)/)||[])[1]||'application/octet-stream';
-      const binary=meta.includes(';base64')?atob(body):decodeURIComponent(body);
-      const bytes=new Uint8Array(binary.length);
-      for(let i=0;i<binary.length;i++)bytes[i]=binary.charCodeAt(i);
-      const url=URL.createObjectURL(new Blob([bytes],{type}));
-      const link=document.createElement('a');
-      link.href=url;link.download=fileName;link.style.display='none';
-      document.body.appendChild(link);link.click();link.remove();
-      setTimeout(()=>URL.revokeObjectURL(url),60000);
-      return true;
-    }catch(e){
-      return false;
-    }
-  }
   function render(slot,data){
     const c=slots[slot], n=document.getElementById(c.name), a=document.getElementById(c.link);
-    a.onclick=null;
     if(data&&data.fileName&&data.dataUrl){
       n.textContent=data.fileName;
-      a.href='#';
+      a.href=API+'?section='+encodeURIComponent(c.section)+'&download=1';
       a.removeAttribute('download');
       a.classList.remove('is-empty');
-      a.onclick=function(e){
-        e.preventDefault();
-        if(!downloadDataFile(data.dataUrl,data.fileName,data.mimeType)){
-          window.location.href=data.dataUrl;
-        }
-      };
     }else{
       n.textContent='現在ダウンロードできるファイルはありません。';a.href='#';a.removeAttribute('download');a.classList.add('is-empty');
     }
@@ -648,4 +622,5 @@ document.addEventListener('DOMContentLoaded',function(){
 </script>
 </body>
 </html>
+
 
