@@ -161,14 +161,14 @@ h1{font-family:serif;font-weight:600;font-size:clamp(34px,6vw,58px);letter-spaci
   text-shadow:0 2px 10px rgba(0,0,0,.18);
 }
 .partner-heading-small{
-  font-size:clamp(24px,4.3vw,38px);
+  font-size:clamp(20px,3.5vw,30px);
   line-height:1.15;
   font-weight:700;
   letter-spacing:.05em;
 }
 .partner-heading-main{
   margin-top:3px;
-  font-size:clamp(34px,6.2vw,56px);
+  font-size:clamp(28px,5vw,44px);
   line-height:1.1;
   font-weight:700;
   letter-spacing:.06em;
@@ -235,14 +235,25 @@ h1{font-family:serif;font-weight:600;font-size:clamp(34px,6vw,58px);letter-spaci
     border-radius:12px;
   }
   .partner-section::before,.partner-section::after{top:105px;width:12%}
-  .partner-heading-small{font-size:25px}
-  .partner-heading-main{font-size:38px}
+  .partner-heading-small{font-size:20px}
+  .partner-heading-main{font-size:30px}
   .partner-lead{margin:14px 8px 22px;font-size:12px}
   .partner-card{padding:20px 16px 20px 24px}
   .partner-card::before{left:12px;top:16px;bottom:16px;width:3px}
   .partner-card h3{padding-left:6px;font-size:24px}
   .partner-card p{padding-left:6px;font-size:13px;line-height:1.9}
 }
+
+
+.partner-card.has-link{cursor:pointer;padding-right:46px;transition:transform .16s ease,box-shadow .16s ease}
+.partner-card.has-link::after{
+  content:"›";position:absolute;right:18px;top:50%;transform:translateY(-50%);
+  color:var(--gold);font-size:38px;font-family:serif;font-weight:400;line-height:1;
+}
+.partner-card.has-link:active{transform:translateY(1px)}
+.partner-link-note{display:block;margin-top:8px;padding-left:8px;color:#9b741e;font-size:11px;font-weight:800}
+.partner-url{display:block;width:100%;margin-top:7px;padding:11px;border:1px solid #cfd5dc;border-radius:6px;font:inherit;font-size:16px}
+@media(max-width:600px){.partner-card.has-link{padding-right:40px}.partner-card.has-link::after{right:13px;font-size:32px}}
 
 </style>
 </head>
@@ -364,10 +375,10 @@ h1{font-family:serif;font-weight:600;font-size:clamp(34px,6vw,58px);letter-spaci
 
 
   const DEFAULT_PARTNERS=[
-    {name:'スポーツCV',description:'鎌ヶ谷市の野球道具専門店。関東最大級の品揃え。当チームのチーム道具、指導者、選手のアパレル関係も含めて、すべてスポーツCVで購入しています。ネット注文でグランドに配達も可能。'},
-    {name:'ZEROFITNESS',description:'八千代市大和田新田にあるスポーツジム。24時間365日トレーニング可能。各種トレーニング器具とランニングマシン、エアロバイク複数台完備。酸素カプセルもあり体のメンテナンスも可能。'},
-    {name:'市原整骨院',description:'佐倉市の京成志津駅北口の目の前にある整骨院。小学生、中学生のみならず強豪校の高校球児も多く通っています。電気治療、マッサージに加えてテーピングで発達段階の筋肉、関節可動域の拡大をサポートしてくれます。院長先生の野球指導歴が長いので動作改善などのアドバイスもいただけます。'},
-    {name:'合同会社ファミリー',description:'佐倉市上座にある訪問介護の会社。職員に当チームのOB父母が多く在籍しており、地域に根差した良心的な会社です。介護職員募集中。'}
+    {name:'スポーツCV',url:'https://spcv.jp/',description:'鎌ヶ谷市の野球道具専門店。関東最大級の品揃え。当チームのチーム道具、指導者、選手のアパレル関係も含めて、すべてスポーツCVで購入しています。ネット注文でグランドに配達も可能。'},
+    {name:'ZEROFITNESS',url:'https://zero.automarina.co.jp/',description:'八千代市大和田新田にあるスポーツジム。24時間365日トレーニング可能。各種トレーニング器具とランニングマシン、エアロバイク複数台完備。酸素カプセルもあり体のメンテナンスも可能。'},
+    {name:'市原整骨院',url:'',description:'佐倉市の京成志津駅北口の目の前にある整骨院。小学生、中学生のみならず強豪校の高校球児も多く通っています。電気治療、マッサージに加えてテーピングで発達段階の筋肉、関節可動域の拡大をサポートしてくれます。院長先生の野球指導歴が長いので動作改善などのアドバイスもいただけます。'},
+    {name:'合同会社ファミリー',url:'',description:'佐倉市上座にある訪問介護の会社。職員に当チームのOB父母が多く在籍しており、地域に根差した良心的な会社です。介護職員募集中。'}
   ];
   let partners=DEFAULT_PARTNERS.map(x=>({...x}));
   const partnerGrid=document.getElementById('partnerGrid');
@@ -377,14 +388,21 @@ h1{font-family:serif;font-weight:600;font-size:clamp(34px,6vw,58px);letter-spaci
   const esc=v=>String(v??'').replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));
 
   function renderPartners(){
-    partnerGrid.innerHTML=partners.map(p=>'<article class="partner-card"><h3>'+esc(p.name)+'</h3><p>'+esc(p.description)+'</p></article>').join('');
+    partnerGrid.innerHTML=partners.map(p=>{
+      const url=String(p.url||'').trim();
+      const body='<h3>'+esc(p.name)+'</h3><p>'+esc(p.description)+'</p>'+(url?'<span class="partner-link-note">公式サイトを見る</span>':'');
+      return url
+        ? '<a class="partner-card has-link" href="'+esc(url)+'" target="_blank" rel="noopener noreferrer">'+body+'</a>'
+        : '<article class="partner-card">'+body+'</article>';
+    }).join('');
   }
   function renderPartnerEditor(){
-    partnerEditorList.innerHTML=partners.map((p,i)=>'<div class="partner-editor-row" data-index="'+i+'"><label>企業名<input class="partner-name" value="'+esc(p.name)+'"></label><label>紹介文<textarea class="partner-description">'+esc(p.description)+'</textarea></label><div class="partner-editor-actions"><button type="button" class="partner-delete" data-index="'+i+'">削除</button></div></div>').join('');
+    partnerEditorList.innerHTML=partners.map((p,i)=>'<div class="partner-editor-row" data-index="'+i+'"><label>企業名<input class="partner-name" value="'+esc(p.name)+'"></label><label>リンク先URL<input class="partner-url" type="url" inputmode="url" placeholder="https://..." value="'+esc(p.url||'')+'"></label><label>紹介文<textarea class="partner-description">'+esc(p.description)+'</textarea></label><div class="partner-editor-actions"><button type="button" class="partner-delete" data-index="'+i+'">削除</button></div></div>').join('');
   }
   function collectPartnerEditor(){
     return [...partnerEditorList.querySelectorAll('.partner-editor-row')].map(row=>({
       name:row.querySelector('.partner-name').value.trim(),
+      url:row.querySelector('.partner-url').value.trim(),
       description:row.querySelector('.partner-description').value.trim()
     })).filter(x=>x.name||x.description);
   }
@@ -393,7 +411,7 @@ h1{font-family:serif;font-weight:600;font-size:clamp(34px,6vw,58px);letter-spaci
       const r=await fetch(API+'?section=seniorcup-partners',{cache:'no-store'});
       if(r.ok){
         const j=await r.json();
-        if(j.data&&Array.isArray(j.data.partners)) partners=j.data.partners.map(x=>({name:String(x.name||''),description:String(x.description||'')}));
+        if(j.data&&Array.isArray(j.data.partners)) partners=j.data.partners.map(x=>({name:String(x.name||''),url:String(x.url||''),description:String(x.description||'')}));
       }
     }catch(e){}
     renderPartners();renderPartnerEditor();
@@ -412,7 +430,7 @@ h1{font-family:serif;font-weight:600;font-size:clamp(34px,6vw,58px);letter-spaci
     }catch(e){alert(e.message==='PASSWORD'?'管理者パスワードが違います。':'協力企業紹介を保存できませんでした。')}
     finally{partnerSaveBtn.disabled=false;partnerSaveBtn.textContent=old}
   }
-  partnerAddBtn.addEventListener('click',()=>{partners=collectPartnerEditor();partners.push({name:'',description:''});renderPartnerEditor()});
+  partnerAddBtn.addEventListener('click',()=>{partners=collectPartnerEditor();partners.push({name:'',url:'',description:''});renderPartnerEditor()});
   partnerEditorList.addEventListener('click',e=>{
     const b=e.target.closest('.partner-delete');if(!b)return;
     const current=collectPartnerEditor(),i=Number(b.dataset.index),name=current[i]?.name||'この企業';
