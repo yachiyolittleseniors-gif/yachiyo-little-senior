@@ -34,6 +34,10 @@ h1{font-family:serif;font-weight:600;font-size:clamp(34px,6vw,58px);letter-spaci
 .download-btn{display:flex;align-items:center;justify-content:center;min-height:48px;background:var(--gold);border:1px solid var(--gold);color:var(--navy)!important;border-radius:7px;font-weight:900}
 .download-btn.is-empty{pointer-events:none;opacity:.42;background:#ece7dc}
 .admin-area{display:none;margin-top:22px;padding-top:20px;border-top:1px solid #ddd9cf}.admin-area.show{display:block}
+.guideline-admin-box{display:none;margin-top:14px;background:#fff;border:1px solid #d8d4cb;padding:15px}
+.guideline-admin-box.show{display:block}
+.guideline-admin-box label{display:block;margin-bottom:8px;font-size:13px;font-weight:800}
+.guideline-admin-box button{width:100%;min-height:44px;margin-top:10px;border:0;background:var(--navy);color:#fff;font-weight:800}
 .admin-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px}
 .admin-box{background:#fff;border:1px solid #d8d4cb;padding:15px}
 .admin-box label{display:block;margin-bottom:8px;font-size:13px;font-weight:800}.admin-box input{width:100%;font-size:13px}
@@ -322,6 +326,11 @@ textarea[name="guideline"]{
 <strong><span class="current-year"></span>年 八千代シニア杯 大会要項</strong>
 <p id="guidelineText">大会要項の詳細は準備ができ次第、こちらに掲載します。</p>
 </div>
+<div class="guideline-admin-box" id="guidelineAdminBox">
+<label for="guidelineEditor">大会要項を編集</label>
+<textarea id="guidelineEditor" placeholder="大会要項の詳細を入力してください。" rows="12" style="width:100%;padding:12px;border:1px solid #cfd5dc;border-radius:6px;font:inherit;font-size:16px;line-height:1.8;resize:vertical"></textarea>
+<button id="guidelineSaveBtn" type="button">大会要項を保存</button>
+</div>
 <h2 class="section-title">申込書・選手名簿</h2>
 <div class="download-grid">
 <section class="download-card">
@@ -352,11 +361,7 @@ textarea[name="guideline"]{
 
 
 
-<div class="admin-box" style="margin-bottom:14px">
-<label for="guidelineEditor">大会要項を編集</label>
-<textarea id="guidelineEditor" placeholder="大会要項の詳細を入力してください。" rows="7" style="width:100%;padding:12px;border:1px solid #cfd5dc;border-radius:6px;font:inherit;font-size:16px;resize:vertical"></textarea>
-<button id="guidelineSaveBtn" type="button">大会要項を保存</button>
-</div><div class="admin-grid">
+<div class="admin-grid">
 <div class="admin-box">
 <label for="applicationUpload">申込書を更新（PDF / Excel）</label>
 <input accept=".pdf,.xls,.xlsx,application/pdf,application/vnd.ms-excel,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" id="applicationUpload" type="file"/>
@@ -565,9 +570,9 @@ textarea[name="guideline"]{
 
   document.querySelectorAll('[data-slot]').forEach(b=>b.addEventListener('click',()=>save(b.dataset.slot)));
 
-  const footer=document.querySelector('.restored-footer'),btn=document.getElementById('cupAdminBtn'),area=document.getElementById('cupAdminArea');
+  const footer=document.querySelector('.restored-footer'),btn=document.getElementById('cupAdminBtn'),area=document.getElementById('cupAdminArea'),guidelineBox=document.getElementById('guidelineAdminBox');
   sessionStorage.removeItem('yachiyoAdminMode');sessionStorage.removeItem('yachiyoAdminPassword');
-  area.classList.remove('show');btn.classList.remove('is-visible');btn.textContent='管理';
+  area.classList.remove('show');guidelineBox.classList.remove('show');btn.classList.remove('is-visible');btn.textContent='管理';
 
   async function verifyAdminPassword(pw){
     try{
@@ -583,7 +588,7 @@ textarea[name="guideline"]{
 
   btn.addEventListener('click',async()=>{
     if(area.classList.contains('show')){
-      area.classList.remove('show');btn.textContent='管理';btn.classList.remove('is-visible');
+      area.classList.remove('show');guidelineBox.classList.remove('show');btn.textContent='管理';btn.classList.remove('is-visible');
       sessionStorage.removeItem('yachiyoAdminMode');sessionStorage.removeItem('yachiyoAdminPassword');return;
     }
     const pw=prompt('管理者パスワードを入力してください');if(!pw)return;
@@ -596,7 +601,7 @@ textarea[name="guideline"]{
       alert('管理者パスワードが違います。');return;
     }
     sessionStorage.setItem('yachiyoAdminPassword',pw);sessionStorage.setItem('yachiyoAdminMode','1');
-    area.classList.add('show');btn.textContent='管理終了';btn.classList.add('is-visible');
+    area.classList.add('show');guidelineBox.classList.add('show');btn.textContent='管理終了';btn.classList.add('is-visible');
   });
 
   if(footer){
@@ -622,5 +627,6 @@ document.addEventListener('DOMContentLoaded',function(){
 </script>
 </body>
 </html>
+
 
 
