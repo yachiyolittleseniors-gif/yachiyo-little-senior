@@ -31,7 +31,7 @@ h1{font-family:serif;font-weight:600;font-size:clamp(34px,6vw,58px);letter-spaci
 .download-card{background:#fff;border:1px solid #ddd9cf;border-top:3px solid var(--gold);padding:22px}
 .download-card h3{margin:0 0 8px;color:var(--navy);font-family:serif;font-size:21px}
 .file-name{min-height:43px;margin:0 0 15px;color:#697481;font-size:13px;line-height:1.65;overflow-wrap:anywhere}
-.download-btn{display:flex;align-items:center;justify-content:center;min-height:48px;background:var(--gold);border:1px solid var(--gold);color:var(--navy)!important;border-radius:7px;font-weight:900}
+.download-btn{display:flex;width:100%;align-items:center;justify-content:center;min-height:48px;background:var(--gold);border:1px solid var(--gold);color:var(--navy)!important;border-radius:7px;font-weight:900;cursor:pointer;pointer-events:auto;position:relative;z-index:5;-webkit-tap-highlight-color:transparent;touch-action:manipulation}
 .download-btn.is-empty{pointer-events:none;opacity:.42;background:#ece7dc}
 .admin-area{display:none;margin-top:22px;padding-top:20px;border-top:1px solid #ddd9cf}.admin-area.show{display:block}
 .admin-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px}
@@ -305,12 +305,12 @@ textarea[name="guideline"]{
 <section class="download-card">
 <h3>申込書</h3>
 <p class="file-name" id="applicationFileName">現在ダウンロードできるファイルはありません。</p>
-<a class="download-btn is-empty" href="#" id="applicationDownload">ダウンロード</a>
+<button class="download-btn is-empty" id="applicationDownload" type="button">ダウンロード</button>
 </section>
 <section class="download-card">
 <h3>選手名簿</h3>
 <p class="file-name" id="rosterFileName">現在ダウンロードできるファイルはありません。</p>
-<a class="download-btn is-empty" href="#" id="rosterDownload">ダウンロード</a>
+<button class="download-btn is-empty" id="rosterDownload" type="button">ダウンロード</button>
 </section>
 </div>
 <section aria-label="返信用アドレス" class="reply-address">
@@ -497,11 +497,21 @@ textarea[name="guideline"]{
   guidelineSaveBtn.addEventListener('click',saveGuideline);
 
   function render(slot,data){
-    const c=slots[slot], n=document.getElementById(c.name), a=document.getElementById(c.link);
+    const c=slots[slot], n=document.getElementById(c.name), b=document.getElementById(c.link);
     if(data&&data.fileName&&data.dataUrl){
-      n.textContent=data.fileName;a.href=data.dataUrl;a.download=data.fileName;a.classList.remove('is-empty');
+      n.textContent=data.fileName;
+      b.dataset.fileName=data.fileName;
+      b.dataset.dataUrl=data.dataUrl;
+      b.dataset.mimeType=data.mimeType||'application/octet-stream';
+      b.classList.remove('is-empty');
+      b.disabled=false;
     }else{
-      n.textContent='現在ダウンロードできるファイルはありません。';a.href='#';a.removeAttribute('download');a.classList.add('is-empty');
+      n.textContent='現在ダウンロードできるファイルはありません。';
+      delete b.dataset.fileName;
+      delete b.dataset.dataUrl;
+      delete b.dataset.mimeType;
+      b.classList.add('is-empty');
+      b.disabled=true;
     }
   }
   async function load(slot){
@@ -509,6 +519,40 @@ textarea[name="guideline"]{
     try{const r=await fetch(API+'?section='+encodeURIComponent(c.section),{cache:'no-store'});if(!r.ok)throw 0;const j=await r.json();render(slot,j.data)}
     catch(e){render(slot,null)}
   }
+
+  function downloadStoredFile(button){
+    const dataUrl=button.dataset.dataUrl||'';
+    const fileName=button.dataset.fileName||'download';
+    if(!dataUrl){alert('ダウンロードできるファイルがありません。');return;}
+    try{
+      const parts=dataUrl.split(',');
+      const mime=((parts[0].match(/^data:([^;]+)/)||[])[1])||'application/octet-stream';
+      const binary=atob(parts.slice(1).join(','));
+      const bytes=new Uint8Array(binary.length);
+      for(let i=0;i<binary.length;i++) bytes[i]=binary.charCodeAt(i);
+      const blob=new Blob([bytes],{type:mime});
+      const url=URL.createObjectURL(blob);
+      const a=document.createElement('a');
+      a.href=url;
+      a.download=fileName;
+      a.style.display='none';
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      setTimeout(()=>URL.revokeObjectURL(url),30000);
+    }catch(e){
+      // iOS Safari向けフォールバック
+      window.open(dataUrl,'_blank');
+    }
+  }
+
+  document.getElementById('applicationDownload').addEventListener('click',function(){
+    downloadStoredFile(this);
+  });
+  document.getElementById('rosterDownload').addEventListener('click',function(){
+    downloadStoredFile(this);
+  });
+
   function valid(f){
     if(!f)return 'ファイルを選択してください。';
     const ext=(f.name.split('.').pop()||'').toLowerCase();
