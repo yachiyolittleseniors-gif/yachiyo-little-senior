@@ -2747,6 +2747,45 @@ window.__loadYachiyoPhotos = function(){
 }
 </style>
 
+
+<style id="quick-icon-balance-fix">
+/* HOMEクイックメニュー6枚専用：アイコンの視覚サイズと位置を統一 */
+.quick > a > div > .ico{
+  width:36px!important;
+  height:36px!important;
+  min-width:36px!important;
+  max-width:36px!important;
+  margin:0 auto 8px!important;
+  display:flex!important;
+  align-items:center!important;
+  justify-content:center!important;
+  line-height:1!important;
+  box-sizing:border-box!important;
+  color:var(--gold2)!important;
+}
+
+/* 文字記号は形ごとの差だけ微調整 */
+.quick > a[href="team.html"] .ico{font-size:31px!important}
+.quick > a[href="./players.html"] .player-pawn-gold{font-size:34px!important}
+.quick > a[href="./results.html"] .ico{font-size:31px!important}
+.quick > a[href="./schedule.html"] .ico{font-size:31px!important}
+.quick > a[href="./join.html"] .ico{font-size:31px!important}
+
+/* Instagramも同じ36px枠の中に収める */
+.quick .instagram-official-icon{
+  width:36px!important;
+  height:36px!important;
+  min-width:36px!important;
+  max-width:36px!important;
+  margin:0 auto 8px!important;
+}
+.quick .instagram-official-icon svg{
+  width:30px!important;
+  height:30px!important;
+  display:block!important;
+}
+</style>
+
 </head>
 <body>
 <header class="header">
