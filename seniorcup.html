@@ -78,6 +78,54 @@ h1{font-family:serif;font-weight:600;font-size:clamp(34px,6vw,58px);letter-spaci
   .reply-address a{font-size:15px}
 }
 
+
+/* ===== 協力企業紹介 ===== */
+.partner-section{margin-top:38px}
+.partner-lead{margin:-5px 0 18px;color:#66717e;font-size:13px;line-height:1.8}
+.partner-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:16px}
+.partner-card{background:#fff;border:1px solid #ddd9cf;border-top:3px solid var(--gold);padding:22px;box-shadow:0 8px 24px rgba(7,20,38,.05)}
+.partner-card h3{margin:0 0 10px;color:var(--navy);font-family:serif;font-size:21px}
+.partner-card p{margin:0;color:#56616e;font-size:14px;line-height:1.9;white-space:pre-wrap}
+.partner-editor-list{display:grid;gap:12px}
+.partner-editor-row{background:#fff;border:1px solid #d8d4cb;padding:14px}
+.partner-editor-row input,.partner-editor-row textarea{display:block;width:100%;margin-top:7px;padding:11px;border:1px solid #cfd5dc;border-radius:6px;font:inherit;font-size:16px}
+.partner-editor-row textarea{min-height:110px;resize:vertical}
+.partner-editor-actions{display:flex;gap:8px;justify-content:flex-end;margin-top:10px}
+.partner-editor-actions button{width:auto!important;min-width:90px;padding:0 14px}
+.partner-add{margin-top:12px!important;width:auto!important;padding:0 18px}
+@media(max-width:700px){.partner-grid{grid-template-columns:1fr}.partner-card{padding:19px 17px}}
+
+/* ===== 全ページ共通仕様に合わせた管理ボタン ===== */
+#cupAdminBtn{
+  display:none;
+  position:fixed !important;
+  right:max(12px,env(safe-area-inset-right)) !important;
+  left:auto !important;
+  top:auto !important;
+  bottom:calc(12px + env(safe-area-inset-bottom)) !important;
+  z-index:10001 !important;
+  margin:0 !important;
+  transform:none !important;
+  border:1px solid rgba(199,154,59,.78) !important;
+  background:var(--navy) !important;
+  color:var(--gold2) !important;
+  border-radius:999px !important;
+  padding:10px 14px !important;
+  font-size:12px !important;
+  font-weight:800 !important;
+  box-shadow:0 8px 22px rgba(0,0,0,.24) !important;
+  cursor:pointer;
+  -webkit-tap-highlight-color:transparent;
+  touch-action:manipulation;
+}
+#cupAdminBtn.is-visible{display:block!important}
+@media(max-width:600px){
+  #cupAdminBtn{
+    right:max(10px,env(safe-area-inset-right)) !important;
+    bottom:calc(10px + env(safe-area-inset-bottom)) !important;
+    padding:9px 12px !important;font-size:11px !important;
+  }
+}
 </style>
 </head>
 <body>
@@ -127,7 +175,21 @@ h1{font-family:serif;font-weight:600;font-size:clamp(34px,6vw,58px);letter-spaci
     <a href="mailto:team.yachiyo.8740@gmail.com">team.yachiyo.8740@gmail.com</a>
   </section>
 
+
+  <section class="partner-section" aria-labelledby="partnerTitle">
+    <h2 class="section-title" id="partnerTitle">八千代リトルシニア杯協力企業紹介</h2>
+    <p class="partner-lead">（当チームの活動にご賛同・ご協力をいただいている企業）</p>
+    <div class="partner-grid" id="partnerGrid"></div>
+  </section>
+
   <div class="admin-area" id="cupAdminArea">
+
+    <div class="admin-box" style="margin-bottom:14px">
+      <label>協力企業紹介を編集</label>
+      <div class="partner-editor-list" id="partnerEditorList"></div>
+      <button type="button" class="partner-add" id="partnerAddBtn">企業を追加</button>
+      <button type="button" id="partnerSaveBtn">協力企業紹介を保存</button>
+    </div>
     <div class="admin-box" style="margin-bottom:14px">
       <label for="guidelineEditor">大会要項を編集</label>
       <textarea id="guidelineEditor" rows="7" style="width:100%;padding:12px;border:1px solid #cfd5dc;border-radius:6px;font:inherit;font-size:16px;resize:vertical" placeholder="大会要項の詳細を入力してください。"></textarea>
@@ -178,6 +240,65 @@ h1{font-family:serif;font-weight:600;font-size:clamp(34px,6vw,58px);letter-spaci
     application:{section:'downloads-application',input:'applicationUpload',name:'applicationFileName',link:'applicationDownload'},
     roster:{section:'downloads-roster',input:'rosterUpload',name:'rosterFileName',link:'rosterDownload'}
   };
+
+
+  const DEFAULT_PARTNERS=[
+    {name:'スポーツCV',description:'鎌ヶ谷市の野球道具専門店。関東最大級の品揃え。当チームのチーム道具、指導者、選手のアパレル関係も含めて、すべてスポーツCVで購入しています。ネット注文でグランドに配達も可能。'},
+    {name:'ZEROFITNESS',description:'八千代市大和田新田にあるスポーツジム。24時間365日トレーニング可能。各種トレーニング器具とランニングマシン、エアロバイク複数台完備。酸素カプセルもあり体のメンテナンスも可能。'},
+    {name:'市原整骨院',description:'佐倉市の京成志津駅北口の目の前にある整骨院。小学生、中学生のみならず強豪校の高校球児も多く通っています。電気治療、マッサージに加えてテーピングで発達段階の筋肉、関節可動域の拡大をサポートしてくれます。院長先生の野球指導歴が長いので動作改善などのアドバイスもいただけます。'},
+    {name:'合同会社ファミリー',description:'佐倉市上座にある訪問介護の会社。職員に当チームのOB父母が多く在籍しており、地域に根差した良心的な会社です。介護職員募集中。'}
+  ];
+  let partners=DEFAULT_PARTNERS.map(x=>({...x}));
+  const partnerGrid=document.getElementById('partnerGrid');
+  const partnerEditorList=document.getElementById('partnerEditorList');
+  const partnerSaveBtn=document.getElementById('partnerSaveBtn');
+  const partnerAddBtn=document.getElementById('partnerAddBtn');
+  const esc=v=>String(v??'').replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));
+
+  function renderPartners(){
+    partnerGrid.innerHTML=partners.map(p=>'<article class="partner-card"><h3>'+esc(p.name)+'</h3><p>'+esc(p.description)+'</p></article>').join('');
+  }
+  function renderPartnerEditor(){
+    partnerEditorList.innerHTML=partners.map((p,i)=>'<div class="partner-editor-row" data-index="'+i+'"><label>企業名<input class="partner-name" value="'+esc(p.name)+'"></label><label>紹介文<textarea class="partner-description">'+esc(p.description)+'</textarea></label><div class="partner-editor-actions"><button type="button" class="partner-delete" data-index="'+i+'">削除</button></div></div>').join('');
+  }
+  function collectPartnerEditor(){
+    return [...partnerEditorList.querySelectorAll('.partner-editor-row')].map(row=>({
+      name:row.querySelector('.partner-name').value.trim(),
+      description:row.querySelector('.partner-description').value.trim()
+    })).filter(x=>x.name||x.description);
+  }
+  async function loadPartners(){
+    try{
+      const r=await fetch(API+'?section=seniorcup-partners',{cache:'no-store'});
+      if(r.ok){
+        const j=await r.json();
+        if(j.data&&Array.isArray(j.data.partners)) partners=j.data.partners.map(x=>({name:String(x.name||''),description:String(x.description||'')}));
+      }
+    }catch(e){}
+    renderPartners();renderPartnerEditor();
+  }
+  async function savePartners(){
+    const next=collectPartnerEditor();
+    if(!next.length){alert('協力企業を1社以上入力してください。');return}
+    if(next.some(x=>!x.name)){alert('企業名を入力してください。');return}
+    const pw=sessionStorage.getItem('yachiyoAdminPassword')||'';
+    if(!pw){alert('管理者パスワードを入力し直してください。');return}
+    const old=partnerSaveBtn.textContent;partnerSaveBtn.disabled=true;partnerSaveBtn.textContent='保存中...';
+    try{
+      const r=await fetch(API+'?section=seniorcup-partners',{method:'POST',headers:{'content-type':'application/json','x-admin-password':pw},body:JSON.stringify({data:{partners:next,updatedAt:new Date().toISOString()}})});
+      if(r.status===401)throw new Error('PASSWORD');if(!r.ok)throw new Error('SAVE');
+      partners=next;renderPartners();renderPartnerEditor();alert('協力企業紹介を保存しました。');
+    }catch(e){alert(e.message==='PASSWORD'?'管理者パスワードが違います。':'協力企業紹介を保存できませんでした。')}
+    finally{partnerSaveBtn.disabled=false;partnerSaveBtn.textContent=old}
+  }
+  partnerAddBtn.addEventListener('click',()=>{partners=collectPartnerEditor();partners.push({name:'',description:''});renderPartnerEditor()});
+  partnerEditorList.addEventListener('click',e=>{
+    const b=e.target.closest('.partner-delete');if(!b)return;
+    const current=collectPartnerEditor(),i=Number(b.dataset.index),name=current[i]?.name||'この企業';
+    if(!confirm(name+'を削除しますか？'))return;
+    current.splice(i,1);partners=current;renderPartnerEditor();
+  });
+  partnerSaveBtn.addEventListener('click',savePartners);
 
   const guidelineText=document.getElementById('guidelineText');
   const guidelineEditor=document.getElementById('guidelineEditor');
@@ -268,16 +389,36 @@ h1{font-family:serif;font-weight:600;font-size:clamp(34px,6vw,58px);letter-spaci
 
   const footer=document.querySelector('.restored-footer'),btn=document.getElementById('cupAdminBtn'),area=document.getElementById('cupAdminArea');
   sessionStorage.removeItem('yachiyoAdminMode');sessionStorage.removeItem('yachiyoAdminPassword');
-  area.classList.remove('show');btn.style.display='none';btn.textContent='管理';
+  area.classList.remove('show');btn.classList.remove('is-visible');btn.textContent='管理';
 
-  btn.addEventListener('click',()=>{
+  async function verifyAdminPassword(pw){
+    try{
+      const current=guidelineEditor.value.trim()||guidelineText.textContent.trim();
+      const r=await fetch(API+'?section=seniorcup-guideline',{
+        method:'POST',
+        headers:{'content-type':'application/json','x-admin-password':pw},
+        body:JSON.stringify({data:{text:current,updatedAt:new Date().toISOString()}})
+      });
+      return r.ok;
+    }catch(e){return false}
+  }
+
+  btn.addEventListener('click',async()=>{
     if(area.classList.contains('show')){
-      area.classList.remove('show');btn.textContent='管理';btn.style.display='none';
+      area.classList.remove('show');btn.textContent='管理';btn.classList.remove('is-visible');
       sessionStorage.removeItem('yachiyoAdminMode');sessionStorage.removeItem('yachiyoAdminPassword');return;
     }
     const pw=prompt('管理者パスワードを入力してください');if(!pw)return;
+    const old=btn.textContent;btn.disabled=true;btn.textContent='確認中...';
+    const ok=await verifyAdminPassword(pw);
+    btn.disabled=false;
+    if(!ok){
+      btn.textContent='管理';
+      sessionStorage.removeItem('yachiyoAdminMode');sessionStorage.removeItem('yachiyoAdminPassword');
+      alert('管理者パスワードが違います。');return;
+    }
     sessionStorage.setItem('yachiyoAdminPassword',pw);sessionStorage.setItem('yachiyoAdminMode','1');
-    area.classList.add('show');btn.textContent='管理終了';area.scrollIntoView({behavior:'smooth',block:'start'});
+    area.classList.add('show');btn.textContent='管理終了';btn.classList.add('is-visible');
   });
 
   if(footer){
@@ -287,11 +428,11 @@ h1{font-family:serif;font-weight:600;font-size:clamp(34px,6vw,58px);letter-spaci
       const r=footer.getBoundingClientRect();
       if(r.right-e.clientX>130||r.bottom-e.clientY>130){count=0;return}
       count++;clearTimeout(timer);timer=setTimeout(()=>count=0,1500);
-      if(count>=3){count=0;clearTimeout(timer);btn.style.display='block'}
+      if(count>=3){count=0;clearTimeout(timer);btn.textContent='管理';btn.classList.add('is-visible')}
     },{passive:true});
   }
 
-  load('application');load('roster');loadGuideline();
+  load('application');load('roster');loadGuideline();loadPartners();
 })();
 </script>
 <script>
