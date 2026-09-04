@@ -1544,6 +1544,44 @@ body.admin-mode #adminModeToggle.admin-toggle{
 
 </style>
 
+
+<style id="calendar-public-detail-fix">
+.calendar-detail{
+  display:none;position:fixed;inset:0;z-index:10060;
+  padding:16px;background:rgba(3,12,24,.72);
+  align-items:center;justify-content:center
+}
+.calendar-detail.show{display:flex}
+.calendar-detail-box{
+  position:relative;width:min(520px,100%);max-height:88vh;overflow:auto;
+  background:#fff;border-top:4px solid #c79a3b;border-radius:10px;
+  padding:24px 20px;box-shadow:0 20px 60px rgba(0,0,0,.28)
+}
+.calendar-detail-close{
+  position:absolute;right:12px;top:12px;width:40px;height:40px;
+  border:0;border-radius:50%;background:#f0f2f5;font-size:25px;cursor:pointer
+}
+.calendar-detail-date{
+  color:#9b7623;font-size:12px;font-weight:800;letter-spacing:.08em;margin:0 44px 8px 0
+}
+.calendar-detail-title{
+  margin:0 44px 18px 0;color:#071426;font-size:24px;line-height:1.45
+}
+.calendar-detail-row{
+  display:grid;grid-template-columns:70px 1fr;gap:12px;
+  padding:12px 0;border-top:1px solid #e4e2dd
+}
+.calendar-detail-row b{color:#8f6918;font-size:12px}
+.calendar-detail-row span{color:#425064;font-size:14px;line-height:1.75;white-space:pre-wrap}
+.calendar-detail-row[hidden]{display:none}
+@media(max-width:600px){
+  .calendar-detail{padding:10px}
+  .calendar-detail-box{padding:22px 16px}
+  .calendar-detail-title{font-size:21px}
+  .calendar-detail-row{grid-template-columns:58px 1fr;gap:10px}
+}
+</style>
+
 </head>
 <body>
 <header class="header">
@@ -1645,6 +1683,18 @@ body.admin-mode #adminModeToggle.admin-toggle{
 
 </div>
 </section>
+
+<div class="calendar-detail" id="calendarDetail" aria-hidden="true">
+  <div class="calendar-detail-box" role="dialog" aria-modal="true" aria-labelledby="calendarDetailTitle">
+    <button type="button" class="calendar-detail-close" id="calendarDetailClose" aria-label="閉じる">×</button>
+    <div class="calendar-detail-date" id="calendarDetailDate"></div>
+    <h2 class="calendar-detail-title" id="calendarDetailTitle"></h2>
+    <div class="calendar-detail-row" id="calendarDetailTimeRow"><b>時間</b><span id="calendarDetailTime"></span></div>
+    <div class="calendar-detail-row" id="calendarDetailPlaceRow"><b>場所</b><span id="calendarDetailPlace"></span></div>
+    <div class="calendar-detail-row" id="calendarDetailMemoRow"><b>詳細</b><span id="calendarDetailMemo"></span></div>
+  </div>
+</div>
+
 <div aria-hidden="true" class="calendar-editor" id="calendarEditor">
 <div class="calendar-editor-box">
 <button aria-label="閉じる" class="calendar-editor-close" id="calendarEditorClose" type="button">×</button>
@@ -1766,9 +1816,43 @@ function renderCalendar(){
   }
   grid.innerHTML=html;
   grid.querySelectorAll('[data-date]').forEach(b=>b.addEventListener('click',()=>{
-    if(document.body.classList.contains('admin-mode')) openEditor(b.dataset.date);
+    const date=b.dataset.date;
+    if(document.body.classList.contains('admin-mode')){
+      openEditor(date);
+    }else if(eventFor(date)){
+      openPublicDetail(date);
+    }
   }));
 }
+function openPublicDetail(date){
+  const ev=eventFor(date);
+  if(!ev) return;
+  const detail=document.getElementById('calendarDetail');
+  document.getElementById('calendarDetailDate').textContent=date.replace(/-/g,'/');
+  document.getElementById('calendarDetailTitle').textContent=ev.title||'予定';
+  const fields=[
+    ['Time','time'],['Place','place'],['Memo','memo']
+  ];
+  fields.forEach(([id,key])=>{
+    const row=document.getElementById('calendarDetail'+id+'Row');
+    const val=document.getElementById('calendarDetail'+id);
+    const text=String(ev[key]||'').trim();
+    val.textContent=text;
+    row.hidden=!text;
+  });
+  detail.classList.add('show');
+  detail.setAttribute('aria-hidden','false');
+}
+function closePublicDetail(){
+  const detail=document.getElementById('calendarDetail');
+  detail.classList.remove('show');
+  detail.setAttribute('aria-hidden','true');
+}
+document.getElementById('calendarDetailClose').addEventListener('click',closePublicDetail);
+document.getElementById('calendarDetail').addEventListener('click',e=>{
+  if(e.target.id==='calendarDetail') closePublicDetail();
+});
+
 function openEditor(date){
   selectedDate=date;
   const ev=eventFor(date)||{};
