@@ -21,16 +21,38 @@ a{text-decoration:none;color:inherit}
 h1{font-family:serif;font-weight:500;letter-spacing:.08em;margin:8px 0 6px;font-size:34px}
 .crumb{font-size:11px;color:#c9d0d9}
 .wrap{max-width:900px;margin:auto;padding:28px 16px 60px}
-.lead{background:#fff;border:1px solid #ddd9d0;padding:17px 18px;line-height:1.8;font-size:13px;margin-bottom:18px}
-.grid{display:grid;grid-template-columns:1fr 1fr;gap:16px}
-.card{background:#fff;border:1px solid #d7dbe0;border-top:4px solid var(--gold);padding:24px 20px;box-shadow:0 5px 20px rgba(0,0,0,.04)}
-.card h2{font-family:serif;margin:0 0 8px;font-size:24px}
-.card p{font-size:13px;line-height:1.7;color:#68727e;min-height:66px}
-.btn{display:block;text-align:center;background:var(--navy);color:var(--gold2);border:1px solid var(--gold);padding:14px 16px;border-radius:7px;font-weight:800;margin-top:16px}
-.btn.gold{background:var(--gold);color:#fff}.btn.densuke-btn{background:var(--gold);color:#fff}.btn.gold.disabled{background:#b8b8b8;border-color:#a9a9a9;color:#f3f3f3;pointer-events:none;cursor:not-allowed}
-.note{font-size:11px;color:#7b8490;margin-top:9px}
+.lead{display:flex;align-items:center;gap:14px;background:#fff;border:1px solid #ddd9d0;border-left:4px solid var(--gold);padding:16px 18px;line-height:1.75;font-size:13px;margin-bottom:20px;box-shadow:0 5px 18px rgba(7,20,38,.04)}
+.lead strong{flex:0 0 auto;color:var(--navy);font-family:serif;font-size:17px}
+.lead span{color:#69737f}
+.grid{display:grid;grid-template-columns:1fr 1fr;gap:18px}
+.card{position:relative;overflow:hidden;background:#fff;border:1px solid #d8dce1;border-radius:12px;padding:26px 22px 22px;box-shadow:0 10px 28px rgba(7,20,38,.06)}
+.card::before{content:"";position:absolute;left:0;right:0;top:0;height:4px;background:linear-gradient(90deg,var(--gold),var(--gold2))}
+.card-kicker{font-size:10px;letter-spacing:.18em;color:#a27927;font-weight:800;margin-bottom:9px}
+.card h2{font-family:serif;margin:0 0 10px;font-size:25px;color:var(--navy)}
+.card p{font-size:13px;line-height:1.8;color:#69737f;min-height:70px;margin:0}
+.attendance-card{background:linear-gradient(180deg,#fff 0%,#fbfbfa 100%)}
+.densuke-card{background:linear-gradient(180deg,#fffdfa 0%,#fbf7ed 100%);border-color:#d8c79f}
+.densuke-card .card-kicker{color:var(--gold)}
+.btn{display:block;text-align:center;background:var(--navy);color:var(--gold2);border:1px solid var(--gold);padding:14px 16px;border-radius:8px;font-weight:800;margin-top:18px;transition:.18s ease}
+.btn:active{transform:translateY(1px)}
+.btn.gold{background:var(--gold);color:#fff}.btn.densuke-btn{background:var(--gold);color:#fff;border-color:var(--gold)}
+.btn.gold.disabled{background:#e3e3e0;border-color:#d3d3cf;color:#a2a6aa;pointer-events:none;cursor:not-allowed}
+.note{font-size:11px;color:#7b8490;margin-top:10px}
+.attendance-note{color:#9298a0}
 .footer{background:var(--navy);color:#9aa5b1;text-align:center;padding:28px 15px;font-size:11px}
-@media(max-width:650px){.grid{grid-template-columns:1fr}.card p{min-height:0}h1{font-size:29px}}
+@media(max-width:650px){.grid{grid-template-columns:1fr;gap:14px}.card p{min-height:0}.lead{display:block}.lead strong{display:block;margin-bottom:5px}h1{font-size:29px}.card{padding:24px 19px 20px}.card h2{font-size:24px}}
+
+.densuke-subtitle{
+  font-size:14px;
+  font-family:inherit;
+  font-weight:700;
+  letter-spacing:0;
+  white-space:nowrap;
+}
+@media(max-width:380px){
+  .densuke-subtitle{font-size:13px}
+}
+
 </style>
 <script>
 const BOARD_VIEW_PASSWORD='yachiyo20260800';
@@ -66,26 +88,25 @@ const BOARD_VIEW_PASSWORD='yachiyo20260800';
 </section>
 
 <main class="wrap">
-  <div class="lead">チーム内の保護者出欠確認はこちらから行えます。伝助は移行期間中のみ旧画面確認用として残しています。伝助を削除した後も、保護者出欠確認はそのまま利用できます。</div>
+  <div class="lead"><strong>保護者出欠確認</strong><span>切り替え前は「伝助」、切り替え完了後はサイト内の「保護者出欠確認」をご利用ください。</span></div>
 
   <div class="grid">
-    <section class="card">
-      <div class="eyebrow">ATTENDANCE</div>
+    <section class="card attendance-card">
+      <div class="card-kicker">NEW ATTENDANCE</div>
       <h2>保護者出欠確認</h2>
-      <p>八千代リトルシニアのサイト内で、各日程の「○・△・×」を入力できます。日程ごとの人数も自動集計されます。</p>
+      <p>サイト内で各日程の「○・△・×」を入力し、出欠状況を確認できます。</p>
       <a id="attendanceOpenBtn" class="btn gold disabled" data-href="./attendance.html" aria-disabled="true" tabindex="-1">保護者出欠確認を開く</a>
-      <div class="note">初回移行後のデータはサイト側に保存され、以後は伝助とは独立して運用されます。</div>
+      <div class="note attendance-note">切り替え完了後に利用できます。</div>
     </section>
 
-    <section class="card" id="densukeLegacyCard">
-      <div class="eyebrow">LEGACY</div>
-      <h2>伝助（移行期間中）</h2>
-      <p>これまで使用していた伝助を、移行期間中の確認用として残しています。将来この伝助を削除しても、新しい保護者出欠確認のデータには影響しません。</p>
+    <section class="card densuke-card" id="densukeLegacyCard">
+      <div class="card-kicker">CURRENT ATTENDANCE</div>
+      <h2>伝助 <span class="densuke-subtitle">（保護者出席確認サイト）</span></h2>
+      <p>現在使用している出欠確認ページです。新しい保護者出欠確認への切り替えが完了するまでは、こちらをご利用ください。</p>
       <div id="densukeMigrationBlock">
-        <p class="attendance-transfer-note">伝助に入力した出欠データは保護者出欠確認に反映されます。</p>
         <a class="btn densuke-btn" href="https://densuke.biz/list?cd=ZhxJNW9dPNGVtm7c" target="_blank" rel="noopener noreferrer">伝助を開く</a>
       </div>
-      <div class="note">旧伝助は外部サイトです。削除後はこのボタンだけ不要になります。</div>
+      <div class="note">伝助は外部サイトです。</div>
     </section>
   </div>
 </main>
