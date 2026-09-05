@@ -2630,6 +2630,7 @@ function openProtectedArea(type){
 (function(){
  const API='/.netlify/functions/site-data?section=staff';
  const defaults=[
+  {role:'事務局長',name:'櫻井 道徳'},
   {role:'監督',name:'早坂 徹'},
   {role:'ヘッドコーチ',name:'平田 祥之'},
   {role:'コーチ',name:'河野 剛'},
@@ -2649,11 +2650,12 @@ function openProtectedArea(type){
  const pub=document.getElementById('staffPublic'), editor=document.getElementById('staffEditor');
  const esc=s=>String(s??'').replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));
  function render(){
+   const directors=staff.filter(x=>x.role==='事務局長');
    const managers=staff.filter(x=>x.role==='監督');
    const heads=staff.filter(x=>x.role==='ヘッドコーチ');
    const coaches=staff.filter(x=>x.role==='コーチ');
    const temporary=staff.filter(x=>x.role==='臨時コーチ');
-   const others=staff.filter(x=>!['監督','ヘッドコーチ','コーチ','臨時コーチ'].includes(x.role));
+   const others=staff.filter(x=>!['事務局長','監督','ヘッドコーチ','コーチ','臨時コーチ'].includes(x.role));
    const single=x=>{
       const m=String(x.name||'').match(/^(.+?)（(.+?)）$/);
       const nameHtml=m
@@ -2661,7 +2663,7 @@ function openProtectedArea(type){
         : `<span class="staff-main-name">${esc(x.name)}</span>`;
       return `<div class="staff-feature-row"><div class="staff-feature-role">${esc(x.role)}</div><div class="staff-feature-name">${nameHtml}</div></div>`;
     };
-   let html=[...managers,...heads].map(single).join('');
+   let html=[...directors,...managers,...heads].map(single).join('');
    if(coaches.length){
      html+=`<div class="staff-coach-group"><div class="staff-coach-title"><span>コーチ</span><b>${coaches.length}名</b></div><div class="staff-coach-grid">${coaches.map(x=>`<div class="staff-coach-name">${esc(x.name)}</div>`).join('')}</div></div>`;
    }
@@ -2685,6 +2687,9 @@ function openProtectedArea(type){
     incoming[2]?.role==='コーチ' && incoming[2]?.name==='河野 剛' &&
     incoming[3]?.role==='学生コーチ' && incoming[3]?.name==='学生コーチ';
   const groupedCoach = incoming.some(x=>x.role==='コーチ' && x.name.includes('村山 清隆') && x.name.includes('齋川 英司'));
+  if(!incoming.some(x=>x.role==='事務局長')){
+    incoming.unshift({role:'事務局長',name:'櫻井 道徳'});
+  }
   staff = (legacyThree || legacyFour || groupedCoach) ? defaults.slice() : incoming;
 }}}catch(e){}
    render();
