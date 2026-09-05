@@ -284,7 +284,7 @@ textarea[name="guideline"]{
 <style id="footer-unified-final">
 .footer-privacy{margin-top:20px;text-align:center;color:#8997a7;font-size:12px;font-weight:700}
 .footer-privacy a{color:inherit!important;text-decoration:none}
-.restored-footer-copy{margin-top:18px;padding-top:15px;border-top:1px solid rgba(255,255,255,.12);text-align:center;color:#9eabb9;font-size:11px;letter-spacing:.05em}
+.restored-footer-copy{margin:0;padding:0;border-top:0;text-align:center;color:#9eabb9;font-size:11px;letter-spacing:.05em}
 @media(max-width:700px){
   .restored-footer{padding:20px 12px 16px!important}
   .restored-footer-nav{display:grid!important;grid-template-columns:repeat(2,minmax(0,1fr))!important;grid-auto-flow:row!important}
@@ -345,9 +345,9 @@ textarea[name="guideline"]{
 <a class="download-btn is-empty" href="#" id="rosterDownload">ダウンロード</a>
 </section>
 </div>
-<section aria-label="返信用アドレス" class="reply-address">
-<p class="reply-address-title">【八千代リトルシニア杯 申込み返信用アドレス】</p>
-<a href="mailto:team.yachiyo.8740@gmail.com">team.yachiyo.8740@gmail.com</a>
+<section aria-label="返信用アドレス" class="reply-address" id="cupReplyAddress">
+<p class="reply-address-title" id="cupReplyTitle">【八千代リトルシニア杯 申込み返信用アドレス】</p>
+<a href="mailto:team.yachiyo.8740@gmail.com" id="cupReplyLink">team.yachiyo.8740@gmail.com</a>
 </section>
 <section aria-labelledby="partnerTitle" class="partner-section">
 <div class="partner-heading" id="partnerTitle">
@@ -374,6 +374,10 @@ textarea[name="guideline"]{
 <button data-slot="roster" type="button">選手名簿を保存</button>
 </div>
 </div><p class="admin-note">PDF・Excel（.pdf / .xls / .xlsx）に対応。1ファイル最大5MBです。</p><div class="admin-box" style="margin-bottom:14px">
+<label>申込み返信先の表示</label>
+<p class="admin-note" id="replyModeStatus">現在：大会専用メールアドレス</p>
+<button id="replyModeBtn" type="button">お問い合わせに変更</button>
+</div><div class="admin-box" style="margin-bottom:14px">
 <label>協力企業紹介を編集</label>
 <div class="partner-editor-list" id="partnerEditorList"></div>
 <button class="partner-add" id="partnerAddBtn" type="button">企業を追加</button>
@@ -382,22 +386,6 @@ textarea[name="guideline"]{
 </main>
 <footer class="restored-footer">
 <div class="restored-footer-inner">
-<nav aria-label="フッターナビゲーション" class="restored-footer-nav">
-<a href="./index.html">HOME</a>
-<a href="./team.html">チーム紹介</a>
-<a href="./players.html">選手紹介</a>
-<a href="./results.html">試合結果</a>
-<a href="./schedule.html">スケジュール</a>
-<a href="./join.html">入団案内</a>
-<a href="./contact.html">お問い合わせ</a>
-<a href="./links.html">リンク集</a>
-<a href="https://www.instagram.com/yachiyo_little_senior?igsi=MTl4N3dneG9uY2ZxcA==" rel="noopener noreferrer" target="_blank">Instagram</a>
-<a href="https://www.facebook.com/share/1DakdBtEv6/?mibextid=wwXIfr" rel="noopener noreferrer" target="_blank">Facebook</a>
-<a href="./rules.html">チーム規約 🔒</a>
-<a href="./board.html">チーム内案内板 🔒</a>
-</nav>
-<div class="ground-address"><a href="https://www.google.com/maps/search/?api=1&amp;query=千葉県八千代市島田台775" rel="noopener noreferrer" target="_blank" style="color:inherit;text-decoration:none;">グラウンド案内：千葉県八千代市島田台７７５</a></div>
-<div class="footer-privacy"><a href="./privacy.html">プライバシーポリシー</a></div>
 <div class="restored-footer-copy">© YACHIYO LITTLE SENIOR. All Rights Reserved.</div>
 </div>
 </footer>
@@ -409,6 +397,56 @@ textarea[name="guideline"]{
     application:{section:'downloads-application',input:'applicationUpload',name:'applicationFileName',link:'applicationDownload'},
     roster:{section:'downloads-roster',input:'rosterUpload',name:'rosterFileName',link:'rosterDownload'}
   };
+
+  const replyAddress=document.getElementById('cupReplyAddress');
+  const replyTitle=document.getElementById('cupReplyTitle');
+  const replyLink=document.getElementById('cupReplyLink');
+  const replyModeBtn=document.getElementById('replyModeBtn');
+  const replyModeStatus=document.getElementById('replyModeStatus');
+  let replyMode='email';
+
+  function renderReplyMode(){
+    const isContact=replyMode==='contact';
+    replyAddress.setAttribute('aria-label',isContact?'お問い合わせ':'返信用アドレス');
+    replyTitle.hidden=isContact;
+    replyLink.href=isContact?'./contact.html':'mailto:team.yachiyo.8740@gmail.com';
+    replyLink.textContent=isContact?'お問い合わせ':'team.yachiyo.8740@gmail.com';
+    replyModeStatus.textContent=isContact?'現在：通常のお問い合わせ窓口':'現在：大会専用メールアドレス';
+    replyModeBtn.textContent=isContact?'専用アドレス表示に戻す':'お問い合わせに変更';
+  }
+
+  async function loadReplyMode(){
+    try{
+      const r=await fetch(API+'?section=seniorcup-reply-mode',{cache:'no-store'});
+      if(r.ok){
+        const j=await r.json();
+        if(j.data&&j.data.mode==='contact')replyMode='contact';
+      }
+    }catch(e){}
+    renderReplyMode();
+  }
+
+  async function saveReplyMode(){
+    const pw=sessionStorage.getItem('yachiyoAdminPassword')||'';
+    if(!pw){alert('管理者パスワードを入力し直してください。');return}
+    const next=replyMode==='contact'?'email':'contact';
+    const message=next==='contact'?'表示を通常の「お問い合わせ」に変更しますか？':'大会専用メールアドレスの表示に戻しますか？';
+    if(!confirm(message))return;
+    const old=replyModeBtn.textContent;replyModeBtn.disabled=true;replyModeBtn.textContent='保存中...';
+    try{
+      const r=await fetch(API+'?section=seniorcup-reply-mode',{method:'POST',headers:{'content-type':'application/json','x-admin-password':pw},body:JSON.stringify({data:{mode:next,updatedAt:new Date().toISOString()}})});
+      if(r.status===401)throw new Error('PASSWORD');
+      if(!r.ok)throw new Error('SAVE');
+      replyMode=next;renderReplyMode();alert('表示を変更しました。');
+    }catch(e){
+      alert(e.message==='PASSWORD'?'管理者パスワードが違います。':'表示を変更できませんでした。');
+    }finally{
+      replyModeBtn.disabled=false;
+      if(replyModeBtn.textContent==='保存中...')replyModeBtn.textContent=old;
+    }
+  }
+
+  replyModeBtn.addEventListener('click',saveReplyMode);
 
 
   const DEFAULT_PARTNERS=[
@@ -616,7 +654,7 @@ textarea[name="guideline"]{
     },{passive:true});
   }
 
-  load('application');load('roster');loadGuideline();loadPartners();
+  load('application');load('roster');loadGuideline();loadPartners();loadReplyMode();
 })();
 </script>
 <script>
@@ -628,5 +666,3 @@ document.addEventListener('DOMContentLoaded',function(){
 </script>
 </body>
 </html>
-
-
