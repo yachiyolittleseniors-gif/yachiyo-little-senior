@@ -16,6 +16,7 @@ const allowed = new Set([
   "seniorcup-settings",
   "seniorcup-guideline",
   "graduate-paths",
+  "links",
   "access-settings"
 ]);
 
