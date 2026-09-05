@@ -3,6 +3,7 @@ import { getStore } from "@netlify/blobs";
 const STORE = "yachiyo-public-site";
 const KEY = "content/attendance.json";
 const CONFIG_KEY = "content/attendance-config-v2.json";
+const ACCESS_KEY = "content/access-settings.json";
 
 const DENSUKE_URL =
   "https://densuke.biz/list?cd=ZhxJNW9dPNGVtm7c";
@@ -10,32 +11,47 @@ const DENSUKE_URL =
 const DENSUKE_MOBILE_URL =
   "https://densuke.biz/m/list2?cd=ZhxJNW9dPNGVtm7c";
 
-/*
-  伝助から名前を拾う際の補助リスト。
-  同姓同名がいる場合も人数を維持する。
-*/
-const KNOWN_NAMES = [
-  "吉岡父","杉山父","山澤父","山口明父","南父","山口勇父",
-  "安本父","浅野父","佐藤父","谷川父","向山父","亀井父",
-  "松田惺父","長島父","荒木父","加藤父","石山父","大谷部父",
-  "草野父","古賀父","齋藤父","佐藤父","篠崎父","竹内父",
-  "永井父","本村父","森田父","矢羽田父","赤羽父","秋葉父",
-  "石川晃父","井上遥父","井上竜父","宇山父","江見父",
-  "加賀原父","粕谷父","亀井碧父","川村父","小池父","高祖父",
-  "小堀父","紺野父","内藤父","中濱父","長峰父","松井父",
-  "溝上父","村山父","本吉父","山澤奏父","山本諒父","山本要父",
+// 回答者名は公開ソースに保持せず、移行時に伝助から取得する。
+const KNOWN_NAMES = [];
 
-  "吉岡母","杉山母","山澤母","舘母","山口明母","南母",
-  "山口勇母","安本母","谷川母","亀井母","向山母","浅野母",
-  "松田母","長島母","荒木母","石川母","石山母","大谷部母",
-  "加藤母","草野母","古賀母","齋藤母","佐藤母","篠崎母",
-  "椙浦母","高橋母","竹内母","筒井母","永井母","藤澤母",
-  "本村母","森田母","矢羽田母","赤羽母","秋葉母","石川晃母",
-  "井上遥母","井上竜母","宇山母","江見母","加賀原母","粕谷母",
-  "亀井碧母","川村母","小池母","高祖母","小堀母","紺野母",
-  "内藤母","中濱母","長峰母","松井母","松浦母","溝上母",
-  "村山母","本吉母","山澤奏母","山本要母","山本諒母"
-];
+function bytesToHex(bytes) {
+  return Array.from(bytes, byte => byte.toString(16).padStart(2, "0")).join("");
+}
+
+async function hashAccessPassword(password, salt) {
+  const input = new TextEncoder().encode(`${salt}:${password}`);
+  const digest = await crypto.subtle.digest("SHA-256", input);
+  return bytesToHex(new Uint8Array(digest));
+}
+
+function safeEqual(a, b) {
+  const left = String(a || "");
+  const right = String(b || "");
+  let difference = left.length ^ right.length;
+  const length = Math.max(left.length, right.length);
+  for (let i = 0; i < length; i++) {
+    difference |= (left.charCodeAt(i) || 0) ^ (right.charCodeAt(i) || 0);
+  }
+  return difference === 0;
+}
+
+async function accessOK(request, store) {
+  const entered = String(request.headers.get("x-access-password") || "");
+  if (!entered || entered.length > 128) return false;
+
+  const saved = await store.get(ACCESS_KEY, {
+    type: "json",
+    consistency: "strong"
+  });
+
+  if (saved?.salt && saved?.hash) {
+    const enteredHash = await hashAccessPassword(entered, saved.salt);
+    return safeEqual(enteredHash, saved.hash);
+  }
+
+  const initialPassword = process.env.ACCESS_PASSWORD;
+  return Boolean(initialPassword) && safeEqual(entered, initialPassword);
+}
 
 function json(data, status = 200) {
   return new Response(
@@ -707,6 +723,10 @@ export default async request => {
       request.method ===
       "GET"
     ) {
+      if (!(await accessOK(request, store))) {
+        return json({ error: "Unauthorized" }, 401);
+      }
+
       if (
         !config
           .migrationEnded
@@ -766,6 +786,17 @@ export default async request => {
       String(
         body.action || ""
       );
+
+    const adminActions = new Set([
+      "adminPing",
+      "endDensuke",
+      "resumeDensuke",
+      "adminSave"
+    ]);
+
+    if (!adminActions.has(action) && !(await accessOK(request, store))) {
+      return json({ error: "Unauthorized" }, 401);
+    }
 
     /*
       管理者認証確認。

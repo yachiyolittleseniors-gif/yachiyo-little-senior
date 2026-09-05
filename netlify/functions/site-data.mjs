@@ -19,8 +19,6 @@ const allowed = new Set([
   "access-settings"
 ]);
 
-const LEGACY_ACCESS_PASSWORD = "yachiyo20260800";
-
 function bytesToHex(bytes) {
   return Array.from(
     bytes,
@@ -47,6 +45,24 @@ function safeEqual(a, b) {
   }
 
   return difference === 0;
+}
+
+async function accessPasswordIsValid(store, enteredPassword) {
+  const entered = String(enteredPassword || "");
+  if (!entered || entered.length > 128) return false;
+
+  const saved = await store.get("content/access-settings.json", {
+    type: "json",
+    consistency: "strong"
+  });
+
+  if (saved?.salt && saved?.hash) {
+    const enteredHash = await hashAccessPassword(entered, saved.salt);
+    return safeEqual(enteredHash, saved.hash);
+  }
+
+  const initialPassword = process.env.ACCESS_PASSWORD;
+  return Boolean(initialPassword) && safeEqual(entered, initialPassword);
 }
 
 function json(data, status = 200) {
@@ -165,36 +181,10 @@ export default async (request) => {
       section === "access-settings" &&
       body?.action === "verifyAccessPassword"
     ) {
-      const enteredPassword = String(body.password || "");
-
-      if (!enteredPassword || enteredPassword.length > 128) {
-        return json({ ok: false }, 401);
-      }
-
-      const saved = await store.get(key, {
-        type: "json",
-        consistency: "strong"
-      });
-
-      let valid = false;
-
-      if (saved?.salt && saved?.hash) {
-        const enteredHash = await hashAccessPassword(
-          enteredPassword,
-          saved.salt
-        );
-
-        valid = safeEqual(enteredHash, saved.hash);
-      } else {
-        const initialPassword =
-          process.env.ACCESS_PASSWORD ||
-          LEGACY_ACCESS_PASSWORD;
-
-        valid = safeEqual(
-          enteredPassword,
-          initialPassword
-        );
-      }
+      const valid = await accessPasswordIsValid(
+        store,
+        body.password
+      );
 
       return valid
         ? json({ ok: true })
