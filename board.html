@@ -62,20 +62,9 @@ window.boardAccessReady=(async function requireBoardPassword(){
     if(history.length>1){history.back()}else{location.replace('./index.html')}
     return;
   }
-  try{
-    const r=await fetch('/.netlify/functions/site-data?section=access-settings',{
-      method:'POST',
-      headers:{'content-type':'application/json'},
-      body:JSON.stringify({action:'verifyAccessPassword',password:p})
-    });
-    if(r.ok){
-      sessionStorage.setItem('yachiyoAttendancePass',p);
-      document.documentElement.style.visibility='';
-      return;
-    }
-  }catch(e){
-    alert('パスワードを確認できませんでした。通信状況を確認してください。');
-    location.replace('./index.html');
+  if(p==='y20260800'){
+    sessionStorage.setItem('yachiyoAttendancePass',p);
+    document.documentElement.style.visibility='';
     return;
   }
   alert('パスワードが違います。');
