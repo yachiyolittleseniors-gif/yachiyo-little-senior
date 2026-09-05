@@ -56,7 +56,7 @@ h1{font-family:serif;font-weight:500;letter-spacing:.08em;margin:8px 0 6px;font-
 </style>
 <script>
 document.documentElement.style.visibility='hidden';
-(async function requireBoardPassword(){
+window.boardAccessReady=(async function requireBoardPassword(){
   const p=prompt('パスワードを入力してください');
   if(p===null){
     if(history.length>1){history.back()}else{location.replace('./index.html')}
@@ -247,7 +247,12 @@ document.documentElement.style.visibility='hidden';
 
   async function loadSetting(){
     try{
-      const r=await fetch(API,{cache:'no-store'});
+      await window.boardAccessReady;
+      const accessPassword=sessionStorage.getItem('yachiyoAttendancePass')||'';
+      const r=await fetch(API,{
+        cache:'no-store',
+        headers:{'x-access-password':accessPassword}
+      });
       if(!r.ok) return;
       const j=await r.json();
       const ended = j?.config?.migrationEnded === true || j?.locked === false;
