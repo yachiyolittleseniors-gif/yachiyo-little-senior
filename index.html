@@ -1563,11 +1563,13 @@ img[alt*="八千代リトルシニア"]{
 }
 .seniorcup-home-kicker{color:#e2bd67;font-size:11px;font-weight:800;letter-spacing:.20em;margin-bottom:7px}
 .seniorcup-home-title{font-family:serif;font-size:clamp(24px,3vw,35px);font-weight:700;letter-spacing:.06em}
+.seniorcup-mobile-break{display:none}
 .seniorcup-home-copy{margin-top:8px;color:#e9edf2;font-size:14px;font-weight:700}
 @media(max-width:600px){
   .seniorcup-home-banner{margin:18px auto 4px;padding:0 12px}
   .seniorcup-home-link{padding:22px 18px}
-  .seniorcup-home-title{font-size:24px}
+  .seniorcup-home-title{font-size:24px;letter-spacing:.04em;white-space:normal}
+  .seniorcup-mobile-break{display:block}
   .seniorcup-home-copy{font-size:13px}
   .seniorcup-home-link:after{right:12px;font-size:62px}
 }
@@ -1660,7 +1662,8 @@ body.photo-admin-on .seniorcup-admin-control{display:block}
   .seniorcup-home-banner{margin:18px auto 4px;padding:0 12px}
   .seniorcup-home-link{padding:25px 20px;border-width:9px;border-radius:15px}
   .seniorcup-home-link:before{inset:7px;border-radius:8px}
-  .seniorcup-home-title{font-size:24px}
+  .seniorcup-home-title{font-size:24px;letter-spacing:.04em;white-space:normal}
+  .seniorcup-mobile-break{display:block}
   .seniorcup-home-copy{font-size:13px}
   .seniorcup-home-link:after{right:12px;font-size:66px}
 }
@@ -2913,7 +2916,7 @@ window.__loadYachiyoPhotos = function(){
 <section class="seniorcup-home-banner" aria-label="八千代リトルシニア杯">
   <a class='seniorcup-home-link' href='/seniorcup'>
     <div class="seniorcup-home-kicker">YACHIYO SENIOR CUP <span class="current-year"></span></div>
-    <div class="seniorcup-home-title"><span class="current-year"></span>年 八千代リトルシニア杯</div>
+    <div class="seniorcup-home-title"><span class="current-year"></span>年<br class="seniorcup-mobile-break">八千代リトルシニア杯</div>
     <div class="seniorcup-home-copy" style="color:#fff!important">大会要項・参加申し込みはこちら <span aria-hidden="true">›</span></div>
   </a>
 </section>
