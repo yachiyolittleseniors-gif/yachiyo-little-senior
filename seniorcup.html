@@ -80,6 +80,19 @@ h1{font-family:serif;font-weight:600;font-size:clamp(34px,6vw,58px);letter-spaci
   font-weight:800;
   text-decoration:underline;
 }
+.reply-address.is-contact a{
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  min-height:58px;
+  padding:14px 18px;
+  border-radius:10px;
+  background:var(--gold);
+  color:var(--navy);
+  font-weight:900;
+  text-align:center;
+  text-decoration:none;
+}
 @media(max-width:600px){
   .reply-address{padding:19px 17px}
   .reply-address a{font-size:15px}
@@ -407,12 +420,13 @@ textarea[name="guideline"]{
   let replyMode='email';
   const stripLegacyReplyMarker=value=>String(value||'').replace(/\n?\[\[YLS_REPLY_MODE:(?:email|contact)\]\]\s*$/,'').trimEnd();
 
-  function renderReplyMode(){
-    const isContact=replyMode==='contact';
-    replyAddress.setAttribute('aria-label',isContact?'お問い合わせ':'返信用アドレス');
+function renderReplyMode(){
+  const isContact=replyMode==='contact';
+  replyAddress.classList.toggle('is-contact',isContact);
+  replyAddress.setAttribute('aria-label',isContact?'お問い合わせ':'返信用アドレス');
     replyTitle.hidden=isContact;
     replyLink.href=isContact?'./contact.html':'mailto:team.yachiyo.8740@gmail.com';
-    replyLink.textContent=isContact?'お問い合わせ':'team.yachiyo.8740@gmail.com';
+  replyLink.textContent=isContact?'お問い合わせはこちら':'team.yachiyo.8740@gmail.com';
     replyModeStatus.textContent=isContact?'現在：通常のお問い合わせ窓口':'現在：大会専用メールアドレス';
     replyModeBtn.textContent=isContact?'専用アドレス表示に戻す':'お問い合わせに変更';
   }
