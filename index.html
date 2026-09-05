@@ -3193,7 +3193,7 @@ function openProtectedArea(type){
       ? `<strong>${esc(upcoming.date.replace(/-/g,'/'))}</strong><br>${esc(upcoming.title)}${upcoming.time?'<br>'+esc(upcoming.time):''}${upcoming.place?'<br>'+esc(upcoming.place):''}<br><a class="latest-link" href="./schedule.html">スケジュールを見る →</a>`
       : `現在、公開スケジュールはありません。<br><a class="latest-link" href="./schedule.html">スケジュールを見る →</a>`;
 
-    const cleanResults=[...results].filter(x=>String(x.tournament||'').trim()!=='テスト'&&String(x.opponent||'').trim()!=='テスト');
+    const cleanResults=[...results].filter(x=>x&&x.date);
     const latestR=cleanResults.sort((a,b)=>{
       const byDate=dateKey(b.date).localeCompare(dateKey(a.date));
       if(byDate)return byDate;
