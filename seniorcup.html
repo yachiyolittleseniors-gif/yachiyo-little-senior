@@ -418,10 +418,10 @@ textarea[name="guideline"]{
 
   async function loadReplyMode(){
     try{
-      const r=await fetch(API+'?section=seniorcup-reply-mode',{cache:'no-store'});
+      const r=await fetch(API+'?section=seniorcup-guideline',{cache:'no-store'});
       if(r.ok){
         const j=await r.json();
-        if(j.data&&j.data.mode==='contact')replyMode='contact';
+        if(j.data&&j.data.replyMode==='contact')replyMode='contact';
       }
     }catch(e){}
     renderReplyMode();
@@ -435,7 +435,8 @@ textarea[name="guideline"]{
     if(!confirm(message))return;
     const old=replyModeBtn.textContent;replyModeBtn.disabled=true;replyModeBtn.textContent='保存中...';
     try{
-      const r=await fetch(API+'?section=seniorcup-reply-mode',{method:'POST',headers:{'content-type':'application/json','x-admin-password':pw},body:JSON.stringify({data:{mode:next,updatedAt:new Date().toISOString()}})});
+      const text=guidelineEditor.value.trim()||guidelineText.textContent.trim();
+      const r=await fetch(API+'?section=seniorcup-guideline',{method:'POST',headers:{'content-type':'application/json','x-admin-password':pw},body:JSON.stringify({data:{text,replyMode:next,updatedAt:new Date().toISOString()}})});
       if(r.status===401)throw new Error('PASSWORD');
       if(!r.ok)throw new Error('SAVE');
       replyMode=next;renderReplyMode();alert('表示を変更しました。');
@@ -552,7 +553,7 @@ textarea[name="guideline"]{
       const r=await fetch(API+'?section=seniorcup-guideline',{
         method:'POST',
         headers:{'content-type':'application/json','x-admin-password':pw},
-        body:JSON.stringify({data:{text:value,updatedAt:new Date().toISOString()}})
+        body:JSON.stringify({data:{text:value,replyMode,updatedAt:new Date().toISOString()}})
       });
       if(r.status===401)throw new Error('PASSWORD');
       if(!r.ok)throw new Error('SAVE');
@@ -620,7 +621,7 @@ textarea[name="guideline"]{
       const r=await fetch(API+'?section=seniorcup-guideline',{
         method:'POST',
         headers:{'content-type':'application/json','x-admin-password':pw},
-        body:JSON.stringify({data:{text:current,updatedAt:new Date().toISOString()}})
+        body:JSON.stringify({data:{text:current,replyMode,updatedAt:new Date().toISOString()}})
       });
       return r.ok;
     }catch(e){return false}
