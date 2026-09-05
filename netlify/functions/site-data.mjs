@@ -15,6 +15,8 @@ const allowed = new Set([
   "downloads-roster",
   "seniorcup-settings",
   "seniorcup-guideline",
+  "seniorcup-partners",
+  "seniorcup-reply-mode",
   "graduate-paths",
   "links",
   "access-settings"
