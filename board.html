@@ -55,15 +55,27 @@ h1{font-family:serif;font-weight:500;letter-spacing:.08em;margin:8px 0 6px;font-
 
 </style>
 <script>
-const BOARD_VIEW_PASSWORD='yachiyo20260800';
-(function requireBoardPassword(){
+document.documentElement.style.visibility='hidden';
+(async function requireBoardPassword(){
   const p=prompt('パスワードを入力してください');
-  if((p||'').trim().toLowerCase()===BOARD_VIEW_PASSWORD){
-    sessionStorage.setItem('yachiyoAttendancePass',BOARD_VIEW_PASSWORD);
-    return;
-  }
   if(p===null){
     if(history.length>1){history.back()}else{location.replace('./index.html')}
+    return;
+  }
+  try{
+    const r=await fetch('/.netlify/functions/site-data?section=access-settings',{
+      method:'POST',
+      headers:{'content-type':'application/json'},
+      body:JSON.stringify({action:'verifyAccessPassword',password:p})
+    });
+    if(r.ok){
+      sessionStorage.setItem('yachiyoAttendancePass',p);
+      document.documentElement.style.visibility='';
+      return;
+    }
+  }catch(e){
+    alert('パスワードを確認できませんでした。通信状況を確認してください。');
+    location.replace('./index.html');
     return;
   }
   alert('パスワードが違います。');

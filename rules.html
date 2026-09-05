@@ -91,19 +91,28 @@ button{border:0;border-radius:12px;padding:13px 18px;font-weight:800;cursor:poin
 
 
 <script>
-
-const RULES_VIEW_PASSWORD='yachiyo20260800';
-(function requireRulesPassword(){
+document.documentElement.style.visibility='hidden';
+(async function requireRulesPassword(){
   const p=prompt('パスワードを入力してください');
-  if(p===RULES_VIEW_PASSWORD) return;
   if(p===null){
-  if(history.length>1){
-    history.back();
-  }else{
-    location.replace('./index.html');
+    if(history.length>1){history.back()}else{location.replace('./index.html')}
+    return;
   }
-  return;
-}
+  try{
+    const r=await fetch('/.netlify/functions/site-data?section=access-settings',{
+      method:'POST',
+      headers:{'content-type':'application/json'},
+      body:JSON.stringify({action:'verifyAccessPassword',password:p})
+    });
+    if(r.ok){
+      document.documentElement.style.visibility='';
+      return;
+    }
+  }catch(e){
+    alert('パスワードを確認できませんでした。通信状況を確認してください。');
+    location.replace('./index.html');
+    return;
+  }
   alert('パスワードが違います。');
   location.replace('./index.html');
 })();

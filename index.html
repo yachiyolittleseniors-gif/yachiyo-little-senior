@@ -1866,6 +1866,7 @@ img,video,iframe{max-width:100%}
 #heroPhotoAdmin{position:fixed;right:16px;bottom:16px;z-index:9998;display:none;gap:8px;align-items:center}
 #heroPhotoAdmin button,#heroPhotoAdmin label{border:1px solid rgba(212,175,55,.75);background:#071426;color:#e2bd67;border-radius:999px;padding:10px 14px;font-size:12px;font-weight:700;box-shadow:0 5px 18px rgba(0,0,0,.22);cursor:pointer}
 #heroPhotoAdmin label{display:none;background:#b48a32;color:#fff}
+#accessPasswordChange{display:none;background:#071426;color:#e2bd67}
 #heroPhotoInput{display:none}
 @media(max-width:600px){#heroPhotoAdmin{right:12px;bottom:12px}#heroPhotoAdmin button,#heroPhotoAdmin label{padding:9px 12px;font-size:11px}}
 </style>
@@ -3218,6 +3219,7 @@ function openProtectedArea(type){
 <div id="heroPhotoAdmin">
   <button id="heroAdminToggle" type="button">管理</button>
   <label id="heroPhotoChange" for="heroPhotoInput">写真を変更</label>
+  <button id="accessPasswordChange" type="button">閲覧パスワード変更</button>
   <input id="heroPhotoInput" type="file" accept="image/*">
 </div>
 
@@ -3227,8 +3229,9 @@ function openProtectedArea(type){
   const hero=document.querySelector('.hero');
   const toggle=document.getElementById('heroAdminToggle');
   const change=document.getElementById('heroPhotoChange');
+  const accessPasswordChange=document.getElementById('accessPasswordChange');
   const input=document.getElementById('heroPhotoInput');
-  if(!hero||!toggle||!change||!input)return;
+  if(!hero||!toggle||!change||!accessPasswordChange||!input)return;
 
   async function loadHero(){
     try{
@@ -3250,11 +3253,13 @@ function openProtectedArea(type){
     if(on){
       sessionStorage.setItem('yachiyoAdminMode','1');
       change.style.display='inline-block';
+      accessPasswordChange.style.display='inline-block';
       toggle.textContent='管理終了';
     }else{
       sessionStorage.removeItem('yachiyoAdminMode');
       sessionStorage.removeItem('yachiyoAdminPassword');
       change.style.display='none';
+      accessPasswordChange.style.display='none';
       toggle.textContent='管理';
     }
   }
@@ -3265,6 +3270,7 @@ function openProtectedArea(type){
   document.body.classList.remove('photo-admin-on');
   document.getElementById('heroPhotoAdmin').style.display='none';
   change.style.display='none';
+  accessPasswordChange.style.display='none';
   toggle.textContent='管理';
 
   // Hidden admin entrance: フッター右下を3回タップで管理ボタン表示
@@ -3297,6 +3303,53 @@ function openProtectedArea(type){
     if(!pw)return;
     sessionStorage.setItem('yachiyoAdminPassword',pw);
     setAdmin(true);
+  });
+
+  accessPasswordChange.addEventListener('click',async function(){
+    const adminPassword=sessionStorage.getItem('yachiyoAdminPassword')||'';
+    if(!adminPassword){
+      alert('管理者パスワードを入力し直してください。');
+      return;
+    }
+    const next=prompt('チーム規約・チーム内案内板の新しい共通パスワードを入力してください。\n（8文字以上64文字以内）');
+    if(next===null)return;
+    if(next.length<8||next.length>64){
+      alert('新しいパスワードは8文字以上64文字以内で入力してください。');
+      return;
+    }
+    const confirmation=prompt('確認のため、新しいパスワードをもう一度入力してください。');
+    if(confirmation===null)return;
+    if(next!==confirmation){
+      alert('新しいパスワードが一致しません。');
+      return;
+    }
+    if(!confirm('チーム規約とチーム内案内板の閲覧パスワードを同時に変更しますか？'))return;
+
+    accessPasswordChange.disabled=true;
+    const originalText=accessPasswordChange.textContent;
+    accessPasswordChange.textContent='変更中…';
+    try{
+      const r=await fetch(api+'?section=access-settings',{
+        method:'POST',
+        headers:{'content-type':'application/json','x-admin-password':adminPassword},
+        body:JSON.stringify({action:'setAccessPassword',password:next})
+      });
+      if(r.status===401){
+        alert('管理者パスワードが違います。');
+        return;
+      }
+      if(!r.ok){
+        alert('閲覧パスワードを変更できませんでした。');
+        return;
+      }
+      sessionStorage.setItem('yachiyoAttendancePass',next);
+      alert('チーム規約とチーム内案内板の閲覧パスワードを変更しました。');
+    }catch(e){
+      alert('通信エラーのため、閲覧パスワードを変更できませんでした。');
+    }finally{
+      accessPasswordChange.disabled=false;
+      accessPasswordChange.textContent=originalText;
+    }
   });
 
   function compress(file){
