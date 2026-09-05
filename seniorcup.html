@@ -7,7 +7,7 @@
 <meta charset="utf-8"/>
 <meta content="width=device-width,initial-scale=1,viewport-fit=cover" name="viewport"/>
 <meta content="#071426" name="theme-color"/>
-<title>八千代シニア杯｜八千代リトルシニア</title>
+<title>八千代リトルシニア杯｜八千代リトルシニア</title>
 <style>
 :root{--navy:#071426;--navy2:#102942;--gold:#c79a3b;--gold2:#e2bd67;--bg:#f4f3ef;--ink:#17202b}
 *{box-sizing:border-box}
@@ -49,8 +49,9 @@ h1{font-family:serif;font-weight:600;font-size:clamp(34px,6vw,58px);letter-spaci
 .restored-footer-nav a{padding:7px 15px;font-size:13px;color:#fff;border-right:1px solid rgba(199,154,59,.55)}
 .restored-footer-nav a:last-child{border-right:0}.ground-address{text-align:center;margin-top:16px;color:#d7dde5;font-size:12px}
 .copy{text-align:center;border-top:1px solid rgba(255,255,255,.12);margin-top:18px;padding-top:15px;color:#9eabb9;font-size:11px}
+.cup-mobile-break{display:none}
 @media(max-width:600px){
-  .nav{padding:11px 14px}.brand{font-size:14px}.hero-inner{padding:46px 15px}.hero h1{font-size:clamp(22px,7.1vw,30px);letter-spacing:.01em;white-space:nowrap}.main{padding:30px 12px 44px}
+  .nav{padding:11px 14px}.brand{font-size:14px}.hero-inner{padding:46px 15px}.hero h1{font-size:clamp(22px,7.1vw,30px);letter-spacing:.01em;white-space:normal}.cup-mobile-break{display:block}.main{padding:30px 12px 44px}
   .intro{padding:20px 17px;font-size:14px}.download-grid,.admin-grid{grid-template-columns:1fr}
   .restored-footer-nav{display:grid;grid-template-columns:repeat(2,minmax(0,1fr))}
   .restored-footer-nav a{text-align:center;border-right:0;border-bottom:1px solid rgba(255,255,255,.08);padding:11px 6px;font-size:12px}
@@ -313,7 +314,7 @@ textarea[name="guideline"]{
 <section class="hero">
 <div class="hero-inner">
 <div class="kicker">YACHIYO SENIOR CUP <span class="current-year"></span></div>
-<h1><span class="current-year"></span>年 八千代シニア杯</h1>
+<h1><span class="current-year"></span>年<br class="cup-mobile-break">八千代リトルシニア杯</h1>
 <p>大会要項・参加申込み</p>
 </div>
 </section>
@@ -323,7 +324,7 @@ textarea[name="guideline"]{
   </div>
 <h2 class="section-title">大会要項</h2>
 <div class="guideline">
-<strong><span class="current-year"></span>年 八千代シニア杯 大会要項</strong>
+<strong><span class="current-year"></span>年 八千代リトルシニア杯 大会要項</strong>
 <p id="guidelineText">大会要項の詳細は準備ができ次第、こちらに掲載します。</p>
 </div>
 <div class="guideline-admin-box" id="guidelineAdminBox">
@@ -345,12 +346,12 @@ textarea[name="guideline"]{
 </section>
 </div>
 <section aria-label="返信用アドレス" class="reply-address">
-<p class="reply-address-title">【八千代シニア杯 申込み返信用アドレス】</p>
+<p class="reply-address-title">【八千代リトルシニア杯 申込み返信用アドレス】</p>
 <a href="mailto:team.yachiyo.8740@gmail.com">team.yachiyo.8740@gmail.com</a>
 </section>
 <section aria-labelledby="partnerTitle" class="partner-section">
 <div class="partner-heading" id="partnerTitle">
-<div class="partner-heading-small">八千代シニア杯</div>
+<div class="partner-heading-small">八千代リトルシニア杯</div>
 <div class="partner-heading-main">協力企業様紹介</div>
 </div>
 <p class="partner-lead">（当チームの活動にご賛同・ご協力をいただいている企業様）</p>
@@ -622,11 +623,10 @@ textarea[name="guideline"]{
 document.addEventListener('DOMContentLoaded',function(){
   const y=new Date().getFullYear();
   document.querySelectorAll('.current-year').forEach(el=>el.textContent=y);
-  document.title=y+'年 八千代シニア杯｜八千代リトルシニア';
+  document.title=y+'年 八千代リトルシニア杯｜八千代リトルシニア';
 });
 </script>
 </body>
 </html>
-
 
 
