@@ -76,8 +76,8 @@ footer{background:var(--navy);color:#fff;border-top:1px solid rgba(202,166,75,.6
 (function(){
   const API='/.netlify/functions/site-data?section=links';
   const defaults=[
+    {name:'日本リトルシニア中学硬式野球協会\n関東連盟',url:'https://www.kantoleague.net/shop/sphone/'},
     {name:'日本リトルシニア 関東連盟 東関東支部',url:'https://www.kantoleague.net/shop/block/?action=detail&b_id=3'},
-    {name:'日本リトルシニア中学硬式野球協会 関東連盟',url:'https://www.kantoleague.net/shop/sphone/'},
     {name:'超野球専門店CV',url:'https://www.spcv.jp'},
     {name:'超野球専門店CV\n八千代リトルシニア専用',url:'https://www.sportscv.jp/p/auth/team_yachiyo-sr'},
     {name:'Instagram',url:'https://www.instagram.com/yachiyo_little_senior?igsi=MTl4N3dneG9uY2ZxcA=='},
@@ -96,11 +96,16 @@ footer{background:var(--navy);color:#fff;border-top:1px solid rgba(202,166,75,.6
     return (Array.isArray(items)?items:[]).map(x=>({name:String(x?.name||'').trim(),url:String(x?.url||'').trim()})).filter(x=>x.name||x.url);
   }
   function normalize(items){
-    return clean(items).map(item=>{
+    const normalized=clean(items).map(item=>{
+      if(item.url==='https://www.kantoleague.net/shop/sphone/')return {...item,name:'日本リトルシニア中学硬式野球協会\n関東連盟'};
       if(item.name==='超野球専門店CV'&&/^https:\/\/www\.sportscv\.jp\/?$/.test(item.url))return {...item,url:'https://www.spcv.jp'};
       if(item.url==='https://www.sportscv.jp/p/auth/team_yachiyo-sr')return {...item,name:'超野球専門店CV\n八千代リトルシニア専用'};
       return item;
     });
+    const leagueIndex=normalized.findIndex(item=>item.url==='https://www.kantoleague.net/shop/sphone/');
+    const branchIndex=normalized.findIndex(item=>item.url==='https://www.kantoleague.net/shop/block/?action=detail&b_id=3');
+    if(leagueIndex>branchIndex&&branchIndex>=0){const [league]=normalized.splice(leagueIndex,1);normalized.splice(branchIndex,0,league)}
+    return normalized;
   }
   function render(){
     list.replaceChildren();
