@@ -3194,7 +3194,11 @@ function openProtectedArea(type){
       : `現在、公開スケジュールはありません。<br><a class="latest-link" href="./schedule.html">スケジュールを見る →</a>`;
 
     const cleanResults=[...results].filter(x=>String(x.tournament||'').trim()!=='テスト'&&String(x.opponent||'').trim()!=='テスト');
-    const latestR=cleanResults.sort((a,b)=>(b.date||'').localeCompare(a.date||''))[0];
+    const latestR=cleanResults.sort((a,b)=>{
+      const byDate=dateKey(b.date).localeCompare(dateKey(a.date));
+      if(byDate)return byDate;
+      return String(b.id||'').localeCompare(String(a.id||''));
+    })[0];
     const rc=document.querySelector('#latestResultCard .latest-meta');
     if(latestR){
       const yachiyoFirst=latestR.battingOrder!=='second';
