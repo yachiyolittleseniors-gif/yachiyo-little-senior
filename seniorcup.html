@@ -42,6 +42,8 @@ h1{font-family:serif;font-weight:600;font-size:clamp(34px,6vw,58px);letter-spaci
 .admin-box{background:#fff;border:1px solid #d8d4cb;padding:15px}
 .admin-box label{display:block;margin-bottom:8px;font-size:13px;font-weight:800}.admin-box input{width:100%;font-size:13px}
 .admin-box button{width:100%;min-height:44px;margin-top:10px;border:0;background:var(--navy);color:#fff;font-weight:800}
+.attachment-info{margin:12px 0 0;padding:11px 12px;background:#f4f3ef;color:#596573;font-size:12px;line-height:1.7;overflow-wrap:anywhere}
+.admin-box button.attachment-delete{background:#fff;color:#b3262e;border:1px solid #b3262e}
 #replyModeBtn{background:#fff;color:#b3262e;border:1px solid #b3262e}
 .admin-note{font-size:11px;color:#737d88;line-height:1.7}
 #cupAdminBtn{display:none;margin:16px 0 0 auto;border:1px solid rgba(199,154,59,.65);background:var(--navy);color:var(--gold2);border-radius:999px;padding:9px 12px;font-size:12px;font-weight:800}
@@ -88,7 +90,7 @@ h1{font-family:serif;font-weight:600;font-size:clamp(34px,6vw,58px);letter-spaci
   padding:14px 18px;
   border-radius:10px;
   background:var(--gold);
-  color:var(--navy);
+  color:#fff;
   font-weight:900;
   text-align:center;
   text-decoration:none;
@@ -380,12 +382,16 @@ textarea[name="guideline"]{
 <div class="admin-box">
 <label for="applicationUpload">申込書を更新（PDF / Excel）</label>
 <input accept=".pdf,.xls,.xlsx,application/pdf,application/vnd.ms-excel,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" id="applicationUpload" type="file"/>
+<p class="attachment-info" id="applicationAttachmentInfo">現在の添付ファイル：読み込み中...</p>
 <button data-slot="application" type="button">申込書を保存</button>
+<button class="attachment-delete" data-delete-slot="application" hidden type="button">添付ファイルを削除</button>
 </div>
 <div class="admin-box">
 <label for="rosterUpload">選手名簿を更新（PDF / Excel）</label>
 <input accept=".pdf,.xls,.xlsx,application/pdf,application/vnd.ms-excel,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" id="rosterUpload" type="file"/>
+<p class="attachment-info" id="rosterAttachmentInfo">現在の添付ファイル：読み込み中...</p>
 <button data-slot="roster" type="button">選手名簿を保存</button>
+<button class="attachment-delete" data-delete-slot="roster" hidden type="button">添付ファイルを削除</button>
 </div>
 </div><p class="admin-note">PDF・Excel（.pdf / .xls / .xlsx）に対応。1ファイル最大5MBです。</p><div class="admin-box" style="margin-bottom:14px">
 <label>申込み返信先の表示</label>
@@ -408,8 +414,8 @@ textarea[name="guideline"]{
 (function(){
   const API='/.netlify/functions/site-data';
   const slots={
-    application:{section:'downloads-application',input:'applicationUpload',name:'applicationFileName',link:'applicationDownload'},
-    roster:{section:'downloads-roster',input:'rosterUpload',name:'rosterFileName',link:'rosterDownload'}
+    application:{label:'申込書',section:'downloads-application',input:'applicationUpload',name:'applicationFileName',link:'applicationDownload',info:'applicationAttachmentInfo'},
+    roster:{label:'選手名簿',section:'downloads-roster',input:'rosterUpload',name:'rosterFileName',link:'rosterDownload',info:'rosterAttachmentInfo'}
   };
 
   const replyAddress=document.getElementById('cupReplyAddress');
@@ -585,15 +591,37 @@ function renderReplyMode(){
 
   guidelineSaveBtn.addEventListener('click',saveGuideline);
 
+  function formatBytes(bytes){
+    const value=Number(bytes);
+    if(!Number.isFinite(value)||value<0)return 'サイズ不明';
+    if(value<1024)return value+' B';
+    if(value<1024*1024)return (value/1024).toFixed(value<10*1024?1:0)+' KB';
+    return (value/(1024*1024)).toFixed(1)+' MB';
+  }
+  function storedFileSize(data){
+    if(Number.isFinite(Number(data&&data.fileSize)))return Number(data.fileSize);
+    const value=String(data&&data.dataUrl||''),comma=value.indexOf(',');
+    if(comma<0)return NaN;
+    const encoded=value.slice(comma+1);
+    return value.slice(0,comma).includes(';base64')?Math.max(0,Math.floor(encoded.length*3/4)-(encoded.endsWith('==')?2:encoded.endsWith('=')?1:0)):encoded.length;
+  }
+  function fileType(data){
+    const ext=String(data&&data.fileName||'').split('.').pop().toUpperCase();
+    return ['PDF','XLS','XLSX'].includes(ext)?ext:'ファイル';
+  }
   function render(slot,data){
-    const c=slots[slot], n=document.getElementById(c.name), a=document.getElementById(c.link);
+    const c=slots[slot], n=document.getElementById(c.name), a=document.getElementById(c.link),info=document.getElementById(c.info),del=document.querySelector('[data-delete-slot="'+slot+'"]');
     if(data&&data.fileName&&data.dataUrl){
       n.textContent=data.fileName;
       a.href=API+'?section='+encodeURIComponent(c.section)+'&download=1';
       a.removeAttribute('download');
       a.classList.remove('is-empty');
+      info.textContent='現在の添付ファイル：'+data.fileName+'（'+fileType(data)+'／'+formatBytes(storedFileSize(data))+'）';
+      del.hidden=false;
     }else{
       n.textContent='現在ダウンロードできるファイルはありません。';a.href='#';a.removeAttribute('download');a.classList.add('is-empty');
+      info.textContent='現在の添付ファイル：なし';
+      del.hidden=true;
     }
   }
   async function load(slot){
@@ -616,7 +644,7 @@ function renderReplyMode(){
     if(!pw){alert('管理者パスワードを入力し直してください。');return}
     const btn=document.querySelector('[data-slot="'+slot+'"]'),old=btn.textContent;btn.disabled=true;btn.textContent='保存中...';
     try{
-      const payload={fileName:f.name,mimeType:f.type||'application/octet-stream',dataUrl:await asDataURL(f),updatedAt:new Date().toISOString()};
+      const payload={fileName:f.name,mimeType:f.type||'application/octet-stream',fileSize:f.size,dataUrl:await asDataURL(f),updatedAt:new Date().toISOString()};
       const r=await fetch(API+'?section='+encodeURIComponent(c.section),{method:'POST',headers:{'content-type':'application/json','x-admin-password':pw},body:JSON.stringify({data:payload})});
       if(r.status===401)throw new Error('PASSWORD');if(!r.ok)throw new Error('SAVE');
       render(slot,payload);inp.value='';alert('保存しました。');
@@ -625,6 +653,20 @@ function renderReplyMode(){
   }
 
   document.querySelectorAll('[data-slot]').forEach(b=>b.addEventListener('click',()=>save(b.dataset.slot)));
+  async function removeFile(slot){
+    const c=slots[slot];
+    if(!confirm(c.label+'の添付ファイルを削除しますか？'))return;
+    const pw=sessionStorage.getItem('yachiyoAdminPassword')||'';
+    if(!pw){alert('管理者パスワードを入力し直してください。');return}
+    const btn=document.querySelector('[data-delete-slot="'+slot+'"]'),old=btn.textContent;btn.disabled=true;btn.textContent='削除中...';
+    try{
+      const r=await fetch(API+'?section='+encodeURIComponent(c.section),{method:'POST',headers:{'content-type':'application/json','x-admin-password':pw},body:JSON.stringify({data:{}})});
+      if(r.status===401)throw new Error('PASSWORD');if(!r.ok)throw new Error('DELETE');
+      render(slot,null);document.getElementById(c.input).value='';alert('添付ファイルを削除しました。');
+    }catch(e){alert(e.message==='PASSWORD'?'管理者パスワードが違います。':'添付ファイルを削除できませんでした。')}
+    finally{btn.disabled=false;btn.textContent=old}
+  }
+  document.querySelectorAll('[data-delete-slot]').forEach(b=>b.addEventListener('click',()=>removeFile(b.dataset.deleteSlot)));
 
   const footer=document.querySelector('.restored-footer'),btn=document.getElementById('cupAdminBtn'),area=document.getElementById('cupAdminArea'),guidelineBox=document.getElementById('guidelineAdminBox');
   sessionStorage.removeItem('yachiyoAdminMode');sessionStorage.removeItem('yachiyoAdminPassword');
