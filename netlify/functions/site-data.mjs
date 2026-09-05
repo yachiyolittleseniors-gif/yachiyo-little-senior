@@ -15,8 +15,39 @@ const allowed = new Set([
   "downloads-roster",
   "seniorcup-settings",
   "seniorcup-guideline",
-  "graduate-paths"
+  "graduate-paths",
+  "access-settings"
 ]);
+
+const LEGACY_ACCESS_PASSWORD = "yachiyo20260800";
+
+function bytesToHex(bytes) {
+  return Array.from(
+    bytes,
+    byte => byte.toString(16).padStart(2, "0")
+  ).join("");
+}
+
+async function hashAccessPassword(password, salt) {
+  const input = new TextEncoder().encode(`${salt}:${password}`);
+  const digest = await crypto.subtle.digest("SHA-256", input);
+  return bytesToHex(new Uint8Array(digest));
+}
+
+function safeEqual(a, b) {
+  const left = String(a || "");
+  const right = String(b || "");
+  let difference = left.length ^ right.length;
+  const length = Math.max(left.length, right.length);
+
+  for (let i = 0; i < length; i++) {
+    difference |=
+      (left.charCodeAt(i) || 0) ^
+      (right.charCodeAt(i) || 0);
+  }
+
+  return difference === 0;
+}
 
 function json(data, status = 200) {
   return new Response(JSON.stringify(data), {
@@ -45,6 +76,10 @@ export default async (request) => {
     const key = `content/${section}.json`;
 
     if (request.method === "GET") {
+      if (section === "access-settings") {
+        return json({ error: "method not allowed" }, 405);
+      }
+
       const data = await store.get(key, {
         type: "json",
         consistency: "strong"
@@ -81,7 +116,7 @@ export default async (request) => {
         const bytes = match[2]
           ? Uint8Array.from(
               atob(match[3]),
-              (character) => character.charCodeAt(0)
+              character => character.charCodeAt(0)
             )
           : new TextEncoder().encode(
               decodeURIComponent(match[3])
@@ -118,6 +153,54 @@ export default async (request) => {
       }, 405);
     }
 
+    let body;
+
+    try {
+      body = await request.json();
+    } catch {
+      return json({ error: "invalid json" }, 400);
+    }
+
+    if (
+      section === "access-settings" &&
+      body?.action === "verifyAccessPassword"
+    ) {
+      const enteredPassword = String(body.password || "");
+
+      if (!enteredPassword || enteredPassword.length > 128) {
+        return json({ ok: false }, 401);
+      }
+
+      const saved = await store.get(key, {
+        type: "json",
+        consistency: "strong"
+      });
+
+      let valid = false;
+
+      if (saved?.salt && saved?.hash) {
+        const enteredHash = await hashAccessPassword(
+          enteredPassword,
+          saved.salt
+        );
+
+        valid = safeEqual(enteredHash, saved.hash);
+      } else {
+        const initialPassword =
+          process.env.ACCESS_PASSWORD ||
+          LEGACY_ACCESS_PASSWORD;
+
+        valid = safeEqual(
+          enteredPassword,
+          initialPassword
+        );
+      }
+
+      return valid
+        ? json({ ok: true })
+        : json({ ok: false }, 401);
+    }
+
     const expected = process.env.ADMIN_PASSWORD;
 
     if (!expected) {
@@ -135,7 +218,40 @@ export default async (request) => {
       }, 401);
     }
 
-    const body = await request.json();
+    if (
+      section === "access-settings" &&
+      body?.action === "setAccessPassword"
+    ) {
+      const newPassword = String(body.password || "");
+
+      if (
+        newPassword.length < 8 ||
+        newPassword.length > 64
+      ) {
+        return json({
+          error:
+            "password must be between 8 and 64 characters"
+        }, 400);
+      }
+
+      const saltBytes = new Uint8Array(16);
+      crypto.getRandomValues(saltBytes);
+
+      const salt = bytesToHex(saltBytes);
+      const hash = await hashAccessPassword(
+        newPassword,
+        salt
+      );
+
+      await store.setJSON(key, {
+        salt,
+        hash,
+        updatedAt: new Date().toISOString()
+      });
+
+      return json({ ok: true });
+    }
+
     const serialized = JSON.stringify(body.data);
 
     if (serialized.length > 8000000) {
