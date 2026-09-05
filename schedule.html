@@ -2,11 +2,10 @@
 
 <html lang="ja">
 <head>
-<meta name="author" content="tatsuki.saitoh">
 <meta charset="utf-8"/>
 <meta content="width=device-width, initial-scale=1.0, viewport-fit=cover" name="viewport"/>
 <meta content="#071426" name="theme-color"/>
-<title>スケジュール｜八千代リトルシニア（八千代シニア）公式</title>
+<title>予定｜八千代リトルシニア</title>
 <style>
 :root{
   --navy:#071426; --navy2:#0c1d33; --gold:#c79a3b; --gold2:#e2bd67;
@@ -1228,7 +1227,15 @@ nav a *,
 @media(max-width:600px){.hero{min-height:610px;background-position:58% center!important}.hero-inner{background:linear-gradient(90deg,rgba(7,20,38,.18),transparent);}.activity-stack{grid-template-columns:1fr}.activity-main,.activity-side{min-height:250px}.gallery{grid-template-columns:1fr!important}.gallery .g{aspect-ratio:16/10}.photo{min-height:260px}}
 </style>
 
+<meta name="description" content="八千代リトルシニアの練習、公式戦、練習試合などの予定を掲載しています。">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="八千代リトルシニア">
+<meta property="og:title" content="予定｜八千代リトルシニア">
+<meta property="og:description" content="八千代リトルシニアの練習、公式戦、練習試合などの予定を掲載しています。">
 <meta property="og:locale" content="ja_JP">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="予定｜八千代リトルシニア">
+<meta name="twitter:description" content="八千代リトルシニア公式サイト。選手紹介、試合結果、予定、入団案内、ギャラリーなどを掲載しています。">
 <link rel="icon" href="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCA2NCA2NCI+CjxyZWN0IHdpZHRoPSI2NCIgaGVpZ2h0PSI2NCIgcng9IjE0IiBmaWxsPSIjMDcxNDI2Ii8+CjxjaXJjbGUgY3g9IjMyIiBjeT0iMzIiIHI9IjIwIiBmaWxsPSIjZmZmIi8+CjxwYXRoIGQ9Ik0yMCAyMmM1IDQgOCA5IDkgMTVNNDQgMjJjLTUgNC04IDktOSAxNU0yMCA0MmM1LTQgOC05IDktMTVNNDQgNDJjLTUtNC04LTktOS0xNSIgc3Ryb2tlPSIjYzc5YTNiIiBzdHJva2Utd2lkdGg9IjMiIGZpbGw9Im5vbmUiIHN0cm9rZS1saW5lY2FwPSJyb3VuZCIvPgo8L3N2Zz4=">
 
 
@@ -1240,12 +1247,12 @@ body.admin-mode .admin-only.block{display:flex!important}
 body.admin-mode .delete{display:inline-block!important}
 body:not(.admin-mode) .delete{display:none!important}
 .admin-toggle{
-  display:none;position:static;z-index:1;margin:14px 0 0 auto;
+  position:fixed;right:14px;bottom:14px;z-index:9998;
   border:1px solid rgba(199,154,59,.65);background:#071426;color:#e2bd67;
   border-radius:999px;padding:9px 12px;font-size:12px;font-weight:800;
   box-shadow:0 8px 22px rgba(0,0,0,.18);cursor:pointer
 }
-@media(max-width:600px){.admin-toggle{padding:8px 10px;font-size:11px}}
+@media(max-width:600px){.admin-toggle{right:10px;bottom:10px;padding:8px 10px;font-size:11px}}
 </style>
 
 
@@ -1326,262 +1333,8 @@ img,video,iframe{max-width:100%}
 }
 </style>
 
-<meta name="description" content="八千代リトルシニアの活動予定を掲載。土曜日・日曜日・祝日の練習、公式戦、練習試合などの予定をご確認いただけます。">
 <link rel="canonical" href="https://yachiyo-little-senior.netlify.app/schedule.html">
-<meta property="og:type" content="website">
-<meta property="og:site_name" content="八千代リトルシニア">
-<meta property="og:title" content="スケジュール｜八千代リトルシニア（八千代シニア）公式">
-<meta property="og:description" content="八千代リトルシニアの活動予定を掲載。土曜日・日曜日・祝日の練習、公式戦、練習試合などの予定をご確認いただけます。">
 <meta property="og:url" content="https://yachiyo-little-senior.netlify.app/schedule.html">
-<meta name="twitter:card" content="summary">
-<meta name="twitter:title" content="スケジュール｜八千代リトルシニア（八千代シニア）公式">
-<meta name="twitter:description" content="八千代リトルシニアの活動予定を掲載。土曜日・日曜日・祝日の練習、公式戦、練習試合などの予定をご確認いただけます。">
-<script type="application/ld+json">{"@context":"https://schema.org","@type":"BreadcrumbList","itemListElement":[{"@type":"ListItem","position":1,"name":"HOME","item":"https://yachiyo-little-senior.netlify.app/"},{"@type":"ListItem","position":2,"name":"スケジュール","item":"https://yachiyo-little-senior.netlify.app/schedule.html"}]}</script>
-
-<style>
-/* 予定：1か月カレンダー表示 */
-.calendar-wrap{
-  width:100% !important;
-  overflow-x:auto;
-  -webkit-overflow-scrolling:touch;
-}
-.calendar-grid{
-  display:grid !important;
-  grid-template-columns:repeat(7,minmax(0,1fr)) !important;
-  width:100% !important;
-}
-.calendar-grid > *{
-  min-width:0 !important;
-}
-@media(max-width:600px){
-  .calendar-grid{
-    grid-template-columns:repeat(7,minmax(42px,1fr)) !important;
-    min-width:100% !important;
-  }
-  .calendar-day,
-  .day{
-    min-height:72px !important;
-    padding:5px 3px !important;
-    font-size:11px !important;
-  }
-}
-</style>
-
-<style>
-@media(max-width:600px){
-  #calendarGrid{
-    display:grid!important;
-    grid-template-columns:repeat(7,minmax(0,1fr))!important;
-    width:100%!important;
-  }
-  #calendarGrid .calendar-day{
-    display:block!important;
-    min-width:0!important;
-    min-height:64px!important;
-    padding:5px 3px!important;
-    font-size:11px!important;
-  }
-  #calTitle{display:block!important}
-}
-</style>
-
-<style id="footer-canonical-mobile-fix">
-@media (max-width:600px){
-  .restored-footer-nav{
-    display:grid!important;
-    grid-template-columns:repeat(2,minmax(0,1fr))!important;
-  }
-}
-
-/* ===== 主な年間スケジュール ===== */
-.annual-schedule{
-  margin-top:28px;
-  background:#fff;
-  border:1px solid #d8d6d0;
-  border-top:4px solid var(--gold);
-  border-radius:12px;
-  box-shadow:0 8px 24px rgba(14,25,38,.06);
-  overflow:hidden;
-}
-.annual-schedule-head{
-  padding:24px 26px 18px;
-  background:linear-gradient(135deg,#071426,#102943);
-  color:#fff;
-}
-.annual-schedule-head .annual-kicker{
-  color:var(--gold2);
-  font-size:11px;
-  font-weight:800;
-  letter-spacing:.18em;
-  margin-bottom:7px;
-}
-.annual-schedule-head h2{
-  margin:0;
-  font-family:serif;
-  font-size:26px;
-  font-weight:500;
-  letter-spacing:.04em;
-}
-.annual-schedule-list{padding:8px 26px 20px}
-.annual-month{
-  display:grid;
-  grid-template-columns:72px 1fr;
-  gap:18px;
-  padding:17px 0;
-  border-bottom:1px solid #e5e3de;
-}
-.annual-month:last-of-type{border-bottom:0}
-.annual-month-label{
-  color:#9b741e;
-  font-size:18px;
-  font-weight:800;
-  white-space:nowrap;
-}
-.annual-month-events{white-space:pre-line;
-  color:#344152;
-  font-size:14px;
-  line-height:1.9;
-}
-.annual-month-events div+div{margin-top:2px}
-.annual-other{
-  margin:4px 26px 0;
-  padding:20px 0;
-  border-top:1px solid rgba(199,154,59,.45);
-}
-.annual-other h3{
-  margin:0 0 10px;
-  color:#071426;
-  font-family:serif;
-  font-size:20px;
-}
-.annual-other p{
-  margin:4px 0;
-  color:#344152;
-  font-size:14px;
-  line-height:1.8;
-}
-.annual-note{
-  margin:0 26px 24px;
-  padding:13px 15px;
-  background:#f6f3eb;
-  border-left:3px solid var(--gold);
-  color:#5d6670;
-  font-size:12px;
-  line-height:1.7;
-}
-@media(max-width:600px){
-  .annual-schedule{margin-top:20px}
-  .annual-schedule-head{padding:20px 17px 16px}
-  .annual-schedule-head h2{font-size:21px;line-height:1.5}
-  .annual-schedule-list{padding:4px 17px 14px}
-  .annual-month{grid-template-columns:52px 1fr;gap:10px;padding:14px 0}
-  .annual-month-label{font-size:16px}
-  .annual-month-events{font-size:13px;line-height:1.8}
-  .annual-other{margin:2px 17px 0;padding:17px 0}
-  .annual-other p{font-size:13px}
-  .annual-note{margin:0 17px 18px;font-size:11px}
-}
-
-
-.annual-schedule-head{position:relative}
-.annual-admin-btn{
-  position:absolute;right:18px;top:18px;
-  border:1px solid var(--gold2);background:transparent;color:var(--gold2);
-  padding:8px 14px;border-radius:6px;font-weight:800;cursor:pointer;
-}
-.annual-editor{display:none;position:fixed;inset:0;z-index:10050;padding:18px;background:rgba(3,12,24,.76);align-items:center;justify-content:center}
-.annual-editor.show{display:flex}
-.annual-editor-box{position:relative;width:min(680px,100%);max-height:90vh;overflow:auto;background:#fff;border-top:4px solid var(--gold);border-radius:10px;padding:24px;box-shadow:0 20px 60px rgba(0,0,0,.3)}
-.annual-editor-box h2{margin:0 42px 8px 0;color:#071426;font-family:serif}
-.annual-editor-help{margin:0 0 18px;color:#66717e;font-size:12px;line-height:1.7}
-.annual-editor-box label{display:block;margin-top:15px;color:#263344;font-size:13px;font-weight:800}
-.annual-editor-box textarea,.annual-editor-box input{display:block;width:100%;margin-top:7px;padding:12px;border:1px solid #cfd5dc;border-radius:6px;background:#fff;color:#172233;font:inherit;font-size:16px}
-.annual-editor-box textarea{min-height:150px;resize:vertical}
-#annualOtherInput{min-height:100px}
-.annual-editor-close{position:absolute;right:12px;top:12px;width:40px;height:40px;border:0;border-radius:50%;background:#f0f2f5;font-size:25px;cursor:pointer}
-.annual-editor-actions{display:flex;justify-content:flex-end;gap:10px;margin-top:20px}
-.annual-editor-actions button{min-height:44px;padding:0 22px;border-radius:6px;font-weight:800;cursor:pointer}
-.annual-editor-cancel{border:1px solid #bdc4cc;background:#fff;color:#344152}
-.annual-editor-save{border:1px solid #071426;background:#071426;color:#fff}
-@media(max-width:600px){.annual-admin-btn{right:12px;top:12px;padding:7px 11px}.annual-editor{padding:10px}.annual-editor-box{padding:20px 15px}}
-
-
-/* ===== Unified management button ===== */
-#adminModeToggle.admin-toggle{
-  display:none;
-  position:fixed !important;
-  right:max(12px,env(safe-area-inset-right)) !important;
-  left:auto !important;
-  top:auto !important;
-  bottom:calc(12px + env(safe-area-inset-bottom)) !important;
-  z-index:10001 !important;
-  margin:0 !important;
-  transform:none !important;
-  border:1px solid rgba(199,154,59,.78) !important;
-  background:#071426 !important;
-  color:#e2bd67 !important;
-  border-radius:999px !important;
-  padding:10px 14px !important;
-  font-size:12px !important;
-  font-weight:800 !important;
-  box-shadow:0 8px 22px rgba(0,0,0,.24) !important;
-  cursor:pointer;
-  -webkit-tap-highlight-color:transparent;
-  touch-action:manipulation;
-}
-body.admin-mode #adminModeToggle.admin-toggle{
-  display:block !important;
-  color:#e2bd67 !important;
-}
-@media(max-width:600px){
-  #adminModeToggle.admin-toggle{
-    right:max(10px,env(safe-area-inset-right)) !important;
-    bottom:calc(10px + env(safe-area-inset-bottom)) !important;
-    padding:9px 12px !important;
-    font-size:11px !important;
-  }
-}
-
-</style>
-
-
-<style id="calendar-public-detail-fix">
-.calendar-detail{
-  display:none;position:fixed;inset:0;z-index:10060;
-  padding:16px;background:rgba(3,12,24,.72);
-  align-items:center;justify-content:center
-}
-.calendar-detail.show{display:flex}
-.calendar-detail-box{
-  position:relative;width:min(520px,100%);max-height:88vh;overflow:auto;
-  background:#fff;border-top:4px solid #c79a3b;border-radius:10px;
-  padding:24px 20px;box-shadow:0 20px 60px rgba(0,0,0,.28)
-}
-.calendar-detail-close{
-  position:absolute;right:12px;top:12px;width:40px;height:40px;
-  border:0;border-radius:50%;background:#f0f2f5;font-size:25px;cursor:pointer
-}
-.calendar-detail-date{
-  color:#9b7623;font-size:12px;font-weight:800;letter-spacing:.08em;margin:0 44px 8px 0
-}
-.calendar-detail-title{
-  margin:0 44px 18px 0;color:#071426;font-size:24px;line-height:1.45
-}
-.calendar-detail-row{
-  display:grid;grid-template-columns:70px 1fr;gap:12px;
-  padding:12px 0;border-top:1px solid #e4e2dd
-}
-.calendar-detail-row b{color:#8f6918;font-size:12px}
-.calendar-detail-row span{color:#425064;font-size:14px;line-height:1.75;white-space:pre-wrap}
-.calendar-detail-row[hidden]{display:none}
-@media(max-width:600px){
-  .calendar-detail{padding:10px}
-  .calendar-detail-box{padding:22px 16px}
-  .calendar-detail-title{font-size:21px}
-  .calendar-detail-row{grid-template-columns:58px 1fr;gap:10px}
-}
-</style>
-
 </head>
 <body>
 <header class="header">
@@ -1594,14 +1347,16 @@ body.admin-mode #adminModeToggle.admin-toggle{
 <a href="./team.html">チーム紹介</a>
 <a href="./players.html">選手紹介</a>
 <a href="./results.html">試合結果</a>
-<a class="active" href="./schedule.html">スケジュール</a>
+<a class="active" href="./schedule.html">予定</a>
 <a href="./join.html">入団案内</a>
+<a href="./gallery.html">ギャラリー</a>
+<a href="./alumni.html">卒団生</a>
 <a href="./contact.html">お問い合わせ</a>
-
+<a href="./privacy.html">プライバシーポリシー</a>
 <a href="./terms.html">サイト利用について</a>
 <a href="https://www.instagram.com/yachiyo_little_senior?igsi=MTl4N3dneG9uY2ZxcA==" rel="noopener noreferrer" target="_blank">Instagram</a>
 <a href="#" onclick="return openProtectedArea('office')">事務局 🔒</a>
-<a href="./board.html">チーム内案内板 🔒</a>
+<a href="#" onclick="return openProtectedArea('board')">チーム内案内板 🔒</a>
 <a href="https://www.google.com/maps/search/?api=1&amp;query=%E5%8D%83%E8%91%89%E7%9C%8C%E5%85%AB%E5%8D%83%E4%BB%A3%E5%B8%82%E5%B3%B6%E7%94%B0%E5%8F%B0%EF%BC%97%EF%BC%97%EF%BC%95" rel="noopener noreferrer" target="_blank">グラウンド案内</a>
 </div>
 <button class="menu" onclick="toggleMenu()">☰</button>
@@ -1611,8 +1366,10 @@ body.admin-mode #adminModeToggle.admin-toggle{
 <a href="./team.html" onclick="toggleMenu()">チーム紹介</a>
 <a href="./players.html" onclick="toggleMenu()">選手紹介</a>
 <a href="./results.html" onclick="toggleMenu()">試合結果</a>
-<a href="./schedule.html" onclick="toggleMenu()">スケジュール</a>
+<a href="./schedule.html" onclick="toggleMenu()">予定</a>
 <a href="./join.html" onclick="toggleMenu()">入団案内</a>
+<a href="./gallery.html" onclick="toggleMenu()">ギャラリー</a>
+<a href="./alumni.html" onclick="toggleMenu()">卒団生</a>
 <a href="./contact.html" onclick="toggleMenu()">お問い合わせ</a>
 </div>
 </header>
@@ -1624,8 +1381,8 @@ body.admin-mode #adminModeToggle.admin-toggle{
 <div class="pagehero">
 <div class="pagehero-inner">
 <div class="eyebrow">CALENDAR</div>
-<h1>スケジュール</h1>
-<div class="crumb">HOME / スケジュール</div>
+<h1>予定</h1>
+<div class="crumb">HOME / 予定</div>
 </div>
 </div>
 <div class="container">
@@ -1633,7 +1390,7 @@ body.admin-mode #adminModeToggle.admin-toggle{
 <div class="calendar-toolbar">
 <button aria-label="前の月" class="cal-nav" id="calPrev" type="button">‹</button>
 <div>
-<div class="calendar-title" id="calTitle">2026年 9月</div>
+<div class="calendar-title" id="calTitle"></div>
 <div class="calendar-sub">予定を確認できます</div>
 </div>
 <button aria-label="次の月" class="cal-nav" id="calNext" type="button">›</button>
@@ -1641,7 +1398,7 @@ body.admin-mode #adminModeToggle.admin-toggle{
 <div class="calendar-week">
 <div class="sun">日</div><div>月</div><div>火</div><div>水</div><div>木</div><div>金</div><div class="sat">土</div>
 </div>
-<div class="calendar-grid" id="calendarGrid"><button type="button" class="calendar-day muted sun" data-date="2026-08-30"><span class="calendar-day-num">30</span></button><button type="button" class="calendar-day muted" data-date="2026-08-31"><span class="calendar-day-num">31</span></button><button type="button" class="calendar-day" data-date="2026-09-01"><span class="calendar-day-num">1</span></button><button type="button" class="calendar-day" data-date="2026-09-02"><span class="calendar-day-num">2</span></button><button type="button" class="calendar-day" data-date="2026-09-03"><span class="calendar-day-num">3</span></button><button type="button" class="calendar-day" data-date="2026-09-04"><span class="calendar-day-num">4</span></button><button type="button" class="calendar-day sat" data-date="2026-09-05"><span class="calendar-day-num">5</span></button><button type="button" class="calendar-day sun" data-date="2026-09-06"><span class="calendar-day-num">6</span></button><button type="button" class="calendar-day" data-date="2026-09-07"><span class="calendar-day-num">7</span></button><button type="button" class="calendar-day" data-date="2026-09-08"><span class="calendar-day-num">8</span></button><button type="button" class="calendar-day" data-date="2026-09-09"><span class="calendar-day-num">9</span></button><button type="button" class="calendar-day" data-date="2026-09-10"><span class="calendar-day-num">10</span></button><button type="button" class="calendar-day" data-date="2026-09-11"><span class="calendar-day-num">11</span></button><button type="button" class="calendar-day sat" data-date="2026-09-12"><span class="calendar-day-num">12</span></button><button type="button" class="calendar-day sun" data-date="2026-09-13"><span class="calendar-day-num">13</span></button><button type="button" class="calendar-day" data-date="2026-09-14"><span class="calendar-day-num">14</span></button><button type="button" class="calendar-day" data-date="2026-09-15"><span class="calendar-day-num">15</span></button><button type="button" class="calendar-day" data-date="2026-09-16"><span class="calendar-day-num">16</span></button><button type="button" class="calendar-day" data-date="2026-09-17"><span class="calendar-day-num">17</span></button><button type="button" class="calendar-day" data-date="2026-09-18"><span class="calendar-day-num">18</span></button><button type="button" class="calendar-day sat" data-date="2026-09-19"><span class="calendar-day-num">19</span></button><button type="button" class="calendar-day sun" data-date="2026-09-20"><span class="calendar-day-num">20</span></button><button type="button" class="calendar-day" data-date="2026-09-21"><span class="calendar-day-num">21</span></button><button type="button" class="calendar-day" data-date="2026-09-22"><span class="calendar-day-num">22</span></button><button type="button" class="calendar-day" data-date="2026-09-23"><span class="calendar-day-num">23</span></button><button type="button" class="calendar-day" data-date="2026-09-24"><span class="calendar-day-num">24</span></button><button type="button" class="calendar-day" data-date="2026-09-25"><span class="calendar-day-num">25</span></button><button type="button" class="calendar-day sat" data-date="2026-09-26"><span class="calendar-day-num">26</span></button><button type="button" class="calendar-day sun" data-date="2026-09-27"><span class="calendar-day-num">27</span></button><button type="button" class="calendar-day" data-date="2026-09-28"><span class="calendar-day-num">28</span></button><button type="button" class="calendar-day" data-date="2026-09-29"><span class="calendar-day-num">29</span></button><button type="button" class="calendar-day" data-date="2026-09-30"><span class="calendar-day-num">30</span></button><button type="button" class="calendar-day muted" data-date="2026-10-01"><span class="calendar-day-num">1</span></button><button type="button" class="calendar-day muted" data-date="2026-10-02"><span class="calendar-day-num">2</span></button><button type="button" class="calendar-day muted sat" data-date="2026-10-03"><span class="calendar-day-num">3</span></button><button type="button" class="calendar-day muted sun" data-date="2026-10-04"><span class="calendar-day-num">4</span></button><button type="button" class="calendar-day muted" data-date="2026-10-05"><span class="calendar-day-num">5</span></button><button type="button" class="calendar-day muted" data-date="2026-10-06"><span class="calendar-day-num">6</span></button><button type="button" class="calendar-day muted" data-date="2026-10-07"><span class="calendar-day-num">7</span></button><button type="button" class="calendar-day muted" data-date="2026-10-08"><span class="calendar-day-num">8</span></button><button type="button" class="calendar-day muted" data-date="2026-10-09"><span class="calendar-day-num">9</span></button><button type="button" class="calendar-day muted sat" data-date="2026-10-10"><span class="calendar-day-num">10</span></button></div>
+<div class="calendar-grid" id="calendarGrid"></div>
 <div class="calendar-legend">
 <span><i class="legend-practice"></i>練習</span>
 <span><i class="legend-official"></i>公式戦</span>
@@ -1649,52 +1406,11 @@ body.admin-mode #adminModeToggle.admin-toggle{
 <span><i class="legend-other"></i>その他</span>
 </div>
 <div class="calendar-note">
-        公開中の予定は閲覧者全員に表示されます。
+        この端末で登録した予定を表示します。
       </div>
 </div>
-
-<div class="annual-schedule">
-  <div class="annual-schedule-head">
-    <button type="button" id="annualAdminBtn" class="annual-admin-btn" hidden>編集</button>
-    <div class="annual-kicker">ANNUAL SCHEDULE</div>
-    <h2>主な年間スケジュール</h2>
-  </div>
-  <div class="annual-schedule-list" id="annualScheduleList">
-    <div class="annual-month"><div class="annual-month-label">4月</div><div class="annual-month-events"><div>新入生歓迎会（1年生）、3年生壮行会（3年生）</div><div>読売新聞社杯（3年生）</div></div></div>
-    <div class="annual-month"><div class="annual-month-label">5月</div><div class="annual-month-events"><div>リトルシニア関東連盟夏季大会（3年生）</div></div></div>
-    <div class="annual-month"><div class="annual-month-label">6月</div><div class="annual-month-events"><div>千葉日報杯新人戦（2年生）</div></div></div>
-    <div class="annual-month"><div class="annual-month-label">7月</div><div class="annual-month-events"><div>サマーフレンドリーカップ（1年生）\n一泊二日合宿</div><div>サマーフレンドリー交流大会（2年生）\n一泊二日合宿</div><div>千葉ロッテマリーンズカップ（3年生）</div></div></div>
-    <div class="annual-month"><div class="annual-month-label">9月</div><div class="annual-month-events"><div>東関東連盟秋季大会（2年生）</div></div></div>
-    <div class="annual-month"><div class="annual-month-label">10月</div><div class="annual-month-events"><div>浦安市長杯（3年生）</div></div></div>
-    <div class="annual-month"><div class="annual-month-label">11月</div><div class="annual-month-events"><div>フレッシュマン大会（1年生）</div><div>八千代リトルシニア杯（小学生大会）</div></div></div>
-    <div class="annual-month"><div class="annual-month-label">12月</div><div class="annual-month-events"><div>グランド納め</div></div></div>
-    <div class="annual-month"><div class="annual-month-label">1月</div><div class="annual-month-events"><div>グランド開き</div><div>鹿島市長杯（2年生）</div></div></div>
-    <div class="annual-month"><div class="annual-month-label">2月</div><div class="annual-month-events"><div>東関東連盟春季大会（2年生）</div></div></div>
-    <div class="annual-month"><div class="annual-month-label">3月</div><div class="annual-month-events"><div>いわきサンシャインCUP（2年生）\n一泊二日合宿</div><div>卒団式（3年生）</div></div></div>
-  </div>
-  <div class="annual-other" id="annualOther">
-    <h3>その他</h3>
-    <p>不定期：陸上トレーニング日</p>
-    <p>年1回：栄養講座（4月）</p>
-    <p>年1回：やちよふるさと祭り出店（未定）</p>
-  </div>
-  <div class="annual-note" id="annualNote">※年間スケジュールは変更になることがあります。</div>
-</div>
-
 </div>
 </section>
-
-<div class="calendar-detail" id="calendarDetail" aria-hidden="true">
-  <div class="calendar-detail-box" role="dialog" aria-modal="true" aria-labelledby="calendarDetailTitle">
-    <button type="button" class="calendar-detail-close" id="calendarDetailClose" aria-label="閉じる">×</button>
-    <div class="calendar-detail-date" id="calendarDetailDate"></div>
-    <h2 class="calendar-detail-title" id="calendarDetailTitle"></h2>
-    <div class="calendar-detail-row" id="calendarDetailTimeRow"><b>時間</b><span id="calendarDetailTime"></span></div>
-    <div class="calendar-detail-row" id="calendarDetailPlaceRow"><b>場所</b><span id="calendarDetailPlace"></span></div>
-    <div class="calendar-detail-row" id="calendarDetailMemoRow"><b>詳細</b><span id="calendarDetailMemo"></span></div>
-  </div>
-</div>
-
 <div aria-hidden="true" class="calendar-editor" id="calendarEditor">
 <div class="calendar-editor-box">
 <button aria-label="閉じる" class="calendar-editor-close" id="calendarEditorClose" type="button">×</button>
@@ -1754,29 +1470,11 @@ function getAdminPassword(){
   return p;
 }
 async function sharedLoad(section){
-  const r=await fetch(`${SHARED_API}?section=${encodeURIComponent(section)}`,{cache:'no-store'});
-  if(!r.ok) throw new Error('load failed');
-  const j=await r.json();
-  return Array.isArray(j.data)?j.data:[];
+  try{return JSON.parse(localStorage.getItem('yachiyo_'+section)||'[]');}
+  catch(e){return [];}
 }
 async function sharedSave(section,data){
-  const password=getAdminPassword();
-  if(!password) throw new Error('cancelled');
-  const r=await fetch(`${SHARED_API}?section=${encodeURIComponent(section)}`,{
-    method:'POST',
-    headers:{'content-type':'application/json','x-admin-password':password},
-    body:JSON.stringify({data})
-  });
-  if(r.status===401){
-    sessionStorage.removeItem('yachiyoAdminPassword');
-    alert('管理者パスワードが違います。');
-    throw new Error('unauthorized');
-  }
-  if(r.status===503){
-    alert('Netlifyの管理者パスワード設定がまだ完了していません。');
-    throw new Error('not configured');
-  }
-  if(!r.ok) throw new Error('save failed');
+  localStorage.setItem('yachiyo_'+section,JSON.stringify(data));
   return true;
 }
 function escHtml(s){
@@ -1784,7 +1482,6 @@ function escHtml(s){
 }
 
 let scheduleData=[];
-window.scheduleData=scheduleData;
 let currentMonth=new Date();
 currentMonth.setDate(1);
 let selectedDate='';
@@ -1816,43 +1513,9 @@ function renderCalendar(){
   }
   grid.innerHTML=html;
   grid.querySelectorAll('[data-date]').forEach(b=>b.addEventListener('click',()=>{
-    const date=b.dataset.date;
-    if(document.body.classList.contains('admin-mode')){
-      openEditor(date);
-    }else if(eventFor(date)){
-      openPublicDetail(date);
-    }
+    if(document.body.classList.contains('admin-mode')) openEditor(b.dataset.date);
   }));
 }
-function openPublicDetail(date){
-  const ev=eventFor(date);
-  if(!ev) return;
-  const detail=document.getElementById('calendarDetail');
-  document.getElementById('calendarDetailDate').textContent=date.replace(/-/g,'/');
-  document.getElementById('calendarDetailTitle').textContent=ev.title||'予定';
-  const fields=[
-    ['Time','time'],['Place','place'],['Memo','memo']
-  ];
-  fields.forEach(([id,key])=>{
-    const row=document.getElementById('calendarDetail'+id+'Row');
-    const val=document.getElementById('calendarDetail'+id);
-    const text=String(ev[key]||'').trim();
-    val.textContent=text;
-    row.hidden=!text;
-  });
-  detail.classList.add('show');
-  detail.setAttribute('aria-hidden','false');
-}
-function closePublicDetail(){
-  const detail=document.getElementById('calendarDetail');
-  detail.classList.remove('show');
-  detail.setAttribute('aria-hidden','true');
-}
-document.getElementById('calendarDetailClose').addEventListener('click',closePublicDetail);
-document.getElementById('calendarDetail').addEventListener('click',e=>{
-  if(e.target.id==='calendarDetail') closePublicDetail();
-});
-
 function openEditor(date){
   selectedDate=date;
   const ev=eventFor(date)||{};
@@ -1885,48 +1548,20 @@ document.getElementById('calendarForm').addEventListener('submit',async e=>{
     memo:document.getElementById('calendarEventMemo').value.trim()
   };
   const next=scheduleData.filter(x=>x.date!==selectedDate);next.push(item);
-  try{await sharedSave('schedule',next);scheduleData=next;window.scheduleData=scheduleData;closeEditor();renderCalendar();}
+  try{await sharedSave('schedule',next);scheduleData=next;closeEditor();renderCalendar();}
   catch(err){if(err.message!=='cancelled'&&err.message!=='unauthorized'&&err.message!=='not configured')alert('保存に失敗しました。');}
 });
 document.getElementById('calendarDelete').addEventListener('click',async()=>{
   if(!selectedDate||!confirm('この予定を削除しますか？'))return;
   const next=scheduleData.filter(x=>x.date!==selectedDate);
-  try{await sharedSave('schedule',next);scheduleData=next;window.scheduleData=scheduleData;closeEditor();renderCalendar();}
+  try{await sharedSave('schedule',next);scheduleData=next;closeEditor();renderCalendar();}
   catch(err){if(err.message!=='cancelled'&&err.message!=='unauthorized'&&err.message!=='not configured')alert('削除に失敗しました。');}
 });
-renderCalendar();
 (async()=>{
-  try{
-    scheduleData=await sharedLoad('schedule');
-    window.scheduleData=scheduleData;
-    renderCalendar();
-  }catch(e){
-    /* カレンダー自体は先に1か月分表示済み */
-  }
+  try{scheduleData=await sharedLoad('schedule');renderCalendar();}
+  catch(e){renderCalendar();}
 })();
 </script>
-
-<div class="annual-editor" id="annualEditor" aria-hidden="true">
-  <div class="annual-editor-box" role="dialog" aria-modal="true" aria-labelledby="annualEditorTitle">
-    <button type="button" class="annual-editor-close" id="annualEditorClose" aria-label="閉じる">×</button>
-    <h2 id="annualEditorTitle">年間スケジュール編集</h2>
-    <p class="annual-editor-help">1行につき「月|内容」の形式で入力してください。同じ月を複数行にしても表示できます。</p>
-    <label>年間スケジュール
-      <textarea id="annualScheduleInput"></textarea>
-    </label>
-    <label>その他
-      <textarea id="annualOtherInput"></textarea>
-    </label>
-    <label>注意書き
-      <input id="annualNoteInput" type="text">
-    </label>
-    <div class="annual-editor-actions">
-      <button type="button" class="annual-editor-cancel" id="annualEditorCancel">キャンセル</button>
-      <button type="button" class="annual-editor-save" id="annualEditorSave">保存</button>
-    </div>
-  </div>
-</div>
-
 <footer class="restored-footer">
 <div class="restored-footer-inner">
 <nav aria-label="フッターナビゲーション" class="restored-footer-nav">
@@ -1934,21 +1569,16 @@ renderCalendar();
 <a href="./team.html">チーム紹介</a>
 <a href="./players.html">選手紹介</a>
 <a href="./results.html">試合結果</a>
-<a href="./schedule.html">スケジュール</a>
+<a href="./schedule.html">予定</a>
 <a href="./join.html">入団案内</a>
+<a href="./gallery.html">ギャラリー</a>
+<a href="./alumni.html">卒団生</a>
 <a href="./contact.html">お問い合わせ</a>
-<a href="./index.html#homeNews">新着NEWS</a>
 <a href="https://www.instagram.com/yachiyo_little_senior?igsi=MTl4N3dneG9uY2ZxcA==" rel="noopener noreferrer" target="_blank">Instagram</a>
-<a href="https://www.facebook.com/share/1DakdBtEv6/?mibextid=wwXIfr" rel="noopener noreferrer" target="_blank">Facebook</a>
-<a href="./rules.html">チーム規約 🔒</a>
-<a href="./board.html">チーム内案内板 🔒</a>
+<a href="#" onclick="return openProtectedArea('office')">事務局 🔒</a>
+<a href="#" onclick="return openProtectedArea('board')">チーム内案内板 🔒</a>
 </nav>
-
-
-<button id="adminModeToggle" class="admin-toggle" type="button" onclick="enableAdminMode()">管理</button>
-
-<div class="ground-address"><a href="https://www.google.com/maps/search/?api=1&query=%E5%8D%83%E8%91%89%E7%9C%8C%E5%85%AB%E5%8D%83%E4%BB%A3%E5%B8%82%E5%B3%B6%E7%94%B0%E5%8F%B0%EF%BC%97%EF%BC%97%EF%BC%95" target="_blank" rel="noopener noreferrer" style="color:inherit;text-decoration:none;">グラウンド案内：千葉県八千代市島田台７７５</a></div>
-<div class="footer-privacy-link" style="text-align:center;margin-top:10px;font-size:11px;"><a href="./privacy.html" style="color:#8f9aa7;text-decoration:none;">プライバシーポリシー</a></div>
+<div class="ground-address"><a href="https://www.google.com/maps/search/?api=1&query=%E5%8D%83%E8%91%89%E7%9C%8C%E5%85%AB%E5%8D%83%E4%BB%A3%E5%B8%82%E5%B3%B6%E7%94%B0%E5%8F%B0%EF%BC%97%EF%BC%97%EF%BC%95" target="_blank" rel="noopener noreferrer" style="color:inherit;text-decoration:none;">グラウンド：千葉県八千代市島田台７７５</a></div>
 <div class="restored-footer-copy">© YACHIYO LITTLE SENIOR. All Rights Reserved.</div>
 </div>
 </footer>
@@ -1960,7 +1590,9 @@ function openProtectedArea(type){
   const entered=prompt("パスワードを入力してください");
   if(entered===null) return false;
   if(type==="office" && entered!=="yachiyo198208000"){ alert("パスワードが違います。"); return false; }
-  if(type==="office") window.location.href="mailto:yachiyo.littleseniors@gmail.com";
+  if(type==="board" && entered!=="yachiyo20260800"){ alert("パスワードが違います。"); return false; }
+  if(type==="office") window.location.href="mailto:team.yachiyo.8740@gmail.com";
+  if(type==="board") window.location.href="https://teamyachiyo8740.web.fc2.com/8740.html";
   return false;
 }
 </script>
@@ -2021,167 +1653,26 @@ function openProtectedArea(type){
 <script>
 (function(){
   const KEY='yachiyoAdminMode';
-
-  function apply(on){
-    document.body.classList.toggle('admin-mode',!!on);
+  function apply(){
+    const on=sessionStorage.getItem(KEY)==='1';
+    document.body.classList.toggle('admin-mode',on);
     const b=document.getElementById('adminModeToggle');
-    if(b){
-      b.textContent=on?'管理終了':'管理';
-      b.style.display=on?'block':'none';
-    }
-    const annualBtn=document.getElementById('annualAdminBtn');
-    if(annualBtn) annualBtn.hidden=!on;
+    if(b) b.textContent=on?'管理モード終了':'管理者';
   }
-
-  async function verifyAdminPassword(password){
-    try{
-      const data = Array.isArray(window.scheduleData) ? window.scheduleData : [];
-      const r = await fetch('/.netlify/functions/site-data?section=schedule',{
-        method:'POST',
-        headers:{
-          'content-type':'application/json',
-          'x-admin-password':password
-        },
-        body:JSON.stringify({data})
-      });
-      return r.ok;
-    }catch(e){
-      return false;
-    }
-  }
-
-  window.enableAdminMode=async function(){
+  window.enableAdminMode=function(){
     if(document.body.classList.contains('admin-mode')){
-      sessionStorage.removeItem(KEY);
-      sessionStorage.removeItem('yachiyoAdminPassword');
-      apply(false);
-      return;
+      sessionStorage.removeItem(KEY);apply();return;
     }
-
     const p=prompt('管理者パスワードを入力してください');
     if(!p)return;
-
-    const ok=await verifyAdminPassword(p);
-    if(!ok){
-      sessionStorage.removeItem(KEY);
-      sessionStorage.removeItem('yachiyoAdminPassword');
-      apply(false);
-      alert('管理者パスワードが違います。');
-      return;
-    }
-
     sessionStorage.setItem('yachiyoAdminPassword',p);
     sessionStorage.setItem(KEY,'1');
-    apply(true);
+    apply();
   };
-
-  document.addEventListener('DOMContentLoaded',function(){
-    // ページを開くたび必ず一般閲覧モードから開始
-    sessionStorage.removeItem(KEY);
-    sessionStorage.removeItem('yachiyoAdminPassword');
-    apply(false);
-
-    const footer=document.querySelector('.restored-footer');
-    const b=document.getElementById('adminModeToggle');
-    if(!footer||!b)return;
-    let tapCount=0,tapTimer=null;
-    footer.addEventListener('pointerup',function(e){
-      if(e.target.closest('#adminModeToggle'))return;
-      const r=footer.getBoundingClientRect();
-      if(Math.max(0,r.right-e.clientX)>130||Math.max(0,r.bottom-e.clientY)>130){
-        tapCount=0;return;
-      }
-      tapCount++;
-      clearTimeout(tapTimer);
-      tapTimer=setTimeout(function(){tapCount=0;},1500);
-      if(tapCount>=3){
-        tapCount=0;
-        clearTimeout(tapTimer);
-        b.style.display='block';
-      }
-    },{passive:true});
-  });
+  document.addEventListener('DOMContentLoaded',apply);
 })();
 </script>
-
-
-
-<script>
-(function(){
-  const DEFAULT_ANNUAL = {
-    schedule: [
-      ["4月","新入生歓迎会（1年生）、3年生壮行会（3年生）"],["4月","読売新聞社杯（3年生）"],
-      ["5月","リトルシニア関東連盟夏季大会（3年生）"],
-      ["6月","千葉日報杯新人戦（2年生）"],
-      ["7月","サマーフレンドリーカップ（1年生）\n一泊二日合宿"],["7月","サマーフレンドリー交流大会（2年生）\n一泊二日合宿"],["7月","千葉ロッテマリーンズカップ（3年生）"],
-      ["9月","東関東連盟秋季大会（2年生）"],["10月","浦安市長杯（3年生）"],
-      ["11月","フレッシュマン大会（1年生）"],["11月","八千代リトルシニア杯（小学生大会）"],
-      ["12月","グランド納め"],["1月","グランド開き"],["1月","鹿島市長杯（2年生）"],
-      ["2月","東関東連盟春季大会（2年生）"],["3月","いわきサンシャインCUP（2年生）\n一泊二日合宿"],["3月","卒団式（3年生）"]
-    ],
-    other:["不定期：陸上トレーニング日","年1回：栄養講座（4月）","年1回：やちよふるさと祭り出店（未定）"],
-    note:"※年間スケジュールは変更になることがあります。"
-  };
-  let annualData = JSON.parse(JSON.stringify(DEFAULT_ANNUAL));
-
-  const esc = v => String(v??"").replace(/[&<>"']/g,m=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[m]));
-  function normalize(v){
-    return {
-      schedule:Array.isArray(v?.schedule)?v.schedule.filter(x=>Array.isArray(x)&&x.length>=2).map(x=>[String(x[0]),String(x[1])]):DEFAULT_ANNUAL.schedule,
-      other:Array.isArray(v?.other)?v.other.map(String):DEFAULT_ANNUAL.other,
-      note:typeof v?.note==="string"?v.note:DEFAULT_ANNUAL.note
-    };
-  }
-  function renderAnnual(){
-    const list=document.getElementById("annualScheduleList");
-    const groups=[];
-    annualData.schedule.forEach(([month,text])=>{
-      let g=groups.find(x=>x.month===month);
-      if(!g){g={month,items:[]};groups.push(g)}
-      g.items.push(text);
-    });
-    list.innerHTML=groups.map(g=>`<div class="annual-month"><div class="annual-month-label">${esc(g.month)}</div><div class="annual-month-events">${g.items.map(t=>`<div>${esc(t)}</div>`).join("")}</div></div>`).join("");
-    document.getElementById("annualOther").innerHTML='<h3>その他</h3>'+annualData.other.map(t=>`<p>${esc(t)}</p>`).join("");
-    document.getElementById("annualNote").textContent=annualData.note;
-  }
-  async function loadAnnual(){
-    try{
-      if(typeof sharedLoad!=="function") return renderAnnual();
-      const saved=await sharedLoad("annualSchedule");
-      if(saved && (saved.schedule||saved.other||saved.note)) annualData=normalize(saved);
-    }catch(e){ console.warn("annualSchedule load",e); }
-    renderAnnual();
-  }
-  function openEditor(){
-    document.getElementById("annualScheduleInput").value=annualData.schedule.map(x=>x[0]+"|"+x[1]).join("\n");
-    document.getElementById("annualOtherInput").value=annualData.other.join("\n");
-    document.getElementById("annualNoteInput").value=annualData.note;
-    const m=document.getElementById("annualEditor");m.classList.add("show");m.setAttribute("aria-hidden","false");
-  }
-  function closeEditor(){const m=document.getElementById("annualEditor");m.classList.remove("show");m.setAttribute("aria-hidden","true")}
-  async function saveAnnual(){
-    const schedule=document.getElementById("annualScheduleInput").value.split(/\r?\n/).map(x=>x.trim()).filter(Boolean).map(line=>{
-      const i=line.indexOf("|"); return i<0?null:[line.slice(0,i).trim(),line.slice(i+1).trim()];
-    }).filter(x=>x&&x[0]&&x[1]);
-    const other=document.getElementById("annualOtherInput").value.split(/\r?\n/).map(x=>x.trim()).filter(Boolean);
-    const note=document.getElementById("annualNoteInput").value.trim();
-    if(!schedule.length){alert("年間スケジュールを1件以上入力してください。");return}
-    const next={schedule,other,note};
-    try{
-      if(typeof sharedSave!=="function") throw new Error("保存機能を確認できません");
-      await sharedSave("annualSchedule",next);
-      annualData=next;renderAnnual();closeEditor();alert("年間スケジュールを保存しました。");
-    }catch(e){alert("保存できませんでした。管理状態と通信を確認してください。");console.error(e)}
-  }
-
-  document.getElementById("annualAdminBtn")?.addEventListener("click",openEditor);
-  document.getElementById("annualEditorClose")?.addEventListener("click",closeEditor);
-  document.getElementById("annualEditorCancel")?.addEventListener("click",closeEditor);
-  document.getElementById("annualEditorSave")?.addEventListener("click",saveAnnual);
-
-  loadAnnual();
-})();
-</script>
+<button id="adminModeToggle" class="admin-toggle" type="button" onclick="enableAdminMode()">管理者</button>
 
 </body>
 </html>
