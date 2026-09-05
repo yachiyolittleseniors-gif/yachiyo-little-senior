@@ -2692,6 +2692,9 @@ function openProtectedArea(type){
   if(!incoming.some(x=>x.role==='事務局長')){
     incoming.unshift({role:'事務局長',name:'櫻井 道徳'});
   }
+  if(!incoming.some(x=>x.role==='会長')){
+    incoming.unshift({role:'会長',name:'中村 智己'});
+  }
   staff = (legacyThree || legacyFour || groupedCoach) ? defaults.slice() : incoming;
 }}}catch(e){}
    render();
