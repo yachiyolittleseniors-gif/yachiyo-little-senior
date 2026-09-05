@@ -2,10 +2,12 @@
 
 <html lang="ja">
 <head>
+<!-- Created by tatsuki.saitoh -->
+<meta content="tatsuki.saitoh" name="author"/>
 <meta charset="utf-8"/>
 <meta content="width=device-width, initial-scale=1.0, viewport-fit=cover" name="viewport"/>
 <meta content="#071426" name="theme-color"/>
-<title>入団・体験案内｜八千代リトルシニア</title>
+<title>入団案内・選手募集｜八千代リトルシニア（八千代シニア）</title>
 <style>
 :root{
   --navy:#071426; --navy2:#0c1d33; --gold:#c79a3b; --gold2:#e2bd67;
@@ -35,7 +37,7 @@ h1{font-family:serif;font-weight:500;font-size:clamp(42px,7vw,82px);letter-spaci
 .hero-sub{font-family:serif;font-size:clamp(20px,3vw,31px);letter-spacing:.12em;margin:0 0 14px}
 .hero-copy{color:#e0e4e9;max-width:620px;line-height:2;font-size:15px}
 .goldline{width:74px;height:2px;background:var(--gold);margin:28px 0}
-.btns{display:flex;gap:12px;flex-wrap:wrap;margin-top:30px}.btn{border:1px solid var(--gold);padding:14px 28px;display:inline-flex;gap:18px;align-items:center;font-weight:700}.btn.primary{background:var(--gold);color:#101923}.btn.ghost{background:rgba(0,0,0,.15);color:#fff}
+.btns{display:flex;gap:12px;flex-wrap:wrap;margin-top:30px}.btn{border:1px solid var(--gold);padding:14px 28px;display:inline-flex;gap:18px;align-items:center;font-weight:700}.btn.primary{background:var(--gold);color:#fff!important}.btn.ghost{background:rgba(0,0,0,.15);color:#fff}
 .news{background:var(--navy);color:#fff;border-bottom:1px solid var(--line)}.news-inner{max-width:1180px;margin:auto;padding:28px 22px;display:grid;grid-template-columns:170px 1fr;gap:28px}
 .section-label{font-family:serif;font-size:30px;letter-spacing:.08em}.section-label small{display:block;color:var(--gold2);font-family:inherit;font-size:12px;margin-top:5px}
 .news-list{display:grid;gap:10px}.news-item{display:flex;gap:18px;border-bottom:1px solid rgba(255,255,255,.1);padding-bottom:9px;font-size:14px}.date{color:var(--gold2);min-width:92px}.tag{font-size:10px;border:1px solid var(--gold);padding:2px 6px;color:var(--gold2);margin-left:auto}
@@ -930,7 +932,7 @@ footer .official-brand-img{
   .hero-actions a:first-child,
   .btn.primary{
     background:linear-gradient(180deg,#d3b45d,#b88e31)!important;
-    color:#071426!important;
+    color:#fff!important;
     border:1px solid #e7cf84!important;
     box-shadow:0 7px 20px rgba(199,162,74,.25);
   }
@@ -1198,7 +1200,8 @@ nav a *,
 
 
 .higashikanto-link-wrap{margin:26px 0;text-align:center}
-.higashikanto-link{display:inline-block;padding:13px 20px;border:1px solid #d7b457;border-radius:999px;color:#d7b457!important;text-decoration:none!important;font-weight:800;letter-spacing:.02em}
+.higashikanto-link{display:inline-block;box-sizing:border-box;max-width:calc(100% - 24px);padding:13px clamp(12px,3vw,20px);border:1px solid #d7b457;border-radius:999px;color:#d7b457!important;text-decoration:none!important;font-weight:800;font-size:clamp(11px,3.25vw,16px);letter-spacing:0;line-height:1.35;white-space:nowrap}
+.higashikanto-link .link-line{display:block;white-space:nowrap}
 .higashikanto-link:hover{background:#d7b457;color:#071a2d!important}
 
 
@@ -1232,15 +1235,7 @@ nav a *,
 @media(max-width:600px){.hero{min-height:610px;background-position:58% center!important}.hero-inner{background:linear-gradient(90deg,rgba(7,20,38,.18),transparent);}.activity-stack{grid-template-columns:1fr}.activity-main,.activity-side{min-height:250px}.gallery{grid-template-columns:1fr!important}.gallery .g{aspect-ratio:16/10}.photo{min-height:260px}}
 </style>
 
-<meta name="description" content="八千代リトルシニアの入団・体験参加案内。中学生および卒業前の小学6年生を対象に募集しています。">
-<meta property="og:type" content="website">
-<meta property="og:site_name" content="八千代リトルシニア">
-<meta property="og:title" content="入団・体験案内｜八千代リトルシニア">
-<meta property="og:description" content="八千代リトルシニアの入団・体験参加案内。中学生および卒業前の小学6年生を対象に募集しています。">
-<meta property="og:locale" content="ja_JP">
-<meta name="twitter:card" content="summary_large_image">
-<meta name="twitter:title" content="入団案内｜八千代リトルシニア">
-<meta name="twitter:description" content="八千代リトルシニア公式サイト。選手紹介、試合結果、予定、入団案内、ギャラリーなどを掲載しています。">
+
 <link rel="icon" href="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCA2NCA2NCI+CjxyZWN0IHdpZHRoPSI2NCIgaGVpZ2h0PSI2NCIgcng9IjE0IiBmaWxsPSIjMDcxNDI2Ii8+CjxjaXJjbGUgY3g9IjMyIiBjeT0iMzIiIHI9IjIwIiBmaWxsPSIjZmZmIi8+CjxwYXRoIGQ9Ik0yMCAyMmM1IDQgOCA5IDkgMTVNNDQgMjJjLTUgNC04IDktOSAxNU0yMCA0MmM1LTQgOC05IDktMTVNNDQgNDJjLTUtNC04LTktOS0xNSIgc3Ryb2tlPSIjYzc5YTNiIiBzdHJva2Utd2lkdGg9IjMiIGZpbGw9Im5vbmUiIHN0cm9rZS1saW5lY2FwPSJyb3VuZCIvPgo8L3N2Zz4=">
 
 
@@ -1295,8 +1290,74 @@ img,video,iframe{max-width:100%}
 }
 </style>
 
+
+
+
+
+
+
+
+
+
+
+<script type="application/ld+json">{"@context":"https://schema.org","@type":"BreadcrumbList","itemListElement":[{"@type":"ListItem","position":1,"name":"HOME","item":"https://yachiyo-little-senior.netlify.app/"},{"@type":"ListItem","position":2,"name":"入団案内・体験練習","item":"https://yachiyo-little-senior.netlify.app/join.html"}]}</script>
+
+<style id="footer-layout-only-fix">
+.footer-privacy{
+  margin-top:20px;
+  text-align:center;
+  color:#8997a7;
+  font-size:12px;
+  font-weight:700;
+}
+.footer-privacy a{color:inherit!important;text-decoration:none}
+@media(max-width:700px){
+  .restored-footer-nav{
+    display:grid!important;
+    grid-template-columns:repeat(2,minmax(0,1fr))!important;
+    grid-auto-flow:row!important;
+  }
+  .restored-footer-nav>a{
+    grid-column:auto!important;
+    width:auto!important;
+    min-width:0!important;
+    display:flex!important;
+    align-items:center!important;
+    justify-content:center!important;
+    text-align:center!important;
+  }
+  .ground-address{
+    margin-top:28px!important;
+    padding:24px 0 4px!important;
+    border-top:1px solid rgba(255,255,255,.08);
+    font-size:13px!important;
+    font-weight:700;
+  }
+  .footer-privacy{margin-top:18px;font-size:12px}
+}
+</style>
+
+<meta name="description" content="八千代リトルシニアの入団案内・選手募集。千葉県八千代市で中学硬式野球に取り組みたい中学生・小学6年生へ、活動内容や入団情報をご案内します。">
 <link rel="canonical" href="https://yachiyo-little-senior.netlify.app/join.html">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="八千代リトルシニア">
+<meta property="og:title" content="入団案内・選手募集｜八千代リトルシニア（八千代シニア）">
+<meta property="og:description" content="八千代リトルシニアの入団案内・選手募集。千葉県八千代市で中学硬式野球に取り組みたい中学生・小学6年生へ、活動内容や入団情報をご案内します。">
 <meta property="og:url" content="https://yachiyo-little-senior.netlify.app/join.html">
+<meta property="og:locale" content="ja_JP">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="入団案内・選手募集｜八千代リトルシニア（八千代シニア）">
+<meta name="twitter:description" content="八千代リトルシニアの入団案内・選手募集。千葉県八千代市で中学硬式野球に取り組みたい中学生・小学6年生へ、活動内容や入団情報をご案内します。">
+<style id="footer-ground-spacing-unified">
+@media(max-width:700px){
+  .restored-footer-nav{margin-bottom:0!important}
+  .ground-address{
+    margin-top:0!important;
+    padding:16px 6px 8px!important;
+    border-top:0!important;
+  }
+}
+</style>
 </head>
 <body>
 <header class="header">
@@ -1309,16 +1370,14 @@ img,video,iframe{max-width:100%}
 <a href="./team.html">チーム紹介</a>
 <a href="./players.html">選手紹介</a>
 <a href="./results.html">試合結果</a>
-<a href="./schedule.html">予定</a>
+<a href="./schedule.html">スケジュール</a>
 <a class="active" href="./join.html">入団案内</a>
-<a href="./gallery.html">ギャラリー</a>
-<a href="./alumni.html">卒団生</a>
 <a href="./contact.html">お問い合わせ</a>
 <a href="./privacy.html">プライバシーポリシー</a>
 <a href="./terms.html">サイト利用について</a>
 <a href="https://www.instagram.com/yachiyo_little_senior?igsi=MTl4N3dneG9uY2ZxcA==" rel="noopener noreferrer" target="_blank">Instagram</a>
-<a href="#" onclick="return openProtectedArea('office')">事務局 🔒</a>
-<a href="#" onclick="return openProtectedArea('board')">チーム内案内板 🔒</a>
+<a href="./rules.html">チーム規約</a>
+<a href="./board.html">チーム内案内板 🔒</a>
 <a href="https://www.google.com/maps/search/?api=1&amp;query=%E5%8D%83%E8%91%89%E7%9C%8C%E5%85%AB%E5%8D%83%E4%BB%A3%E5%B8%82%E5%B3%B6%E7%94%B0%E5%8F%B0%EF%BC%97%EF%BC%97%EF%BC%95" rel="noopener noreferrer" target="_blank">グラウンド案内</a>
 </div>
 <button class="menu" onclick="toggleMenu()">☰</button>
@@ -1328,10 +1387,8 @@ img,video,iframe{max-width:100%}
 <a href="./team.html" onclick="toggleMenu()">チーム紹介</a>
 <a href="./players.html" onclick="toggleMenu()">選手紹介</a>
 <a href="./results.html" onclick="toggleMenu()">試合結果</a>
-<a href="./schedule.html" onclick="toggleMenu()">予定</a>
+<a href="./schedule.html" onclick="toggleMenu()">スケジュール</a>
 <a href="./join.html" onclick="toggleMenu()">入団案内</a>
-<a href="./gallery.html" onclick="toggleMenu()">ギャラリー</a>
-<a href="./alumni.html" onclick="toggleMenu()">卒団生</a>
 <a href="./contact.html" onclick="toggleMenu()">お問い合わせ</a>
 </div>
 </header>
@@ -1343,9 +1400,9 @@ img,video,iframe{max-width:100%}
 <div aria-hidden="true" class="calendar-editor" id="calendarEditor">
 <div class="calendar-editor-box">
 <button aria-label="閉じる" class="calendar-editor-close" id="calendarEditorClose" type="button">×</button>
-<h2 id="calendarEditorDate">予定入力</h2>
+<h2 id="calendarEditorDate">スケジュール入力</h2>
 <form id="calendarForm">
-<label>予定名
+<label>スケジュール名
         <input id="calendarEventTitle" maxlength="50" placeholder="例：練習／公式戦／遠征" required="" type="text"/>
 </label>
 <label>時間
@@ -1365,7 +1422,7 @@ img,video,iframe{max-width:100%}
 </div>
 </div>
 <section class="page show" id="join"><div class="pagehero"><div class="pagehero-inner"><div class="eyebrow">JOIN US</div><h1>入団案内</h1><div class="crumb">HOME / 入団案内</div></div></div><div class="container"><div class="card"><h2>硬式野球6年間計画</h2><div class="en">FUTURE</div><p>硬式野球に打ち込みたい中学生、および卒業前の小学6年生が対象。勝つことだけではなく、勝つことを目標に努力する過程を大切に指導します。</p>
-<div class="info-row"><b>対象</b><span>中学生・卒業前の小学6年生</span></div><div class="info-row"><b>経験</b><span>野球経験の長さ・体格・性別は問いません</span></div><div class="info-row"><b>活動</b><span>土曜日・日曜日・祝日が基本</span></div><div class="info-row"><b>試合</b><span>大会・練習試合を合わせ年間約100試合程度</span></div><div class="info-row"><b>体験</b><span>見学・体験についてはお問い合わせください</span></div></div></div></section>
+<div class="info-row"><b>対象</b><span>中学生・卒業前の小学6年生</span></div><div class="info-row"><b>経験</b><span>野球経験の長さ・体格・性別は問いません</span></div><div class="info-row"><b>活動</b><span>土曜日・日曜日・祝日を基本に練習<br>また、春休み、夏休み、冬休み期間中は適宜平日練習を行います</span></div><div class="info-row"><b>試合</b><span>大会・練習試合を合わせ年間約100試合程度</span></div><div class="info-row"><b>体験</b><span>見学・体験についてはお問い合わせください</span></div><div style="text-align:center;margin-top:24px;"><a class="btn primary" href="./contact.html">お問い合わせはこちら</a></div></div></div></section>
 
 
 
@@ -1384,6 +1441,7 @@ function closeModal(){
   if(modal) modal.classList.remove('show');
 }
 </script>
+
 <footer class="restored-footer">
 <div class="restored-footer-inner">
 <nav aria-label="フッターナビゲーション" class="restored-footer-nav">
@@ -1391,61 +1449,21 @@ function closeModal(){
 <a href="./team.html">チーム紹介</a>
 <a href="./players.html">選手紹介</a>
 <a href="./results.html">試合結果</a>
-<a href="./schedule.html">予定</a>
+<a href="./schedule.html">スケジュール</a>
 <a href="./join.html">入団案内</a>
-<a href="./gallery.html">ギャラリー</a>
-<a href="./alumni.html">卒団生</a>
 <a href="./contact.html">お問い合わせ</a>
+<a href="./links.html">リンク集</a>
 <a href="https://www.instagram.com/yachiyo_little_senior?igsi=MTl4N3dneG9uY2ZxcA==" rel="noopener noreferrer" target="_blank">Instagram</a>
-<a href="#" onclick="return openProtectedArea('office')">事務局 🔒</a>
-<a href="#" onclick="return openProtectedArea('board')">チーム内案内板 🔒</a>
+<a href="https://www.facebook.com/share/1DakdBtEv6/?mibextid=wwXIfr" rel="noopener noreferrer" target="_blank">Facebook</a>
+<a href="./rules.html">チーム規約 🔒</a>
+<a href="./board.html">チーム内案内板 🔒</a>
 </nav>
-<div class="ground-address"><a href="https://www.google.com/maps/search/?api=1&query=%E5%8D%83%E8%91%89%E7%9C%8C%E5%85%AB%E5%8D%83%E4%BB%A3%E5%B8%82%E5%B3%B6%E7%94%B0%E5%8F%B0%EF%BC%97%EF%BC%97%EF%BC%95" target="_blank" rel="noopener noreferrer" style="color:inherit;text-decoration:none;">グラウンド：千葉県八千代市島田台７７５</a></div>
+<div class="ground-address"><a href="https://www.google.com/maps/search/?api=1&query=%E5%8D%83%E8%91%89%E7%9C%8C%E5%85%AB%E5%8D%83%E4%BB%A3%E5%B8%82%E5%B3%B6%E7%94%B0%E5%8F%B0%EF%BC%97%EF%BC%97%EF%BC%95" target="_blank" rel="noopener noreferrer" style="color:inherit;text-decoration:none;">グラウンド案内：千葉県八千代市島田台７７５</a></div>
+<div class="footer-privacy"><a href="./privacy.html">プライバシーポリシー</a></div>
 <div class="restored-footer-copy">© YACHIYO LITTLE SENIOR. All Rights Reserved.</div>
 </div>
 </footer>
 
-
-
-
-
-<script>
-function openProtectedArea(type){
-  const entered=prompt("パスワードを入力してください");
-  if(entered===null) return false;
-  if(type==="office" && entered!=="yachiyo198208000"){ alert("パスワードが違います。"); return false; }
-  if(type==="board" && entered!=="yachiyo20260800"){ alert("パスワードが違います。"); return false; }
-  if(type==="office") window.location.href="mailto:team.yachiyo.8740@gmail.com";
-  if(type==="board") window.location.href="https://teamyachiyo8740.web.fc2.com/8740.html";
-  return false;
-}
-</script>
-
-
-<section class="join-cta">
-  <div class="small">TRIAL / JOIN</div>
-  <h2>体験参加・入団について</h2>
-  <p>見学・体験参加をご希望の方は、お問い合わせフォームからお気軽にご連絡ください。</p>
-  <a href="./contact.html">体験参加を申し込む →</a>
-</section>
-
-<div class="higashikanto-link-wrap">
-  <a class="higashikanto-link" href="https://www.little-senior.jp/higashikanto/sub/index.html" target="_blank" rel="noopener noreferrer">
-    日本リトルシニア 関東連盟 東関東支部
-  </a>
-</div>
-
-<div class="higashikanto-link-wrap">
-  <a class="higashikanto-link" href="https://www.kantoleague.net/shop/sphone/" target="_blank" rel="noopener noreferrer">
-    日本リトルシニア中学硬式野球協会 関東連盟
-  </a>
-</div>
-
-<div class="higashikanto-link-wrap">
-  <a class="higashikanto-link" href="https://spcv.jp/index.html" target="_blank" rel="noopener noreferrer">
-    超野球専門店CV
-  </a>
-</div>
 <script>
 (function(){
   const btn=document.querySelector('.menu');
