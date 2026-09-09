@@ -1,0 +1,776 @@
+/* PC layout refresh — mobile/tablet rules are intentionally untouched. */
+.pc-reference-hero-copy,
+.pc-reference-recruit-copy { display: none; }
+
+@media (min-width: 901px) {
+  :root {
+    --pc-content: 1180px;
+    --pc-header: 88px;
+    --pc-section-gap: 72px;
+    --pc-navy: #071426;
+    --pc-gold: #c79a3b;
+    --pc-paper: #f5f3ee;
+    --pc-line: #d9d7d0;
+  }
+
+  html { scroll-padding-top: var(--pc-header) !important; }
+  body { padding-top: var(--pc-header) !important; font-size: 16px; }
+
+  /* One compact desktop header for both header implementations. */
+  .header,
+  .site-header {
+    position: fixed !important;
+    inset: 0 0 auto 0 !important;
+    width: 100% !important;
+    height: var(--pc-header) !important;
+    z-index: 9999 !important;
+    background: rgba(7, 20, 38, .985) !important;
+    border-bottom: 1px solid rgba(199, 154, 59, .52) !important;
+    box-shadow: 0 8px 22px rgba(3, 12, 24, .18) !important;
+  }
+  .header .nav,
+  .site-header .site-nav {
+    width: min(100%, 1380px) !important;
+    max-width: 1380px !important;
+    height: var(--pc-header) !important;
+    min-height: var(--pc-header) !important;
+    margin: 0 auto !important;
+    padding: 0 28px !important;
+    display: flex !important;
+    align-items: center !important;
+    gap: 22px !important;
+    background: transparent !important;
+  }
+  .header .brand,
+  .site-header .site-brand {
+    flex: 0 0 300px !important;
+    min-width: 0 !important;
+    width: 300px !important;
+    height: auto !important;
+    margin: 0 !important;
+    transform: none !important;
+  }
+  .official-brand-wrap,
+  .site-header .site-brand {
+    display: flex !important;
+    align-items: center !important;
+    width: 300px !important;
+    max-width: 300px !important;
+    height: 64px !important;
+    padding: 0 !important;
+    background: transparent !important;
+    border: 0 !important;
+    border-radius: 0 !important;
+    box-shadow: none !important;
+  }
+  .official-brand-img,
+  .site-brand-logo {
+    display: block !important;
+    width: 100% !important;
+    height: 100% !important;
+    max-height: 64px !important;
+    object-fit: contain !important;
+    object-position: left center !important;
+    background: transparent !important;
+    border-radius: 0 !important;
+  }
+  .header .links,
+  .site-header .site-menu {
+    position: static !important;
+    inset: auto !important;
+    width: auto !important;
+    max-width: none !important;
+    height: 100% !important;
+    max-height: none !important;
+    margin: 0 0 0 auto !important;
+    padding: 0 !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: flex-end !important;
+    gap: 15px !important;
+    overflow: visible !important;
+    background: transparent !important;
+    border: 0 !important;
+    border-radius: 0 !important;
+    box-shadow: none !important;
+    white-space: nowrap !important;
+  }
+  .header .links a,
+  .site-header .site-menu a {
+    display: flex !important;
+    align-items: center !important;
+    height: 100% !important;
+    padding: 2px 0 0 !important;
+    border: 0 !important;
+    color: rgba(255,255,255,.88) !important;
+    font-size: 12px !important;
+    font-weight: 700 !important;
+    line-height: 1 !important;
+    letter-spacing: .02em !important;
+    background: transparent !important;
+  }
+  .header .links a:hover,
+  .site-header .site-menu a:hover { color: #e2bd67 !important; }
+  .menu,
+  .site-menu-button,
+  .mobile-links { display: none !important; }
+
+  /* Shared page rhythm and type scale. */
+  .pagehero,
+  body > .site-header + .hero {
+    min-height: 252px !important;
+    height: auto !important;
+    padding: 0 32px !important;
+    display: flex !important;
+    align-items: center !important;
+    background: linear-gradient(118deg, #071426 0%, #102943 100%) !important;
+  }
+  .pagehero-inner,
+  body > .site-header + .hero > div {
+    width: 100% !important;
+    max-width: var(--pc-content) !important;
+    margin: 0 auto !important;
+    padding: 58px 0 52px !important;
+  }
+  .pagehero .eyebrow,
+  body > .site-header + .hero .eyebrow {
+    font-size: 12px !important;
+    letter-spacing: .28em !important;
+  }
+  .pagehero h1,
+  body > .site-header + .hero h1 {
+    margin: 12px 0 14px !important;
+    font-size: clamp(42px, 4vw, 54px) !important;
+    line-height: 1.18 !important;
+    letter-spacing: .055em !important;
+  }
+  .pagehero .crumb,
+  body > .site-header + .hero .crumb { font-size: 13px !important; }
+
+  .container,
+  .wrap,
+  .main,
+  .news-inner,
+  .quick,
+  .home-news,
+  .latest-board,
+  .restored-footer-inner,
+  .footer-inner {
+    width: min(calc(100% - 64px), var(--pc-content)) !important;
+    max-width: var(--pc-content) !important;
+    margin-left: auto !important;
+    margin-right: auto !important;
+  }
+  body > .site-header ~ main {
+    width: min(calc(100% - 64px), var(--pc-content)) !important;
+    max-width: var(--pc-content) !important;
+    margin: 0 auto !important;
+    padding: 64px 0 80px !important;
+  }
+  .wrap,
+  .main { padding-top: 64px !important; padding-bottom: 80px !important; }
+  .container { padding-top: 64px !important; padding-bottom: 64px !important; }
+
+  h2 { line-height: 1.3; }
+  .container > h2,
+  .wrap > h2,
+  .main > h2,
+  .card > h2,
+  .panel > h2 { font-size: clamp(30px, 3vw, 40px); }
+  p, li, td, th, input, textarea, button { line-height: 1.75; }
+
+  .card,
+  .panel,
+  .download-card,
+  .locked-card,
+  .notice,
+  .comment-item,
+  .latest-card {
+    border: 1px solid var(--pc-line) !important;
+    border-radius: 6px !important;
+    box-shadow: 0 12px 30px rgba(7, 20, 38, .07) !important;
+  }
+  .card,
+  .panel,
+  .download-card { padding: 34px 38px !important; }
+  .grid,
+  .grid3,
+  .latest-grid,
+  .activity-grid { gap: 24px !important; }
+
+  /* Home page: broad, calm sections instead of oversized blocks. */
+  #home > .hero {
+    min-height: 540px !important;
+    height: auto !important;
+    padding: 72px 32px !important;
+  }
+  #home > .hero .hero-inner {
+    width: 100% !important;
+    max-width: var(--pc-content) !important;
+    margin: 0 auto !important;
+    gap: 54px !important;
+  }
+  #home > .hero h1 {
+    font-size: clamp(54px, 5vw, 70px) !important;
+    line-height: 1.1 !important;
+  }
+  #home > .hero .hero-copy { max-width: 650px !important; font-size: 17px !important; }
+  #home .news { padding: 38px 0 !important; }
+  #home .quick {
+    grid-template-columns: repeat(6, minmax(0, 1fr)) !important;
+    margin-top: 34px !important;
+    margin-bottom: 34px !important;
+    border-radius: 6px !important;
+    overflow: hidden !important;
+  }
+  #home .quick a { min-height: 118px !important; padding: 22px 10px !important; }
+  #home .seniorcup-home-banner,
+  #home .home-news,
+  #home .banner,
+  #home .latest-board { margin-top: var(--pc-section-gap) !important; margin-bottom: var(--pc-section-gap) !important; }
+  #home .recruit { gap: 30px !important; align-items: stretch !important; }
+  #home .recruit > * { min-width: 0 !important; }
+
+  /* Desktop uses the approved horizontal principles artwork. */
+  #home .six-principles-home { padding: 0 !important; background: var(--pc-paper) !important; }
+  #home .six-principles-visual-wrap { padding: 0 !important; }
+  #home .six-principles-visual {
+    width: 100% !important;
+    aspect-ratio: 3 / 2 !important;
+    border-radius: 0 !important;
+    overflow: hidden !important;
+    background: #071426 !important;
+  }
+  #home .six-principles-visual picture { display: block !important; width: 100% !important; height: 100% !important; }
+  #home .six-principles-visual img {
+    display: block !important;
+    width: 100% !important;
+    height: 100% !important;
+    aspect-ratio: 3 / 2 !important;
+    object-fit: cover !important;
+  }
+
+  /* Tables, editors and modal content stay readable on wide screens. */
+  table { font-size: 14px !important; }
+  th, td { padding: 12px 10px !important; }
+  .board-shell { max-height: 68vh !important; border-radius: 6px !important; }
+  .modal-card { width: min(720px, calc(100% - 80px)) !important; padding: 34px !important; border-radius: 8px !important; }
+  .admin-grid { gap: 24px !important; }
+
+  /* Consistent desktop management control. Functional display rules remain intact. */
+  .admin-toggle,
+  .adminToggle,
+  #adminModeToggle,
+  #adminToggle,
+  #adminBtn,
+  #densukeToggleBtn,
+  #staffEditBtn,
+  .manage-btn {
+    min-width: 104px !important;
+    min-height: 54px !important;
+    padding: 12px 20px !important;
+    border: 1px solid var(--pc-gold) !important;
+    border-radius: 6px !important;
+    background: var(--pc-navy) !important;
+    color: #e2bd67 !important;
+    font-size: 14px !important;
+    font-weight: 800 !important;
+    line-height: 1 !important;
+    box-shadow: none !important;
+  }
+
+  /* Compact, aligned footers. */
+  .restored-footer,
+  body > footer,
+  .footer {
+    background: var(--pc-navy) !important;
+    color: rgba(255,255,255,.62) !important;
+  }
+  .restored-footer { padding: 42px 0 28px !important; }
+  .restored-footer-inner { padding: 0 !important; }
+  .restored-footer-nav {
+    display: flex !important;
+    flex-wrap: wrap !important;
+    gap: 12px 24px !important;
+    margin-bottom: 24px !important;
+  }
+  .restored-footer-nav a { width: auto !important; padding: 0 !important; font-size: 12px !important; }
+  body > footer:not(.restored-footer),
+  .footer { min-height: 112px !important; padding: 42px 32px !important; font-size: 12px !important; }
+}
+
+/* Final approved home composition. */
+@media (min-width: 1200px) {
+  #home {
+    display: grid !important;
+    grid-template-columns: minmax(28px,1fr) minmax(0,581px) minmax(0,581px) minmax(28px,1fr) !important;
+    grid-template-rows: auto auto auto auto auto !important;
+    column-gap: 18px !important;
+    row-gap: 0 !important;
+  }
+  #home > * { grid-column: 1 / -1; }
+
+  #home > .hero {
+    grid-row: 1 !important;
+    grid-column: 1 / -1 !important;
+    min-height: 510px !important;
+  }
+  #home > .hero .hero-main > .eyebrow,
+  #home > .hero .hero-main > h1,
+  #home > .hero .hero-main > .affiliation-note,
+  #home > .hero .hero-main > .goldline,
+  #home > .hero .hero-main > .hero-sub,
+  #home > .hero .hero-main > .hero-copy,
+  #home > .hero .hero-main > .btns { display: none !important; }
+  #home .pc-reference-hero-copy {
+    display: block !important;
+    color: #fff !important;
+  }
+  #home .pc-reference-hero-copy h1 {
+    display: block !important;
+    margin: 0 !important;
+    font-family: Georgia,"Yu Mincho","Hiragino Mincho ProN",serif !important;
+    font-size: 58px !important;
+    font-weight: 500 !important;
+    line-height: 1.2 !important;
+    letter-spacing: .05em !important;
+  }
+  #home .pc-reference-goldline {
+    width: 132px !important;
+    height: 2px !important;
+    margin: 25px 0 18px !important;
+    background: #c79a3b !important;
+  }
+  #home .pc-reference-hero-copy p {
+    margin: 0 !important;
+    color: #fff !important;
+    font-size: 16px !important;
+    line-height: 1.8 !important;
+    letter-spacing: .04em !important;
+  }
+  #home > .hero .desktop-hero-panel { display: none !important; }
+
+  #home > .home-news {
+    grid-row: 2 !important;
+    grid-column: 2 / 4 !important;
+    width: auto !important;
+    max-width: none !important;
+    padding: 34px 0 28px !important;
+  }
+
+  #home > .quick {
+    grid-row: 3 !important;
+    grid-column: 2 / 4 !important;
+    width: auto !important;
+    max-width: none !important;
+    margin: 0 0 30px !important;
+    grid-template-columns: repeat(6,minmax(0,1fr)) !important;
+    gap: 10px !important;
+  }
+  #home .quick a,
+  #home .quick a:nth-child(1),
+  #home .quick a:nth-child(2),
+  #home .quick a:nth-child(3),
+  #home .quick a:nth-child(4),
+  #home .quick a:nth-child(5),
+  #home .quick a:nth-child(6) {
+    min-height: 132px !important;
+    padding: 20px 16px !important;
+    display: grid !important;
+    place-items: center !important;
+    align-items: center !important;
+    justify-content: center !important;
+    text-align: center !important;
+    background: #071426 !important;
+    background-image: none !important;
+    border: 1px solid rgba(199,154,59,.46) !important;
+  }
+  #home .quick a::after { display: none !important; }
+  #home .quick .ico { margin: 0 0 8px !important; }
+  #home .quick b { font-size: 16px !important; }
+
+  #home > .container:has(.recruit) {
+    grid-row: 4 !important;
+    grid-column: 2 !important;
+    width: auto !important;
+    max-width: none !important;
+    margin: 0 !important;
+    padding: 0 0 48px !important;
+  }
+  #home > .container:has(.activity-grid) {
+    position: relative !important;
+    grid-row: 4 !important;
+    grid-column: 3 !important;
+    width: auto !important;
+    max-width: none !important;
+    margin: 0 !important;
+    padding: 0 0 48px !important;
+  }
+  #home .recruit {
+    position: relative !important;
+    display: block !important;
+    height: 410px !important;
+    overflow: hidden !important;
+  }
+  #home .recruit .photo {
+    position: absolute !important;
+    inset: 0 !important;
+    width: 100% !important;
+    height: 100% !important;
+    min-height: 0 !important;
+  }
+  #home .recruit .photo::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(90deg,rgba(3,13,25,.90),rgba(3,13,25,.22));
+    pointer-events: none;
+  }
+  #home .recruit .photo-caption { display: none !important; }
+  #home .recruit .card {
+    position: absolute !important;
+    inset: 0 !important;
+    z-index: 3 !important;
+    width: 100% !important;
+    height: 100% !important;
+    padding: 46px 34px !important;
+    background: transparent !important;
+    border: 0 !important;
+    box-shadow: none !important;
+    color: #fff !important;
+  }
+  #home .recruit .card h2 { color: #fff !important; font-size: 38px !important; }
+  #home .recruit .card .en { color: #e2bd67 !important; }
+  #home .recruit .info-row { display: none !important; }
+  #home .pc-reference-recruit-copy {
+    display: block !important;
+    margin: 24px 0 22px !important;
+    color: #fff !important;
+    font-size: 14px !important;
+    line-height: 1.8 !important;
+  }
+  #home .recruit .btns { margin-top: 0 !important; }
+
+  #home > .container:has(.activity-grid) > .section-label {
+    position: absolute !important;
+    z-index: 4 !important;
+    top: 44px !important;
+    left: 34px !important;
+    color: #e2bd67 !important;
+    font-size: 13px !important;
+  }
+  #home > .container:has(.activity-grid) > .section-label small {
+    display: block !important;
+    margin-top: 9px !important;
+    color: #fff !important;
+    font-family: Georgia,"Yu Mincho",serif !important;
+    font-size: 38px !important;
+    letter-spacing: .08em !important;
+  }
+  #home .activity-grid { display: block !important; height: 410px !important; }
+  #home .activity-main { width: 100% !important; height: 100% !important; min-height: 0 !important; }
+  #home .activity-main::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(90deg,rgba(3,13,25,.73),rgba(3,13,25,.08));
+    pointer-events: none;
+  }
+  #home .activity-stack { display: none !important; }
+  #home .activity-main .photo-caption { z-index: 3 !important; }
+
+  #home > .seniorcup-home-banner {
+    grid-row: 5 !important;
+    grid-column: 2 / 4 !important;
+    width: auto !important;
+    max-width: none !important;
+    margin: 0 0 48px !important;
+  }
+  #home > .seniorcup-admin-control { grid-row: 5 !important; grid-column: 2 / 4 !important; }
+  #home > .banner { display: none !important; }
+}
+
+/* Compact laptops keep the same sizing but use the existing menu control. */
+@media (min-width: 901px) and (max-width: 1199px) {
+  .header .links { display: none !important; }
+  .menu,
+  .site-menu-button {
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    width: 48px !important;
+    height: 48px !important;
+    margin-left: auto !important;
+    border: 1px solid rgba(199,154,59,.65) !important;
+    border-radius: 6px !important;
+    background: transparent !important;
+    color: #fff !important;
+    font-size: 22px !important;
+  }
+  .mobile-links.show,
+  .site-header .site-menu.open {
+    position: fixed !important;
+    top: 94px !important;
+    right: 24px !important;
+    left: auto !important;
+    width: 320px !important;
+    height: auto !important;
+    max-height: calc(100vh - 118px) !important;
+    padding: 10px 20px 14px !important;
+    display: grid !important;
+    overflow-y: auto !important;
+    background: #071426 !important;
+    border: 1px solid rgba(199,154,59,.55) !important;
+    border-radius: 6px !important;
+    box-shadow: 0 18px 42px rgba(0,0,0,.3) !important;
+  }
+  .mobile-links.show a,
+  .site-header .site-menu.open a {
+    display: block !important;
+    height: auto !important;
+    padding: 13px 2px !important;
+    border-bottom: 1px solid rgba(255,255,255,.1) !important;
+    color: #fff !important;
+    font-size: 14px !important;
+    line-height: 1.4 !important;
+  }
+  .site-header .site-menu:not(.open) { display: none !important; }
+}
+
+/* Approved PC concept — full visual implementation. */
+@media (min-width: 1200px) {
+  body {
+    padding-top: 88px !important;
+    background: #f7f6f2 !important;
+  }
+
+  .header .nav,
+  .site-header .site-nav {
+    width: min(calc(100% - 56px), 1180px) !important;
+    max-width: 1180px !important;
+    padding: 0 !important;
+  }
+  .header .brand,
+  .site-header .site-brand,
+  .official-brand-wrap,
+  .site-header .site-brand {
+    flex-basis: 350px !important;
+    width: 350px !important;
+    max-width: 350px !important;
+  }
+  .official-brand-img,
+  .site-brand-logo { max-height: 66px !important; }
+  .header .links,
+  .site-header .site-menu { gap: 25px !important; }
+  .header .links a,
+  .site-header .site-menu a {
+    font-size: 13px !important;
+    letter-spacing: .035em !important;
+  }
+
+  /* Keep the desktop navigation focused and identical on every page. */
+  .header .links a[href*="terms"],
+  .header .links a[href*="privacy"],
+  .header .links a[href*="instagram"],
+  .header .links a[href*="rules"],
+  .header .links a[href*="board"],
+  .header .links a[href*="gallery"],
+  .header .links a[href*="google.com/maps"],
+  .header .links a[href="#"],
+  .site-header .site-menu a[href*="links"],
+  .site-header .site-menu a[href*="rules"],
+  .site-header .site-menu a[href*="board"] { display: none !important; }
+
+  /* Home */
+  #home {
+    display: flex !important;
+    flex-direction: column !important;
+    background: #f7f6f2 !important;
+  }
+  #home > .hero {
+    order: 1;
+    min-height: 520px !important;
+    padding: 60px 32px !important;
+    border-bottom: 0 !important;
+    box-shadow: none !important;
+  }
+  #home > .hero::before {
+    background: linear-gradient(90deg,rgba(3,13,25,.94) 0%,rgba(4,15,29,.68) 43%,rgba(4,15,29,.17) 78%,rgba(4,15,29,.08) 100%) !important;
+  }
+  #home > .hero::after { height: 90px !important; }
+  #home > .hero .hero-inner {
+    min-height: 400px !important;
+    padding: 0 !important;
+    align-items: center !important;
+  }
+  #home > .hero .hero-main {
+    width: min(650px, 58%) !important;
+    max-width: 650px !important;
+    padding: 0 0 0 6px !important;
+    background: transparent !important;
+    border-left: 0 !important;
+  }
+  #home > .hero h1 {
+    max-width: 620px !important;
+    margin: 12px 0 20px !important;
+    font-size: 62px !important;
+    line-height: 1.13 !important;
+    letter-spacing: .055em !important;
+  }
+  #home > .hero .goldline { margin: 22px 0 !important; }
+  #home > .hero .hero-copy { font-size: 16px !important; line-height: 1.85 !important; }
+  #home > .hero .desktop-hero-panel {
+    width: 300px !important;
+    margin-left: auto !important;
+    padding: 26px !important;
+    border-radius: 0 !important;
+    background: rgba(4,15,29,.62) !important;
+  }
+
+  #home > .news { display: none !important; }
+  #home > .home-news {
+    order: 2;
+    width: min(calc(100% - 56px), 1180px) !important;
+    margin: 0 auto !important;
+    padding: 34px 0 26px !important;
+    display: grid !important;
+    grid-template-columns: 190px 1fr !important;
+    gap: 32px !important;
+    align-items: start !important;
+  }
+  #home .home-news-head {
+    display: block !important;
+    margin: 0 !important;
+    padding-top: 4px !important;
+  }
+  #home .home-news-head h2 {
+    margin: 2px 0 0 !important;
+    font-size: 34px !important;
+    line-height: 1.2 !important;
+  }
+  #home .home-news-en { font-size: 12px !important; letter-spacing: .24em !important; }
+  #home .home-news-list {
+    padding: 0 !important;
+    border: 0 !important;
+    border-radius: 0 !important;
+    box-shadow: none !important;
+    background: transparent !important;
+  }
+  #home .home-news-list .news-item,
+  #home .news-empty { min-height: 42px !important; padding: 10px 90px 10px 0 !important; border-bottom: 1px solid #d7d9dc !important; }
+
+  #home > .quick {
+    order: 3;
+    width: min(calc(100% - 56px), 1180px) !important;
+    max-width: 1180px !important;
+    margin: 0 auto 62px !important;
+    padding: 0 !important;
+    gap: 12px !important;
+    overflow: visible !important;
+    background: transparent !important;
+  }
+  #home .quick a {
+    position: relative !important;
+    min-height: 205px !important;
+    padding: 110px 18px 20px !important;
+    display: flex !important;
+    align-items: flex-end !important;
+    justify-content: flex-start !important;
+    overflow: hidden !important;
+    text-align: left !important;
+    border: 0 !important;
+    background-color: #071426 !important;
+    background-position: center !important;
+    background-size: cover !important;
+    box-shadow: none !important;
+  }
+  #home .quick a:nth-child(1) { background-image: linear-gradient(180deg,transparent 28%,rgba(4,15,29,.96) 100%),url('./team-photo.jpg') !important; }
+  #home .quick a:nth-child(2) { background-image: linear-gradient(180deg,transparent 28%,rgba(4,15,29,.96) 100%),url('./activity-game.jpg') !important; }
+  #home .quick a:nth-child(3) { background-image: linear-gradient(180deg,transparent 28%,rgba(4,15,29,.96) 100%),url('./activity-lineup.jpg') !important; }
+  #home .quick a:nth-child(4) { background-image: linear-gradient(180deg,transparent 28%,rgba(4,15,29,.96) 100%),url('./activity-meeting.jpg') !important; }
+  #home .quick a:nth-child(5) { background-image: linear-gradient(180deg,transparent 28%,rgba(4,15,29,.96) 100%),url('./team-hero.jpg') !important; }
+  #home .quick a:nth-child(6) { background-image: linear-gradient(180deg,transparent 28%,rgba(4,15,29,.96) 100%),url('./activity-game.jpg') !important; }
+  #home .quick a::after {
+    content: '›';
+    position: absolute;
+    right: 16px;
+    bottom: 24px;
+    color: #d8ad47;
+    font-size: 26px;
+  }
+  #home .quick a > div { position: relative; z-index: 2; }
+  #home .quick .ico { margin-bottom: 12px !important; font-size: 27px !important; }
+  #home .quick b { font-size: 18px !important; }
+  #home .quick small { font-size: 10px !important; }
+
+  #home > .seniorcup-home-banner { order: 4; width: min(calc(100% - 56px),1180px) !important; margin: 0 auto 40px !important; }
+  #home > .seniorcup-admin-control { order: 5; }
+  #home > .container { width: min(calc(100% - 56px),1180px) !important; }
+  #home > .container:has(.activity-grid) { order: 6; padding: 36px 0 !important; }
+  #home > .banner { order: 7; margin: 28px 0 0 !important; }
+  #home > .container:has(.recruit) { order: 8; padding: 72px 0 !important; }
+  #home .activity-grid { min-height: 460px !important; }
+  #home .activity-main,
+  #home .activity-side { border-radius: 0 !important; }
+  #home .recruit { grid-template-columns: 1fr 1fr !important; gap: 0 !important; }
+  #home .recruit .photo { min-height: 470px !important; border: 0 !important; }
+  #home .recruit .card {
+    padding: 52px 48px !important;
+    border-top: 1px solid #d9d7d0 !important;
+    box-shadow: none !important;
+  }
+
+  #home .news-modal { order: 20; }
+  #home > .container:empty,
+  #home > .container:has(> .grid3:empty) { display: none !important; }
+
+  .six-principles-home {
+    padding: 54px 0 !important;
+    background: #071426 !important;
+    border-top: 1px solid #c79a3b !important;
+    border-bottom: 1px solid #c79a3b !important;
+  }
+  .six-principles-home .six-principles-visual-wrap {
+    width: min(calc(100% - 56px),1180px) !important;
+    padding: 0 !important;
+  }
+  .six-principles-home .six-principles-visual {
+    width: 100% !important;
+    height: auto !important;
+    aspect-ratio: 3 / 2 !important;
+    overflow: hidden !important;
+  }
+  .six-principles-home .six-principles-visual picture,
+  .six-principles-home .six-principles-visual img {
+    display: block !important;
+    width: 100% !important;
+    height: 100% !important;
+    aspect-ratio: 3 / 2 !important;
+    object-fit: cover !important;
+  }
+
+  /* Inner pages use the same header, hero and content scale. */
+  .pagehero,
+  body > .site-header + .hero {
+    min-height: 250px !important;
+    background-image: linear-gradient(90deg,rgba(3,13,25,.95),rgba(4,15,29,.60)),url('./team-hero.jpg') !important;
+    background-position: center 45% !important;
+    background-size: cover !important;
+    border-bottom: 0 !important;
+  }
+  .pagehero-inner,
+  body > .site-header + .hero > div { padding: 54px 0 46px !important; }
+  .pagehero h1,
+  body > .site-header + .hero h1 { font-size: 48px !important; }
+  .container,
+  .wrap,
+  .main,
+  body > .site-header ~ main { padding-top: 58px !important; padding-bottom: 72px !important; }
+  .card,
+  .panel,
+  .download-card {
+    border-radius: 0 !important;
+    border-top: 3px solid #c79a3b !important;
+    box-shadow: 0 10px 28px rgba(7,20,38,.065) !important;
+  }
+}

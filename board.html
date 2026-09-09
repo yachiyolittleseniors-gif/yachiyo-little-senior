@@ -1,0 +1,887 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<style id="initial-paint-style">html{background:#071426}</style>
+<link rel="preload" as="image" href="./official-logo-new.png" fetchpriority="high">
+<meta charset="utf-8">
+<meta name="author" content="tatsuki.saitoh">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="robots" content="noindex,nofollow">
+<meta name="theme-color" content="#071426">
+<title>チーム内案内板｜八千代リトルシニア</title>
+<style>
+:root{--navy:#071426;--navy2:#102741;--gold:#c79a3b;--gold2:#e2bd67;--bg:#f4f3ef;--ink:#17202b}
+*{box-sizing:border-box}html,body{overflow-x:hidden;overflow-y:auto;-webkit-overflow-scrolling:touch}
+body{margin:0;font-family:-apple-system,BlinkMacSystemFont,"Hiragino Kaku Gothic ProN","Yu Gothic",Meiryo,sans-serif;background:var(--bg);color:var(--ink)}
+a{text-decoration:none;color:inherit}
+.header{background:var(--navy);color:#fff;border-bottom:1px solid rgba(199,154,59,.4)}
+.nav{max-width:1080px;height:70px;margin:auto;padding:0 18px;display:flex;align-items:center}
+.brand{font-family:serif;font-weight:700;letter-spacing:.06em}
+.home{margin-left:auto;border:1px solid rgba(199,154,59,.55);padding:9px 13px;border-radius:6px;font-size:12px;color:var(--gold2);font-weight:700}
+.hero{background:linear-gradient(135deg,var(--navy),#162d47);color:#fff}
+.hero>div{max-width:1080px;margin:auto;padding:38px 18px 34px}
+.eyebrow{font-size:11px;letter-spacing:.24em;color:var(--gold2)}
+h1{font-family:serif;font-weight:500;letter-spacing:.08em;margin:8px 0 6px;font-size:34px}
+.crumb{font-size:11px;color:#c9d0d9}
+.wrap{max-width:900px;margin:auto;padding:28px 16px 60px}
+.lead{display:flex;align-items:center;gap:14px;background:#fff;border:1px solid #ddd9d0;border-left:4px solid var(--gold);padding:16px 18px;line-height:1.75;font-size:13px;margin-bottom:20px;box-shadow:0 5px 18px rgba(7,20,38,.04)}
+.lead strong{flex:0 0 auto;color:var(--navy);font-family:serif;font-size:17px}
+.lead span{color:#69737f}
+.grid{display:grid;grid-template-columns:minmax(0,760px);justify-content:center;gap:18px}
+.card{position:relative;overflow:hidden;background:#fff;border:1px solid #d8dce1;border-radius:12px;padding:26px 22px 22px;box-shadow:0 10px 28px rgba(7,20,38,.06)}
+.card::before{content:"";position:absolute;left:0;right:0;top:0;height:4px;background:linear-gradient(90deg,var(--gold),var(--gold2))}
+.card-kicker{font-size:10px;letter-spacing:.18em;color:#a27927;font-weight:800;margin-bottom:9px}
+.card h2{font-family:serif;margin:0 0 10px;font-size:25px;color:var(--navy)}
+.card p{font-size:13px;line-height:1.8;color:#69737f;min-height:70px;margin:0}
+.attendance-card{display:none;background:linear-gradient(180deg,#fff 0%,#fbfbfa 100%)}
+.densuke-card{background:linear-gradient(180deg,#fffdfa 0%,#fbf7ed 100%);border-color:#d8c79f}
+.densuke-card .card-kicker{color:var(--gold)}
+.tournament-card{background:linear-gradient(180deg,#fff 0%,#fbfbfa 100%)}
+.tournament-list{display:grid;gap:12px;margin-top:18px}
+.tournament-item{display:flex;align-items:center;gap:14px;padding:14px;border:1px solid #e1ded6;border-radius:10px;background:#faf9f6}
+.tournament-info{min-width:0;flex:1}.tournament-grade{display:inline-flex;align-items:center;margin-bottom:8px;padding:5px 12px;border-radius:999px;background:var(--gold);color:#fff;font-size:13px;font-weight:900;line-height:1.2}.tournament-title{font-weight:800;color:var(--navy);line-height:1.5}.tournament-meta{margin-top:3px;font-size:11px;color:#7b8490;overflow-wrap:anywhere}
+.tournament-open{flex:0 0 auto;padding:10px 14px;border:1px solid var(--gold);border-radius:8px;background:var(--navy);color:#fff;font-size:12px;font-weight:800}
+.tournament-empty{margin-top:16px;padding:16px;border:1px dashed #d6d2c8;border-radius:10px;color:#7b8490;font-size:13px;text-align:center}
+.btn{display:block;text-align:center;background:var(--navy);color:var(--gold2);border:1px solid var(--gold);padding:14px 16px;border-radius:8px;font-weight:800;margin-top:18px;transition:.18s ease}
+.btn:active{transform:translateY(1px)}
+.btn.gold{background:var(--gold);color:#fff}.btn.densuke-btn{background:var(--gold);color:#fff;border-color:var(--gold)}
+.btn.gold.disabled{background:#e3e3e0;border-color:#d3d3cf;color:#a2a6aa;pointer-events:none;cursor:not-allowed}
+.note{font-size:11px;color:#7b8490;margin-top:10px}
+.attendance-note{color:#9298a0}
+.footer{background:var(--navy);color:#9aa5b1;text-align:center;padding:28px 15px;font-size:11px}
+@media(max-width:650px){.grid{grid-template-columns:1fr;gap:14px}.card p{min-height:0}.lead{display:block}.lead strong{display:block;margin-bottom:5px}h1{font-size:29px}.card{padding:24px 19px 20px}.card h2{font-size:24px}.tournament-item{align-items:stretch;flex-direction:column}.tournament-open{width:100%;text-align:center}}
+
+.densuke-subtitle{
+  font-size:14px;
+  font-family:inherit;
+  font-weight:700;
+  letter-spacing:0;
+  white-space:nowrap;
+}
+@media(max-width:380px){
+  .densuke-subtitle{font-size:13px}
+}
+
+</style>
+<script>
+document.documentElement.style.visibility='hidden';
+window.boardAccessReady=(async function requireBoardPassword(){
+  const p=prompt('パスワードを入力してください');
+  if(p===null){
+    if(history.length>1){history.back()}else{location.replace('./index.html')}
+    return;
+  }
+  try{
+    const r=await fetch('/.netlify/functions/site-data?section=access-settings',{
+      method:'POST',
+      headers:{'content-type':'application/json'},
+      body:JSON.stringify({action:'verifyAccessPassword',password:p})
+    });
+    if(r.ok){
+      sessionStorage.setItem('yachiyoAttendancePass',p);
+      document.documentElement.style.visibility='';
+      return;
+    }
+  }catch(e){
+    alert('パスワードを確認できませんでした。通信状況を確認してください。');
+    location.replace('./index.html');
+    return;
+  }
+  alert('パスワードが違います。');
+  location.replace('./index.html');
+})();
+</script>
+<link rel="preload" as="image" href="./official-logo-new.png">
+<style id="compact-site-header-style">
+:root{--compact-header-height:82px}
+body{padding-top:var(--compact-header-height) !important}
+html{scroll-padding-top:var(--compact-header-height)}
+.site-header{
+  position:fixed !important;
+  top:0;left:0;right:0;
+  z-index:11000;
+  width:100%;
+  padding:0 !important;
+  background:#071426 !important;
+  border-top:0 !important;
+  border-bottom:1px solid rgba(199,154,59,.55) !important;
+  color:#fff;
+}
+.site-nav{
+  max-width:1180px;
+  height:var(--compact-header-height);
+  margin:0 auto;
+  padding:8px 18px;
+  display:flex;
+  align-items:center;
+  gap:14px;
+}
+.site-brand{display:block;min-width:0;text-decoration:none}
+.site-brand-logo{
+  display:block;
+  width:min(620px,72vw);
+  height:64px;
+  object-fit:contain;
+  object-position:left center;
+}
+.site-menu-button{
+  margin-left:auto;
+  flex:0 0 auto;
+  width:48px;
+  height:48px;
+  padding:0;
+  display:grid;
+  place-items:center;
+  border:1px solid rgba(199,154,59,.62);
+  border-radius:12px;
+  background:#071426;
+  color:#fff;
+  font-size:25px;
+  line-height:1;
+  cursor:pointer;
+}
+.site-menu{
+  display:none;
+  position:absolute;
+  top:100%;
+  right:12px;
+  width:min(330px,calc(100vw - 24px));
+  max-height:calc(100vh - var(--compact-header-height) - 16px);
+  overflow-y:auto;
+  padding:8px 16px 12px;
+  border:1px solid rgba(199,154,59,.48);
+  border-radius:0 0 14px 14px;
+  background:rgba(7,20,38,.98);
+  box-shadow:0 16px 34px rgba(0,0,0,.3);
+}
+.site-menu.open{display:grid}
+.site-menu a{
+  display:block;
+  padding:13px 4px;
+  border-bottom:1px solid rgba(255,255,255,.1);
+  color:#fff !important;
+  text-decoration:none;
+  font-size:14px;
+  font-weight:700;
+}
+.site-menu a:last-child{border-bottom:0}
+@media(max-width:600px){
+  :root{--compact-header-height:66px}
+  .site-nav{padding:8px 12px}
+  .site-brand-logo{width:min(300px,72vw);height:50px}
+  .site-menu-button{width:46px;height:46px;border-radius:11px;font-size:23px}
+}
+</style>
+<style id="home-header-position-unified">
+@media(max-width:900px){
+  .header .nav,.site-header .site-nav{padding-left:0!important}
+  .header .brand,.site-header .site-brand{transform:none!important;margin-left:10px!important}
+  .header .official-brand-wrap{padding-left:0!important}
+}
+</style>
+<link rel="stylesheet" href="./desktop-2026.css?v=20260908-pc2">
+<style id="board-desktop-hamburger-style">
+@media(min-width:901px){
+  #siteMenuButton{
+    display:grid!important;
+    width:48px!important;
+    height:48px!important;
+    min-width:48px!important;
+    min-height:48px!important;
+    padding:0!important;
+    border:1px solid rgba(199,154,59,.62)!important;
+    border-radius:12px!important;
+    background:#071426!important;
+    color:#fff!important;
+    font-size:25px!important;
+  }
+  #siteMenu{
+    display:none!important;
+    position:absolute!important;
+    top:100%!important;
+    right:18px!important;
+    left:auto!important;
+    width:min(330px,calc(100vw - 36px))!important;
+    height:auto!important;
+    max-height:calc(100vh - var(--compact-header-height) - 16px)!important;
+    margin:0!important;
+    padding:8px 16px 12px!important;
+    overflow-y:auto!important;
+    background:rgba(7,20,38,.985)!important;
+    border:1px solid rgba(199,154,59,.48)!important;
+    border-radius:0 0 14px 14px!important;
+    box-shadow:0 16px 34px rgba(0,0,0,.3)!important;
+  }
+  #siteMenu.open{display:grid!important;}
+  #siteMenu a{
+    display:block!important;
+    width:100%!important;
+    height:auto!important;
+    padding:13px 4px!important;
+    border-bottom:1px solid rgba(255,255,255,.1)!important;
+    color:#fff!important;
+    font-size:14px!important;
+    line-height:1.45!important;
+  }
+}
+</style>
+</head>
+<body id="page-top">
+<header class="site-header">
+  <nav class="site-nav" aria-label="メインナビゲーション">
+    <a class="site-brand" href="./official-logo-new.png" aria-label="ページ先頭へ戻る・ロゴ画像を保存" onclick="event.preventDefault();window.scrollTo({top:0,behavior:'smooth'})">
+      <img class="site-brand-logo" src="./official-logo-new.png" alt="八千代リトルシニア 公式ロゴ" width="2062" height="374" loading="eager" decoding="sync" fetchpriority="high">
+    </a>
+    <button class="site-menu-button" id="siteMenuButton" type="button" aria-label="メニューを開く" aria-controls="siteMenu" aria-expanded="false">☰</button>
+    <div class="site-menu" id="siteMenu">
+      <a href="./index.html">HOME</a>
+      <a href="./team.html">チーム紹介</a>
+      <a href="./players.html">選手紹介</a>
+      <a href="./results.html">試合結果</a>
+      <a href="./schedule.html">スケジュール</a>
+      <a href="./join.html">入団案内</a>
+      <a href="./contact.html">お問い合わせ</a>
+      <a href="./links.html">リンク集</a>
+      <a href="./rules.html">チーム規約 🔒</a>
+      <a href="./board.html">チーム内案内板 🔒</a>
+    </div>
+  </nav>
+</header>
+
+<section class="hero">
+  <div>
+    <div class="eyebrow">TEAM BOARD</div>
+    <h1>チーム内案内板</h1>
+    <div class="crumb">HOME / チーム内案内板</div>
+  </div>
+</section>
+
+<main class="wrap">
+  <div class="grid">
+    <section class="card attendance-card" id="attendanceCard">
+      <div class="card-kicker">NEW ATTENDANCE</div>
+      <h2>保護者出欠確認</h2>
+      <p>サイト内で各日程の「○・△・×」を入力し、出欠状況を確認できます。</p>
+      <a id="attendanceOpenBtn" class="btn gold disabled" data-href="./attendance.html" aria-disabled="true" tabindex="-1">保護者出欠確認を開く</a>
+      <div class="note attendance-note">切り替え完了後に利用できます。</div>
+    </section>
+
+    <section class="card densuke-card" id="densukeLegacyCard">
+      <div class="card-kicker">CURRENT ATTENDANCE</div>
+      <h2>伝助 <span class="densuke-subtitle">（保護者出席確認サイト）</span></h2>
+      <p>現在使用している出欠確認ページです。新しい保護者出欠確認への切り替えが完了するまでは、こちらをご利用ください。</p>
+      <div id="densukeMigrationBlock">
+        <a class="btn densuke-btn" href="https://densuke.biz/list?cd=ZhxJNW9dPNGVtm7c" target="_blank" rel="noopener noreferrer">伝助を開く</a>
+      </div>
+      <div class="note">※伝助は外部サイトです。</div>
+    </section>
+
+    <section class="card tournament-card" id="officialTournamentCard">
+      <div class="card-kicker">OFFICIAL TOURNAMENT</div>
+      <h2>開催中の公式戦</h2>
+      <p>大会要項や組み合わせなど、現在開催中の公式戦資料を確認できます。</p>
+      <div class="tournament-list" id="tournamentList" aria-live="polite">
+        <div class="tournament-empty">資料を読み込んでいます。</div>
+      </div>
+    </section>
+  </div>
+</main>
+
+<footer class="footer">© YACHIYO LITTLE SENIOR. All Rights Reserved.</footer>
+
+<style>
+#densukeToggleBtn{
+  display:none;
+  position:fixed !important;
+  right:max(12px,env(safe-area-inset-right)) !important;
+  left:auto !important;
+  top:auto !important;
+  bottom:calc(12px + env(safe-area-inset-bottom)) !important;
+  z-index:10001 !important;
+  margin:0 !important;
+  transform:none !important;
+  padding:10px 16px;
+  border:1px solid #c79a3b;
+  border-radius:999px;
+  background:#071426;
+  color:#c79a3b;
+  font-weight:700;
+  width:auto !important;
+  max-width:none !important;
+}
+#densukeAdminPanel{
+  display:none;
+  position:fixed !important;
+  right:max(12px,env(safe-area-inset-right)) !important;
+  left:auto !important;
+  top:auto !important;
+  bottom:calc(66px + env(safe-area-inset-bottom)) !important;
+  z-index:10000 !important;
+  width:min(92vw,680px) !important;
+  max-width:calc(100vw - 24px) !important;
+  max-height:min(70vh,620px) !important;
+  overflow-y:auto !important;
+  overflow-x:hidden !important;
+  -webkit-overflow-scrolling:touch;
+  overscroll-behavior:contain;
+  touch-action:pan-y;
+  padding:16px;
+  border:1px solid rgba(199,154,59,.45);
+  border-radius:14px;
+  background:rgba(7,20,38,.96);
+  color:#fff;
+  box-shadow:0 12px 35px rgba(0,0,0,.28);
+}
+#densukeAdminPanel.show{display:block}
+#densukeAdminPanel button{margin:6px;padding:10px 14px;border-radius:10px;border:1px solid #c79a3b;background:#071426;color:#fff}
+#densukeEndActions{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+#densukeAdminPanel .danger{background:#5e1515}
+#closeDensukeAdminBtn{background:#4d5662!important}
+#densukeAdminPanel .restore{background:#173e24}
+#densukeWarning{display:none;margin:12px 6px;color:#ff5b5b;font-weight:800;line-height:1.6}
+#densukeAdminStatus{font-size:12px;line-height:1.7;color:#d5dbe3}
+#tournamentAdminFields{margin-top:16px;padding-top:16px;border-top:1px solid rgba(255,255,255,.18)}
+#tournamentAdminFields label{display:block;margin:10px 6px 5px;font-size:12px;font-weight:700;color:#d5dbe3}
+#tournamentAdminFields input{width:100%;padding:11px 12px;border:1px solid rgba(199,154,59,.55);border-radius:9px;background:#fff;color:#17202b;font:inherit}
+#tournamentAdminFields select{width:100%;padding:11px 12px;border:1px solid rgba(199,154,59,.55);border-radius:9px;background:#fff;color:#17202b;font:inherit}
+#uploadTournamentBtn{width:100%;margin:12px 0 4px!important;background:#c79a3b!important;color:#fff!important}
+#tournamentAdminList{display:grid;gap:8px;margin-top:12px}
+.tournament-admin-item{display:flex;align-items:center;gap:8px;padding:9px;border:1px solid rgba(255,255,255,.14);border-radius:9px;background:rgba(255,255,255,.06)}
+.tournament-admin-item span{min-width:0;flex:1;font-size:12px;line-height:1.5;overflow-wrap:anywhere}
+.tournament-admin-item button{flex:0 0 auto;margin:0!important;background:#5e1515!important}
+</style>
+
+<button id="densukeToggleBtn" type="button">管理</button>
+<div id="densukeAdminPanel">
+  <strong>伝助移行設定</strong>
+  <p id="densukeAdminStatus">伝助終了前は、保護者出欠確認を開くことはできません。</p>
+  <p id="densukeWarning">⚠ 伝助は復元できない可能性があります。</p>
+  <div id="densukeEndActions">
+    <button id="endDensukeBtn" class="danger" type="button">伝助を終了</button>
+  </div>
+  <button id="resumeDensukeBtn" class="restore" type="button" style="display:none">伝助移行を再開</button>
+  <div id="tournamentAdminFields">
+    <strong>開催中の公式戦PDF</strong>
+    <label for="tournamentTitleInput">大会名・資料名</label>
+    <input id="tournamentTitleInput" type="text" maxlength="120" placeholder="例：秋季関東大会 組み合わせ">
+    <label for="tournamentGradeInput">対象学年</label>
+    <select id="tournamentGradeInput">
+      <option value="3">3年生</option>
+      <option value="2">2年生</option>
+      <option value="1">1年生</option>
+      <option value="all">全学年</option>
+    </select>
+    <label for="tournamentPdfInput">PDFファイル（6MB以下）</label>
+    <input id="tournamentPdfInput" type="file" accept="application/pdf,.pdf">
+    <button id="uploadTournamentBtn" type="button">PDFを掲載</button>
+    <div id="tournamentAdminList"></div>
+  </div>
+  <button id="closeDensukeAdminBtn" type="button">キャンセル</button>
+</div>
+
+<script>
+// Created by tatsuki.saitoh
+(function(){
+  const API='/.netlify/functions/attendance-data';
+  const attendanceBtn=document.getElementById('attendanceOpenBtn');
+  const attendanceCard=document.getElementById('attendanceCard');
+  const legacyCard=document.getElementById('densukeLegacyCard');
+  const adminBtn=document.getElementById('densukeToggleBtn');
+  const panel=document.getElementById('densukeAdminPanel');
+  const endBtn=document.getElementById('endDensukeBtn');
+  const resumeBtn=document.getElementById('resumeDensukeBtn');
+  const closeAdminBtn=document.getElementById('closeDensukeAdminBtn');
+  const warning=document.getElementById('densukeWarning');
+  const adminStatus=document.getElementById('densukeAdminStatus');
+
+  if(!attendanceBtn || !attendanceCard || !legacyCard || !adminBtn || !panel || !endBtn || !resumeBtn || !closeAdminBtn || !warning) return;
+
+  function setAttendanceEnabled(enabled){
+    if(enabled){
+      attendanceBtn.classList.remove('disabled');
+      attendanceBtn.setAttribute('href',attendanceBtn.dataset.href || './attendance.html');
+      attendanceBtn.setAttribute('aria-disabled','false');
+      attendanceBtn.removeAttribute('tabindex');
+    }else{
+      attendanceBtn.classList.add('disabled');
+      attendanceBtn.removeAttribute('href');
+      attendanceBtn.setAttribute('aria-disabled','true');
+      attendanceBtn.setAttribute('tabindex','-1');
+    }
+  }
+
+  function setEndedUI(ended){
+    setAttendanceEnabled(ended);
+    warning.style.display='none';
+    endBtn.dataset.warningShown='0';
+    endBtn.textContent='伝助を終了';
+
+    if(ended){
+      legacyCard.style.display='none';
+      attendanceCard.style.display='block';
+      endBtn.style.display='none';
+      resumeBtn.style.display='';
+      adminStatus.textContent='伝助の移行は終了しています。保護者出欠確認を利用できます。';
+    }else{
+      legacyCard.style.display='block';
+      attendanceCard.style.display='none';
+      endBtn.style.display='';
+      resumeBtn.style.display='none';
+      adminStatus.textContent='伝助終了前は、保護者出欠確認を開くことはできません。';
+    }
+  }
+
+  // 初期状態は必ずロック。サーバー確認後にのみ解除。
+  setAttendanceEnabled(false);
+
+  async function loadSetting(){
+    try{
+      await window.boardAccessReady;
+      const accessPassword=sessionStorage.getItem('yachiyoAttendancePass')||'';
+      const r=await fetch(API,{
+        cache:'no-store',
+        headers:{'x-access-password':accessPassword}
+      });
+      if(!r.ok) return;
+      const j=await r.json();
+      const ended = j?.config?.migrationEnded === true || j?.locked === false;
+      setEndedUI(ended);
+    }catch(e){
+      // 通信失敗時は安全側でロックのまま
+      setAttendanceEnabled(false);
+    }
+  }
+
+  // footer bottom-right 3 taps -> 管理表示
+  const footer=document.querySelector('footer') || document.body;
+  let taps=0,timer=null;
+  footer.addEventListener('pointerup',function(e){
+    const r=footer.getBoundingClientRect();
+    const inRight=Math.max(0,r.right-e.clientX)<=140;
+    const inBottom=Math.max(0,r.bottom-e.clientY)<=140;
+    if(!inRight || !inBottom){taps=0;return}
+    taps++;
+    clearTimeout(timer);
+    timer=setTimeout(()=>taps=0,1500);
+    if(taps>=3){
+      taps=0;
+      clearTimeout(timer);
+      adminBtn.textContent='管理';
+      adminBtn.style.setProperty('display','block','important');
+    }
+  },{passive:true});
+
+  adminBtn.addEventListener('click',async()=>{
+    if(panel.classList.contains('show')){
+      panel.classList.remove('show');
+      panel.dataset.adminPassword='';
+      adminBtn.textContent='管理';
+      adminBtn.style.setProperty('display','none','important');
+      warning.style.display='none';
+      endBtn.dataset.warningShown='0';
+      endBtn.textContent='伝助を終了';
+      return;
+    }
+
+    const adminPassword=prompt('管理者パスワードを入力してください。');
+    if(!adminPassword) return;
+
+    try{
+      const r=await fetch(API,{
+        method:'POST',
+        headers:{
+          'content-type':'application/json',
+          'x-admin-password':adminPassword
+        },
+        body:JSON.stringify({action:'adminPing'})
+      });
+
+      if(r.status===401){
+        alert('パスワードが違います。');
+        return;
+      }
+
+      if(!r.ok){
+        alert('管理者認証を確認できませんでした。');
+        return;
+      }
+
+      panel.dataset.adminPassword=adminPassword;
+      panel.classList.add('show');
+      adminBtn.textContent='管理終了';
+    }catch(e){
+      alert('管理者認証を確認できませんでした。');
+    }
+  });
+
+  endBtn.addEventListener('click',async()=>{
+    // 1回目は赤い警告を表示。2回目で終了処理へ進む。
+    if(endBtn.dataset.warningShown!=='1'){
+      warning.style.display='block';
+      endBtn.dataset.warningShown='1';
+      endBtn.textContent='確認して伝助を終了';
+      warning.scrollIntoView({behavior:'smooth',block:'nearest'});
+      return;
+    }
+
+    const adminPassword=prompt('伝助を終了するには管理者パスワードを入力してください。');
+    if(!adminPassword) return;
+
+    try{
+      const auth=await fetch(API,{
+        method:'POST',
+        headers:{
+          'content-type':'application/json',
+          'x-admin-password':adminPassword
+        },
+        body:JSON.stringify({action:'adminPing'})
+      });
+      if(auth.status===401){
+        alert('パスワードが違います。');
+        return;
+      }
+      if(!auth.ok){
+        alert('管理者認証を確認できませんでした。');
+        return;
+      }
+    }catch(e){
+      alert('管理者認証を確認できませんでした。');
+      return;
+    }
+
+    const ok=confirm(
+      '伝助を終了しますか？\n\n伝助は復元できない可能性があります。\n初回終了時のみ、伝助から回答者名だけを1回取得します。'
+    );
+    if(!ok) return;
+
+    endBtn.disabled=true;
+    endBtn.textContent='移行中...';
+
+    try{
+      const r=await fetch(API,{
+        method:'POST',
+        headers:{
+          'content-type':'application/json',
+          'x-admin-password':adminPassword
+        },
+        body:JSON.stringify({action:'endDensuke'})
+      });
+
+      let j={};
+      try{ j=await r.json(); }catch(e){}
+
+      if(r.status===401){
+        alert('パスワードが違います。');
+        return;
+      }
+
+      if(!r.ok){
+        alert(j?.error || '伝助の終了処理に失敗しました。');
+        return;
+      }
+
+      setEndedUI(true);
+      showSaveNotice('保存しました');
+    }catch(e){
+      alert('通信エラーのため、伝助は終了していません。');
+    }finally{
+      endBtn.disabled=false;
+      if(endBtn.style.display!=='none'){
+        endBtn.textContent='確認して伝助を終了';
+      }
+    }
+  });
+
+  closeAdminBtn.addEventListener('click',()=>{
+    panel.classList.remove('show');
+    panel.dataset.adminPassword='';
+    adminBtn.textContent='管理';
+    adminBtn.style.setProperty('display','block','important');
+    warning.style.display='none';
+    endBtn.dataset.warningShown='0';
+    endBtn.textContent='伝助を終了';
+  });
+
+  resumeBtn.addEventListener('click',async()=>{
+    const adminPassword=panel.dataset.adminPassword || prompt('管理者パスワードを入力してください。');
+    if(!adminPassword) return;
+
+    const ok=confirm(
+      '伝助移行を再開しますか？\n\n保護者出欠確認は再びグレーになり、開けない状態に戻ります。\n保存済みの保護者出欠確認データは削除しません。'
+    );
+    if(!ok) return;
+
+    resumeBtn.disabled=true;
+    resumeBtn.textContent='再開中...';
+
+    try{
+      const r=await fetch(API,{
+        method:'POST',
+        headers:{
+          'content-type':'application/json',
+          'x-admin-password':adminPassword
+        },
+        body:JSON.stringify({action:'resumeDensuke'})
+      });
+
+      let j={};
+      try{ j=await r.json(); }catch(e){}
+
+      if(r.status===401){
+        alert('パスワードが違います。');
+        return;
+      }
+
+      if(!r.ok){
+        alert(j?.error || '伝助移行を再開できませんでした。');
+        return;
+      }
+
+      setEndedUI(false);
+      showSaveNotice('保存しました');
+    }catch(e){
+      alert('通信エラーのため、設定を変更できませんでした。');
+    }finally{
+      resumeBtn.disabled=false;
+      resumeBtn.textContent='伝助移行を再開';
+    }
+  });
+
+  loadSetting();
+})();
+</script>
+<script>
+(function(){
+  const API='/.netlify/functions/site-data?section=board-tournaments';
+  const list=document.getElementById('tournamentList');
+  const adminList=document.getElementById('tournamentAdminList');
+  const panel=document.getElementById('densukeAdminPanel');
+  const titleInput=document.getElementById('tournamentTitleInput');
+  const gradeInput=document.getElementById('tournamentGradeInput');
+  const fileInput=document.getElementById('tournamentPdfInput');
+  const uploadBtn=document.getElementById('uploadTournamentBtn');
+  let documents=[];
+
+  if(!list || !adminList || !panel || !titleInput || !gradeInput || !fileInput || !uploadBtn) return;
+
+  function gradeLabel(grade){
+    return grade==='1'?'1年生':grade==='2'?'2年生':grade==='3'?'3年生':'全学年';
+  }
+
+  function formatSize(bytes){
+    const mb=Number(bytes||0)/1024/1024;
+    return mb>=1 ? mb.toFixed(1)+'MB' : Math.max(1,Math.round(Number(bytes||0)/1024))+'KB';
+  }
+
+  function renderDocuments(){
+    list.replaceChildren();
+    adminList.replaceChildren();
+
+    if(!documents.length){
+      const empty=document.createElement('div');
+      empty.className='tournament-empty';
+      empty.textContent='現在掲載中の資料はありません。';
+      list.appendChild(empty);
+    }
+
+    documents.forEach(function(item){
+      const row=document.createElement('div');
+      row.className='tournament-item';
+      const info=document.createElement('div');
+      info.className='tournament-info';
+      const grade=document.createElement('div');
+      grade.className='tournament-grade';
+      grade.textContent=gradeLabel(String(item.grade||'all'));
+      const title=document.createElement('div');
+      title.className='tournament-title';
+      title.textContent=item.title||'公式戦資料';
+      const meta=document.createElement('div');
+      meta.className='tournament-meta';
+      meta.textContent=(item.fileName||'PDF')+'・'+formatSize(item.size);
+      const open=document.createElement('a');
+      open.className='tournament-open';
+      open.href=API+'&file='+encodeURIComponent(item.id);
+      open.target='_blank';
+      open.rel='noopener';
+      open.textContent='PDFを開く';
+      info.append(grade,title,meta);
+      row.append(info,open);
+      list.appendChild(row);
+
+    });
+
+    if(!documents.length){
+      const adminEmpty=document.createElement('div');
+      adminEmpty.className='note';
+      adminEmpty.textContent='現在掲載中のPDFはありません。';
+      adminList.appendChild(adminEmpty);
+    }
+
+    documents.forEach(function(item){
+      const adminRow=document.createElement('div');
+      adminRow.className='tournament-admin-item';
+      const adminTitle=document.createElement('span');
+      adminTitle.textContent=gradeLabel(String(item.grade||'all'))+'｜'+(item.title||item.fileName||'公式戦資料');
+      const remove=document.createElement('button');
+      remove.type='button';
+      remove.textContent='削除';
+      remove.addEventListener('click',function(){deleteDocument(item)});
+      adminRow.append(adminTitle,remove);
+      adminList.appendChild(adminRow);
+    });
+  }
+
+  async function loadDocuments(){
+    try{
+      await window.boardAccessReady;
+      const accessPassword=sessionStorage.getItem('yachiyoAttendancePass')||'';
+      const response=await fetch(API,{
+        cache:'no-store',
+        headers:{'x-access-password':accessPassword}
+      });
+      if(!response.ok) throw new Error('load failed');
+      const body=await response.json();
+      documents=Array.isArray(body.data)?body.data:[];
+      renderDocuments();
+    }catch(e){
+      list.innerHTML='<div class="tournament-empty">資料を読み込めませんでした。</div>';
+    }
+  }
+
+  function readAsDataUrl(file){
+    return new Promise(function(resolve,reject){
+      const reader=new FileReader();
+      reader.onload=function(){resolve(String(reader.result||''))};
+      reader.onerror=reject;
+      reader.readAsDataURL(file);
+    });
+  }
+
+  uploadBtn.addEventListener('click',async function(){
+    const adminPassword=panel.dataset.adminPassword||'';
+    const title=titleInput.value.trim();
+    const file=fileInput.files&&fileInput.files[0];
+    if(!adminPassword){alert('管理画面を開き直してください。');return}
+    if(!title){alert('大会名・資料名を入力してください。');return}
+    if(!file || (file.type!=='application/pdf' && !file.name.toLowerCase().endsWith('.pdf'))){alert('PDFファイルを選択してください。');return}
+    if(file.size>6*1024*1024){alert('PDFは6MB以下にしてください。');return}
+
+    uploadBtn.disabled=true;
+    uploadBtn.textContent='掲載中...';
+    try{
+      const response=await fetch(API,{
+        method:'POST',
+        headers:{'content-type':'application/json','x-admin-password':adminPassword},
+        body:JSON.stringify({
+          action:'uploadBoardTournament',
+          title,
+          grade:gradeInput.value,
+          fileName:file.name,
+          dataUrl:await readAsDataUrl(file)
+        })
+      });
+      const body=await response.json().catch(function(){return {}});
+      if(!response.ok) throw new Error(body.error||'PDFを掲載できませんでした。');
+      documents=Array.isArray(body.data)?body.data:documents;
+      titleInput.value='';
+      fileInput.value='';
+      renderDocuments();
+      showSaveNotice('PDFを掲載しました');
+    }catch(e){
+      alert(e.message||'PDFを掲載できませんでした。');
+    }finally{
+      uploadBtn.disabled=false;
+      uploadBtn.textContent='PDFを掲載';
+    }
+  });
+
+  async function deleteDocument(item){
+    const adminPassword=panel.dataset.adminPassword||'';
+    if(!adminPassword){alert('管理画面を開き直してください。');return}
+    if(!confirm('「'+(item.title||'公式戦資料')+'」を削除しますか？')) return;
+    try{
+      const response=await fetch(API,{
+        method:'POST',
+        headers:{'content-type':'application/json','x-admin-password':adminPassword},
+        body:JSON.stringify({action:'deleteBoardTournament',id:item.id})
+      });
+      const body=await response.json().catch(function(){return {}});
+      if(!response.ok) throw new Error(body.error||'PDFを削除できませんでした。');
+      documents=Array.isArray(body.data)?body.data:documents.filter(function(entry){return entry.id!==item.id});
+      renderDocuments();
+      showSaveNotice('PDFを削除しました');
+    }catch(e){
+      alert(e.message||'PDFを削除できませんでした。');
+    }
+  }
+
+  loadDocuments();
+})();
+</script>
+<style id="nonblocking-save-notice-style">
+.save-notice{
+  position:fixed;
+  left:50%;
+  bottom:calc(18px + env(safe-area-inset-bottom));
+  z-index:10000;
+  max-width:calc(100vw - 48px);
+  padding:7px 12px;
+  border:1px solid rgba(226,189,103,.8);
+  border-radius:999px;
+  background:rgba(7,20,38,.96);
+  color:#fff;
+  box-shadow:0 10px 30px rgba(0,0,0,.28);
+  font-size:12px;
+  font-weight:700;
+  line-height:1.5;
+  text-align:center;
+  opacity:0;
+  transform:translate(-50%,12px);
+  transition:opacity .2s ease,transform .2s ease;
+  pointer-events:none;
+}
+.save-notice.show{opacity:1;transform:translate(-50%,0)}
+</style>
+<div class="save-notice" id="saveNotice" role="status" aria-live="polite"></div>
+<script>
+(function(){
+  let saveNoticeTimer;
+  window.showSaveNotice=function(message){
+    const notice=document.getElementById('saveNotice');
+    if(!notice) return;
+    notice.textContent=message;
+    notice.classList.add('show');
+    clearTimeout(saveNoticeTimer);
+    saveNoticeTimer=setTimeout(function(){notice.classList.remove('show');},1800);
+  };
+})();
+</script>
+<script id="compact-site-header-script">
+(function(){
+  const button=document.getElementById('siteMenuButton');
+  const menu=document.getElementById('siteMenu');
+  if(!button||!menu)return;
+  function setOpen(open){
+    menu.classList.toggle('open',open);
+    button.setAttribute('aria-expanded',open?'true':'false');
+    button.setAttribute('aria-label',open?'メニューを閉じる':'メニューを開く');
+    button.textContent=open?'✕':'☰';
+  }
+  button.addEventListener('click',function(e){
+    e.preventDefault();
+    e.stopPropagation();
+    setOpen(!menu.classList.contains('open'));
+  });
+  menu.querySelectorAll('a').forEach(function(link){
+    link.addEventListener('click',function(){setOpen(false)});
+  });
+  document.addEventListener('click',function(e){
+    if(menu.classList.contains('open')&&!e.target.closest('.site-header'))setOpen(false);
+  });
+  document.addEventListener('keydown',function(e){
+    if(e.key==='Escape')setOpen(false);
+  });
+})();
+</script>
+</body>
+</html>
