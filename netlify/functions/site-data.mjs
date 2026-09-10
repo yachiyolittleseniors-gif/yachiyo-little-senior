@@ -871,6 +871,55 @@ export default async (request, context) => {
 
     if (!adminAuth.ok) return adminAuthError(json, adminAuth);
 
+    if (
+      section === "results" &&
+      body?.action === "renameResultTournament"
+    ) {
+      const fromTournament = String(body.fromTournament || "").trim();
+      const toTournament = String(body.toTournament || "").trim();
+      const nextResults = body.data;
+
+      if (
+        !fromTournament ||
+        !toTournament ||
+        fromTournament.length > 200 ||
+        toTournament.length > 200 ||
+        !Array.isArray(nextResults)
+      ) {
+        return json({ error: "大会名を確認してください。" }, 400);
+      }
+
+      const serializedResults = JSON.stringify(nextResults);
+      if (serializedResults.length > 8000000) {
+        return json({ error: "payload too large" }, 413);
+      }
+
+      const documentKey = "content/result-documents.json";
+      const currentDocuments = await store.get(documentKey, {
+        type: "json",
+        consistency: "strong"
+      });
+      const documents = Array.isArray(currentDocuments)
+        ? currentDocuments
+        : [];
+      const updatedDocuments = documents.map(item =>
+        String(item?.tournament || "") === fromTournament
+          ? { ...item, tournament: toTournament }
+          : item
+      );
+
+      await store.setJSON(key, nextResults);
+      if (JSON.stringify(updatedDocuments) !== JSON.stringify(documents)) {
+        await store.setJSON(documentKey, updatedDocuments);
+      }
+
+      return json({
+        ok: true,
+        data: nextResults,
+        documents: updatedDocuments
+      });
+    }
+
     if (section === "downloads-guideline" && body?.data?.fileName) {
       const fileName = String(body.data.fileName || "").trim();
       const bytes = decodeDataUrl(body.data.dataUrl);
