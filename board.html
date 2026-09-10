@@ -452,18 +452,14 @@ html{scroll-padding-top:var(--compact-header-height)}
     }
   }
 
-  // footer bottom-right 3 taps -> 管理表示
+  // コピーライトを2秒以内に5回タップ -> 管理表示
   const footer=document.querySelector('footer') || document.body;
   let taps=0,timer=null;
   footer.addEventListener('pointerup',function(e){
-    const r=footer.getBoundingClientRect();
-    const inRight=Math.max(0,r.right-e.clientX)<=140;
-    const inBottom=Math.max(0,r.bottom-e.clientY)<=140;
-    if(!inRight || !inBottom){taps=0;return}
     taps++;
     clearTimeout(timer);
-    timer=setTimeout(()=>taps=0,1500);
-    if(taps>=3){
+    timer=setTimeout(()=>taps=0,2000);
+    if(taps>=5){
       taps=0;
       clearTimeout(timer);
       adminBtn.textContent='管理';

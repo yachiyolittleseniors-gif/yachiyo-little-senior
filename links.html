@@ -289,7 +289,8 @@ html{scroll-padding-top:var(--compact-header-height)}
   });
   sessionStorage.removeItem('yachiyoAdminPassword');
   let taps=0,timer=null;
-  document.addEventListener('pointerup',e=>{if(e.target.closest('#adminBtn'))return;const right=innerWidth-e.clientX,bottom=innerHeight-e.clientY;if(right>130||bottom>130){taps=0;return}taps++;clearTimeout(timer);timer=setTimeout(()=>taps=0,1500);if(taps>=3){taps=0;adminBtn.style.display='block'}},{passive:true});
+  const copyright=document.querySelector('.footer-copy');
+  if(copyright)copyright.addEventListener('pointerup',e=>{if(e.target.closest('#adminBtn'))return;taps++;clearTimeout(timer);timer=setTimeout(()=>taps=0,2000);if(taps>=5){taps=0;adminBtn.style.display='block'}},{passive:true});
   load();
 })();
 </script>

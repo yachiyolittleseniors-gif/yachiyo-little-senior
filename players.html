@@ -2000,7 +2000,7 @@ function renderP(){updateGradeTabs();const o={'3年':3,'2年':2,'1年':1},b=docu
   }
 }
 async function deletePlayer(id){if(!confirm('この選手を削除しますか？'))return;const n=playersData.filter(p=>String(p.id)!==String(id));try{await saveP(n);playersData=n;renderP()}catch(e){alert(e.message)}}loadP().then(x=>{playersData=normalizeCohorts(x);renderP()}).catch(()=>{playersData=normalizeCohorts(DEFAULT_PLAYERS);renderP()});</script><script>(function(){
-const K='yachiyoAdminMode',P='yachiyoAdminPassword',b=document.getElementById('adminToggle'),footer=document.querySelector('.restored-footer');
+const K='yachiyoAdminMode',P='yachiyoAdminPassword',b=document.getElementById('adminToggle'),footer=document.querySelector('.restored-footer-copy');
 function logout(){
   document.body.classList.remove('admin-mode');
   sessionStorage.removeItem(K);
@@ -2029,12 +2029,10 @@ b.onclick=function(){
 let tapCount=0,tapTimer=null;
 if(footer)footer.addEventListener('pointerup',function(e){
   if(e.target.closest('#adminToggle'))return;
-  const r=footer.getBoundingClientRect();
-  if(Math.max(0,r.right-e.clientX)>130||Math.max(0,r.bottom-e.clientY)>130){tapCount=0;return}
   tapCount++;
   clearTimeout(tapTimer);
-  tapTimer=setTimeout(function(){tapCount=0},1500);
-  if(tapCount>=3){
+  tapTimer=setTimeout(function(){tapCount=0},2000);
+  if(tapCount>=5){
     tapCount=0;
     clearTimeout(tapTimer);
     b.style.display='block'

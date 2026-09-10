@@ -420,17 +420,14 @@ document.addEventListener('DOMContentLoaded',()=>{
   b.style.display='none';
 
   let tapCount=0,tapTimer=null;
-  document.addEventListener('pointerup',function(e){
+  const copyright=document.querySelector('.footer-copy');
+  if(!copyright)return;
+  copyright.addEventListener('pointerup',function(e){
     if(e.target.closest('#adminBtn'))return;
-    const rightGap=window.innerWidth-e.clientX;
-    const bottomGap=window.innerHeight-e.clientY;
-    if(rightGap>130 || bottomGap>130){
-      tapCount=0;return;
-    }
     tapCount++;
     clearTimeout(tapTimer);
-    tapTimer=setTimeout(()=>{tapCount=0},1500);
-    if(tapCount>=3){
+    tapTimer=setTimeout(()=>{tapCount=0},2000);
+    if(tapCount>=5){
       tapCount=0;
       clearTimeout(tapTimer);
       b.style.display='block';

@@ -727,7 +727,7 @@ function renderReplyMode(){
   }
   document.querySelectorAll('[data-delete-slot]').forEach(b=>b.addEventListener('click',()=>removeFile(b.dataset.deleteSlot)));
 
-  const footer=document.querySelector('.restored-footer'),btn=document.getElementById('cupAdminBtn'),area=document.getElementById('cupAdminArea'),guidelineBox=document.getElementById('guidelineAdminBox');
+  const footer=document.querySelector('.restored-footer-copy'),btn=document.getElementById('cupAdminBtn'),area=document.getElementById('cupAdminArea'),guidelineBox=document.getElementById('guidelineAdminBox');
   sessionStorage.removeItem('yachiyoAdminMode');sessionStorage.removeItem('yachiyoAdminPassword');
   area.classList.remove('show');guidelineBox.classList.remove('show');btn.classList.remove('is-visible');btn.textContent='管理';
 
@@ -765,10 +765,8 @@ function renderReplyMode(){
     let count=0,timer=null;
     footer.addEventListener('pointerup',e=>{
       if(e.target.closest('#cupAdminBtn'))return;
-      const r=footer.getBoundingClientRect();
-      if(r.right-e.clientX>130||r.bottom-e.clientY>130){count=0;return}
-      count++;clearTimeout(timer);timer=setTimeout(()=>count=0,1500);
-      if(count>=3){count=0;clearTimeout(timer);btn.textContent='管理';btn.classList.add('is-visible')}
+      count++;clearTimeout(timer);timer=setTimeout(()=>count=0,2000);
+      if(count>=5){count=0;clearTimeout(timer);btn.textContent='管理';btn.classList.add('is-visible')}
     },{passive:true});
   }
 

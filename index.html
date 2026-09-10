@@ -3512,23 +3512,16 @@ function openProtectedArea(type){
   accessPasswordChange.style.display='none';
   toggle.textContent='管理';
 
-  // Hidden admin entrance: フッター右下を3回タップで管理ボタン表示
+  // Hidden admin entrance: コピーライトを2秒以内に5回タップ
   let secretTapCount=0, secretTapTimer=null;
-  const footer=document.querySelector('.restored-footer');
+  const footer=document.querySelector('.restored-footer-copy');
   if(footer){
     footer.addEventListener('pointerup',function(e){
       if(e.target.closest('#heroPhotoAdmin'))return;
-      const r=footer.getBoundingClientRect();
-      const fromRight=Math.max(0,r.right-e.clientX);
-      const fromBottom=Math.max(0,r.bottom-e.clientY);
-      if(fromRight>150 || fromBottom>150){
-        secretTapCount=0;
-        return;
-      }
       secretTapCount++;
       clearTimeout(secretTapTimer);
-      secretTapTimer=setTimeout(()=>{secretTapCount=0},1500);
-      if(secretTapCount>=3){
+      secretTapTimer=setTimeout(()=>{secretTapCount=0},2000);
+      if(secretTapCount>=5){
         secretTapCount=0;
         clearTimeout(secretTapTimer);
         document.getElementById('heroPhotoAdmin').style.display='flex';

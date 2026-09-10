@@ -1982,20 +1982,16 @@ function openProtectedArea(type){
     sessionStorage.removeItem(KEY);
     sessionStorage.removeItem('yachiyoAdminPassword');
     apply();
-    const footer=document.querySelector('.restored-footer');
+    const footer=document.querySelector('.restored-footer-copy');
     const b=document.getElementById('adminModeToggle');
     if(!footer||!b)return;
     let tapCount=0,tapTimer=null;
     footer.addEventListener('pointerup',function(e){
       if(e.target.closest('#adminModeToggle'))return;
-      const r=footer.getBoundingClientRect();
-      if(Math.max(0,r.right-e.clientX)>130||Math.max(0,r.bottom-e.clientY)>130){
-        tapCount=0;return;
-      }
       tapCount++;
       clearTimeout(tapTimer);
-      tapTimer=setTimeout(function(){tapCount=0;},1500);
-      if(tapCount>=3){
+      tapTimer=setTimeout(function(){tapCount=0;},2000);
+      if(tapCount>=5){
         tapCount=0;clearTimeout(tapTimer);b.style.display='block';
       }
     },{passive:true});
