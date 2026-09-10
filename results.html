@@ -2000,6 +2000,38 @@ body.admin-mode .tournament-pdf-save-menu{display:block!important}
   -webkit-user-select:none;
   user-select:none;
 }
+.form-mode-title{margin:0 0 14px;color:var(--navy);font-size:18px;font-weight:900}
+.tournament-name-edit{
+  border:0;
+  padding:0;
+  background:transparent;
+  color:var(--gold2);
+  font-size:11px;
+  font-weight:900;
+  line-height:1.3;
+  white-space:nowrap;
+  cursor:pointer;
+}
+.game-admin-actions{margin-top:8px;gap:8px;align-items:center}
+body.admin-mode .game-admin-actions{display:flex!important}
+.game-admin-actions .game-edit,.game-admin-actions .delete{
+  min-height:34px;
+  margin:0!important;
+  padding:6px 12px;
+  border-radius:7px;
+  background:#fff;
+  font-size:12px;
+  font-weight:900;
+  cursor:pointer;
+}
+.game-admin-actions .game-edit{border:1px solid var(--gold);color:#8a6815}
+.game-admin-actions .delete{border:1px solid #b33640;color:#a1262f}
+#tournament[readonly]{background:#f2f3f5;color:#68727e}
+@media(max-width:650px){
+  #panel input,#panel select,#panel textarea{font-size:16px!important}
+  .tournament-head-pdfs{gap:8px}
+  .tournament-name-edit{font-size:10px}
+}
 </style>
 </head>
 <body id="page-top">
@@ -2057,6 +2089,7 @@ body.admin-mode .tournament-pdf-save-menu{display:block!important}
   </div>
 
   <section id="panel" class="panel">
+    <div id="formModeTitle" class="form-mode-title">新しい試合結果</div>
     <form id="resultForm">
       <div class="grid">
         <div class="field">
@@ -2082,6 +2115,10 @@ body.admin-mode .tournament-pdf-save-menu{display:block!important}
           <input id="tournament" type="text" placeholder="例：関東連盟 春季大会" required>
         </div>
         <div class="field">
+          <label for="round">試合区分</label>
+          <input id="round" type="text" placeholder="例：1回戦、敗者復活1回戦">
+        </div>
+        <div class="field">
           <label for="opponent">対戦相手</label>
           <input id="opponent" type="text" placeholder="例：〇〇シニア" required>
         </div>
@@ -2103,7 +2140,7 @@ body.admin-mode .tournament-pdf-save-menu{display:block!important}
         </div>
       </div>
       <div class="actions">
-        <button class="save" type="submit">登録する</button>
+        <button class="save" id="resultSubmitButton" type="submit">登録する</button>
         <button class="cancel" type="button" onclick="clearForm()">キャンセル</button>
       </div>
     </form>
@@ -2217,6 +2254,10 @@ function escHtml(s){
 let resultsData=[];
 let resultDocuments=[];
 let pendingPdfTournament='';
+let editingGameId='';
+let editingOriginalDate='';
+let editingOriginalGrade='';
+let editingOriginalGradeYear='';
 
 function tournamentParts(value){
   const text=String(value||'大会名未設定').trim();
@@ -2310,13 +2351,15 @@ function renderResults(){
 
   box.innerHTML=[...groups.values()].map(group=>{
     const pdfs=resultDocuments.filter(item=>item.tournament===group.key);
-    const pdfHeaderHtml=!pdfs.length
+    const pdfOpenHtml=!pdfs.length
       ? ''
       : pdfs.length===1
-        ? '<div class="tournament-head-pdfs"><a class="tournament-head-pdf" style="display:inline!important;min-height:0!important;padding:0!important;border:0!important;border-radius:0!important;background:none!important;background-color:transparent!important;box-shadow:none!important;color:#e2bd67!important;font-size:12px!important;font-weight:900!important;line-height:1.3!important;text-decoration:none!important;" href="'+SHARED_API+'?section=result-documents&amp;file='+encodeURIComponent(pdfs[0].id)+'" target="_blank" rel="noopener" title="'+escHtml(pdfs[0].fileName)+'">PDFを開く</a></div>'
-        : '<div class="tournament-head-pdfs"><details class="tournament-pdf-picker"><summary>PDFを開く</summary><div class="tournament-pdf-picker-list">'+
+        ? '<a class="tournament-head-pdf" style="display:inline!important;min-height:0!important;padding:0!important;border:0!important;border-radius:0!important;background:none!important;background-color:transparent!important;box-shadow:none!important;color:#e2bd67!important;font-size:12px!important;font-weight:900!important;line-height:1.3!important;text-decoration:none!important;" href="'+SHARED_API+'?section=result-documents&amp;file='+encodeURIComponent(pdfs[0].id)+'" target="_blank" rel="noopener" title="'+escHtml(pdfs[0].fileName)+'">PDFを開く</a>'
+        : '<details class="tournament-pdf-picker"><summary>PDFを開く</summary><div class="tournament-pdf-picker-list">'+
             pdfs.map(item=>'<a href="'+SHARED_API+'?section=result-documents&amp;file='+encodeURIComponent(item.id)+'" target="_blank" rel="noopener">'+escHtml(item.fileName)+'</a>').join('')+
-          '</div></details></div>';
+          '</div></details>';
+    const pdfHeaderHtml='<div class="tournament-head-pdfs">'+pdfOpenHtml+
+      '<button class="tournament-name-edit admin-only" type="button" data-tournament-edit="'+escHtml(group.key)+'">大会名を編集</button></div>';
     const pdfHtml=pdfs.length
       ? '<div class="tournament-pdfs admin-only">'+pdfs.map(item=>
           '<div class="tournament-pdf">'+
@@ -2380,7 +2423,10 @@ function renderResults(){
             : '<div class="team">八千代</div><div class="score">'+Number(g.ourScore)+' - '+Number(g.oppScore)+'</div><div class="team">'+opponentHtml+'</div>')+
         '</div>'+
         (g.note?'<div class="meta" style="margin-top:12px">'+escHtml(g.note)+'</div>':'')+
-        '<button class="delete" onclick="removeGame(\''+escHtml(g.id)+'\')">削除</button>'+
+        '<div class="game-admin-actions admin-only">'+
+          '<button class="game-edit" type="button" data-game-edit="'+escHtml(g.id)+'">編集</button>'+
+          '<button class="delete" type="button" onclick="removeGame(\''+escHtml(g.id)+'\')">削除</button>'+
+        '</div>'+
       '</article>';
     }).join('');
 
@@ -2445,8 +2491,75 @@ window.addEventListener('resize',()=>{
   clearTimeout(resultFitResizeTimer);
   resultFitResizeTimer=setTimeout(()=>fitResultLines(document.getElementById('results')),100);
 });
-function togglePanel(){document.getElementById('panel').classList.toggle('open')}
-function clearForm(){document.getElementById('resultForm').reset();document.getElementById('panel').classList.remove('open')}
+function togglePanel(){
+  const panel=document.getElementById('panel');
+  if(panel.classList.contains('open'))clearForm();
+  else panel.classList.add('open');
+}
+function clearForm(){
+  document.getElementById('resultForm').reset();
+  document.getElementById('panel').classList.remove('open');
+  document.getElementById('formModeTitle').textContent='新しい試合結果';
+  document.getElementById('resultSubmitButton').textContent='登録する';
+  document.getElementById('tournament').readOnly=false;
+  editingGameId='';
+  editingOriginalDate='';
+  editingOriginalGrade='';
+  editingOriginalGradeYear='';
+}
+function startEditGame(id){
+  const game=resultsData.find(item=>String(item.id)===String(id));
+  if(!game)return;
+  const parts=tournamentParts(game.tournament);
+  const displayedGrade=gradeLifecycle(game).label||String(game.grade||'');
+  editingGameId=String(game.id);
+  editingOriginalDate=String(game.date||'');
+  editingOriginalGrade=String(game.grade||'');
+  editingOriginalGradeYear=game.gradeYear||'';
+  document.getElementById('date').value=/^\d{4}-\d{2}$/.test(editingOriginalDate)?editingOriginalDate+'-01':editingOriginalDate;
+  document.getElementById('grade').value=displayedGrade;
+  document.getElementById('battingOrder').value=game.battingOrder||'';
+  document.getElementById('tournament').value=parts.name;
+  document.getElementById('tournament').readOnly=true;
+  document.getElementById('round').value=String(game.round||parts.round||'');
+  document.getElementById('opponent').value=game.opponent||'';
+  document.getElementById('venue').value=game.venue||'';
+  document.getElementById('ourScore').value=game.ourScore;
+  document.getElementById('oppScore').value=game.oppScore;
+  document.getElementById('note').value=game.note||'';
+  document.getElementById('formModeTitle').textContent='試合結果を編集';
+  document.getElementById('resultSubmitButton').textContent='更新する';
+  document.getElementById('panel').classList.add('open');
+  document.getElementById('panel').scrollIntoView({block:'start'});
+}
+async function editTournamentName(key){
+  const games=resultsData.filter(game=>tournamentKey(game)===key);
+  if(!games.length)return;
+  const currentName=tournamentParts(games[0].tournament).name;
+  const entered=prompt('大会名を編集してください',currentName);
+  if(entered===null)return;
+  const newName=entered.trim();
+  if(!newName){alert('大会名を入力してください。');return}
+  if(newName===currentName)return;
+  const nextResults=resultsData.map(game=>{
+    if(tournamentKey(game)!==key)return game;
+    const parts=tournamentParts(game.tournament);
+    return {...game,tournament:newName,round:String(game.round||parts.round||'')};
+  });
+  const year=gameYear(games[0])||'年不明';
+  try{
+    const response=await sharedAction('results',{
+      action:'renameResultTournament',
+      data:nextResults,
+      fromTournament:key,
+      toTournament:year+'::'+newName
+    });
+    resultsData=Array.isArray(response.data)?response.data:nextResults;
+    resultDocuments=Array.isArray(response.documents)?response.documents:resultDocuments;
+    renderResults();
+    if(typeof showSaveNotice==='function')showSaveNotice('大会名を更新しました');
+  }catch(e){}
+}
 async function removeGame(id){
   if(!confirm('この試合結果を削除しますか？'))return;
   const next=resultsData.filter(x=>x.id!==id);
@@ -2455,25 +2568,38 @@ async function removeGame(id){
 }
 document.getElementById('resultForm').addEventListener('submit',async e=>{
   e.preventDefault();
+  const existing=editingGameId?resultsData.find(item=>String(item.id)===editingGameId):null;
+  const enteredDate=document.getElementById('date').value;
+  const displayedExistingGrade=existing?gradeLifecycle(existing).label:'';
+  const selectedGrade=document.getElementById('grade').value;
+  const keepOriginalGrade=existing&&selectedGrade===displayedExistingGrade;
   const g={
-    id:String(Date.now()),
-    date:document.getElementById('date').value,
-    grade:document.getElementById('grade').value,
-    gradeYear:currentJapanYear(),
+    ...(existing||{}),
+    id:existing?existing.id:String(Date.now()),
+    date:existing&&/^\d{4}-\d{2}$/.test(editingOriginalDate)&&enteredDate===editingOriginalDate+'-01'?editingOriginalDate:enteredDate,
+    grade:keepOriginalGrade?editingOriginalGrade:selectedGrade,
+    gradeYear:keepOriginalGrade?editingOriginalGradeYear:currentJapanYear(),
     battingOrder:document.getElementById('battingOrder').value,
     tournament:document.getElementById('tournament').value.trim(),
+    round:document.getElementById('round').value.trim(),
     opponent:document.getElementById('opponent').value.trim(),
     venue:document.getElementById('venue').value.trim(),
     ourScore:Number(document.getElementById('ourScore').value),
     oppScore:Number(document.getElementById('oppScore').value),
     note:document.getElementById('note').value.trim()
   };
-  const next=[...resultsData,g];
+  const next=existing
+    ? resultsData.map(item=>String(item.id)===editingGameId?g:item)
+    : [...resultsData,g];
   try{await sharedSave('results',next);resultsData=next;clearForm();renderResults();}
   catch(err){if(err.message!=='cancelled'&&err.message!=='unauthorized'&&err.message!=='not configured')alert('保存に失敗しました。');}
 });
 const tournamentPdfInput=document.getElementById('tournamentPdfInput');
 document.getElementById('results').addEventListener('click',async event=>{
+  const gameEdit=event.target.closest('[data-game-edit]');
+  if(gameEdit){startEditGame(gameEdit.dataset.gameEdit);return}
+  const tournamentEdit=event.target.closest('[data-tournament-edit]');
+  if(tournamentEdit){await editTournamentName(tournamentEdit.dataset.tournamentEdit);return}
   const add=event.target.closest('[data-pdf-add]');
   if(add){
     pendingPdfTournament=add.dataset.pdfAdd||'';
