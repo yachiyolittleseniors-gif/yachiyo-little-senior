@@ -2219,6 +2219,27 @@ function tournamentParts(value){
   }
   return {name:text,round:''};
 }
+const LEGACY_GRADE_BASE_YEAR=2026;
+function currentJapanYear(){
+  try{
+    return Number(new Intl.DateTimeFormat('en-US',{timeZone:'Asia/Tokyo',year:'numeric'}).format(new Date()));
+  }catch(e){
+    return new Date().getFullYear();
+  }
+}
+function gradeLifecycle(game){
+  const original=String(game.grade||'').trim();
+  const normalized=original.replace(/[１２３]/g,ch=>String('１２３'.indexOf(ch)+1));
+  const match=normalized.match(/[1-3]/);
+  if(!match)return {visible:true,label:original};
+  const baseGrade=Number(match[0]);
+  const baseYear=Number(game.gradeYear)||LEGACY_GRADE_BASE_YEAR;
+  const effectiveGrade=baseGrade+Math.max(0,currentJapanYear()-baseYear);
+  return {
+    visible:effectiveGrade<=3,
+    label:effectiveGrade<=3?effectiveGrade+'年':''
+  };
+}
 function gameYear(game){
   return String(game.date||game.year||'').slice(0,4);
 }
@@ -2265,6 +2286,7 @@ function renderResults(){
   const yf=document.getElementById('yearFilter')?.value||'';
   const tf=document.getElementById('tournamentFilter')?.value||'';
   const data=[...resultsData]
+    .filter(g=>gradeLifecycle(g).visible)
     .filter(g=>(!yf || gameYear(g)===yf) && (!tf || tournamentParts(g.tournament).name===tf))
     .sort((a,b)=>String(b.date||b.year||'').localeCompare(String(a.date||a.year||'')));
   if(!data.length){box.innerHTML='<div class="empty">まだ試合結果が登録されていません。</div>';return}
@@ -2338,9 +2360,10 @@ function renderResults(){
       const opponent=displayTeamName(g.opponent);
       const opponentHtml=displayTeamNameHtml(g.opponent);
       const dateVenue=[g.date?escHtml(formatGameDate(g.date)):'',g.venue?escHtml(g.venue):''].filter(Boolean).join(' ／ ');
+      const gradeLabel=gradeLifecycle(g).label;
       return '<article class="game">'+
         '<div class="game-head">'+
-          '<div><div class="tournament">'+(g.grade?'<span class="grade-badge">'+escHtml(g.grade)+'</span>':'')+round+'</div>'+
+          '<div><div class="tournament">'+(gradeLabel?'<span class="grade-badge">'+escHtml(gradeLabel)+'</span>':'')+round+'</div>'+
           (dateVenue?'<div class="meta">'+dateVenue+'</div>':'')+'</div>'+
           '<span class="badge '+cls+'">'+label+'</span>'+
         '</div>'+
@@ -2429,6 +2452,7 @@ document.getElementById('resultForm').addEventListener('submit',async e=>{
     id:String(Date.now()),
     date:document.getElementById('date').value,
     grade:document.getElementById('grade').value,
+    gradeYear:currentJapanYear(),
     battingOrder:document.getElementById('battingOrder').value,
     tournament:document.getElementById('tournament').value.trim(),
     opponent:document.getElementById('opponent').value.trim(),
