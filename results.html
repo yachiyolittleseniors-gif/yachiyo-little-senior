@@ -1696,6 +1696,40 @@ html{scroll-padding-top:var(--fixed-header-height)}
   white-space:nowrap;
 }
 </style>
+<style id="results-mobile-width-guard">
+/* モバイルで見出し・カードが画面外へ広がらないよう幅を固定 */
+.results{
+  width:100%!important;
+  min-width:0!important;
+  grid-template-columns:minmax(0,1fr)!important;
+}
+.tournament-group,
+.tournament-group-head,
+.tournament-games,
+.tournament-group .game,
+.tournament-group .game-head,
+.tournament-group .scoreline{
+  min-width:0!important;
+  max-width:100%!important;
+}
+.tournament-group{overflow:hidden!important}
+.tournament-group-head{width:100%!important}
+.tournament-group-title{
+  display:block!important;
+  width:100%!important;
+  max-width:100%!important;
+  overflow:hidden!important;
+}
+.tournament-games{width:auto!important}
+.tournament-group .game{width:100%!important;overflow:hidden!important}
+.tournament-group .game-head>div{min-width:0!important}
+.tournament-group .scoreline{width:100%!important;overflow:hidden!important}
+.scoreline .team{min-width:0!important;max-width:100%!important}
+@media(max-width:650px){
+  .result-page-shell,.results-page-shell,.results-wrap{min-width:0!important;max-width:100%!important}
+  .tournament-group-title{font-size:26px!important}
+}
+</style>
 </head>
 <body id="page-top">
 <header class="header">
@@ -2074,8 +2108,8 @@ function fitOneLine(element,minSize){
 function fitResultLines(scope){
   if(!scope)return;
   const fitGroup=group=>{
-    group.querySelectorAll('.tournament-group-title').forEach(el=>fitOneLine(el,16));
-    group.querySelectorAll('.scoreline .team').forEach(el=>fitOneLine(el,14));
+    group.querySelectorAll('.tournament-group-title').forEach(el=>fitOneLine(el,10));
+    group.querySelectorAll('.scoreline .team').forEach(el=>fitOneLine(el,12));
   };
   const applyFit=()=>{
     scope.querySelectorAll('.tournament-group').forEach(group=>{
