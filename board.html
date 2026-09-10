@@ -236,6 +236,45 @@ html{scroll-padding-top:var(--compact-header-height)}
 <style id="remove-official-tournament-admin-fields">
 #tournamentAdminFields{display:none!important}
 </style>
+<style id="team-rules-pdf-button-consistency">
+.rules-loading{
+  display:flex!important;
+  width:100%;
+  min-height:50px;
+  margin-top:18px;
+  padding:14px 16px!important;
+  align-items:center;
+  justify-content:center;
+  border:1px solid var(--gold)!important;
+  border-radius:8px!important;
+  background:var(--gold)!important;
+  color:#fff!important;
+  font-size:inherit!important;
+  font-weight:800;
+  line-height:1.4;
+  text-align:center;
+}
+.rules-pdf-item{
+  padding:0!important;
+  border:0!important;
+  background:transparent!important;
+}
+.rules-pdf-name{margin-bottom:0}
+.rules-pdf-open{
+  display:block!important;
+  width:100%!important;
+  min-height:50px;
+  margin-top:18px!important;
+  padding:14px 16px!important;
+  border:1px solid var(--gold)!important;
+  border-radius:8px!important;
+  background:var(--gold)!important;
+  color:#fff!important;
+  font-size:inherit!important;
+  font-weight:800!important;
+  line-height:1.4!important;
+}
+</style>
 </head>
 <body id="page-top">
 <header class="site-header">
@@ -289,7 +328,7 @@ html{scroll-padding-top:var(--compact-header-height)}
     <section class="card rules-card" id="teamRulesCard">
       <div class="card-kicker">TEAM RULES</div>
       <h2>チーム規約</h2>
-      <div id="rulesText" class="rules-text empty">チーム規約を読み込んでいます。</div>
+      <div id="rulesText" class="rules-text empty rules-loading" aria-busy="true">チーム規約を読み込んでいます。</div>
       <div id="rulesPdfList" class="rules-pdf-list" hidden></div>
     </section>
   </div>
@@ -891,6 +930,8 @@ html{scroll-padding-top:var(--compact-header-height)}
   }
 
   function render(){
+    textView.classList.remove('rules-loading');
+    textView.removeAttribute('aria-busy');
     const hasText=Boolean(rules.text),hasPdfs=rules.pdfs.length>0;
     textView.textContent=rules.text||(hasPdfs?'':'現在、公開中のチーム規約はありません。');
     textView.hidden=!hasText&&hasPdfs;
@@ -900,7 +941,7 @@ html{scroll-padding-top:var(--compact-header-height)}
     rules.pdfs.forEach(function(pdf,index){
       const item=document.createElement('div');item.className='rules-pdf-item';
       const name=document.createElement('div');name.className='rules-pdf-name';name.textContent=pdf.name||('チーム規約PDF '+(index+1));
-      const open=document.createElement('a');open.className='rules-pdf-open';open.href=toBlobUrl(pdf.data);open.target='_blank';open.rel='noopener';open.textContent='PDFを開く';
+      const open=document.createElement('a');open.className='rules-pdf-open btn gold';open.href=toBlobUrl(pdf.data);open.target='_blank';open.rel='noopener';open.textContent='PDFを開く';
       item.append(name,open);pdfList.appendChild(item);
       const adminItem=document.createElement('div');adminItem.className='rules-admin-item';
       const adminName=document.createElement('span');adminName.textContent=pdf.name||('チーム規約PDF '+(index+1));
@@ -917,7 +958,7 @@ html{scroll-padding-top:var(--compact-header-height)}
       const response=await fetch(API,{cache:'no-store',headers:{'x-access-password':accessPassword}});
       if(!response.ok)throw new Error('load failed');
       const body=await response.json();const data=Array.isArray(body.data)?body.data:[];rules=normalize(data[0]||{});render();
-    }catch(e){textView.hidden=false;textView.classList.add('empty');textView.textContent='チーム規約を読み込めませんでした。'}
+    }catch(e){textView.hidden=false;textView.classList.remove('rules-loading');textView.removeAttribute('aria-busy');textView.classList.add('empty');textView.textContent='チーム規約を読み込めませんでした。'}
   }
 
   function readAsDataUrl(file){return new Promise(function(resolve,reject){const reader=new FileReader();reader.onload=function(){resolve(String(reader.result||''))};reader.onerror=reject;reader.readAsDataURL(file)})}
