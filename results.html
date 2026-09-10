@@ -1949,13 +1949,32 @@ function renderResults(){
         ).join('')+'</div>'
       : '';
 
+    function roundOrder(game){
+      const text=String(game.roundName||game.round||'');
+      const normalized=text.replace(/[０-９]/g,char=>String('０１２３４５６７８９'.indexOf(char)));
+      const digit=normalized.match(/\d+/);
+      let number=digit?Number(digit[0]):0;
+      if(!number){
+        const japanese=normalized.match(/[一二三四五六七八九十]+/);
+        if(japanese){
+          const value=japanese[0],ones={'一':1,'二':2,'三':3,'四':4,'五':5,'六':6,'七':7,'八':8,'九':9};
+          if(value.includes('十')){
+            const parts=value.split('十');
+            number=(parts[0]?ones[parts[0]]:1)*10+(parts[1]?ones[parts[1]]:0);
+          }else number=ones[value]||0;
+        }
+      }
+      if(/敗者復活/.test(text))return 100+number;
+      if(/敗者交流/.test(text))return 90+number;
+      if(/決勝/.test(text)&&!/準/.test(text))return 80;
+      if(/準決勝/.test(text))return 70;
+      if(/準々決勝/.test(text))return 60;
+      return number;
+    }
     group.games.sort((a,b)=>{
-      const aRound=String(a.roundName||a.round||'');
-      const bRound=String(b.roundName||b.round||'');
-      const aRevival=/敗者復活/.test(aRound)?0:1;
-      const bRevival=/敗者復活/.test(bRound)?0:1;
-      if(aRevival!==bRevival)return aRevival-bRevival;
-      return String(a.date||a.year||'').localeCompare(String(b.date||b.year||''));
+      const dateCompare=String(b.date||b.year||'').localeCompare(String(a.date||a.year||''));
+      if(dateCompare)return dateCompare;
+      return roundOrder(b)-roundOrder(a);
     });
     const gamesHtml=group.games.map(g=>{
       const result=outcome(g.ourScore,g.oppScore),label=result[0],cls=result[1];
