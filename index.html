@@ -30,6 +30,15 @@ html{background:#071426}
   }catch(error){}
 })();
 </script>
+<script id="seniorcup-visibility-prepaint">
+(function(){
+  try{
+    if(localStorage.getItem('yachiyoSeniorCupVisible')==='false'){
+      document.documentElement.classList.add('seniorcup-hidden');
+    }
+  }catch(error){}
+})();
+</script>
 <link rel="preload" as="image" href="./official-logo-new.png" fetchpriority="high">
 <link rel="preload" as="image" href="./six-principles-six-kajo-mobile-v2.webp?v=20260908-mobile2" type="image/webp" media="(max-width:900px)" fetchpriority="high">
 <link rel="preload" as="image" href="./six-principles-six-kajo-desktop.webp?v=20260908-pc2" type="image/webp" media="(min-width:901px)" fetchpriority="high">
@@ -2522,10 +2531,9 @@ body.photo-admin-on .news-delete{display:block}
 
 
 <style>
-/* 八千代シニア杯：更新時の一瞬表示（ちらつき）防止 */
-.seniorcup-home-banner{
-  display:none;
-}
+/* 八千代リトルシニア杯：更新時も表示状態を維持 */
+.seniorcup-home-banner{display:block}
+html.seniorcup-hidden .seniorcup-home-banner{display:none}
 </style>
 
 
@@ -4180,10 +4188,16 @@ document.addEventListener('DOMContentLoaded',function(){
   const btn=document.getElementById('seniorcupVisibilityBtn');
   if(!banner||!btn)return;
 
+  const cacheKey='yachiyoSeniorCupVisible';
   let visible=true;
+  try{
+    visible=localStorage.getItem(cacheKey)!=='false';
+  }catch(e){}
 
   function apply(){
-    banner.style.display=visible?'block':'none';
+    document.documentElement.classList.toggle('seniorcup-hidden',!visible);
+    banner.style.removeProperty('display');
+    try{localStorage.setItem(cacheKey,String(visible))}catch(e){}
     btn.textContent=visible?'八千代リトルシニア杯を非表示':'八千代リトルシニア杯を表示';
   }
 
