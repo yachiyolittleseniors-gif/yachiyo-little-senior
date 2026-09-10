@@ -1394,6 +1394,29 @@ body:not(.admin-mode) .delete{display:none!important}
 <style>
 .result-filters{display:flex;gap:8px;flex-wrap:wrap;margin:0 0 16px}
 .result-filters select{border:1px solid #cfd6df;border-radius:999px;padding:8px 12px;background:#fff;color:#102033;font:inherit}
+/* 大会ごとに試合結果とPDFをまとめて表示 */
+.results{gap:24px!important}
+.tournament-group{background:#fff;border:1px solid rgba(199,154,59,.55);border-top:5px solid var(--gold);border-radius:18px;padding:20px;box-shadow:0 12px 32px rgba(7,20,38,.09)}
+.tournament-group-head{display:flex;align-items:flex-start;justify-content:space-between;gap:14px;padding:2px 2px 16px;border-bottom:1px solid #e8ebef}
+.tournament-group-title{margin:0;color:var(--navy);font-family:serif;font-size:clamp(23px,3.2vw,32px);line-height:1.35}
+.tournament-year{display:inline-flex;flex:0 0 auto;border:1px solid var(--gold);border-radius:999px;padding:6px 11px;color:#8b671d;font-size:12px;font-weight:800}
+.tournament-games{display:grid;gap:14px;margin-top:16px}
+.tournament-group .game{background:#fff;border:1px solid #e3e7eb!important;box-shadow:0 7px 20px rgba(7,20,38,.07)!important}
+.round-name{color:var(--navy);font-weight:900}
+.tournament-pdfs{display:grid;gap:9px;margin-top:15px}
+.tournament-pdf{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:11px 13px;border:1px solid rgba(199,154,59,.48);border-radius:10px;background:#fffaf0}
+.tournament-pdf-name{min-width:0;color:#66501e;font-size:13px;font-weight:800;overflow-wrap:anywhere}
+.tournament-pdf-open{flex:0 0 auto;display:inline-flex;align-items:center;justify-content:center;min-height:38px;padding:8px 13px;border-radius:8px;background:var(--gold);color:#fff!important;font-size:12px;font-weight:900}
+.tournament-pdf-delete{flex:0 0 auto;border:1px solid #b3262e;background:#fff;color:#b3262e;border-radius:8px;padding:8px 10px;font-weight:800}
+.tournament-pdf-add{margin-top:14px;border:1px solid var(--gold);background:#fff;color:#8b671d;border-radius:9px;padding:10px 14px;font-weight:900}
+@media(max-width:650px){
+  .tournament-group{padding:16px 12px;border-radius:16px}
+  .tournament-group-head{display:block}
+  .tournament-group-title{font-size:23px}
+  .tournament-year{margin-top:9px}
+  .tournament-pdf{align-items:flex-start;flex-wrap:wrap}
+  .tournament-pdf-name{width:100%}
+}
 </style>
 
 
@@ -1708,6 +1731,7 @@ html{scroll-padding-top:var(--fixed-header-height)}
   </section>
 
   <section id="results" class="results"></section>
+  <input id="tournamentPdfInput" type="file" accept=".pdf,application/pdf" hidden>
   
 </main>
 
@@ -1782,12 +1806,53 @@ async function sharedSave(section,data){
   if(!r.ok) throw new Error('save failed');
   return true;
 }
+async function sharedAction(section,payload){
+  const password=getAdminPassword();
+  if(!password) throw new Error('cancelled');
+  const r=await fetch(`${SHARED_API}?section=${encodeURIComponent(section)}`,{
+    method:'POST',
+    headers:{'content-type':'application/json','x-admin-password':password},
+    body:JSON.stringify(payload)
+  });
+  let response={};
+  try{response=await r.json()}catch(e){}
+  if(r.status===429){
+    alert('試行回数の上限です。15分後に再度お試しください。');
+    throw new Error('rate limited');
+  }
+  if(r.status===401){
+    sessionStorage.removeItem('yachiyoAdminPassword');
+    alert('管理者パスワードが違います。');
+    throw new Error('unauthorized');
+  }
+  if(!r.ok){
+    alert(response.error||'保存に失敗しました。');
+    throw new Error('save failed');
+  }
+  return response;
+}
 function escHtml(s){
   return String(s??'').replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));
 }
 
 let resultsData=[];
+let resultDocuments=[];
+let pendingPdfTournament='';
 
+function tournamentParts(value){
+  const text=String(value||'大会名未設定').trim();
+  const match=text.match(/^(.*?)[\s　]*(第?\s*\d+\s*回戦|準々決勝|準決勝|決勝|順位決定戦|敗者復活戦|第?\s*\d+\s*試合)$/);
+  if(match&&match[1].trim()){
+    return {name:match[1].trim(),round:match[2].replace(/\s/g,'')};
+  }
+  return {name:text,round:''};
+}
+function gameYear(game){
+  return String(game.date||game.year||'').slice(0,4);
+}
+function tournamentKey(game){
+  return (gameYear(game)||'年不明')+'::'+tournamentParts(game.tournament).name;
+}
 function outcome(a,b){
   a=Number(a);b=Number(b);
   if(a>b)return ['勝','win'];
@@ -1799,24 +1864,59 @@ function renderResults(){
   const yf=document.getElementById('yearFilter')?.value||'';
   const tf=document.getElementById('tournamentFilter')?.value||'';
   const data=[...resultsData]
-    .filter(g=>(!yf || (g.date||'').startsWith(yf)) && (!tf || (g.tournament||'')===tf))
-    .sort((a,b)=>(b.date||'').localeCompare(a.date||''));
+    .filter(g=>(!yf || gameYear(g)===yf) && (!tf || tournamentParts(g.tournament).name===tf))
+    .sort((a,b)=>String(b.date||b.year||'').localeCompare(String(a.date||a.year||'')));
   if(!data.length){box.innerHTML='<div class="empty">まだ試合結果が登録されていません。</div>';return}
-  box.innerHTML=data.map(g=>{
-    const [label,cls]=outcome(g.ourScore,g.oppScore);
-    return `<article class="game">
-      <div class="game-head">
-        <div><div class="tournament">${g.grade?`<span class="grade-badge">${escHtml(g.grade)}</span>`:''}${escHtml(g.tournament)}</div><div class="meta">${escHtml(g.date)}${g.venue?' ／ '+escHtml(g.venue):''}</div></div>
-        <span class="badge ${cls}">${label}</span>
-      </div>
-      <div class="scoreline">
-        ${g.battingOrder==='second'
-          ? `<div class="team">${escHtml(g.opponent)}</div><div class="score">${Number(g.oppScore)} - ${Number(g.ourScore)}</div><div class="team">八千代</div>`
-          : `<div class="team">八千代</div><div class="score">${Number(g.ourScore)} - ${Number(g.oppScore)}</div><div class="team">${escHtml(g.opponent)}</div>`}
-      </div>
-      ${g.note?`<div class="meta" style="margin-top:12px">${escHtml(g.note)}</div>`:''}
-      <button class="delete" onclick="removeGame('${g.id}')">削除</button>
-    </article>`;
+
+  const groups=new Map();
+  data.forEach(game=>{
+    const parts=tournamentParts(game.tournament);
+    const key=tournamentKey(game);
+    if(!groups.has(key)){
+      groups.set(key,{key:key,name:parts.name,year:gameYear(game),games:[]});
+    }
+    groups.get(key).games.push({...game,roundName:parts.round});
+  });
+
+  box.innerHTML=[...groups.values()].map(group=>{
+    const pdfs=resultDocuments.filter(item=>item.tournament===group.key);
+    const pdfHtml=pdfs.length
+      ? '<div class="tournament-pdfs">'+pdfs.map(item=>
+          '<div class="tournament-pdf">'+
+            '<div class="tournament-pdf-name">'+escHtml(item.fileName)+'</div>'+
+            '<a class="tournament-pdf-open" href="'+SHARED_API+'?section=result-documents&amp;file='+encodeURIComponent(item.id)+'" target="_blank" rel="noopener">PDFを開く</a>'+
+            '<button class="tournament-pdf-delete admin-only" type="button" data-pdf-delete="'+escHtml(item.id)+'">削除</button>'+
+          '</div>'
+        ).join('')+'</div>'
+      : '';
+
+    const gamesHtml=group.games.map(g=>{
+      const result=outcome(g.ourScore,g.oppScore),label=result[0],cls=result[1];
+      const round=g.roundName?'<span class="round-name">'+escHtml(g.roundName)+'</span>':'';
+      const dateVenue=[g.date?escHtml(g.date):'',g.venue?escHtml(g.venue):''].filter(Boolean).join(' ／ ');
+      return '<article class="game">'+
+        '<div class="game-head">'+
+          '<div><div class="tournament">'+(g.grade?'<span class="grade-badge">'+escHtml(g.grade)+'</span>':'')+round+'</div>'+
+          (dateVenue?'<div class="meta">'+dateVenue+'</div>':'')+'</div>'+
+          '<span class="badge '+cls+'">'+label+'</span>'+
+        '</div>'+
+        '<div class="scoreline">'+
+          (g.battingOrder==='second'
+            ? '<div class="team">'+escHtml(g.opponent)+'</div><div class="score">'+Number(g.oppScore)+' - '+Number(g.ourScore)+'</div><div class="team">八千代</div>'
+            : '<div class="team">八千代</div><div class="score">'+Number(g.ourScore)+' - '+Number(g.oppScore)+'</div><div class="team">'+escHtml(g.opponent)+'</div>')+
+        '</div>'+
+        (g.note?'<div class="meta" style="margin-top:12px">'+escHtml(g.note)+'</div>':'')+
+        '<button class="delete" onclick="removeGame(\''+escHtml(g.id)+'\')">削除</button>'+
+      '</article>';
+    }).join('');
+
+    return '<section class="tournament-group">'+
+      '<div class="tournament-group-head"><h2 class="tournament-group-title">'+escHtml(group.name)+'</h2>'+
+      '<span class="tournament-year">'+escHtml(group.year)+'年度</span></div>'+
+      pdfHtml+
+      '<button class="tournament-pdf-add admin-only" type="button" data-pdf-add="'+escHtml(group.key)+'">＋ この大会のPDFを追加</button>'+
+      '<div class="tournament-games">'+gamesHtml+'</div>'+
+    '</section>';
   }).join('');
 }
 function togglePanel(){document.getElementById('panel').classList.toggle('open')}
@@ -1845,10 +1945,56 @@ document.getElementById('resultForm').addEventListener('submit',async e=>{
   try{await sharedSave('results',next);resultsData=next;clearForm();renderResults();}
   catch(err){if(err.message!=='cancelled'&&err.message!=='unauthorized'&&err.message!=='not configured')alert('保存に失敗しました。');}
 });
+const tournamentPdfInput=document.getElementById('tournamentPdfInput');
+document.getElementById('results').addEventListener('click',async event=>{
+  const add=event.target.closest('[data-pdf-add]');
+  if(add){
+    pendingPdfTournament=add.dataset.pdfAdd||'';
+    tournamentPdfInput.value='';
+    tournamentPdfInput.click();
+    return;
+  }
+  const remove=event.target.closest('[data-pdf-delete]');
+  if(remove){
+    if(!confirm('このPDFを削除しますか？'))return;
+    try{
+      const response=await sharedAction('result-documents',{action:'deleteResultDocument',id:remove.dataset.pdfDelete});
+      resultDocuments=Array.isArray(response.data)?response.data:[];
+      renderResults();
+    }catch(e){}
+  }
+});
+tournamentPdfInput.addEventListener('change',async()=>{
+  const file=tournamentPdfInput.files&&tournamentPdfInput.files[0];
+  if(!file||!pendingPdfTournament)return;
+  if(!file.name.toLowerCase().endsWith('.pdf')){alert('PDFファイルを選択してください。');return}
+  if(file.size>6*1024*1024){alert('PDFは6MB以下にしてください。');return}
+  const reader=new FileReader();
+  reader.onload=async()=>{
+    try{
+      const response=await sharedAction('result-documents',{
+        action:'uploadResultDocument',
+        tournament:pendingPdfTournament,
+        fileName:file.name,
+        dataUrl:reader.result
+      });
+      resultDocuments=Array.isArray(response.data)?response.data:[];
+      renderResults();
+      if(typeof showSaveNotice==='function')showSaveNotice('PDFを追加しました');
+    }catch(e){}
+    finally{tournamentPdfInput.value='';pendingPdfTournament=''}
+  };
+  reader.onerror=()=>alert('PDFを読み込めませんでした。');
+  reader.readAsDataURL(file);
+});
+
 (async()=>{
-  try{resultsData=await sharedLoad('results');
-    const years=[...new Set(resultsData.map(x=>(x.date||'').slice(0,4)).filter(Boolean))].sort().reverse();
-    const tournaments=[...new Set(resultsData.map(x=>x.tournament).filter(Boolean))].sort();
+  try{
+    const loaded=await Promise.all([sharedLoad('results'),sharedLoad('result-documents')]);
+    resultsData=loaded[0];
+    resultDocuments=loaded[1];
+    const years=[...new Set(resultsData.map(gameYear).filter(Boolean))].sort().reverse();
+    const tournaments=[...new Set(resultsData.map(x=>tournamentParts(x.tournament).name).filter(Boolean))].sort();
     const yf=document.getElementById('yearFilter'), tf=document.getElementById('tournamentFilter');
     if(yf){
       years.forEach(y=>yf.insertAdjacentHTML('beforeend',`<option value="${escHtml(y)}">${escHtml(y)}年度</option>`));
@@ -1858,8 +2004,10 @@ document.getElementById('resultForm').addEventListener('submit',async e=>{
       tournaments.forEach(t=>tf.insertAdjacentHTML('beforeend',`<option value="${escHtml(t)}">${escHtml(t)}</option>`));
       tf.addEventListener('change',renderResults);
     }
-    renderResults();}
-  catch(e){document.getElementById('results').innerHTML='<div class="empty">試合結果を読み込めませんでした。</div>';}
+    renderResults();
+  }catch(e){
+    document.getElementById('results').innerHTML='<div class="empty">試合結果を読み込めませんでした。</div>';
+  }
 })();
 </script>
 <script>
