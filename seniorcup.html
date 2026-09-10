@@ -20,11 +20,11 @@ gtag('config','G-L8BMMSXDP9',{allow_google_signals:false,allow_ad_personalizatio
 <meta charset="utf-8"/>
 <meta content="width=device-width,initial-scale=1,viewport-fit=cover" name="viewport"/>
 <title>八千代リトルシニア杯｜八千代リトルシニア</title>
-<meta name="description" content="八千代リトルシニア杯の大会要項、参加チーム向け資料、お問い合わせ情報をご案内します。">
+<meta name="description" content="八千代リトルシニア杯の開催要項、参加チーム向け資料、お問い合わせ情報をご案内します。">
 <link rel="canonical" href="https://yachiyo-little-senior.netlify.app/seniorcup.html">
 <meta property="og:type" content="website">
 <meta property="og:title" content="八千代リトルシニア杯｜八千代リトルシニア">
-<meta property="og:description" content="八千代リトルシニア杯の大会要項、参加チーム向け資料、お問い合わせ情報をご案内します。">
+<meta property="og:description" content="八千代リトルシニア杯の開催要項、参加チーム向け資料、お問い合わせ情報をご案内します。">
 <meta property="og:url" content="https://yachiyo-little-senior.netlify.app/seniorcup.html">
 <style>
 :root{--navy:#071426;--navy2:#102942;--gold:#c79a3b;--gold2:#e2bd67;--bg:#f4f3ef;--ink:#17202b}
@@ -296,7 +296,7 @@ h1{font-family:serif;font-weight:600;font-size:clamp(34px,6vw,58px);letter-spaci
 @media(max-width:600px){.partner-card.has-link{padding-right:40px}.partner-card.has-link::after{right:13px;font-size:32px}}
 
 
-/* 大会要項：管理画面で入力した改行・空行を公開表示にも反映 */
+/* 大会概要：管理画面で入力した改行・空行を公開表示にも反映 */
 #guidelineText,
 .guideline-text,
 #guidelineContent,
@@ -403,7 +403,7 @@ html{scroll-padding-top:var(--fixed-header-height)}
 <div class="hero-inner">
 <div class="kicker">YACHIYO SENIOR CUP <span class="current-year"></span></div>
 <h1><span class="current-year"></span>年<br class="cup-mobile-break">八千代リトルシニア杯</h1>
-<p>大会要項・参加申込み</p>
+<p>開催要項・参加申込み</p>
 </div>
 </section>
 <main class="main">
@@ -423,7 +423,7 @@ html{scroll-padding-top:var(--fixed-header-height)}
 <h2 class="section-title">大会資料</h2>
 <div class="download-grid">
 <section class="download-card">
-<h3>大会要項</h3>
+<h3>開催要項</h3>
 <p class="file-name" id="guidelineFileName">現在公開されているPDFはありません。</p>
 <a class="download-btn is-empty" href="#" id="guidelineView" target="_blank" rel="noopener">PDFを開く</a>
 </section>
@@ -452,10 +452,10 @@ html{scroll-padding-top:var(--fixed-header-height)}
 
 <div class="admin-grid">
 <div class="admin-box">
-<label for="guidelineUpload">大会要項を更新（PDF）</label>
+<label for="guidelineUpload">開催要項を更新（PDF）</label>
 <input accept=".pdf,application/pdf" id="guidelineUpload" type="file"/>
 <p class="attachment-info" id="guidelineAttachmentInfo">現在の添付ファイル：読み込み中...</p>
-<button data-slot="guideline" type="button">大会要項を保存</button>
+<button data-slot="guideline" type="button">開催要項を保存</button>
 <button class="attachment-delete" data-delete-slot="guideline" hidden type="button">添付ファイルを削除</button>
 </div>
 <div class="admin-box">
@@ -465,7 +465,7 @@ html{scroll-padding-top:var(--fixed-header-height)}
 <button data-slot="roster" type="button">申込書・選手名簿を保存</button>
 <button class="attachment-delete" data-delete-slot="roster" hidden type="button">添付ファイルを削除</button>
 </div>
-</div><p class="admin-note">大会要項はPDF、申込書・選手名簿はPDF・Excel（.pdf / .xls / .xlsx）に対応。1ファイル最大5MBです。</p><div class="admin-box" style="margin-bottom:14px">
+</div><p class="admin-note">開催要項はPDF、申込書・選手名簿はPDF・Excel（.pdf / .xls / .xlsx）に対応。1ファイル最大5MBです。</p><div class="admin-box" style="margin-bottom:14px">
 <label>申込み返信先の表示</label>
 <p class="admin-note" id="replyModeStatus">現在：大会専用メールアドレス</p>
 <button id="replyModeBtn" type="button">お問い合わせに変更</button>
@@ -486,7 +486,7 @@ html{scroll-padding-top:var(--fixed-header-height)}
 (function(){
   const API='/.netlify/functions/site-data';
   const slots={
-    guideline:{label:'大会要項',section:'downloads-guideline',input:'guidelineUpload',name:'guidelineFileName',link:'guidelineView',openMode:'view',info:'guidelineAttachmentInfo',pdfOnly:true,emptyText:'現在公開されているPDFはありません。'},
+    guideline:{label:'開催要項',section:'downloads-guideline',input:'guidelineUpload',name:'guidelineFileName',link:'guidelineView',openMode:'view',info:'guidelineAttachmentInfo',pdfOnly:true,emptyText:'現在公開されているPDFはありません。'},
     roster:{label:'申込書・選手名簿',section:'downloads-roster',input:'rosterUpload',name:'rosterFileName',link:'rosterDownload',info:'rosterAttachmentInfo'}
   };
 
