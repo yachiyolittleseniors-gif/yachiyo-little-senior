@@ -2868,6 +2868,7 @@ function openProtectedArea(type){
    if(!p) return;
    try{
      const r=await fetch(API,{method:'POST',headers:{'content-type':'application/json','x-admin-password':p},body:JSON.stringify({data:staff})});
+     if(r.status===429){alert('試行回数の上限です。15分後に再度お試しください。');return}
      if(r.status===401){alert('管理者パスワードが違います。');return}
      if(!r.ok){alert('管理機能の接続設定を確認してください。');return}
      sessionStorage.setItem('yachiyoAdminPassword',p);
@@ -2918,6 +2919,7 @@ function openProtectedArea(type){
    const clean=staff.map(x=>({role:String(x.role||'').trim(),name:String(x.name||'').trim()})).filter(x=>x.role||x.name);
    try{
      const r=await fetch(API,{method:'POST',headers:{'content-type':'application/json','x-admin-password':p},body:JSON.stringify({data:clean})});
+     if(r.status===429){alert('試行回数の上限です。15分後に再度お試しください。');return}
      if(r.status===401){alert('管理者パスワードが違います。');return}
      if(!r.ok){alert('保存できませんでした。');return}
      staff=clean;render();document.body.classList.remove('staff-editing');showSaveNotice('保存しました');
@@ -2998,6 +3000,7 @@ function openProtectedArea(type){
     };
     try{
       const r=await fetch(API,{method:'POST',headers:{'content-type':'application/json','x-admin-password':p},body:JSON.stringify({data:next})});
+      if(r.status===429){alert('試行回数の上限です。15分後に再度お試しください。');return;}
       if(r.status===401){alert('管理者パスワードが違います。');return;}
       if(!r.ok){alert('進路を保存できませんでした。');return;}
       data=next; render(); fillEditor(); showSaveNotice('保存しました');

@@ -326,8 +326,8 @@ async function verify(p){
       headers:{'content-type':'application/json','x-admin-password':p},
       body:JSON.stringify({data:[rules]})
     });
-    return r.ok;
-  }catch(e){return false}
+    return {ok:r.ok,status:r.status};
+  }catch(e){return {ok:false,status:0}}
 }
 async function toggleAdmin(){
   const b=document.getElementById('adminBtn');
@@ -342,8 +342,9 @@ async function toggleAdmin(){
   const p=prompt('管理者パスワードを入力してください');
   if(!p)return;
   document.getElementById('status').textContent='確認中...';
-  if(!(await verify(p))){
-    alert('管理者パスワードが違います。');
+  const auth=await verify(p);
+  if(!auth.ok){
+    alert(auth.status===429?'試行回数の上限です。15分後に再度お試しください。':'管理者パスワードが違います。');
     document.getElementById('status').textContent='';
     sessionStorage.removeItem('yachiyoAdminPassword');
     return;
@@ -381,6 +382,10 @@ async function saveRules(){
     method:'POST',headers:{'content-type':'application/json','x-admin-password':p},
     body:JSON.stringify({data:[rules]})
   });
+  if(r.status===429){
+    if(additions.length) rules.pdfs.splice(rules.pdfs.length-additions.length,additions.length);
+    st.textContent='試行回数の上限です。15分後に再度お試しください。';return;
+  }
   if(!r.ok){
     if(additions.length) rules.pdfs.splice(rules.pdfs.length-additions.length,additions.length);
     st.textContent='保存できませんでした。';return;
@@ -401,6 +406,10 @@ async function removePdf(index){
     method:'POST',headers:{'content-type':'application/json','x-admin-password':p},
     body:JSON.stringify({data:[rules]})
   });
+  if(r.status===429){
+    rules.pdfs.splice(index,0,removed);
+    st.textContent='試行回数の上限です。15分後に再度お試しください。';return;
+  }
   if(!r.ok){
     rules.pdfs.splice(index,0,removed);
     st.textContent='削除できませんでした。';return;

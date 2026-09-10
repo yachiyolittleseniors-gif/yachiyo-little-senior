@@ -96,7 +96,7 @@ export function adminAuthError(json, result) {
   }
   if (result.locked) {
     return json(
-      { error: "Too many attempts. Try again later." },
+      { error: "試行回数の上限です。15分後に再度お試しください。" },
       429,
       { "retry-after": String(result.retryAfter) }
     );

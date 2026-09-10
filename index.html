@@ -3540,6 +3540,7 @@ function openProtectedArea(type){
         headers:{'content-type':'application/json','x-admin-password':pw},
         body:JSON.stringify({action:'verifyAdminPassword'})
       });
+      if(r.status===429){alert('試行回数の上限です。15分後に再度お試しください。');return}
       if(r.status===401){alert('管理者パスワードが違います。');return}
       if(r.status===503){alert('Netlifyの管理者パスワード設定を確認してください。');return}
       if(!r.ok)throw new Error();
@@ -3578,6 +3579,10 @@ function openProtectedArea(type){
         headers:{'content-type':'application/json','x-admin-password':adminPassword},
         body:JSON.stringify({action:'setAccessPassword',password:next})
       });
+      if(r.status===429){
+        alert('試行回数の上限です。15分後に再度お試しください。');
+        return;
+      }
       if(r.status===401){
         alert('管理者パスワードが違います。');
         return;
@@ -3627,6 +3632,7 @@ function openProtectedArea(type){
         headers:{'content-type':'application/json','x-admin-password':pw},
         body:JSON.stringify({data:[{image,updatedAt:new Date().toISOString()}]})
       });
+      if(r.status===429)throw new Error('LIMITED');
       if(!r.ok)throw new Error('save failed');
      window.__yachiyoPhotoDataPromise=null;
        window.__yachiyoPhotoDataPromise=null;
@@ -3634,7 +3640,7 @@ function openProtectedArea(type){
        hero.style.setProperty('--hero-photo',`url("${image}")`);
       showSaveNotice('保存しました');
     }catch(e){
-      alert('保存できませんでした。管理パスワードを確認してください。');
+      alert(e.message==='LIMITED'?'試行回数の上限です。15分後に再度お試しください。':'保存できませんでした。管理パスワードを確認してください。');
     }finally{
       change.textContent='写真を変更'; input.value='';
     }
@@ -3703,11 +3709,12 @@ function openProtectedArea(type){
      arr=arr.filter(x=>x.key!==key); arr.push({key,image,updatedAt:new Date().toISOString()});
      const pw=sessionStorage.getItem('yachiyoAdminPassword')||'';
      const r=await fetch(api+'?section=photos',{method:'POST',headers:{'content-type':'application/json','x-admin-password':pw},body:JSON.stringify({data:arr})});
+     if(r.status===429)throw new Error('LIMITED');
      if(!r.ok)throw 0;
      current.src=image;
      window.__yachiyoPhotoCache&&window.__yachiyoPhotoCache.set(key,image);
      showSaveNotice('保存しました');
-   }catch(e){alert('保存できませんでした。管理パスワードを確認してください。')}
+   }catch(e){alert(e.message==='LIMITED'?'試行回数の上限です。15分後に再度お試しください。':'保存できませんでした。管理パスワードを確認してください。')}
    input.value=''; current=null;
  };
  load();
@@ -3822,6 +3829,9 @@ function openProtectedArea(type){
  async function save(){
    const pw=sessionStorage.getItem('yachiyoAdminPassword')||'';
    const r=await fetch(api+'?section=ground-photos',{method:'POST',headers:{'content-type':'application/json','x-admin-password':pw},body:JSON.stringify({data:photos})});
+   if(r.status===429){
+     throw new Error('LIMITED');
+   }
    if(r.status===401){
      throw new Error('PASSWORD');
    }
@@ -3872,7 +3882,8 @@ function openProtectedArea(type){
      showSaveNotice('保存しました');
    }catch(e){
      if(typeof before!=='undefined')photos=before;
-     if(e.message==='PASSWORD')alert('管理者パスワードが違います。');
+     if(e.message==='LIMITED')alert('試行回数の上限です。15分後に再度お試しください。');
+     else if(e.message==='PASSWORD')alert('管理者パスワードが違います。');
      else if(e.message==='LIMIT')alert('グラウンド写真は最大6枚です。不要な写真を削除してから追加してください。');
      else if(e.message==='SIZE')alert('写真の合計容量が大きすぎます。枚数を減らして追加してください。');
      else alert('写真を保存できませんでした。');
@@ -3905,7 +3916,7 @@ function openProtectedArea(type){
      photos=beforeRaw||visibleBefore;
      current=Math.min(oldIndex,Math.max(0,photos.length-1));
      render();
-     alert(e.message==='PASSWORD'?'管理者パスワードが違います。':'写真の順番を保存できませんでした。');
+     alert(e.message==='LIMITED'?'試行回数の上限です。15分後に再度お試しください。':e.message==='PASSWORD'?'管理者パスワードが違います。':'写真の順番を保存できませんでした。');
    }finally{syncOrderButtons()}
  }
 
@@ -3919,7 +3930,7 @@ function openProtectedArea(type){
    deleteBtn.disabled=true;deleteBtn.textContent='削除中…';
    let before=[];
    try{await loadRawForEdit();before=photos.slice();current=Math.min(oldIndex,Math.max(0,photos.length-1));photos.splice(current,1);current=Math.min(current,Math.max(0,photos.length-1));await save();render();showSaveNotice('保存しました')}
-   catch(e){if(before.length)photos=before;current=oldIndex;render();alert(e.message==='PASSWORD'?'管理者パスワードが違います。':'写真を削除できませんでした。')}
+   catch(e){if(before.length)photos=before;current=oldIndex;render();alert(e.message==='LIMITED'?'試行回数の上限です。15分後に再度お試しください。':e.message==='PASSWORD'?'管理者パスワードが違います。':'写真を削除できませんでした。')}
    finally{deleteBtn.disabled=false;deleteBtn.textContent='表示中を削除'}
  });
 
@@ -3956,6 +3967,7 @@ function openProtectedArea(type){
  async function persist(){
    const pw=sessionStorage.getItem('yachiyoAdminPassword')||'';
    const r=await fetch(api+'?section=news',{method:'POST',headers:{'content-type':'application/json','x-admin-password':pw},body:JSON.stringify({data})});
+   if(r.status===429)throw new Error('LIMITED');
    if(!r.ok)throw new Error();
  }
  add.onclick=()=>{editingIndex=-1;modalTitle.textContent='新着NEWSを追加';save.textContent='保存する';date.value=new Date().toISOString().slice(0,10);title.value='';body.value='';modal.hidden=false};
@@ -3971,9 +3983,9 @@ function openProtectedArea(type){
    const old=data.slice();
    const item={id:editingIndex>=0?(data[editingIndex].id||Date.now()):Date.now(),date:date.value,title:title.value.trim(),body:body.value.trim()};
    if(editingIndex>=0)data[editingIndex]=item;else data.push(item);
-   try{await persist();modal.hidden=true;editingIndex=-1;render();showSaveNotice('保存しました')}catch(e){data=old;alert('保存できませんでした。')}
+   try{await persist();modal.hidden=true;editingIndex=-1;render();showSaveNotice('保存しました')}catch(e){data=old;alert(e.message==='LIMITED'?'試行回数の上限です。15分後に再度お試しください。':'保存できませんでした。')}
  };
- async function remove(i){if(!confirm('このNEWSを削除しますか？'))return;const old=data.slice();data.splice(i,1);try{await persist();render()}catch(e){data=old;alert('削除できませんでした。')}}
+ async function remove(i){if(!confirm('このNEWSを削除しますか？'))return;const old=data.slice();data.splice(i,1);try{await persist();render()}catch(e){data=old;alert(e.message==='LIMITED'?'試行回数の上限です。15分後に再度お試しください。':'削除できませんでした。')}}
  load();
 })();
 </script>
@@ -4042,6 +4054,7 @@ function openProtectedArea(type){
        headers:{'content-type':'application/json','x-admin-password':password},
        body:JSON.stringify({data:{...next,updatedAt:new Date().toISOString()}})
      });
+     if(response.status===429){alert('試行回数の上限です。15分後に再度お試しください。');return}
      if(response.status===401){alert('管理者パスワードが違います。');return}
      if(!response.ok)throw new Error();
      state=next;
@@ -4197,13 +4210,15 @@ document.addEventListener('DOMContentLoaded',function(){
         headers:{'content-type':'application/json','x-admin-password':pw},
         body:JSON.stringify({data:{visible:next,updatedAt:new Date().toISOString()}})
       });
+      if(r.status===429)throw new Error('LIMITED');
       if(r.status===401)throw new Error('PASSWORD');
       if(!r.ok)throw new Error('SAVE');
       visible=next;
       apply();
     }catch(e){
       btn.textContent=old;
-      if(e.message==='PASSWORD') alert('管理者パスワードが違います。');
+      if(e.message==='LIMITED') alert('試行回数の上限です。15分後に再度お試しください。');
+      else if(e.message==='PASSWORD') alert('管理者パスワードが違います。');
       else alert('表示設定を保存できませんでした。');
     }finally{
       btn.disabled=false;

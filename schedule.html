@@ -1862,6 +1862,10 @@ async function sharedSave(section,data){
     headers:{'content-type':'application/json','x-admin-password':password},
     body:JSON.stringify({data})
   });
+  if(r.status===429){
+    alert('試行回数の上限です。15分後に再度お試しください。');
+    throw new Error('rate limited');
+  }
   if(r.status===401){
     sessionStorage.removeItem('yachiyoAdminPassword');
     alert('管理者パスワードが違います。');
@@ -2133,9 +2137,9 @@ renderCalendar();
         },
         body:JSON.stringify({data})
       });
-      return r.ok;
+      return {ok:r.ok,status:r.status};
     }catch(e){
-      return false;
+      return {ok:false,status:0};
     }
   }
 
@@ -2150,12 +2154,12 @@ renderCalendar();
     const p=prompt('管理者パスワードを入力してください');
     if(!p)return;
 
-    const ok=await verifyAdminPassword(p);
-    if(!ok){
+    const auth=await verifyAdminPassword(p);
+    if(!auth.ok){
       sessionStorage.removeItem(KEY);
       sessionStorage.removeItem('yachiyoAdminPassword');
       apply(false);
-      alert('管理者パスワードが違います。');
+      alert(auth.status===429?'試行回数の上限です。15分後に再度お試しください。':'管理者パスワードが違います。');
       return;
     }
 

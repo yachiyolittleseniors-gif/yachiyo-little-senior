@@ -269,6 +269,7 @@ html{scroll-padding-top:var(--compact-header-height)}
     status.textContent='確認中...';
     try{
       const r=await fetch(API,{method:'POST',headers:{'content-type':'application/json','x-admin-password':p},body:JSON.stringify({data:links})});
+      if(r.status===429){alert('試行回数の上限です。15分後に再度お試しください。');status.textContent='';return}
       if(r.status===401){alert('管理者パスワードが違います。');status.textContent='';return}
       if(!r.ok){alert('管理機能の接続設定を確認してください。');status.textContent='';return}
       sessionStorage.setItem('yachiyoAdminPassword',p);document.body.classList.add('editing');adminBtn.textContent='管理終了';renderEditor();status.textContent='';
@@ -285,7 +286,7 @@ html{scroll-padding-top:var(--compact-header-height)}
   document.getElementById('linkSave').addEventListener('click',async()=>{
     const next=clean(links);if(next.some(x=>!x.name||!safeUrl(x.url))){alert('表示名と正しいURLを入力してください。');return}
     const p=sessionStorage.getItem('yachiyoAdminPassword')||'';status.textContent='保存中...';
-    try{const r=await fetch(API,{method:'POST',headers:{'content-type':'application/json','x-admin-password':p},body:JSON.stringify({data:next})});if(r.status===401){alert('管理者パスワードが違います。');status.textContent='';return}if(!r.ok){alert('保存できませんでした。');status.textContent='';return}links=next;render();renderEditor();status.textContent='保存しました。'}catch(e){alert('保存できませんでした。');status.textContent=''}
+    try{const r=await fetch(API,{method:'POST',headers:{'content-type':'application/json','x-admin-password':p},body:JSON.stringify({data:next})});if(r.status===429){alert('試行回数の上限です。15分後に再度お試しください。');status.textContent='';return}if(r.status===401){alert('管理者パスワードが違います。');status.textContent='';return}if(!r.ok){alert('保存できませんでした。');status.textContent='';return}links=next;render();renderEditor();status.textContent='保存しました。'}catch(e){alert('保存できませんでした。');status.textContent=''}
   });
   sessionStorage.removeItem('yachiyoAdminPassword');
   let taps=0,timer=null;

@@ -1760,6 +1760,10 @@ async function sharedSave(section,data){
     headers:{'content-type':'application/json','x-admin-password':password},
     body:JSON.stringify({data})
   });
+  if(r.status===429){
+    alert('試行回数の上限です。15分後に再度お試しください。');
+    throw new Error('rate limited');
+  }
   if(r.status===401){
     sessionStorage.removeItem('yachiyoAdminPassword');
     alert('管理者パスワードが違います。');
