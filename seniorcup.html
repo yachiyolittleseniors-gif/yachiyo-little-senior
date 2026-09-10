@@ -410,18 +410,23 @@ html{scroll-padding-top:var(--fixed-header-height)}
 <div class="intro">
     参加希望チームは下記要項をご確認の上、申込書・選手名簿をダウンロードし、指定のアドレスへご返信ください。
   </div>
-<h2 class="section-title">大会要項</h2>
+<h2 class="section-title">大会概要</h2>
 <div class="guideline">
-<strong><span class="current-year"></span>年 八千代リトルシニア杯 大会要項</strong>
-<p id="guidelineText">大会要項の詳細は準備ができ次第、こちらに掲載します。</p>
+<strong><span class="current-year"></span>年 八千代リトルシニア杯</strong>
+<p id="guidelineText">大会概要の詳細は準備ができ次第、こちらに掲載します。</p>
 </div>
 <div class="guideline-admin-box" id="guidelineAdminBox">
-<label for="guidelineEditor">大会要項を編集</label>
-<textarea id="guidelineEditor" placeholder="大会要項の詳細を入力してください。" rows="12" style="width:100%;padding:12px;border:1px solid #cfd5dc;border-radius:6px;font:inherit;font-size:16px;line-height:1.8;resize:vertical"></textarea>
-<button id="guidelineSaveBtn" type="button">大会要項を保存</button>
+<label for="guidelineEditor">大会概要を編集</label>
+<textarea id="guidelineEditor" placeholder="大会概要を入力してください。" rows="12" style="width:100%;padding:12px;border:1px solid #cfd5dc;border-radius:6px;font:inherit;font-size:16px;line-height:1.8;resize:vertical"></textarea>
+<button id="guidelineSaveBtn" type="button">大会概要を保存</button>
 </div>
-<h2 class="section-title">申込書・選手名簿</h2>
+<h2 class="section-title">大会資料</h2>
 <div class="download-grid">
+<section class="download-card">
+<h3>大会要項</h3>
+<p class="file-name" id="guidelineFileName">現在公開されているPDFはありません。</p>
+<a class="download-btn is-empty" href="#" id="guidelineView" target="_blank" rel="noopener">PDFを開く</a>
+</section>
 <section class="download-card">
 <h3>申込書・選手名簿</h3>
 <p class="file-name" id="rosterFileName">現在ダウンロードできるファイルはありません。</p>
@@ -447,13 +452,20 @@ html{scroll-padding-top:var(--fixed-header-height)}
 
 <div class="admin-grid">
 <div class="admin-box">
+<label for="guidelineUpload">大会要項を更新（PDF）</label>
+<input accept=".pdf,application/pdf" id="guidelineUpload" type="file"/>
+<p class="attachment-info" id="guidelineAttachmentInfo">現在の添付ファイル：読み込み中...</p>
+<button data-slot="guideline" type="button">大会要項を保存</button>
+<button class="attachment-delete" data-delete-slot="guideline" hidden type="button">添付ファイルを削除</button>
+</div>
+<div class="admin-box">
 <label for="rosterUpload">申込書・選手名簿を更新（PDF / Excel）</label>
 <input accept=".pdf,.xls,.xlsx,application/pdf,application/vnd.ms-excel,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" id="rosterUpload" type="file"/>
 <p class="attachment-info" id="rosterAttachmentInfo">現在の添付ファイル：読み込み中...</p>
 <button data-slot="roster" type="button">申込書・選手名簿を保存</button>
 <button class="attachment-delete" data-delete-slot="roster" hidden type="button">添付ファイルを削除</button>
 </div>
-</div><p class="admin-note">PDF・Excel（.pdf / .xls / .xlsx）に対応。1ファイル最大5MBです。</p><div class="admin-box" style="margin-bottom:14px">
+</div><p class="admin-note">大会要項はPDF、申込書・選手名簿はPDF・Excel（.pdf / .xls / .xlsx）に対応。1ファイル最大5MBです。</p><div class="admin-box" style="margin-bottom:14px">
 <label>申込み返信先の表示</label>
 <p class="admin-note" id="replyModeStatus">現在：大会専用メールアドレス</p>
 <button id="replyModeBtn" type="button">お問い合わせに変更</button>
@@ -474,6 +486,7 @@ html{scroll-padding-top:var(--fixed-header-height)}
 (function(){
   const API='/.netlify/functions/site-data';
   const slots={
+    guideline:{label:'大会要項',section:'downloads-guideline',input:'guidelineUpload',name:'guidelineFileName',link:'guidelineView',openMode:'view',info:'guidelineAttachmentInfo',pdfOnly:true,emptyText:'現在公開されているPDFはありません。'},
     roster:{label:'申込書・選手名簿',section:'downloads-roster',input:'rosterUpload',name:'rosterFileName',link:'rosterDownload',info:'rosterAttachmentInfo'}
   };
 
@@ -624,7 +637,7 @@ function renderReplyMode(){
 
   async function saveGuideline(){
     const value=guidelineEditor.value.trim();
-    if(!value){alert('大会要項を入力してください。');return}
+    if(!value){alert('大会概要を入力してください。');return}
     const pw=sessionStorage.getItem('yachiyoAdminPassword')||'';
     if(!pw){alert('管理者パスワードを入力し直してください。');return}
     const old=guidelineSaveBtn.textContent;
@@ -644,7 +657,7 @@ function renderReplyMode(){
     }catch(e){
       if(e.message==='LIMITED')alert('試行回数の上限です。15分後に再度お試しください。');
       else if(e.message==='PASSWORD')alert('管理者パスワードが違います。');
-      else alert('大会要項を保存できませんでした。');
+      else alert('大会概要を保存できませんでした。');
     }finally{
       guidelineSaveBtn.disabled=false;
       guidelineSaveBtn.textContent=old;
@@ -675,13 +688,13 @@ function renderReplyMode(){
     const c=slots[slot], n=document.getElementById(c.name), a=document.getElementById(c.link),info=document.getElementById(c.info),del=document.querySelector('[data-delete-slot="'+slot+'"]');
     if(data&&data.fileName&&data.dataUrl){
       n.textContent=data.fileName;
-      a.href=API+'?section='+encodeURIComponent(c.section)+'&download=1';
+      a.href=API+'?section='+encodeURIComponent(c.section)+'&'+(c.openMode||'download')+'=1';
       a.removeAttribute('download');
       a.classList.remove('is-empty');
       info.textContent='現在の添付ファイル：'+data.fileName+'（'+fileType(data)+'／'+formatBytes(storedFileSize(data))+'）';
       del.hidden=false;
     }else{
-      n.textContent='現在ダウンロードできるファイルはありません。';a.href='#';a.removeAttribute('download');a.classList.add('is-empty');
+      n.textContent=c.emptyText||'現在ダウンロードできるファイルはありません。';a.href='#';a.removeAttribute('download');a.classList.add('is-empty');
       info.textContent='現在の添付ファイル：なし';
       del.hidden=true;
     }
@@ -691,16 +704,17 @@ function renderReplyMode(){
     try{const r=await fetch(API+'?section='+encodeURIComponent(c.section),{cache:'no-store'});if(!r.ok)throw 0;const j=await r.json();render(slot,j.data)}
     catch(e){render(slot,null)}
   }
-  function valid(f){
+  function valid(f,c){
     if(!f)return 'ファイルを選択してください。';
     const ext=(f.name.split('.').pop()||'').toLowerCase();
+    if(c.pdfOnly&&ext!=='pdf')return 'PDFファイルを選択してください。';
     if(!['pdf','xls','xlsx'].includes(ext))return 'PDFまたはExcelファイルを選択してください。';
     if(f.size>5*1024*1024)return 'ファイルサイズは5MB以下にしてください。';
     return '';
   }
   function asDataURL(f){return new Promise((ok,ng)=>{const r=new FileReader();r.onload=()=>ok(r.result);r.onerror=ng;r.readAsDataURL(f)})}
   async function save(slot){
-    const c=slots[slot],inp=document.getElementById(c.input),f=inp.files&&inp.files[0],err=valid(f);
+    const c=slots[slot],inp=document.getElementById(c.input),f=inp.files&&inp.files[0],err=valid(f,c);
     if(err){alert(err);return}
     const pw=sessionStorage.getItem('yachiyoAdminPassword')||'';
     if(!pw){alert('管理者パスワードを入力し直してください。');return}
@@ -773,7 +787,7 @@ function renderReplyMode(){
     },{passive:true});
   }
 
-  load('roster');loadGuideline();loadPartners();loadReplyMode();
+  load('guideline');load('roster');loadGuideline();loadPartners();loadReplyMode();
 })();
 </script>
 <script>

@@ -22,6 +22,7 @@ const allowed = new Set([
   "staff",
   "alumni",
   "downloads-application",
+  "downloads-guideline",
   "downloads-roster",
   "seniorcup-settings",
   "seniorcup-guideline",
@@ -316,9 +317,13 @@ export default async (request, context) => {
       }
 
       if (
-        url.searchParams.get("download") === "1" &&
+        (
+          url.searchParams.get("download") === "1" ||
+          url.searchParams.get("view") === "1"
+        ) &&
         (
           section === "downloads-application" ||
+          section === "downloads-guideline" ||
           section === "downloads-roster"
         )
       ) {
@@ -338,10 +343,9 @@ export default async (request, context) => {
           });
         }
 
-        const mimeType =
-          data.mimeType ||
-          match[1] ||
-          "application/octet-stream";
+        const mimeType = section === "downloads-guideline"
+          ? "application/pdf"
+          : data.mimeType || match[1] || "application/octet-stream";
 
         const bytes = match[2]
           ? Uint8Array.from(
@@ -359,12 +363,16 @@ export default async (request, context) => {
           data.fileName
         );
 
+        const disposition = url.searchParams.get("view") === "1"
+          ? "inline"
+          : "attachment";
+
         return new Response(bytes, {
           status: 200,
           headers: {
             "content-type": mimeType,
             "content-disposition":
-              `attachment; filename="${safeName}"; ` +
+              `${disposition}; filename="${safeName}"; ` +
               `filename*=UTF-8''${encodedName}`,
             "content-length": String(bytes.byteLength),
             "cache-control": "no-store"
@@ -433,6 +441,22 @@ export default async (request, context) => {
     }
 
     if (!adminAuth.ok) return adminAuthError(json, adminAuth);
+
+    if (section === "downloads-guideline" && body?.data?.fileName) {
+      const fileName = String(body.data.fileName || "").trim();
+      const bytes = decodeDataUrl(body.data.dataUrl);
+
+      if (!fileName.toLowerCase().endsWith(".pdf") || !bytes) {
+        return json({ error: "PDFファイルを選択してください。" }, 400);
+      }
+      if (bytes.byteLength > 5 * 1024 * 1024) {
+        return json({ error: "PDFは5MB以下にしてください。" }, 413);
+      }
+      const signature = new TextDecoder().decode(bytes.slice(0, 5));
+      if (signature !== "%PDF-") {
+        return json({ error: "正しいPDFファイルではありません。" }, 400);
+      }
+    }
 
     if (
       section === "board-tournaments" &&
