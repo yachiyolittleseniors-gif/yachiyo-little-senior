@@ -1660,6 +1660,30 @@ html{scroll-padding-top:var(--fixed-header-height)}
   .scoreline .team{font-size:28px!important}
 }
 </style>
+<style id="results-navy-heading-refresh">
+/* 大会見出し：紺＋白文字、試合カード：白でコンパクト */
+.tournament-group-head{
+  overflow:hidden;
+  color:#fff!important;
+  background:linear-gradient(135deg,#102b49 0%,#071426 100%)!important;
+  border-color:rgba(199,154,59,.78)!important;
+  border-left:6px solid var(--gold)!important;
+}
+.tournament-group-title{
+  color:#fff!important;
+  text-shadow:0 1px 1px rgba(0,0,0,.18);
+}
+.tournament-year{
+  color:var(--gold2)!important;
+  font-weight:900!important;
+}
+@media(max-width:650px){
+  .tournament-group-head{padding:9px 11px!important;border-radius:11px!important}
+  .tournament-group-title{font-size:26px!important;line-height:1.16!important}
+  .tournament-year{font-size:13px!important;line-height:1.2!important}
+  .tournament-games{margin-top:7px!important}
+}
+</style>
 </head>
 <body id="page-top">
 <header class="header">
