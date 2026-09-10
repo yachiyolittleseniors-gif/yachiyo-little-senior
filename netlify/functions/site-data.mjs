@@ -356,11 +356,15 @@ export default async (request, context) => {
               decodeURIComponent(match[3])
             );
 
-        const safeName = String(data.fileName)
-          .replace(/[\r\n"]/g, "_");
+        const originalName = String(data.fileName);
+        const cleanedName = originalName.replace(/[\r\n"\\]/g, "_");
+        const extensionMatch = originalName.match(/\.([a-zA-Z0-9]{1,8})$/);
+        const safeName = /^[\x20-\x7e]+$/.test(cleanedName)
+          ? cleanedName
+          : `download${extensionMatch ? `.${extensionMatch[1]}` : ""}`;
 
         const encodedName = encodeURIComponent(
-          data.fileName
+          originalName
         );
 
         const disposition = url.searchParams.get("view") === "1"
