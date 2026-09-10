@@ -364,7 +364,6 @@ html{scroll-padding-top:var(--compact-header-height)}
 .tournament-admin-item span{min-width:0;flex:1;font-size:12px;line-height:1.5;overflow-wrap:anywhere}
 .tournament-admin-item button{flex:0 0 auto;margin:0!important;background:#5e1515!important}
 #rulesAdminFields{margin-top:18px;padding-top:18px;border-top:1px solid rgba(255,255,255,.18)}
-#rulesAdminFields textarea{width:100%;min-height:150px;margin:10px 0;padding:11px 12px;border:1px solid rgba(199,154,59,.55);border-radius:9px;background:#fff;color:#17202b;font:inherit;line-height:1.7;resize:vertical}
 #rulesAdminFields input{width:100%;margin:6px 0 10px;color:#fff}
 #saveRulesBtn{width:100%;margin:4px 0!important;background:#c79a3b!important;color:#fff!important}
 #rulesAdminList{display:grid;gap:8px;margin-top:12px}
@@ -401,10 +400,9 @@ html{scroll-padding-top:var(--compact-header-height)}
   </div>
   <div id="rulesAdminFields">
     <strong>チーム規約</strong>
-    <textarea id="rulesInput" placeholder="チーム規約を入力してください"></textarea>
     <label for="rulesPdfInput">PDFファイル（1ファイル5MB以下・複数選択可）</label>
     <input id="rulesPdfInput" type="file" accept="application/pdf,.pdf" multiple>
-    <button id="saveRulesBtn" type="button">保存・PDFを追加</button>
+    <button id="saveRulesBtn" type="button">PDFを追加</button>
     <div id="rulesAdminList"></div>
   </div>
   <button id="closeDensukeAdminBtn" type="button">キャンセル</button>
@@ -865,7 +863,6 @@ html{scroll-padding-top:var(--compact-header-height)}
   const API='/.netlify/functions/site-data?section=rules';
   const textView=document.getElementById('rulesText');
   const pdfList=document.getElementById('rulesPdfList');
-  const input=document.getElementById('rulesInput');
   const fileInput=document.getElementById('rulesPdfInput');
   const saveBtn=document.getElementById('saveRulesBtn');
   const adminList=document.getElementById('rulesAdminList');
@@ -873,7 +870,7 @@ html{scroll-padding-top:var(--compact-header-height)}
   let rules={text:'',pdfs:[]};
   let blobUrls=[];
 
-  if(!textView||!pdfList||!input||!fileInput||!saveBtn||!adminList||!panel)return;
+  if(!textView||!pdfList||!fileInput||!saveBtn||!adminList||!panel)return;
 
   function normalize(raw){
     const out={text:(raw&&raw.text)||'',pdfs:[]};
@@ -903,7 +900,6 @@ html{scroll-padding-top:var(--compact-header-height)}
     textView.textContent=rules.text||(hasPdfs?'':'現在、公開中のチーム規約はありません。');
     textView.hidden=!hasText&&hasPdfs;
     textView.classList.toggle('empty',!hasText&&!hasPdfs);
-    input.value=rules.text||'';
     blobUrls.forEach(function(url){URL.revokeObjectURL(url)});blobUrls=[];
     pdfList.replaceChildren();adminList.replaceChildren();pdfList.hidden=!hasPdfs;
     rules.pdfs.forEach(function(pdf,index){
@@ -934,16 +930,17 @@ html{scroll-padding-top:var(--compact-header-height)}
   async function save(){
     const adminPassword=panel.dataset.adminPassword||'',files=Array.from(fileInput.files||[]);
     if(!adminPassword){alert('管理画面を開き直してください。');return}
+    if(!files.length){alert('追加するPDFファイルを選択してください。');return}
     for(const file of files){if(file.type!=='application/pdf'&&!file.name.toLowerCase().endsWith('.pdf')){alert('PDFファイルを選択してください。');return}if(file.size>5*1024*1024){alert(file.name+' は5MBを超えています。');return}}
     saveBtn.disabled=true;saveBtn.textContent='保存中...';
     const additions=[];
     try{
       for(const file of files)additions.push({name:file.name,data:await readAsDataUrl(file)});
-      const next={text:input.value.trim(),pdfs:rules.pdfs.concat(additions)};
+      const next={text:rules.text,pdfs:rules.pdfs.concat(additions)};
       const response=await fetch(API,{method:'POST',headers:{'content-type':'application/json','x-admin-password':adminPassword},body:JSON.stringify({data:[next]})});
       if(!response.ok)throw new Error('保存できませんでした。');
       rules=next;fileInput.value='';render();showSaveNotice(additions.length?'PDFを追加して保存しました':'保存しました');
-    }catch(e){alert(e.message||'保存できませんでした。')}finally{saveBtn.disabled=false;saveBtn.textContent='保存・PDFを追加'}
+    }catch(e){alert(e.message||'保存できませんでした。')}finally{saveBtn.disabled=false;saveBtn.textContent='PDFを追加'}
   }
 
   async function removePdf(index){
