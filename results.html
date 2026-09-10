@@ -2651,5 +2651,31 @@ function openProtectedArea(type){
 </script>
 
 
+<script>
+(function(){
+  const selector='details.tournament-pdf-picker,details.tournament-pdf-save-menu';
+  function closeMenus(except){
+    document.querySelectorAll(selector+'[open]').forEach(menu=>{
+      if(menu!==except)menu.removeAttribute('open');
+    });
+  }
+  document.addEventListener('click',function(event){
+    const summary=event.target.closest(selector+' summary');
+    if(summary){
+      closeMenus(summary.parentElement);
+      return;
+    }
+    const selected=event.target.closest(selector+' a');
+    if(selected){
+      closeMenus();
+      return;
+    }
+    if(!event.target.closest(selector))closeMenus();
+  });
+  document.addEventListener('keydown',function(event){
+    if(event.key==='Escape')closeMenus();
+  });
+})();
+</script>
 </body>
 </html>
