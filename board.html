@@ -475,7 +475,7 @@ html{scroll-padding-top:var(--compact-header-height)}
       });
       if(!r.ok) return;
       const j=await r.json();
-      const ended = j?.config?.migrationEnded === true || j?.locked === false;
+      const ended = j?.config?.migrationEnded === true;
       setEndedUI(ended);
     }catch(e){
       // 通信失敗時は安全側でロックのまま
