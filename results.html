@@ -1684,6 +1684,18 @@ html{scroll-padding-top:var(--fixed-header-height)}
   .tournament-games{margin-top:7px!important}
 }
 </style>
+<style id="result-team-category-break">
+/* ヤング・ボーイズは種別名を2行目にして、チーム名を大きく保つ */
+.scoreline .team-category{
+  display:block;
+  margin-top:1px;
+  font-family:-apple-system,BlinkMacSystemFont,"Hiragino Kaku Gothic ProN","Yu Gothic",Meiryo,sans-serif;
+  font-size:.64em;
+  line-height:1.05;
+  letter-spacing:.02em;
+  white-space:nowrap;
+}
+</style>
 </head>
 <body id="page-top">
 <header class="header">
@@ -1924,6 +1936,14 @@ function formatGameDate(value){
 function displayTeamName(value){
   return String(value||'').trim().replace(/(?:リトル)?シニア$/,'').trim();
 }
+function displayTeamNameHtml(value){
+  const name=displayTeamName(value);
+  const match=name.match(/^(.*?)(ヤング|ボーイズ)$/);
+  if(match&&match[1].trim()){
+    return escHtml(match[1].trim())+'<span class="team-category">'+escHtml(match[2])+'</span>';
+  }
+  return escHtml(name);
+}
 function lengthClass(value){
   const length=Array.from(String(value||'')).length;
   if(length>=20)return 'is-very-long';
@@ -2004,6 +2024,7 @@ function renderResults(){
       const result=outcome(g.ourScore,g.oppScore),label=result[0],cls=result[1];
       const round=g.roundName?'<span class="round-name">'+escHtml(g.roundName)+'</span>':'';
       const opponent=displayTeamName(g.opponent);
+      const opponentHtml=displayTeamNameHtml(g.opponent);
       const dateVenue=[g.date?escHtml(formatGameDate(g.date)):'',g.venue?escHtml(g.venue):''].filter(Boolean).join(' ／ ');
       return '<article class="game">'+
         '<div class="game-head">'+
@@ -2013,8 +2034,8 @@ function renderResults(){
         '</div>'+
         '<div class="scoreline">'+
           (g.battingOrder==='second'
-            ? '<div class="team">'+escHtml(opponent)+'</div><div class="score">'+Number(g.oppScore)+' - '+Number(g.ourScore)+'</div><div class="team">八千代</div>'
-            : '<div class="team">八千代</div><div class="score">'+Number(g.ourScore)+' - '+Number(g.oppScore)+'</div><div class="team">'+escHtml(opponent)+'</div>')+
+            ? '<div class="team">'+opponentHtml+'</div><div class="score">'+Number(g.oppScore)+' - '+Number(g.ourScore)+'</div><div class="team">八千代</div>'
+            : '<div class="team">八千代</div><div class="score">'+Number(g.ourScore)+' - '+Number(g.oppScore)+'</div><div class="team">'+opponentHtml+'</div>')+
         '</div>'+
         (g.note?'<div class="meta" style="margin-top:12px">'+escHtml(g.note)+'</div>':'')+
         '<button class="delete" onclick="removeGame(\''+escHtml(g.id)+'\')">削除</button>'+
