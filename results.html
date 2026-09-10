@@ -1622,6 +1622,22 @@ html{scroll-padding-top:var(--fixed-header-height)}
 .ground-map-link:hover{color:#f0d89e!important}
 @media(max-width:600px){.ground-access-address{font-size:12px}.ground-map-link{font-size:12px}}
 </style>
+<style id="results-one-line-final">
+.tournament-group-title{white-space:nowrap!important;letter-spacing:-.035em}
+.tournament-group-title.is-long{font-size:20px}
+.tournament-group-title.is-very-long{font-size:16px}
+.scoreline .team{min-width:0;white-space:nowrap!important;letter-spacing:-.045em}
+@media(max-width:650px){
+  .tournament-group-title{font-size:21px!important}
+  .tournament-group-title.is-long{font-size:16px!important}
+  .tournament-group-title.is-very-long{font-size:clamp(11px,3.15vw,14px)!important;letter-spacing:-.07em}
+  .scoreline{grid-template-columns:minmax(0,1fr) 70px minmax(0,1fr)!important;gap:5px!important}
+  .scoreline .score{min-width:70px!important;font-size:23px!important}
+  .scoreline .team{font-size:20px!important}
+  .scoreline .team.is-long{font-size:17px!important}
+  .scoreline .team.is-very-long{font-size:13px!important;letter-spacing:-.07em}
+}
+</style>
 </head>
 <body id="page-top">
 <header class="header">
@@ -1841,7 +1857,7 @@ let pendingPdfTournament='';
 
 function tournamentParts(value){
   const text=String(value||'大会名未設定').trim();
-  const match=text.match(/^(.*?)[\s　]*(敗者復活(?:第?[0-9一二三四五六七八九十]+回戦)?|敗者交流戦|第?[0-9一二三四五六七八九十]+回戦|準々決勝|準決勝|決勝|順位決定戦|第?[0-9一二三四五六七八九十]+試合)$/);
+  const match=text.match(/^(.*?)[\s　]*(敗者復活(?:第?[0-9０-９一二三四五六七八九十]+回戦)?|敗者交流戦|第?[0-9０-９一二三四五六七八九十]+回戦|準々決勝|準決勝|決勝|順位決定戦|第?[0-9０-９一二三四五六七八九十]+試合)$/);
   if(match&&match[1].trim()){
     return {name:match[1].trim(),round:match[2].replace(/\s/g,'')};
   }
@@ -1858,6 +1874,21 @@ function formatGameDate(value){
   const monthOnly=text.match(/^(\d{4})-(\d{2})$/);
   if(monthOnly)return monthOnly[1]+'年'+Number(monthOnly[2])+'月（日付記録なし）';
   return text;
+}
+function displayTeamName(value){
+  return String(value||'').trim().replace(/(?:リトル)?シニア$/,'').trim();
+}
+function lengthClass(value){
+  const length=Array.from(String(value||'')).length;
+  if(length>=20)return 'is-very-long';
+  if(length>=14)return 'is-long';
+  return '';
+}
+function teamLengthClass(value){
+  const length=Array.from(String(value||'')).length;
+  if(length>=8)return 'is-very-long';
+  if(length>=5)return 'is-long';
+  return '';
 }
 function outcome(a,b){
   a=Number(a);b=Number(b);
@@ -1899,6 +1930,8 @@ function renderResults(){
     const gamesHtml=group.games.map(g=>{
       const result=outcome(g.ourScore,g.oppScore),label=result[0],cls=result[1];
       const round=g.roundName?'<span class="round-name">'+escHtml(g.roundName)+'</span>':'';
+      const opponent=displayTeamName(g.opponent);
+      const opponentClass=teamLengthClass(opponent);
       const dateVenue=[g.date?escHtml(formatGameDate(g.date)):'',g.venue?escHtml(g.venue):''].filter(Boolean).join(' ／ ');
       return '<article class="game">'+
         '<div class="game-head">'+
@@ -1908,8 +1941,8 @@ function renderResults(){
         '</div>'+
         '<div class="scoreline">'+
           (g.battingOrder==='second'
-            ? '<div class="team">'+escHtml(g.opponent)+'</div><div class="score">'+Number(g.oppScore)+' - '+Number(g.ourScore)+'</div><div class="team">八千代</div>'
-            : '<div class="team">八千代</div><div class="score">'+Number(g.ourScore)+' - '+Number(g.oppScore)+'</div><div class="team">'+escHtml(g.opponent)+'</div>')+
+            ? '<div class="team '+opponentClass+'">'+escHtml(opponent)+'</div><div class="score">'+Number(g.oppScore)+' - '+Number(g.ourScore)+'</div><div class="team">八千代</div>'
+            : '<div class="team">八千代</div><div class="score">'+Number(g.ourScore)+' - '+Number(g.oppScore)+'</div><div class="team '+opponentClass+'">'+escHtml(opponent)+'</div>')+
         '</div>'+
         (g.note?'<div class="meta" style="margin-top:12px">'+escHtml(g.note)+'</div>':'')+
         '<button class="delete" onclick="removeGame(\''+escHtml(g.id)+'\')">削除</button>'+
@@ -1917,7 +1950,7 @@ function renderResults(){
     }).join('');
 
     return '<section class="tournament-group">'+
-      '<div class="tournament-group-head"><h2 class="tournament-group-title">'+escHtml(group.name)+'</h2>'+
+      '<div class="tournament-group-head"><h2 class="tournament-group-title '+lengthClass(group.name)+'">'+escHtml(group.name)+'</h2>'+
       '<span class="tournament-year">'+escHtml(group.year)+'年度</span></div>'+
       pdfHtml+
       '<button class="tournament-pdf-add admin-only" type="button" data-pdf-add="'+escHtml(group.key)+'">＋ この大会のPDFを追加</button>'+
