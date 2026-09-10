@@ -50,6 +50,7 @@ h1{font-family:serif;font-weight:600;font-size:clamp(34px,6vw,58px);letter-spaci
 .download-card h3{margin:0 0 8px;color:var(--navy);font-family:serif;font-size:21px}
 .file-name{min-height:43px;margin:0 0 15px;color:#697481;font-size:13px;line-height:1.65;overflow-wrap:anywhere}
 .download-btn{display:flex;align-items:center;justify-content:center;min-height:48px;background:var(--gold);border:1px solid var(--gold);color:#fff!important;border-radius:7px;font-weight:900}
+.download-btn.is-loading{pointer-events:none;background:var(--gold);opacity:1;color:#fff!important}
 .download-btn.is-empty{pointer-events:none;opacity:.42;background:#ece7dc}
 .admin-area{display:none;margin-top:22px;padding-top:20px;border-top:1px solid #ddd9cf}.admin-area.show{display:block}
 .guideline-admin-box{display:none;margin-top:14px;background:#fff;border:1px solid #d8d4cb;padding:15px}
@@ -425,13 +426,13 @@ html{scroll-padding-top:var(--fixed-header-height)}
 <div class="download-grid">
 <section class="download-card">
 <h3>開催要項</h3>
-<p class="file-name" id="guidelineFileName">現在公開されているPDFはありません。</p>
-<a class="download-btn is-empty" href="#" id="guidelineView" target="_blank" rel="noopener">PDFを開く</a>
+<p class="file-name" id="guidelineFileName">読み込み中...</p>
+<a class="download-btn is-loading" href="#" id="guidelineView" target="_blank" rel="noopener">PDFを開く</a>
 </section>
 <section class="download-card">
 <h3>申込書・選手名簿</h3>
-<p class="file-name" id="rosterFileName">現在ダウンロードできるファイルはありません。</p>
-<a class="download-btn is-empty" href="#" id="rosterDownload">ダウンロード</a>
+<p class="file-name" id="rosterFileName">読み込み中...</p>
+<a class="download-btn is-loading" href="#" id="rosterDownload">ダウンロード</a>
 </section>
 </div>
 <section aria-label="返信用アドレス" class="reply-address" id="cupReplyAddress">
@@ -691,11 +692,11 @@ function renderReplyMode(){
       n.textContent=data.fileName;
       a.href=API+'?section='+encodeURIComponent(c.section)+'&'+(c.openMode||'download')+'=1';
       a.removeAttribute('download');
-      a.classList.remove('is-empty');
+      a.classList.remove('is-empty','is-loading');
       info.textContent='現在の添付ファイル：'+data.fileName+'（'+fileType(data)+'／'+formatBytes(storedFileSize(data))+'）';
       del.hidden=false;
     }else{
-      n.textContent=c.emptyText||'現在ダウンロードできるファイルはありません。';a.href='#';a.removeAttribute('download');a.classList.add('is-empty');
+      n.textContent=c.emptyText||'現在ダウンロードできるファイルはありません。';a.href='#';a.removeAttribute('download');a.classList.remove('is-loading');a.classList.add('is-empty');
       info.textContent='現在の添付ファイル：なし';
       del.hidden=true;
     }
