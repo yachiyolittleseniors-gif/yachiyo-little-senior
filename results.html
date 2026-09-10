@@ -1899,6 +1899,98 @@ body:not(.admin-mode) .tournament-pdf-save{display:none!important}
 }
 .tournament-head-pdf{vertical-align:baseline!important}
 </style>
+<style id="results-pdf-picker-and-admin-match">
+.tournament-group{overflow:visible!important}
+.tournament-group-head{overflow:visible!important}
+.tournament-head-pdfs{position:relative!important}
+.tournament-pdf-picker{position:relative}
+.tournament-pdf-picker summary{
+  cursor:pointer;
+  list-style:none;
+  color:var(--gold2)!important;
+  font-size:12px;
+  font-weight:900;
+  line-height:1.3;
+  white-space:nowrap;
+}
+.tournament-pdf-picker summary::-webkit-details-marker{display:none}
+.tournament-pdf-picker summary::after{content:"▾";margin-left:4px;font-size:9px}
+.tournament-pdf-picker[open] summary::after{content:"▴"}
+.tournament-pdf-picker-list{
+  position:absolute;
+  z-index:100;
+  top:calc(100% + 7px);
+  right:0;
+  width:min(290px,calc(100vw - 48px));
+  padding:5px;
+  border:1px solid rgba(199,154,59,.75);
+  border-radius:9px;
+  background:#fff;
+  box-shadow:0 12px 28px rgba(0,0,0,.24);
+}
+.tournament-pdf-picker-list a{
+  display:block;
+  padding:9px 10px;
+  border-radius:6px;
+  color:var(--navy)!important;
+  font-size:12px;
+  font-weight:800;
+  line-height:1.45;
+  overflow-wrap:anywhere;
+}
+.tournament-pdf-picker-list a+a{border-top:1px solid #ece8df}
+body.admin-mode .tournament-pdf-actions{grid-template-columns:repeat(2,minmax(0,1fr))!important}
+.tournament-pdf-save-menu{display:none!important;position:relative;margin:7px 3px 0}
+body.admin-mode .tournament-pdf-save-menu{display:block!important}
+.tournament-pdf-save-menu summary{
+  display:inline-flex;
+  min-height:36px;
+  padding:8px 13px;
+  align-items:center;
+  justify-content:center;
+  border:1px solid var(--gold);
+  border-radius:8px;
+  background:var(--navy);
+  color:#fff;
+  font-size:12px;
+  font-weight:900;
+  cursor:pointer;
+  list-style:none;
+}
+.tournament-pdf-save-menu summary::-webkit-details-marker{display:none}
+.tournament-pdf-save-list{
+  display:grid;
+  gap:4px;
+  margin-top:6px;
+  padding:6px;
+  border:1px solid rgba(199,154,59,.55);
+  border-radius:9px;
+  background:#fff;
+}
+.tournament-pdf-save-list a{
+  padding:8px 9px;
+  color:var(--navy)!important;
+  font-size:12px;
+  font-weight:800;
+  overflow-wrap:anywhere;
+}
+.admin-toggle{
+  position:fixed!important;
+  right:16px!important;
+  bottom:16px!important;
+  left:auto!important;
+  width:auto!important;
+  margin:0!important;
+  z-index:9998!important;
+}
+@media(max-width:600px){
+  .admin-toggle{
+    right:12px!important;
+    bottom:12px!important;
+    margin:0!important;
+  }
+}
+</style>
 </head>
 <body id="page-top">
 <header class="header">
@@ -2186,24 +2278,28 @@ function renderResults(){
 
   box.innerHTML=[...groups.values()].map(group=>{
     const pdfs=resultDocuments.filter(item=>item.tournament===group.key);
-    const pdfHeaderHtml=pdfs.length
-      ? '<div class="tournament-head-pdfs">'+pdfs.map((item,index)=>
-          '<a class="tournament-head-pdf" style="display:inline!important;min-height:0!important;padding:0!important;border:0!important;border-radius:0!important;background:none!important;background-color:transparent!important;box-shadow:none!important;color:#e2bd67!important;font-size:12px!important;font-weight:900!important;line-height:1.3!important;text-decoration:none!important;" href="'+SHARED_API+'?section=result-documents&amp;file='+encodeURIComponent(item.id)+'" target="_blank" rel="noopener" title="'+escHtml(item.fileName)+'">'+
-            (pdfs.length>1?'PDF '+(index+1):'PDFを開く')+
-          '</a>'
-        ).join('')+'</div>'
-      : '';
+    const pdfHeaderHtml=!pdfs.length
+      ? ''
+      : pdfs.length===1
+        ? '<div class="tournament-head-pdfs"><a class="tournament-head-pdf" style="display:inline!important;min-height:0!important;padding:0!important;border:0!important;border-radius:0!important;background:none!important;background-color:transparent!important;box-shadow:none!important;color:#e2bd67!important;font-size:12px!important;font-weight:900!important;line-height:1.3!important;text-decoration:none!important;" href="'+SHARED_API+'?section=result-documents&amp;file='+encodeURIComponent(pdfs[0].id)+'" target="_blank" rel="noopener" title="'+escHtml(pdfs[0].fileName)+'">PDFを開く</a></div>'
+        : '<div class="tournament-head-pdfs"><details class="tournament-pdf-picker"><summary>PDFを開く</summary><div class="tournament-pdf-picker-list">'+
+            pdfs.map(item=>'<a href="'+SHARED_API+'?section=result-documents&amp;file='+encodeURIComponent(item.id)+'" target="_blank" rel="noopener">'+escHtml(item.fileName)+'</a>').join('')+
+          '</div></details></div>';
     const pdfHtml=pdfs.length
       ? '<div class="tournament-pdfs admin-only">'+pdfs.map(item=>
           '<div class="tournament-pdf">'+
             '<div class="tournament-pdf-name">'+escHtml(item.fileName)+'</div>'+
             '<div class="tournament-pdf-actions">'+
               '<a class="tournament-pdf-open" href="'+SHARED_API+'?section=result-documents&amp;file='+encodeURIComponent(item.id)+'" target="_blank" rel="noopener">PDFを開く</a>'+
-              '<a class="tournament-pdf-save admin-only" href="'+SHARED_API+'?section=result-documents&amp;file='+encodeURIComponent(item.id)+'" download="'+escHtml(item.fileName)+'">PDFを保存</a>'+
               '<button class="tournament-pdf-delete admin-only" type="button" data-pdf-delete="'+escHtml(item.id)+'">削除</button>'+
             '</div>'+
           '</div>'
         ).join('')+'</div>'
+      : '';
+    const pdfSaveHtml=pdfs.length
+      ? '<details class="tournament-pdf-save-menu admin-only"><summary>PDFを保存</summary><div class="tournament-pdf-save-list">'+
+          pdfs.map(item=>'<a href="'+SHARED_API+'?section=result-documents&amp;file='+encodeURIComponent(item.id)+'" download="'+escHtml(item.fileName)+'">'+escHtml(item.fileName)+'</a>').join('')+
+        '</div></details>'
       : '';
 
     function roundOrder(game){
@@ -2260,6 +2356,7 @@ function renderResults(){
       '<span class="tournament-year">'+escHtml(group.year)+'年度</span>'+
       pdfHeaderHtml+'</div>'+
       pdfHtml+
+      pdfSaveHtml+
       '<button class="tournament-pdf-add admin-only" type="button" data-pdf-add="'+escHtml(group.key)+'">＋ この大会のPDFを追加</button>'+
       '<div class="tournament-games">'+gamesHtml+'</div>'+
     '</section>';
