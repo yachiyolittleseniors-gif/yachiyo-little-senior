@@ -1863,6 +1863,29 @@ body:not(.admin-mode) .tournament-pdf-save{display:none!important}
   .tournament-head-pdf{min-height:28px;padding:5px 8px;font-size:10px}
 }
 </style>
+<style id="results-pdf-text-link">
+.tournament-head-pdf{
+  display:inline!important;
+  min-height:0!important;
+  padding:2px 0!important;
+  border:0!important;
+  border-radius:0!important;
+  background:transparent!important;
+  box-shadow:none!important;
+  color:var(--gold2)!important;
+  font-size:12px!important;
+  font-weight:900!important;
+  line-height:1.3!important;
+}
+.tournament-head-pdf:hover{text-decoration:underline}
+@media(max-width:650px){
+  .tournament-head-pdf{
+    min-height:0!important;
+    padding:2px 0!important;
+    font-size:12px!important;
+  }
+}
+</style>
 </head>
 <body id="page-top">
 <header class="header">
