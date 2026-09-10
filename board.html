@@ -33,7 +33,7 @@ h1{font-family:serif;font-weight:500;letter-spacing:.08em;margin:8px 0 6px;font-
 .card-kicker{font-size:10px;letter-spacing:.18em;color:#a27927;font-weight:800;margin-bottom:9px}
 .card h2{font-family:serif;margin:0 0 10px;font-size:25px;color:var(--navy)}
 .card p{font-size:13px;line-height:1.8;color:#69737f;min-height:70px;margin:0}
-.attendance-card{display:none;background:linear-gradient(180deg,#fff 0%,#fbfbfa 100%)}
+.attendance-card{display:block;background:linear-gradient(180deg,#fff 0%,#fbfbfa 100%)}
 .densuke-card{background:linear-gradient(180deg,#fffdfa 0%,#fbf7ed 100%);border-color:#d8c79f}
 .densuke-card .card-kicker{color:var(--gold)}
 .tournament-card{background:linear-gradient(180deg,#fff 0%,#fbfbfa 100%)}
@@ -269,8 +269,8 @@ html{scroll-padding-top:var(--compact-header-height)}
       <div class="card-kicker">NEW ATTENDANCE</div>
       <h2>保護者出欠確認</h2>
       <p>サイト内で各日程の「○・△・×」を入力し、出欠状況を確認できます。</p>
-      <a id="attendanceOpenBtn" class="btn gold disabled" data-href="./attendance.html" aria-disabled="true" tabindex="-1">保護者出欠確認を開く</a>
-      <div class="note attendance-note">切り替え完了後に利用できます。</div>
+      <a id="attendanceOpenBtn" class="btn gold" href="./attendance.html" data-href="./attendance.html" aria-disabled="false">保護者出欠確認を開く</a>
+      <div class="note attendance-note">伝助の移行期間中も確認・入力できます。</div>
     </section>
 
     <section class="card densuke-card" id="densukeLegacyCard">
@@ -442,7 +442,7 @@ html{scroll-padding-top:var(--compact-header-height)}
   }
 
   function setEndedUI(ended){
-    setAttendanceEnabled(ended);
+    setAttendanceEnabled(true);
     warning.style.display='none';
     endBtn.dataset.warningShown='0';
     endBtn.textContent='伝助を終了';
@@ -455,15 +455,15 @@ html{scroll-padding-top:var(--compact-header-height)}
       adminStatus.textContent='伝助の移行は終了しています。保護者出欠確認を利用できます。';
     }else{
       legacyCard.style.display='block';
-      attendanceCard.style.display='none';
+      attendanceCard.style.display='block';
       endBtn.style.display='';
       resumeBtn.style.display='none';
-      adminStatus.textContent='伝助終了前は、保護者出欠確認を開くことはできません。';
+      adminStatus.textContent='伝助の移行期間中も、保護者出欠確認を利用できます。';
     }
   }
 
-  // 初期状態は必ずロック。サーバー確認後にのみ解除。
-  setAttendanceEnabled(false);
+  // チーム専用ページの認証後は、移行期間中も出欠確認を利用可能にする。
+  setAttendanceEnabled(true);
 
   async function loadSetting(){
     try{
@@ -478,8 +478,7 @@ html{scroll-padding-top:var(--compact-header-height)}
       const ended = j?.config?.migrationEnded === true;
       setEndedUI(ended);
     }catch(e){
-      // 通信失敗時は安全側でロックのまま
-      setAttendanceEnabled(false);
+      setAttendanceEnabled(true);
     }
   }
 
