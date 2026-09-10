@@ -1974,7 +1974,7 @@ function displayTeamName(value){
 }
 function displayTeamNameHtml(value){
   const name=displayTeamName(value);
-  const match=name.match(/^(.*?)([ァ-ヶー・]+(?:[A-Za-z0-9]+)?|[A-Za-z][A-Za-z0-9 .&+_-]*)$/);
+  const match=name.match(/^(.*?)([ァ-ヶー・]+(?:[A-Za-z0-9]+)?|[A-Za-z][A-Za-z0-9 .&+_-]+)$/);
   if(match&&match[1].trim()){
     return escHtml(match[1].trim())+'<span class="team-category">'+escHtml(match[2])+'</span>';
   }
