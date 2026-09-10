@@ -1814,6 +1814,54 @@ body:not(.admin-mode) .tournament-pdf-actions .tournament-pdf-delete{
   }
 }
 </style>
+<style id="results-pdf-in-tournament-heading">
+.tournament-group-head{
+  display:grid!important;
+  grid-template-columns:minmax(0,1fr) auto!important;
+  grid-template-areas:"year pdf" "title title"!important;
+  align-items:center!important;
+  gap:2px 8px!important;
+}
+.tournament-group-title{grid-area:title!important}
+.tournament-year{grid-area:year!important;justify-self:start}
+.tournament-head-pdfs{
+  grid-area:pdf;
+  display:flex;
+  justify-content:flex-end;
+  align-items:center;
+  gap:5px;
+  min-width:0;
+}
+.tournament-head-pdf{
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  min-height:30px;
+  padding:5px 9px;
+  border:1px solid rgba(255,255,255,.68);
+  border-radius:7px;
+  background:var(--gold);
+  color:#fff!important;
+  font-family:-apple-system,BlinkMacSystemFont,"Hiragino Kaku Gothic ProN","Yu Gothic",Meiryo,sans-serif;
+  font-size:11px;
+  font-weight:900;
+  line-height:1;
+  white-space:nowrap;
+}
+.tournament-pdfs{display:none!important}
+body.admin-mode .tournament-pdfs{
+  display:grid!important;
+  width:calc(100% - 6px);
+}
+body:not(.admin-mode) .tournament-pdf-save{display:none!important}
+@media(max-width:650px){
+  .tournament-group-head{
+    padding:8px 10px!important;
+    grid-template-columns:minmax(0,1fr) auto!important;
+  }
+  .tournament-head-pdf{min-height:28px;padding:5px 8px;font-size:10px}
+}
+</style>
 </head>
 <body id="page-top">
 <header class="header">
@@ -2101,13 +2149,20 @@ function renderResults(){
 
   box.innerHTML=[...groups.values()].map(group=>{
     const pdfs=resultDocuments.filter(item=>item.tournament===group.key);
+    const pdfHeaderHtml=pdfs.length
+      ? '<div class="tournament-head-pdfs">'+pdfs.map((item,index)=>
+          '<a class="tournament-head-pdf" href="'+SHARED_API+'?section=result-documents&amp;file='+encodeURIComponent(item.id)+'" target="_blank" rel="noopener" title="'+escHtml(item.fileName)+'">'+
+            (pdfs.length>1?'PDF '+(index+1):'PDFを開く')+
+          '</a>'
+        ).join('')+'</div>'
+      : '';
     const pdfHtml=pdfs.length
-      ? '<div class="tournament-pdfs">'+pdfs.map(item=>
+      ? '<div class="tournament-pdfs admin-only">'+pdfs.map(item=>
           '<div class="tournament-pdf">'+
             '<div class="tournament-pdf-name">'+escHtml(item.fileName)+'</div>'+
             '<div class="tournament-pdf-actions">'+
               '<a class="tournament-pdf-open" href="'+SHARED_API+'?section=result-documents&amp;file='+encodeURIComponent(item.id)+'" target="_blank" rel="noopener">PDFを開く</a>'+
-              '<a class="tournament-pdf-save" href="'+SHARED_API+'?section=result-documents&amp;file='+encodeURIComponent(item.id)+'" download="'+escHtml(item.fileName)+'">PDFを保存</a>'+
+              '<a class="tournament-pdf-save admin-only" href="'+SHARED_API+'?section=result-documents&amp;file='+encodeURIComponent(item.id)+'" download="'+escHtml(item.fileName)+'">PDFを保存</a>'+
               '<button class="tournament-pdf-delete admin-only" type="button" data-pdf-delete="'+escHtml(item.id)+'">削除</button>'+
             '</div>'+
           '</div>'
@@ -2165,7 +2220,8 @@ function renderResults(){
 
     return '<section class="tournament-group">'+
       '<div class="tournament-group-head"><h2 class="tournament-group-title">'+escHtml(group.name)+'</h2>'+
-      '<span class="tournament-year">'+escHtml(group.year)+'年度</span></div>'+
+      '<span class="tournament-year">'+escHtml(group.year)+'年度</span>'+
+      pdfHeaderHtml+'</div>'+
       pdfHtml+
       '<button class="tournament-pdf-add admin-only" type="button" data-pdf-add="'+escHtml(group.key)+'">＋ この大会のPDFを追加</button>'+
       '<div class="tournament-games">'+gamesHtml+'</div>'+
