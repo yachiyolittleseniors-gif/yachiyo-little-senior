@@ -395,7 +395,7 @@ html{scroll-padding-top:var(--compact-header-height)}
     </select>
     <label for="tournamentPdfInput">PDFファイル（6MB以下）</label>
     <input id="tournamentPdfInput" type="file" accept="application/pdf,.pdf">
-    <button id="uploadTournamentBtn" type="button">PDFを掲載</button>
+    <button id="uploadTournamentBtn" type="button">PDFを追加</button>
     <div id="tournamentAdminList"></div>
   </div>
   <div id="rulesAdminFields">
@@ -821,17 +821,17 @@ html{scroll-padding-top:var(--compact-header-height)}
         })
       });
       const body=await response.json().catch(function(){return {}});
-      if(!response.ok) throw new Error(body.error||'PDFを掲載できませんでした。');
+      if(!response.ok) throw new Error(body.error||'PDFを追加できませんでした。');
       documents=Array.isArray(body.data)?body.data:documents;
       titleInput.value='';
       fileInput.value='';
       renderDocuments();
-      showSaveNotice('PDFを掲載しました');
+      showSaveNotice('PDFを追加しました');
     }catch(e){
-      alert(e.message||'PDFを掲載できませんでした。');
+      alert(e.message||'PDFを追加できませんでした。');
     }finally{
       uploadBtn.disabled=false;
-      uploadBtn.textContent='PDFを掲載';
+      uploadBtn.textContent='PDFを追加';
     }
   });
 
