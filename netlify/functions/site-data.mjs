@@ -155,6 +155,33 @@ async function boardSessionIsValid(request) {
   return safeEqual(signature, await signBoardSession(expiresAt));
 }
 
+const LEGACY_GRADE_BASE_YEAR = 2026;
+
+function currentJapanYear() {
+  return Number(
+    new Intl.DateTimeFormat("en-US", {
+      timeZone: "Asia/Tokyo",
+      year: "numeric"
+    }).format(new Date())
+  );
+}
+
+function resultIsExpired(item) {
+  const normalized = String(item?.grade || "")
+    .replace(/[１２３]/g, character =>
+      String("１２３".indexOf(character) + 1)
+    );
+  const match = normalized.match(/[1-3]/);
+  if (!match) return false;
+
+  const baseGrade = Number(match[0]);
+  const baseYear = Number(item?.gradeYear) || LEGACY_GRADE_BASE_YEAR;
+  const effectiveGrade =
+    baseGrade + Math.max(0, currentJapanYear() - baseYear);
+
+  return effectiveGrade >= 5;
+}
+
 function decodeDataUrl(dataUrl) {
   const match = String(dataUrl || "").match(/^data:application\/pdf;base64,(.*)$/s);
   if (!match) return null;
@@ -640,6 +667,13 @@ export default async (request, context) => {
             added: additions.length,
             updatedAt: new Date().toISOString()
           });
+        }
+
+        const currentResults = Array.isArray(data) ? data : [];
+        const activeResults = currentResults.filter(item => !resultIsExpired(item));
+        if (activeResults.length !== currentResults.length) {
+          data = activeResults;
+          await store.setJSON(key, data);
         }
       }
 
