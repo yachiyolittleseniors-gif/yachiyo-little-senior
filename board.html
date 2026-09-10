@@ -233,6 +233,9 @@ html{scroll-padding-top:var(--compact-header-height)}
   }
 }
 </style>
+<style id="remove-official-tournament-admin-fields">
+#tournamentAdminFields{display:none!important}
+</style>
 </head>
 <body id="page-top">
 <header class="site-header">
@@ -281,15 +284,6 @@ html{scroll-padding-top:var(--compact-header-height)}
         <a class="btn densuke-btn" href="https://densuke.biz/list?cd=ZhxJNW9dPNGVtm7c" target="_blank" rel="noopener noreferrer">伝助を開く</a>
       </div>
       <div class="note">※伝助は外部サイトです。</div>
-    </section>
-
-    <section class="card tournament-card" id="officialTournamentCard">
-      <div class="card-kicker">OFFICIAL TOURNAMENT</div>
-      <h2>開催中の公式戦</h2>
-      <p>大会要項や組み合わせなど、現在開催中の公式戦資料を確認できます。</p>
-      <div class="tournament-list" id="tournamentList" aria-live="polite">
-        <div class="tournament-empty">資料を読み込んでいます。</div>
-      </div>
     </section>
 
     <section class="card rules-card" id="teamRulesCard">
