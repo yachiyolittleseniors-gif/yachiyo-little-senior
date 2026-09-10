@@ -335,6 +335,13 @@ export default async (request, context) => {
     try { current = (await store.get(KEY, { type: "json" })) || {}; } catch { current = {}; }
     let data = cleanupOldData(mergeInitial(normalize(current)).data);
 
+    if (["answer", "comment"].includes(action)) {
+      const config = await getConfig(store);
+      if (!config.migrationEnded) {
+        return json({ error: "伝助終了前は保護者出欠確認へ入力できません。", locked: true }, 423);
+      }
+    }
+
     if (action === "endDensuke") {
       const html = await fetchDensukeHtml();
       const imported = importMatchingDensukeData(data, html);
