@@ -1,4 +1,8 @@
 import { getStore } from "@netlify/blobs";
+import {
+  adminAuthError,
+  verifyAdminPassword,
+} from "./admin-rate-limit.mjs";
 
 const STORE = "yachiyo-public-site";
 const KEY = "content/attendance.json";
@@ -11,10 +15,11 @@ const DEFAULT_ACCESS_HASH =
 const MIGRATED_DATA = { events: [], members: [], answers: {} };
 const MIGRATED_COMMENTS = [];
 
-function json(data, status = 200) {
+function json(data, status = 200, extraHeaders = {}) {
   return new Response(JSON.stringify(data), { status, headers: {
     "content-type": "application/json; charset=utf-8",
     "cache-control": "no-store",
+    ...extraHeaders,
   } });
 }
 
@@ -148,12 +153,6 @@ async function getConfig(store) {
   }
 }
 
-function adminOK(request) {
-  const expected = process.env.ADMIN_PASSWORD || "";
-  const received = request.headers.get("x-admin-password") || "";
-  return Boolean(expected && received === expected);
-}
-
 function mergeInitial(data) {
   let changed = false;
 
@@ -174,7 +173,7 @@ function mergeInitial(data) {
   return { data, changed };
 }
 
-export default async request => {
+export default async (request, context) => {
   const store = getStore({ name: STORE, consistency: "strong" });
   const url = new URL(request.url);
 
@@ -202,6 +201,24 @@ export default async request => {
     try { body = await request.json(); } catch { return json({ error: "Invalid JSON" }, 400); }
     const action = body.action || "";
 
+    const adminActions = new Set([
+      "adminPing",
+      "setConfig",
+      "endDensuke",
+      "resumeDensuke",
+      "adminSave",
+    ]);
+    let adminAuth = null;
+    if (adminActions.has(action)) {
+      adminAuth = await verifyAdminPassword({
+        store,
+        request,
+        context,
+        expectedPassword: process.env.ADMIN_PASSWORD || "",
+      });
+      if (!adminAuth.ok) return adminAuthError(json, adminAuth);
+    }
+
     if (
       (action === "answer" || action === "comment") &&
       !(await accessOK(store, request))
@@ -210,12 +227,10 @@ export default async request => {
     }
 
     if (action === "adminPing") {
-      if (!adminOK(request)) return json({ error: "Unauthorized" }, 401);
       return json({ ok: true, config: await getConfig(store) });
     }
 
     if (action === "setConfig") {
-      if (!adminOK(request)) return json({ error: "Unauthorized" }, 401);
       const currentConfig = await getConfig(store);
       const config = {
         ...currentConfig,
@@ -230,7 +245,6 @@ export default async request => {
     let data = cleanupOldData(mergeInitial(normalize(current)).data);
 
     if (action === "endDensuke") {
-      if (!adminOK(request)) return json({ error: "Unauthorized" }, 401);
       data.migrationInitialized = true;
       const config = {
         ...(await getConfig(store)),
@@ -250,7 +264,6 @@ export default async request => {
     }
 
     if (action === "resumeDensuke") {
-      if (!adminOK(request)) return json({ error: "Unauthorized" }, 401);
       const config = {
         ...(await getConfig(store)),
         densukeVisible: true,
@@ -261,7 +274,6 @@ export default async request => {
     }
 
     if (action === "adminSave") {
-      if (!adminOK(request)) return json({ error: "Unauthorized" }, 401);
       data = cleanupOldData(normalize(body.data || {}));
       data.migrationInitialized = true;
       await store.setJSON(KEY, data);

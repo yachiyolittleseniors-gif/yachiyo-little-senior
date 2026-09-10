@@ -1,4 +1,8 @@
 import { getStore } from "@netlify/blobs";
+import {
+  adminAuthError,
+  verifyAdminPassword,
+} from "./admin-rate-limit.mjs";
 
 const DEFAULT_ACCESS_SALT = "yachiyo-access-v1";
 const DEFAULT_ACCESS_HASH =
@@ -159,7 +163,7 @@ function decodeDataUrl(dataUrl) {
   }
 }
 
-export default async (request) => {
+export default async (request, context) => {
   try {
     const url = new URL(request.url);
     const section = url.searchParams.get("section");
@@ -412,31 +416,23 @@ export default async (request) => {
       );
     }
 
-    const expected = process.env.ADMIN_PASSWORD;
-
-    if (!expected) {
-      return json({
-        error: "ADMIN_PASSWORD is not configured"
-      }, 503);
-    }
-
-    const entered =
-      request.headers.get("x-admin-password") || "";
+    const adminAuth = await verifyAdminPassword({
+      store,
+      request,
+      context,
+      expectedPassword: process.env.ADMIN_PASSWORD || "",
+    });
 
     if (
       section === "access-settings" &&
       body?.action === "verifyAdminPassword"
     ) {
-      return entered === expected
+      return adminAuth.ok
         ? json({ ok: true })
-        : json({ ok: false }, 401);
+        : adminAuthError(json, adminAuth);
     }
 
-    if (entered !== expected) {
-      return json({
-        error: "unauthorized"
-      }, 401);
-    }
+    if (!adminAuth.ok) return adminAuthError(json, adminAuth);
 
     if (
       section === "board-tournaments" &&
