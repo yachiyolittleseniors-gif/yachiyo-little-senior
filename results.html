@@ -1994,6 +1994,13 @@ body.admin-mode .tournament-pdf-save-menu{display:block!important}
 <style id="results-pdf-link-position">
 .tournament-head-pdfs{transform:translateY(-2px)!important}
 </style>
+<style id="results-admin-tap-zoom-fix">
+.restored-footer-copy,.admin-toggle{
+  touch-action:manipulation!important;
+  -webkit-user-select:none;
+  user-select:none;
+}
+</style>
 </head>
 <body id="page-top">
 <header class="header">
@@ -2666,13 +2673,14 @@ function openProtectedArea(type){
     let tapCount=0,tapTimer=null;
     footer.addEventListener('pointerup',function(e){
       if(e.target.closest('#adminModeToggle'))return;
+      e.preventDefault();
       tapCount++;
       clearTimeout(tapTimer);
       tapTimer=setTimeout(function(){tapCount=0;},2000);
       if(tapCount>=5){
         tapCount=0;clearTimeout(tapTimer);b.style.display='block';
       }
-    },{passive:true});
+    },{passive:false});
   });
 })();
 </script>
