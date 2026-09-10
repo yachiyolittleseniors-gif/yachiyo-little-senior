@@ -43,15 +43,17 @@ button{border:0;border-radius:10px;padding:12px 16px;font:inherit;font-weight:80
 .delete{background:#fff;color:#9d2633;border:1px solid #ddd}.actions{display:flex;justify-content:flex-end;gap:10px;flex-wrap:wrap;margin-top:16px}
 .add,.save{background:var(--gold);color:var(--navy)}.cancel{background:#eee;color:#222}.status{min-height:22px;margin-top:10px;color:#536071;font-size:14px;text-align:right}
 .admin-toggle{display:none;position:fixed;right:18px;bottom:18px;z-index:9998;border:1px solid rgba(199,154,59,.65);background:var(--navy);color:#e2bd67;border-radius:999px;padding:9px 12px;font-size:12px;box-shadow:0 8px 22px rgba(0,0,0,.18)}
-footer{background:var(--navy);color:#fff;border-top:1px solid rgba(202,166,75,.6);padding:36px 18px 22px}
-.footer-inner{max-width:1050px;margin:auto}
-.footer-nav{display:flex;justify-content:center;flex-wrap:wrap;gap:0;margin:0 auto}
-.footer-nav a{display:inline-flex;align-items:center;min-height:38px;padding:7px 13px;color:#fff;text-decoration:none;font-size:13px;font-weight:700;border-right:1px solid rgba(255,255,255,.18)}
-.footer-nav a:last-child{border-right:0}.footer-nav a:hover{color:var(--gold2)}
-.footer-info{display:grid;justify-items:center;gap:10px;padding:19px 0 20px;border-top:0;border-bottom:1px solid rgba(255,255,255,.13)}
-.footer-info a{color:#d8dee7;text-decoration:none;font-size:13px;line-height:1.7;text-align:center}.footer-info a:hover{color:var(--gold2)}
-.footer-copy{text-align:center;margin-top:20px;color:#94a0ae;font-size:12px;letter-spacing:.08em}
-@media(max-width:600px){main{padding:24px 14px 70px}.panel{padding:18px 12px}.link-list{gap:11px}.link-card{min-height:58px;padding:11px 13px}.link-title{font-size:13px;font-weight:700;line-height:1.4}.link-arrow{font-size:18px}.editor-row{grid-template-columns:1fr}.delete{justify-self:end}.admin-toggle{right:12px;bottom:74px;padding:8px 10px;font-size:11px}footer{padding:30px 14px 20px}.footer-nav{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));width:100%;margin-bottom:0}.footer-nav a{justify-content:center;min-height:42px;padding:8px 6px;border-right:0;border-bottom:1px solid rgba(255,255,255,.12);font-size:12px;text-align:center}.footer-info{padding:17px 4px 18px}.footer-info a{font-size:12px}.footer-copy{font-size:10px}}
+.restored-footer{background:#071426;color:#fff;border-top:1px solid rgba(199,154,59,.45);padding:26px 18px 18px}
+.restored-footer-inner{max-width:1180px;margin:0 auto}
+.restored-footer-nav{display:flex;flex-wrap:wrap;justify-content:center;gap:0;margin:0 auto}
+.restored-footer-nav a{display:block;padding:7px 15px;color:#dce2e8;text-decoration:none;font-size:13px;font-weight:700;border-right:1px solid rgba(199,154,59,.55)}
+.restored-footer-nav a:last-child{border-right:0}.restored-footer-nav a:hover{color:#e2bd67}
+.ground-address{text-align:center;line-height:1.65;margin-top:0;padding-top:18px}
+.ground-access-address{color:#c5cdd6;font-size:13px;font-weight:700}
+.ground-map-link{display:inline-flex!important;align-items:center;justify-content:center;gap:5px;margin-top:6px;color:#e2bd67!important;font-size:12px;font-weight:800;letter-spacing:.03em;text-decoration:none!important}
+.footer-privacy-link{text-align:center;margin-top:10px;font-size:11px}.footer-privacy-link a{color:#8f9aa7;text-decoration:none}
+.restored-footer-copy{text-align:center;border-top:1px solid rgba(255,255,255,.12);margin-top:18px;padding-top:15px;color:#8f9aa7;font-size:11px;letter-spacing:.08em}
+@media(max-width:600px){main{padding:24px 14px 70px}.panel{padding:18px 12px}.link-list{gap:11px}.link-card{min-height:58px;padding:11px 13px}.link-title{font-size:13px;font-weight:700;line-height:1.4}.link-arrow{font-size:18px}.editor-row{grid-template-columns:1fr}.delete{justify-self:end}.admin-toggle{right:12px;bottom:74px;padding:8px 10px;font-size:11px}.restored-footer{padding:20px 12px 16px}.restored-footer-nav{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));width:100%}.restored-footer-nav a{display:flex;align-items:center;justify-content:center;min-height:42px;padding:8px 6px;border-right:0;border-bottom:1px solid rgba(255,255,255,.08);font-size:12px;text-align:center}.ground-address{padding-top:18px}.ground-access-address,.ground-map-link{font-size:12px}.restored-footer-copy{font-size:10px;line-height:1.6}}
 </style>
 <link rel="preload" as="image" href="./official-logo-new.png">
 <style id="compact-site-header-style">
@@ -142,12 +144,6 @@ html{scroll-padding-top:var(--compact-header-height)}
 }
 </style>
 <link rel="stylesheet" href="./desktop-2026.css?v=20260908-pc2">
-<style id="footer-access-link-style">
-.footer-info .ground-access-address{color:#c5cdd6;font-size:13px;font-weight:700;line-height:1.65;text-align:center}
-.footer-info .ground-map-link{display:inline-flex!important;align-items:center;justify-content:center;gap:5px;color:#e2bd67!important;font-size:12px;font-weight:800;letter-spacing:.03em;text-decoration:none!important}
-.footer-info .ground-map-link:hover{color:#f0d89e!important}
-@media(max-width:600px){.footer-info .ground-access-address,.footer-info .ground-map-link{font-size:12px}}
-</style>
 </head>
 <body id="page-top">
 <header class="site-header">
@@ -165,8 +161,8 @@ html{scroll-padding-top:var(--compact-header-height)}
       <a href="./join.html">入団案内</a>
       <a href="./contact.html">お問い合わせ</a>
       <a href="./links.html">リンク集</a>
-      <a href="./rules.html">チーム規約 🔒</a>
-      <a href="./board.html">チーム内案内板 🔒</a>
+      <a href="./terms.html">サイト利用について</a>
+      <a href="./board.html">チーム専用ページ 🔒</a>
     </div>
   </nav>
 </header>
@@ -187,9 +183,9 @@ html{scroll-padding-top:var(--compact-header-height)}
   </section>
 </main>
 <button class="admin-toggle" id="adminBtn" type="button">管理</button>
-<footer>
-  <div class="footer-inner">
-    <nav class="footer-nav" aria-label="フッターナビゲーション">
+<footer class="restored-footer">
+  <div class="restored-footer-inner">
+    <nav class="restored-footer-nav" aria-label="フッターナビゲーション">
       <a href="./index.html">HOME</a>
       <a href="./team.html">チーム紹介</a>
       <a href="./players.html">選手紹介</a>
@@ -198,15 +194,17 @@ html{scroll-padding-top:var(--compact-header-height)}
       <a href="./join.html">入団案内</a>
       <a href="./contact.html">お問い合わせ</a>
       <a href="./links.html">リンク集</a>
-      <a href="./rules.html">チーム規約 🔒</a>
-      <a href="./board.html">チーム内案内板 🔒</a>
+      <a href="https://www.instagram.com/yachiyo_little_senior/" rel="noopener noreferrer" target="_blank">Instagram</a>
+      <a href="https://www.facebook.com/874baseball" rel="noopener noreferrer" target="_blank">Facebook</a>
+      <a href="./terms.html">サイト利用について</a>
+      <a href="./board.html">チーム専用ページ 🔒</a>
     </nav>
-    <div class="footer-info">
+    <div class="ground-address">
       <div class="ground-access-address">アクセス：千葉県八千代市島田台775</div>
       <a class="ground-map-link" href="https://www.google.com/maps/search/?api=1&amp;query=%E5%8D%83%E8%91%89%E7%9C%8C%E5%85%AB%E5%8D%83%E4%BB%A3%E5%B8%82%E5%B3%B6%E7%94%B0%E5%8F%B0%EF%BC%97%EF%BC%97%EF%BC%95" target="_blank" rel="noopener noreferrer">Googleマップで見る <span aria-hidden="true">↗</span></a>
-      <a href="./privacy.html">プライバシーポリシー</a>
     </div>
-    <div class="footer-copy">© YACHIYO LITTLE SENIOR. All Rights Reserved.</div>
+    <div class="footer-privacy-link"><a href="./privacy.html">プライバシーポリシー</a></div>
+    <div class="restored-footer-copy footer-copy">© YACHIYO LITTLE SENIOR. All Rights Reserved.</div>
   </div>
 </footer>
 <script>

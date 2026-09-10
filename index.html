@@ -3113,8 +3113,8 @@ html{scroll-padding-top:var(--fixed-header-height)}
 <a href='/join' onclick='toggleMenu()'>入団案内</a>
 <a href='/contact' onclick='toggleMenu()'>お問い合わせ</a>
 <a href='./links.html' onclick='toggleMenu()'>リンク集</a>
-<a href="./rules.html" onclick="toggleMenu()">チーム規約 🔒</a>
-<a href="./board.html" onclick="toggleMenu()">チーム内案内板 🔒</a>
+<a href="./terms.html" onclick="toggleMenu()">サイト利用について</a>
+<a href="./board.html" onclick="toggleMenu()">チーム専用ページ 🔒</a>
 
 </div>
 </header>
@@ -3340,8 +3340,8 @@ function closeModal(){
 <a href="./links.html">リンク集</a>
 <a href="https://www.instagram.com/yachiyo_little_senior/" rel="noopener noreferrer" target="_blank">Instagram</a>
 <a href="https://www.facebook.com/874baseball" rel="noopener noreferrer" target="_blank">Facebook</a>
-<a href="./rules.html">チーム規約 🔒</a>
-<a href="./board.html">チーム内案内板 🔒</a>
+<a href="./terms.html">サイト利用について</a>
+<a href="./board.html">チーム専用ページ 🔒</a>
 </nav>
 
 
@@ -3571,7 +3571,7 @@ function openProtectedArea(type){
       alert('管理者パスワードを入力し直してください。');
       return;
     }
-    const next=prompt('チーム規約・チーム内案内板の新しい共通パスワードを入力してください。\n（8文字以上64文字以内）');
+    const next=prompt('チーム専用ページの新しいパスワードを入力してください。\n（8文字以上64文字以内）');
     if(next===null)return;
     if(next.length<8||next.length>64){
       alert('新しいパスワードは8文字以上64文字以内で入力してください。');
@@ -3583,7 +3583,7 @@ function openProtectedArea(type){
       alert('新しいパスワードが一致しません。');
       return;
     }
-    if(!confirm('チーム規約とチーム内案内板の閲覧パスワードを同時に変更しますか？'))return;
+    if(!confirm('チーム専用ページの閲覧パスワードを変更しますか？'))return;
 
     accessPasswordChange.disabled=true;
     const originalText=accessPasswordChange.textContent;
@@ -4099,7 +4099,7 @@ document.addEventListener('DOMContentLoaded',function(){
   const find=t=>links.find(a=>(a.textContent||'').replace(/\s+/g,'').includes(t));
   const insta=find('Instagram');
   const office=find('事務局');
-  const board=find('チーム内案内板');
+  const board=find('チーム専用ページ');
   const ground=links.find(a=>(a.textContent||'').includes('千葉県八千代市島田台'));
   if(!insta||!office||!board)return;
 
@@ -4127,7 +4127,7 @@ document.addEventListener('DOMContentLoaded',function(){
     news.innerHTML='<a class="footer-news-link" href="/links">リンク集</a>';
   }
 
-  // Desired order: Instagram | リンク集 / 事務局 | チーム内案内板
+  // Desired order: Instagram | リンク集 / 事務局 | チーム専用ページ
   iBox.after(news);
   news.after(oBox);
   oBox.after(bBox);
@@ -4163,7 +4163,7 @@ document.addEventListener('DOMContentLoaded',function(){
  const footer=document.querySelector('footer'); if(!footer)return;
  const links=[...footer.querySelectorAll('a')];
  const find=t=>links.find(a=>(a.textContent||'').replace(/\s+/g,'').includes(t));
- const insta=find('Instagram'), office=find('事務局'), board=find('チーム内案内板');
+ const insta=find('Instagram'), office=find('事務局'), board=find('チーム専用ページ');
  const news=footer.querySelector('.footer-news-link');
  if(!insta||!office||!board||!news)return;
  let grid=insta.parentElement;

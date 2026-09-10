@@ -4,3 +4,15 @@
 
 [functions]
   node_bundler = "esbuild"
+
+[[redirects]]
+  from = "/rules"
+  to = "/board.html"
+  status = 301
+  force = true
+
+[[redirects]]
+  from = "/rules.html"
+  to = "/board.html"
+  status = 301
+  force = true

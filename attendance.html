@@ -60,12 +60,13 @@ html{scroll-padding-top:var(--fixed-header-height)}
 <img alt="八千代リトルシニア 公式ロゴ" class="official-brand-img" src="./official-logo-new.png" width="2062" height="374" loading="eager" decoding="sync" fetchpriority="high">
 </a></div>
 <div class="links">
-<a href="./index.html">HOME</a><a href="./team.html">チーム紹介</a><a href="./players.html">選手紹介</a><a href="./results.html">試合結果</a><a href="./schedule.html">スケジュール</a><a href="./join.html">入団案内</a><a href="./contact.html">お問い合わせ</a><a href="https://www.instagram.com/yachiyo_little_senior/" rel="noopener noreferrer" target="_blank">Instagram</a><a href="./rules.html">チーム規約</a><a href="./board.html">チーム内案内板 🔒</a>
+<a href="./index.html">HOME</a><a href="./team.html">チーム紹介</a><a href="./players.html">選手紹介</a><a href="./results.html">試合結果</a><a href="./schedule.html">スケジュール</a><a href="./join.html">入団案内</a><a href="./contact.html">お問い合わせ</a><a href="https://www.instagram.com/yachiyo_little_senior/" rel="noopener noreferrer" target="_blank">Instagram</a><a href="./terms.html">サイト利用について</a><a href="./board.html">チーム専用ページ 🔒</a>
 </div>
 <button class="menu" id="attendanceMenuToggle" type="button" aria-controls="mobileLinks" aria-expanded="false" aria-label="メニューを開く">☰</button>
 </nav>
 <div class="mobile-links" id="mobileLinks">
-<a href="./index.html">HOME</a><a href="./team.html">チーム紹介</a><a href="./players.html">選手紹介</a><a href="./results.html">試合結果</a><a href="./schedule.html">スケジュール</a><a href="./join.html">入団案内</a><a href="./contact.html">お問い合わせ</a><a href="./links.html">リンク集</a><a href="./rules.html">チーム規約 🔒</a><a href="./board.html">チーム内案内板 🔒</a>
+<a href="./index.html">HOME</a><a href="./team.html">チーム紹介</a><a href="./players.html">選手紹介</a><a href="./results.html">試合結果</a><a href="./schedule.html">スケジュール</a><a href="./join.html">入団案内</a><a href="./contact.html">お問い合わせ</a><a href="./links.html">リンク集</a><a href="./terms.html">サイト利用について</a>
+<a href="./board.html">チーム専用ページ 🔒</a>
 </div>
 </header>
 <script>
@@ -78,7 +79,7 @@ html{scroll-padding-top:var(--fixed-header-height)}
   menu.querySelectorAll('a').forEach(function(link){link.addEventListener('click',function(){setOpen(false)})});
 })();
 </script>
-<section class="pagehero"><div class="pagehero-inner"><div class="eyebrow">ATTENDANCE</div><h1>保護者出欠確認</h1><div class="crumb">HOME / チーム内案内板 / 保護者出欠確認</div></div></section>
+<section class="pagehero"><div class="pagehero-inner"><div class="eyebrow">ATTENDANCE</div><h1>保護者出欠確認</h1><div class="crumb">HOME / チーム専用ページ / 保護者出欠確認</div></div></section>
 <main class="wrap">
   <div class="error" id="errorBox"></div>
   <section class="locked-card" id="lockedView">
@@ -112,7 +113,7 @@ function statusClass(s){return s==='○'?'status-o':s==='△'?'status-t':s==='×
 function nextStatus(s){return s==='○'?'△':s==='△'?'×':s==='×'?'':'○'}
 function normalize(v){return{events:Array.isArray(v?.events)?v.events:[],members:Array.isArray(v?.members)?v.members:[],answers:v?.answers&&typeof v.answers==='object'?v.answers:{},comments:Array.isArray(v?.comments)?v.comments:[]}}
 async function api(method,body,admin=false){const headers={'content-type':'application/json'};if(admin)headers['x-admin-password']=adminPass;else headers['x-access-password']=accessPass;const r=await fetch(API,{method,headers,cache:'no-store',body:body?JSON.stringify(body):undefined});let j={};try{j=await r.json()}catch{}if(!r.ok)throw new Error(j.error||'通信に失敗しました');return j}
-async function load(){if(!accessPass){alert('チーム内案内板から開いてください。');location.replace('./board.html');return}try{showError('');const j=await api('GET');appConfig=j.config||appConfig;if(j.locked||!appConfig.migrationEnded){showLocked();return}data=normalize(j.data);showAttendance();render();$('#syncText').textContent='更新 '+new Date().toLocaleTimeString('ja-JP',{hour:'2-digit',minute:'2-digit'})}catch(e){showError('認証を確認できませんでした。チーム内案内板から開き直してください。')}}
+async function load(){if(!accessPass){alert('チーム専用ページから開いてください。');location.replace('./board.html');return}try{showError('');const j=await api('GET');appConfig=j.config||appConfig;if(j.locked||!appConfig.migrationEnded){showLocked();return}data=normalize(j.data);showAttendance();render();$('#syncText').textContent='更新 '+new Date().toLocaleTimeString('ja-JP',{hour:'2-digit',minute:'2-digit'})}catch(e){showError('認証を確認できませんでした。チーム専用ページから開き直してください。')}}
 function showLocked(){$('#lockedView').classList.remove('hidden');$('#attendanceView').classList.add('hidden');selectedMember='';renderAdmin()}
 function showAttendance(){$('#lockedView').classList.add('hidden');$('#attendanceView').classList.remove('hidden');renderAdmin()}
 function formatDate(d){if(!d)return'';const x=new Date(d+'T00:00:00');return `${x.getMonth()+1}/${x.getDate()}(${['日','月','火','水','木','金','土'][x.getDay()]})`}
@@ -134,4 +135,5 @@ $('#memberForm').onsubmit=async e=>{e.preventDefault();data.members.push({id:uid
 async function adminDelete(type,id){if(type==='event'){if(!confirm('この日程を削除しますか？'))return;data.events=data.events.filter(x=>x.id!==id);for(const m of Object.keys(data.answers))delete data.answers[m][id]}else{const member=data.members.find(x=>x.id===id);const name=member?.name||'この回答者';if(!confirm(name+'さんを削除しますか？\nこの方の○△×の回答とコメントも一緒に削除されます。'))return;data.members=data.members.filter(x=>x.id!==id);delete data.answers[id];data.comments=data.comments.filter(c=>c.memberId!==id);if(selectedMember===id)selectedMember=''}await adminSave()}
 async function adminSave(){try{const j=await api('POST',{action:'adminSave',data},true);data=normalize(j.data);render()}catch(e){showError(e.message==='試行回数の上限です。15分後に再度お試しください。'?e.message:'管理内容を保存できませんでした。')}}
 load();
-</script></body></html>
+</script>
+</body></html>

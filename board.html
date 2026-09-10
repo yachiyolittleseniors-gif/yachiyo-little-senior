@@ -8,7 +8,7 @@
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <meta name="robots" content="noindex,nofollow">
 <meta name="theme-color" content="#071426">
-<title>チーム内案内板｜八千代リトルシニア</title>
+<title>チーム専用ページ｜八千代リトルシニア</title>
 <style>
 :root{--navy:#071426;--navy2:#102741;--gold:#c79a3b;--gold2:#e2bd67;--bg:#f4f3ef;--ink:#17202b}
 *{box-sizing:border-box}html,body{overflow-x:hidden;overflow-y:auto;-webkit-overflow-scrolling:touch}
@@ -42,6 +42,13 @@ h1{font-family:serif;font-weight:500;letter-spacing:.08em;margin:8px 0 6px;font-
 .tournament-info{min-width:0;flex:1}.tournament-grade{display:inline-flex;align-items:center;margin-bottom:8px;padding:5px 12px;border-radius:999px;background:var(--gold);color:#fff;font-size:13px;font-weight:900;line-height:1.2}.tournament-title{font-weight:800;color:var(--navy);line-height:1.5}.tournament-meta{margin-top:3px;font-size:11px;color:#7b8490;overflow-wrap:anywhere}
 .tournament-open{flex:0 0 auto;padding:10px 14px;border:1px solid var(--gold);border-radius:8px;background:var(--gold);color:var(--navy);font-size:12px;font-weight:800}
 .tournament-empty{margin-top:16px;padding:16px;border:1px dashed #d6d2c8;border-radius:10px;color:#7b8490;font-size:13px;text-align:center}
+.rules-card{background:linear-gradient(180deg,#fff 0%,#fbfbfa 100%)}
+.rules-text{white-space:pre-wrap;line-height:1.9;font-size:14px;color:#46515e}
+.rules-text.empty{padding:14px;border:1px dashed #d6d2c8;border-radius:10px;color:#7b8490;text-align:center}
+.rules-pdf-list{display:grid;gap:12px;margin-top:18px}
+.rules-pdf-item{padding:14px;border:1px solid #e1ded6;border-radius:10px;background:#faf9f6}
+.rules-pdf-name{font-weight:800;color:var(--navy);line-height:1.5;overflow-wrap:anywhere}
+.rules-pdf-open{display:block;margin-top:10px;padding:11px 14px;border:1px solid var(--gold);border-radius:8px;background:var(--gold);color:#fff;text-align:center;font-size:12px;font-weight:800}
 .btn{display:block;text-align:center;background:var(--navy);color:var(--gold2);border:1px solid var(--gold);padding:14px 16px;border-radius:8px;font-weight:800;margin-top:18px;transition:.18s ease}
 .btn:active{transform:translateY(1px)}
 .btn.gold{background:var(--gold);color:#fff}.btn.densuke-btn{background:var(--gold);color:#fff;border-color:var(--gold)}
@@ -242,17 +249,17 @@ html{scroll-padding-top:var(--compact-header-height)}
       <a href="./join.html">入団案内</a>
       <a href="./contact.html">お問い合わせ</a>
       <a href="./links.html">リンク集</a>
-      <a href="./rules.html">チーム規約 🔒</a>
-      <a href="./board.html">チーム内案内板 🔒</a>
+      <a href="./terms.html">サイト利用について</a>
+      <a href="./board.html">チーム専用ページ 🔒</a>
     </div>
   </nav>
 </header>
 
 <section class="hero">
   <div>
-    <div class="eyebrow">TEAM BOARD</div>
-    <h1>チーム内案内板</h1>
-    <div class="crumb">HOME / チーム内案内板</div>
+    <div class="eyebrow">TEAM MEMBERS</div>
+    <h1>チーム専用ページ</h1>
+    <div class="crumb">HOME / チーム専用ページ</div>
   </div>
 </section>
 
@@ -283,6 +290,13 @@ html{scroll-padding-top:var(--compact-header-height)}
       <div class="tournament-list" id="tournamentList" aria-live="polite">
         <div class="tournament-empty">資料を読み込んでいます。</div>
       </div>
+    </section>
+
+    <section class="card rules-card" id="teamRulesCard">
+      <div class="card-kicker">TEAM RULES</div>
+      <h2>チーム規約</h2>
+      <div id="rulesText" class="rules-text empty">チーム規約を読み込んでいます。</div>
+      <div id="rulesPdfList" class="rules-pdf-list" hidden></div>
     </section>
   </div>
 </main>
@@ -349,11 +363,20 @@ html{scroll-padding-top:var(--compact-header-height)}
 .tournament-admin-item{display:flex;align-items:center;gap:8px;padding:9px;border:1px solid rgba(255,255,255,.14);border-radius:9px;background:rgba(255,255,255,.06)}
 .tournament-admin-item span{min-width:0;flex:1;font-size:12px;line-height:1.5;overflow-wrap:anywhere}
 .tournament-admin-item button{flex:0 0 auto;margin:0!important;background:#5e1515!important}
+#rulesAdminFields{margin-top:18px;padding-top:18px;border-top:1px solid rgba(255,255,255,.18)}
+#rulesAdminFields textarea{width:100%;min-height:150px;margin:10px 0;padding:11px 12px;border:1px solid rgba(199,154,59,.55);border-radius:9px;background:#fff;color:#17202b;font:inherit;line-height:1.7;resize:vertical}
+#rulesAdminFields input{width:100%;margin:6px 0 10px;color:#fff}
+#saveRulesBtn{width:100%;margin:4px 0!important;background:#c79a3b!important;color:#fff!important}
+#rulesAdminList{display:grid;gap:8px;margin-top:12px}
+.rules-admin-item{display:flex;align-items:center;gap:8px;padding:9px;border:1px solid rgba(255,255,255,.14);border-radius:9px;background:rgba(255,255,255,.06)}
+.rules-admin-item span{min-width:0;flex:1;font-size:12px;line-height:1.5;overflow-wrap:anywhere}
+.rules-admin-item button{flex:0 0 auto;margin:0!important;background:#5e1515!important}
 </style>
 
 <button id="densukeToggleBtn" type="button">管理</button>
 <div id="densukeAdminPanel">
-  <strong>伝助移行設定</strong>
+  <strong>チーム専用ページ管理</strong>
+  <h3>保護者出欠確認</h3>
   <p id="densukeAdminStatus">伝助終了前は、保護者出欠確認を開くことはできません。</p>
   <p id="densukeWarning">⚠ 伝助は復元できない可能性があります。</p>
   <div id="densukeEndActions">
@@ -375,6 +398,14 @@ html{scroll-padding-top:var(--compact-header-height)}
     <input id="tournamentPdfInput" type="file" accept="application/pdf,.pdf">
     <button id="uploadTournamentBtn" type="button">PDFを掲載</button>
     <div id="tournamentAdminList"></div>
+  </div>
+  <div id="rulesAdminFields">
+    <strong>チーム規約</strong>
+    <textarea id="rulesInput" placeholder="チーム規約を入力してください"></textarea>
+    <label for="rulesPdfInput">PDFファイル（1ファイル5MB以下・複数選択可）</label>
+    <input id="rulesPdfInput" type="file" accept="application/pdf,.pdf" multiple>
+    <button id="saveRulesBtn" type="button">保存・PDFを追加</button>
+    <div id="rulesAdminList"></div>
   </div>
   <button id="closeDensukeAdminBtn" type="button">キャンセル</button>
 </div>
@@ -828,6 +859,107 @@ html{scroll-padding-top:var(--compact-header-height)}
   }
 
   loadDocuments();
+})();
+</script>
+<script>
+(function(){
+  const API='/.netlify/functions/site-data?section=rules';
+  const textView=document.getElementById('rulesText');
+  const pdfList=document.getElementById('rulesPdfList');
+  const input=document.getElementById('rulesInput');
+  const fileInput=document.getElementById('rulesPdfInput');
+  const saveBtn=document.getElementById('saveRulesBtn');
+  const adminList=document.getElementById('rulesAdminList');
+  const panel=document.getElementById('densukeAdminPanel');
+  let rules={text:'',pdfs:[]};
+  let blobUrls=[];
+
+  if(!textView||!pdfList||!input||!fileInput||!saveBtn||!adminList||!panel)return;
+
+  function normalize(raw){
+    const out={text:(raw&&raw.text)||'',pdfs:[]};
+    if(raw&&Array.isArray(raw.pdfs)){
+      out.pdfs=raw.pdfs.filter(function(item){return item&&item.data}).map(function(item){return {name:item.name||'チーム規約.pdf',data:item.data}});
+    }
+    if(raw&&raw.pdf&&!out.pdfs.some(function(item){return item.data===raw.pdf}))out.pdfs.unshift({name:raw.pdfName||'チーム規約.pdf',data:raw.pdf});
+    return out;
+  }
+
+  function toBlobUrl(dataUrl){
+    if(!dataUrl||!dataUrl.startsWith('data:'))return dataUrl;
+    try{
+      const parts=dataUrl.split(',');
+      const mime=(parts[0].match(/data:([^;]+)/)||[])[1]||'application/pdf';
+      const binary=atob(parts[1]);
+      const bytes=new Uint8Array(binary.length);
+      for(let i=0;i<binary.length;i++)bytes[i]=binary.charCodeAt(i);
+      const url=URL.createObjectURL(new Blob([bytes],{type:mime}));
+      blobUrls.push(url);
+      return url;
+    }catch(e){return dataUrl}
+  }
+
+  function render(){
+    const hasText=Boolean(rules.text),hasPdfs=rules.pdfs.length>0;
+    textView.textContent=rules.text||(hasPdfs?'':'現在、公開中のチーム規約はありません。');
+    textView.hidden=!hasText&&hasPdfs;
+    textView.classList.toggle('empty',!hasText&&!hasPdfs);
+    input.value=rules.text||'';
+    blobUrls.forEach(function(url){URL.revokeObjectURL(url)});blobUrls=[];
+    pdfList.replaceChildren();adminList.replaceChildren();pdfList.hidden=!hasPdfs;
+    rules.pdfs.forEach(function(pdf,index){
+      const item=document.createElement('div');item.className='rules-pdf-item';
+      const name=document.createElement('div');name.className='rules-pdf-name';name.textContent=pdf.name||('チーム規約PDF '+(index+1));
+      const open=document.createElement('a');open.className='rules-pdf-open';open.href=toBlobUrl(pdf.data);open.target='_blank';open.rel='noopener';open.textContent='PDFを開く';
+      item.append(name,open);pdfList.appendChild(item);
+      const adminItem=document.createElement('div');adminItem.className='rules-admin-item';
+      const adminName=document.createElement('span');adminName.textContent=pdf.name||('チーム規約PDF '+(index+1));
+      const remove=document.createElement('button');remove.type='button';remove.textContent='削除';remove.addEventListener('click',function(){removePdf(index)});
+      adminItem.append(adminName,remove);adminList.appendChild(adminItem);
+    });
+    if(!hasPdfs){const empty=document.createElement('div');empty.className='note';empty.textContent='現在掲載中のPDFはありません。';adminList.appendChild(empty)}
+  }
+
+  async function load(){
+    try{
+      await window.boardAccessReady;
+      const accessPassword=sessionStorage.getItem('yachiyoAttendancePass')||'';
+      const response=await fetch(API,{cache:'no-store',headers:{'x-access-password':accessPassword}});
+      if(!response.ok)throw new Error('load failed');
+      const body=await response.json();const data=Array.isArray(body.data)?body.data:[];rules=normalize(data[0]||{});render();
+    }catch(e){textView.hidden=false;textView.classList.add('empty');textView.textContent='チーム規約を読み込めませんでした。'}
+  }
+
+  function readAsDataUrl(file){return new Promise(function(resolve,reject){const reader=new FileReader();reader.onload=function(){resolve(String(reader.result||''))};reader.onerror=reject;reader.readAsDataURL(file)})}
+
+  async function save(){
+    const adminPassword=panel.dataset.adminPassword||'',files=Array.from(fileInput.files||[]);
+    if(!adminPassword){alert('管理画面を開き直してください。');return}
+    for(const file of files){if(file.type!=='application/pdf'&&!file.name.toLowerCase().endsWith('.pdf')){alert('PDFファイルを選択してください。');return}if(file.size>5*1024*1024){alert(file.name+' は5MBを超えています。');return}}
+    saveBtn.disabled=true;saveBtn.textContent='保存中...';
+    const additions=[];
+    try{
+      for(const file of files)additions.push({name:file.name,data:await readAsDataUrl(file)});
+      const next={text:input.value.trim(),pdfs:rules.pdfs.concat(additions)};
+      const response=await fetch(API,{method:'POST',headers:{'content-type':'application/json','x-admin-password':adminPassword},body:JSON.stringify({data:[next]})});
+      if(!response.ok)throw new Error('保存できませんでした。');
+      rules=next;fileInput.value='';render();showSaveNotice(additions.length?'PDFを追加して保存しました':'保存しました');
+    }catch(e){alert(e.message||'保存できませんでした。')}finally{saveBtn.disabled=false;saveBtn.textContent='保存・PDFを追加'}
+  }
+
+  async function removePdf(index){
+    const adminPassword=panel.dataset.adminPassword||'',target=rules.pdfs[index];
+    if(!adminPassword){alert('管理画面を開き直してください。');return}
+    if(!target||!confirm('「'+target.name+'」を削除しますか？'))return;
+    const next={text:rules.text,pdfs:rules.pdfs.filter(function(_,i){return i!==index})};
+    try{
+      const response=await fetch(API,{method:'POST',headers:{'content-type':'application/json','x-admin-password':adminPassword},body:JSON.stringify({data:[next]})});
+      if(!response.ok)throw new Error('PDFを削除できませんでした。');
+      rules=next;render();showSaveNotice('PDFを削除しました');
+    }catch(e){alert(e.message||'PDFを削除できませんでした。')}
+  }
+
+  saveBtn.addEventListener('click',save);load();
 })();
 </script>
 <style id="nonblocking-save-notice-style">
