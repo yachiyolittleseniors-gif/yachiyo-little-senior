@@ -2175,7 +2175,7 @@ function renderResults(){
     const pdfs=resultDocuments.filter(item=>item.tournament===group.key);
     const pdfHeaderHtml=pdfs.length
       ? '<div class="tournament-head-pdfs">'+pdfs.map((item,index)=>
-          '<a class="tournament-head-pdf" href="'+SHARED_API+'?section=result-documents&amp;file='+encodeURIComponent(item.id)+'" target="_blank" rel="noopener" title="'+escHtml(item.fileName)+'">'+
+          '<a class="tournament-head-pdf" style="display:inline!important;min-height:0!important;padding:0!important;border:0!important;border-radius:0!important;background:none!important;background-color:transparent!important;box-shadow:none!important;color:#e2bd67!important;font-size:12px!important;font-weight:900!important;line-height:1.3!important;text-decoration:none!important;" href="'+SHARED_API+'?section=result-documents&amp;file='+encodeURIComponent(item.id)+'" target="_blank" rel="noopener" title="'+escHtml(item.fileName)+'">'+
             (pdfs.length>1?'PDF '+(index+1):'PDFを開く')+
           '</a>'
         ).join('')+'</div>'
