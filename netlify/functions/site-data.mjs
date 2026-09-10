@@ -165,6 +165,334 @@ function decodeDataUrl(dataUrl) {
   }
 }
 
+const LEGACY_RESULT_SEED = [
+  {
+    "id": "legacy-44-2024-narita-1",
+    "date": "2024-11",
+    "grade": "3年",
+    "round": "一回戦",
+    "battingOrder": "first",
+    "tournament": "第18回成田国際空港杯フレッシュマン大会",
+    "opponent": "匝瑳シニア",
+    "venue": "",
+    "ourScore": 0,
+    "oppScore": 3,
+    "note": ""
+  },
+  {
+    "id": "legacy-44-2024-narita-2",
+    "date": "2024-11",
+    "grade": "3年",
+    "round": "敗者交流戦",
+    "battingOrder": "first",
+    "tournament": "第18回成田国際空港杯フレッシュマン大会",
+    "opponent": "千葉緑シニア",
+    "venue": "",
+    "ourScore": 3,
+    "oppScore": 2,
+    "note": ""
+  },
+  {
+    "id": "legacy-44-2025-chibanippo-1",
+    "date": "2025-06",
+    "grade": "3年",
+    "round": "一回戦",
+    "battingOrder": "first",
+    "tournament": "千葉日報社新人大会",
+    "opponent": "君津シニア",
+    "venue": "",
+    "ourScore": 10,
+    "oppScore": 1,
+    "note": ""
+  },
+  {
+    "id": "legacy-44-2025-chibanippo-2",
+    "date": "2025-06",
+    "grade": "3年",
+    "round": "二回戦",
+    "battingOrder": "first",
+    "tournament": "千葉日報社新人大会",
+    "opponent": "我孫子シニア",
+    "venue": "",
+    "ourScore": 2,
+    "oppScore": 6,
+    "note": ""
+  },
+  {
+    "id": "legacy-44-2025-autumn-1",
+    "date": "2025-09",
+    "grade": "3年",
+    "round": "二回戦",
+    "battingOrder": "first",
+    "tournament": "東関東支部秋季大会",
+    "opponent": "かすみがうらシニア",
+    "venue": "",
+    "ourScore": 9,
+    "oppScore": 2,
+    "note": ""
+  },
+  {
+    "id": "legacy-44-2025-autumn-2",
+    "date": "2025-09",
+    "grade": "3年",
+    "round": "三回戦",
+    "battingOrder": "first",
+    "tournament": "東関東支部秋季大会",
+    "opponent": "常総シニア",
+    "venue": "",
+    "ourScore": 3,
+    "oppScore": 5,
+    "note": ""
+  },
+  {
+    "id": "legacy-44-2025-autumn-3",
+    "date": "2025-09",
+    "grade": "3年",
+    "round": "敗者復活三回戦",
+    "battingOrder": "first",
+    "tournament": "東関東支部秋季大会",
+    "opponent": "我孫子シニア",
+    "venue": "",
+    "ourScore": 2,
+    "oppScore": 6,
+    "note": ""
+  },
+  {
+    "id": "legacy-44-2026-kashima-1",
+    "date": "2026-01",
+    "grade": "3年",
+    "round": "第一試合",
+    "battingOrder": "first",
+    "tournament": "第5回鹿嶋市長杯交流大会",
+    "opponent": "小山ボーイズ",
+    "venue": "",
+    "ourScore": 2,
+    "oppScore": 10,
+    "note": ""
+  },
+  {
+    "id": "legacy-44-2026-kashima-2",
+    "date": "2026-01",
+    "grade": "3年",
+    "round": "第二試合",
+    "battingOrder": "first",
+    "tournament": "第5回鹿嶋市長杯交流大会",
+    "opponent": "世田谷西シニア",
+    "venue": "",
+    "ourScore": 0,
+    "oppScore": 16,
+    "note": ""
+  },
+  {
+    "id": "legacy-44-2026-kashima-3",
+    "date": "2026-01",
+    "grade": "3年",
+    "round": "第三試合",
+    "battingOrder": "first",
+    "tournament": "第5回鹿嶋市長杯交流大会",
+    "opponent": "水戸青藍舎ヤング",
+    "venue": "",
+    "ourScore": 2,
+    "oppScore": 10,
+    "note": ""
+  },
+  {
+    "id": "legacy-44-2026-spring-1",
+    "date": "2026-02",
+    "grade": "3年",
+    "round": "一回戦",
+    "battingOrder": "first",
+    "tournament": "東関東支部春季大会",
+    "opponent": "千葉南シニア",
+    "venue": "",
+    "ourScore": 10,
+    "oppScore": 2,
+    "note": ""
+  },
+  {
+    "id": "legacy-44-2026-spring-2",
+    "date": "2026-02",
+    "grade": "3年",
+    "round": "二回戦",
+    "battingOrder": "first",
+    "tournament": "東関東支部春季大会",
+    "opponent": "佐倉シニア",
+    "venue": "",
+    "ourScore": 9,
+    "oppScore": 1,
+    "note": ""
+  },
+  {
+    "id": "legacy-44-2026-spring-3",
+    "date": "2026-02",
+    "grade": "3年",
+    "round": "敗者復活二回戦",
+    "battingOrder": "first",
+    "tournament": "東関東支部春季大会",
+    "opponent": "千葉市ウイナーズ",
+    "venue": "",
+    "ourScore": 0,
+    "oppScore": 10,
+    "note": ""
+  },
+  {
+    "id": "legacy-44-2026-iwaki-1",
+    "date": "2026-03",
+    "grade": "3年",
+    "round": "第一試合",
+    "battingOrder": "first",
+    "tournament": "第11回iwakiサンシャインcup交流大会",
+    "opponent": "新庄シニア",
+    "venue": "",
+    "ourScore": 0,
+    "oppScore": 7,
+    "note": ""
+  },
+  {
+    "id": "legacy-44-2026-iwaki-2",
+    "date": "2026-03",
+    "grade": "3年",
+    "round": "第二試合",
+    "battingOrder": "first",
+    "tournament": "第11回iwakiサンシャインcup交流大会",
+    "opponent": "郡山シニア",
+    "venue": "",
+    "ourScore": 1,
+    "oppScore": 8,
+    "note": ""
+  },
+  {
+    "id": "legacy-44-2026-iwaki-3",
+    "date": "2026-03",
+    "grade": "3年",
+    "round": "第三試合",
+    "battingOrder": "first",
+    "tournament": "第11回iwakiサンシャインcup交流大会",
+    "opponent": "会津シニア",
+    "venue": "",
+    "ourScore": 2,
+    "oppScore": 10,
+    "note": ""
+  },
+  {
+    "id": "legacy-44-2026-iwaki-4",
+    "date": "2026-03",
+    "grade": "3年",
+    "round": "第四試合",
+    "battingOrder": "first",
+    "tournament": "第11回iwakiサンシャインcup交流大会",
+    "opponent": "宮城登米シニア",
+    "venue": "",
+    "ourScore": 18,
+    "oppScore": 9,
+    "note": ""
+  },
+  {
+    "id": "legacy-44-2026-yomiuri-1",
+    "date": "2026-04",
+    "grade": "3年",
+    "round": "三回戦",
+    "battingOrder": "first",
+    "tournament": "第19回読売新聞社杯兼第48回千葉県大会",
+    "opponent": "柏シニア",
+    "venue": "",
+    "ourScore": 7,
+    "oppScore": 5,
+    "note": ""
+  },
+  {
+    "id": "legacy-44-2026-yomiuri-2",
+    "date": "2026-04",
+    "grade": "3年",
+    "round": "四回戦",
+    "battingOrder": "first",
+    "tournament": "第19回読売新聞社杯兼第48回千葉県大会",
+    "opponent": "市川シニア",
+    "venue": "",
+    "ourScore": 0,
+    "oppScore": 3,
+    "note": ""
+  },
+  {
+    "id": "legacy-44-2026-kanto-summer-1",
+    "date": "2026-05",
+    "grade": "3年",
+    "round": "一回戦",
+    "battingOrder": "first",
+    "tournament": "関東夏季大会",
+    "opponent": "上尾シニア",
+    "venue": "",
+    "ourScore": 0,
+    "oppScore": 7,
+    "note": ""
+  },
+  {
+    "id": "legacy-44-2026-lotte-1",
+    "date": "2026-07",
+    "grade": "3年",
+    "round": "二回戦",
+    "battingOrder": "first",
+    "tournament": "CHIBA LOTTE MARINES CUP 2026",
+    "opponent": "匝瑳シニア",
+    "venue": "",
+    "ourScore": 2,
+    "oppScore": 3,
+    "note": ""
+  },
+  {
+    "id": "legacy-45-2025-narita-1",
+    "date": "2025-11",
+    "grade": "2年",
+    "round": "一回戦",
+    "battingOrder": "first",
+    "tournament": "第19回成田国際空港杯フレッシュマン大会",
+    "opponent": "八千代中央シニア",
+    "venue": "",
+    "ourScore": 0,
+    "oppScore": 11,
+    "note": ""
+  },
+  {
+    "id": "legacy-45-2025-narita-2",
+    "date": "2025-11",
+    "grade": "2年",
+    "round": "敗者交流戦",
+    "battingOrder": "first",
+    "tournament": "第19回成田国際空港杯フレッシュマン大会",
+    "opponent": "千葉西シニア",
+    "venue": "",
+    "ourScore": 5,
+    "oppScore": 6,
+    "note": ""
+  },
+  {
+    "id": "legacy-45-2026-chibanippo-1",
+    "date": "2026-06",
+    "grade": "2年",
+    "round": "一回戦",
+    "battingOrder": "first",
+    "tournament": "千葉日報社新人大会",
+    "opponent": "船橋シニア",
+    "venue": "",
+    "ourScore": 4,
+    "oppScore": 1,
+    "note": ""
+  },
+  {
+    "id": "legacy-45-2026-chibanippo-2",
+    "date": "2026-06",
+    "grade": "2年",
+    "round": "二回戦",
+    "battingOrder": "first",
+    "tournament": "千葉日報社新人大会",
+    "opponent": "八千代中央V",
+    "venue": "",
+    "ourScore": 0,
+    "oppScore": 9,
+    "note": ""
+  }
+];
+
 export default async (request, context) => {
   try {
     const url = new URL(request.url);
@@ -290,10 +618,30 @@ export default async (request, context) => {
         return json({ data: Array.isArray(documents) ? documents : [] });
       }
 
-      const data = await store.get(key, {
+      let data = await store.get(key, {
         type: "json",
         consistency: "strong"
       });
+
+      if (section === "results") {
+        const migrationKey = "migrations/results-legacy-20260910.json";
+        const migrated = await store.get(migrationKey, {
+          type: "json",
+          consistency: "strong"
+        });
+        if (!migrated?.done) {
+          const current = Array.isArray(data) ? data : [];
+          const currentIds = new Set(current.map(item => String(item?.id || "")));
+          const additions = LEGACY_RESULT_SEED.filter(item => !currentIds.has(item.id));
+          data = [...current, ...additions];
+          await store.setJSON(key, data);
+          await store.setJSON(migrationKey, {
+            done: true,
+            added: additions.length,
+            updatedAt: new Date().toISOString()
+          });
+        }
+      }
 
       const photoSection =
         section === "hero" ||
