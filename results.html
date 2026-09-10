@@ -1841,7 +1841,7 @@ let pendingPdfTournament='';
 
 function tournamentParts(value){
   const text=String(value||'大会名未設定').trim();
-  const match=text.match(/^(.*?)[\s　]*(第?\s*\d+\s*回戦|準々決勝|準決勝|決勝|順位決定戦|敗者復活戦|第?\s*\d+\s*試合)$/);
+  const match=text.match(/^(.*?)[\s　]*(敗者復活(?:第?[0-9一二三四五六七八九十]+回戦)?|敗者交流戦|第?[0-9一二三四五六七八九十]+回戦|準々決勝|準決勝|決勝|順位決定戦|第?[0-9一二三四五六七八九十]+試合)$/);
   if(match&&match[1].trim()){
     return {name:match[1].trim(),round:match[2].replace(/\s/g,'')};
   }
@@ -1852,6 +1852,12 @@ function gameYear(game){
 }
 function tournamentKey(game){
   return (gameYear(game)||'年不明')+'::'+tournamentParts(game.tournament).name;
+}
+function formatGameDate(value){
+  const text=String(value||'');
+  const monthOnly=text.match(/^(\d{4})-(\d{2})$/);
+  if(monthOnly)return monthOnly[1]+'年'+Number(monthOnly[2])+'月（日付記録なし）';
+  return text;
 }
 function outcome(a,b){
   a=Number(a);b=Number(b);
@@ -1875,7 +1881,7 @@ function renderResults(){
     if(!groups.has(key)){
       groups.set(key,{key:key,name:parts.name,year:gameYear(game),games:[]});
     }
-    groups.get(key).games.push({...game,roundName:parts.round});
+    groups.get(key).games.push({...game,roundName:String(game.round||parts.round)});
   });
 
   box.innerHTML=[...groups.values()].map(group=>{
@@ -1893,7 +1899,7 @@ function renderResults(){
     const gamesHtml=group.games.map(g=>{
       const result=outcome(g.ourScore,g.oppScore),label=result[0],cls=result[1];
       const round=g.roundName?'<span class="round-name">'+escHtml(g.roundName)+'</span>':'';
-      const dateVenue=[g.date?escHtml(g.date):'',g.venue?escHtml(g.venue):''].filter(Boolean).join(' ／ ');
+      const dateVenue=[g.date?escHtml(formatGameDate(g.date)):'',g.venue?escHtml(g.venue):''].filter(Boolean).join(' ／ ');
       return '<article class="game">'+
         '<div class="game-head">'+
           '<div><div class="tournament">'+(g.grade?'<span class="grade-badge">'+escHtml(g.grade)+'</span>':'')+round+'</div>'+
