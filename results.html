@@ -1879,7 +1879,7 @@ let pendingPdfTournament='';
 
 function tournamentParts(value){
   const text=String(value||'大会名未設定').trim();
-  const match=text.match(/^(.*?)[\s　]*(敗者復活(?:第?[0-9０-９一二三四五六七八九十]+回戦)?|敗者交流戦|第?[0-9０-９一二三四五六七八九十]+回戦|準々決勝|準決勝|決勝|順位決定戦|第?[0-9０-９一二三四五六七八九十]+試合)$/);
+  const match=text.match(/^(.*?)[\s　]*(敗者復活(?:戦)?(?:第?[0-9０-９一二三四五六七八九十]+(?:回戦|試合目|試合))?|敗者交流戦|第?[0-9０-９一二三四五六七八九十]+回戦|準々決勝|準決勝|決勝|順位決定戦|第?[0-9０-９一二三四五六七八九十]+(?:試合目|試合))$/);
   if(match&&match[1].trim()){
     return {name:match[1].trim(),round:match[2].replace(/\s/g,'')};
   }
@@ -1949,7 +1949,14 @@ function renderResults(){
         ).join('')+'</div>'
       : '';
 
-    group.games.sort((a,b)=>String(a.date||a.year||'').localeCompare(String(b.date||b.year||'')));
+    group.games.sort((a,b)=>{
+      const aRound=String(a.roundName||a.round||'');
+      const bRound=String(b.roundName||b.round||'');
+      const aRevival=/敗者復活/.test(aRound)?0:1;
+      const bRevival=/敗者復活/.test(bRound)?0:1;
+      if(aRevival!==bRevival)return aRevival-bRevival;
+      return String(a.date||a.year||'').localeCompare(String(b.date||b.year||''));
+    });
     const gamesHtml=group.games.map(g=>{
       const result=outcome(g.ourScore,g.oppScore),label=result[0],cls=result[1];
       const round=g.roundName?'<span class="round-name">'+escHtml(g.roundName)+'</span>':'';
