@@ -2031,28 +2031,49 @@ function renderResults(){
   }).join('');
   fitResultLines(box);
 }
+let resultFitObserver;
 function fitOneLine(element,minSize){
   element.style.removeProperty('font-size');
   const maxSize=parseFloat(getComputedStyle(element).fontSize)||20;
+  const available=element.getBoundingClientRect().width;
+  if(!Number.isFinite(available)||available<40)return false;
   let low=minSize,high=maxSize;
   element.style.setProperty('white-space','nowrap','important');
   element.style.setProperty('font-size',high+'px','important');
-  if(element.scrollWidth<=element.clientWidth-1)return;
+  if(element.scrollWidth<=available+1)return true;
   for(let i=0;i<10;i++){
     const middle=(low+high)/2;
     element.style.setProperty('font-size',middle+'px','important');
-    if(element.scrollWidth<=element.clientWidth-1)low=middle;
+    if(element.scrollWidth<=available+1)low=middle;
     else high=middle;
   }
   element.style.setProperty('font-size',Math.max(minSize,low-.15)+'px','important');
+  return true;
 }
 function fitResultLines(scope){
+  if(!scope)return;
+  const fitGroup=group=>{
+    group.querySelectorAll('.tournament-group-title').forEach(el=>fitOneLine(el,16));
+    group.querySelectorAll('.scoreline .team').forEach(el=>fitOneLine(el,14));
+  };
   const applyFit=()=>{
-    scope.querySelectorAll('.tournament-group-title').forEach(el=>fitOneLine(el,10));
-    scope.querySelectorAll('.scoreline .team').forEach(el=>fitOneLine(el,11));
+    scope.querySelectorAll('.tournament-group').forEach(group=>{
+      const box=group.getBoundingClientRect();
+      if(box.width>80)fitGroup(group);
+    });
   };
   requestAnimationFrame(applyFit);
-  if(document.fonts&&document.fonts.ready)document.fonts.ready.then(applyFit);
+  if(document.fonts&&document.fonts.ready)document.fonts.ready.then(()=>requestAnimationFrame(applyFit));
+  if('IntersectionObserver' in window){
+    if(resultFitObserver)resultFitObserver.disconnect();
+    resultFitObserver=new IntersectionObserver(entries=>{
+      entries.forEach(entry=>{
+        if(!entry.isIntersecting)return;
+        requestAnimationFrame(()=>fitGroup(entry.target));
+      });
+    },{rootMargin:'180px 0px'});
+    scope.querySelectorAll('.tournament-group').forEach(group=>resultFitObserver.observe(group));
+  }
 }
 let resultFitResizeTimer;
 window.addEventListener('resize',()=>{
