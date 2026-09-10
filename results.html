@@ -1949,6 +1949,7 @@ function renderResults(){
         ).join('')+'</div>'
       : '';
 
+    group.games.sort((a,b)=>String(a.date||a.year||'').localeCompare(String(b.date||b.year||'')));
     const gamesHtml=group.games.map(g=>{
       const result=outcome(g.ourScore,g.oppScore),label=result[0],cls=result[1];
       const round=g.roundName?'<span class="round-name">'+escHtml(g.roundName)+'</span>':'';
