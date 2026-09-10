@@ -1732,6 +1732,37 @@ html{scroll-padding-top:var(--fixed-header-height)}
   .tournament-group-title{font-size:26px!important}
 }
 </style>
+<style id="results-pdf-save-and-admin-position">
+.tournament-pdf-save{
+  flex:0 0 auto;
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  min-height:38px;
+  padding:8px 13px;
+  border:1px solid var(--gold);
+  border-radius:8px;
+  background:var(--navy);
+  color:#fff!important;
+  font-size:12px;
+  font-weight:900;
+}
+.admin-toggle{
+  position:static!important;
+  display:none;
+  width:max-content;
+  margin:16px auto 0!important;
+  right:auto!important;
+  bottom:auto!important;
+  opacity:.9;
+}
+@media(max-width:650px){
+  .tournament-pdf{gap:8px!important}
+  .tournament-pdf-open,.tournament-pdf-save{flex:1 1 120px;min-height:42px}
+  .tournament-pdf-delete{flex:0 0 auto}
+  .admin-toggle{margin:14px auto 0!important}
+}
+</style>
 </head>
 <body id="page-top">
 <header class="header">
@@ -1868,10 +1899,10 @@ html{scroll-padding-top:var(--fixed-header-height)}
 
 
 
-<button id="adminModeToggle" class="admin-toggle" type="button" onclick="enableAdminMode()">管理</button>
 <div class="ground-address"><div class="ground-access-address">アクセス：千葉県八千代市島田台775</div><a class="ground-map-link" href="https://www.google.com/maps/search/?api=1&amp;query=%E5%8D%83%E8%91%89%E7%9C%8C%E5%85%AB%E5%8D%83%E4%BB%A3%E5%B8%82%E5%B3%B6%E7%94%B0%E5%8F%B0%EF%BC%97%EF%BC%97%EF%BC%95" target="_blank" rel="noopener noreferrer">Googleマップで見る <span aria-hidden="true">↗</span></a></div>
 <div class="footer-privacy-link" style="text-align:center;margin-top:10px;font-size:11px;"><a href="./privacy.html" style="color:#8f9aa7;text-decoration:none;">プライバシーポリシー</a></div>
 <div class="restored-footer-copy">© YACHIYO LITTLE SENIOR. All Rights Reserved.</div>
+<button id="adminModeToggle" class="admin-toggle" type="button" onclick="enableAdminMode()">管理</button>
 </div>
 </footer>
 <script>
@@ -2024,6 +2055,7 @@ function renderResults(){
           '<div class="tournament-pdf">'+
             '<div class="tournament-pdf-name">'+escHtml(item.fileName)+'</div>'+
             '<a class="tournament-pdf-open" href="'+SHARED_API+'?section=result-documents&amp;file='+encodeURIComponent(item.id)+'" target="_blank" rel="noopener">PDFを開く</a>'+
+            '<a class="tournament-pdf-save" href="'+SHARED_API+'?section=result-documents&amp;file='+encodeURIComponent(item.id)+'" download="'+escHtml(item.fileName)+'">PDFを保存</a>'+
             '<button class="tournament-pdf-delete admin-only" type="button" data-pdf-delete="'+escHtml(item.id)+'">削除</button>'+
           '</div>'
         ).join('')+'</div>'
