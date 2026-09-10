@@ -1657,7 +1657,7 @@ html{scroll-padding-top:var(--fixed-header-height)}
   .tournament-group .game-head{padding-bottom:4px!important}
   .tournament-group .scoreline{grid-template-columns:minmax(0,1fr) 58px minmax(0,1fr)!important;gap:3px!important;padding-top:4px!important}
   .scoreline .score{min-width:58px!important;font-size:24px!important}
-  .scoreline .team{font-size:25px!important}
+  .scoreline .team{font-size:22px!important}
 }
 </style>
 <style id="results-navy-heading-refresh">
@@ -1688,7 +1688,9 @@ html{scroll-padding-top:var(--fixed-header-height)}
 /* チーム名末尾のカタカナ・アルファベット部分は2行目にして、文字を大きく保つ */
 .scoreline .team-category{
   display:block;
+  width:100%;
   margin-top:1px;
+  text-align:center!important;
   font-family:-apple-system,BlinkMacSystemFont,"Hiragino Kaku Gothic ProN","Yu Gothic",Meiryo,sans-serif;
   font-size:.64em;
   line-height:1.05;
