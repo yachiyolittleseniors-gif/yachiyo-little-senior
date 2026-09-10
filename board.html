@@ -584,7 +584,7 @@ html{scroll-padding-top:var(--compact-header-height)}
     }
 
     const ok=confirm(
-      '伝助を終了しますか？\n\n伝助は復元できない可能性があります。\n初回終了時のみ、伝助から回答者名だけを1回取得します。'
+      '伝助を終了しますか？\n\n登録済みの同名回答者について、日付が一致する○△×とコメントだけを1回取り込みます。\n伝助側の名前や日程は追加しません。'
     );
     if(!ok) return;
 
@@ -619,7 +619,7 @@ html{scroll-padding-top:var(--compact-header-height)}
       }
 
       setEndedUI(true);
-      showSaveNotice('保存しました');
+      showSaveNotice(`回答${j?.importedAnswers||0}件・コメント${j?.importedComments||0}件を取り込み、伝助を終了しました`);
     }catch(e){
       alert('通信エラーのため、伝助は終了していません。');
     }finally{
