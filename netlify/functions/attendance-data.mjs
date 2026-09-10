@@ -8,6 +8,7 @@ const STORE = "yachiyo-public-site";
 const KEY = "content/attendance.json";
 const CONFIG_KEY = "content/attendance-config.json";
 const ACCESS_CONFIG_KEY = "content/access-settings.json";
+const MEMBER_STATE_PREFIX = "attendance/member-state/";
 const DENSUKE_URL = "https://densuke.biz/list?cd=ZhxJNW9dPNGVtm7c";
 const DEFAULT_ACCESS_SALT = "yachiyo-access-v1";
 const DEFAULT_ACCESS_HASH =
@@ -77,6 +78,108 @@ function normalize(data = {}) {
     comments: Array.isArray(data.comments) ? data.comments : [],
     migrationInitialized: data.migrationInitialized === true,
   };
+}
+
+function memberStateKey(memberId) {
+  return `${MEMBER_STATE_PREFIX}${encodeURIComponent(String(memberId))}.json`;
+}
+
+function normalizeMemberState(value = {}, fallbackAnswers = {}, fallbackComments = []) {
+  return {
+    answers:
+      value.answers && typeof value.answers === "object"
+        ? value.answers
+        : { ...fallbackAnswers },
+    comments: Array.isArray(value.comments)
+      ? value.comments
+      : [...fallbackComments],
+    updatedAt: String(value.updatedAt || ""),
+  };
+}
+
+async function loadMemberState(store, data, memberId) {
+  const id = String(memberId || "");
+  const fallbackAnswers = data.answers?.[id] || {};
+  const fallbackComments = data.comments.filter(
+    comment => String(comment?.memberId || "") === id
+  );
+  let saved = null;
+  try {
+    saved = await store.get(memberStateKey(id), {
+      type: "json",
+      consistency: "strong",
+    });
+  } catch {
+    saved = null;
+  }
+  return normalizeMemberState(
+    saved || {},
+    fallbackAnswers,
+    fallbackComments
+  );
+}
+
+function applyMemberState(data, memberId, state) {
+  const id = String(memberId || "");
+  data.answers[id] = state.answers;
+  data.comments = [
+    ...data.comments.filter(
+      comment => String(comment?.memberId || "") !== id
+    ),
+    ...state.comments,
+  ];
+  return data;
+}
+
+async function mergeMemberStates(store, data) {
+  const loaded = await Promise.all(
+    data.members.map(async member => {
+      const id = String(member?.id || "");
+      if (!id) return null;
+      let saved = null;
+      try {
+        saved = await store.get(memberStateKey(id), {
+          type: "json",
+          consistency: "strong",
+        });
+      } catch {
+        saved = null;
+      }
+      if (!saved) return null;
+      return {
+        id,
+        state: normalizeMemberState(
+          saved,
+          data.answers?.[id] || {},
+          data.comments.filter(
+            comment => String(comment?.memberId || "") === id
+          )
+        ),
+      };
+    })
+  );
+
+  for (const entry of loaded) {
+    if (entry) applyMemberState(data, entry.id, entry.state);
+  }
+  return data;
+}
+
+async function saveAllMemberStates(store, data) {
+  const updatedAt = new Date().toISOString();
+  await Promise.all(
+    data.members.map(member => {
+      const id = String(member?.id || "");
+      if (!id) return Promise.resolve();
+      return store.setJSON(memberStateKey(id), {
+        answers: data.answers?.[id] || {},
+        comments: data.comments.filter(
+          comment => String(comment?.memberId || "") === id
+        ),
+        updatedAt,
+      });
+    })
+  );
 }
 
 function oneMonthAgo(now = new Date()) {
@@ -280,7 +383,8 @@ export default async (request, context) => {
       try { saved = await store.get(KEY, { type: "json" }); } catch { saved = null; }
       let data = normalize(saved || {});
       const merged = mergeInitial(data);
-      data = cleanupOldData(merged.data);
+      data = await mergeMemberStates(store, merged.data);
+      data = cleanupOldData(data);
       await store.setJSON(KEY, data);
       const config = await getConfig(store);
       return json({ data, config, locked: !config.migrationEnded });
@@ -333,7 +437,9 @@ export default async (request, context) => {
 
     let current = {};
     try { current = (await store.get(KEY, { type: "json" })) || {}; } catch { current = {}; }
-    let data = cleanupOldData(mergeInitial(normalize(current)).data);
+    let data = mergeInitial(normalize(current)).data;
+    data = await mergeMemberStates(store, data);
+    data = cleanupOldData(data);
 
     if (["answer", "comment"].includes(action)) {
       const config = await getConfig(store);
@@ -352,6 +458,7 @@ export default async (request, context) => {
         migrationEnded: true,
         endedAt: new Date().toISOString(),
       };
+      await saveAllMemberStates(store, data);
       await store.setJSON(KEY, data);
       await store.setJSON(CONFIG_KEY, config);
       return json({
@@ -376,6 +483,7 @@ export default async (request, context) => {
     if (action === "adminSave") {
       data = cleanupOldData(normalize(body.data || {}));
       data.migrationInitialized = true;
+      await saveAllMemberStates(store, data);
       await store.setJSON(KEY, data);
       return json({ ok: true, data });
     }
@@ -386,9 +494,16 @@ export default async (request, context) => {
       const status = String(body.status || "");
       if (!eventId || !memberId) return json({ error: "Missing id" }, 400);
       if (status && !["○", "△", "×"].includes(status)) return json({ error: "Invalid status" }, 400);
-      if (!data.answers[memberId]) data.answers[memberId] = {};
-      if (status) data.answers[memberId][eventId] = status; else delete data.answers[memberId][eventId];
-      await store.setJSON(KEY, data);
+      const memberExists = data.members.some(
+        member => String(member?.id || "") === memberId
+      );
+      if (!memberExists) return json({ error: "Member not found" }, 404);
+      const state = await loadMemberState(store, data, memberId);
+      if (status) state.answers[eventId] = status;
+      else delete state.answers[eventId];
+      state.updatedAt = new Date().toISOString();
+      await store.setJSON(memberStateKey(memberId), state);
+      applyMemberState(data, memberId, state);
       return json({ ok: true, data });
     }
 
@@ -406,9 +521,14 @@ export default async (request, context) => {
         updatedAt: new Date().toISOString(),
         source: "site",
       };
-      data.comments.push(comment);
-      if (data.comments.length > 300) data.comments = data.comments.slice(-300);
-      await store.setJSON(KEY, data);
+      const state = await loadMemberState(store, data, memberId);
+      state.comments.push(comment);
+      if (state.comments.length > 100) {
+        state.comments = state.comments.slice(-100);
+      }
+      state.updatedAt = new Date().toISOString();
+      await store.setJSON(memberStateKey(memberId), state);
+      applyMemberState(data, memberId, state);
       return json({ ok: true, comment, data });
     }
 
