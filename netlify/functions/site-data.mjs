@@ -11,6 +11,7 @@ const DEFAULT_ACCESS_HASH =
 const allowed = new Set([
   "schedule",
   "results",
+  "result-documents",
   "gallery",
   "players",
   "hero",
@@ -194,6 +195,48 @@ export default async (request, context) => {
         if (!accessGranted) {
           return json({ error: "unauthorized" }, 401);
         }
+      }
+
+      if (section === "result-documents") {
+        const documents = await store.get(key, {
+          type: "json",
+          consistency: "strong"
+        });
+
+        if (url.searchParams.has("file")) {
+          const id = String(url.searchParams.get("file") || "");
+          const item = Array.isArray(documents)
+            ? documents.find(entry => String(entry?.id || "") === id)
+            : null;
+
+          if (!item) {
+            return new Response("PDF not found", { status: 404 });
+          }
+
+          const pdf = await store.get(`result-documents/${id}.pdf`, {
+            type: "blob",
+            consistency: "strong"
+          });
+
+          if (!pdf) {
+            return new Response("PDF not found", { status: 404 });
+          }
+
+          const originalName = String(item.fileName || "document.pdf");
+          const encodedName = encodeURIComponent(originalName);
+          return new Response(pdf, {
+            status: 200,
+            headers: {
+              "content-type": "application/pdf",
+              "content-disposition":
+                `inline; filename="tournament.pdf"; filename*=UTF-8''${encodedName}`,
+              "cache-control": "public, max-age=300",
+              "x-content-type-options": "nosniff"
+            }
+          });
+        }
+
+        return json({ data: Array.isArray(documents) ? documents : [] });
       }
 
       if (section === "board-tournaments") {
@@ -460,6 +503,71 @@ export default async (request, context) => {
       if (signature !== "%PDF-") {
         return json({ error: "正しいPDFファイルではありません。" }, 400);
       }
+    }
+
+    if (
+      section === "result-documents" &&
+      body?.action === "uploadResultDocument"
+    ) {
+      const tournament = String(body.tournament || "").trim();
+      const fileName = String(body.fileName || "").trim();
+      const bytes = decodeDataUrl(body.dataUrl);
+
+      if (!tournament || tournament.length > 160) {
+        return json({ error: "大会名を確認してください。" }, 400);
+      }
+      if (!fileName.toLowerCase().endsWith(".pdf") || !bytes) {
+        return json({ error: "PDFファイルを選択してください。" }, 400);
+      }
+      if (bytes.byteLength > 6 * 1024 * 1024) {
+        return json({ error: "PDFは6MB以下にしてください。" }, 413);
+      }
+      const signature = new TextDecoder().decode(bytes.slice(0, 5));
+      if (signature !== "%PDF-") {
+        return json({ error: "正しいPDFファイルではありません。" }, 400);
+      }
+
+      const current = await store.get(key, {
+        type: "json",
+        consistency: "strong"
+      });
+      const documents = Array.isArray(current) ? current : [];
+      const id = crypto.randomUUID();
+      const item = {
+        id,
+        tournament,
+        fileName,
+        size: bytes.byteLength,
+        uploadedAt: new Date().toISOString()
+      };
+
+      await store.set(`result-documents/${id}.pdf`, bytes.buffer, {
+        metadata: { tournament, fileName }
+      });
+      const updated = [item, ...documents];
+      await store.setJSON(key, updated);
+      return json({ ok: true, data: updated });
+    }
+
+    if (
+      section === "result-documents" &&
+      body?.action === "deleteResultDocument"
+    ) {
+      const id = String(body.id || "");
+      const current = await store.get(key, {
+        type: "json",
+        consistency: "strong"
+      });
+      const documents = Array.isArray(current) ? current : [];
+      const item = documents.find(entry => String(entry?.id || "") === id);
+      if (!item) {
+        return json({ error: "PDFが見つかりません。" }, 404);
+      }
+
+      await store.delete(`result-documents/${id}.pdf`);
+      const updated = documents.filter(entry => String(entry?.id || "") !== id);
+      await store.setJSON(key, updated);
+      return json({ ok: true, data: updated });
     }
 
     if (
