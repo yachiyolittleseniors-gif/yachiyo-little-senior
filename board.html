@@ -44,6 +44,11 @@ h1{font-family:serif;font-weight:500;letter-spacing:.08em;margin:8px 0 6px;font-
 .tournament-open{flex:0 0 auto;padding:10px 14px;border:1px solid var(--gold);border-radius:8px;background:var(--gold);color:#fff;font-size:12px;font-weight:800}
 .tournament-empty{margin-top:16px;padding:16px;border:1px dashed #d6d2c8;border-radius:10px;color:#7b8490;font-size:13px;text-align:center}
 .rules-card{background:linear-gradient(180deg,#fffdfa 0%,#fbf7ed 100%);border-color:#d8c79f}
+.duty-roster-card{background:linear-gradient(180deg,#fffdfa 0%,#fbf7ed 100%);border-color:#d8c79f}
+.duty-roster-list{display:grid;gap:16px;margin-top:16px}
+.duty-roster-image{display:block;width:100%;height:auto;border:1px solid #d8dce1;border-radius:10px;background:#fff}
+.duty-roster-note{margin-top:14px!important;min-height:0!important;color:#69737f!important;font-size:12px!important;line-height:1.7!important}
+.duty-roster-loading{padding:14px;border:1px dashed #d6d2c8;border-radius:10px;color:#7b8490;font-size:13px;text-align:center}
 .rules-text{white-space:pre-wrap;line-height:1.9;font-size:14px;color:#46515e}
 .rules-text.empty{padding:14px;border:1px dashed #d6d2c8;border-radius:10px;color:#7b8490;text-align:center}
 .rules-pdf-list{display:grid;gap:12px;margin-top:18px}
@@ -325,6 +330,15 @@ html{scroll-padding-top:var(--compact-header-height)}
       <div class="note">※伝助は外部サイトです。</div>
     </section>
 
+    <section class="card duty-roster-card" id="dutyRosterCard">
+      <div class="card-kicker">DUTY ROSTER</div>
+      <h2>お当番表</h2>
+      <div id="dutyRosterList" class="duty-roster-list">
+        <div class="duty-roster-loading">お当番表を読み込んでいます。</div>
+      </div>
+      <p class="duty-roster-note">※個別にお当番日を変更した場合は反映されません。</p>
+    </section>
+
     <section class="card rules-card" id="teamRulesCard">
       <div class="card-kicker">TEAM RULES</div>
       <h2>チーム規約</h2>
@@ -396,6 +410,15 @@ html{scroll-padding-top:var(--compact-header-height)}
 .tournament-admin-item{display:flex;align-items:center;gap:8px;padding:9px;border:1px solid rgba(255,255,255,.14);border-radius:9px;background:rgba(255,255,255,.06)}
 .tournament-admin-item span{min-width:0;flex:1;font-size:12px;line-height:1.5;overflow-wrap:anywhere}
 .tournament-admin-item button{flex:0 0 auto;margin:0!important;background:#5e1515!important}
+#dutyRosterAdminFields{margin-top:18px;padding-top:18px;border-top:1px solid rgba(255,255,255,.18)}
+#dutyRosterAdminFields input{width:100%;margin:6px 0 10px;color:#fff}
+#saveDutyRosterBtn{width:100%;margin:4px 0!important;background:#c79a3b!important;color:#fff!important}
+#dutyRosterAdminList{display:grid;gap:8px;margin-top:12px}
+.duty-roster-admin-item{display:grid;grid-template-columns:minmax(0,1fr) auto;align-items:center;gap:8px;padding:9px;border:1px solid rgba(255,255,255,.14);border-radius:9px;background:rgba(255,255,255,.06)}
+.duty-roster-admin-item span{min-width:0;font-size:12px;line-height:1.5;overflow-wrap:anywhere}
+.duty-roster-admin-actions{display:flex;gap:4px;align-items:center}
+.duty-roster-admin-actions button{margin:0!important;padding:7px 9px!important}
+.duty-roster-admin-actions .duty-roster-delete{background:#5e1515!important}
 #rulesAdminFields{margin-top:18px;padding-top:18px;border-top:1px solid rgba(255,255,255,.18)}
 #rulesAdminFields input{width:100%;margin:6px 0 10px;color:#fff}
 #saveRulesBtn{width:100%;margin:4px 0!important;background:#c79a3b!important;color:#fff!important}
@@ -430,6 +453,13 @@ html{scroll-padding-top:var(--compact-header-height)}
     <input id="tournamentPdfInput" type="file" accept="application/pdf,.pdf">
     <button id="uploadTournamentBtn" type="button">PDFを追加</button>
     <div id="tournamentAdminList"></div>
+  </div>
+  <div id="dutyRosterAdminFields">
+    <strong>お当番表</strong>
+    <label for="dutyRosterImageInput">画像ファイル（複数選択可）</label>
+    <input id="dutyRosterImageInput" type="file" accept="image/jpeg,image/png,image/webp,.jpg,.jpeg,.png,.webp" multiple>
+    <button id="saveDutyRosterBtn" type="button">画像を追加</button>
+    <div id="dutyRosterAdminList"></div>
   </div>
   <div id="rulesAdminFields">
     <strong>チーム規約</strong>
@@ -890,6 +920,153 @@ html{scroll-padding-top:var(--compact-header-height)}
   }
 
   loadDocuments();
+})();
+</script>
+<script>
+(function(){
+  const API='/.netlify/functions/site-data?section=duty-roster';
+  const list=document.getElementById('dutyRosterList');
+  const adminList=document.getElementById('dutyRosterAdminList');
+  const fileInput=document.getElementById('dutyRosterImageInput');
+  const saveBtn=document.getElementById('saveDutyRosterBtn');
+  const panel=document.getElementById('densukeAdminPanel');
+  let images=[];
+
+  if(!list||!adminList||!fileInput||!saveBtn||!panel)return;
+
+  function normalize(raw){
+    if(!raw||raw.initialized!==true||!Array.isArray(raw.images))return [];
+    return raw.images.filter(function(item){
+      return item&&typeof item==='object'&&(item.data||item.src);
+    }).slice(0,8).map(function(item,index){
+      return {
+        id:String(item.id||('duty-'+index)),
+        name:String(item.name||('お当番表 '+(index+1))),
+        data:item.data?String(item.data):'',
+        src:item.src?String(item.src):''
+      };
+    });
+  }
+
+  function imageSource(item){return item.data||item.src||''}
+
+  function render(){
+    list.replaceChildren();
+    adminList.replaceChildren();
+
+    if(!images.length){
+      const empty=document.createElement('div');
+      empty.className='duty-roster-loading';
+      empty.textContent='現在掲載中のお当番表はありません。';
+      list.appendChild(empty);
+    }
+
+    images.forEach(function(item,index){
+      const image=document.createElement('img');
+      image.className='duty-roster-image';
+      image.src=imageSource(item);
+      image.alt=item.name||('お当番表 '+(index+1));
+      image.loading=index===0?'eager':'lazy';
+      image.decoding='async';
+      list.appendChild(image);
+
+      const row=document.createElement('div');
+      row.className='duty-roster-admin-item';
+      const name=document.createElement('span');
+      name.textContent=item.name||('お当番表 '+(index+1));
+      const actions=document.createElement('div');
+      actions.className='duty-roster-admin-actions';
+      const up=document.createElement('button');
+      up.type='button';up.textContent='↑';up.title='上へ';up.disabled=index===0;
+      up.addEventListener('click',function(){move(index,-1)});
+      const down=document.createElement('button');
+      down.type='button';down.textContent='↓';down.title='下へ';down.disabled=index===images.length-1;
+      down.addEventListener('click',function(){move(index,1)});
+      const remove=document.createElement('button');
+      remove.type='button';remove.textContent='削除';remove.className='duty-roster-delete';
+      remove.addEventListener('click',function(){removeImage(index)});
+      actions.append(up,down,remove);row.append(name,actions);adminList.appendChild(row);
+    });
+  }
+
+  async function load(){
+    try{
+      await window.boardAccessReady;
+      const accessPassword=sessionStorage.getItem('yachiyoAttendancePass')||'';
+      const response=await fetch(API,{cache:'no-store',headers:{'x-access-password':accessPassword}});
+      if(!response.ok)throw new Error('load failed');
+      const body=await response.json();
+      images=normalize(body.data);
+      render();
+    }catch(e){render()}
+  }
+
+  function readAsDataUrl(file){
+    return new Promise(function(resolve,reject){
+      const reader=new FileReader();
+      reader.onload=function(){resolve(String(reader.result||''))};
+      reader.onerror=reject;
+      reader.readAsDataURL(file);
+    });
+  }
+
+  async function persist(successMessage){
+    const adminPassword=panel.dataset.adminPassword||'';
+    if(!adminPassword){alert('管理画面を開き直してください。');return false}
+    const payload={initialized:true,images:images};
+    if(JSON.stringify(payload).length>7500000){alert('画像の合計容量が大きすぎます。画像を減らしてください。');return false}
+    const response=await fetch(API,{
+      method:'POST',
+      headers:{'content-type':'application/json','x-admin-password':adminPassword},
+      body:JSON.stringify({data:payload})
+    });
+    const body=await response.json().catch(function(){return {}});
+    if(!response.ok)throw new Error(body.error||'保存できませんでした。');
+    render();showSaveNotice(successMessage||'保存しました');return true;
+  }
+
+  async function addImages(){
+    const files=Array.from(fileInput.files||[]);
+    if(!files.length){alert('追加する画像を選択してください。');return}
+    if(images.length+files.length>8){alert('お当番表は8枚まで保存できます。');return}
+    for(const file of files){
+      if(!/^image\/(jpeg|png|webp)$/i.test(file.type)&&!(/\.(jpe?g|png|webp)$/i.test(file.name))){alert('JPEG・PNG・WebP画像を選択してください。');return}
+      if(file.size>4*1024*1024){alert(file.name+' は4MBを超えています。');return}
+    }
+    saveBtn.disabled=true;saveBtn.textContent='保存中...';
+    const previous=images.slice();
+    try{
+      for(const file of files){
+        images.push({
+          id:'duty-'+Date.now().toString(36)+'-'+Math.random().toString(36).slice(2,8),
+          name:file.name,
+          data:await readAsDataUrl(file),
+          src:''
+        });
+      }
+      await persist(files.length+'枚の画像を追加しました');
+      fileInput.value='';
+    }catch(e){images=previous;render();alert(e.message||'画像を保存できませんでした。')}
+    finally{saveBtn.disabled=false;saveBtn.textContent='画像を追加'}
+  }
+
+  async function move(index,direction){
+    const next=index+direction;if(next<0||next>=images.length)return;
+    const previous=images.slice();
+    [images[index],images[next]]=[images[next],images[index]];
+    render();
+    try{await persist('並び順を保存しました')}catch(e){images=previous;render();alert(e.message||'並び順を保存できませんでした。')}
+  }
+
+  async function removeImage(index){
+    const target=images[index];
+    if(!target||!confirm('「'+(target.name||'お当番表')+'」を削除しますか？'))return;
+    const previous=images.slice();images.splice(index,1);render();
+    try{await persist('画像を削除しました')}catch(e){images=previous;render();alert(e.message||'画像を削除できませんでした。')}
+  }
+
+  saveBtn.addEventListener('click',addImages);
+  load();
 })();
 </script>
 <script>
