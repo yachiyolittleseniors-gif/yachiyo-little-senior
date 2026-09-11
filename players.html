@@ -2227,5 +2227,58 @@ body.photo-admin-on #accessPasswordChange{
   }
 }
 </style>
+<script id="admin-start-position-unified">
+(function(){
+  const watched=document.querySelector('body');
+  if(!watched)return;
+  const mode='page';
+  const spacerId='admin-position-scroll-spacer';
+  let wasOpen=watched.classList.contains('admin-mode');
+  let timers=[];
+
+  function clearTimers(){
+    timers.forEach(clearTimeout);
+    timers=[];
+  }
+  function removeSpacer(){
+    document.getElementById(spacerId)?.remove();
+  }
+  function ensureSpacer(){
+    if(mode!=='page')return;
+    let spacer=document.getElementById(spacerId);
+    if(!spacer){
+      spacer=document.createElement('div');
+      spacer.id=spacerId;
+      spacer.setAttribute('aria-hidden','true');
+      spacer.style.cssText='height:calc(100dvh - var(--fixed-header-height,66px) - 24px);min-height:240px;pointer-events:none;';
+      document.body.appendChild(spacer);
+    }
+  }
+  function align(){
+    const target=document.querySelector('main.wrap');
+    if(!target)return;
+    if(mode==='panel'){
+      target.scrollTop=0;
+      return;
+    }
+    ensureSpacer();
+    const header=document.querySelector('.header,.site-header');
+    const desiredTop=(header?header.getBoundingClientRect().bottom:0)+12;
+    const difference=target.getBoundingClientRect().top-desiredTop;
+    if(Math.abs(difference)>1)window.scrollBy({top:difference,left:0,behavior:'auto'});
+  }
+  function scheduleAlign(){
+    clearTimers();
+    ensureSpacer();
+    [0,120,320].forEach(delay=>timers.push(setTimeout(align,delay)));
+  }
+  new MutationObserver(()=>{
+    const isOpen=watched.classList.contains('admin-mode');
+    if(isOpen&&!wasOpen)scheduleAlign();
+    if(!isOpen&&wasOpen){clearTimers();removeSpacer();}
+    wasOpen=isOpen;
+  }).observe(watched,{attributes:true,attributeFilter:['class']});
+})();
+</script>
 </body>
 </html>
