@@ -2029,7 +2029,7 @@ img,video,iframe{max-width:100%}
 .hero-announcement-admin{display:none!important}
 body.photo-admin-on .hero-announcement-admin{display:inline-flex!important}
 .hero-announcement-modal-note{margin:0 0 14px;color:#596573;font-size:13px;line-height:1.7}
-#heroAnnouncementText{width:100%;min-height:86px;padding:12px;border:1px solid #c8cdd3;border-radius:10px;background:#fff;color:#17202b;font:inherit;line-height:1.6;resize:none}
+#heroAnnouncementText{width:100%;min-height:86px;padding:12px;border:1px solid #c8cdd3;border-radius:10px;background:#fff;color:#17202b;font-family:inherit;font-size:16px!important;line-height:1.6;resize:none;-webkit-text-size-adjust:100%}
 .hero-announcement-visible{display:flex!important;align-items:center;gap:10px;font-size:15px!important}
 .hero-announcement-visible input{width:20px!important;height:20px;margin:0!important}
 .hero-announcement-actions{display:flex;justify-content:flex-end;gap:10px;margin-top:18px}
@@ -4191,7 +4191,13 @@ function openProtectedArea(type){
      state=next;
      try{localStorage.setItem(cacheKey,JSON.stringify(state))}catch(error){}
      render();
+     textInput.blur();
+     if(document.activeElement&&typeof document.activeElement.blur==='function')document.activeElement.blur();
      closeEditor();
+     requestAnimationFrame(function(){
+       window.scrollTo({top:0,left:0,behavior:'auto'});
+       setTimeout(function(){window.scrollTo(0,0)},180);
+     });
      showSaveNotice('保存しました');
    }catch(error){alert('トップのお知らせを保存できませんでした。')}
    finally{save.disabled=false;save.textContent='保存する'}
