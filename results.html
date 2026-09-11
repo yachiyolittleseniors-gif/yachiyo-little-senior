@@ -1997,6 +1997,26 @@ body.admin-mode .tournament-pdf-save-menu{display:block!important}
 </style>
 <style id="results-admin-tap-zoom-fix">
 #squadField[hidden]{display:none!important}
+.results-admin-toolbar{align-items:center;gap:8px}
+body.admin-mode .results-admin-toolbar{display:flex!important}
+.squad-settings-note{margin:-5px 0 16px;color:#66717d;font-size:13px;line-height:1.7}
+.squad-settings-list{display:grid;gap:10px}
+.squad-setting-row{
+  display:grid;
+  grid-template-columns:minmax(140px,.65fr) minmax(0,1.35fr);
+  gap:12px;
+  align-items:center;
+  padding:12px;
+  border:1px solid #d9dee5;
+  border-radius:10px;
+}
+.squad-setting-toggle{display:flex;align-items:center;gap:8px}
+.squad-setting-toggle input{width:20px!important;height:20px;margin:0;accent-color:var(--gold)}
+.squad-setting-row input[type="text"]:disabled{background:#f1f3f5;color:#8b949e}
+@media(max-width:650px){
+  .results-admin-toolbar{width:100%;justify-content:flex-end}
+  .squad-setting-row{grid-template-columns:1fr;gap:8px}
+}
 .squad-badge{
   display:inline-block;
   margin-right:7px;
@@ -2099,8 +2119,36 @@ body.admin-mode .game-admin-actions{display:flex!important}
 
   <div class="toolbar">
     <div>登録した試合結果を新しい順に表示します。</div>
-    <button class="admin-btn admin-only" type="button" onclick="togglePanel()">＋ 試合結果を入力</button>
+    <div class="admin-only results-admin-toolbar">
+      <button class="admin-btn" type="button" onclick="toggleSquadSettings()">2軍設定</button>
+      <button class="admin-btn" type="button" onclick="togglePanel()">＋ 試合結果を入力</button>
+    </div>
   </div>
+
+  <section id="squadSettingsPanel" class="panel">
+    <div class="form-mode-title">2軍設定</div>
+    <p class="squad-settings-note">2軍がある学年だけ設定してください。名称は試合登録時の内容で保存されます。</p>
+    <form id="squadSettingsForm">
+      <div class="squad-settings-list">
+        <div class="squad-setting-row" data-setting-grade="1">
+          <label class="squad-setting-toggle"><input id="squadEnabled1" type="checkbox"> <span>1年に2軍あり</span></label>
+          <input id="squadName1" type="text" maxlength="40" placeholder="2軍名を入力">
+        </div>
+        <div class="squad-setting-row" data-setting-grade="2">
+          <label class="squad-setting-toggle"><input id="squadEnabled2" type="checkbox"> <span>2年に2軍あり</span></label>
+          <input id="squadName2" type="text" maxlength="40" placeholder="2軍名を入力">
+        </div>
+        <div class="squad-setting-row" data-setting-grade="3">
+          <label class="squad-setting-toggle"><input id="squadEnabled3" type="checkbox"> <span>3年に2軍あり</span></label>
+          <input id="squadName3" type="text" maxlength="40" placeholder="2軍名を入力">
+        </div>
+      </div>
+      <div class="actions">
+        <button class="save" type="submit">設定を保存</button>
+        <button class="cancel" type="button" onclick="closeSquadSettings()">キャンセル</button>
+      </div>
+    </form>
+  </section>
 
   <section id="panel" class="panel">
     <div id="formModeTitle" class="form-mode-title">新しい試合結果</div>
@@ -2119,8 +2167,7 @@ body.admin-mode .game-admin-actions{display:flex!important}
         <div class="field" id="squadField" hidden>
           <label for="squad">出場チーム</label>
           <select id="squad">
-            <option value="yachiyo">八千代</option>
-            <option value="shimadadai">八千代島田台</option>
+            <option value="八千代">八千代</option>
           </select>
         </div>
         <div class="field">
@@ -2279,6 +2326,11 @@ let editingGameId='';
 let editingOriginalDate='';
 let editingOriginalGrade='';
 let editingOriginalGradeYear='';
+let squadSettings={
+  '1':{enabled:true,name:'八千代島田台'},
+  '2':{enabled:false,name:''},
+  '3':{enabled:false,name:''}
+};
 
 function tournamentParts(value){
   const text=String(value||'大会名未設定').trim();
@@ -2309,14 +2361,34 @@ function gradeLifecycle(game){
     label:effectiveGrade<=3?effectiveGrade+'年':''
   };
 }
-function squadValue(game){
-  return String(game?.squad||'')==='shimadadai'?'shimadadai':'yachiyo';
+function normalizeSquadSettings(value){
+  const source=value&&typeof value==='object'&&!Array.isArray(value)?value:{};
+  const normalized={};
+  ['1','2','3'].forEach(grade=>{
+    const current=source[grade]||{};
+    const defaultFirstGrade=grade==='1'&&!source[grade];
+    normalized[grade]={
+      enabled:current.enabled===true||defaultFirstGrade,
+      name:String(current.name||(defaultFirstGrade?'八千代島田台':'')).trim()
+    };
+  });
+  return normalized;
 }
 function squadName(game){
-  return squadValue(game)==='shimadadai'?'八千代島田台':'八千代';
+  const saved=String(game?.teamName||'').trim();
+  if(saved)return saved;
+  return String(game?.squad||'')==='shimadadai'?'八千代島田台':'八千代';
 }
 function squadOrder(game){
-  return squadValue(game)==='yachiyo'?0:1;
+  return squadName(game)==='八千代'?0:1;
+}
+function squadSettingForGradeLabel(label){
+  const match=String(label||'').match(/[1-3]/);
+  return match?squadSettings[match[0]]:{enabled:false,name:''};
+}
+function gradeUsesSquads(label){
+  const setting=squadSettingForGradeLabel(label);
+  return setting.enabled&&Boolean(String(setting.name||'').trim());
 }
 function gameYear(game){
   return String(game.date||game.year||'').slice(0,4);
@@ -2444,7 +2516,7 @@ function renderResults(){
       const dateVenue=[g.date?escHtml(formatGameDate(g.date)):'',g.venue?escHtml(g.venue):''].filter(Boolean).join(' ／ ');
       const gradeLabel=gradeLifecycle(g).label;
       const ourTeam=squadName(g);
-      const squadBadge=gradeLabel==='1年'
+      const squadBadge=(gradeUsesSquads(gradeLabel)||ourTeam!=='八千代')
         ? '<span class="squad-badge">'+escHtml(ourTeam)+'</span>'
         : '';
       return '<article class="game">'+
@@ -2532,20 +2604,49 @@ function togglePanel(){
   if(panel.classList.contains('open'))clearForm();
   else panel.classList.add('open');
 }
-function updateSquadField(){
+function updateSquadField(preferredName){
   const grade=document.getElementById('grade');
   const field=document.getElementById('squadField');
   const squad=document.getElementById('squad');
-  const isFirstGrade=grade.value==='1年';
-  field.hidden=!isFirstGrade;
-  if(!isFirstGrade)squad.value='yachiyo';
-  const teamName=squad.value==='shimadadai'?'八千代島田台':'八千代';
+  const setting=squadSettingForGradeLabel(grade.value);
+  const secondName=setting.enabled?String(setting.name||'').trim():'';
+  const previous=String(preferredName||squad.value||'八千代').trim();
+  field.hidden=!secondName;
+  squad.innerHTML='<option value="八千代">八千代</option>';
+  if(secondName){
+    squad.insertAdjacentHTML('beforeend','<option value="'+escHtml(secondName)+'">'+escHtml(secondName)+'</option>');
+  }
+  if(previous!=='八千代'&&previous!==secondName){
+    squad.insertAdjacentHTML('beforeend','<option value="'+escHtml(previous)+'">'+escHtml(previous)+'</option>');
+  }
+  squad.value=[...squad.options].some(option=>option.value===previous)?previous:'八千代';
+  const teamName=squad.value||'八千代';
   const first=document.querySelector('#battingOrder option[value="first"]');
   const second=document.querySelector('#battingOrder option[value="second"]');
   const scoreLabel=document.querySelector('label[for="ourScore"]');
   if(first)first.textContent=teamName+'が先攻';
   if(second)second.textContent=teamName+'が後攻';
   if(scoreLabel)scoreLabel.textContent=teamName+' 得点';
+}
+function syncSquadSettingsForm(){
+  ['1','2','3'].forEach(grade=>{
+    const setting=squadSettings[grade];
+    const enabled=document.getElementById('squadEnabled'+grade);
+    const name=document.getElementById('squadName'+grade);
+    enabled.checked=setting.enabled;
+    name.value=setting.name;
+    name.disabled=!setting.enabled;
+  });
+}
+function toggleSquadSettings(){
+  const panel=document.getElementById('squadSettingsPanel');
+  document.getElementById('panel').classList.remove('open');
+  if(panel.classList.contains('open'))closeSquadSettings();
+  else{syncSquadSettingsForm();panel.classList.add('open')}
+}
+function closeSquadSettings(){
+  document.getElementById('squadSettingsPanel').classList.remove('open');
+  syncSquadSettingsForm();
 }
 function clearForm(){
   document.getElementById('resultForm').reset();
@@ -2570,8 +2671,7 @@ function startEditGame(id){
   editingOriginalGradeYear=game.gradeYear||'';
   document.getElementById('date').value=/^\d{4}-\d{2}$/.test(editingOriginalDate)?editingOriginalDate+'-01':editingOriginalDate;
   document.getElementById('grade').value=displayedGrade;
-  document.getElementById('squad').value=squadValue(game);
-  updateSquadField();
+  updateSquadField(squadName(game));
   document.getElementById('battingOrder').value=game.battingOrder||'';
   document.getElementById('tournament').value=parts.name;
   document.getElementById('tournament').readOnly=true;
@@ -2620,8 +2720,33 @@ async function removeGame(id){
   try{await sharedSave('results',next);resultsData=next;renderResults();}
   catch(e){if(e.message!=='cancelled'&&e.message!=='unauthorized'&&e.message!=='not configured')alert('保存に失敗しました。');}
 }
-document.getElementById('grade').addEventListener('change',updateSquadField);
-document.getElementById('squad').addEventListener('change',updateSquadField);
+document.getElementById('grade').addEventListener('change',()=>updateSquadField());
+document.getElementById('squad').addEventListener('change',()=>updateSquadField(document.getElementById('squad').value));
+['1','2','3'].forEach(grade=>{
+  document.getElementById('squadEnabled'+grade).addEventListener('change',event=>{
+    document.getElementById('squadName'+grade).disabled=!event.target.checked;
+  });
+});
+document.getElementById('squadSettingsForm').addEventListener('submit',async event=>{
+  event.preventDefault();
+  const next={};
+  for(const grade of ['1','2','3']){
+    const enabled=document.getElementById('squadEnabled'+grade).checked;
+    const name=document.getElementById('squadName'+grade).value.trim();
+    if(enabled&&!name){alert(grade+'年の2軍名を入力してください。');return}
+    next[grade]={enabled,name};
+  }
+  try{
+    await sharedSave('result-squad-settings',next);
+    squadSettings=next;
+    closeSquadSettings();
+    updateSquadField();
+    renderResults();
+    if(typeof showSaveNotice==='function')showSaveNotice('2軍設定を保存しました');
+  }catch(error){
+    if(error.message!=='cancelled'&&error.message!=='unauthorized'&&error.message!=='not configured')alert('設定の保存に失敗しました。');
+  }
+});
 updateSquadField();
 document.getElementById('resultForm').addEventListener('submit',async e=>{
   e.preventDefault();
@@ -2636,7 +2761,7 @@ document.getElementById('resultForm').addEventListener('submit',async e=>{
     date:existing&&/^\d{4}-\d{2}$/.test(editingOriginalDate)&&enteredDate===editingOriginalDate+'-01'?editingOriginalDate:enteredDate,
     grade:keepOriginalGrade?editingOriginalGrade:selectedGrade,
     gradeYear:keepOriginalGrade?editingOriginalGradeYear:currentJapanYear(),
-    squad:selectedGrade==='1年'?document.getElementById('squad').value:'yachiyo',
+    teamName:document.getElementById('squadField').hidden?'八千代':document.getElementById('squad').value,
     battingOrder:document.getElementById('battingOrder').value,
     tournament:document.getElementById('tournament').value.trim(),
     round:document.getElementById('round').value.trim(),
@@ -2701,9 +2826,16 @@ tournamentPdfInput.addEventListener('change',async()=>{
 
 (async()=>{
   try{
-    const loaded=await Promise.all([sharedLoad('results'),sharedLoad('result-documents')]);
+    const loaded=await Promise.all([
+      sharedLoad('results'),
+      sharedLoad('result-documents'),
+      sharedLoad('result-squad-settings')
+    ]);
     resultsData=loaded[0];
     resultDocuments=loaded[1];
+    squadSettings=normalizeSquadSettings(loaded[2]);
+    syncSquadSettingsForm();
+    updateSquadField();
     const years=[...new Set(resultsData.map(gameYear).filter(Boolean))].sort().reverse();
     const tournaments=[...new Set(resultsData.map(x=>tournamentParts(x.tournament).name).filter(Boolean))].sort();
     const yf=document.getElementById('yearFilter'), tf=document.getElementById('tournamentFilter');
