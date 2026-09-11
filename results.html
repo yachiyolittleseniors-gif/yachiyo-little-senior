@@ -1996,6 +1996,19 @@ body.admin-mode .tournament-pdf-save-menu{display:block!important}
 .tournament-head-pdfs{transform:translateY(-2px)!important}
 </style>
 <style id="results-admin-tap-zoom-fix">
+#squadField[hidden]{display:none!important}
+.squad-badge{
+  display:inline-block;
+  margin-right:7px;
+  border:1px solid #8ba2bb;
+  color:#334b66;
+  border-radius:999px;
+  padding:3px 8px;
+  font-size:11px;
+  font-weight:900;
+  line-height:1.25;
+  white-space:nowrap;
+}
 .restored-footer-copy,.admin-toggle{
   touch-action:manipulation!important;
   -webkit-user-select:none;
@@ -2101,6 +2114,13 @@ body.admin-mode .game-admin-actions{display:flex!important}
           <label for="grade">学年</label>
           <select id="grade" required>
             <option value="">選択してください</option><option value="1年">1年</option><option value="2年">2年</option><option value="3年">3年</option>
+          </select>
+        </div>
+        <div class="field" id="squadField" hidden>
+          <label for="squad">出場チーム</label>
+          <select id="squad">
+            <option value="yachiyo">八千代</option>
+            <option value="shimadadai">八千代島田台</option>
           </select>
         </div>
         <div class="field">
@@ -2289,6 +2309,15 @@ function gradeLifecycle(game){
     label:effectiveGrade<=3?effectiveGrade+'年':''
   };
 }
+function squadValue(game){
+  return String(game?.squad||'')==='shimadadai'?'shimadadai':'yachiyo';
+}
+function squadName(game){
+  return squadValue(game)==='shimadadai'?'八千代島田台':'八千代';
+}
+function squadOrder(game){
+  return squadValue(game)==='yachiyo'?0:1;
+}
 function gameYear(game){
   return String(game.date||game.year||'').slice(0,4);
 }
@@ -2403,7 +2432,9 @@ function renderResults(){
     group.games.sort((a,b)=>{
       const dateCompare=String(b.date||b.year||'').localeCompare(String(a.date||a.year||''));
       if(dateCompare)return dateCompare;
-      return roundOrder(b)-roundOrder(a);
+      const roundCompare=roundOrder(b)-roundOrder(a);
+      if(roundCompare)return roundCompare;
+      return squadOrder(a)-squadOrder(b);
     });
     const gamesHtml=group.games.map(g=>{
       const result=outcome(g.ourScore,g.oppScore),label=result[0],cls=result[1];
@@ -2412,16 +2443,20 @@ function renderResults(){
       const opponentHtml=displayTeamNameHtml(g.opponent);
       const dateVenue=[g.date?escHtml(formatGameDate(g.date)):'',g.venue?escHtml(g.venue):''].filter(Boolean).join(' ／ ');
       const gradeLabel=gradeLifecycle(g).label;
+      const ourTeam=squadName(g);
+      const squadBadge=gradeLabel==='1年'
+        ? '<span class="squad-badge">'+escHtml(ourTeam)+'</span>'
+        : '';
       return '<article class="game">'+
         '<div class="game-head">'+
-          '<div><div class="tournament">'+(gradeLabel?'<span class="grade-badge">'+escHtml(gradeLabel)+'</span>':'')+round+'</div>'+
+          '<div><div class="tournament">'+(gradeLabel?'<span class="grade-badge">'+escHtml(gradeLabel)+'</span>':'')+squadBadge+round+'</div>'+
           (dateVenue?'<div class="meta">'+dateVenue+'</div>':'')+'</div>'+
           '<span class="badge '+cls+'">'+label+'</span>'+
         '</div>'+
         '<div class="scoreline">'+
           (g.battingOrder==='second'
-            ? '<div class="team">'+opponentHtml+'</div><div class="score">'+Number(g.oppScore)+' - '+Number(g.ourScore)+'</div><div class="team">八千代</div>'
-            : '<div class="team">八千代</div><div class="score">'+Number(g.ourScore)+' - '+Number(g.oppScore)+'</div><div class="team">'+opponentHtml+'</div>')+
+            ? '<div class="team">'+opponentHtml+'</div><div class="score">'+Number(g.oppScore)+' - '+Number(g.ourScore)+'</div><div class="team">'+escHtml(ourTeam)+'</div>'
+            : '<div class="team">'+escHtml(ourTeam)+'</div><div class="score">'+Number(g.ourScore)+' - '+Number(g.oppScore)+'</div><div class="team">'+opponentHtml+'</div>')+
         '</div>'+
         (g.note?'<div class="meta" style="margin-top:12px">'+escHtml(g.note)+'</div>':'')+
         '<div class="game-admin-actions admin-only">'+
@@ -2497,8 +2532,24 @@ function togglePanel(){
   if(panel.classList.contains('open'))clearForm();
   else panel.classList.add('open');
 }
+function updateSquadField(){
+  const grade=document.getElementById('grade');
+  const field=document.getElementById('squadField');
+  const squad=document.getElementById('squad');
+  const isFirstGrade=grade.value==='1年';
+  field.hidden=!isFirstGrade;
+  if(!isFirstGrade)squad.value='yachiyo';
+  const teamName=squad.value==='shimadadai'?'八千代島田台':'八千代';
+  const first=document.querySelector('#battingOrder option[value="first"]');
+  const second=document.querySelector('#battingOrder option[value="second"]');
+  const scoreLabel=document.querySelector('label[for="ourScore"]');
+  if(first)first.textContent=teamName+'が先攻';
+  if(second)second.textContent=teamName+'が後攻';
+  if(scoreLabel)scoreLabel.textContent=teamName+' 得点';
+}
 function clearForm(){
   document.getElementById('resultForm').reset();
+  updateSquadField();
   document.getElementById('panel').classList.remove('open');
   document.getElementById('formModeTitle').textContent='新しい試合結果';
   document.getElementById('resultSubmitButton').textContent='登録する';
@@ -2519,6 +2570,8 @@ function startEditGame(id){
   editingOriginalGradeYear=game.gradeYear||'';
   document.getElementById('date').value=/^\d{4}-\d{2}$/.test(editingOriginalDate)?editingOriginalDate+'-01':editingOriginalDate;
   document.getElementById('grade').value=displayedGrade;
+  document.getElementById('squad').value=squadValue(game);
+  updateSquadField();
   document.getElementById('battingOrder').value=game.battingOrder||'';
   document.getElementById('tournament').value=parts.name;
   document.getElementById('tournament').readOnly=true;
@@ -2567,6 +2620,9 @@ async function removeGame(id){
   try{await sharedSave('results',next);resultsData=next;renderResults();}
   catch(e){if(e.message!=='cancelled'&&e.message!=='unauthorized'&&e.message!=='not configured')alert('保存に失敗しました。');}
 }
+document.getElementById('grade').addEventListener('change',updateSquadField);
+document.getElementById('squad').addEventListener('change',updateSquadField);
+updateSquadField();
 document.getElementById('resultForm').addEventListener('submit',async e=>{
   e.preventDefault();
   const existing=editingGameId?resultsData.find(item=>String(item.id)===editingGameId):null;
@@ -2580,6 +2636,7 @@ document.getElementById('resultForm').addEventListener('submit',async e=>{
     date:existing&&/^\d{4}-\d{2}$/.test(editingOriginalDate)&&enteredDate===editingOriginalDate+'-01'?editingOriginalDate:enteredDate,
     grade:keepOriginalGrade?editingOriginalGrade:selectedGrade,
     gradeYear:keepOriginalGrade?editingOriginalGradeYear:currentJapanYear(),
+    squad:selectedGrade==='1年'?document.getElementById('squad').value:'yachiyo',
     battingOrder:document.getElementById('battingOrder').value,
     tournament:document.getElementById('tournament').value.trim(),
     round:document.getElementById('round').value.trim(),
