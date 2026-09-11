@@ -1946,7 +1946,52 @@ img,video,iframe{max-width:100%}
 #heroPhotoAdmin label{display:none;background:#b48a32;color:#fff}
 #accessPasswordChange{display:none;background:#071426;color:#e2bd67}
 #heroPhotoInput{display:none}
-@media(max-width:600px){#heroPhotoAdmin{right:12px;bottom:12px;max-width:calc(100vw - 24px)}#heroPhotoAdmin button,#heroPhotoAdmin label{padding:9px 12px;font-size:11px}}
+@media(max-width:600px){
+  #heroPhotoAdmin{
+    right:12px;
+    bottom:calc(12px + env(safe-area-inset-bottom));
+    max-width:calc(100vw - 24px);
+  }
+  body.photo-admin-on #heroPhotoAdmin{
+    display:grid!important;
+    grid-template-columns:repeat(2,minmax(0,1fr));
+    gap:8px;
+    width:min(380px,calc(100vw - 24px));
+  }
+  body.photo-admin-on #heroPhotoAdmin button,
+  body.photo-admin-on #heroPhotoAdmin label{
+    width:100%;
+    min-width:0;
+    min-height:44px;
+    margin:0;
+    padding:8px 6px;
+    border:1px solid rgba(226,189,103,.82);
+    background:rgba(7,20,38,.88);
+    color:#e2bd67;
+    border-radius:999px;
+    font-size:11px;
+    line-height:1.2;
+    text-align:center;
+    white-space:nowrap;
+    align-items:center;
+    justify-content:center;
+    backdrop-filter:blur(8px);
+    -webkit-backdrop-filter:blur(8px);
+  }
+  body.photo-admin-on #heroPhotoChange{order:1}
+  body.photo-admin-on #heroAnnouncementEdit{order:2}
+  body.photo-admin-on #accessPasswordChange{order:3}
+  body.photo-admin-on #heroAdminToggle{order:4}
+}
+@media(max-width:350px){
+  body.photo-admin-on #heroPhotoAdmin button,
+  body.photo-admin-on #heroPhotoAdmin label{
+    padding-left:4px;
+    padding-right:4px;
+    font-size:10px;
+    letter-spacing:-.02em;
+  }
+}
 </style>
 
 <style id="hero-announcement-style">
@@ -3514,7 +3559,7 @@ function openProtectedArea(type){
 
 <div id="heroPhotoAdmin">
   <button id="heroAdminToggle" type="button">管理</button>
-  <label id="heroPhotoChange" for="heroPhotoInput">写真を変更</label>
+  <label id="heroPhotoChange" for="heroPhotoInput">TOPの写真を変更</label>
   <button id="heroAnnouncementEdit" class="hero-announcement-admin" type="button">トップお知らせ編集</button>
   <button id="accessPasswordChange" type="button">閲覧パスワード変更</button>
   <input id="heroPhotoInput" type="file" accept="image/*">
@@ -3528,7 +3573,8 @@ function openProtectedArea(type){
   const change=document.getElementById('heroPhotoChange');
   const accessPasswordChange=document.getElementById('accessPasswordChange');
   const input=document.getElementById('heroPhotoInput');
-  if(!hero||!toggle||!change||!accessPasswordChange||!input)return;
+  const adminPanel=document.getElementById('heroPhotoAdmin');
+  if(!hero||!toggle||!change||!accessPasswordChange||!input||!adminPanel)return;
 
   async function loadHero(){
     try{
@@ -3552,6 +3598,7 @@ function openProtectedArea(type){
       sessionStorage.setItem('yachiyoAdminMode','1');
       change.style.display='inline-block';
       accessPasswordChange.style.display='inline-block';
+      adminPanel.style.setProperty('display',window.matchMedia('(max-width:600px)').matches?'grid':'flex','important');
       toggle.textContent='管理終了';
     }else{
       sessionStorage.removeItem('yachiyoAdminMode');
