@@ -3009,7 +3009,7 @@ function openProtectedArea(type){
     if(on){
       staffToggle.style.display='block';
       requestAnimationFrame(()=>requestAnimationFrame(()=>{
-        const target=document.getElementById('graduateAdmin');
+        const target=document.querySelector('#team > .container');
         const header=document.querySelector('.header');
         if(!target)return;
         const top=target.getBoundingClientRect().top+window.scrollY-(header?header.offsetHeight:0)-12;
@@ -3437,7 +3437,7 @@ body.photo-admin-on #accessPasswordChange{
   function removeSpacer(){document.getElementById(spacerId)?.remove();}
   function align(){
     if(!isOpen())return;
-    const target=document.querySelector('#graduateAdmin');
+    const target=document.querySelector('#team > .container');
     if(!target)return;
     ensureSpacer();
     const header=document.querySelector('.header,.site-header');
