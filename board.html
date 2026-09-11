@@ -411,7 +411,9 @@ html{scroll-padding-top:var(--compact-header-height)}
 .tournament-admin-item span{min-width:0;flex:1;font-size:12px;line-height:1.5;overflow-wrap:anywhere}
 .tournament-admin-item button{flex:0 0 auto;margin:0!important;background:#5e1515!important}
 #dutyRosterAdminFields{margin-top:18px;padding-top:18px;border-top:1px solid rgba(255,255,255,.18)}
+#dutyRosterAdminFields label{display:block;margin:10px 6px 5px;font-size:12px;font-weight:700;color:#d5dbe3}
 #dutyRosterAdminFields input{width:100%;margin:6px 0 10px;color:#fff}
+#dutyRosterAdminHelp{margin:2px 6px 10px!important;min-height:0!important;color:#d5dbe3!important;font-size:11px!important;line-height:1.6!important}
 #saveDutyRosterBtn{width:100%;margin:4px 0!important;background:#c79a3b!important;color:#fff!important}
 #dutyRosterAdminList{display:grid;gap:8px;margin-top:12px}
 .duty-roster-admin-item{display:grid;grid-template-columns:minmax(0,1fr) auto;align-items:center;gap:8px;padding:9px;border:1px solid rgba(255,255,255,.14);border-radius:9px;background:rgba(255,255,255,.06)}
@@ -458,7 +460,8 @@ html{scroll-padding-top:var(--compact-header-height)}
     <strong>お当番表</strong>
     <label for="dutyRosterImageInput">画像ファイル（複数選択可）</label>
     <input id="dutyRosterImageInput" type="file" accept="image/jpeg,image/png,image/webp,.jpg,.jpeg,.png,.webp" multiple>
-    <button id="saveDutyRosterBtn" type="button">画像を追加</button>
+    <p id="dutyRosterAdminHelp">画像を選択後、下のボタンを押すと保存されます。</p>
+    <button id="saveDutyRosterBtn" type="button">画像を保存</button>
     <div id="dutyRosterAdminList"></div>
   </div>
   <div id="rulesAdminFields">
@@ -1044,10 +1047,10 @@ html{scroll-padding-top:var(--compact-header-height)}
           src:''
         });
       }
-      await persist(files.length+'枚の画像を追加しました');
+      await persist(files.length+'枚の画像を保存しました');
       fileInput.value='';
     }catch(e){images=previous;render();alert(e.message||'画像を保存できませんでした。')}
-    finally{saveBtn.disabled=false;saveBtn.textContent='画像を追加'}
+    finally{saveBtn.disabled=false;saveBtn.textContent='画像を保存'}
   }
 
   async function move(index,direction){
