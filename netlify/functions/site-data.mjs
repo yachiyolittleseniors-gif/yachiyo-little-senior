@@ -20,6 +20,7 @@ const allowed = new Set([
   "hero-announcement",
   "news",
   "rules",
+  "duty-roster",
   "staff",
   "alumni",
   "downloads-application",
@@ -541,7 +542,7 @@ export default async (request, context) => {
         return json({ error: "method not allowed" }, 405);
       }
 
-      if (section === "rules") {
+      if (section === "rules" || section === "duty-roster") {
         const accessPassword = request.headers.get("x-access-password") || "";
         const accessGranted =
           await boardSessionIsValid(request) ||
@@ -1107,6 +1108,34 @@ export default async (request, context) => {
       });
 
       return json({ ok: true });
+    }
+
+    if (section === "duty-roster") {
+      const roster = body?.data;
+      const images = roster?.images;
+
+      if (
+        roster?.initialized !== true ||
+        !Array.isArray(images) ||
+        images.length > 8
+      ) {
+        return json({ error: "画像データを確認してください。" }, 400);
+      }
+
+      const valid = images.every(item => {
+        const name = String(item?.name || "");
+        const data = String(item?.data || "");
+        const src = String(item?.src || "");
+        const validData =
+          !data ||
+          /^data:image\/(?:jpeg|png|webp);base64,[A-Za-z0-9+/=]+$/i.test(data);
+        const validSource = !src;
+        return name.length <= 160 && validData && validSource && Boolean(data || src);
+      });
+
+      if (!valid) {
+        return json({ error: "保存できない画像形式が含まれています。" }, 400);
+      }
     }
 
     const serialized = JSON.stringify(body.data);
