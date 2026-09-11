@@ -510,7 +510,9 @@ export default async (request, context) => {
     if (action === "comment") {
       const memberId = String(body.memberId || "");
       const text = String(body.text || "").trim();
-      if (!memberId || !text) return json({ error: "Missing comment" }, 400);
+      const eventDate = /^\d{4}-\d{2}-\d{2}$/.test(String(body.eventDate || "")) ? String(body.eventDate) : "";
+      const upperGrade = body.upperGrade === true;
+      if (!memberId || (!text && !upperGrade) || !eventDate) return json({ error: "Missing comment" }, 400);
       if (text.length > 500) return json({ error: "Comment too long" }, 400);
       const memberExists = data.members.some(m => String(m.id) === memberId);
       if (!memberExists) return json({ error: "Member not found" }, 404);
@@ -518,6 +520,8 @@ export default async (request, context) => {
         id: `comment_${Date.now().toString(36)}_${Math.random().toString(36).slice(2,8)}`,
         memberId,
         text,
+        eventDate,
+        upperGrade,
         updatedAt: new Date().toISOString(),
         source: "site",
       };
