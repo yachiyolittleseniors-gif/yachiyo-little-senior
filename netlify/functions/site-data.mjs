@@ -11,6 +11,7 @@ const DEFAULT_ACCESS_HASH =
 const allowed = new Set([
   "schedule",
   "results",
+  "result-squad-settings",
   "result-documents",
   "gallery",
   "players",
