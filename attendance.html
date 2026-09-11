@@ -85,6 +85,50 @@ body{padding-top:var(--fixed-header-height)!important}
 .admin-grid{grid-template-columns:1fr!important}
 @media(max-width:600px){:root{--fixed-header-height:66px}.header .nav{height:66px!important;min-height:66px!important;padding:8px 12px 8px 0!important}.header .brand{margin-left:10px!important}.official-brand-wrap{width:min(300px,72vw)!important;height:50px!important}.official-brand-img{max-height:50px!important}.menu{width:46px!important;height:46px!important;border-radius:11px!important;font-size:23px!important}}
 </style>
+
+<style id="unified-admin-reveal-style">
+.unified-admin-reveal{
+  min-height:44px;
+  display:flex!important;
+  align-items:center;
+  justify-content:center;
+  touch-action:manipulation!important;
+  -webkit-user-select:none!important;
+  user-select:none!important;
+  -webkit-touch-callout:none!important;
+  -webkit-tap-highlight-color:transparent!important;
+}
+.unified-admin-toggle{
+  position:fixed!important;
+  right:16px!important;
+  bottom:calc(16px + env(safe-area-inset-bottom))!important;
+  left:auto!important;
+  width:auto!important;
+  min-width:0!important;
+  height:auto!important;
+  margin:0!important;
+  padding:9px 12px!important;
+  z-index:9998!important;
+  border:1px solid rgba(199,154,59,.72)!important;
+  border-radius:999px!important;
+  background:#071426!important;
+  color:#e2bd67!important;
+  box-shadow:0 8px 22px rgba(0,0,0,.24)!important;
+  font-size:12px!important;
+  font-weight:800!important;
+  line-height:1.3!important;
+  touch-action:manipulation!important;
+  -webkit-tap-highlight-color:transparent!important;
+}
+@media(max-width:600px){
+  .unified-admin-toggle{
+    right:12px!important;
+    bottom:calc(12px + env(safe-area-inset-bottom))!important;
+    padding:8px 10px!important;
+    font-size:11px!important;
+  }
+}
+</style>
 </head><body id="page-top">
 <header class="header">
 <nav class="nav">
@@ -198,5 +242,39 @@ $('#restoreCommentBtn').onclick=async()=>{if(!lastDeletedComment)return;const pe
 async function adminDelete(type,id){if(type==='event'){if(!confirm('この日程を削除しますか？'))return;data.events=data.events.filter(x=>x.id!==id);for(const m of Object.keys(data.answers))delete data.answers[m][id]}else{const member=data.members.find(x=>x.id===id);const name=member?.name||'この回答者';if(!confirm(name+'さんを削除しますか？\nこの方の○△×の回答とコメントも一緒に削除されます。'))return;data.members=data.members.filter(x=>x.id!==id);delete data.answers[id];data.comments=data.comments.filter(c=>c.memberId!==id);if(selectedMember===id)selectedMember=''}await adminSave()}
 async function adminSave(){try{const j=await api('POST',{action:'adminSave',data},true);data=normalize(j.data);memberChangesDirty=false;$('#memberSaveStatus').textContent='保存しました';render();return true}catch(e){$('#saveMemberChanges').disabled=false;showError(e.message==='試行回数の上限です。15分後に再度お試しください。'?e.message:'管理内容を保存できませんでした。');return false}}
 load();
+</script>
+
+<script id="unified-admin-reveal-script">
+(function(){
+  const button=document.getElementById("manageBtn");
+  const trigger=document.querySelector("#adminReveal");
+  if(!button||!trigger)return;
+  button.classList.add('unified-admin-toggle');
+  trigger.classList.add('unified-admin-reveal');
+  trigger.setAttribute('aria-label','管理ボタンを表示');
+
+  let taps=0;
+  let timer=null;
+  function reset(){
+    taps=0;
+    clearTimeout(timer);
+    timer=null;
+  }
+  trigger.addEventListener('pointerup',function(event){
+    event.preventDefault();
+    event.stopImmediatePropagation();
+    taps++;
+    clearTimeout(timer);
+    timer=setTimeout(reset,2000);
+    if(taps>=5){
+      reset();
+      button.style.setProperty('display','block','important');
+    }
+  },{capture:true,passive:false});
+  trigger.addEventListener('dblclick',function(event){
+    event.preventDefault();
+    event.stopImmediatePropagation();
+  },{capture:true,passive:false});
+})();
 </script>
 </body></html>
