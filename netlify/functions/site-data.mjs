@@ -23,6 +23,7 @@ const allowed = new Set([
   "rules",
   "duty-roster",
   "staff",
+  "team-interview",
   "alumni",
   "downloads-application",
   "downloads-guideline",
