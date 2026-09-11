@@ -4358,6 +4358,8 @@ document.addEventListener('DOMContentLoaded',function(){
     timer=setTimeout(reset,2200);
     if(taps>=5){
       reset();
+      const container=button.closest('#heroPhotoAdmin');
+      if(container)container.style.setProperty('display','flex','important');
       button.style.setProperty('display','block','important');
     }
   }
