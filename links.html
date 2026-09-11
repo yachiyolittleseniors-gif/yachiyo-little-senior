@@ -503,56 +503,72 @@ body.photo-admin-on #accessPasswordChange{
 }
 </style>
 <script id="admin-start-position-unified">
-(function(){
-  const watched=document.querySelector('body');
-  if(!watched)return;
-  const mode='page';
+(()=>{
+  const watched=document.body;
   const spacerId='admin-position-scroll-spacer';
-  let wasOpen=watched.classList.contains('editing');
+  const delays=[0,100,300,700,1200];
   let timers=[];
+  let wasOpen=watched.classList.contains('editing');
+  let resizeTimer=0;
+  const previousHtmlAnchor=document.documentElement.style.overflowAnchor;
+  const previousBodyAnchor=document.body.style.overflowAnchor;
 
-  function clearTimers(){
-    timers.forEach(clearTimeout);
-    timers=[];
-  }
-  function removeSpacer(){
-    document.getElementById(spacerId)?.remove();
+  function isOpen(){return watched.classList.contains('editing');}
+  function clearTimers(){timers.forEach(clearTimeout);timers=[];clearTimeout(resizeTimer);}
+  function setAnchoring(disabled){
+    document.documentElement.style.overflowAnchor=disabled?'none':previousHtmlAnchor;
+    document.body.style.overflowAnchor=disabled?'none':previousBodyAnchor;
   }
   function ensureSpacer(){
-    if(mode!=='page')return;
     let spacer=document.getElementById(spacerId);
     if(!spacer){
       spacer=document.createElement('div');
       spacer.id=spacerId;
       spacer.setAttribute('aria-hidden','true');
-      spacer.style.cssText='height:calc(100dvh - var(--fixed-header-height,66px) - 24px);min-height:240px;pointer-events:none;';
+      spacer.style.cssText='height:110dvh;min-height:720px;pointer-events:none;';
       document.body.appendChild(spacer);
     }
   }
+  function removeSpacer(){document.getElementById(spacerId)?.remove();}
   function align(){
+    if(!isOpen())return;
     const target=document.querySelector('#linkAdmin');
     if(!target)return;
-    if(mode==='panel'){
-      target.scrollTop=0;
-      return;
-    }
     ensureSpacer();
     const header=document.querySelector('.header,.site-header');
     const desiredTop=(header?header.getBoundingClientRect().bottom:0)+12;
-    const difference=target.getBoundingClientRect().top-desiredTop;
-    if(Math.abs(difference)>1)window.scrollBy({top:difference,left:0,behavior:'auto'});
+    const nextTop=Math.max(0,Math.round(window.scrollY+target.getBoundingClientRect().top-desiredTop));
+    window.scrollTo(0,nextTop);
   }
   function scheduleAlign(){
     clearTimers();
+    setAnchoring(true);
     ensureSpacer();
-    [0,120,320].forEach(delay=>timers.push(setTimeout(align,delay)));
+    delays.forEach(delay=>timers.push(setTimeout(align,delay)));
   }
+
   new MutationObserver(()=>{
-    const isOpen=watched.classList.contains('editing');
-    if(isOpen&&!wasOpen)scheduleAlign();
-    if(!isOpen&&wasOpen){clearTimers();removeSpacer();}
-    wasOpen=isOpen;
+    const open=isOpen();
+    if(open&&!wasOpen)scheduleAlign();
+    if(!open&&wasOpen){
+      clearTimers();
+      removeSpacer();
+      setAnchoring(false);
+    }
+    wasOpen=open;
   }).observe(watched,{attributes:true,attributeFilter:['class']});
+
+  const changingArea=document.querySelector('#linkEditor');
+  if(changingArea&&'ResizeObserver' in window){
+    new ResizeObserver(()=>{
+      if(!isOpen())return;
+      clearTimeout(resizeTimer);
+      resizeTimer=setTimeout(align,60);
+    }).observe(changingArea);
+  }
+
+  window.addEventListener('orientationchange',()=>{if(isOpen())scheduleAlign();});
+  if(wasOpen)scheduleAlign();
 })();
 </script>
 </body>
