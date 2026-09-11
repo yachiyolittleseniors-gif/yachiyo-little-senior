@@ -332,9 +332,9 @@ html{scroll-padding-top:var(--compact-header-height)}
 
     <section class="card duty-roster-card" id="dutyRosterCard">
       <div class="card-kicker">DUTY ROSTER</div>
-      <h2>お当番表</h2>
+      <h2>当番表</h2>
       <div id="dutyRosterList" class="duty-roster-list">
-        <div class="duty-roster-loading">お当番表を読み込んでいます。</div>
+        <div class="duty-roster-loading">当番表を読み込んでいます。</div>
       </div>
       <p class="duty-roster-note">※個別にお当番日を変更した場合は反映されません。</p>
     </section>
@@ -457,7 +457,7 @@ html{scroll-padding-top:var(--compact-header-height)}
     <div id="tournamentAdminList"></div>
   </div>
   <div id="dutyRosterAdminFields">
-    <strong>お当番表</strong>
+    <strong>当番表</strong>
     <label for="dutyRosterImageInput">画像ファイル（複数選択可）</label>
     <input id="dutyRosterImageInput" type="file" accept="image/jpeg,image/png,image/webp,.jpg,.jpeg,.png,.webp" multiple>
     <p id="dutyRosterAdminHelp">画像を選択後、下のボタンを押すと保存されます。</p>
@@ -944,7 +944,7 @@ html{scroll-padding-top:var(--compact-header-height)}
     }).slice(0,8).map(function(item,index){
       return {
         id:String(item.id||('duty-'+index)),
-        name:String(item.name||('お当番表 '+(index+1))),
+        name:String(item.name||('当番表 '+(index+1))),
         data:item.data?String(item.data):'',
         src:item.src?String(item.src):''
       };
@@ -960,7 +960,7 @@ html{scroll-padding-top:var(--compact-header-height)}
     if(!images.length){
       const empty=document.createElement('div');
       empty.className='duty-roster-loading';
-      empty.textContent='現在掲載中のお当番表はありません。';
+      empty.textContent='現在掲載中の当番表はありません。';
       list.appendChild(empty);
     }
 
@@ -968,7 +968,7 @@ html{scroll-padding-top:var(--compact-header-height)}
       const image=document.createElement('img');
       image.className='duty-roster-image';
       image.src=imageSource(item);
-      image.alt=item.name||('お当番表 '+(index+1));
+      image.alt=item.name||('当番表 '+(index+1));
       image.loading=index===0?'eager':'lazy';
       image.decoding='async';
       list.appendChild(image);
@@ -976,7 +976,7 @@ html{scroll-padding-top:var(--compact-header-height)}
       const row=document.createElement('div');
       row.className='duty-roster-admin-item';
       const name=document.createElement('span');
-      name.textContent=item.name||('お当番表 '+(index+1));
+      name.textContent=item.name||('当番表 '+(index+1));
       const actions=document.createElement('div');
       actions.className='duty-roster-admin-actions';
       const up=document.createElement('button');
@@ -1031,7 +1031,7 @@ html{scroll-padding-top:var(--compact-header-height)}
   async function addImages(){
     const files=Array.from(fileInput.files||[]);
     if(!files.length){alert('追加する画像を選択してください。');return}
-    if(images.length+files.length>8){alert('お当番表は8枚まで保存できます。');return}
+    if(images.length+files.length>8){alert('当番表は8枚まで保存できます。');return}
     for(const file of files){
       if(!/^image\/(jpeg|png|webp)$/i.test(file.type)&&!(/\.(jpe?g|png|webp)$/i.test(file.name))){alert('JPEG・PNG・WebP画像を選択してください。');return}
       if(file.size>4*1024*1024){alert(file.name+' は4MBを超えています。');return}
@@ -1063,7 +1063,7 @@ html{scroll-padding-top:var(--compact-header-height)}
 
   async function removeImage(index){
     const target=images[index];
-    if(!target||!confirm('「'+(target.name||'お当番表')+'」を削除しますか？'))return;
+    if(!target||!confirm('「'+(target.name||'当番表')+'」を削除しますか？'))return;
     const previous=images.slice();images.splice(index,1);render();
     try{await persist('画像を削除しました')}catch(e){images=previous;render();alert(e.message||'画像を削除できませんでした。')}
   }
