@@ -4464,26 +4464,33 @@ document.addEventListener('DOMContentLoaded',function(){
   left:auto!important;
   top:auto!important;
   width:auto!important;
-  min-width:0!important;
+  min-width:52px!important;
   max-width:calc(100vw - 24px)!important;
   height:auto!important;
-  min-height:40px!important;
+  min-height:44px!important;
   margin:0!important;
-  padding:9px 12px!important;
+  padding:12px 14px!important;
   transform:none!important;
   z-index:20001!important;
-  border:1px solid rgba(199,154,59,.78)!important;
-  border-radius:999px!important;
-  background:rgba(7,20,38,.94)!important;
-  color:#e2bd67!important;
-  box-shadow:0 8px 22px rgba(0,0,0,.25)!important;
-  font-size:12px!important;
-  font-weight:800!important;
+  border:0!important;
+  border-radius:0!important;
+  outline:0!important;
+  background:transparent!important;
+  background-image:none!important;
+  color:rgba(199,154,59,.46)!important;
+  box-shadow:none!important;
+  text-shadow:none!important;
+  font-size:11px!important;
+  font-weight:700!important;
   line-height:1.25!important;
   text-align:center!important;
   white-space:nowrap!important;
   touch-action:manipulation!important;
   -webkit-tap-highlight-color:transparent!important;
+}
+.unified-admin-toggle:hover,
+.unified-admin-toggle:focus-visible{
+  color:rgba(199,154,59,.72)!important;
 }
 #densukeAdminPanel.show{
   top:calc(var(--fixed-header-height,66px) + 12px)!important;
@@ -4524,8 +4531,9 @@ body.photo-admin-on #accessPasswordChange{
   .unified-admin-toggle{
     right:max(12px,env(safe-area-inset-right))!important;
     bottom:calc(12px + env(safe-area-inset-bottom))!important;
-    min-height:40px!important;
-    padding:8px 10px!important;
+    min-width:52px!important;
+    min-height:44px!important;
+    padding:12px 14px!important;
     font-size:11px!important;
   }
 }
