@@ -3008,6 +3008,13 @@ function openProtectedArea(type){
     staffToggle.textContent=on?'管理終了':'管理';
     if(on){
       staffToggle.style.display='block';
+      requestAnimationFrame(()=>requestAnimationFrame(()=>{
+        const target=document.getElementById('graduateAdmin');
+        const header=document.querySelector('.header');
+        if(!target)return;
+        const top=target.getBoundingClientRect().top+window.scrollY-(header?header.offsetHeight:0)-12;
+        window.scrollTo({top:Math.max(0,top),behavior:'auto'});
+      }));
     }else{
       document.body.classList.remove('staff-editing');
       staffToggle.style.display='none';
