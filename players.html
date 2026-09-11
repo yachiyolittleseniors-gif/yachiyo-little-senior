@@ -2063,6 +2063,13 @@ function login(){
   sessionStorage.setItem(K,'1');
   b.textContent='管理終了';
   b.style.display='block';
+  requestAnimationFrame(()=>requestAnimationFrame(()=>{
+    const target=document.querySelector('main.wrap');
+    const header=document.querySelector('.header');
+    if(!target)return;
+    const top=target.getBoundingClientRect().top+window.scrollY-(header?header.offsetHeight:0)-12;
+    window.scrollTo({top:Math.max(0,top),behavior:'auto'});
+  }));
 }
 
 /* ページを開き直した・更新した時は必ず管理状態を解除 */
