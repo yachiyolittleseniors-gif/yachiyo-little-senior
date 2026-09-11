@@ -2120,27 +2120,27 @@ body.admin-mode .game-admin-actions{display:flex!important}
   <div class="toolbar">
     <div>登録した試合結果を新しい順に表示します。</div>
     <div class="admin-only results-admin-toolbar">
-      <button class="admin-btn" type="button" onclick="toggleSquadSettings()">2軍設定</button>
+      <button class="admin-btn" type="button" onclick="toggleSquadSettings()">出場チーム設定</button>
       <button class="admin-btn" type="button" onclick="togglePanel()">＋ 試合結果を入力</button>
     </div>
   </div>
 
   <section id="squadSettingsPanel" class="panel">
-    <div class="form-mode-title">2軍設定</div>
-    <p class="squad-settings-note">2軍がある学年だけ設定してください。名称は試合登録時の内容で保存されます。</p>
+    <div class="form-mode-title">出場チーム設定</div>
+    <p class="squad-settings-note">複数チームで出場する学年だけ設定してください。名称は試合登録時の内容で保存されます。</p>
     <form id="squadSettingsForm">
       <div class="squad-settings-list">
         <div class="squad-setting-row" data-setting-grade="1">
-          <label class="squad-setting-toggle"><input id="squadEnabled1" type="checkbox"> <span>1年に2軍あり</span></label>
-          <input id="squadName1" type="text" maxlength="40" placeholder="2軍名を入力">
+          <label class="squad-setting-toggle"><input id="squadEnabled1" type="checkbox"> <span>1年に複数チームあり</span></label>
+          <input id="squadName1" type="text" maxlength="40" placeholder="チーム名を入力">
         </div>
         <div class="squad-setting-row" data-setting-grade="2">
-          <label class="squad-setting-toggle"><input id="squadEnabled2" type="checkbox"> <span>2年に2軍あり</span></label>
-          <input id="squadName2" type="text" maxlength="40" placeholder="2軍名を入力">
+          <label class="squad-setting-toggle"><input id="squadEnabled2" type="checkbox"> <span>2年に複数チームあり</span></label>
+          <input id="squadName2" type="text" maxlength="40" placeholder="チーム名を入力">
         </div>
         <div class="squad-setting-row" data-setting-grade="3">
-          <label class="squad-setting-toggle"><input id="squadEnabled3" type="checkbox"> <span>3年に2軍あり</span></label>
-          <input id="squadName3" type="text" maxlength="40" placeholder="2軍名を入力">
+          <label class="squad-setting-toggle"><input id="squadEnabled3" type="checkbox"> <span>3年に複数チームあり</span></label>
+          <input id="squadName3" type="text" maxlength="40" placeholder="チーム名を入力">
         </div>
       </div>
       <div class="actions">
@@ -2733,7 +2733,7 @@ document.getElementById('squadSettingsForm').addEventListener('submit',async eve
   for(const grade of ['1','2','3']){
     const enabled=document.getElementById('squadEnabled'+grade).checked;
     const name=document.getElementById('squadName'+grade).value.trim();
-    if(enabled&&!name){alert(grade+'年の2軍名を入力してください。');return}
+    if(enabled&&!name){alert(grade+'年のチーム名を入力してください。');return}
     next[grade]={enabled,name};
   }
   try{
@@ -2742,7 +2742,7 @@ document.getElementById('squadSettingsForm').addEventListener('submit',async eve
     closeSquadSettings();
     updateSquadField();
     renderResults();
-    if(typeof showSaveNotice==='function')showSaveNotice('2軍設定を保存しました');
+    if(typeof showSaveNotice==='function')showSaveNotice('出場チーム設定を保存しました');
   }catch(error){
     if(error.message!=='cancelled'&&error.message!=='unauthorized'&&error.message!=='not configured')alert('設定の保存に失敗しました。');
   }
