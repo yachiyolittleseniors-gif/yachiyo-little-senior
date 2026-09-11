@@ -3365,6 +3365,18 @@ function openProtectedArea(type){
   touch-action:manipulation!important;
   -webkit-tap-highlight-color:transparent!important;
 }
+
+#staffEditBtn.unified-admin-toggle{
+  border:0!important;
+  border-radius:0!important;
+  background:transparent!important;
+  background-image:none!important;
+  color:rgba(199,154,59,.46)!important;
+  box-shadow:none!important;
+  text-shadow:none!important;
+  backdrop-filter:none!important;
+  -webkit-backdrop-filter:none!important;
+}
 .unified-admin-toggle:hover,
 .unified-admin-toggle:focus-visible{
   color:rgba(199,154,59,.72)!important;
@@ -3417,22 +3429,30 @@ body.photo-admin-on #accessPasswordChange{
 </style>
 <script id="admin-start-position-unified">
 (()=>{
-  const watched=document.body;
+  const watched=document.querySelector('body');
+  if(!watched)return;
+  const mode='page';
   const spacerId='admin-position-scroll-spacer';
   const delays=[0,100,300,700,1200];
   let timers=[];
-  let wasOpen=watched.classList.contains('staff-editing');
   let resizeTimer=0;
+  let wasOpen=watched.classList.contains('staff-editing');
   const previousHtmlAnchor=document.documentElement.style.overflowAnchor;
   const previousBodyAnchor=document.body.style.overflowAnchor;
 
   function isOpen(){return watched.classList.contains('staff-editing');}
-  function clearTimers(){timers.forEach(clearTimeout);timers=[];clearTimeout(resizeTimer);}
+  function clearTimers(){
+    timers.forEach(clearTimeout);
+    timers=[];
+    clearTimeout(resizeTimer);
+  }
   function setAnchoring(disabled){
+    if(mode!=='page')return;
     document.documentElement.style.overflowAnchor=disabled?'none':previousHtmlAnchor;
     document.body.style.overflowAnchor=disabled?'none':previousBodyAnchor;
   }
   function ensureSpacer(){
+    if(mode!=='page')return;
     let spacer=document.getElementById(spacerId);
     if(!spacer){
       spacer=document.createElement('div');
@@ -3447,6 +3467,10 @@ body.photo-admin-on #accessPasswordChange{
     if(!isOpen())return;
     const target=document.querySelector('#team > .container');
     if(!target)return;
+    if(mode==='panel'){
+      target.scrollTop=0;
+      return;
+    }
     ensureSpacer();
     const header=document.querySelector('.header,.site-header');
     const desiredTop=(header?header.getBoundingClientRect().bottom:0)+12;
@@ -3471,13 +3495,13 @@ body.photo-admin-on #accessPasswordChange{
     wasOpen=open;
   }).observe(watched,{attributes:true,attributeFilter:['class']});
 
-  const changingArea=document.querySelector('#staffEditor');
-  if(changingArea&&'ResizeObserver' in window){
+  const target=document.querySelector('#team > .container');
+  if(target&&'ResizeObserver' in window){
     new ResizeObserver(()=>{
       if(!isOpen())return;
       clearTimeout(resizeTimer);
       resizeTimer=setTimeout(align,60);
-    }).observe(changingArea);
+    }).observe(target);
   }
 
   window.addEventListener('orientationchange',()=>{if(isOpen())scheduleAlign();});
