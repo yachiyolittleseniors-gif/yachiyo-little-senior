@@ -1482,6 +1482,59 @@ img,video,iframe{max-width:100%}
 }
 </style>
 
+<style id="team-interview-admin-style">
+.team-youtube.interview-hidden{display:none}
+body.staff-editing .team-youtube.interview-hidden{display:block}
+.team-interview-admin{
+  position:relative;
+  z-index:2;
+  display:none;
+  margin-top:22px;
+  padding-top:20px;
+  border-top:1px solid rgba(255,255,255,.22);
+}
+body.staff-editing .team-interview-admin{display:block}
+.team-interview-status{margin:0 0 12px;color:var(--gold2);font-size:12px;font-weight:900}
+.team-interview-admin label{display:block;margin:0 0 13px;color:#fff;font-size:13px;font-weight:800}
+.team-interview-admin input[type="text"],
+.team-interview-admin input[type="url"],
+.team-interview-admin textarea{
+  display:block;
+  width:100%;
+  margin-top:7px;
+  padding:12px;
+  border:1px solid #cfd5dc;
+  border-radius:7px;
+  background:#fff;
+  color:#172233;
+  font:inherit;
+  font-size:16px;
+  line-height:1.5;
+}
+.team-interview-admin textarea{resize:vertical}
+.team-interview-visible{display:flex!important;align-items:center;gap:9px}
+.team-interview-visible input{width:20px;height:20px;margin:0;accent-color:var(--gold)}
+.team-interview-admin-actions{display:flex;justify-content:flex-end;gap:10px;margin-top:16px;flex-wrap:wrap}
+.team-interview-admin-actions button{min-height:44px;padding:0 20px;border-radius:7px;font-weight:900;cursor:pointer}
+.team-interview-save{border:1px solid #e2c56f;background:linear-gradient(180deg,#d2ad52,#b98a2e);color:#071426}
+.team-interview-cancel{border:1px solid #bdc4cc;background:#fff;color:#4b5662}
+.staff-edit-btn{
+  position:fixed!important;
+  right:16px!important;
+  bottom:calc(16px + env(safe-area-inset-bottom))!important;
+  margin:0!important;
+  z-index:9998!important;
+}
+@media(max-width:600px){
+  .team-interview-admin-actions{display:grid;grid-template-columns:1fr 1fr}
+  .team-interview-admin-actions button{width:100%;padding:0 10px}
+  .staff-edit-btn{
+    right:12px!important;
+    bottom:calc(12px + env(safe-area-inset-bottom))!important;
+  }
+}
+</style>
+
 <style>
 /* Graduate destinations admin editor */
 .graduate-admin{display:none;margin-top:22px;padding-top:20px;border-top:1px solid #ddd5c5}
@@ -2669,20 +2722,43 @@ html{scroll-padding-top:var(--fixed-header-height)}
 </div>
 </div>
 
-<div class="team-youtube" aria-label="早坂監督インタビュー動画">
-  <div class="team-youtube-kicker">TEAM MOVIE</div>
-  <div class="team-youtube-head">
-    <span class="team-youtube-icon" aria-hidden="true"></span>
-    <h2>早坂監督インタビュー</h2>
+<div class="team-youtube" id="teamInterviewCard" aria-label="早坂監督インタビュー動画">
+  <div class="team-youtube-public">
+    <div class="team-youtube-kicker">TEAM MOVIE</div>
+    <div class="team-youtube-head">
+      <span class="team-youtube-icon" aria-hidden="true"></span>
+      <h2 id="teamInterviewTitle">早坂監督インタビュー</h2>
+    </div>
+    <p id="teamInterviewDescription">八千代リトルシニアの早坂監督の過去インタビュー動画をご覧いただけます。</p>
+    <a class="team-youtube-link"
+       id="teamInterviewLink"
+       href="https://youtu.be/iOIV3r7_0do?si=mDDPpI4bv4RVQjaA"
+       target="_blank"
+       rel="noopener noreferrer"
+       aria-label="インタビュー動画を開く">
+      YouTube動画を見る
+    </a>
   </div>
-  <p>八千代リトルシニアの早坂監督の過去インタビュー動画をご覧いただけます。</p>
-  <a class="team-youtube-link"
-     href="https://youtu.be/iOIV3r7_0do?si=mDDPpI4bv4RVQjaA"
-     target="_blank"
-     rel="noopener noreferrer"
-     aria-label="八千代リトルシニア 早坂監督インタビュー動画を開く">
-    YouTube動画を見る
-  </a>
+  <div class="team-interview-admin" id="teamInterviewAdmin">
+    <div class="team-interview-status" id="teamInterviewStatus"></div>
+    <label>見出し
+      <input id="teamInterviewTitleEdit" type="text" maxlength="80">
+    </label>
+    <label>説明文
+      <textarea id="teamInterviewDescriptionEdit" maxlength="300" rows="4"></textarea>
+    </label>
+    <label>YouTube URL
+      <input id="teamInterviewUrlEdit" type="url" inputmode="url" maxlength="500" placeholder="https://youtu.be/...">
+    </label>
+    <label class="team-interview-visible">
+      <input id="teamInterviewVisibleEdit" type="checkbox">
+      <span>このインタビューを表示する</span>
+    </label>
+    <div class="team-interview-admin-actions">
+      <button class="team-interview-cancel" id="teamInterviewCancel" type="button">キャンセル</button>
+      <button class="team-interview-save" id="teamInterviewSave" type="button">インタビューを保存</button>
+    </div>
+  </div>
 </div>
 
 </div></section>
@@ -3017,6 +3093,96 @@ function openProtectedArea(type){
     document.body.classList.remove('staff-editing');
   });
   const observer=new MutationObserver(()=>{if(document.body.classList.contains('staff-editing')) fillEditor();});
+  observer.observe(document.body,{attributes:true,attributeFilter:['class']});
+  load();
+})();
+</script>
+
+<script>
+(function(){
+  const API='/.netlify/functions/site-data?section=team-interview';
+  const defaults={
+    title:'早坂監督インタビュー',
+    description:'八千代リトルシニアの早坂監督の過去インタビュー動画をご覧いただけます。',
+    url:'https://youtu.be/iOIV3r7_0do?si=mDDPpI4bv4RVQjaA',
+    visible:true
+  };
+  let data={...defaults};
+  const card=document.getElementById('teamInterviewCard');
+  const title=document.getElementById('teamInterviewTitle');
+  const description=document.getElementById('teamInterviewDescription');
+  const link=document.getElementById('teamInterviewLink');
+  const titleEdit=document.getElementById('teamInterviewTitleEdit');
+  const descriptionEdit=document.getElementById('teamInterviewDescriptionEdit');
+  const urlEdit=document.getElementById('teamInterviewUrlEdit');
+  const visibleEdit=document.getElementById('teamInterviewVisibleEdit');
+  const status=document.getElementById('teamInterviewStatus');
+  if(!card||!title||!description||!link)return;
+
+  function validUrl(value){
+    try{
+      const parsed=new URL(value);
+      return parsed.protocol==='https:'||parsed.protocol==='http:';
+    }catch(e){return false}
+  }
+  function render(){
+    title.textContent=data.title||defaults.title;
+    description.textContent=data.description||'';
+    link.href=validUrl(data.url)?data.url:defaults.url;
+    card.classList.toggle('interview-hidden',data.visible===false);
+    status.textContent=data.visible===false?'現在は非表示です':'現在は表示中です';
+    card.setAttribute('aria-label',(data.title||defaults.title)+'動画');
+  }
+  function fillEditor(){
+    titleEdit.value=data.title||'';
+    descriptionEdit.value=data.description||'';
+    urlEdit.value=data.url||'';
+    visibleEdit.checked=data.visible!==false;
+  }
+  async function load(){
+    try{
+      const response=await fetch(API,{cache:'no-store'});
+      if(response.ok){
+        const json=await response.json();
+        if(json.data&&!Array.isArray(json.data)&&typeof json.data==='object'){
+          data={...defaults,...json.data,visible:json.data.visible!==false};
+        }
+      }
+    }catch(e){}
+    render();
+    fillEditor();
+  }
+  document.getElementById('teamInterviewSave').addEventListener('click',async()=>{
+    const password=sessionStorage.getItem('yachiyoAdminPassword')||'';
+    const next={
+      title:titleEdit.value.trim(),
+      description:descriptionEdit.value.trim(),
+      url:urlEdit.value.trim(),
+      visible:visibleEdit.checked
+    };
+    if(!next.title){alert('見出しを入力してください。');return}
+    if(!next.description){alert('説明文を入力してください。');return}
+    if(!validUrl(next.url)){alert('正しいURLを入力してください。');return}
+    if(!password){alert('管理者認証をやり直してください。');return}
+    try{
+      const response=await fetch(API,{
+        method:'POST',
+        headers:{'content-type':'application/json','x-admin-password':password},
+        body:JSON.stringify({data:next})
+      });
+      if(response.status===429){alert('試行回数の上限です。15分後に再度お試しください。');return}
+      if(response.status===401){alert('管理者パスワードが違います。');return}
+      if(!response.ok){alert('インタビューを保存できませんでした。');return}
+      data=next;
+      render();
+      fillEditor();
+      showSaveNotice('インタビューを保存しました');
+    }catch(e){alert('インタビューを保存できませんでした。')}
+  });
+  document.getElementById('teamInterviewCancel').addEventListener('click',fillEditor);
+  const observer=new MutationObserver(()=>{
+    if(document.body.classList.contains('staff-editing'))fillEditor();
+  });
   observer.observe(document.body,{attributes:true,attributeFilter:['class']});
   load();
 })();
