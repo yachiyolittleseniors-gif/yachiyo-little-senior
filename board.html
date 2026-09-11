@@ -1295,21 +1295,43 @@ html{scroll-padding-top:var(--compact-header-height)}
 
   let taps=0;
   let timer=null;
+  let lastTouchAt=0;
   function reset(){
     taps=0;
     clearTimeout(timer);
     timer=null;
   }
-  trigger.addEventListener('pointerup',function(event){
-    event.preventDefault();
-    event.stopImmediatePropagation();
+  function countTap(){
     taps++;
     clearTimeout(timer);
-    timer=setTimeout(reset,2000);
+    timer=setTimeout(reset,2200);
     if(taps>=5){
       reset();
       button.style.setProperty('display','block','important');
     }
+  }
+  trigger.addEventListener('pointerup',function(event){
+    if(event.pointerType==='touch'){
+      event.stopImmediatePropagation();
+      return;
+    }
+    event.stopImmediatePropagation();
+    countTap();
+  },{capture:true,passive:true});
+  trigger.addEventListener('touchend',function(event){
+    lastTouchAt=Date.now();
+    event.preventDefault();
+    event.stopImmediatePropagation();
+    countTap();
+  },{capture:true,passive:false});
+  trigger.addEventListener('click',function(event){
+    if(Date.now()-lastTouchAt<800){
+      event.preventDefault();
+      event.stopImmediatePropagation();
+      return;
+    }
+    event.stopImmediatePropagation();
+    countTap();
   },{capture:true,passive:false});
   trigger.addEventListener('dblclick',function(event){
     event.preventDefault();
