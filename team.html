@@ -3087,21 +3087,13 @@ function openProtectedArea(type){
 <script>
 (function(){
   const API='/.netlify/functions/site-data?section=graduate-paths';
-  const legacy={
-    outsidePrivate:'履正社高校、履正社高校（女子野球部）（大阪）、霞ヶ浦高校（茨城）、日本文理高校（新潟）、八戸学院光星高校（青森）、北照高校（北海道）、江戸川学園取手高校（茨城）など',
-    insidePrivate:'千葉経済高校、東京学館船橋高校、東京学館高校、千葉英和高校、千葉敬愛高校、日大習志野高校、中央学院高校、八千代松陰高校など',
-    publicHigh:'市立習志野高校、市立松戸高校、八千代高校、佐倉高校、八千代東高校など'
-  };
+  const LIST_VERSION=2;
   const defaults={
     outsidePrivate:'江戸川学園取手高校（茨城）、鹿島学園高校（茨城）、霞ヶ浦高校（茨城）、京都両洋高校（女子野球部）（京都）、修徳高校（東京）、東洋大学附属牛久高校（茨城）、日南学園高校（宮崎）、日本航空高校（女子野球部）（山梨）、日本大学第一高校（東京）、日本文理高校（新潟）、八戸学院光星高校（青森）、北照高校（北海道）、履正社高校、履正社高校（女子野球部）（大阪）など',
     insidePrivate:'秀明八千代高校、拓殖大学紅陵高校、千葉英和高校、千葉学芸高校、千葉敬愛高校、千葉経済高校、千葉日本大学第一高校、千葉明徳高校、中央学院高校、東海大学付属市原望洋高校、東海大学付属浦安高校、東京学館高校、東京学館船橋高校、日大習志野高校、八千代松陰高校、流通経済大学付属柏高校など',
     publicHigh:'我孫子東高校、印旛明誠高校、柏井高校、京葉工業高校、佐倉高校、市立習志野高校、市立船橋高校、市立松戸高校、白井高校、千葉商業高校、津田沼高校、船橋芝山高校、船橋東高校、松戸六実高校、実籾高校、八千代高校、八千代西高校、八千代東高校など'
   };
   const normalize=value=>String(value||'').trim().replace(/〈/g,'（').replace(/〉/g,'）');
-  const migrate=(key,value)=>{
-    const normalized=normalize(value);
-    return !normalized||normalized===legacy[key]?defaults[key]:normalized;
-  };
   let data={...defaults};
   const outside=document.getElementById('graduateOutsidePrivate');
   const inside=document.getElementById('graduateInsidePrivate');
@@ -3126,12 +3118,16 @@ function openProtectedArea(type){
       if(r.ok){
         const j=await r.json();
         if(j.data && !Array.isArray(j.data) && typeof j.data==='object'){
-          const saved={...defaults,...j.data};
-          data={
-            outsidePrivate:migrate('outsidePrivate',saved.outsidePrivate),
-            insidePrivate:migrate('insidePrivate',saved.insidePrivate),
-            publicHigh:migrate('publicHigh',saved.publicHigh)
-          };
+          if(Number(j.data.listVersion)===LIST_VERSION){
+            const saved={...defaults,...j.data};
+            data={
+              outsidePrivate:normalize(saved.outsidePrivate),
+              insidePrivate:normalize(saved.insidePrivate),
+              publicHigh:normalize(saved.publicHigh)
+            };
+          }else{
+            data={...defaults};
+          }
         }
       }
     }catch(e){}
@@ -3142,6 +3138,7 @@ function openProtectedArea(type){
     const p=sessionStorage.getItem('yachiyoAdminPassword')||'';
     if(!p){alert('管理者認証をやり直してください。');return;}
     const next={
+      listVersion:LIST_VERSION,
       outsidePrivate:normalize(outsideEdit.value),
       insidePrivate:normalize(insideEdit.value),
       publicHigh:normalize(publicEdit.value)
