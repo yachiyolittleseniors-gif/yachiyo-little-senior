@@ -1069,7 +1069,7 @@ body.photo-admin-on #accessPasswordChange{
   function removeSpacer(){document.getElementById(spacerId)?.remove();}
   function align(){
     if(!isOpen())return;
-    const target=document.querySelector('#guidelineAdminBox');
+    const target=document.querySelector('main.main');
     if(!target)return;
     if(mode==='panel'){
       target.scrollTop=0;
@@ -1099,7 +1099,7 @@ body.photo-admin-on #accessPasswordChange{
     wasOpen=open;
   }).observe(watched,{attributes:true,attributeFilter:['class']});
 
-  const target=document.querySelector('#guidelineAdminBox');
+  const target=document.querySelector('main.main');
   if(target&&'ResizeObserver' in window){
     new ResizeObserver(()=>{
       if(!isOpen())return;
