@@ -532,7 +532,7 @@ body.photo-admin-on #accessPasswordChange{
   function removeSpacer(){document.getElementById(spacerId)?.remove();}
   function align(){
     if(!isOpen())return;
-    const target=document.querySelector('#linkAdmin');
+    const target=document.querySelector('main');
     if(!target)return;
     ensureSpacer();
     const header=document.querySelector('.header,.site-header');
