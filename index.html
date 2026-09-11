@@ -1978,10 +1978,26 @@ img,video,iframe{max-width:100%}
     backdrop-filter:blur(8px);
     -webkit-backdrop-filter:blur(8px);
   }
-  body.photo-admin-on #heroPhotoChange{order:1}
+  body.photo-admin-on #heroPhotoChange{
+    order:1;
+    display:flex!important;
+  }
   body.photo-admin-on #heroAnnouncementEdit{order:2}
   body.photo-admin-on #accessPasswordChange{order:3}
-  body.photo-admin-on #heroAdminToggle{order:4}
+  body.photo-admin-on #heroAdminToggle.unified-admin-toggle{
+    order:4;
+    position:static!important;
+    inset:auto!important;
+    width:100%!important;
+    min-width:0!important;
+    height:44px!important;
+    margin:0!important;
+    padding:8px 6px!important;
+    font-size:11px!important;
+    display:flex!important;
+    align-items:center!important;
+    justify-content:center!important;
+  }
 }
 @media(max-width:350px){
   body.photo-admin-on #heroPhotoAdmin button,
@@ -3559,7 +3575,7 @@ function openProtectedArea(type){
 
 <div id="heroPhotoAdmin">
   <button id="heroAdminToggle" type="button">管理</button>
-  <label id="heroPhotoChange" for="heroPhotoInput">TOPの写真を変更</label>
+  <label id="heroPhotoChange" for="heroPhotoInput">トップの写真を変更</label>
   <button id="heroAnnouncementEdit" class="hero-announcement-admin" type="button">トップお知らせ編集</button>
   <button id="accessPasswordChange" type="button">閲覧パスワード変更</button>
   <input id="heroPhotoInput" type="file" accept="image/*">
