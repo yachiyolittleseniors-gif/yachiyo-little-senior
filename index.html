@@ -2023,12 +2023,13 @@ img,video,iframe{max-width:100%}
   .hero-announcement.is-visible+.eyebrow{margin-top:0}
 }
 .hero-announcement-label{position:relative;z-index:2;color:#d7b45f;font-size:clamp(10px,1.15vw,13px);font-weight:800;line-height:1.25;letter-spacing:.22em}
-.hero-announcement-message{position:relative;z-index:2;width:100%;color:#f4d98f;font-size:clamp(15px,1.7vw,21px);font-weight:800;letter-spacing:.08em;text-align:center}
+.hero-announcement-message{position:relative;z-index:2;width:100%;color:#f4d98f;font-size:clamp(15px,1.7vw,21px);font-weight:800;line-height:1.45;letter-spacing:.08em;text-align:center;white-space:pre-line}
 .hero-announcement.is-visible::after{content:"";position:absolute;z-index:1;top:-45%;bottom:-45%;left:-38%;width:24%;pointer-events:none;background:linear-gradient(90deg,transparent,rgba(255,232,166,.42),transparent);filter:blur(1px);transform:skewX(-18deg);animation:heroAnnouncementShine 3s ease-in-out infinite}
 @keyframes heroAnnouncementShine{0%,68%{left:-38%;opacity:0}72%{opacity:1}92%{left:118%;opacity:1}100%{left:118%;opacity:0}}
 .hero-announcement-admin{display:none!important}
 body.photo-admin-on .hero-announcement-admin{display:inline-flex!important}
 .hero-announcement-modal-note{margin:0 0 14px;color:#596573;font-size:13px;line-height:1.7}
+#heroAnnouncementText{width:100%;min-height:82px;font-family:inherit;font-size:16px!important;line-height:1.55;resize:none}
 .hero-announcement-visible{display:flex!important;align-items:center;gap:10px;font-size:15px!important}
 .hero-announcement-visible input{width:20px!important;height:20px;margin:0!important}
 .hero-announcement-actions{display:flex;justify-content:flex-end;gap:10px;margin-top:18px}
@@ -3303,8 +3304,8 @@ html{scroll-padding-top:var(--fixed-header-height)}
   <div class="news-modal-card">
     <button type="button" id="heroAnnouncementClose" class="news-close" aria-label="閉じる">×</button>
     <h3 id="heroAnnouncementModalTitle">トップのお知らせを編集</h3>
-    <p class="hero-announcement-modal-note">表示しない場合はチェックを外してください。</p>
-    <label>表示する文章<input id="heroAnnouncementText" type="text" maxlength="60" placeholder="例：祝　関東大会出場 🎉"></label>
+    <p class="hero-announcement-modal-note">改行して2行まで入力できます。表示しない場合はチェックを外してください。</p>
+    <label>表示する文章<textarea id="heroAnnouncementText" rows="2" maxlength="100" placeholder="例：祝　関東大会出場 🎉"></textarea></label>
     <label class="hero-announcement-visible"><input id="heroAnnouncementVisible" type="checkbox">トップに表示する</label>
     <div class="hero-announcement-actions">
       <button type="button" id="heroAnnouncementCancel">キャンセル</button>
@@ -4128,9 +4129,12 @@ function openProtectedArea(type){
 
  const cacheKey='yachiyoHeroAnnouncement';
  let state={text:'祝　関東大会出場 🎉',visible:false};
+ function limitToTwoLines(value){
+   return String(value||'').replace(/\r\n?/g,'\n').split('\n').slice(0,2).join('\n').slice(0,100);
+ }
  function normalize(value){
    if(!value||Array.isArray(value)||typeof value!=='object')return state;
-   return {text:String(value.text||'').trim().slice(0,60),visible:value.visible===true};
+   return {text:limitToTwoLines(value.text).trim(),visible:value.visible===true};
  }
  function render(){
    message.textContent=state.text;
@@ -4157,14 +4161,19 @@ function openProtectedArea(type){
    modal.hidden=false;
    setTimeout(()=>textInput.focus(),0);
  }
- function closeEditor(){modal.hidden=true}
+ function closeEditor(){textInput.blur();modal.hidden=true}
+
+ textInput.addEventListener('input',function(){
+   const limited=limitToTwoLines(textInput.value);
+   if(textInput.value!==limited)textInput.value=limited;
+ });
 
  edit.addEventListener('click',openEditor);
  close.addEventListener('click',closeEditor);
  cancel.addEventListener('click',closeEditor);
  modal.addEventListener('click',event=>{if(event.target===modal)closeEditor()});
  save.addEventListener('click',async function(){
-   const next={text:textInput.value.trim().slice(0,60),visible:visibleInput.checked};
+   const next={text:limitToTwoLines(textInput.value).trim(),visible:visibleInput.checked};
    if(next.visible&&!next.text){alert('表示する文章を入力してください。');return}
    const password=sessionStorage.getItem('yachiyoAdminPassword')||'';
    if(!password){alert('管理画面に入り直してください。');return}
@@ -4183,6 +4192,8 @@ function openProtectedArea(type){
      try{localStorage.setItem(cacheKey,JSON.stringify(state))}catch(error){}
      render();
      closeEditor();
+     setTimeout(function(){window.scrollTo(0,0)},250);
+     setTimeout(function(){window.scrollTo(0,0)},800);
      showSaveNotice('保存しました');
    }catch(error){alert('トップのお知らせを保存できませんでした。')}
    finally{save.disabled=false;save.textContent='保存する'}
