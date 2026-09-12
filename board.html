@@ -557,6 +557,11 @@ html{scroll-padding-top:var(--compact-header-height)}
 #densukeAdminPanel .restore{background:#173e24}
 #densukeWarning{display:none;margin:12px 6px;color:#ff5b5b;font-weight:800;line-height:1.6}
 #densukeAdminStatus{font-size:12px;line-height:1.7;color:#d5dbe3}
+#coachPasswordAdminFields{margin-top:16px;padding-top:16px;border-top:1px solid rgba(255,255,255,.18)}
+#coachPasswordAdminFields label{display:block;margin:10px 6px 5px;font-size:12px;font-weight:700;color:#d5dbe3}
+#coachPasswordAdminFields input{width:100%;padding:11px 12px;border:1px solid rgba(199,154,59,.55);border-radius:9px;background:#fff;color:#17202b;font:inherit}
+#saveCoachPasswordBtn{width:100%;margin:12px 0 4px!important;background:#c79a3b!important;color:#fff!important}
+#coachPasswordStatus{min-height:0!important;margin:7px 6px 0!important;color:#d5dbe3!important;font-size:11px!important;line-height:1.6!important}
 #tournamentAdminFields{margin-top:16px;padding-top:16px;border-top:1px solid rgba(255,255,255,.18)}
 #tournamentAdminFields label{display:block;margin:10px 6px 5px;font-size:12px;font-weight:700;color:#d5dbe3}
 #tournamentAdminFields input{width:100%;padding:11px 12px;border:1px solid rgba(199,154,59,.55);border-radius:9px;background:#fff;color:#17202b;font:inherit}
@@ -596,6 +601,15 @@ html{scroll-padding-top:var(--compact-header-height)}
     <button id="endDensukeBtn" class="danger" type="button">伝助を終了</button>
   </div>
   <button id="resumeDensukeBtn" class="restore" type="button" style="display:none">伝助移行を再開</button>
+  <div id="coachPasswordAdminFields">
+    <strong>指導者出欠確認</strong>
+    <label for="coachPasswordInput">新しいパスワード</label>
+    <input id="coachPasswordInput" type="password" minlength="8" maxlength="64" autocomplete="new-password" placeholder="8文字以上">
+    <label for="coachPasswordConfirmInput">新しいパスワード（確認）</label>
+    <input id="coachPasswordConfirmInput" type="password" minlength="8" maxlength="64" autocomplete="new-password" placeholder="もう一度入力">
+    <button id="saveCoachPasswordBtn" type="button">パスワードを変更</button>
+    <p id="coachPasswordStatus">初期パスワード：y20260101</p>
+  </div>
   <div id="tournamentAdminFields">
     <strong>開催中の公式戦PDF</strong>
     <label for="tournamentTitleInput">大会名・資料名</label>
@@ -644,6 +658,10 @@ html{scroll-padding-top:var(--compact-header-height)}
   const closeAdminBtn=document.getElementById('closeDensukeAdminBtn');
   const warning=document.getElementById('densukeWarning');
   const adminStatus=document.getElementById('densukeAdminStatus');
+  const coachPasswordInput=document.getElementById('coachPasswordInput');
+  const coachPasswordConfirmInput=document.getElementById('coachPasswordConfirmInput');
+  const saveCoachPasswordBtn=document.getElementById('saveCoachPasswordBtn');
+  const coachPasswordStatus=document.getElementById('coachPasswordStatus');
 
   if(!attendanceBtn || !attendanceCard || !legacyCard || !adminBtn || !panel || !endBtn || !resumeBtn || !closeAdminBtn || !warning) return;
 
@@ -762,6 +780,40 @@ html{scroll-padding-top:var(--compact-header-height)}
       adminBtn.textContent='管理終了';
     }catch(e){
       alert('管理者認証を確認できませんでした。');
+    }
+  });
+
+  saveCoachPasswordBtn.addEventListener('click',async()=>{
+    const adminPassword=panel.dataset.adminPassword||'';
+    const password=coachPasswordInput.value;
+    const confirmation=coachPasswordConfirmInput.value;
+    if(!adminPassword){alert('管理画面を開き直してください。');return}
+    if(password.length<8){alert('パスワードは8文字以上で入力してください。');return}
+    if(password!==confirmation){alert('確認用パスワードが一致しません。');return}
+    if(!confirm('指導者出欠確認のパスワードを変更しますか？'))return;
+
+    saveCoachPasswordBtn.disabled=true;
+    saveCoachPasswordBtn.textContent='変更中...';
+    coachPasswordStatus.textContent='';
+    try{
+      const response=await fetch('/.netlify/functions/coach-attendance-data',{
+        method:'POST',
+        headers:{'content-type':'application/json','x-admin-password':adminPassword},
+        body:JSON.stringify({action:'setCoachPassword',password:password})
+      });
+      const body=await response.json().catch(()=>({}));
+      if(!response.ok)throw new Error(body.error||'パスワードを変更できませんでした。');
+      coachPasswordInput.value='';
+      coachPasswordConfirmInput.value='';
+      sessionStorage.removeItem('yachiyoCoachAttendancePass');
+      coachPasswordStatus.textContent='パスワードを変更しました。';
+      showSaveNotice('指導者出欠確認のパスワードを変更しました');
+    }catch(e){
+      coachPasswordStatus.textContent=e.message||'パスワードを変更できませんでした。';
+      alert(coachPasswordStatus.textContent);
+    }finally{
+      saveCoachPasswordBtn.disabled=false;
+      saveCoachPasswordBtn.textContent='パスワードを変更';
     }
   });
 

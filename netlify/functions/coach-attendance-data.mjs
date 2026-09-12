@@ -7,14 +7,14 @@ import {
 const STORE = "yachiyo-public-site";
 const KEY = "content/coach-attendance.json";
 const CONFIG_KEY = "content/coach-attendance-config.json";
-const ACCESS_CONFIG_KEY = "content/access-settings.json";
+const COACH_ACCESS_CONFIG_KEY = "content/coach-attendance-access.json";
 const STAFF_KEY = "content/staff.json";
 const PARENT_ATTENDANCE_KEY = "content/attendance.json";
 const MEMBER_STATE_PREFIX = "coach-attendance/member-state/";
 const DENSUKE_URL = "https://densuke.biz/list?cd=ZhxJNW9dPNGVtm7c";
-const DEFAULT_ACCESS_SALT = "yachiyo-access-v1";
-const DEFAULT_ACCESS_HASH =
-  "19eb403934ae615b2961d9f6b5ddd86aab32a0fdf4e96adeb8aa2fcb351276ba";
+const DEFAULT_COACH_ACCESS_SALT = "yachiyo-coach-access-v1";
+const DEFAULT_COACH_ACCESS_HASH =
+  "937e76fe820379b5e095356a7dae5cbd223b5c9af6dd444e48a3f3b34bd4f8eb";
 
 const MIGRATED_DATA = { events: [], members: [], answers: {} };
 const MIGRATED_COMMENTS = [];
@@ -55,21 +55,31 @@ function safeEqual(a, b) {
   return difference === 0;
 }
 
-async function accessOK(store, request) {
-  const entered = String(
-    request.headers.get("x-access-password") || ""
-  );
-
+async function coachAccessPasswordIsValid(store, enteredPassword) {
+  const entered = String(enteredPassword || "");
   if (!entered || entered.length > 128) return false;
 
-  const saved = await store.get(ACCESS_CONFIG_KEY, {
-    type: "json",
-    consistency: "strong",
-  });
-  const salt = saved?.salt || DEFAULT_ACCESS_SALT;
-  const expectedHash = saved?.hash || DEFAULT_ACCESS_HASH;
+  let saved = null;
+  try {
+    saved = await store.get(COACH_ACCESS_CONFIG_KEY, {
+      type: "json",
+      consistency: "strong",
+    });
+  } catch {
+    saved = null;
+  }
+
+  const salt = saved?.salt || DEFAULT_COACH_ACCESS_SALT;
+  const expectedHash = saved?.hash || DEFAULT_COACH_ACCESS_HASH;
   const enteredHash = await hashAccessPassword(entered, salt);
   return safeEqual(enteredHash, expectedHash);
+}
+
+async function coachAccessOK(store, request) {
+  return coachAccessPasswordIsValid(
+    store,
+    request.headers.get("x-coach-password") || ""
+  );
 }
 
 function normalize(data = {}) {
@@ -430,7 +440,7 @@ export default async (request, context) => {
 
   try {
     if (request.method === "GET") {
-      if (!(await accessOK(store, request))) {
+      if (!(await coachAccessOK(store, request))) {
         return json({ error: "Unauthorized" }, 401);
       }
 
@@ -455,7 +465,16 @@ export default async (request, context) => {
     try { body = await request.json(); } catch { return json({ error: "Invalid JSON" }, 400); }
     const action = body.action || "";
 
-    const adminActions = new Set(["adminPing", "adminSave"]);
+    if (action === "verifyCoachPassword") {
+      const valid = await coachAccessPasswordIsValid(store, body.password);
+      return valid ? json({ ok: true }) : json({ ok: false }, 401);
+    }
+
+    const adminActions = new Set([
+      "adminPing",
+      "adminSave",
+      "setCoachPassword",
+    ]);
     let adminAuth = null;
     if (adminActions.has(action)) {
       adminAuth = await verifyAdminPassword({
@@ -469,17 +488,32 @@ export default async (request, context) => {
 
     if (
       (action === "answer" || action === "comment") &&
-      !(await accessOK(store, request))
+      !(await coachAccessOK(store, request))
     ) {
       return json({ error: "Unauthorized" }, 401);
     }
 
-    if (!["adminPing", "adminSave", "answer", "comment"].includes(action)) {
+    if (!["adminPing", "adminSave", "setCoachPassword", "answer", "comment"].includes(action)) {
       return json({ error: "Unknown action" }, 400);
     }
 
     if (action === "adminPing") {
       return json({ ok: true, config: await getConfig(store) });
+    }
+
+    if (action === "setCoachPassword") {
+      const password = String(body.password || "");
+      if (password.length < 8 || password.length > 64) {
+        return json({ error: "パスワードは8文字以上64文字以内で入力してください。" }, 400);
+      }
+      const salt = crypto.randomUUID();
+      const hash = await hashAccessPassword(password, salt);
+      await store.setJSON(COACH_ACCESS_CONFIG_KEY, {
+        salt,
+        hash,
+        updatedAt: new Date().toISOString(),
+      });
+      return json({ ok: true });
     }
 
     if (action === "setConfig") {

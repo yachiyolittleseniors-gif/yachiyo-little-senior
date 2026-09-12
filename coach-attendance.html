@@ -193,7 +193,50 @@ body{padding-top:var(--fixed-header-height)!important}
  .report-grade,.report-comments{break-inside:avoid}
 }
 </style>
-<style id="coach-attendance-polish">.name-col{min-width:148px}@media(max-width:700px){.name-col{min-width:136px}}</style></head><body id="page-top">
+<style id="coach-attendance-polish">.name-col{min-width:148px}@media(max-width:700px){.name-col{min-width:136px}}</style>
+<script>
+document.documentElement.style.visibility='hidden';
+window.coachAccessReady=(async function(){
+  const API='/.netlify/functions/coach-attendance-data';
+  const storageKey='yachiyoCoachAttendancePass';
+
+  async function verify(password){
+    if(!password)return false;
+    try{
+      const response=await fetch(API,{
+        method:'POST',
+        headers:{'content-type':'application/json'},
+        body:JSON.stringify({action:'verifyCoachPassword',password:password})
+      });
+      return response.ok;
+    }catch(e){
+      return false;
+    }
+  }
+
+  const saved=sessionStorage.getItem(storageKey)||'';
+  if(saved&&await verify(saved)){
+    document.documentElement.style.visibility='';
+    return true;
+  }
+  sessionStorage.removeItem(storageKey);
+
+  const entered=prompt('指導者出欠確認のパスワードを入力してください。');
+  if(entered===null){
+    location.replace('./board.html');
+    return false;
+  }
+  if(await verify(entered)){
+    sessionStorage.setItem(storageKey,entered);
+    document.documentElement.style.visibility='';
+    return true;
+  }
+  alert('パスワードが違います。');
+  location.replace('./board.html');
+  return false;
+})();
+</script>
+</head><body id="page-top">
 <header class="header">
 <nav class="nav">
 <div class="brand"><a class="official-brand-wrap" href="./official-logo-crisp-final.png" aria-label="ページ先頭へ戻る・ロゴ画像を保存" onclick="event.preventDefault();window.scrollTo({top:0,behavior:'smooth'})">
@@ -264,7 +307,7 @@ body{padding-top:var(--fixed-header-height)!important}
 // Created by tatsuki.saitoh
 const API='/.netlify/functions/coach-attendance-data';
 const SCHEDULE_API='/.netlify/functions/site-data?section=schedule';
-let adminPass='',accessPass=sessionStorage.getItem('yachiyoAttendancePass')||'',selectedMember='',currentReportEventId='',data={events:[],members:[],answers:{},comments:[]},scheduleEvents=[],appConfig={migrationEnded:true,endedAt:''},memberChangesDirty=false,lastDeletedComment=null,savingMembers=new Set();
+let adminPass='',accessPass=sessionStorage.getItem('yachiyoCoachAttendancePass')||'',selectedMember='',currentReportEventId='',data={events:[],members:[],answers:{},comments:[]},scheduleEvents=[],appConfig={migrationEnded:true,endedAt:''},memberChangesDirty=false,lastDeletedComment=null,savingMembers=new Set();
 sessionStorage.removeItem('yachiyoAdminPassword');
 const $=s=>document.querySelector(s);
 const esc=s=>String(s??'').replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));
@@ -276,10 +319,10 @@ function statusClass(s){return s==='○'?'status-o':s==='△'?'status-t':s==='×
 function nextStatus(s){return s==='○'?'△':s==='△'?'×':s==='×'?'':'○'}
 function normalizeMember(member){return{...member,id:String(member?.id||''),name:String(member?.name||''),role:String(member?.role||'コーチ')}}
 function normalize(v){return{events:Array.isArray(v?.events)?v.events:[],members:Array.isArray(v?.members)?v.members.map(normalizeMember):[],answers:v?.answers&&typeof v.answers==='object'?v.answers:{},comments:Array.isArray(v?.comments)?v.comments:[]}}
-async function api(method,body,admin=false){const headers={'content-type':'application/json'};if(admin)headers['x-admin-password']=adminPass;else headers['x-access-password']=accessPass;const r=await fetch(API,{method,headers,cache:'no-store',body:body?JSON.stringify(body):undefined});let j={};try{j=await r.json()}catch{}if(!r.ok)throw new Error(j.error||'通信に失敗しました');return j}
+async function api(method,body,admin=false){const headers={'content-type':'application/json'};if(admin)headers['x-admin-password']=adminPass;else headers['x-coach-password']=accessPass;const r=await fetch(API,{method,headers,cache:'no-store',body:body?JSON.stringify(body):undefined});let j={};try{j=await r.json()}catch{}if(!r.ok)throw new Error(j.error||'通信に失敗しました');return j}
 async function loadScheduleEvents(){try{const response=await fetch(SCHEDULE_API,{cache:'no-store'});if(!response.ok)return[];const body=await response.json();return Array.isArray(body.data)?body.data:[]}catch{return[]}}
 function visibleEvents(){const now=new Date(),start=new Date(now),end=new Date(now);start.setDate(start.getDate()-((start.getDay()+6)%7));start.setHours(0,0,0,0);end.setMonth(end.getMonth()+1);const withinRange=item=>{const date=new Date(String(item?.date||'')+'T00:00:00');return !Number.isNaN(date.getTime())&&date>=start&&date<=end};const byDate=new Map(data.events.filter(withinRange).map(item=>[String(item.date),item]));for(const item of scheduleEvents.filter(withinRange)){const date=String(item.date);const existing=byDate.get(date);byDate.set(date,existing?{...existing,title:existing.title||item.title}:{id:'schedule_'+date.replaceAll('-',''),date,title:item.title||'予定'})}return [...byDate.values()].sort((a,b)=>String(a.date).localeCompare(String(b.date)))}
-async function load(){if(!accessPass){alert('チーム専用ページから開いてください。');location.replace('./board.html');return}try{showError('');const [j,calendar]=await Promise.all([api('GET'),loadScheduleEvents()]);appConfig=j.config||appConfig;data=normalize(j.data);scheduleEvents=calendar;showAttendance();render();$('#syncText').textContent='更新 '+new Date().toLocaleTimeString('ja-JP',{hour:'2-digit',minute:'2-digit'})}catch(e){showError('認証を確認できませんでした。チーム専用ページから開き直してください。')}}
+async function load(){const ready=await window.coachAccessReady;accessPass=sessionStorage.getItem('yachiyoCoachAttendancePass')||'';if(!ready||!accessPass)return;try{showError('');const [j,calendar]=await Promise.all([api('GET'),loadScheduleEvents()]);appConfig=j.config||appConfig;data=normalize(j.data);scheduleEvents=calendar;showAttendance();render();$('#syncText').textContent='更新 '+new Date().toLocaleTimeString('ja-JP',{hour:'2-digit',minute:'2-digit'})}catch(e){sessionStorage.removeItem('yachiyoCoachAttendancePass');showError('認証を確認できませんでした。ページを開き直してください。')}}
 function showLocked(){$('#lockedView').classList.remove('hidden');$('#attendanceView').classList.add('hidden');selectedMember='';renderAdmin()}
 function showAttendance(){$('#lockedView').classList.add('hidden');$('#attendanceView').classList.remove('hidden');renderAdmin()}
 function formatDate(d){if(!d)return'';const x=new Date(d+'T00:00:00');return `${x.getMonth()+1}/${x.getDate()}(${['日','月','火','水','木','金','土'][x.getDay()]})`}
