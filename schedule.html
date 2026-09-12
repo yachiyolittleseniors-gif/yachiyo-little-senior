@@ -1293,8 +1293,13 @@ body:not(.admin-mode) .delete{display:none!important}
 .calendar-grade-field legend{margin-bottom:7px;color:#263344;font-size:13px;font-weight:700}
 .calendar-grade-options{display:flex;gap:9px;flex-wrap:wrap}
 #calendarForm .calendar-grade-option{display:flex;align-items:center;gap:7px;min-width:82px;margin:0;padding:10px 12px;border:1px solid #cfd5dc;border-radius:7px;background:#fff;font-size:14px;font-weight:700;cursor:pointer}
-#calendarForm .calendar-grade-option:has(input:checked){border-color:#b88a2d;background:#fff8e7;color:#75540d}
-#calendarForm .calendar-grade-option input{display:block;width:18px;height:18px;margin:0;padding:0;accent-color:#b88a2d}
+#calendarForm .calendar-grade-option input{display:block;width:18px;height:18px;margin:0;padding:0}
+#calendarForm .calendar-grade-option.grade-1 input{accent-color:#e0ad00}
+#calendarForm .calendar-grade-option.grade-2 input{accent-color:#176cd3}
+#calendarForm .calendar-grade-option.grade-3 input{accent-color:#d62432}
+#calendarForm .calendar-grade-option.grade-1:has(input:checked){border-color:#d4a300;background:#fff9df;color:#6c5200}
+#calendarForm .calendar-grade-option.grade-2:has(input:checked){border-color:#176cd3;background:#eef5ff;color:#124e96}
+#calendarForm .calendar-grade-option.grade-3:has(input:checked){border-color:#d62432;background:#fff0f1;color:#98202a}
 </style>
 
 
@@ -1847,9 +1852,9 @@ html{scroll-padding-top:var(--fixed-header-height)}
 <fieldset class="calendar-grade-field">
   <legend>対象学年（複数選択可）</legend>
   <div class="calendar-grade-options">
-    <label class="calendar-grade-option"><input type="checkbox" name="calendarGrade" value="1">1年</label>
-    <label class="calendar-grade-option"><input type="checkbox" name="calendarGrade" value="2">2年</label>
-    <label class="calendar-grade-option"><input type="checkbox" name="calendarGrade" value="3">3年</label>
+    <label class="calendar-grade-option grade-1"><input type="checkbox" name="calendarGrade" value="1">🟡1年生</label>
+    <label class="calendar-grade-option grade-2"><input type="checkbox" name="calendarGrade" value="2">🔵2年生</label>
+    <label class="calendar-grade-option grade-3"><input type="checkbox" name="calendarGrade" value="3">🔴3年生</label>
   </div>
 </fieldset>
 <label>時間
@@ -1950,8 +1955,9 @@ function gradesFor(ev){
 }
 function gradeText(ev){
   const grades=gradesFor(ev);
-  if(grades.length===3)return '全学年';
-  return grades.map(x=>x+'年').join('・');
+  if(grades.length===3)return '🟢全学年';
+  const labels={'1':'🟡1年生','2':'🔵2年生','3':'🔴3年生'};
+  return grades.map(x=>labels[x]).join('・');
 }
 function renderCalendar(){
   const y=currentMonth.getFullYear(), m=currentMonth.getMonth();
