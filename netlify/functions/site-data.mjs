@@ -722,11 +722,18 @@ export default async (request, context) => {
             ? String(item.contentType)
             : "application/pdf";
           const encodedName = encodeURIComponent(item.fileName || "meeting-record");
+          const fallbackName = contentType === "application/pdf"
+            ? "meeting-record.pdf"
+            : contentType === "image/png"
+              ? "meeting-record.png"
+              : contentType === "image/webp"
+                ? "meeting-record.webp"
+                : "meeting-record.jpg";
           return new Response(file, {
             status: 200,
             headers: {
               "content-type": contentType,
-              "content-disposition": `inline; filename="meeting-record"; filename*=UTF-8''${encodedName}`,
+              "content-disposition": `inline; filename="${fallbackName}"; filename*=UTF-8''${encodedName}`,
               "cache-control": "private, no-store",
               "x-content-type-options": "nosniff"
             }
