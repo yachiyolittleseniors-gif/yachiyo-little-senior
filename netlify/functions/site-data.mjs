@@ -35,6 +35,8 @@ const allowed = new Set([
   "graduate-paths",
   "links",
   "board-tournaments",
+  "board-meeting-documents",
+  "board-meeting-schedule",
   "access-settings"
 ]);
 
@@ -544,7 +546,12 @@ export default async (request, context) => {
         return json({ error: "method not allowed" }, 405);
       }
 
-      if (section === "rules" || section === "duty-roster") {
+      if (
+        section === "rules" ||
+        section === "duty-roster" ||
+        section === "board-meeting-documents" ||
+        section === "board-meeting-schedule"
+      ) {
         const accessPassword = request.headers.get("x-access-password") || "";
         const accessGranted =
           await boardSessionIsValid(request) ||
@@ -639,6 +646,47 @@ export default async (request, context) => {
               "content-type": "application/pdf",
               "content-disposition":
                 `inline; filename="tournament.pdf"; filename*=UTF-8''${encodedName}`,
+              "cache-control": "private, no-store",
+              "x-content-type-options": "nosniff"
+            }
+          });
+        }
+
+        return json({ data: Array.isArray(documents) ? documents : [] });
+      }
+
+      if (section === "board-meeting-documents") {
+        const documents = await store.get(key, {
+          type: "json",
+          consistency: "strong"
+        });
+
+        if (url.searchParams.has("file")) {
+          const id = String(url.searchParams.get("file") || "");
+          const item = Array.isArray(documents)
+            ? documents.find(entry => String(entry?.id || "") === id)
+            : null;
+
+          if (!item) {
+            return new Response("PDF not found", { status: 404 });
+          }
+
+          const pdf = await store.get(`board-meeting-documents/${id}.pdf`, {
+            type: "blob",
+            consistency: "strong"
+          });
+
+          if (!pdf) {
+            return new Response("PDF not found", { status: 404 });
+          }
+
+          const encodedName = encodeURIComponent(item.fileName || "meeting-record.pdf");
+          return new Response(pdf, {
+            status: 200,
+            headers: {
+              "content-type": "application/pdf",
+              "content-disposition":
+                `inline; filename="meeting-record.pdf"; filename*=UTF-8''${encodedName}`,
               "cache-control": "private, no-store",
               "x-content-type-options": "nosniff"
             }
@@ -854,6 +902,134 @@ export default async (request, context) => {
             `Path=/; Max-Age=${BOARD_SESSION_SECONDS}; HttpOnly; Secure; SameSite=Strict`
         }
       );
+    }
+
+    const boardDirectSection =
+      section === "board-meeting-documents" ||
+      section === "board-meeting-schedule";
+
+    if (boardDirectSection) {
+      const accessPassword = request.headers.get("x-access-password") || "";
+      const accessGranted =
+        await boardSessionIsValid(request) ||
+        await accessPasswordIsValid(store, accessPassword);
+
+      if (!accessGranted) {
+        return json({ error: "unauthorized" }, 401);
+      }
+
+      if (
+        section === "board-meeting-documents" &&
+        body?.action === "uploadBoardMeetingDocument"
+      ) {
+        const fileName = String(body.fileName || "").trim();
+        const bytes = decodeDataUrl(body.dataUrl);
+
+        if (!fileName.toLowerCase().endsWith(".pdf") || !bytes) {
+          return json({ error: "PDFファイルを選択してください。" }, 400);
+        }
+        if (bytes.byteLength > 6 * 1024 * 1024) {
+          return json({ error: "PDFは6MB以下にしてください。" }, 413);
+        }
+        if (new TextDecoder().decode(bytes.slice(0, 5)) !== "%PDF-") {
+          return json({ error: "正しいPDFファイルではありません。" }, 400);
+        }
+
+        const current = await store.get(key, {
+          type: "json",
+          consistency: "strong"
+        });
+        const documents = Array.isArray(current) ? current : [];
+        if (documents.length >= 12) {
+          return json({ error: "保存できるPDFは12件までです。" }, 400);
+        }
+
+        const id = crypto.randomUUID();
+        const item = {
+          id,
+          fileName,
+          size: bytes.byteLength,
+          uploadedAt: new Date().toISOString()
+        };
+        await store.set(`board-meeting-documents/${id}.pdf`, bytes.buffer, {
+          metadata: { fileName }
+        });
+        const updated = [item, ...documents];
+        await store.setJSON(key, updated);
+        return json({ ok: true, data: updated });
+      }
+
+      if (
+        section === "board-meeting-documents" &&
+        body?.action === "deleteBoardMeetingDocument"
+      ) {
+        const id = String(body.id || "");
+        const current = await store.get(key, {
+          type: "json",
+          consistency: "strong"
+        });
+        const documents = Array.isArray(current) ? current : [];
+        if (!documents.some(entry => String(entry?.id || "") === id)) {
+          return json({ error: "PDFが見つかりません。" }, 404);
+        }
+        await store.delete(`board-meeting-documents/${id}.pdf`);
+        const updated = documents.filter(entry => String(entry?.id || "") !== id);
+        await store.setJSON(key, updated);
+        return json({ ok: true, data: updated });
+      }
+
+      if (
+        section === "board-meeting-schedule" &&
+        body?.action === "saveBoardMeetingEvent"
+      ) {
+        const event = body.event || {};
+        const id = String(event.id || crypto.randomUUID());
+        const date = String(event.date || "");
+        const title = String(event.title || "").trim();
+        const time = String(event.time || "").trim();
+        const place = String(event.place || "").trim();
+        const memo = String(event.memo || "").trim();
+
+        if (!/^\d{4}-\d{2}-\d{2}$/.test(date)) {
+          return json({ error: "日付を確認してください。" }, 400);
+        }
+        if (!title || title.length > 60 || time.length > 40 || place.length > 80 || memo.length > 500) {
+          return json({ error: "入力内容を確認してください。" }, 400);
+        }
+
+        const current = await store.get(key, {
+          type: "json",
+          consistency: "strong"
+        });
+        const events = Array.isArray(current) ? current : [];
+        const nextItem = { id, date, title, time, place, memo, updatedAt: new Date().toISOString() };
+        const updated = [
+          ...events.filter(entry => String(entry?.id || "") !== id),
+          nextItem
+        ].sort((a, b) => String(a.date || "").localeCompare(String(b.date || "")));
+        await store.setJSON(key, updated);
+        return json({ ok: true, data: updated });
+      }
+
+      if (
+        section === "board-meeting-schedule" &&
+        body?.action === "deleteBoardMeetingEvent"
+      ) {
+        const id = String(body.id || "");
+        const current = await store.get(key, {
+          type: "json",
+          consistency: "strong"
+        });
+        const events = Array.isArray(current) ? current : [];
+        if (!events.some(entry => String(entry?.id || "") === id)) {
+          return json({ error: "予定が見つかりません。" }, 404);
+        }
+        const updated = events.filter(entry => String(entry?.id || "") !== id);
+        await store.setJSON(key, updated);
+        return json({ ok: true, data: updated });
+      }
+
+      return json({ error: "invalid action" }, 400);
     }
 
     const adminAuth = await verifyAdminPassword({
