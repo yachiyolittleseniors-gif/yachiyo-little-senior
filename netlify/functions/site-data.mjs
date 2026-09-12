@@ -43,6 +43,7 @@ const allowed = new Set([
   "referee-documents",
   "board-meeting-documents",
   "board-meeting-schedule",
+  "board-latest-update",
   "access-settings"
 ]);
 
@@ -237,6 +238,81 @@ function boardMeetingFileIsValid(fileName, contentType, bytes) {
   }
   if (contentType === "image/webp") return name.endsWith(".webp") && new TextDecoder().decode(bytes.slice(0, 4)) === "RIFF" && new TextDecoder().decode(bytes.slice(8, 12)) === "WEBP";
   return false;
+}
+
+const BOARD_LATEST_UPDATE_KEY = "content/board-latest-update.json";
+
+function boardUpdateTime(value) {
+  const time = Date.parse(String(value || ""));
+  return Number.isFinite(time) ? time : 0;
+}
+
+function cleanBoardUpdateMessage(value, fallback = "更新しました") {
+  return String(value || fallback).trim().replace(/\s+/g, " ").slice(0, 180);
+}
+
+async function safeStoreJson(store, key) {
+  try {
+    return await store.get(key, { type: "json", consistency: "strong" });
+  } catch {
+    return null;
+  }
+}
+
+async function saveBoardLatestUpdate(store, category, message, updatedAt = new Date().toISOString()) {
+  const data = {
+    category,
+    message: cleanBoardUpdateMessage(message),
+    updatedAt
+  };
+  await store.setJSON(BOARD_LATEST_UPDATE_KEY, data);
+  return data;
+}
+
+async function loadBoardLatestUpdate(store) {
+  const saved = await safeStoreJson(store, BOARD_LATEST_UPDATE_KEY);
+  if (saved?.category && saved?.message && boardUpdateTime(saved.updatedAt)) return saved;
+
+  const [secretariat, referee, roster, schedule] = await Promise.all([
+    safeStoreJson(store, "content/board-meeting-documents.json"),
+    safeStoreJson(store, "content/referee-documents.json"),
+    safeStoreJson(store, "content/duty-roster.json"),
+    safeStoreJson(store, "content/board-meeting-schedule.json")
+  ]);
+  const candidates = [];
+  const newestSecretariat = Array.isArray(secretariat)
+    ? secretariat.slice().sort((a, b) => boardUpdateTime(b?.uploadedAt) - boardUpdateTime(a?.uploadedAt))[0]
+    : null;
+  const newestReferee = Array.isArray(referee)
+    ? referee.slice().sort((a, b) => boardUpdateTime(b?.uploadedAt) - boardUpdateTime(a?.uploadedAt))[0]
+    : null;
+  const newestSchedule = Array.isArray(schedule)
+    ? schedule.slice().sort((a, b) => boardUpdateTime(b?.updatedAt) - boardUpdateTime(a?.updatedAt))[0]
+    : null;
+
+  if (newestSecretariat?.uploadedAt) candidates.push({
+    category: "documents",
+    message: `事務局資料「${cleanBoardUpdateMessage(newestSecretariat.fileName, "資料")}」を保存しました`,
+    updatedAt: newestSecretariat.uploadedAt
+  });
+  if (newestReferee?.uploadedAt) candidates.push({
+    category: "documents",
+    message: `審判部資料「${cleanBoardUpdateMessage(newestReferee.fileName, "資料")}」を保存しました`,
+    updatedAt: newestReferee.uploadedAt
+  });
+  if (roster?.updatedAt) candidates.push({
+    category: "duty-roster",
+    message: cleanBoardUpdateMessage(roster.latestUpdateMessage, "当番表を更新しました"),
+    updatedAt: roster.updatedAt
+  });
+  if (newestSchedule?.updatedAt) candidates.push({
+    category: "schedule",
+    message: `事務局スケジュール「${cleanBoardUpdateMessage(newestSchedule.title, "予定")}」を更新しました`,
+    updatedAt: newestSchedule.updatedAt
+  });
+
+  const latest = candidates.sort((a, b) => boardUpdateTime(b.updatedAt) - boardUpdateTime(a.updatedAt))[0];
+  return latest || null;
 }
 
 function normalizeScheduleEntries(value) {
@@ -624,7 +700,8 @@ export default async (request, context) => {
         section === "duty-roster" ||
         section === "referee-documents" ||
         section === "board-meeting-documents" ||
-        section === "board-meeting-schedule"
+        section === "board-meeting-schedule" ||
+        section === "board-latest-update"
       ) {
         const accessPassword = request.headers.get("x-access-password") || "";
         const accessGranted =
@@ -634,6 +711,10 @@ export default async (request, context) => {
         if (!accessGranted) {
           return json({ error: "unauthorized" }, 401);
         }
+      }
+
+      if (section === "board-latest-update") {
+        return json({ data: await loadBoardLatestUpdate(store) });
       }
 
       if (section === "result-documents") {
@@ -980,6 +1061,10 @@ export default async (request, context) => {
       return json({ error: "invalid json" }, 400);
     }
 
+    if (section === "board-latest-update") {
+      return json({ error: "method not allowed" }, 405);
+    }
+
     if (
       section === "access-settings" &&
       body?.action === "verifyAccessPassword"
@@ -1049,6 +1134,8 @@ export default async (request, context) => {
         await store.set(storageKey, decoded.bytes.buffer, {metadata: {fileName, contentType: decoded.contentType}});
         const updated = [item, ...documents];
         await store.setJSON(key, updated);
+        const documentLabel = section === "referee-documents" ? "審判部資料" : "事務局資料";
+        await saveBoardLatestUpdate(store, "documents", `${documentLabel}「${fileName}」を保存しました`, item.uploadedAt);
         return json({ ok: true, data: updated });
       }
 
@@ -1069,6 +1156,8 @@ export default async (request, context) => {
         await store.delete(String(item?.storageKey || `${section}/${id}.pdf`));
         const updated = documents.filter(entry => String(entry?.id || "") !== id);
         await store.setJSON(key, updated);
+        const documentLabel = section === "referee-documents" ? "審判部資料" : "事務局資料";
+        await saveBoardLatestUpdate(store, "documents", `${documentLabel}「${cleanBoardUpdateMessage(item?.fileName, "資料")}」を削除しました`);
         return json({ ok: true, data: updated });
       }
 
@@ -1108,6 +1197,12 @@ export default async (request, context) => {
           nextItem
         ].sort((a, b) => String(a.date || "").localeCompare(String(b.date || "")));
         await store.setJSON(key, updated);
+        await saveBoardLatestUpdate(
+          store,
+          "schedule",
+          `事務局スケジュール「${title}」を${events.some(entry => String(entry?.id || "") === id) ? "変更" : "追加"}しました`,
+          nextItem.updatedAt
+        );
         return json({ ok: true, data: updated });
       }
 
@@ -1124,8 +1219,10 @@ export default async (request, context) => {
         if (!events.some(entry => String(entry?.id || "") === id)) {
           return json({ error: "予定が見つかりません。" }, 404);
         }
+        const item = events.find(entry => String(entry?.id || "") === id);
         const updated = events.filter(entry => String(entry?.id || "") !== id);
         await store.setJSON(key, updated);
+        await saveBoardLatestUpdate(store, "schedule", `事務局スケジュール「${cleanBoardUpdateMessage(item?.title, "予定")}」を削除しました`);
         return json({ ok: true, data: updated });
       }
 
@@ -1414,6 +1511,12 @@ export default async (request, context) => {
       if (!valid) {
         return json({ error: "保存できない画像形式が含まれています。" }, 400);
       }
+
+      body.data.updatedAt = new Date().toISOString();
+      body.data.latestUpdateMessage = cleanBoardUpdateMessage(
+        body?.updateMessage,
+        "当番表を更新しました"
+      );
     }
 
     if (section === "schedule") {
@@ -1444,6 +1547,15 @@ export default async (request, context) => {
     }
 
     await store.setJSON(key, body.data);
+
+    if (section === "duty-roster") {
+      await saveBoardLatestUpdate(
+        store,
+        "duty-roster",
+        body.data.latestUpdateMessage,
+        body.data.updatedAt
+      );
+    }
 
     return json({
       ok: true

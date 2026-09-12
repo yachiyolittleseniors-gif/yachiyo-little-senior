@@ -28,6 +28,16 @@ h1{font-family:serif;font-weight:500;letter-spacing:.08em;margin:8px 0 6px;font-
 .lead strong{flex:0 0 auto;color:var(--navy);font-family:serif;font-size:17px}
 .lead span{color:#69737f}
 .grid{display:grid;grid-template-columns:minmax(0,760px);justify-content:center;gap:18px}
+.latest-update{display:flex;align-items:center;gap:16px;padding:16px 20px;border:1px solid #d8c79f;border-radius:12px;background:linear-gradient(135deg,#0b1c31,#142d49);color:#fff;box-shadow:0 10px 28px rgba(7,20,38,.1)}
+.latest-update[hidden]{display:none}
+.latest-update-heading{flex:0 0 auto;padding-right:16px;border-right:1px solid rgba(216,193,139,.38)}
+.latest-update-kicker{display:block;margin-bottom:4px;color:var(--gold2);font-size:9px;font-weight:800;letter-spacing:.18em}
+.latest-update-title{font-family:serif;font-size:16px;font-weight:700;white-space:nowrap}
+.latest-update-content{min-width:0;display:flex;align-items:center;gap:10px;font-size:13px;line-height:1.6}
+.latest-update-date{flex:0 0 auto;padding:3px 9px;border-radius:999px;background:var(--gold);color:#fff;font-size:11px;font-weight:800}
+.latest-update-category{flex:0 0 auto;color:var(--gold2);font-weight:800}
+.latest-update-message{min-width:0;overflow-wrap:anywhere}
+@media(max-width:600px){.latest-update{align-items:flex-start;gap:12px;padding:15px 16px}.latest-update-heading{padding-right:12px}.latest-update-content{align-items:flex-start;flex-wrap:wrap;gap:6px 8px}.latest-update-message{flex-basis:100%}}
 .card{position:relative;overflow:hidden;background:#fff;border:1px solid #d8dce1;border-radius:12px;padding:26px 22px 22px;box-shadow:0 10px 28px rgba(7,20,38,.06)}
 .card::before{content:"";position:absolute;left:0;right:0;top:0;height:4px;background:linear-gradient(90deg,var(--gold),var(--gold2))}
 .card-kicker{font-size:10px;letter-spacing:.18em;color:#a27927;font-weight:800;margin-bottom:9px}
@@ -447,6 +457,17 @@ html{scroll-padding-top:var(--compact-header-height)}
 
 <main class="wrap">
   <div class="grid">
+    <aside class="latest-update" id="latestUpdateAnnouncement" aria-live="polite" hidden>
+      <div class="latest-update-heading">
+        <span class="latest-update-kicker">LATEST UPDATE</span>
+        <span class="latest-update-title">最新更新情報</span>
+      </div>
+      <div class="latest-update-content">
+        <time class="latest-update-date" id="latestUpdateDate"></time>
+        <span class="latest-update-category" id="latestUpdateCategory"></span>
+        <span class="latest-update-message" id="latestUpdateMessage"></span>
+      </div>
+    </aside>
     <section class="card attendance-card" id="coachAttendanceCard">
       <div class="card-kicker">COACH ATTENDANCE</div>
       <h2>指導者出欠確認</h2>
@@ -736,6 +757,44 @@ html{scroll-padding-top:var(--compact-header-height)}
 
 <script>
 // Created by tatsuki.saitoh
+(function(){
+  const API='/.netlify/functions/site-data?section=board-latest-update';
+  const announcement=document.getElementById('latestUpdateAnnouncement');
+  const dateElement=document.getElementById('latestUpdateDate');
+  const categoryElement=document.getElementById('latestUpdateCategory');
+  const messageElement=document.getElementById('latestUpdateMessage');
+  const categories={documents:'資料保存','duty-roster':'当番表',schedule:'カレンダー'};
+
+  if(!announcement||!dateElement||!categoryElement||!messageElement)return;
+
+  function formatDate(value){
+    const date=new Date(value);
+    if(Number.isNaN(date.getTime()))return '';
+    return new Intl.DateTimeFormat('ja-JP',{timeZone:'Asia/Tokyo',year:'numeric',month:'numeric',day:'numeric'}).format(date);
+  }
+
+  async function load(){
+    try{
+      await window.boardAccessReady;
+      const accessPassword=sessionStorage.getItem('yachiyoAttendancePass')||'';
+      const response=await fetch(API,{cache:'no-store',headers:{'x-access-password':accessPassword}});
+      if(!response.ok)throw new Error('load failed');
+      const body=await response.json();
+      const data=body&&body.data;
+      const date=formatDate(data&&data.updatedAt);
+      if(!data||!date||!data.message){announcement.hidden=true;return}
+      dateElement.dateTime=String(data.updatedAt||'');
+      dateElement.textContent=date;
+      categoryElement.textContent=categories[data.category]||'更新';
+      messageElement.textContent=String(data.message);
+      announcement.hidden=false;
+    }catch(e){announcement.hidden=true}
+  }
+
+  window.refreshBoardLatestUpdate=load;
+  load();
+})();
+
 (function(){
   const API='/.netlify/functions/attendance-data';
   const attendanceBtn=document.getElementById('attendanceOpenBtn');
@@ -1197,6 +1256,7 @@ html{scroll-padding-top:var(--compact-header-height)}
       fileInput.value='';
       render();
       showSaveNotice('審判部からのお知らせを保存しました');
+      window.refreshBoardLatestUpdate?.();
     }catch(e){alert(e.message||'資料を保存できませんでした。')}
     finally{fileSave.disabled=false;fileSave.textContent='選択した資料を保存'}
   });
@@ -1213,6 +1273,7 @@ html{scroll-padding-top:var(--compact-header-height)}
       documents=Array.isArray(body.data)?body.data:documents.filter(function(entry){return entry.id!==item.id});
       render();
       showSaveNotice('資料を削除しました');
+      window.refreshBoardLatestUpdate?.();
     }catch(e){alert(e.message||'資料を削除できませんでした。')}
   }
 
@@ -1802,6 +1863,7 @@ html{scroll-padding-top:var(--compact-header-height)}
       pdfInput.value='';
       renderDocuments();
       showSaveNotice('事務局からのお知らせを保存しました');
+      window.refreshBoardLatestUpdate?.();
     }catch(e){alert(e.message||'資料を保存できませんでした。')}
     finally{pdfSave.disabled=false;pdfSave.textContent='選択した資料を保存'}
   });
@@ -1821,6 +1883,7 @@ html{scroll-padding-top:var(--compact-header-height)}
       documents=Array.isArray(body.data)?body.data:documents.filter(function(entry){return entry.id!==item.id});
       renderDocuments();
       showSaveNotice('PDFを削除しました');
+      window.refreshBoardLatestUpdate?.();
     }catch(e){alert(e.message||'PDFを削除できませんでした。')}
   }
 
@@ -1863,6 +1926,7 @@ html{scroll-padding-top:var(--compact-header-height)}
       renderDayList();
       renderCalendar();
       showSaveNotice(editingId?'予定の変更を保存しました':'予定を保存しました');
+      window.refreshBoardLatestUpdate?.();
     }catch(e){alert(e.message||(editingId?'予定を変更できませんでした。':'予定を保存できませんでした。'))}
     finally{
       formSave.disabled=false;
@@ -1884,6 +1948,7 @@ html{scroll-padding-top:var(--compact-header-height)}
       events=Array.isArray(body.data)?body.data:events.filter(function(entry){return entry.id!==item.id});
       if(editingEventId===String(item.id||''))resetFormMode();
       renderDayList();renderCalendar();showSaveNotice('予定を削除しました');
+      window.refreshBoardLatestUpdate?.();
     }catch(e){alert(e.message||'予定を削除できませんでした。')}
   }
 
@@ -2013,7 +2078,7 @@ html{scroll-padding-top:var(--compact-header-height)}
     });
   }
 
-  async function persist(successMessage){
+  async function persist(successMessage,updateMessage){
     const adminPassword=panel.dataset.adminPassword||'';
     if(!adminPassword){alert('管理画面を開き直してください。');return false}
     const payload={initialized:true,images:images};
@@ -2021,11 +2086,11 @@ html{scroll-padding-top:var(--compact-header-height)}
     const response=await fetch(API,{
       method:'POST',
       headers:{'content-type':'application/json','x-admin-password':adminPassword},
-      body:JSON.stringify({data:payload})
+      body:JSON.stringify({data:payload,updateMessage:updateMessage||'当番表を更新しました'})
     });
     const body=await response.json().catch(function(){return {}});
     if(!response.ok)throw new Error(body.error||'保存できませんでした。');
-    saveCache();render();showSaveNotice(successMessage||'保存しました');return true;
+    saveCache();render();showSaveNotice(successMessage||'保存しました');window.refreshBoardLatestUpdate?.();return true;
   }
 
   async function addImages(){
@@ -2047,7 +2112,7 @@ html{scroll-padding-top:var(--compact-header-height)}
           src:''
         });
       }
-      await persist(files.length+'枚の画像を保存しました');
+      await persist(files.length+'枚の画像を保存しました','当番表の画像を'+files.length+'枚保存しました');
       fileInput.value='';
     }catch(e){images=previous;render();alert(e.message||'画像を保存できませんでした。')}
     finally{saveBtn.disabled=false;saveBtn.textContent='画像を保存'}
@@ -2058,14 +2123,14 @@ html{scroll-padding-top:var(--compact-header-height)}
     const previous=images.slice();
     [images[index],images[next]]=[images[next],images[index]];
     render();
-    try{await persist('並び順を保存しました')}catch(e){images=previous;render();alert(e.message||'並び順を保存できませんでした。')}
+    try{await persist('並び順を保存しました','当番表の並び順を変更しました')}catch(e){images=previous;render();alert(e.message||'並び順を保存できませんでした。')}
   }
 
   async function removeImage(index){
     const target=images[index];
     if(!target||!confirm('「'+(target.name||'当番表')+'」を削除しますか？'))return;
     const previous=images.slice();images.splice(index,1);render();
-    try{await persist('画像を削除しました')}catch(e){images=previous;render();alert(e.message||'画像を削除できませんでした。')}
+    try{await persist('画像を削除しました','当番表「'+(target.name||'画像')+'」を削除しました')}catch(e){images=previous;render();alert(e.message||'画像を削除できませんでした。')}
   }
 
   saveBtn.addEventListener('click',addImages);
