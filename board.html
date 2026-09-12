@@ -28,16 +28,16 @@ h1{font-family:serif;font-weight:500;letter-spacing:.08em;margin:8px 0 6px;font-
 .lead strong{flex:0 0 auto;color:var(--navy);font-family:serif;font-size:17px}
 .lead span{color:#69737f}
 .grid{display:grid;grid-template-columns:minmax(0,760px);justify-content:center;gap:18px}
-.latest-update{display:flex;align-items:center;gap:16px;padding:16px 20px;border:1px solid #d8c79f;border-radius:12px;background:linear-gradient(135deg,#0b1c31,#142d49);color:#fff;box-shadow:0 10px 28px rgba(7,20,38,.1)}
+.latest-update{display:grid;grid-template-columns:auto auto 1fr;align-items:center;gap:8px 12px;padding:16px 20px;border:2px solid #b8892f;border-radius:12px;background:#fffdfa;color:var(--navy);box-shadow:0 8px 20px rgba(7,20,38,.06)}
 .latest-update[hidden]{display:none}
-.latest-update-heading{flex:0 0 auto;padding-right:16px;border-right:1px solid rgba(216,193,139,.38)}
-.latest-update-kicker{display:block;margin-bottom:4px;color:var(--gold2);font-size:9px;font-weight:800;letter-spacing:.18em}
-.latest-update-title{font-family:serif;font-size:16px;font-weight:700;white-space:nowrap}
-.latest-update-content{min-width:0;display:flex;align-items:center;gap:10px;font-size:13px;line-height:1.6}
-.latest-update-date{flex:0 0 auto;padding:3px 9px;border-radius:999px;background:var(--gold);color:#fff;font-size:11px;font-weight:800}
-.latest-update-category{flex:0 0 auto;color:var(--gold2);font-weight:800}
-.latest-update-message{min-width:0;overflow-wrap:anywhere}
-@media(max-width:600px){.latest-update{align-items:flex-start;gap:12px;padding:15px 16px}.latest-update-heading{padding-right:12px}.latest-update-content{align-items:flex-start;flex-wrap:wrap;gap:6px 8px}.latest-update-message{flex-basis:100%}}
+.latest-update-heading{white-space:nowrap}
+.latest-update-kicker{display:none}
+.latest-update-title{color:#a97922;font-size:12px;font-weight:900;letter-spacing:.06em}
+.latest-update-content{min-width:0;display:contents;font-size:13px;line-height:1.65}
+.latest-update-date{white-space:nowrap;color:#7f8287;font-size:12px;font-weight:700}
+.latest-update-category{white-space:nowrap;color:#a97922;font-size:12px;font-weight:900}
+.latest-update-message{grid-column:1/-1;min-width:0;color:var(--navy);font-size:14px;font-weight:700;overflow-wrap:anywhere}
+@media(max-width:600px){.latest-update{gap:6px 10px;padding:14px 16px}.latest-update-message{font-size:13px}}
 .card{position:relative;overflow:hidden;background:#fff;border:1px solid #d8dce1;border-radius:12px;padding:26px 22px 22px;box-shadow:0 10px 28px rgba(7,20,38,.06)}
 .card::before{content:"";position:absolute;left:0;right:0;top:0;height:4px;background:linear-gradient(90deg,var(--gold),var(--gold2))}
 .card-kicker{font-size:10px;letter-spacing:.18em;color:#a27927;font-weight:800;margin-bottom:9px}
@@ -460,7 +460,7 @@ html{scroll-padding-top:var(--compact-header-height)}
     <aside class="latest-update" id="latestUpdateAnnouncement" aria-live="polite" hidden>
       <div class="latest-update-heading">
         <span class="latest-update-kicker">LATEST UPDATE</span>
-        <span class="latest-update-title">最新更新情報</span>
+        <span class="latest-update-title">最新更新</span>
       </div>
       <div class="latest-update-content">
         <time class="latest-update-date" id="latestUpdateDate"></time>
