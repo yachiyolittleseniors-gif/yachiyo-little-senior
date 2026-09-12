@@ -271,13 +271,19 @@ async function saveBoardLatestUpdate(store, category, message, updatedAt = new D
 
 async function loadBoardLatestUpdate(store) {
   const saved = await safeStoreJson(store, BOARD_LATEST_UPDATE_KEY);
-  if (saved?.category && saved?.message && boardUpdateTime(saved.updatedAt)) return saved;
+  if (
+    saved?.category &&
+    saved?.message &&
+    boardUpdateTime(saved.updatedAt) &&
+    !/(?:削除|並び順)/.test(String(saved.message))
+  ) return saved;
 
-  const [secretariat, referee, roster, schedule] = await Promise.all([
+  const [secretariat, referee, roster, schedule, rules] = await Promise.all([
     safeStoreJson(store, "content/board-meeting-documents.json"),
     safeStoreJson(store, "content/referee-documents.json"),
     safeStoreJson(store, "content/duty-roster.json"),
-    safeStoreJson(store, "content/board-meeting-schedule.json")
+    safeStoreJson(store, "content/board-meeting-schedule.json"),
+    safeStoreJson(store, "content/rules.json")
   ]);
   const candidates = [];
   const newestSecretariat = Array.isArray(secretariat)
@@ -309,6 +315,12 @@ async function loadBoardLatestUpdate(store) {
     category: "schedule",
     message: `事務局スケジュール「${cleanBoardUpdateMessage(newestSchedule.title, "予定")}」を更新しました`,
     updatedAt: newestSchedule.updatedAt
+  });
+  const rulesData = Array.isArray(rules) ? rules[0] : null;
+  if (rulesData?.updatedAt) candidates.push({
+    category: "rules",
+    message: cleanBoardUpdateMessage(rulesData.latestUpdateMessage, "チーム規約ファイルを更新しました"),
+    updatedAt: rulesData.updatedAt
   });
 
   const latest = candidates.sort((a, b) => boardUpdateTime(b.updatedAt) - boardUpdateTime(a.updatedAt))[0];
@@ -1156,8 +1168,6 @@ export default async (request, context) => {
         await store.delete(String(item?.storageKey || `${section}/${id}.pdf`));
         const updated = documents.filter(entry => String(entry?.id || "") !== id);
         await store.setJSON(key, updated);
-        const documentLabel = section === "referee-documents" ? "審判部資料" : "事務局資料";
-        await saveBoardLatestUpdate(store, "documents", `${documentLabel}「${cleanBoardUpdateMessage(item?.fileName, "資料")}」を削除しました`);
         return json({ ok: true, data: updated });
       }
 
@@ -1219,10 +1229,8 @@ export default async (request, context) => {
         if (!events.some(entry => String(entry?.id || "") === id)) {
           return json({ error: "予定が見つかりません。" }, 404);
         }
-        const item = events.find(entry => String(entry?.id || "") === id);
         const updated = events.filter(entry => String(entry?.id || "") !== id);
         await store.setJSON(key, updated);
-        await saveBoardLatestUpdate(store, "schedule", `事務局スケジュール「${cleanBoardUpdateMessage(item?.title, "予定")}」を削除しました`);
         return json({ ok: true, data: updated });
       }
 
@@ -1512,10 +1520,23 @@ export default async (request, context) => {
         return json({ error: "保存できない画像形式が含まれています。" }, 400);
       }
 
-      body.data.updatedAt = new Date().toISOString();
-      body.data.latestUpdateMessage = cleanBoardUpdateMessage(
+      if (body?.announceLatest === true) {
+        body.data.updatedAt = new Date().toISOString();
+        body.data.latestUpdateMessage = cleanBoardUpdateMessage(
+          body?.updateMessage,
+          "当番表を更新しました"
+        );
+      }
+    }
+
+    if (section === "rules" && body?.announceLatest === true) {
+      if (!Array.isArray(body.data) || !body.data[0] || typeof body.data[0] !== "object") {
+        return json({ error: "チーム規約データを確認してください。" }, 400);
+      }
+      body.data[0].updatedAt = new Date().toISOString();
+      body.data[0].latestUpdateMessage = cleanBoardUpdateMessage(
         body?.updateMessage,
-        "当番表を更新しました"
+        "チーム規約ファイルを更新しました"
       );
     }
 
@@ -1548,12 +1569,21 @@ export default async (request, context) => {
 
     await store.setJSON(key, body.data);
 
-    if (section === "duty-roster") {
+    if (section === "duty-roster" && body?.announceLatest === true) {
       await saveBoardLatestUpdate(
         store,
         "duty-roster",
         body.data.latestUpdateMessage,
         body.data.updatedAt
+      );
+    }
+
+    if (section === "rules" && body?.announceLatest === true) {
+      await saveBoardLatestUpdate(
+        store,
+        "rules",
+        body.data[0].latestUpdateMessage,
+        body.data[0].updatedAt
       );
     }
 

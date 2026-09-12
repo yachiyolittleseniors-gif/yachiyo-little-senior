@@ -763,7 +763,7 @@ html{scroll-padding-top:var(--compact-header-height)}
   const dateElement=document.getElementById('latestUpdateDate');
   const categoryElement=document.getElementById('latestUpdateCategory');
   const messageElement=document.getElementById('latestUpdateMessage');
-  const categories={documents:'資料保存','duty-roster':'当番表',schedule:'カレンダー'};
+  const categories={documents:'資料保存','duty-roster':'当番表',schedule:'カレンダー',rules:'チーム規約'};
 
   if(!announcement||!dateElement||!categoryElement||!messageElement)return;
 
@@ -1273,7 +1273,6 @@ html{scroll-padding-top:var(--compact-header-height)}
       documents=Array.isArray(body.data)?body.data:documents.filter(function(entry){return entry.id!==item.id});
       render();
       showSaveNotice('資料を削除しました');
-      window.refreshBoardLatestUpdate?.();
     }catch(e){alert(e.message||'資料を削除できませんでした。')}
   }
 
@@ -1883,7 +1882,6 @@ html{scroll-padding-top:var(--compact-header-height)}
       documents=Array.isArray(body.data)?body.data:documents.filter(function(entry){return entry.id!==item.id});
       renderDocuments();
       showSaveNotice('PDFを削除しました');
-      window.refreshBoardLatestUpdate?.();
     }catch(e){alert(e.message||'PDFを削除できませんでした。')}
   }
 
@@ -1948,7 +1946,6 @@ html{scroll-padding-top:var(--compact-header-height)}
       events=Array.isArray(body.data)?body.data:events.filter(function(entry){return entry.id!==item.id});
       if(editingEventId===String(item.id||''))resetFormMode();
       renderDayList();renderCalendar();showSaveNotice('予定を削除しました');
-      window.refreshBoardLatestUpdate?.();
     }catch(e){alert(e.message||'予定を削除できませんでした。')}
   }
 
@@ -2078,7 +2075,7 @@ html{scroll-padding-top:var(--compact-header-height)}
     });
   }
 
-  async function persist(successMessage,updateMessage){
+  async function persist(successMessage,updateMessage,announceLatest){
     const adminPassword=panel.dataset.adminPassword||'';
     if(!adminPassword){alert('管理画面を開き直してください。');return false}
     const payload={initialized:true,images:images};
@@ -2086,11 +2083,11 @@ html{scroll-padding-top:var(--compact-header-height)}
     const response=await fetch(API,{
       method:'POST',
       headers:{'content-type':'application/json','x-admin-password':adminPassword},
-      body:JSON.stringify({data:payload,updateMessage:updateMessage||'当番表を更新しました'})
+      body:JSON.stringify({data:payload,updateMessage:updateMessage||'当番表を更新しました',announceLatest:announceLatest===true})
     });
     const body=await response.json().catch(function(){return {}});
     if(!response.ok)throw new Error(body.error||'保存できませんでした。');
-    saveCache();render();showSaveNotice(successMessage||'保存しました');window.refreshBoardLatestUpdate?.();return true;
+    saveCache();render();showSaveNotice(successMessage||'保存しました');if(announceLatest)window.refreshBoardLatestUpdate?.();return true;
   }
 
   async function addImages(){
@@ -2112,7 +2109,7 @@ html{scroll-padding-top:var(--compact-header-height)}
           src:''
         });
       }
-      await persist(files.length+'枚の画像を保存しました','当番表の画像を'+files.length+'枚保存しました');
+      await persist(files.length+'枚の画像を保存しました','当番表の画像を'+files.length+'枚保存しました',true);
       fileInput.value='';
     }catch(e){images=previous;render();alert(e.message||'画像を保存できませんでした。')}
     finally{saveBtn.disabled=false;saveBtn.textContent='画像を保存'}
@@ -2219,9 +2216,11 @@ html{scroll-padding-top:var(--compact-header-height)}
     try{
       for(const file of files)additions.push({name:file.name,data:await readAsDataUrl(file)});
       const next={text:rules.text,pdfs:rules.pdfs.concat(additions)};
-      const response=await fetch(API,{method:'POST',headers:{'content-type':'application/json','x-admin-password':adminPassword},body:JSON.stringify({data:[next]})});
+      const updateMessage=additions.length===1?'チーム規約「'+additions[0].name+'」を保存しました':'チーム規約ファイルを'+additions.length+'件保存しました';
+      const response=await fetch(API,{method:'POST',headers:{'content-type':'application/json','x-admin-password':adminPassword},body:JSON.stringify({data:[next],announceLatest:true,updateMessage:updateMessage})});
       if(!response.ok)throw new Error('保存できませんでした。');
       rules=next;fileInput.value='';render();showSaveNotice(additions.length?'PDFを追加して保存しました':'保存しました');
+      window.refreshBoardLatestUpdate?.();
     }catch(e){alert(e.message||'保存できませんでした。')}finally{saveBtn.disabled=false;saveBtn.textContent='PDFを追加'}
   }
 
