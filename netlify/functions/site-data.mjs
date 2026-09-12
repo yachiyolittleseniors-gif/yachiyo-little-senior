@@ -1043,6 +1043,9 @@ export default async (request, context) => {
         const id = String(event.id || crypto.randomUUID());
         const date = String(event.date || "");
         const title = String(event.title || "").trim();
+        const grades = Array.isArray(event.grades)
+          ? [...new Set(event.grades.map(String).filter(grade => ["1", "2", "3"].includes(grade)))].sort()
+          : [];
         const time = String(event.time || "").trim();
         const place = String(event.place || "").trim();
         const memo = String(event.memo || "").trim();
@@ -1059,7 +1062,7 @@ export default async (request, context) => {
           consistency: "strong"
         });
         const events = Array.isArray(current) ? current : [];
-        const nextItem = { id, date, title, time, place, memo, updatedAt: new Date().toISOString() };
+        const nextItem = { id, date, title, grades, time, place, memo, updatedAt: new Date().toISOString() };
         const updated = [
           ...events.filter(entry => String(entry?.id || "") !== id),
           nextItem
