@@ -23,6 +23,7 @@ const allowed = new Set([
   "photos",
   "ground-photos",
   "hero-announcement",
+  "recruitment-settings",
   "news",
   "rules",
   "duty-roster",
