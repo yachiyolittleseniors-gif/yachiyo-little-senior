@@ -1649,9 +1649,8 @@ body.photo-admin-on .seniorcup-admin-control{display:block}
   overflow:hidden;
   padding:30px 32px 28px;
   background:
-    linear-gradient(118deg,transparent 0 69%,rgba(226,189,103,.11) 69% 70%,transparent 70% 76%,rgba(226,189,103,.065) 76% 77%,transparent 77%),
-    radial-gradient(circle at 88% 18%,rgba(226,189,103,.18),transparent 29%),
-    linear-gradient(135deg,#071426 0%,#0b2340 58%,#071426 100%);
+    radial-gradient(circle at 88% 18%,rgba(226,189,103,.12),transparent 31%),
+    linear-gradient(135deg,#071426 0%,#0a2038 60%,#071426 100%);
   border:3px solid #c79a3b;
   border-radius:20px;
   color:#fff!important;
@@ -1667,30 +1666,26 @@ body.photo-admin-on .seniorcup-admin-control{display:block}
   pointer-events:none;
 }
 .seniorcup-home-link:after{
-  content:"YACHIYO";
+  content:"";
   position:absolute;
   z-index:-1;
-  right:-18px;
-  bottom:-18px;
-  transform:rotate(-7deg);
-  color:#fff;
-  font-family:Impact,"Arial Black",sans-serif;
-  font-size:86px;
-  font-weight:900;
-  letter-spacing:.02em;
-  line-height:1;
-  opacity:.025;
+  right:-120px;
+  top:-180px;
+  width:340px;
+  height:340px;
+  border:1px solid rgba(226,189,103,.22);
+  border-radius:50%;
   pointer-events:none;
 }
 .seniorcup-home-ball{
   position:absolute;
   z-index:0;
-  right:5%;
+  right:3%;
   top:52%;
-  width:220px;
+  width:205px;
   aspect-ratio:1;
   transform:translateY(-50%) rotate(-14deg);
-  opacity:.16;
+  opacity:.11;
   filter:drop-shadow(0 14px 22px rgba(0,0,0,.28));
   pointer-events:none;
 }
@@ -1709,19 +1704,21 @@ body.photo-admin-on .seniorcup-admin-control{display:block}
   z-index:1;
   color:#e2bd67;
   font-size:11px;
-  font-weight:900;
+  font-weight:700;
   letter-spacing:.24em;
 }
 .seniorcup-home-badge{
   flex:0 0 auto;
-  padding:7px 11px;
-  border:1px solid rgba(226,189,103,.72);
-  border-radius:5px;
-  background:rgba(199,154,59,.1);
-  color:#f4d88f;
+  padding:0 0 5px;
+  border:0;
+  border-bottom:1px solid rgba(226,189,103,.58);
+  border-radius:0;
+  background:transparent;
+  color:#d8b45e;
+  font-family:Georgia,"Times New Roman",serif;
   font-size:10px;
-  font-weight:900;
-  letter-spacing:.15em;
+  font-weight:400;
+  letter-spacing:.18em;
 }
 .seniorcup-home-year{
   position:relative;
@@ -1729,30 +1726,30 @@ body.photo-admin-on .seniorcup-admin-control{display:block}
   display:flex;
   align-items:baseline;
   gap:6px;
-  color:#e2bd67;
-  font-family:Impact,"Arial Black","Noto Sans JP",sans-serif;
-  font-size:clamp(42px,5vw,62px);
-  font-weight:900;
-  letter-spacing:.035em;
+  color:#ddb85e;
+  font-family:Georgia,"Yu Mincho","Hiragino Mincho ProN",serif;
+  font-size:clamp(36px,4.3vw,52px);
+  font-weight:400;
+  letter-spacing:.07em;
   line-height:1;
 }
 .seniorcup-home-year small{
   font-family:"Noto Sans JP","Yu Gothic",sans-serif;
-  font-size:18px;
-  font-weight:800;
+  font-size:15px;
+  font-weight:500;
 }
 .seniorcup-home-title{
   position:relative;
   z-index:1;
   margin-top:10px;
   color:#fff;
-  max-width:78%;
-  font-family:"Noto Sans JP","Yu Gothic",sans-serif;
-  font-size:clamp(27px,3.2vw,40px);
-  font-weight:900;
-  letter-spacing:.045em;
-  line-height:1.35;
-  text-shadow:0 3px 14px rgba(0,0,0,.38);
+  max-width:82%;
+  font-family:"Yu Mincho","Hiragino Mincho ProN","Hiragino Mincho Pro",serif;
+  font-size:clamp(28px,3.3vw,40px);
+  font-weight:500;
+  letter-spacing:.075em;
+  line-height:1.45;
+  text-shadow:0 3px 14px rgba(0,0,0,.28);
 }
 .seniorcup-home-copy{
   position:relative;
@@ -1763,10 +1760,10 @@ body.photo-admin-on .seniorcup-admin-control{display:block}
   gap:18px;
   margin-top:23px;
   padding-top:18px;
-  border-top:2px solid rgba(226,189,103,.42);
+  border-top:1px solid rgba(226,189,103,.4);
   color:#dce3ec;
   font-size:14px;
-  font-weight:700;
+  font-weight:500;
 }
 .seniorcup-home-cta{
   flex:0 0 auto;
@@ -1776,7 +1773,7 @@ body.photo-admin-on .seniorcup-admin-control{display:block}
   background:linear-gradient(135deg,#c79a3b,#f0d27d);
   color:#071426;
   font-size:12px;
-  font-weight:900;
+  font-weight:700;
   box-shadow:0 7px 16px rgba(0,0,0,.22);
   clip-path:polygon(7px 0,100% 0,100% calc(100% - 7px),calc(100% - 7px) 100%,0 100%,0 7px);
 }
@@ -1784,14 +1781,14 @@ body.photo-admin-on .seniorcup-admin-control{display:block}
   .seniorcup-home-banner{margin:18px auto 4px;padding:0 12px}
   .seniorcup-home-link{padding:24px 20px 21px;border-width:2px;border-radius:16px}
   .seniorcup-home-link:before{inset:6px;border-radius:10px}
-  .seniorcup-home-link:after{right:-8px;bottom:-7px;font-size:52px;opacity:.025}
-  .seniorcup-home-ball{right:-12px;top:50%;width:145px;opacity:.18}
+  .seniorcup-home-link:after{right:-115px;top:-185px;width:280px;height:280px}
+  .seniorcup-home-ball{right:-18px;top:51%;width:140px;opacity:.1}
   .seniorcup-home-head{margin-bottom:16px}
   .seniorcup-home-kicker{font-size:9px;letter-spacing:.18em}
-  .seniorcup-home-badge{padding:6px 8px;font-size:8px;letter-spacing:.08em}
-  .seniorcup-home-year{font-size:42px}
-  .seniorcup-home-year small{font-size:15px}
-  .seniorcup-home-title{max-width:92%;margin-top:8px;font-size:clamp(23px,6.7vw,27px);letter-spacing:.015em;white-space:nowrap}
+  .seniorcup-home-badge{padding-bottom:4px;font-size:8px;letter-spacing:.12em}
+  .seniorcup-home-year{font-size:36px}
+  .seniorcup-home-year small{font-size:13px}
+  .seniorcup-home-title{max-width:92%;margin-top:10px;font-size:clamp(23px,6.5vw,27px);letter-spacing:.025em;white-space:nowrap}
   .seniorcup-home-copy{gap:10px;margin-top:18px;padding-top:15px;font-size:11px}
   .seniorcup-home-cta{padding:8px 11px;border-radius:4px;font-size:10px}
 }
@@ -3603,8 +3600,8 @@ body.photo-admin-on .recruit-mode-admin{display:block}
       </svg>
     </span>
     <div class="seniorcup-home-head">
-      <div class="seniorcup-home-kicker">YACHIYO LITTLE SENIOR</div>
-      <div class="seniorcup-home-badge">OFFICIAL CUP</div>
+      <div class="seniorcup-home-kicker">YACHIYO SENIOR CUP</div>
+      <div class="seniorcup-home-badge">OFFICIAL TOURNAMENT</div>
     </div>
     <div class="seniorcup-home-year"><span class="current-year"></span><small>年</small></div>
     <div class="seniorcup-home-title">八千代リトルシニア杯</div>
