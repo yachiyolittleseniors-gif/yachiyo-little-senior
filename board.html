@@ -115,6 +115,17 @@ h1{font-family:serif;font-weight:500;letter-spacing:.08em;margin:8px 0 6px;font-
 .meeting-form label{display:block;margin:0 0 11px;color:#263344;font-size:12px;font-weight:800}
 .meeting-form input,.meeting-form textarea{display:block;width:100%;margin-top:5px;padding:11px;border:1px solid #cfd5dc;border-radius:7px;background:#fff;color:#172233;font:inherit;font-size:16px}
 .meeting-form textarea{min-height:76px;resize:vertical}
+.meeting-grade-field{margin:0 0 11px;padding:0;border:0}
+.meeting-grade-field legend{margin-bottom:7px;color:#263344;font-size:12px;font-weight:800}
+.meeting-grade-options{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:7px}
+.meeting-form .meeting-grade-option{display:flex;align-items:center;justify-content:center;gap:5px;min-width:0;margin:0;padding:10px 5px;border:1px solid #cfd5dc;border-radius:7px;background:#fff;color:#263344;font-size:13px;font-weight:800;cursor:pointer}
+.meeting-form .meeting-grade-option input{display:block;width:17px;height:17px;flex:0 0 auto;margin:0;padding:0}
+.meeting-form .meeting-grade-option.grade-1 input{accent-color:#e0ad00}
+.meeting-form .meeting-grade-option.grade-2 input{accent-color:#176cd3}
+.meeting-form .meeting-grade-option.grade-3 input{accent-color:#d62432}
+.meeting-form .meeting-grade-option.grade-1:has(input:checked){border-color:#d4a300;background:#fff9df;color:#6c5200}
+.meeting-form .meeting-grade-option.grade-2:has(input:checked){border-color:#176cd3;background:#eef5ff;color:#124e96}
+.meeting-form .meeting-grade-option.grade-3:has(input:checked){border-color:#d62432;background:#fff0f1;color:#98202a}
 .meeting-form-actions{display:grid;grid-template-columns:1fr;gap:8px}
 .meeting-form-actions.editing{grid-template-columns:1fr 1.35fr}
 .meeting-form-save,.meeting-form-cancel{width:100%;min-height:46px;border-radius:8px;font:inherit;font-weight:900;cursor:pointer}
@@ -562,6 +573,14 @@ html{scroll-padding-top:var(--compact-header-height)}
       <label>予定名
         <input id="meetingEventTitle" type="text" maxlength="60" placeholder="例：9月事務局" required>
       </label>
+      <fieldset class="meeting-grade-field">
+        <legend>対象学年（複数選択可）</legend>
+        <div class="meeting-grade-options">
+          <label class="meeting-grade-option grade-1"><input type="checkbox" name="meetingGrade" value="1">🟡1年生</label>
+          <label class="meeting-grade-option grade-2"><input type="checkbox" name="meetingGrade" value="2">🔵2年生</label>
+          <label class="meeting-grade-option grade-3"><input type="checkbox" name="meetingGrade" value="3">🔴3年生</label>
+        </div>
+      </fieldset>
       <label>時間
         <input id="meetingEventTime" type="text" maxlength="40" placeholder="例：19:00～">
       </label>
@@ -1485,6 +1504,24 @@ html{scroll-padding-top:var(--compact-header-height)}
     return events.filter(function(item){return item.date===date});
   }
 
+  function gradesFor(item){
+    if(Array.isArray(item&&item.grades)){
+      return ['1','2','3'].filter(function(grade){return item.grades.map(String).includes(grade)});
+    }
+    const legacy=String(item&&item.grade||'');
+    return ['1','2','3'].filter(function(grade){return legacy.includes(grade)});
+  }
+
+  function gradeText(item){
+    const labels={'1':'🟡1年生','2':'🔵2年生','3':'🔴3年生'};
+    return gradesFor(item).map(function(grade){return labels[grade]}).join('、');
+  }
+
+  function gradeIcons(item){
+    const icons={'1':'🟡','2':'🔵','3':'🔴'};
+    return gradesFor(item).map(function(grade){return icons[grade]}).join('');
+  }
+
   function renderCalendar(){
     calendarTitle.textContent=viewYear+'年 '+(viewMonth+1)+'月';
     calendarGrid.replaceChildren();
@@ -1511,7 +1548,7 @@ html{scroll-padding-top:var(--compact-header-height)}
       dayEvents.slice(0,2).forEach(function(item){
         const pill=document.createElement('span');
         pill.className='meeting-day-event';
-        pill.textContent=item.title;
+        pill.textContent=(gradeIcons(item)?gradeIcons(item)+' ':'')+item.title;
         button.appendChild(pill);
       });
       if(dayEvents.length>2){
@@ -1540,7 +1577,7 @@ html{scroll-padding-top:var(--compact-header-height)}
       row.className='meeting-day-list-row';
       const info=document.createElement('div');
       const title=document.createElement('strong');
-      title.textContent=item.title||'事務局';
+      title.textContent=(gradeText(item)?gradeText(item)+'　':'')+(item.title||'事務局');
       const detail=document.createElement('span');
       detail.textContent=[item.time,item.place,item.memo].filter(Boolean).join('／');
       info.appendChild(title);
@@ -1580,6 +1617,8 @@ html{scroll-padding-top:var(--compact-header-height)}
     activeCoachPassword=coachPassword;
     editingEventId=String(item.id||'');
     eventTitle.value=item.title||'';
+    const selectedGrades=gradesFor(item);
+    form.querySelectorAll('input[name="meetingGrade"]').forEach(function(input){input.checked=selectedGrades.includes(input.value)});
     eventTime.value=item.time||'';
     eventPlace.value=item.place||'';
     eventMemo.value=item.memo||'';
@@ -1723,11 +1762,12 @@ html{scroll-padding-top:var(--compact-header-height)}
     const coachPassword=activeCoachPassword||await requireCoachPassword();
     if(!coachPassword)return;
     const editingId=editingEventId;
+    const grades=Array.from(form.querySelectorAll('input[name="meetingGrade"]:checked')).map(function(input){return input.value});
     formSave.disabled=true;formSave.textContent=editingId?'変更中...':'保存中...';
     try{
       const response=await fetch(SCHEDULE_API,{
         method:'POST',headers:accessHeaders(true,coachPassword),
-        body:JSON.stringify({action:'saveBoardMeetingEvent',event:{id:editingId||undefined,date:selectedDate,title,time:eventTime.value.trim(),place:eventPlace.value.trim(),memo:eventMemo.value.trim()}})
+        body:JSON.stringify({action:'saveBoardMeetingEvent',event:{id:editingId||undefined,date:selectedDate,title,grades,time:eventTime.value.trim(),place:eventPlace.value.trim(),memo:eventMemo.value.trim()}})
       });
       const body=await response.json().catch(function(){return {}});
       if(!response.ok)throw new Error(body.error||(editingId?'予定を変更できませんでした。':'予定を保存できませんでした。'));
