@@ -156,11 +156,21 @@ window.boardAccessReady=(async function requireBoardPassword(){
     document.documentElement.style.visibility='';
     return true;
   }
-  try{
-    const saved=sessionStorage.getItem('yachiyoAttendancePass')||'';
-    if(saved&&await verify(saved))return;
-    if(saved)sessionStorage.removeItem('yachiyoAttendancePass');
-  }catch(e){}
+  const returningFromDocuments=new URLSearchParams(location.search).get('from')==='documents';
+  const navigationEntry=performance.getEntriesByType&&performance.getEntriesByType('navigation')[0];
+  const isPageReload=navigationEntry&&navigationEntry.type==='reload';
+  if(returningFromDocuments||isPageReload){
+    try{
+      const saved=sessionStorage.getItem('yachiyoAttendancePass')||'';
+      if(saved&&await verify(saved)){
+        history.replaceState(null,'','./board.html');
+        return;
+      }
+      if(saved)sessionStorage.removeItem('yachiyoAttendancePass');
+    }catch(e){}
+  }else{
+    try{sessionStorage.removeItem('yachiyoAttendancePass')}catch(e){}
+  }
   const p=prompt('パスワードを入力してください。');
   if(p===null){
     if(history.length>1){history.back()}else{location.replace('./index.html')}
