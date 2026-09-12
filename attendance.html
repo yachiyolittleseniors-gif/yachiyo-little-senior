@@ -12,6 +12,7 @@
 </style>
 <style id="attendance-member-polish">
 .member-name-text{color:#17202b}.member-name-text.parent-father{color:#287ca8}.member-name-text.parent-mother{color:#bd5e7e}.footer .manage-btn.show{display:block}.member-order-actions{display:flex;gap:5px}.member-order-actions button{min-width:34px;border-color:#cfd5dc;background:#fff;color:var(--navy);font-weight:800}.member-order-actions button:disabled{opacity:.35}
+.head-name-label{display:block;margin-bottom:5px}.parent-jumps{display:flex;gap:5px}.parent-jump{min-width:43px;border:1px solid currentColor;border-radius:999px;padding:4px 7px;font-size:11px;font-weight:800;line-height:1.15;cursor:pointer}.parent-jump-father{color:#287ca8;background:#eef8fd}.parent-jump-mother{color:#bd5e7e;background:#fff2f6}
 </style>
 <style id="attendance-home-admin-style">
 .footer .manage-btn{position:fixed;right:16px;bottom:16px;z-index:9998;margin:0;border:1px solid rgba(212,175,55,.75);background:#071426;color:#e2bd67;border-radius:999px;padding:10px 14px;font-size:12px;font-weight:700;box-shadow:0 5px 18px rgba(0,0,0,.22);cursor:pointer}.footer .manage-btn.show{display:block}.footer .manage-btn.admin-open{z-index:20001}
@@ -446,7 +447,32 @@ async function saveReportImage(){
   finally{button.disabled=false;button.textContent=original}
 }
 
-function render(){const events=visibleEvents();let h='<table><thead><tr><th class="name-col head-name">回答者</th>';for(const e of events){const counts=countStatuses(e.id);h+=`<th class="event-head"><button class="event-summary-btn" type="button" data-summary-event="${esc(e.id)}" aria-label="${esc(formatDate(e.date))}の学年・父母別内訳を開く"><span class="event-date">${esc(formatDate(e.date))}</span><span class="event-counts">${countMarkup(counts)}</span></button></th>`}h+='</tr></thead><tbody>';for(const m of sortedMembers()){h+=`<tr><th class="name-col"><button class="member-btn ${selectedMember===m.id?'selected':''}" data-select-member="${esc(m.id)}">${memberDisplayHtml(m)}</button></th>`;for(const e of events){const s=data.answers?.[m.id]?.[e.id]||'',on=selectedMember===m.id,busy=savingMembers.has(String(m.id));h+=`<td><button class="status-btn ${statusClass(s)}" ${on&&!busy?'':'disabled'} data-member="${esc(m.id)}" data-event="${esc(e.id)}">${esc(s||'・')}</button></td>`}h+='</tr>'}h+='</tbody></table>';$('#board').innerHTML=h;document.querySelectorAll('[data-select-member]').forEach(b=>b.onclick=()=>selectMember(b.dataset.selectMember));document.querySelectorAll('[data-summary-event]').forEach(b=>b.onclick=()=>showSummary(b.dataset.summaryEvent));document.querySelectorAll('.status-btn:not(:disabled)').forEach(b=>b.onclick=saveAnswer);renderReportControls(events);renderEditor();renderComments();renderAdmin()}
+function jumpToParent(parent){
+  const board=$('#board'),row=board?.querySelector(`[data-parent-start="${parent}"]`);
+  if(!board||!row)return;
+  const headHeight=board.querySelector('thead')?.offsetHeight||0;
+  board.scrollTo({top:Math.max(0,row.offsetTop-headHeight),behavior:'smooth'});
+}
+function render(){
+  const events=visibleEvents(),members=sortedMembers(),seenParents=new Set();
+  let h='<table><thead><tr><th class="name-col head-name"><span class="head-name-label">回答者</span><span class="parent-jumps"><button class="parent-jump parent-jump-father" type="button" data-jump-parent="father" aria-label="父の先頭へ移動">父 ↓</button><button class="parent-jump parent-jump-mother" type="button" data-jump-parent="mother" aria-label="母の先頭へ移動">母 ↓</button></span></th>';
+  for(const e of events){const counts=countStatuses(e.id);h+=`<th class="event-head"><button class="event-summary-btn" type="button" data-summary-event="${esc(e.id)}" aria-label="${esc(formatDate(e.date))}の学年・父母別内訳を開く"><span class="event-date">${esc(formatDate(e.date))}</span><span class="event-counts">${countMarkup(counts)}</span></button></th>`}
+  h+='</tr></thead><tbody>';
+  for(const m of members){
+    const parentStart=m.parent&&!seenParents.has(m.parent);
+    if(parentStart)seenParents.add(m.parent);
+    h+=`<tr${parentStart?` data-parent-start="${esc(m.parent)}"`:''}><th class="name-col"><button class="member-btn ${selectedMember===m.id?'selected':''}" data-select-member="${esc(m.id)}">${memberDisplayHtml(m)}</button></th>`;
+    for(const e of events){const s=data.answers?.[m.id]?.[e.id]||'',on=selectedMember===m.id,busy=savingMembers.has(String(m.id));h+=`<td><button class="status-btn ${statusClass(s)}" ${on&&!busy?'':'disabled'} data-member="${esc(m.id)}" data-event="${esc(e.id)}">${esc(s||'・')}</button></td>`}
+    h+='</tr>';
+  }
+  h+='</tbody></table>';
+  $('#board').innerHTML=h;
+  document.querySelectorAll('[data-select-member]').forEach(b=>b.onclick=()=>selectMember(b.dataset.selectMember));
+  document.querySelectorAll('[data-summary-event]').forEach(b=>b.onclick=()=>showSummary(b.dataset.summaryEvent));
+  document.querySelectorAll('[data-jump-parent]').forEach(b=>b.onclick=()=>jumpToParent(b.dataset.jumpParent));
+  document.querySelectorAll('.status-btn:not(:disabled)').forEach(b=>b.onclick=saveAnswer);
+  renderReportControls(events);renderEditor();renderComments();renderAdmin();
+}
 function showSummary(eventId){const event=visibleEvents().find(item=>String(item.id)===String(eventId));if(!event)return;$('#summaryTitle').textContent=formatDate(event.date)+(event.title?' '+event.title:'');const grades=['1','2','3'];$('#summaryBody').innerHTML=grades.map(grade=>{const rows=['father','mother'].map(parent=>{const counts=countStatuses(eventId,data.members.filter(member=>member.grades.includes(grade)&&member.parent===parent));return `<div class="breakdown-row"><span class="breakdown-parent">${parent==='father'?'父':'母'}</span>${countMarkup(counts)}</div>`}).join('');return `<section class="breakdown-grade"><h3>${grade}年生</h3>${rows}</section>`}).join('');const unset=data.members.filter(member=>!member.grades.length||!member.parent).length;$('#summaryUnset').textContent=unset?`学年または父・母が未設定の回答者：${unset}名`:'※人数は回答者に設定した学年と父・母で集計しています。';$('#summaryDialog').showModal()}
 $('#summaryClose').onclick=()=>$('#summaryDialog').close();$('#summaryDialog').onclick=e=>{if(e.target===$('#summaryDialog'))$('#summaryDialog').close()};
 function selectMember(id){const next=selectedMember===id?'':id;if(next!==selectedMember){$('#commentText').value='';$('#upperGradeCheck').checked=false}selectedMember=next;render()}
