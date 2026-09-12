@@ -7,6 +7,10 @@ import {
 const DEFAULT_ACCESS_SALT = "yachiyo-access-v1";
 const DEFAULT_ACCESS_HASH =
   "19eb403934ae615b2961d9f6b5ddd86aab32a0fdf4e96adeb8aa2fcb351276ba";
+const COACH_ACCESS_CONFIG_KEY = "content/coach-attendance-access.json";
+const DEFAULT_COACH_ACCESS_SALT = "yachiyo-coach-access-v1";
+const DEFAULT_COACH_ACCESS_HASH =
+  "937e76fe820379b5e095356a7dae5cbd223b5c9af6dd444e48a3f3b34bd4f8eb";
 
 const allowed = new Set([
   "schedule",
@@ -97,6 +101,20 @@ async function accessPasswordIsValid(store, enteredPassword) {
     DEFAULT_ACCESS_SALT
   );
   return safeEqual(enteredHash, DEFAULT_ACCESS_HASH);
+}
+
+async function coachAccessPasswordIsValid(store, enteredPassword) {
+  const entered = String(enteredPassword || '');
+  if (!entered || entered.length > 128) return false;
+  let saved = null;
+  try {
+    saved = await store.get(COACH_ACCESS_CONFIG_KEY, {type: 'json', consistency: 'strong'});
+  } catch {
+    saved = null;
+  }
+  const salt = saved?.salt || DEFAULT_COACH_ACCESS_SALT;
+  const expectedHash = saved?.hash || DEFAULT_COACH_ACCESS_HASH;
+  return safeEqual(await hashAccessPassword(entered, salt), expectedHash);
 }
 
 function json(data, status = 200, extraHeaders = {}) {
@@ -195,6 +213,28 @@ function decodeDataUrl(dataUrl) {
   } catch {
     return null;
   }
+}
+
+function decodeBoardMeetingDataUrl(dataUrl) {
+  const match = String(dataUrl || "").match(/^data:(application\/pdf|image\/jpeg|image\/png|image\/webp);base64,(.*)$/s);
+  if (!match) return null;
+  try {
+    return {contentType: match[1].toLowerCase(), bytes: Uint8Array.from(atob(match[2]), character => character.charCodeAt(0))};
+  } catch {
+    return null;
+  }
+}
+
+function boardMeetingFileIsValid(fileName, contentType, bytes) {
+  const name = String(fileName || "").toLowerCase();
+  if (contentType === "application/pdf") return name.endsWith(".pdf") && new TextDecoder().decode(bytes.slice(0, 5)) === "%PDF-";
+  if (contentType === "image/jpeg") return /\.jpe?g$/.test(name) && bytes[0] === 0xff && bytes[1] === 0xd8 && bytes[2] === 0xff;
+  if (contentType === "image/png") {
+    const signature = [0x89,0x50,0x4e,0x47,0x0d,0x0a,0x1a,0x0a];
+    return name.endsWith(".png") && signature.every((value,index) => bytes[index] === value);
+  }
+  if (contentType === "image/webp") return name.endsWith(".webp") && new TextDecoder().decode(bytes.slice(0, 4)) === "RIFF" && new TextDecoder().decode(bytes.slice(8, 12)) === "WEBP";
+  return false;
 }
 
 const LEGACY_RESULT_SEED = [
@@ -667,26 +707,25 @@ export default async (request, context) => {
             ? documents.find(entry => String(entry?.id || "") === id)
             : null;
 
-          if (!item) {
-            return new Response("PDF not found", { status: 404 });
-          }
+          if (!item) return new Response("File not found", { status: 404 });
 
-          const pdf = await store.get(`board-meeting-documents/${id}.pdf`, {
+          const storageKey = String(item.storageKey || `board-meeting-documents/${id}.pdf`);
+          const file = await store.get(storageKey, {
             type: "blob",
             consistency: "strong"
           });
+          if (!file) return new Response("File not found", { status: 404 });
 
-          if (!pdf) {
-            return new Response("PDF not found", { status: 404 });
-          }
-
-          const encodedName = encodeURIComponent(item.fileName || "meeting-record.pdf");
-          return new Response(pdf, {
+          const allowedTypes = new Set(["application/pdf","image/jpeg","image/png","image/webp"]);
+          const contentType = allowedTypes.has(String(item.contentType || ""))
+            ? String(item.contentType)
+            : "application/pdf";
+          const encodedName = encodeURIComponent(item.fileName || "meeting-record");
+          return new Response(file, {
             status: 200,
             headers: {
-              "content-type": "application/pdf",
-              "content-disposition":
-                `inline; filename="meeting-record.pdf"; filename*=UTF-8''${encodedName}`,
+              "content-type": contentType,
+              "content-disposition": `inline; filename="meeting-record"; filename*=UTF-8''${encodedName}`,
               "cache-control": "private, no-store",
               "x-content-type-options": "nosniff"
             }
@@ -918,42 +957,33 @@ export default async (request, context) => {
         return json({ error: "unauthorized" }, 401);
       }
 
+      const protectedBoardActions = new Set(["uploadBoardMeetingDocument","deleteBoardMeetingDocument","saveBoardMeetingEvent","deleteBoardMeetingEvent"]);
+      if (protectedBoardActions.has(String(body?.action || "")) && !(await coachAccessPasswordIsValid(store, request.headers.get("x-coach-password") || ""))) {
+        return json({ error: "指導者出欠確認のパスワードが違います。" }, 401);
+      }
+
       if (
         section === "board-meeting-documents" &&
         body?.action === "uploadBoardMeetingDocument"
       ) {
         const fileName = String(body.fileName || "").trim();
-        const bytes = decodeDataUrl(body.dataUrl);
+        const decoded = decodeBoardMeetingDataUrl(body.dataUrl);
 
-        if (!fileName.toLowerCase().endsWith(".pdf") || !bytes) {
-          return json({ error: "PDFファイルを選択してください。" }, 400);
+        if (!decoded || !boardMeetingFileIsValid(fileName, decoded.contentType, decoded.bytes)) {
+          return json({ error: "PDF・JPEG・PNG・WebPファイルを選択してください。" }, 400);
         }
-        if (bytes.byteLength > 6 * 1024 * 1024) {
-          return json({ error: "PDFは6MB以下にしてください。" }, 413);
-        }
-        if (new TextDecoder().decode(bytes.slice(0, 5)) !== "%PDF-") {
-          return json({ error: "正しいPDFファイルではありません。" }, 400);
+        if (decoded.bytes.byteLength > 6 * 1024 * 1024) {
+          return json({ error: "ファイルは6MB以下にしてください。" }, 413);
         }
 
-        const current = await store.get(key, {
-          type: "json",
-          consistency: "strong"
-        });
+        const current = await store.get(key, {type: "json", consistency: "strong"});
         const documents = Array.isArray(current) ? current : [];
-        if (documents.length >= 12) {
-          return json({ error: "保存できるPDFは12件までです。" }, 400);
-        }
+        if (documents.length >= 12) return json({ error: "保存できる資料は12件までです。" }, 400);
 
         const id = crypto.randomUUID();
-        const item = {
-          id,
-          fileName,
-          size: bytes.byteLength,
-          uploadedAt: new Date().toISOString()
-        };
-        await store.set(`board-meeting-documents/${id}.pdf`, bytes.buffer, {
-          metadata: { fileName }
-        });
+        const storageKey = `board-meeting-documents/${id}.bin`;
+        const item = {id, fileName, contentType: decoded.contentType, storageKey, size: decoded.bytes.byteLength, uploadedAt: new Date().toISOString()};
+        await store.set(storageKey, decoded.bytes.buffer, {metadata: {fileName, contentType: decoded.contentType}});
         const updated = [item, ...documents];
         await store.setJSON(key, updated);
         return json({ ok: true, data: updated });
@@ -972,7 +1002,8 @@ export default async (request, context) => {
         if (!documents.some(entry => String(entry?.id || "") === id)) {
           return json({ error: "PDFが見つかりません。" }, 404);
         }
-        await store.delete(`board-meeting-documents/${id}.pdf`);
+        const item = documents.find(entry => String(entry?.id || "") === id);
+        await store.delete(String(item?.storageKey || `board-meeting-documents/${id}.pdf`));
         const updated = documents.filter(entry => String(entry?.id || "") !== id);
         await store.setJSON(key, updated);
         return json({ ok: true, data: updated });

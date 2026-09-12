@@ -449,10 +449,10 @@ html{scroll-padding-top:var(--compact-header-height)}
 
       <div class="board-meeting-section">
         <h3 class="board-meeting-heading">事務局の記録</h3>
-        <p class="board-meeting-help">PDF資料を選択すると、この画面から直接保存・削除できます。</p>
+        <p class="board-meeting-help">PDF・画像を選択すると、この画面から直接保存・削除できます。</p>
         <div class="meeting-upload">
-          <input id="meetingPdfInput" type="file" accept="application/pdf,.pdf" aria-label="事務局の記録 PDF">
-          <button id="meetingPdfSave" class="meeting-action" type="button">PDFを保存</button>
+          <input id="meetingPdfInput" type="file" accept="application/pdf,image/jpeg,image/png,image/webp,.pdf,.jpg,.jpeg,.png,.webp" aria-label="事務局の記録 PDF・画像">
+          <button id="meetingPdfSave" class="meeting-action" type="button">資料を保存</button>
           <button id="meetingPdfCancel" class="meeting-action meeting-action-cancel" type="button">キャンセル</button>
         </div>
         <div id="meetingDocumentList" class="meeting-document-list">
@@ -1140,6 +1140,8 @@ html{scroll-padding-top:var(--compact-header-height)}
 (function(){
   const DOCUMENT_API='/.netlify/functions/site-data?section=board-meeting-documents';
   const SCHEDULE_API='/.netlify/functions/site-data?section=board-meeting-schedule';
+  const COACH_AUTH_API='/.netlify/functions/coach-attendance-data';
+  const COACH_PASSWORD_KEY='yachiyoCoachAttendancePass';
   const documentList=document.getElementById('meetingDocumentList');
   const pdfInput=document.getElementById('meetingPdfInput');
   const pdfSave=document.getElementById('meetingPdfSave');
@@ -1166,10 +1168,33 @@ html{scroll-padding-top:var(--compact-header-height)}
 
   if(!documentList||!pdfInput||!pdfSave||!calendarGrid||!form)return;
 
-  function accessHeaders(json){
+  function accessHeaders(json,coachPassword){
     const headers={'x-access-password':sessionStorage.getItem('yachiyoAttendancePass')||''};
+    if(coachPassword)headers['x-coach-password']=coachPassword;
     if(json)headers['content-type']='application/json';
     return headers;
+  }
+
+  async function verifyCoachPassword(password){
+    if(!password)return false;
+    try{
+      const response=await fetch(COACH_AUTH_API,{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({action:'verifyCoachPassword',password:password})});
+      return response.ok;
+    }catch(e){return false}
+  }
+
+  async function requireCoachPassword(){
+    const saved=sessionStorage.getItem(COACH_PASSWORD_KEY)||'';
+    if(saved&&await verifyCoachPassword(saved))return saved;
+    sessionStorage.removeItem(COACH_PASSWORD_KEY);
+    const entered=prompt('指導者出欠確認のパスワードを入力してください。');
+    if(entered===null)return '';
+    if(await verifyCoachPassword(entered)){
+      sessionStorage.setItem(COACH_PASSWORD_KEY,entered);
+      return entered;
+    }
+    alert('パスワードが違います。');
+    return '';
   }
 
   function formatDate(year,month,day){
@@ -1201,7 +1226,7 @@ html{scroll-padding-top:var(--compact-header-height)}
       open.href=DOCUMENT_API+'&file='+encodeURIComponent(item.id);
       open.target='_blank';
       open.rel='noopener';
-      open.textContent='PDFを開く';
+      open.textContent=String(item.contentType||'').startsWith('image/')?'画像を開く':'PDFを開く';
       const remove=document.createElement('button');
       remove.className='meeting-document-delete';
       remove.type='button';
@@ -1334,31 +1359,37 @@ html{scroll-padding-top:var(--compact-header-height)}
 
   pdfSave.addEventListener('click',async function(){
     const file=pdfInput.files&&pdfInput.files[0];
-    if(!file||(file.type!=='application/pdf'&&!file.name.toLowerCase().endsWith('.pdf'))){alert('PDFファイルを選択してください。');return}
-    if(file.size>6*1024*1024){alert('PDFは6MB以下にしてください。');return}
+    const allowedType=/^(application\/pdf|image\/(jpeg|png|webp))$/i.test(file&&file.type||'');
+    const allowedName=/\.(pdf|jpe?g|png|webp)$/i.test(file&&file.name||'');
+    if(!file||!allowedType||!allowedName){alert('PDF・JPEG・PNG・WebPファイルを選択してください。');return}
+    if(file.size>6*1024*1024){alert('ファイルは6MB以下にしてください。');return}
+    const coachPassword=await requireCoachPassword();
+    if(!coachPassword)return;
     pdfSave.disabled=true;
     pdfSave.textContent='保存中...';
     try{
       const response=await fetch(DOCUMENT_API,{
         method:'POST',
-        headers:accessHeaders(true),
-        body:JSON.stringify({action:'uploadBoardMeetingDocument',fileName:file.name,dataUrl:await readAsDataUrl(file)})
+        headers:accessHeaders(true,coachPassword),
+        body:JSON.stringify({action:'uploadBoardMeetingDocument',fileName:file.name,contentType:file.type||'',dataUrl:await readAsDataUrl(file)})
       });
       const body=await response.json().catch(function(){return {}});
-      if(!response.ok)throw new Error(body.error||'PDFを保存できませんでした。');
+      if(!response.ok)throw new Error(body.error||'資料を保存できませんでした。');
       documents=Array.isArray(body.data)?body.data:documents;
       pdfInput.value='';
       renderDocuments();
       showSaveNotice('事務局の記録を保存しました');
-    }catch(e){alert(e.message||'PDFを保存できませんでした。')}
-    finally{pdfSave.disabled=false;pdfSave.textContent='PDFを保存'}
+    }catch(e){alert(e.message||'資料を保存できませんでした。')}
+    finally{pdfSave.disabled=false;pdfSave.textContent='資料を保存'}
   });
 
   async function deleteDocument(item){
     if(!confirm('「'+(item.fileName||'事務局資料')+'」を削除しますか？'))return;
+    const coachPassword=await requireCoachPassword();
+    if(!coachPassword)return;
     try{
       const response=await fetch(DOCUMENT_API,{
-        method:'POST',headers:accessHeaders(true),
+        method:'POST',headers:accessHeaders(true,coachPassword),
         body:JSON.stringify({action:'deleteBoardMeetingDocument',id:item.id})
       });
       const body=await response.json().catch(function(){return {}});
@@ -1373,11 +1404,13 @@ html{scroll-padding-top:var(--compact-header-height)}
     event.preventDefault();
     const title=eventTitle.value.trim();
     if(!selectedDate||!title)return;
+    const coachPassword=await requireCoachPassword();
+    if(!coachPassword)return;
     const submit=form.querySelector('button[type="submit"]');
     submit.disabled=true;submit.textContent='登録中...';
     try{
       const response=await fetch(SCHEDULE_API,{
-        method:'POST',headers:accessHeaders(true),
+        method:'POST',headers:accessHeaders(true,coachPassword),
         body:JSON.stringify({action:'saveBoardMeetingEvent',event:{date:selectedDate,title,time:eventTime.value.trim(),place:eventPlace.value.trim(),memo:eventMemo.value.trim()}})
       });
       const body=await response.json().catch(function(){return {}});
@@ -1390,9 +1423,11 @@ html{scroll-padding-top:var(--compact-header-height)}
 
   async function deleteEvent(item){
     if(!confirm('「'+(item.title||'事務局予定')+'」を削除しますか？'))return;
+    const coachPassword=await requireCoachPassword();
+    if(!coachPassword)return;
     try{
       const response=await fetch(SCHEDULE_API,{
-        method:'POST',headers:accessHeaders(true),
+        method:'POST',headers:accessHeaders(true,coachPassword),
         body:JSON.stringify({action:'deleteBoardMeetingEvent',id:item.id})
       });
       const body=await response.json().catch(function(){return {}});
