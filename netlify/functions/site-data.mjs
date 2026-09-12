@@ -729,15 +729,30 @@ export default async (request, context) => {
               : contentType === "image/webp"
                 ? "meeting-record.webp"
                 : "meeting-record.jpg";
-          return new Response(file, {
-            status: 200,
-            headers: {
-              "content-type": contentType,
-              "content-disposition": `inline; filename="${fallbackName}"; filename*=UTF-8''${encodedName}`,
-              "cache-control": "private, no-store",
-              "x-content-type-options": "nosniff"
-            }
-          });
+          const totalSize = Number(file.size || item.size || 0);
+          const responseHeaders = {
+            "content-type": contentType,
+            "content-disposition": `inline; filename="${fallbackName}"; filename*=UTF-8''${encodedName}`,
+            "cache-control": "private, no-store",
+            "accept-ranges": "bytes",
+            "x-content-type-options": "nosniff"
+          };
+          const range = request.headers.get("range") || "";
+          const match = /^bytes=(\d*)-(\d*)$/.exec(range);
+          if (match && totalSize > 0) {
+            const requestedStart = match[1] === "" ? 0 : Number(match[1]);
+            const requestedEnd = match[2] === "" ? totalSize - 1 : Number(match[2]);
+            const start = Math.max(0, Math.min(requestedStart, totalSize - 1));
+            const end = Math.max(start, Math.min(requestedEnd, totalSize - 1));
+            responseHeaders["content-range"] = `bytes ${start}-${end}/${totalSize}`;
+            responseHeaders["content-length"] = String(end - start + 1);
+            return new Response(file.slice(start, end + 1, contentType), {
+              status: 206,
+              headers: responseHeaders
+            });
+          }
+          if (totalSize > 0) responseHeaders["content-length"] = String(totalSize);
+          return new Response(file, {status: 200, headers: responseHeaders});
         }
 
         return json({ data: Array.isArray(documents) ? documents : [] });
