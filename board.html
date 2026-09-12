@@ -421,7 +421,7 @@ html{scroll-padding-top:var(--compact-header-height)}
       <div class="card-kicker">PLAYER ATTENDANCE</div>
       <h2>選手出欠確認</h2>
       <p>サイト内で各日程の「○・△・×」を入力し、選手の出席状況を確認できます。</p>
-      <a class="btn gold" href="./player-attendance.html">選手出欠確認を開く</a>
+      <a id="playerAttendanceOpenBtn" class="btn gold" href="./player-attendance.html" data-href="./player-attendance.html" aria-disabled="false">選手出欠確認を開く</a>
     </section>
 
     <section class="card densuke-card" id="densukeLegacyCard" style="display:none">
@@ -653,6 +653,8 @@ html{scroll-padding-top:var(--compact-header-height)}
   const API='/.netlify/functions/attendance-data';
   const attendanceBtn=document.getElementById('attendanceOpenBtn');
   const attendanceCard=document.getElementById('attendanceCard');
+  const playerAttendanceBtn=document.getElementById('playerAttendanceOpenBtn');
+  const playerAttendanceCard=document.getElementById('playerAttendanceCard');
   const legacyCard=document.getElementById('densukeLegacyCard');
   const adminBtn=document.getElementById('densukeToggleBtn');
   const panel=document.getElementById('densukeAdminPanel');
@@ -666,21 +668,28 @@ html{scroll-padding-top:var(--compact-header-height)}
   const saveCoachPasswordBtn=document.getElementById('saveCoachPasswordBtn');
   const coachPasswordStatus=document.getElementById('coachPasswordStatus');
 
-  if(!attendanceBtn || !attendanceCard || !legacyCard || !adminBtn || !panel || !endBtn || !resumeBtn || !closeAdminBtn || !warning) return;
+  if(!attendanceBtn || !attendanceCard || !playerAttendanceBtn || !playerAttendanceCard || !legacyCard || !adminBtn || !panel || !endBtn || !resumeBtn || !closeAdminBtn || !warning) return;
 
   function setAttendanceEnabled(enabled){
-    attendanceCard.classList.toggle('disabled',!enabled);
-    if(enabled){
-      attendanceBtn.classList.remove('disabled');
-      attendanceBtn.setAttribute('href',attendanceBtn.dataset.href || './attendance.html');
-      attendanceBtn.setAttribute('aria-disabled','false');
-      attendanceBtn.removeAttribute('tabindex');
-    }else{
-      attendanceBtn.classList.add('disabled');
-      attendanceBtn.removeAttribute('href');
-      attendanceBtn.setAttribute('aria-disabled','true');
-      attendanceBtn.setAttribute('tabindex','-1');
-    }
+    const targets=[
+      {card:attendanceCard,button:attendanceBtn,fallback:'./attendance.html'},
+      {card:playerAttendanceCard,button:playerAttendanceBtn,fallback:'./player-attendance.html'}
+    ];
+
+    targets.forEach(({card,button,fallback})=>{
+      card.classList.toggle('disabled',!enabled);
+      if(enabled){
+        button.classList.remove('disabled');
+        button.setAttribute('href',button.dataset.href || fallback);
+        button.setAttribute('aria-disabled','false');
+        button.removeAttribute('tabindex');
+      }else{
+        button.classList.add('disabled');
+        button.removeAttribute('href');
+        button.setAttribute('aria-disabled','true');
+        button.setAttribute('tabindex','-1');
+      }
+    });
   }
 
   function setEndedUI(ended){
