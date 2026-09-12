@@ -443,23 +443,23 @@ html{scroll-padding-top:var(--compact-header-height)}
     </section>
 
     <section class="card board-meeting-card" id="boardMeetingCard">
-      <div class="card-kicker">BOARD MEETING</div>
-      <h2>役員会</h2>
+      <div class="card-kicker">SECRETARIAT</div>
+      <h2>事務局</h2>
 
       <div class="board-meeting-section">
-        <h3 class="board-meeting-heading">役員会の記録</h3>
+        <h3 class="board-meeting-heading">事務局の記録</h3>
         <p class="board-meeting-help">PDF資料を選択すると、この画面から直接保存・削除できます。</p>
         <div class="meeting-upload">
-          <input id="meetingPdfInput" type="file" accept="application/pdf,.pdf" aria-label="役員会の記録 PDF">
+          <input id="meetingPdfInput" type="file" accept="application/pdf,.pdf" aria-label="事務局の記録 PDF">
           <button id="meetingPdfSave" class="meeting-action" type="button">PDFを保存</button>
         </div>
         <div id="meetingDocumentList" class="meeting-document-list">
-          <div class="meeting-empty">役員会の記録を読み込んでいます。</div>
+          <div class="meeting-empty">事務局の記録を読み込んでいます。</div>
         </div>
       </div>
 
       <div class="board-meeting-section">
-        <h3 class="board-meeting-heading">役員会スケジュール</h3>
+        <h3 class="board-meeting-heading">事務局スケジュール</h3>
         <div class="meeting-calendar-toolbar">
           <button id="meetingPrevMonth" class="meeting-calendar-nav" type="button" aria-label="前の月">‹</button>
           <div id="meetingCalendarTitle" class="meeting-calendar-title"></div>
@@ -485,11 +485,11 @@ html{scroll-padding-top:var(--compact-header-height)}
 <div id="meetingEditor" class="meeting-editor" aria-hidden="true">
   <div class="meeting-editor-box" role="dialog" aria-modal="true" aria-labelledby="meetingEditorDate">
     <button id="meetingEditorClose" class="meeting-editor-close" type="button" aria-label="閉じる">×</button>
-    <h2 id="meetingEditorDate" class="meeting-editor-date">役員会予定</h2>
+    <h2 id="meetingEditorDate" class="meeting-editor-date">事務局予定</h2>
     <div id="meetingDayList" class="meeting-day-list"></div>
     <form id="meetingForm" class="meeting-form">
       <label>予定名
-        <input id="meetingEventTitle" type="text" maxlength="60" placeholder="例：9月役員会" required>
+        <input id="meetingEventTitle" type="text" maxlength="60" placeholder="例：9月事務局" required>
       </label>
       <label>時間
         <input id="meetingEventTime" type="text" maxlength="40" placeholder="例：19:00～">
@@ -1183,7 +1183,7 @@ html{scroll-padding-top:var(--compact-header-height)}
     if(!documents.length){
       const empty=document.createElement('div');
       empty.className='meeting-empty';
-      empty.textContent='現在保存されている役員会の記録はありません。';
+      empty.textContent='現在保存されている事務局の記録はありません。';
       documentList.appendChild(empty);
       return;
     }
@@ -1192,7 +1192,7 @@ html{scroll-padding-top:var(--compact-header-height)}
       row.className='meeting-document-row';
       const name=document.createElement('div');
       name.className='meeting-document-name';
-      name.textContent=(item.fileName||'役員会資料.pdf')+'（'+formatSize(item.size)+'）';
+      name.textContent=(item.fileName||'事務局資料.pdf')+'（'+formatSize(item.size)+'）';
       const open=document.createElement('a');
       open.className='meeting-document-open';
       open.href=DOCUMENT_API+'&file='+encodeURIComponent(item.id);
@@ -1268,7 +1268,7 @@ html{scroll-padding-top:var(--compact-header-height)}
       row.className='meeting-day-list-row';
       const info=document.createElement('div');
       const title=document.createElement('strong');
-      title.textContent=item.title||'役員会';
+      title.textContent=item.title||'事務局';
       const detail=document.createElement('span');
       detail.textContent=[item.time,item.place,item.memo].filter(Boolean).join('／');
       info.appendChild(title);
@@ -1319,7 +1319,7 @@ html{scroll-padding-top:var(--compact-header-height)}
       renderDocuments();
       renderCalendar();
     }catch(e){
-      documentList.innerHTML='<div class="meeting-empty">役員会の記録を読み込めませんでした。</div>';
+      documentList.innerHTML='<div class="meeting-empty">事務局の記録を読み込めませんでした。</div>';
       renderCalendar();
     }
   }
@@ -1341,13 +1341,13 @@ html{scroll-padding-top:var(--compact-header-height)}
       documents=Array.isArray(body.data)?body.data:documents;
       pdfInput.value='';
       renderDocuments();
-      showSaveNotice('役員会の記録を保存しました');
+      showSaveNotice('事務局の記録を保存しました');
     }catch(e){alert(e.message||'PDFを保存できませんでした。')}
     finally{pdfSave.disabled=false;pdfSave.textContent='PDFを保存'}
   });
 
   async function deleteDocument(item){
-    if(!confirm('「'+(item.fileName||'役員会資料')+'」を削除しますか？'))return;
+    if(!confirm('「'+(item.fileName||'事務局資料')+'」を削除しますか？'))return;
     try{
       const response=await fetch(DOCUMENT_API,{
         method:'POST',headers:accessHeaders(true),
@@ -1381,7 +1381,7 @@ html{scroll-padding-top:var(--compact-header-height)}
   });
 
   async function deleteEvent(item){
-    if(!confirm('「'+(item.title||'役員会予定')+'」を削除しますか？'))return;
+    if(!confirm('「'+(item.title||'事務局予定')+'」を削除しますか？'))return;
     try{
       const response=await fetch(SCHEDULE_API,{
         method:'POST',headers:accessHeaders(true),
