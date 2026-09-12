@@ -8,6 +8,7 @@ const STORE = "yachiyo-public-site";
 const KEY = "content/player-attendance.json";
 const CONFIG_KEY = "content/player-attendance-config.json";
 const ACCESS_CONFIG_KEY = "content/access-settings.json";
+const PLAYERS_KEY = "content/players.json";
 const MEMBER_STATE_PREFIX = "player-attendance/member-state/";
 const DENSUKE_URL = "https://densuke.biz/list?cd=ZhxJNW9dPNGVtm7c";
 const DEFAULT_ACCESS_SALT = "yachiyo-access-v1";
@@ -78,6 +79,58 @@ function normalize(data = {}) {
     comments: Array.isArray(data.comments) ? data.comments : [],
     migrationInitialized: data.migrationInitialized === true,
   };
+}
+
+function rosterGrade(value) {
+  const match = String(value || "").normalize("NFKC").match(/[1-3]/);
+  return match ? match[0] : "";
+}
+
+function normalizedRosterName(value) {
+  return String(value || "").normalize("NFKC").replace(/[\s　]+/g, "").trim();
+}
+
+async function syncPlayersFromRoster(store, data) {
+  let roster = null;
+  try {
+    roster = await store.get(PLAYERS_KEY, {
+      type: "json",
+      consistency: "strong",
+    });
+  } catch {
+    roster = null;
+  }
+  if (!Array.isArray(roster) || !roster.length) return data;
+
+  const currentByRosterId = new Map(
+    data.members
+      .filter(member => member?.rosterId)
+      .map(member => [String(member.rosterId), member])
+  );
+  const currentByName = new Map(
+    data.members.map(member => [normalizedRosterName(member?.name), member])
+  );
+
+  const members = roster.map((player, index) => {
+    const rosterId = String(player?.id || `index-${index}`);
+    const name = String(player?.name || "").trim();
+    const grade = rosterGrade(player?.grade);
+    const existing = currentByRosterId.get(rosterId) || currentByName.get(normalizedRosterName(name));
+    return {
+      id: String(existing?.id || `roster_${rosterId}`),
+      rosterId,
+      name,
+      grades: grade ? [grade] : [],
+    };
+  }).filter(member => member.name);
+
+  const activeIds = new Set(members.map(member => member.id));
+  data.members = members;
+  for (const memberId of Object.keys(data.answers)) {
+    if (!activeIds.has(String(memberId))) delete data.answers[memberId];
+  }
+  data.comments = data.comments.filter(comment => activeIds.has(String(comment?.memberId || "")));
+  return data;
 }
 
 function memberStateKey(memberId) {
@@ -375,6 +428,7 @@ export default async (request, context) => {
       let data = normalize(saved || {});
       const merged = mergeInitial(data);
       data = await mergeMemberStates(store, merged.data);
+      data = await syncPlayersFromRoster(store, data);
       data = cleanupOldData(data);
       await store.setJSON(KEY, data);
       const config = await getConfig(store);
@@ -428,6 +482,7 @@ export default async (request, context) => {
     try { current = (await store.get(KEY, { type: "json" })) || {}; } catch { current = {}; }
     let data = mergeInitial(normalize(current)).data;
     data = await mergeMemberStates(store, data);
+    data = await syncPlayersFromRoster(store, data);
     data = cleanupOldData(data);
 
     if (action === "endDensuke") {
