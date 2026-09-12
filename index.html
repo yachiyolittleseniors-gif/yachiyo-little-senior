@@ -3207,6 +3207,7 @@ html{scroll-padding-top:var(--fixed-header-height)}
 </script>
 <style id="recruit-open-card-design">
 .recruit-standard-card{display:none}
+.recruit-open-home{max-width:1180px;margin:28px auto 6px;padding:0 22px}
 .recruit-open-card{
   display:block;
   position:relative;
@@ -3313,8 +3314,10 @@ html{scroll-padding-top:var(--fixed-header-height)}
 .recruit-open-cta span{font-size:23px;line-height:1}
 html.recruiting-standard .recruit-standard-card{display:block}
 html.recruiting-standard .recruit-open-card{display:none}
+html.recruiting-standard .recruit-open-home{display:none}
 html.recruiting-open .recruit-standard-card{display:none}
 html.recruiting-open .recruit-open-card{display:block}
+html.recruiting-open #homeRecruitSection .recruit{grid-template-columns:1fr}
 .recruit-mode-admin{display:none;margin-top:12px;text-align:right}
 body.photo-admin-on .recruit-mode-admin{display:block}
 .recruit-mode-admin button{
@@ -3335,6 +3338,7 @@ body.photo-admin-on .recruit-mode-admin{display:block}
 @keyframes recruitStatusPulse{0%{box-shadow:0 0 0 0 rgba(7,20,38,.42)}70%,100%{box-shadow:0 0 0 9px rgba(7,20,38,0)}}
 @media(prefers-reduced-motion:reduce){.recruit-open-status span,.recruit-card-flash{animation:none}}
 @media(max-width:600px){
+  .recruit-open-home{margin:18px auto 4px;padding:0 12px}
   .recruit-open-card{padding:28px 20px 24px!important;border-width:9px!important}
   .recruit-open-card:before{inset:7px}
   .recruit-open-card:after{right:-16px;bottom:-20px;font-size:112px}
@@ -3475,6 +3479,23 @@ body.photo-admin-on .recruit-mode-admin{display:block}
 </div>
 
 
+<section class="recruit-open-home" aria-label="選手募集中">
+<div class="card recruit-open-card" id="recruitOpenCard">
+  <span class="recruit-card-flash" aria-hidden="true"></span>
+  <div class="recruit-open-status"><span aria-hidden="true"></span>八千代リトルシニア</div>
+  <div class="recruit-open-kicker">JOIN OUR TEAM</div>
+  <h2>選手募集中</h2>
+  <p class="recruit-open-year">2027年度の新入部員の募集を開始しました。</p>
+  <div class="recruit-open-grid">
+    <div><b>対象</b><span>中学生・小学6年生</span></div>
+    <div><b>経験</b><span>経験・体格・性別不問</span></div>
+    <div><b>活動</b><span>土曜・日曜・祝日</span></div>
+  </div>
+  <p class="recruit-open-note">女子選手も所属しています</p>
+  <a class="recruit-open-cta" href="/join">体験・入団案内を見る <span aria-hidden="true">›</span></a>
+</div>
+</section>
+
 <section class="seniorcup-home-banner" aria-label="八千代リトルシニア杯">
   <a class='seniorcup-home-link' href='/seniorcup'>
     <div class="seniorcup-home-kicker">YACHIYO SENIOR CUP <span class="current-year"></span></div>
@@ -3546,20 +3567,7 @@ body.photo-admin-on .recruit-mode-admin{display:block}
 <div class="info-row"><b>特徴</b><span>年間約100試合程度の大会・練習試合<br>女子選手も所属</span></div>
 <div class="btns"><a class='btn primary' href='/join' style='color:#fff!important;'>体験・入団案内　›</a></div>
 </div>
-<div class="card recruit-open-card" id="recruitOpenCard">
-  <span class="recruit-card-flash" aria-hidden="true"></span>
-  <div class="recruit-open-status"><span aria-hidden="true"></span>体験・見学 随時受付中</div>
-  <div class="recruit-open-kicker">JOIN OUR TEAM</div>
-  <h2>選手募集中</h2>
-  <p class="recruit-open-year">2027年度の新入部員の募集を開始しました。</p>
-  <div class="recruit-open-grid">
-    <div><b>対象</b><span>中学生・小学6年生</span></div>
-    <div><b>経験</b><span>経験・体格・性別不問</span></div>
-    <div><b>活動</b><span>土曜・日曜・祝日</span></div>
-  </div>
-  <p class="recruit-open-note">女子選手も所属しています</p>
-  <a class="recruit-open-cta" href="/join">体験・入団案内を見る <span aria-hidden="true">›</span></a>
-</div></div>
+</div>
 <div class="recruit-mode-admin" id="recruitModeAdmin"><button type="button" id="recruitModeToggle">通常の選手募集に戻す</button></div>
 </section>
 </main>
