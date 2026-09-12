@@ -93,12 +93,19 @@ h1{font-family:serif;font-weight:500;letter-spacing:.08em;margin:8px 0 6px;font-
 .meeting-day-list{display:grid;gap:8px;margin-bottom:16px}
 .meeting-day-list-row{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:8px;padding:10px;border:1px solid #e0e3e7;border-radius:8px;background:#f8f9fa}
 .meeting-day-list-row strong,.meeting-day-list-row span{display:block;overflow-wrap:anywhere}.meeting-day-list-row span{margin-top:3px;color:#69737f;font-size:11px;line-height:1.5}
-.meeting-day-list-row button{align-self:center;padding:8px;border:1px solid #d6bcbc;border-radius:7px;background:#fff;color:#9b2727;font-weight:800}
+.meeting-day-list-actions{display:flex;align-items:center;gap:6px}
+.meeting-day-list-row button{align-self:center;padding:8px;border-radius:7px;background:#fff;font-weight:800;cursor:pointer}
+.meeting-event-edit{border:1px solid #c79a3b;color:#7b5b16}
+.meeting-event-delete{border:1px solid #d6bcbc;color:#9b2727}
 .meeting-form{padding-top:14px;border-top:1px solid #e0e3e7}
 .meeting-form label{display:block;margin:0 0 11px;color:#263344;font-size:12px;font-weight:800}
 .meeting-form input,.meeting-form textarea{display:block;width:100%;margin-top:5px;padding:11px;border:1px solid #cfd5dc;border-radius:7px;background:#fff;color:#172233;font:inherit;font-size:16px}
 .meeting-form textarea{min-height:76px;resize:vertical}
-.meeting-form-save{width:100%;min-height:46px;border:1px solid var(--navy);border-radius:8px;background:var(--navy);color:#fff;font:inherit;font-weight:900;cursor:pointer}
+.meeting-form-actions{display:grid;grid-template-columns:1fr;gap:8px}
+.meeting-form-actions.editing{grid-template-columns:1fr 1.35fr}
+.meeting-form-save,.meeting-form-cancel{width:100%;min-height:46px;border-radius:8px;font:inherit;font-weight:900;cursor:pointer}
+.meeting-form-save{border:1px solid var(--navy);background:var(--navy);color:#fff}
+.meeting-form-cancel{border:1px solid #9aa5b1;background:#fff;color:var(--navy)}
 @media(max-width:520px){.meeting-upload{grid-template-columns:1fr}.meeting-action{width:100%}.meeting-document-row{grid-template-columns:minmax(0,1fr) auto}.meeting-document-name{grid-column:1/-1}.meeting-calendar-day{min-height:62px}}
 .btn{display:block;text-align:center;background:var(--navy);color:var(--gold2);border:1px solid var(--gold);padding:14px 16px;border-radius:8px;font-weight:800;margin-top:18px;transition:.18s ease}
 .btn:active{transform:translateY(1px)}
@@ -471,7 +478,7 @@ html{scroll-padding-top:var(--compact-header-height)}
           <div class="sun">日</div><div>月</div><div>火</div><div>水</div><div>木</div><div>金</div><div class="sat">土</div>
         </div>
         <div id="meetingCalendarGrid" class="meeting-calendar-grid"></div>
-        <p class="meeting-calendar-note">日付をタップすると予定を登録・削除できます。</p>
+        <p class="meeting-calendar-note">日付をタップすると予定を登録・編集・削除できます。</p>
       </div>
     </section>
 
@@ -502,7 +509,10 @@ html{scroll-padding-top:var(--compact-header-height)}
       <label>詳細
         <textarea id="meetingEventMemo" maxlength="500" placeholder="議題・持ち物など"></textarea>
       </label>
-      <button class="meeting-form-save" type="submit">予定を登録</button>
+      <div class="meeting-form-actions">
+        <button id="meetingEditCancel" class="meeting-form-cancel" type="button" hidden>編集をキャンセル</button>
+        <button id="meetingFormSave" class="meeting-form-save" type="submit">予定を保存</button>
+      </div>
     </form>
   </div>
 </div>
@@ -1168,14 +1178,18 @@ html{scroll-padding-top:var(--compact-header-height)}
   const eventTime=document.getElementById('meetingEventTime');
   const eventPlace=document.getElementById('meetingEventPlace');
   const eventMemo=document.getElementById('meetingEventMemo');
+  const formSave=document.getElementById('meetingFormSave');
+  const editCancel=document.getElementById('meetingEditCancel');
+  const formActions=form.querySelector('.meeting-form-actions');
   let documents=[];
   let events=[];
   let selectedDate='';
+  let editingEventId='';
   const now=new Date();
   let viewYear=now.getFullYear();
   let viewMonth=now.getMonth();
 
-  if(!documentList||!pdfInput||!pdfSave||!calendarGrid||!form)return;
+  if(!documentList||!pdfInput||!pdfSave||!calendarGrid||!form||!formSave||!editCancel||!formActions)return;
 
   function accessHeaders(json,coachPassword){
     const headers={'x-access-password':sessionStorage.getItem('yachiyoAttendancePass')||''};
@@ -1312,23 +1326,55 @@ html{scroll-padding-top:var(--compact-header-height)}
       if(detail.textContent)info.appendChild(detail);
       const remove=document.createElement('button');
       remove.type='button';
+      remove.className='meeting-event-delete';
       remove.textContent='削除';
       remove.addEventListener('click',function(){deleteEvent(item)});
-      row.append(info,remove);
+      const edit=document.createElement('button');
+      edit.type='button';
+      edit.className='meeting-event-edit';
+      edit.textContent='編集';
+      edit.addEventListener('click',function(){startEditing(item)});
+      const actions=document.createElement('div');
+      actions.className='meeting-day-list-actions';
+      actions.append(edit,remove);
+      row.append(info,actions);
       dayList.appendChild(row);
     });
+  }
+
+  function resetFormMode(){
+    editingEventId='';
+    form.reset();
+    formSave.textContent='予定を保存';
+    editCancel.hidden=true;
+    formActions.classList.remove('editing');
+  }
+
+  async function startEditing(item){
+    const coachPassword=await requireCoachPassword();
+    if(!coachPassword)return;
+    editingEventId=String(item.id||'');
+    eventTitle.value=item.title||'';
+    eventTime.value=item.time||'';
+    eventPlace.value=item.place||'';
+    eventMemo.value=item.memo||'';
+    formSave.textContent='変更を保存';
+    editCancel.hidden=false;
+    formActions.classList.add('editing');
+    eventTitle.focus();
   }
 
   function openEditor(date){
     selectedDate=date;
     editorDate.textContent=date.replace(/-/g,'/')+' の予定';
-    form.reset();
+    resetFormMode();
     renderDayList();
     editor.classList.add('show');
     editor.setAttribute('aria-hidden','false');
   }
 
   function closeEditor(){
+    resetFormMode();
     editor.classList.remove('show');
     editor.setAttribute('aria-hidden','true');
   }
@@ -1409,25 +1455,35 @@ html{scroll-padding-top:var(--compact-header-height)}
     }catch(e){alert(e.message||'PDFを削除できませんでした。')}
   }
 
+  editCancel.addEventListener('click',function(){
+    resetFormMode();
+  });
+
   form.addEventListener('submit',async function(event){
     event.preventDefault();
     const title=eventTitle.value.trim();
     if(!selectedDate||!title)return;
     const coachPassword=await requireCoachPassword();
     if(!coachPassword)return;
-    const submit=form.querySelector('button[type="submit"]');
-    submit.disabled=true;submit.textContent='登録中...';
+    const editingId=editingEventId;
+    formSave.disabled=true;formSave.textContent=editingId?'変更中...':'保存中...';
     try{
       const response=await fetch(SCHEDULE_API,{
         method:'POST',headers:accessHeaders(true,coachPassword),
-        body:JSON.stringify({action:'saveBoardMeetingEvent',event:{date:selectedDate,title,time:eventTime.value.trim(),place:eventPlace.value.trim(),memo:eventMemo.value.trim()}})
+        body:JSON.stringify({action:'saveBoardMeetingEvent',event:{id:editingId||undefined,date:selectedDate,title,time:eventTime.value.trim(),place:eventPlace.value.trim(),memo:eventMemo.value.trim()}})
       });
       const body=await response.json().catch(function(){return {}});
-      if(!response.ok)throw new Error(body.error||'予定を登録できませんでした。');
+      if(!response.ok)throw new Error(body.error||(editingId?'予定を変更できませんでした。':'予定を保存できませんでした。'));
       events=Array.isArray(body.data)?body.data:events;
-      form.reset();renderDayList();renderCalendar();showSaveNotice('予定を登録しました');
-    }catch(e){alert(e.message||'予定を登録できませんでした。')}
-    finally{submit.disabled=false;submit.textContent='予定を登録'}
+      resetFormMode();
+      renderDayList();
+      renderCalendar();
+      showSaveNotice(editingId?'予定の変更を保存しました':'予定を保存しました');
+    }catch(e){alert(e.message||(editingId?'予定を変更できませんでした。':'予定を保存できませんでした。'))}
+    finally{
+      formSave.disabled=false;
+      formSave.textContent=editingEventId?'変更を保存':'予定を保存';
+    }
   });
 
   async function deleteEvent(item){
@@ -1442,6 +1498,7 @@ html{scroll-padding-top:var(--compact-header-height)}
       const body=await response.json().catch(function(){return {}});
       if(!response.ok)throw new Error(body.error||'予定を削除できませんでした。');
       events=Array.isArray(body.data)?body.data:events.filter(function(entry){return entry.id!==item.id});
+      if(editingEventId===String(item.id||''))resetFormMode();
       renderDayList();renderCalendar();showSaveNotice('予定を削除しました');
     }catch(e){alert(e.message||'予定を削除できませんでした。')}
   }
