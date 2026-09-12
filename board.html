@@ -1364,7 +1364,9 @@ html{scroll-padding-top:var(--compact-header-height)}
     eventTitle.focus();
   }
 
-  function openEditor(date){
+  async function openEditor(date){
+    const coachPassword=await requireCoachPassword();
+    if(!coachPassword)return;
     selectedDate=date;
     editorDate.textContent=date.replace(/-/g,'/')+' の予定';
     resetFormMode();
