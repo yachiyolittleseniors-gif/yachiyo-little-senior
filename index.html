@@ -3370,26 +3370,29 @@ html{scroll-padding-top:var(--fixed-header-height)}
 }
 .recruit-open-card>*:not(.recruit-card-flash){position:relative;z-index:3}
 .recruit-open-status{
-  display:inline-flex;
-  align-items:center;
-  gap:9px;
-  margin-bottom:24px;
-  padding:8px 14px;
-  border:1px solid rgba(7,20,38,.72);
-  border-radius:999px;
-  background:#071426;
-  color:#f4d88f;
-  font-size:12px;
-  font-weight:900;
-  letter-spacing:.08em;
+  display:flex;
+  flex-direction:column;
+  align-items:flex-start;
+  gap:3px;
+  margin-bottom:25px;
+  padding:0;
+  background:transparent;
+  color:#071426;
+  line-height:1;
 }
-.recruit-open-status span{
-  width:8px;
-  height:8px;
-  border-radius:50%;
-  background:#e2bd67;
-  box-shadow:0 0 0 0 rgba(7,20,38,.38);
-  animation:recruitStatusPulse 2.2s ease-out infinite;
+.recruit-open-status-en{
+  font-family:Arial,"Helvetica Neue",sans-serif;
+  font-size:13px;
+  font-weight:800;
+  letter-spacing:.24em;
+  white-space:nowrap;
+}
+.recruit-open-status-jp{
+  font-size:10px;
+  font-weight:700;
+  letter-spacing:.16em;
+  opacity:.72;
+  white-space:nowrap;
 }
 .recruit-open-kicker{color:#071426;font-size:11px;font-weight:900;letter-spacing:.28em}
 .recruit-open-card h2{
@@ -3449,7 +3452,7 @@ body.photo-admin-on .recruit-mode-admin{display:block}
   100%{left:118%;opacity:0}
 }
 @keyframes recruitStatusPulse{0%{box-shadow:0 0 0 0 rgba(7,20,38,.42)}70%,100%{box-shadow:0 0 0 9px rgba(7,20,38,0)}}
-@media(prefers-reduced-motion:reduce){.recruit-open-status span,.recruit-card-flash{animation:none}}
+@media(prefers-reduced-motion:reduce){.recruit-card-flash{animation:none}}
 @media(max-width:600px){
   .recruit-open-home{margin:18px auto 4px;padding:0 12px}
   .recruit-open-card{padding:28px 20px 24px!important;border-width:9px!important}
@@ -3603,7 +3606,10 @@ body.photo-admin-on .recruit-mode-admin{display:block}
 <section class="recruit-open-home" aria-label="選手募集中">
 <div class="card recruit-open-card" id="recruitOpenCard">
   <span class="recruit-card-flash" aria-hidden="true"></span>
-  <div class="recruit-open-status"><span aria-hidden="true"></span>八千代リトルシニア</div>
+  <div class="recruit-open-status">
+    <span class="recruit-open-status-en">YACHIYO LITTLE SENIOR</span>
+    <span class="recruit-open-status-jp">八千代リトルシニア</span>
+  </div>
   <div class="recruit-open-kicker">JOIN OUR TEAM</div>
   <h2>選手募集中</h2>
   <p class="recruit-open-year">2027年度の新入部員の募集を開始しました。</p>
