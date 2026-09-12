@@ -3194,6 +3194,142 @@ html{scroll-padding-top:var(--fixed-header-height)}
   }
 }
 </style>
+
+<script id="recruit-mode-prepaint">
+(()=>{
+  try{
+    const cached=localStorage.getItem('yachiyoRecruitingOpen');
+    document.documentElement.classList.add(cached==='false'?'recruiting-standard':'recruiting-open');
+  }catch(error){
+    document.documentElement.classList.add('recruiting-open');
+  }
+})();
+</script>
+<style id="recruit-open-card-design">
+.recruit-standard-card{display:none}
+.recruit-open-card{
+  display:block;
+  position:relative;
+  isolation:isolate;
+  overflow:hidden;
+  min-height:100%;
+  padding:34px 32px 30px!important;
+  border:1px solid rgba(226,189,103,.72)!important;
+  background:
+    linear-gradient(135deg,rgba(255,255,255,.035),transparent 42%),
+    linear-gradient(145deg,#102a47 0%,#071426 72%)!important;
+  color:#fff;
+  box-shadow:0 16px 38px rgba(7,20,38,.20)!important;
+}
+.recruit-open-card:before{
+  content:"";
+  position:absolute;
+  z-index:-1;
+  inset:10px;
+  border:1px solid rgba(226,189,103,.24);
+  pointer-events:none;
+}
+.recruit-open-card:after{
+  content:"⚾";
+  position:absolute;
+  z-index:-1;
+  right:-12px;
+  bottom:-32px;
+  color:#e2bd67;
+  font-size:150px;
+  line-height:1;
+  opacity:.07;
+  transform:rotate(-15deg);
+  pointer-events:none;
+}
+.recruit-open-status{
+  display:inline-flex;
+  align-items:center;
+  gap:9px;
+  margin-bottom:24px;
+  padding:8px 14px;
+  border:1px solid rgba(226,189,103,.52);
+  border-radius:999px;
+  background:rgba(226,189,103,.10);
+  color:#f3d88e;
+  font-size:12px;
+  font-weight:900;
+  letter-spacing:.08em;
+}
+.recruit-open-status span{
+  width:8px;
+  height:8px;
+  border-radius:50%;
+  background:#e2bd67;
+  box-shadow:0 0 0 0 rgba(226,189,103,.55);
+  animation:recruitStatusPulse 2.2s ease-out infinite;
+}
+.recruit-open-kicker{color:#d8b45a;font-size:11px;font-weight:900;letter-spacing:.28em}
+.recruit-open-card h2{
+  margin:8px 0 12px!important;
+  color:#fff!important;
+  font-family:"Yu Mincho","Hiragino Mincho ProN",serif!important;
+  font-size:clamp(36px,4vw,54px)!important;
+  font-weight:600!important;
+  letter-spacing:.10em!important;
+  line-height:1.25!important;
+}
+.recruit-open-lead{margin:0 0 22px!important;color:#e7ebef!important;font-size:16px!important;font-weight:700;line-height:1.9!important}
+.recruit-open-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));border-top:1px solid rgba(226,189,103,.35);border-bottom:1px solid rgba(226,189,103,.35)}
+.recruit-open-grid div{padding:14px 10px;text-align:center}
+.recruit-open-grid div+div{border-left:1px solid rgba(226,189,103,.26)}
+.recruit-open-grid b{display:block;margin-bottom:6px;color:#d8b45a;font-size:11px;letter-spacing:.12em}
+.recruit-open-grid span{display:block;color:#fff;font-size:12px;font-weight:800;line-height:1.5}
+.recruit-open-note{margin:14px 0 0!important;color:#cbd3dc!important;font-size:12px!important;min-height:0!important}
+.recruit-open-cta{
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  gap:12px;
+  min-height:58px;
+  margin-top:20px;
+  padding:14px 18px;
+  border:1px solid #e2bd67;
+  border-radius:8px;
+  background:linear-gradient(100deg,#c79632,#e2bd67);
+  color:#071426!important;
+  font-size:15px;
+  font-weight:900;
+  box-shadow:0 8px 20px rgba(0,0,0,.22);
+}
+.recruit-open-cta span{font-size:23px;line-height:1}
+html.recruiting-standard .recruit-standard-card{display:block}
+html.recruiting-standard .recruit-open-card{display:none}
+html.recruiting-open .recruit-standard-card{display:none}
+html.recruiting-open .recruit-open-card{display:block}
+.recruit-mode-admin{display:none;margin-top:12px;text-align:right}
+body.photo-admin-on .recruit-mode-admin{display:block}
+.recruit-mode-admin button{
+  border:1px solid rgba(199,154,59,.7);
+  border-radius:999px;
+  background:#071426;
+  color:#e2bd67;
+  padding:9px 14px;
+  font-size:12px;
+  font-weight:800;
+}
+@keyframes recruitStatusPulse{0%{box-shadow:0 0 0 0 rgba(226,189,103,.58)}70%,100%{box-shadow:0 0 0 9px rgba(226,189,103,0)}}
+@media(prefers-reduced-motion:reduce){.recruit-open-status span{animation:none}}
+@media(max-width:600px){
+  .recruit-open-card{padding:28px 20px 24px!important}
+  .recruit-open-card:after{right:-16px;bottom:-20px;font-size:112px}
+  .recruit-open-status{margin-bottom:20px;font-size:11px}
+  .recruit-open-card h2{font-size:38px!important}
+  .recruit-open-lead{font-size:14px!important;line-height:1.8!important}
+  .recruit-open-grid{grid-template-columns:1fr}
+  .recruit-open-grid div{display:grid;grid-template-columns:70px 1fr;align-items:center;text-align:left;padding:10px 8px}
+  .recruit-open-grid div+div{border-left:0;border-top:1px solid rgba(226,189,103,.22)}
+  .recruit-open-grid b{margin:0}
+  .recruit-open-grid span{font-size:13px}
+  .recruit-open-break{display:none}
+  .recruit-mode-admin{text-align:center}
+}
+</style>
 </head>
 <body id="page-top">
 <header class="header">
@@ -3331,14 +3467,30 @@ html{scroll-padding-top:var(--fixed-header-height)}
   </div>
   <p class="kwt-lead">礼儀と感謝の心を育み、技術を磨き、強い身体をつくる。</p>
 </div>
-<section class="container"><div class="recruit"><div class="photo recruit-editable-photo" id="recruitEditablePhoto" aria-label="グラウンド風景のスライド"><div class="photo-caption">グラウンド風景</div><div class="groundPhotoAdminActions"><button type="button" class="recruitPhotoChangeBtn">写真を追加</button><button type="button" class="recruitPhotoMovePrevBtn">← 前へ</button><button type="button" class="recruitPhotoMoveNextBtn">後へ →</button><button type="button" class="recruitPhotoDeleteBtn">表示中を削除</button></div><div class="ground-slide-dots" aria-label="写真を切り替える"></div></div><div class="card"><h2>選手募集</h2><div class="en">JOIN US</div>
+<section class="container recruit-section" id="homeRecruitSection"><div class="recruit"><div class="photo recruit-editable-photo" id="recruitEditablePhoto" aria-label="グラウンド風景のスライド"><div class="photo-caption">グラウンド風景</div><div class="groundPhotoAdminActions"><button type="button" class="recruitPhotoChangeBtn">写真を追加</button><button type="button" class="recruitPhotoMovePrevBtn">← 前へ</button><button type="button" class="recruitPhotoMoveNextBtn">後へ →</button><button type="button" class="recruitPhotoDeleteBtn">表示中を削除</button></div><div class="ground-slide-dots" aria-label="写真を切り替える"></div></div>
+<div class="card recruit-standard-card" id="recruitStandardCard"><h2>選手募集</h2><div class="en">JOIN US</div>
 <p class="pc-reference-recruit-copy">野球を本気で頑張りたい<br>中学生の皆さんをお待ちしています。<br>体験・見学は随時受付中です。</p>
 <div class="info-row"><b>対象</b><span>硬式野球に打ち込みたい中学生、および卒業前の小学6年生</span></div>
 <div class="info-row"><b>経験</b><span>野球経験の長さ・体格・性別などは問いません</span></div>
 <div class="info-row"><b>活動日</b><span>土曜日・日曜日・祝日が基本</span></div>
 <div class="info-row"><b>特徴</b><span>年間約100試合程度の大会・練習試合<br>女子選手も所属</span></div>
 <div class="btns"><a class='btn primary' href='/join' style='color:#fff!important;'>体験・入団案内　›</a></div>
-</div></div></section>
+</div>
+<div class="card recruit-open-card" id="recruitOpenCard">
+  <div class="recruit-open-status"><span aria-hidden="true"></span>体験・見学 随時受付中</div>
+  <div class="recruit-open-kicker">JOIN OUR TEAM</div>
+  <h2>選手募集中</h2>
+  <p class="recruit-open-lead">本気で野球に打ち込みたい仲間を<br class="recruit-open-break">待っています。</p>
+  <div class="recruit-open-grid">
+    <div><b>対象</b><span>中学生・小学6年生</span></div>
+    <div><b>経験</b><span>経験・体格・性別不問</span></div>
+    <div><b>活動</b><span>土曜・日曜・祝日</span></div>
+  </div>
+  <p class="recruit-open-note">女子選手も所属しています</p>
+  <a class="recruit-open-cta" href="/join">体験・入団案内を見る <span aria-hidden="true">›</span></a>
+</div></div>
+<div class="recruit-mode-admin" id="recruitModeAdmin"><button type="button" id="recruitModeToggle">通常の選手募集に戻す</button></div>
+</section>
 </main>
 
 
@@ -4675,6 +4827,71 @@ body.photo-admin-on #accessPasswordChange{
     if(document.documentElement.classList.contains('seniorcup-hidden'))apply(false);
     else if(document.querySelector('.seniorcup-home-banner'))apply(true);
   }).observe(document.documentElement,{attributes:true,attributeFilter:['class']});
+})();
+</script>
+
+<script id="recruit-mode-controller">
+(()=>{
+  const api='/.netlify/functions/site-data?section=recruitment-settings';
+  const cacheKey='yachiyoRecruitingOpen';
+  const toggle=document.getElementById('recruitModeToggle');
+  const standard=document.getElementById('recruitStandardCard');
+  const openCard=document.getElementById('recruitOpenCard');
+  if(!toggle||!standard||!openCard)return;
+
+  let recruiting=true;
+  try{
+    const cached=localStorage.getItem(cacheKey);
+    if(cached==='false')recruiting=false;
+  }catch(error){}
+
+  function render(){
+    document.documentElement.classList.toggle('recruiting-open',recruiting);
+    document.documentElement.classList.toggle('recruiting-standard',!recruiting);
+    toggle.textContent=recruiting?'通常の選手募集に戻す':'選手募集中カードを表示';
+    toggle.setAttribute('aria-pressed',String(recruiting));
+  }
+
+  async function load(){
+    render();
+    try{
+      const response=await fetch(api,{cache:'no-store'});
+      if(!response.ok)return;
+      const json=await response.json();
+      recruiting=json?.data?.recruiting!==false;
+      try{localStorage.setItem(cacheKey,String(recruiting))}catch(error){}
+      render();
+    }catch(error){}
+  }
+
+  toggle.addEventListener('click',async()=>{
+    const password=sessionStorage.getItem('yachiyoAdminPassword')||'';
+    if(!password){alert('管理画面に入り直してください。');return}
+    const next=!recruiting;
+    toggle.disabled=true;
+    const oldText=toggle.textContent;
+    toggle.textContent='保存中…';
+    try{
+      const response=await fetch(api,{
+        method:'POST',
+        headers:{'content-type':'application/json','x-admin-password':password},
+        body:JSON.stringify({data:{recruiting:next,updatedAt:new Date().toISOString()}})
+      });
+      if(response.status===429){alert('試行回数の上限です。15分後に再度お試しください。');return}
+      if(response.status===401){alert('管理者パスワードが違います。');return}
+      if(!response.ok)throw new Error('save');
+      recruiting=next;
+      try{localStorage.setItem(cacheKey,String(recruiting))}catch(error){}
+      render();
+    }catch(error){
+      toggle.textContent=oldText;
+      alert('選手募集カードの表示を変更できませんでした。');
+    }finally{
+      toggle.disabled=false;
+    }
+  });
+
+  load();
 })();
 </script>
 </body>
