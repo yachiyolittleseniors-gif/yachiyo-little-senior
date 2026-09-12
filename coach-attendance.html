@@ -193,7 +193,7 @@ body{padding-top:var(--fixed-header-height)!important}
  .report-grade,.report-comments{break-inside:avoid}
 }
 </style>
-<style id="coach-attendance-polish">.name-col{min-width:190px}.member-grade-badge{background:linear-gradient(135deg,#b8892d,#d8ad4c)}@media(max-width:700px){.name-col{min-width:180px}}</style></head><body id="page-top">
+<style id="coach-attendance-polish">.name-col{min-width:148px}@media(max-width:700px){.name-col{min-width:136px}}</style></head><body id="page-top">
 <header class="header">
 <nav class="nav">
 <div class="brand"><a class="official-brand-wrap" href="./official-logo-crisp-final.png" aria-label="ページ先頭へ戻る・ロゴ画像を保存" onclick="event.preventDefault();window.scrollTo({top:0,behavior:'smooth'})">
@@ -286,7 +286,7 @@ function formatDate(d){if(!d)return'';const x=new Date(d+'T00:00:00');return `${
 function countStatuses(eventId,members=data.members){const counts={o:0,t:0,x:0};for(const member of members){const status=data.answers?.[member.id]?.[eventId];if(status==='○')counts.o++;else if(status==='△')counts.t++;else if(status==='×')counts.x++}return counts}
 function countMarkup(counts){return `<span class="sum-o">○${counts.o}</span><span class="sum-t">△${counts.t}</span><span class="sum-x">×${counts.x}</span>`}
 function memberDisplayName(member){return `${member.role||'コーチ'} ${member.name}`}
-function memberDisplayHtml(member){return `<span class="member-grade-badge">${esc(member.role||'コーチ')}</span><span class="member-name-text">${esc(member.name)}</span>`}
+function memberDisplayHtml(member){return `<span class="member-name-text">${esc(member.name)}</span>`}
 function sortedMembers(){const roleOrder={'監督':0,'ヘッドコーチ':1,'コーチ':2};return [...data.members].sort((a,b)=>(roleOrder[a.role]??9)-(roleOrder[b.role]??9))}
 
 function preferredEvent(events){
