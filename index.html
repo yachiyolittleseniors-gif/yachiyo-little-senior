@@ -1649,7 +1649,8 @@ body.photo-admin-on .seniorcup-admin-control{display:block}
   overflow:hidden;
   padding:30px 32px 28px;
   background:
-    radial-gradient(circle at 88% 18%,rgba(226,189,103,.15),transparent 27%),
+    linear-gradient(118deg,transparent 0 72%,rgba(226,189,103,.09) 72% 73%,transparent 73% 78%,rgba(226,189,103,.055) 78% 79%,transparent 79%),
+    radial-gradient(circle at 88% 18%,rgba(226,189,103,.16),transparent 28%),
     linear-gradient(135deg,#071426 0%,#0b2340 58%,#071426 100%);
   border:3px solid #c79a3b;
   border-radius:20px;
@@ -1666,18 +1667,16 @@ body.photo-admin-on .seniorcup-admin-control{display:block}
   pointer-events:none;
 }
 .seniorcup-home-link:after{
-  content:"CUP";
+  content:"⚾";
   position:absolute;
   z-index:-1;
-  right:24px;
-  bottom:-30px;
-  color:#fff;
-  font-family:Georgia,"Times New Roman",serif;
-  font-size:132px;
-  font-weight:700;
-  letter-spacing:-.05em;
+  right:22px;
+  top:54%;
+  transform:translateY(-50%) rotate(-15deg);
+  font-size:184px;
   line-height:1;
-  opacity:.045;
+  opacity:.14;
+  filter:grayscale(.25) sepia(.18) saturate(.8);
   pointer-events:none;
 }
 .seniorcup-home-head{
@@ -1697,9 +1696,10 @@ body.photo-admin-on .seniorcup-admin-control{display:block}
 }
 .seniorcup-home-badge{
   flex:0 0 auto;
-  padding:6px 10px;
+  padding:7px 11px;
   border:1px solid rgba(226,189,103,.72);
-  border-radius:999px;
+  border-radius:5px;
+  background:rgba(199,154,59,.1);
   color:#f4d88f;
   font-size:10px;
   font-weight:900;
@@ -1732,6 +1732,7 @@ body.photo-admin-on .seniorcup-admin-control{display:block}
   font-weight:700;
   letter-spacing:.08em;
   line-height:1.35;
+  text-shadow:0 3px 14px rgba(0,0,0,.32);
 }
 .seniorcup-home-copy{
   position:relative;
@@ -1749,27 +1750,28 @@ body.photo-admin-on .seniorcup-admin-control{display:block}
 }
 .seniorcup-home-cta{
   flex:0 0 auto;
-  padding:9px 15px;
-  border-radius:999px;
+  padding:10px 17px;
+  border:1px solid #f4d88f;
+  border-radius:7px;
   background:linear-gradient(135deg,#c79a3b,#f0d27d);
   color:#071426;
   font-size:12px;
   font-weight:900;
-  box-shadow:0 7px 16px rgba(0,0,0,.18);
+  box-shadow:0 7px 16px rgba(0,0,0,.22);
 }
 @media(max-width:600px){
   .seniorcup-home-banner{margin:18px auto 4px;padding:0 12px}
   .seniorcup-home-link{padding:24px 20px 21px;border-width:2px;border-radius:16px}
   .seniorcup-home-link:before{inset:6px;border-radius:10px}
-  .seniorcup-home-link:after{right:8px;bottom:-15px;font-size:82px}
+  .seniorcup-home-link:after{right:-2px;top:54%;font-size:118px;opacity:.13}
   .seniorcup-home-head{margin-bottom:16px}
   .seniorcup-home-kicker{font-size:9px;letter-spacing:.18em}
-  .seniorcup-home-badge{padding:5px 8px;font-size:8px;letter-spacing:.1em}
+  .seniorcup-home-badge{padding:6px 8px;font-size:8px;letter-spacing:.08em}
   .seniorcup-home-year{font-size:42px}
   .seniorcup-home-year small{font-size:15px}
   .seniorcup-home-title{margin-top:8px;font-size:clamp(24px,7vw,28px);letter-spacing:.025em;white-space:nowrap}
   .seniorcup-home-copy{gap:10px;margin-top:18px;padding-top:15px;font-size:11px}
-  .seniorcup-home-cta{padding:8px 11px;font-size:10px}
+  .seniorcup-home-cta{padding:8px 11px;border-radius:6px;font-size:10px}
 }
 
 /* ===== HOME latest result: scoreboard layout ===== */
