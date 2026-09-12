@@ -2190,12 +2190,34 @@ body.photo-admin-on .news-delete{display:block}
 
 <style id="home-news-mobile-fix">
 /* 新着NEWS専用：上部の旧.news-itemレイアウトとの競合を防止 */
+.home-news-list{
+  display:grid !important;
+  gap:14px !important;
+  padding:0 !important;
+  border:0 !important;
+  border-radius:0 !important;
+  background:transparent !important;
+  box-shadow:none !important;
+}
 .home-news-list .news-item{
   display:block !important;
   grid-template-columns:none !important;
   gap:0 !important;
   width:100% !important;
+  padding:22px 24px !important;
+  border:1px solid #e5dfd3 !important;
+  border-radius:18px !important;
+  background:#fff !important;
+  box-shadow:0 8px 24px rgba(4,12,22,.05) !important;
   box-sizing:border-box !important;
+}
+.home-news-list > .news-empty{
+  margin:0 !important;
+  padding:22px 24px !important;
+  border:1px solid #e5dfd3 !important;
+  border-radius:18px !important;
+  background:#fff !important;
+  box-shadow:0 8px 24px rgba(4,12,22,.05) !important;
 }
 .home-news-list .news-date,
 .home-news-list .news-title,
@@ -2214,13 +2236,16 @@ body.photo-admin-on .news-delete{display:block}
 .home-news-list .news-body{
   line-height:1.8 !important;
 }
+.home-news-list .news-delete{right:20px !important;top:18px !important;}
+.home-news-list .news-edit{right:20px !important;top:54px !important;}
 @media(max-width:600px){
-  .home-news-list{padding:4px 16px !important;}
-  .home-news-list .news-item{padding:18px 0 !important;}
+  .home-news-list{padding:0 !important;gap:12px !important;}
+  .home-news-list .news-item{padding:20px 18px !important;border-radius:15px !important;}
+  .home-news-list > .news-empty{padding:20px 18px !important;border-radius:15px !important;}
   .home-news-list .news-date{margin-bottom:8px !important;}
   .home-news-list .news-title{font-size:17px !important;margin-bottom:8px !important;}
-  .home-news-list .news-delete{position:absolute !important;right:0 !important;top:14px !important;}
-  .home-news-list .news-edit{position:absolute !important;right:0 !important;top:50px !important;}
+  .home-news-list .news-delete{position:absolute !important;right:16px !important;top:14px !important;}
+  .home-news-list .news-edit{position:absolute !important;right:16px !important;top:50px !important;}
 }
 </style>
 
