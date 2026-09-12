@@ -3240,6 +3240,21 @@ html{scroll-padding-top:var(--fixed-header-height)}
   transform:rotate(-15deg);
   pointer-events:none;
 }
+.recruit-card-flash{
+  position:absolute;
+  z-index:2;
+  top:-30%;
+  bottom:-30%;
+  left:-42%;
+  width:24%;
+  pointer-events:none;
+  background:linear-gradient(90deg,transparent,rgba(255,255,255,.72),rgba(255,238,183,.92),transparent);
+  filter:blur(1px);
+  opacity:0;
+  transform:skewX(-18deg);
+  animation:recruitCardFlash 3s ease-in-out infinite;
+}
+.recruit-open-card>*:not(.recruit-card-flash){position:relative;z-index:3}
 .recruit-open-status{
   display:inline-flex;
   align-items:center;
@@ -3311,8 +3326,14 @@ body.photo-admin-on .recruit-mode-admin{display:block}
   font-size:12px;
   font-weight:800;
 }
+@keyframes recruitCardFlash{
+  0%,55%{left:-42%;opacity:0}
+  60%{opacity:1}
+  86%{left:118%;opacity:.9}
+  100%{left:118%;opacity:0}
+}
 @keyframes recruitStatusPulse{0%{box-shadow:0 0 0 0 rgba(7,20,38,.42)}70%,100%{box-shadow:0 0 0 9px rgba(7,20,38,0)}}
-@media(prefers-reduced-motion:reduce){.recruit-open-status span{animation:none}}
+@media(prefers-reduced-motion:reduce){.recruit-open-status span,.recruit-card-flash{animation:none}}
 @media(max-width:600px){
   .recruit-open-card{padding:28px 20px 24px!important;border-width:9px!important}
   .recruit-open-card:before{inset:7px}
@@ -3504,6 +3525,7 @@ body.photo-admin-on .recruit-mode-admin{display:block}
 <div class="btns"><a class='btn primary' href='/join' style='color:#fff!important;'>体験・入団案内　›</a></div>
 </div>
 <div class="card recruit-open-card" id="recruitOpenCard">
+  <span class="recruit-card-flash" aria-hidden="true"></span>
   <div class="recruit-open-status"><span aria-hidden="true"></span>体験・見学 随時受付中</div>
   <div class="recruit-open-kicker">JOIN OUR TEAM</div>
   <h2>選手募集中</h2>
