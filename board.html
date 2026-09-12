@@ -457,15 +457,15 @@ html{scroll-padding-top:var(--compact-header-height)}
       <h2>事務局</h2>
 
       <div class="board-meeting-section">
-        <h3 class="board-meeting-heading">事務局の記録</h3>
+        <h3 class="board-meeting-heading">事務局からのお知らせ</h3>
         <p class="board-meeting-help">PDF・画像を選択すると、この画面から直接保存・削除できます。</p>
         <div class="meeting-upload">
-          <input id="meetingPdfInput" type="file" accept="application/pdf,image/jpeg,image/png,image/webp,.pdf,.jpg,.jpeg,.png,.webp" aria-label="事務局の記録 PDF・画像">
+          <input id="meetingPdfInput" type="file" accept="application/pdf,image/jpeg,image/png,image/webp,.pdf,.jpg,.jpeg,.png,.webp" aria-label="事務局からのお知らせ PDF・画像">
           <button id="meetingPdfSave" class="meeting-action" type="button">資料を保存</button>
           <button id="meetingPdfCancel" class="meeting-action meeting-action-cancel" type="button">キャンセル</button>
         </div>
         <div id="meetingDocumentList" class="meeting-document-list">
-          <div class="meeting-empty">事務局の記録を読み込んでいます。</div>
+          <div class="meeting-empty">事務局からのお知らせを読み込んでいます。</div>
         </div>
       </div>
 
@@ -1232,7 +1232,7 @@ html{scroll-padding-top:var(--compact-header-height)}
     if(!documents.length){
       const empty=document.createElement('div');
       empty.className='meeting-empty';
-      empty.textContent='現在保存されている事務局の記録はありません。';
+      empty.textContent='現在保存されている事務局からのお知らせはありません。';
       documentList.appendChild(empty);
       return;
     }
@@ -1406,7 +1406,7 @@ html{scroll-padding-top:var(--compact-header-height)}
       renderDocuments();
       renderCalendar();
     }catch(e){
-      documentList.innerHTML='<div class="meeting-empty">事務局の記録を読み込めませんでした。</div>';
+      documentList.innerHTML='<div class="meeting-empty">事務局からのお知らせを読み込めませんでした。</div>';
       renderCalendar();
     }
   }
@@ -1437,7 +1437,7 @@ html{scroll-padding-top:var(--compact-header-height)}
       documents=Array.isArray(body.data)?body.data:documents;
       pdfInput.value='';
       renderDocuments();
-      showSaveNotice('事務局の記録を保存しました');
+      showSaveNotice('事務局からのお知らせを保存しました');
     }catch(e){alert(e.message||'資料を保存できませんでした。')}
     finally{pdfSave.disabled=false;pdfSave.textContent='資料を保存'}
   });
