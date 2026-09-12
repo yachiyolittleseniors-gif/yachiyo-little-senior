@@ -9,6 +9,7 @@ const KEY = "content/player-attendance.json";
 const CONFIG_KEY = "content/player-attendance-config.json";
 const ACCESS_CONFIG_KEY = "content/access-settings.json";
 const PLAYERS_KEY = "content/players.json";
+const PARENT_ATTENDANCE_KEY = "content/attendance.json";
 const MEMBER_STATE_PREFIX = "player-attendance/member-state/";
 const DENSUKE_URL = "https://densuke.biz/list?cd=ZhxJNW9dPNGVtm7c";
 const DEFAULT_ACCESS_SALT = "yachiyo-access-v1";
@@ -130,6 +131,22 @@ async function syncPlayersFromRoster(store, data) {
     if (!activeIds.has(String(memberId))) delete data.answers[memberId];
   }
   data.comments = data.comments.filter(comment => activeIds.has(String(comment?.memberId || "")));
+  return data;
+}
+
+async function syncEventsFromParentAttendance(store, data) {
+  let parentAttendance = null;
+  try {
+    parentAttendance = await store.get(PARENT_ATTENDANCE_KEY, {
+      type: "json",
+      consistency: "strong",
+    });
+  } catch {
+    parentAttendance = null;
+  }
+  if (Array.isArray(parentAttendance?.events)) {
+    data.events = structuredClone(parentAttendance.events);
+  }
   return data;
 }
 
@@ -429,6 +446,7 @@ export default async (request, context) => {
       const merged = mergeInitial(data);
       data = await mergeMemberStates(store, merged.data);
       data = await syncPlayersFromRoster(store, data);
+      data = await syncEventsFromParentAttendance(store, data);
       data = cleanupOldData(data);
       await store.setJSON(KEY, data);
       const config = await getConfig(store);
@@ -483,6 +501,7 @@ export default async (request, context) => {
     let data = mergeInitial(normalize(current)).data;
     data = await mergeMemberStates(store, data);
     data = await syncPlayersFromRoster(store, data);
+    data = await syncEventsFromParentAttendance(store, data);
     data = cleanupOldData(data);
 
     if (action === "endDensuke") {
