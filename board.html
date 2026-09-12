@@ -120,13 +120,8 @@ h1{font-family:serif;font-weight:500;letter-spacing:.08em;margin:8px 0 6px;font-
 .meeting-grade-field legend{margin-bottom:7px;color:#263344;font-size:12px;font-weight:800}
 .meeting-grade-options{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:7px}
 .meeting-form .meeting-grade-option{display:flex;align-items:center;justify-content:center;gap:5px;min-width:0;margin:0;padding:10px 5px;border:1px solid #cfd5dc;border-radius:7px;background:#fff;color:#263344;font-size:13px;font-weight:800;cursor:pointer}
-.meeting-form .meeting-grade-option input{display:block;width:17px;height:17px;flex:0 0 auto;margin:0;padding:0}
-.meeting-form .meeting-grade-option.grade-1 input{accent-color:#e0ad00}
-.meeting-form .meeting-grade-option.grade-2 input{accent-color:#176cd3}
-.meeting-form .meeting-grade-option.grade-3 input{accent-color:#d62432}
-.meeting-form .meeting-grade-option.grade-1:has(input:checked){border-color:#d4a300;background:#fff9df;color:#6c5200}
-.meeting-form .meeting-grade-option.grade-2:has(input:checked){border-color:#176cd3;background:#eef5ff;color:#124e96}
-.meeting-form .meeting-grade-option.grade-3:has(input:checked){border-color:#d62432;background:#fff0f1;color:#98202a}
+.meeting-form .meeting-grade-option input{display:block;width:17px;height:17px;flex:0 0 auto;margin:0;padding:0;accent-color:var(--grade-accent,#176cd3)}
+.meeting-form .meeting-grade-option:has(input:checked){border-color:var(--grade-accent,#176cd3);background:var(--grade-bg,#eef5ff);color:var(--grade-text,#124e96)}
 .meeting-form-actions{display:grid;grid-template-columns:1fr;gap:8px}
 .meeting-form-actions.editing{grid-template-columns:1fr 1.35fr}
 .meeting-form-save,.meeting-form-cancel{width:100%;min-height:46px;border-radius:8px;font:inherit;font-weight:900;cursor:pointer}
@@ -577,9 +572,9 @@ html{scroll-padding-top:var(--compact-header-height)}
       <fieldset class="meeting-grade-field">
         <legend>対象学年（複数選択可）</legend>
         <div class="meeting-grade-options">
-          <label class="meeting-grade-option grade-1"><input type="checkbox" name="meetingGrade" value="1">🟡1年生</label>
-          <label class="meeting-grade-option grade-2"><input type="checkbox" name="meetingGrade" value="2">🔵2年生</label>
-          <label class="meeting-grade-option grade-3"><input type="checkbox" name="meetingGrade" value="3">🔴3年生</label>
+          <label class="meeting-grade-option" data-meeting-grade="1"><input type="checkbox" name="meetingGrade" value="1"><span>🔴1年生</span></label>
+          <label class="meeting-grade-option" data-meeting-grade="2"><input type="checkbox" name="meetingGrade" value="2"><span>🟢2年生</span></label>
+          <label class="meeting-grade-option" data-meeting-grade="3"><input type="checkbox" name="meetingGrade" value="3"><span>🔵3年生</span></label>
         </div>
       </fieldset>
       <label>時間
@@ -1563,14 +1558,47 @@ html{scroll-padding-top:var(--compact-header-height)}
     return ['1','2','3'].filter(function(grade){return legacy.includes(grade)});
   }
 
+  const gradeColorPalette=[
+    {icon:'🔴',accent:'#d62432',background:'#fff0f1',text:'#98202a'},
+    {icon:'🟢',accent:'#18864b',background:'#edf9f2',text:'#116137'},
+    {icon:'🔵',accent:'#176cd3',background:'#eef5ff',text:'#124e96'}
+  ];
+
+  function academicYearFor(date){
+    const parts=String(date||'').split('-').map(Number);
+    const year=parts[0]||new Date().getFullYear();
+    const month=parts[1]||new Date().getMonth()+1;
+    return month>=4?year:year-1;
+  }
+
+  function gradeColorFor(date,grade){
+    const shift=((academicYearFor(date)-2026)%3+3)%3;
+    const index=((Number(grade)-1-shift)%3+3)%3;
+    return gradeColorPalette[index];
+  }
+
+  function updateMeetingGradeOptions(date){
+    form.querySelectorAll('[data-meeting-grade]').forEach(function(label){
+      const grade=label.dataset.meetingGrade;
+      const color=gradeColorFor(date,grade);
+      const text=label.querySelector('span');
+      if(text)text.textContent=color.icon+grade+'年生';
+      label.style.setProperty('--grade-accent',color.accent);
+      label.style.setProperty('--grade-bg',color.background);
+      label.style.setProperty('--grade-text',color.text);
+    });
+  }
+
   function gradeText(item){
-    const labels={'1':'🟡1年生','2':'🔵2年生','3':'🔴3年生'};
-    return gradesFor(item).map(function(grade){return labels[grade]}).join('、');
+    const grades=gradesFor(item);
+    if(grades.length===3)return '🟡全学年';
+    return grades.map(function(grade){return gradeColorFor(item&&item.date,grade).icon+grade+'年生'}).join('、');
   }
 
   function gradeIcons(item){
-    const icons={'1':'🟡','2':'🔵','3':'🔴'};
-    return gradesFor(item).map(function(grade){return icons[grade]}).join('');
+    const grades=gradesFor(item);
+    if(grades.length===3)return '🟡';
+    return grades.map(function(grade){return gradeColorFor(item&&item.date,grade).icon}).join('');
   }
 
   function renderCalendar(){
@@ -1684,6 +1712,7 @@ html{scroll-padding-top:var(--compact-header-height)}
 
   function openEditor(date){
     selectedDate=date;
+    updateMeetingGradeOptions(date);
     editorDate.textContent=date.replace(/-/g,'/')+' の予定';
     resetFormMode();
     renderDayList();
