@@ -1785,9 +1785,9 @@ html{scroll-padding-top:var(--compact-header-height)}
   });
 
   async function deleteEvent(item){
-    if(!confirm('「'+(item.title||'事務局予定')+'」を削除しますか？'))return;
     const coachPassword=await requireCoachPassword();
     if(!coachPassword)return;
+    if(!confirm('「'+(item.title||'事務局予定')+'」を削除しますか？'))return;
     try{
       const response=await fetch(SCHEDULE_API,{
         method:'POST',headers:accessHeaders(true,coachPassword),
