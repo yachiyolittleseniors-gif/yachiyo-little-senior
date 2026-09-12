@@ -55,6 +55,50 @@ h1{font-family:serif;font-weight:500;letter-spacing:.08em;margin:8px 0 6px;font-
 .rules-pdf-item{padding:14px;border:1px solid #e1ded6;border-radius:10px;background:#faf9f6}
 .rules-pdf-name{font-weight:800;color:var(--navy);line-height:1.5;overflow-wrap:anywhere}
 .rules-pdf-open{display:block;margin-top:10px;padding:11px 14px;border:1px solid var(--gold);border-radius:8px;background:var(--gold);color:#fff;text-align:center;font-size:12px;font-weight:800}
+.board-meeting-card{background:linear-gradient(180deg,#fffdfa 0%,#fbf7ed 100%);border-color:#d8c79f}
+.board-meeting-section{margin-top:22px;padding-top:20px;border-top:1px solid #e4dcc9}
+.board-meeting-section:first-of-type{margin-top:16px}
+.board-meeting-heading{margin:0 0 11px;font-size:16px;color:var(--navy);font-weight:900}
+.board-meeting-help{margin:0 0 12px!important;min-height:0!important;font-size:11px!important;line-height:1.65!important}
+.meeting-upload{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:9px;align-items:center}
+.meeting-upload input{min-width:0;width:100%;padding:10px;border:1px solid #d8dce1;border-radius:8px;background:#fff;font-size:13px}
+.meeting-action{min-height:43px;padding:10px 16px;border:1px solid var(--gold);border-radius:8px;background:var(--gold);color:#fff;font:inherit;font-size:13px;font-weight:900;cursor:pointer}
+.meeting-action:disabled{opacity:.55;cursor:wait}
+.meeting-document-list{display:grid;gap:9px;margin-top:13px}
+.meeting-document-row{display:grid;grid-template-columns:minmax(0,1fr) auto auto;gap:7px;align-items:center;padding:10px;border:1px solid #e1ded6;border-radius:9px;background:#fff}
+.meeting-document-name{min-width:0;overflow-wrap:anywhere;font-size:12px;font-weight:800;color:var(--navy)}
+.meeting-document-open,.meeting-document-delete{padding:8px 10px;border-radius:7px;font-size:11px;font-weight:800;text-align:center;cursor:pointer}
+.meeting-document-open{border:1px solid var(--gold);background:var(--gold);color:#fff}
+.meeting-document-delete{border:1px solid #d6bcbc;background:#fff;color:#9b2727}
+.meeting-empty{padding:13px;border:1px dashed #d6d2c8;border-radius:9px;color:#7b8490;font-size:12px;text-align:center}
+.meeting-calendar-toolbar{display:grid;grid-template-columns:42px 1fr 42px;align-items:center;gap:8px;margin-bottom:12px}
+.meeting-calendar-nav{width:42px;height:42px;border:1px solid #d8dce1;border-radius:50%;background:#fff;color:var(--navy);font-size:24px;cursor:pointer}
+.meeting-calendar-title{text-align:center;color:var(--navy);font-size:19px;font-weight:900}
+.meeting-calendar-week,.meeting-calendar-grid{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));border-left:1px solid #dfe3e8}
+.meeting-calendar-week{border-top:1px solid #dfe3e8}
+.meeting-calendar-week div{padding:7px 1px;border-right:1px solid #dfe3e8;border-bottom:1px solid #dfe3e8;background:#f6f7f9;text-align:center;font-size:10px;font-weight:800}
+.meeting-calendar-week .sun{color:#b82929}.meeting-calendar-week .sat{color:#245da8}
+.meeting-calendar-day{min-width:0;min-height:65px;padding:5px 3px;border:0;border-right:1px solid #dfe3e8;border-bottom:1px solid #dfe3e8;background:#fff;color:var(--navy);text-align:left;overflow:hidden;cursor:pointer}
+.meeting-calendar-day.muted{background:#f5f5f2;color:#9da2a7}.meeting-calendar-day.today{box-shadow:inset 0 0 0 2px var(--gold)}
+.meeting-calendar-day.sun .meeting-day-number{color:#b82929}.meeting-calendar-day.sat .meeting-day-number{color:#245da8}
+.meeting-day-number{display:block;font-size:11px;font-weight:900}
+.meeting-day-event{display:block;margin-top:4px;padding:3px 4px;border-radius:4px;background:var(--navy);color:#fff;font-size:8px;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.meeting-calendar-note{margin-top:9px!important;min-height:0!important;text-align:right;font-size:10px!important}
+.meeting-editor{display:none;position:fixed;inset:0;z-index:12000;padding:14px;background:rgba(3,12,24,.74);align-items:center;justify-content:center}
+.meeting-editor.show{display:flex}
+.meeting-editor-box{position:relative;width:min(520px,100%);max-height:90vh;overflow:auto;padding:22px 17px;border-radius:12px;background:#fff;box-shadow:0 20px 60px rgba(0,0,0,.3)}
+.meeting-editor-close{position:absolute;top:10px;right:10px;width:38px;height:38px;border:0;border-radius:50%;background:#eef0f3;font-size:23px;cursor:pointer}
+.meeting-editor-date{margin:0 44px 14px 0;color:var(--navy);font-size:20px}
+.meeting-day-list{display:grid;gap:8px;margin-bottom:16px}
+.meeting-day-list-row{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:8px;padding:10px;border:1px solid #e0e3e7;border-radius:8px;background:#f8f9fa}
+.meeting-day-list-row strong,.meeting-day-list-row span{display:block;overflow-wrap:anywhere}.meeting-day-list-row span{margin-top:3px;color:#69737f;font-size:11px;line-height:1.5}
+.meeting-day-list-row button{align-self:center;padding:8px;border:1px solid #d6bcbc;border-radius:7px;background:#fff;color:#9b2727;font-weight:800}
+.meeting-form{padding-top:14px;border-top:1px solid #e0e3e7}
+.meeting-form label{display:block;margin:0 0 11px;color:#263344;font-size:12px;font-weight:800}
+.meeting-form input,.meeting-form textarea{display:block;width:100%;margin-top:5px;padding:11px;border:1px solid #cfd5dc;border-radius:7px;background:#fff;color:#172233;font:inherit;font-size:16px}
+.meeting-form textarea{min-height:76px;resize:vertical}
+.meeting-form-save{width:100%;min-height:46px;border:1px solid var(--navy);border-radius:8px;background:var(--navy);color:#fff;font:inherit;font-weight:900;cursor:pointer}
+@media(max-width:520px){.meeting-upload{grid-template-columns:1fr}.meeting-action{width:100%}.meeting-document-row{grid-template-columns:minmax(0,1fr) auto}.meeting-document-name{grid-column:1/-1}.meeting-calendar-day{min-height:62px}}
 .btn{display:block;text-align:center;background:var(--navy);color:var(--gold2);border:1px solid var(--gold);padding:14px 16px;border-radius:8px;font-weight:800;margin-top:18px;transition:.18s ease}
 .btn:active{transform:translateY(1px)}
 .btn.gold{background:var(--gold);color:#fff}.btn.densuke-btn{background:var(--gold);color:#fff;border-color:var(--gold)}
@@ -397,6 +441,37 @@ html{scroll-padding-top:var(--compact-header-height)}
       <p class="duty-roster-note">※個別にお当番日を変更した場合は反映されません。</p>
     </section>
 
+    <section class="card board-meeting-card" id="boardMeetingCard">
+      <div class="card-kicker">BOARD MEETING</div>
+      <h2>役員会</h2>
+
+      <div class="board-meeting-section">
+        <h3 class="board-meeting-heading">役員会の記録</h3>
+        <p class="board-meeting-help">PDF資料を選択すると、この画面から直接保存・削除できます。</p>
+        <div class="meeting-upload">
+          <input id="meetingPdfInput" type="file" accept="application/pdf,.pdf" aria-label="役員会の記録 PDF">
+          <button id="meetingPdfSave" class="meeting-action" type="button">PDFを保存</button>
+        </div>
+        <div id="meetingDocumentList" class="meeting-document-list">
+          <div class="meeting-empty">役員会の記録を読み込んでいます。</div>
+        </div>
+      </div>
+
+      <div class="board-meeting-section">
+        <h3 class="board-meeting-heading">役員会スケジュール</h3>
+        <div class="meeting-calendar-toolbar">
+          <button id="meetingPrevMonth" class="meeting-calendar-nav" type="button" aria-label="前の月">‹</button>
+          <div id="meetingCalendarTitle" class="meeting-calendar-title"></div>
+          <button id="meetingNextMonth" class="meeting-calendar-nav" type="button" aria-label="次の月">›</button>
+        </div>
+        <div class="meeting-calendar-week" aria-hidden="true">
+          <div class="sun">日</div><div>月</div><div>火</div><div>水</div><div>木</div><div>金</div><div class="sat">土</div>
+        </div>
+        <div id="meetingCalendarGrid" class="meeting-calendar-grid"></div>
+        <p class="meeting-calendar-note">日付をタップすると予定を登録・削除できます。</p>
+      </div>
+    </section>
+
     <section class="card rules-card" id="teamRulesCard">
       <div class="card-kicker">TEAM RULES</div>
       <h2>チーム規約</h2>
@@ -405,6 +480,29 @@ html{scroll-padding-top:var(--compact-header-height)}
     </section>
   </div>
 </main>
+
+<div id="meetingEditor" class="meeting-editor" aria-hidden="true">
+  <div class="meeting-editor-box" role="dialog" aria-modal="true" aria-labelledby="meetingEditorDate">
+    <button id="meetingEditorClose" class="meeting-editor-close" type="button" aria-label="閉じる">×</button>
+    <h2 id="meetingEditorDate" class="meeting-editor-date">役員会予定</h2>
+    <div id="meetingDayList" class="meeting-day-list"></div>
+    <form id="meetingForm" class="meeting-form">
+      <label>予定名
+        <input id="meetingEventTitle" type="text" maxlength="60" placeholder="例：9月役員会" required>
+      </label>
+      <label>時間
+        <input id="meetingEventTime" type="text" maxlength="40" placeholder="例：19:00～">
+      </label>
+      <label>場所
+        <input id="meetingEventPlace" type="text" maxlength="80" placeholder="例：クラブハウス">
+      </label>
+      <label>詳細
+        <textarea id="meetingEventMemo" maxlength="500" placeholder="議題・持ち物など"></textarea>
+      </label>
+      <button class="meeting-form-save" type="submit">予定を登録</button>
+    </form>
+  </div>
+</div>
 
 <footer class="footer">© YACHIYO LITTLE SENIOR. All Rights Reserved.</footer>
 
@@ -981,6 +1079,273 @@ html{scroll-padding-top:var(--compact-header-height)}
   }
 
   loadDocuments();
+})();
+</script>
+<script>
+(function(){
+  const DOCUMENT_API='/.netlify/functions/site-data?section=board-meeting-documents';
+  const SCHEDULE_API='/.netlify/functions/site-data?section=board-meeting-schedule';
+  const documentList=document.getElementById('meetingDocumentList');
+  const pdfInput=document.getElementById('meetingPdfInput');
+  const pdfSave=document.getElementById('meetingPdfSave');
+  const calendarGrid=document.getElementById('meetingCalendarGrid');
+  const calendarTitle=document.getElementById('meetingCalendarTitle');
+  const prevMonth=document.getElementById('meetingPrevMonth');
+  const nextMonth=document.getElementById('meetingNextMonth');
+  const editor=document.getElementById('meetingEditor');
+  const editorClose=document.getElementById('meetingEditorClose');
+  const editorDate=document.getElementById('meetingEditorDate');
+  const dayList=document.getElementById('meetingDayList');
+  const form=document.getElementById('meetingForm');
+  const eventTitle=document.getElementById('meetingEventTitle');
+  const eventTime=document.getElementById('meetingEventTime');
+  const eventPlace=document.getElementById('meetingEventPlace');
+  const eventMemo=document.getElementById('meetingEventMemo');
+  let documents=[];
+  let events=[];
+  let selectedDate='';
+  const now=new Date();
+  let viewYear=now.getFullYear();
+  let viewMonth=now.getMonth();
+
+  if(!documentList||!pdfInput||!pdfSave||!calendarGrid||!form)return;
+
+  function accessHeaders(json){
+    const headers={'x-access-password':sessionStorage.getItem('yachiyoAttendancePass')||''};
+    if(json)headers['content-type']='application/json';
+    return headers;
+  }
+
+  function formatDate(year,month,day){
+    return String(year)+'-'+String(month+1).padStart(2,'0')+'-'+String(day).padStart(2,'0');
+  }
+
+  function formatSize(bytes){
+    const value=Number(bytes||0);
+    return value>=1024*1024?(value/1024/1024).toFixed(1)+'MB':Math.max(1,Math.round(value/1024))+'KB';
+  }
+
+  function renderDocuments(){
+    documentList.replaceChildren();
+    if(!documents.length){
+      const empty=document.createElement('div');
+      empty.className='meeting-empty';
+      empty.textContent='現在保存されている役員会の記録はありません。';
+      documentList.appendChild(empty);
+      return;
+    }
+    documents.forEach(function(item){
+      const row=document.createElement('div');
+      row.className='meeting-document-row';
+      const name=document.createElement('div');
+      name.className='meeting-document-name';
+      name.textContent=(item.fileName||'役員会資料.pdf')+'（'+formatSize(item.size)+'）';
+      const open=document.createElement('a');
+      open.className='meeting-document-open';
+      open.href=DOCUMENT_API+'&file='+encodeURIComponent(item.id);
+      open.target='_blank';
+      open.rel='noopener';
+      open.textContent='PDFを開く';
+      const remove=document.createElement('button');
+      remove.className='meeting-document-delete';
+      remove.type='button';
+      remove.textContent='削除';
+      remove.addEventListener('click',function(){deleteDocument(item)});
+      row.append(name,open,remove);
+      documentList.appendChild(row);
+    });
+  }
+
+  function eventsFor(date){
+    return events.filter(function(item){return item.date===date});
+  }
+
+  function renderCalendar(){
+    calendarTitle.textContent=viewYear+'年 '+(viewMonth+1)+'月';
+    calendarGrid.replaceChildren();
+    const first=new Date(viewYear,viewMonth,1);
+    const start=new Date(viewYear,viewMonth,1-first.getDay());
+    const today=formatDate(now.getFullYear(),now.getMonth(),now.getDate());
+    for(let index=0;index<42;index++){
+      const current=new Date(start.getFullYear(),start.getMonth(),start.getDate()+index);
+      const date=formatDate(current.getFullYear(),current.getMonth(),current.getDate());
+      const dayEvents=eventsFor(date);
+      const button=document.createElement('button');
+      button.type='button';
+      button.className='meeting-calendar-day';
+      if(current.getMonth()!==viewMonth)button.classList.add('muted');
+      if(current.getDay()===0)button.classList.add('sun');
+      if(current.getDay()===6)button.classList.add('sat');
+      if(date===today)button.classList.add('today');
+      button.dataset.date=date;
+      button.setAttribute('aria-label',date+(dayEvents.length?' '+dayEvents.map(function(item){return item.title}).join('、'):''));
+      const number=document.createElement('span');
+      number.className='meeting-day-number';
+      number.textContent=current.getDate();
+      button.appendChild(number);
+      dayEvents.slice(0,2).forEach(function(item){
+        const pill=document.createElement('span');
+        pill.className='meeting-day-event';
+        pill.textContent=item.title;
+        button.appendChild(pill);
+      });
+      if(dayEvents.length>2){
+        const more=document.createElement('span');
+        more.className='meeting-day-event';
+        more.textContent='ほか'+(dayEvents.length-2)+'件';
+        button.appendChild(more);
+      }
+      button.addEventListener('click',function(){openEditor(date)});
+      calendarGrid.appendChild(button);
+    }
+  }
+
+  function renderDayList(){
+    dayList.replaceChildren();
+    const selectedEvents=eventsFor(selectedDate);
+    if(!selectedEvents.length){
+      const empty=document.createElement('div');
+      empty.className='meeting-empty';
+      empty.textContent='この日の予定はありません。';
+      dayList.appendChild(empty);
+      return;
+    }
+    selectedEvents.forEach(function(item){
+      const row=document.createElement('div');
+      row.className='meeting-day-list-row';
+      const info=document.createElement('div');
+      const title=document.createElement('strong');
+      title.textContent=item.title||'役員会';
+      const detail=document.createElement('span');
+      detail.textContent=[item.time,item.place,item.memo].filter(Boolean).join('／');
+      info.appendChild(title);
+      if(detail.textContent)info.appendChild(detail);
+      const remove=document.createElement('button');
+      remove.type='button';
+      remove.textContent='削除';
+      remove.addEventListener('click',function(){deleteEvent(item)});
+      row.append(info,remove);
+      dayList.appendChild(row);
+    });
+  }
+
+  function openEditor(date){
+    selectedDate=date;
+    editorDate.textContent=date.replace(/-/g,'/')+' の予定';
+    form.reset();
+    renderDayList();
+    editor.classList.add('show');
+    editor.setAttribute('aria-hidden','false');
+  }
+
+  function closeEditor(){
+    editor.classList.remove('show');
+    editor.setAttribute('aria-hidden','true');
+  }
+
+  function readAsDataUrl(file){
+    return new Promise(function(resolve,reject){
+      const reader=new FileReader();
+      reader.onload=function(){resolve(String(reader.result||''))};
+      reader.onerror=reject;
+      reader.readAsDataURL(file);
+    });
+  }
+
+  async function loadData(){
+    try{
+      await window.boardAccessReady;
+      const responses=await Promise.all([
+        fetch(DOCUMENT_API,{cache:'no-store',headers:accessHeaders(false)}),
+        fetch(SCHEDULE_API,{cache:'no-store',headers:accessHeaders(false)})
+      ]);
+      if(!responses[0].ok||!responses[1].ok)throw new Error('load failed');
+      const bodies=await Promise.all(responses.map(function(response){return response.json()}));
+      documents=Array.isArray(bodies[0].data)?bodies[0].data:[];
+      events=Array.isArray(bodies[1].data)?bodies[1].data:[];
+      renderDocuments();
+      renderCalendar();
+    }catch(e){
+      documentList.innerHTML='<div class="meeting-empty">役員会の記録を読み込めませんでした。</div>';
+      renderCalendar();
+    }
+  }
+
+  pdfSave.addEventListener('click',async function(){
+    const file=pdfInput.files&&pdfInput.files[0];
+    if(!file||(file.type!=='application/pdf'&&!file.name.toLowerCase().endsWith('.pdf'))){alert('PDFファイルを選択してください。');return}
+    if(file.size>6*1024*1024){alert('PDFは6MB以下にしてください。');return}
+    pdfSave.disabled=true;
+    pdfSave.textContent='保存中...';
+    try{
+      const response=await fetch(DOCUMENT_API,{
+        method:'POST',
+        headers:accessHeaders(true),
+        body:JSON.stringify({action:'uploadBoardMeetingDocument',fileName:file.name,dataUrl:await readAsDataUrl(file)})
+      });
+      const body=await response.json().catch(function(){return {}});
+      if(!response.ok)throw new Error(body.error||'PDFを保存できませんでした。');
+      documents=Array.isArray(body.data)?body.data:documents;
+      pdfInput.value='';
+      renderDocuments();
+      showSaveNotice('役員会の記録を保存しました');
+    }catch(e){alert(e.message||'PDFを保存できませんでした。')}
+    finally{pdfSave.disabled=false;pdfSave.textContent='PDFを保存'}
+  });
+
+  async function deleteDocument(item){
+    if(!confirm('「'+(item.fileName||'役員会資料')+'」を削除しますか？'))return;
+    try{
+      const response=await fetch(DOCUMENT_API,{
+        method:'POST',headers:accessHeaders(true),
+        body:JSON.stringify({action:'deleteBoardMeetingDocument',id:item.id})
+      });
+      const body=await response.json().catch(function(){return {}});
+      if(!response.ok)throw new Error(body.error||'PDFを削除できませんでした。');
+      documents=Array.isArray(body.data)?body.data:documents.filter(function(entry){return entry.id!==item.id});
+      renderDocuments();
+      showSaveNotice('PDFを削除しました');
+    }catch(e){alert(e.message||'PDFを削除できませんでした。')}
+  }
+
+  form.addEventListener('submit',async function(event){
+    event.preventDefault();
+    const title=eventTitle.value.trim();
+    if(!selectedDate||!title)return;
+    const submit=form.querySelector('button[type="submit"]');
+    submit.disabled=true;submit.textContent='登録中...';
+    try{
+      const response=await fetch(SCHEDULE_API,{
+        method:'POST',headers:accessHeaders(true),
+        body:JSON.stringify({action:'saveBoardMeetingEvent',event:{date:selectedDate,title,time:eventTime.value.trim(),place:eventPlace.value.trim(),memo:eventMemo.value.trim()}})
+      });
+      const body=await response.json().catch(function(){return {}});
+      if(!response.ok)throw new Error(body.error||'予定を登録できませんでした。');
+      events=Array.isArray(body.data)?body.data:events;
+      form.reset();renderDayList();renderCalendar();showSaveNotice('予定を登録しました');
+    }catch(e){alert(e.message||'予定を登録できませんでした。')}
+    finally{submit.disabled=false;submit.textContent='予定を登録'}
+  });
+
+  async function deleteEvent(item){
+    if(!confirm('「'+(item.title||'役員会予定')+'」を削除しますか？'))return;
+    try{
+      const response=await fetch(SCHEDULE_API,{
+        method:'POST',headers:accessHeaders(true),
+        body:JSON.stringify({action:'deleteBoardMeetingEvent',id:item.id})
+      });
+      const body=await response.json().catch(function(){return {}});
+      if(!response.ok)throw new Error(body.error||'予定を削除できませんでした。');
+      events=Array.isArray(body.data)?body.data:events.filter(function(entry){return entry.id!==item.id});
+      renderDayList();renderCalendar();showSaveNotice('予定を削除しました');
+    }catch(e){alert(e.message||'予定を削除できませんでした。')}
+  }
+
+  prevMonth.addEventListener('click',function(){viewMonth--;if(viewMonth<0){viewMonth=11;viewYear--}renderCalendar()});
+  nextMonth.addEventListener('click',function(){viewMonth++;if(viewMonth>11){viewMonth=0;viewYear++}renderCalendar()});
+  editorClose.addEventListener('click',closeEditor);
+  editor.addEventListener('click',function(event){if(event.target===editor)closeEditor()});
+  loadData();
 })();
 </script>
 <script>
