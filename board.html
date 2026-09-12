@@ -124,7 +124,7 @@ h1{font-family:serif;font-weight:500;letter-spacing:.08em;margin:8px 0 6px;font-
 <script>
 document.documentElement.style.visibility='hidden';
 window.boardAccessReady=(async function requireBoardPassword(){
-  const p=prompt('パスワードを入力してください');
+  const p=prompt('パスワードを入力してください。');
   if(p===null){
     if(history.length>1){history.back()}else{location.replace('./index.html')}
     return;
@@ -751,7 +751,7 @@ html{scroll-padding-top:var(--compact-header-height)}
       return;
     }
 
-    const adminPassword=prompt('管理者パスワードを入力してください。');
+    const adminPassword=prompt('パスワードを入力してください。');
     if(!adminPassword) return;
 
     try{
@@ -830,7 +830,7 @@ html{scroll-padding-top:var(--compact-header-height)}
       return;
     }
 
-    const adminPassword=prompt('伝助を終了するには管理者パスワードを入力してください。');
+    const adminPassword=prompt('パスワードを入力してください。');
     if(!adminPassword) return;
 
     try{
@@ -917,7 +917,7 @@ html{scroll-padding-top:var(--compact-header-height)}
   });
 
   resumeBtn.addEventListener('click',async()=>{
-    const adminPassword=panel.dataset.adminPassword || prompt('管理者パスワードを入力してください。');
+    const adminPassword=panel.dataset.adminPassword || prompt('パスワードを入力してください。');
     if(!adminPassword) return;
 
     const ok=confirm(
@@ -1187,7 +1187,7 @@ html{scroll-padding-top:var(--compact-header-height)}
     const saved=sessionStorage.getItem(COACH_PASSWORD_KEY)||'';
     if(saved&&await verifyCoachPassword(saved))return saved;
     sessionStorage.removeItem(COACH_PASSWORD_KEY);
-    const entered=prompt('指導者出欠確認のパスワードを入力してください。');
+    const entered=prompt('パスワードを入力してください。');
     if(entered===null)return '';
     if(await verifyCoachPassword(entered)){
       sessionStorage.setItem(COACH_PASSWORD_KEY,entered);
