@@ -105,8 +105,9 @@ h1{font-family:serif;font-weight:500;letter-spacing:.08em;margin:8px 0 6px;font-
 .meeting-day-list{display:grid;gap:8px;margin-bottom:16px}
 .meeting-day-list-row{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:8px;padding:10px;border:1px solid #e0e3e7;border-radius:8px;background:#f8f9fa}
 .meeting-day-list-row strong,.meeting-day-list-row span{display:block;overflow-wrap:anywhere}.meeting-day-list-row span{margin-top:3px;color:#69737f;font-size:11px;line-height:1.5}
-.meeting-day-list-actions{display:flex;align-items:center;gap:6px}
+.meeting-day-list-actions{display:flex;min-width:58px;flex-direction:column;align-items:stretch;justify-content:center;gap:6px}
 .meeting-day-list-row button{align-self:center;padding:8px;border-radius:7px;background:#fff;font-weight:800;cursor:pointer}
+.meeting-day-list-actions button{width:100%;align-self:stretch}
 .meeting-event-edit{border:1px solid #c79a3b;color:#7b5b16}
 .meeting-event-delete{border:1px solid #d6bcbc;color:#9b2727}
 .meeting-add-event{width:100%;min-height:46px;margin-top:2px;border:1px solid var(--gold);border-radius:8px;background:var(--gold);color:#fff;font:inherit;font-weight:900;cursor:pointer}
