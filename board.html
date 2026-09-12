@@ -137,22 +137,29 @@ h1{font-family:serif;font-weight:500;letter-spacing:.08em;margin:8px 0 6px;font-
 <script>
 document.documentElement.style.visibility='hidden';
 window.boardAccessReady=(async function requireBoardPassword(){
+  async function verify(password){
+    const response=await fetch('/.netlify/functions/site-data?section=access-settings',{
+      method:'POST',
+      headers:{'content-type':'application/json'},
+      body:JSON.stringify({action:'verifyAccessPassword',password:password})
+    });
+    if(!response.ok)return false;
+    try{sessionStorage.setItem('yachiyoAttendancePass',password)}catch(e){}
+    document.documentElement.style.visibility='';
+    return true;
+  }
+  try{
+    const saved=sessionStorage.getItem('yachiyoAttendancePass')||'';
+    if(saved&&await verify(saved))return;
+    if(saved)sessionStorage.removeItem('yachiyoAttendancePass');
+  }catch(e){}
   const p=prompt('パスワードを入力してください。');
   if(p===null){
     if(history.length>1){history.back()}else{location.replace('./index.html')}
     return;
   }
   try{
-    const r=await fetch('/.netlify/functions/site-data?section=access-settings',{
-      method:'POST',
-      headers:{'content-type':'application/json'},
-      body:JSON.stringify({action:'verifyAccessPassword',password:p})
-    });
-    if(r.ok){
-      sessionStorage.setItem('yachiyoAttendancePass',p);
-      document.documentElement.style.visibility='';
-      return;
-    }
+    if(await verify(p))return;
   }catch(e){
     alert('パスワードを確認できませんでした。通信状況を確認してください。');
     location.replace('./index.html');
