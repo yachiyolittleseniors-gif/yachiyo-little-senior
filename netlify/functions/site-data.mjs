@@ -40,6 +40,7 @@ const allowed = new Set([
   "graduate-paths",
   "links",
   "board-tournaments",
+  "referee-documents",
   "board-meeting-documents",
   "board-meeting-schedule",
   "access-settings"
@@ -590,6 +591,7 @@ export default async (request, context) => {
       if (
         section === "rules" ||
         section === "duty-roster" ||
+        section === "referee-documents" ||
         section === "board-meeting-documents" ||
         section === "board-meeting-schedule"
       ) {
@@ -696,7 +698,7 @@ export default async (request, context) => {
         return json({ data: Array.isArray(documents) ? documents : [] });
       }
 
-      if (section === "board-meeting-documents") {
+      if (section === "board-meeting-documents" || section === "referee-documents") {
         const documents = await store.get(key, {
           type: "json",
           consistency: "strong"
@@ -710,7 +712,7 @@ export default async (request, context) => {
 
           if (!item) return new Response("File not found", { status: 404 });
 
-          const storageKey = String(item.storageKey || `board-meeting-documents/${id}.pdf`);
+          const storageKey = String(item.storageKey || `${section}/${id}.pdf`);
           const file = await store.get(storageKey, {
             type: "blob",
             consistency: "strong"
@@ -967,6 +969,7 @@ export default async (request, context) => {
     }
 
     const boardDirectSection =
+      section === "referee-documents" ||
       section === "board-meeting-documents" ||
       section === "board-meeting-schedule";
 
@@ -980,14 +983,14 @@ export default async (request, context) => {
         return json({ error: "unauthorized" }, 401);
       }
 
-      const protectedBoardActions = new Set(["uploadBoardMeetingDocument","deleteBoardMeetingDocument","saveBoardMeetingEvent","deleteBoardMeetingEvent"]);
+      const protectedBoardActions = new Set(["uploadBoardMeetingDocument","deleteBoardMeetingDocument","uploadRefereeDocument","deleteRefereeDocument","saveBoardMeetingEvent","deleteBoardMeetingEvent"]);
       if (protectedBoardActions.has(String(body?.action || "")) && !(await coachAccessPasswordIsValid(store, request.headers.get("x-coach-password") || ""))) {
         return json({ error: "指導者出欠確認のパスワードが違います。" }, 401);
       }
 
       if (
-        section === "board-meeting-documents" &&
-        body?.action === "uploadBoardMeetingDocument"
+        (section === "board-meeting-documents" && body?.action === "uploadBoardMeetingDocument") ||
+        (section === "referee-documents" && body?.action === "uploadRefereeDocument")
       ) {
         const fileName = String(body.fileName || "").trim();
         const decoded = decodeBoardMeetingDataUrl(body.dataUrl);
@@ -1004,7 +1007,7 @@ export default async (request, context) => {
         if (documents.length >= 12) return json({ error: "保存できる資料は12件までです。" }, 400);
 
         const id = crypto.randomUUID();
-        const storageKey = `board-meeting-documents/${id}.bin`;
+        const storageKey = `${section}/${id}.bin`;
         const item = {id, fileName, contentType: decoded.contentType, storageKey, size: decoded.bytes.byteLength, uploadedAt: new Date().toISOString()};
         await store.set(storageKey, decoded.bytes.buffer, {metadata: {fileName, contentType: decoded.contentType}});
         const updated = [item, ...documents];
@@ -1013,8 +1016,8 @@ export default async (request, context) => {
       }
 
       if (
-        section === "board-meeting-documents" &&
-        body?.action === "deleteBoardMeetingDocument"
+        (section === "board-meeting-documents" && body?.action === "deleteBoardMeetingDocument") ||
+        (section === "referee-documents" && body?.action === "deleteRefereeDocument")
       ) {
         const id = String(body.id || "");
         const current = await store.get(key, {
@@ -1026,7 +1029,7 @@ export default async (request, context) => {
           return json({ error: "PDFが見つかりません。" }, 404);
         }
         const item = documents.find(entry => String(entry?.id || "") === id);
-        await store.delete(String(item?.storageKey || `board-meeting-documents/${id}.pdf`));
+        await store.delete(String(item?.storageKey || `${section}/${id}.pdf`));
         const updated = documents.filter(entry => String(entry?.id || "") !== id);
         await store.setJSON(key, updated);
         return json({ ok: true, data: updated });
