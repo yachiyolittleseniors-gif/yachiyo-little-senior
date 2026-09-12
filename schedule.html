@@ -1285,6 +1285,7 @@ body:not(.admin-mode) .delete{display:none!important}
 .calendar-event-title.cat-friendly{background:#eaf7ee;color:#2f6b42}
 .calendar-event-title.cat-other{background:#f0f1f3;color:#555f69}
 .calendar-event-grade{display:block;margin-top:4px;color:#8f6918;font-size:9px;font-weight:800;line-height:1.25}
+.calendar-day.holiday .calendar-day-num{color:#b82929!important}
 .calendar-legend{display:flex;gap:8px;flex-wrap:wrap;margin-top:12px;font-size:11px;color:#5f6975}
 .calendar-legend span{display:inline-flex;align-items:center;gap:5px}
 .calendar-legend i{width:10px;height:10px;border-radius:3px;display:inline-block}
@@ -1947,6 +1948,54 @@ let selectedDate='';
 function ymd(y,m,d){
   return `${y}-${String(m+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
 }
+const japaneseHolidayCache=new Map();
+function japaneseHolidays(year){
+  if(japaneseHolidayCache.has(year))return japaneseHolidayCache.get(year);
+  const holidays=new Set();
+  const add=(month,day)=>holidays.add(ymd(year,month-1,day));
+  const nthMonday=(month,nth)=>{
+    const first=new Date(year,month-1,1).getDay();
+    return 1+((8-first)%7)+(nth-1)*7;
+  };
+  add(1,1);
+  add(1,nthMonday(1,2));
+  add(2,11);
+  if(year>=2020)add(2,23);
+  add(3,Math.floor(20.8431+.242194*(year-1980)-Math.floor((year-1980)/4)));
+  add(4,29);
+  add(5,3);add(5,4);add(5,5);
+  if(year===2020){add(7,23);add(7,24);add(8,10)}
+  else if(year===2021){add(7,22);add(7,23);add(8,8)}
+  else{add(7,nthMonday(7,3));add(8,11);add(10,nthMonday(10,2))}
+  add(9,nthMonday(9,3));
+  add(9,Math.floor(23.2488+.242194*(year-1980)-Math.floor((year-1980)/4)));
+  add(11,3);add(11,23);
+  for(let time=new Date(year,0,2).getTime(),end=new Date(year,11,30).getTime();time<=end;time+=86400000){
+    const current=new Date(time);
+    const key=ymd(current.getFullYear(),current.getMonth(),current.getDate());
+    if(holidays.has(key))continue;
+    const previous=new Date(time-86400000),next=new Date(time+86400000);
+    if(holidays.has(ymd(previous.getFullYear(),previous.getMonth(),previous.getDate()))&&holidays.has(ymd(next.getFullYear(),next.getMonth(),next.getDate())))holidays.add(key);
+  }
+  Array.from(holidays).sort().forEach(key=>{
+    const parts=key.split('-').map(Number);
+    const holiday=new Date(parts[0],parts[1]-1,parts[2]);
+    if(holiday.getDay()!==0)return;
+    let substitute=new Date(holiday.getFullYear(),holiday.getMonth(),holiday.getDate()+1);
+    let substituteKey=ymd(substitute.getFullYear(),substitute.getMonth(),substitute.getDate());
+    while(holidays.has(substituteKey)){
+      substitute=new Date(substitute.getFullYear(),substitute.getMonth(),substitute.getDate()+1);
+      substituteKey=ymd(substitute.getFullYear(),substitute.getMonth(),substitute.getDate());
+    }
+    holidays.add(substituteKey);
+  });
+  japaneseHolidayCache.set(year,holidays);
+  return holidays;
+}
+function isJapaneseHoliday(date){
+  const year=Number(String(date).slice(0,4));
+  return japaneseHolidays(year).has(date);
+}
 function eventFor(date){return scheduleData.find(x=>x.date===date)}
 function gradesFor(ev){
   if(Array.isArray(ev&&ev.grades))return ev.grades.map(String).filter(x=>['1','2','3'].includes(x));
@@ -1975,7 +2024,7 @@ function renderCalendar(){
     const date=ymd(cy,cm,d);
     const ev=eventFor(date);
     const dow=i%7;
-    html+=`<button type="button" class="calendar-day ${muted?'muted':''} ${dow===0?'sun':''} ${dow===6?'sat':''}" data-date="${date}">
+    html+=`<button type="button" class="calendar-day ${muted?'muted':''} ${dow===0?'sun':''} ${dow===6?'sat':''} ${isJapaneseHoliday(date)?'holiday':''}" data-date="${date}">
       <span class="calendar-day-num">${d}</span>
       ${ev&&gradeText(ev)?`<span class="calendar-event-grade">${escHtml(gradeText(ev))}</span>`:''}
       ${ev?`<span class="calendar-event-title cat-${escHtml(ev.category||'other')}">${escHtml(ev.title)}</span>`:''}
