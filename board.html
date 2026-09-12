@@ -468,7 +468,7 @@ html{scroll-padding-top:var(--compact-header-height)}
           <button id="meetingPdfCancel" class="meeting-action meeting-action-cancel" type="button">キャンセル</button>
         </div>
         <div id="meetingDocumentList" class="meeting-document-list">
-          <div class="meeting-empty">事務局からのお知らせを読み込んでいます。</div>
+          <a class="meeting-document-library-link" href="./secretariat-documents.html">保存済み資料を見る</a>
         </div>
       </div>
 
@@ -1502,6 +1502,7 @@ html{scroll-padding-top:var(--compact-header-height)}
   nextMonth.addEventListener('click',function(){viewMonth++;if(viewMonth>11){viewMonth=0;viewYear++}renderCalendar()});
   editorClose.addEventListener('click',closeEditor);
   editor.addEventListener('click',function(event){if(event.target===editor)closeEditor()});
+  renderCalendar();
   loadData();
 })();
 </script>
