@@ -1294,13 +1294,8 @@ body:not(.admin-mode) .delete{display:none!important}
 .calendar-grade-field legend{margin-bottom:7px;color:#263344;font-size:13px;font-weight:700}
 .calendar-grade-options{display:flex;gap:9px;flex-wrap:wrap}
 #calendarForm .calendar-grade-option{display:flex;align-items:center;gap:7px;min-width:82px;margin:0;padding:10px 12px;border:1px solid #cfd5dc;border-radius:7px;background:#fff;font-size:14px;font-weight:700;cursor:pointer}
-#calendarForm .calendar-grade-option input{display:block;width:18px;height:18px;margin:0;padding:0}
-#calendarForm .calendar-grade-option.grade-1 input{accent-color:#e0ad00}
-#calendarForm .calendar-grade-option.grade-2 input{accent-color:#176cd3}
-#calendarForm .calendar-grade-option.grade-3 input{accent-color:#d62432}
-#calendarForm .calendar-grade-option.grade-1:has(input:checked){border-color:#d4a300;background:#fff9df;color:#6c5200}
-#calendarForm .calendar-grade-option.grade-2:has(input:checked){border-color:#176cd3;background:#eef5ff;color:#124e96}
-#calendarForm .calendar-grade-option.grade-3:has(input:checked){border-color:#d62432;background:#fff0f1;color:#98202a}
+#calendarForm .calendar-grade-option input{display:block;width:18px;height:18px;margin:0;padding:0;accent-color:var(--grade-accent,#176cd3)}
+#calendarForm .calendar-grade-option:has(input:checked){border-color:var(--grade-accent,#176cd3);background:var(--grade-bg,#eef5ff);color:var(--grade-text,#124e96)}
 </style>
 
 
@@ -1853,9 +1848,9 @@ html{scroll-padding-top:var(--fixed-header-height)}
 <fieldset class="calendar-grade-field">
   <legend>対象学年（複数選択可）</legend>
   <div class="calendar-grade-options">
-    <label class="calendar-grade-option grade-1"><input type="checkbox" name="calendarGrade" value="1">🟡1年生</label>
-    <label class="calendar-grade-option grade-2"><input type="checkbox" name="calendarGrade" value="2">🔵2年生</label>
-    <label class="calendar-grade-option grade-3"><input type="checkbox" name="calendarGrade" value="3">🔴3年生</label>
+    <label class="calendar-grade-option" data-calendar-grade="1"><input type="checkbox" name="calendarGrade" value="1"><span>🔴1年生</span></label>
+    <label class="calendar-grade-option" data-calendar-grade="2"><input type="checkbox" name="calendarGrade" value="2"><span>🟢2年生</span></label>
+    <label class="calendar-grade-option" data-calendar-grade="3"><input type="checkbox" name="calendarGrade" value="3"><span>🔵3年生</span></label>
   </div>
 </fieldset>
 <label>時間
@@ -2002,11 +1997,37 @@ function gradesFor(ev){
   const legacy=String(ev&&ev.grade||'');
   return ['1','2','3'].filter(x=>legacy.includes(x));
 }
+const gradeColorPalette=[
+  {icon:'🔴',accent:'#d62432',background:'#fff0f1',text:'#98202a'},
+  {icon:'🟢',accent:'#18864b',background:'#edf9f2',text:'#116137'},
+  {icon:'🔵',accent:'#176cd3',background:'#eef5ff',text:'#124e96'}
+];
+function academicYearFor(date){
+  const parts=String(date||'').split('-').map(Number);
+  const year=parts[0]||new Date().getFullYear();
+  const month=parts[1]||new Date().getMonth()+1;
+  return month>=4?year:year-1;
+}
+function gradeColorFor(date,grade){
+  const shift=((academicYearFor(date)-2026)%3+3)%3;
+  const index=((Number(grade)-1-shift)%3+3)%3;
+  return gradeColorPalette[index];
+}
+function updateCalendarGradeOptions(date){
+  document.querySelectorAll('[data-calendar-grade]').forEach(label=>{
+    const grade=label.dataset.calendarGrade;
+    const color=gradeColorFor(date,grade);
+    const text=label.querySelector('span');
+    if(text)text.textContent=color.icon+grade+'年生';
+    label.style.setProperty('--grade-accent',color.accent);
+    label.style.setProperty('--grade-bg',color.background);
+    label.style.setProperty('--grade-text',color.text);
+  });
+}
 function gradeText(ev){
   const grades=gradesFor(ev);
-  if(grades.length===3)return '🟢全学年';
-  const labels={'1':'🟡1年生','2':'🔵2年生','3':'🔴3年生'};
-  return grades.map(x=>labels[x]).join('・');
+  if(grades.length===3)return '🟡全学年';
+  return grades.map(grade=>gradeColorFor(ev&&ev.date,grade).icon+grade+'年生').join('・');
 }
 function renderCalendar(){
   const y=currentMonth.getFullYear(), m=currentMonth.getMonth();
@@ -2075,6 +2096,7 @@ document.getElementById('calendarDetail').addEventListener('click',e=>{
 function openEditor(date){
   selectedDate=date;
   const ev=eventFor(date)||{};
+  updateCalendarGradeOptions(date);
   document.getElementById('calendarEditorDate').textContent=date.replace(/-/g,'/');
   document.getElementById('calendarEventTitle').value=ev.title||'';
   document.getElementById('calendarEventCategory').value=ev.category||'practice';
