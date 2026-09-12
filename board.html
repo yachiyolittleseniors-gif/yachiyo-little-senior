@@ -1163,7 +1163,6 @@ html{scroll-padding-top:var(--compact-header-height)}
   const DOCUMENT_API='/.netlify/functions/site-data?section=board-meeting-documents';
   const SCHEDULE_API='/.netlify/functions/site-data?section=board-meeting-schedule';
   const COACH_AUTH_API='/.netlify/functions/coach-attendance-data';
-  const COACH_PASSWORD_KEY='yachiyoCoachAttendancePass';
   const documentList=document.getElementById('meetingDocumentList');
   const pdfInput=document.getElementById('meetingPdfInput');
   const pdfSave=document.getElementById('meetingPdfSave');
@@ -1189,6 +1188,7 @@ html{scroll-padding-top:var(--compact-header-height)}
   let events=[];
   let selectedDate='';
   let editingEventId='';
+  let activeCoachPassword='';
   const now=new Date();
   let viewYear=now.getFullYear();
   let viewMonth=now.getMonth();
@@ -1211,15 +1211,9 @@ html{scroll-padding-top:var(--compact-header-height)}
   }
 
   async function requireCoachPassword(){
-    const saved=sessionStorage.getItem(COACH_PASSWORD_KEY)||'';
-    if(saved&&await verifyCoachPassword(saved))return saved;
-    sessionStorage.removeItem(COACH_PASSWORD_KEY);
     const entered=prompt('パスワードを入力してください。');
     if(entered===null)return '';
-    if(await verifyCoachPassword(entered)){
-      sessionStorage.setItem(COACH_PASSWORD_KEY,entered);
-      return entered;
-    }
+    if(await verifyCoachPassword(entered))return entered;
     alert('パスワードが違います。');
     return '';
   }
@@ -1346,8 +1340,9 @@ html{scroll-padding-top:var(--compact-header-height)}
     });
   }
 
-  function resetFormMode(){
+  function resetFormMode(clearPassword=true){
     editingEventId='';
+    if(clearPassword)activeCoachPassword='';
     form.reset();
     form.hidden=true;
     addEvent.hidden=false;
@@ -1359,6 +1354,7 @@ html{scroll-padding-top:var(--compact-header-height)}
   async function startEditing(item){
     const coachPassword=await requireCoachPassword();
     if(!coachPassword)return;
+    activeCoachPassword=coachPassword;
     editingEventId=String(item.id||'');
     eventTitle.value=item.title||'';
     eventTime.value=item.time||'';
@@ -1466,7 +1462,8 @@ html{scroll-padding-top:var(--compact-header-height)}
   addEvent.addEventListener('click',async function(){
     const coachPassword=await requireCoachPassword();
     if(!coachPassword)return;
-    resetFormMode();
+    resetFormMode(false);
+    activeCoachPassword=coachPassword;
     form.hidden=false;
     addEvent.hidden=true;
     eventTitle.focus();
@@ -1480,7 +1477,7 @@ html{scroll-padding-top:var(--compact-header-height)}
     event.preventDefault();
     const title=eventTitle.value.trim();
     if(!selectedDate||!title)return;
-    const coachPassword=await requireCoachPassword();
+    const coachPassword=activeCoachPassword||await requireCoachPassword();
     if(!coachPassword)return;
     const editingId=editingEventId;
     formSave.disabled=true;formSave.textContent=editingId?'変更中...':'保存中...';
