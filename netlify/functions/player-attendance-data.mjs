@@ -72,11 +72,31 @@ async function accessOK(store, request) {
   return safeEqual(enteredHash, expectedHash);
 }
 
+function normalizeAnswerRow(row = {}) {
+  if (!row || typeof row !== "object") return {};
+  return Object.fromEntries(
+    Object.entries(row).map(([eventId, status]) => [
+      eventId,
+      status === "△" ? "×" : status,
+    ])
+  );
+}
+
+function normalizeAnswerTable(answers = {}) {
+  if (!answers || typeof answers !== "object") return {};
+  return Object.fromEntries(
+    Object.entries(answers).map(([memberId, row]) => [
+      memberId,
+      normalizeAnswerRow(row),
+    ])
+  );
+}
+
 function normalize(data = {}) {
   return {
     events: Array.isArray(data.events) ? data.events : [],
     members: Array.isArray(data.members) ? data.members : [],
-    answers: data.answers && typeof data.answers === "object" ? data.answers : {},
+    answers: normalizeAnswerTable(data.answers),
     comments: Array.isArray(data.comments) ? data.comments : [],
     migrationInitialized: data.migrationInitialized === true,
   };
@@ -156,10 +176,11 @@ function memberStateKey(memberId) {
 
 function normalizeMemberState(value = {}, fallbackAnswers = {}, fallbackComments = []) {
   return {
-    answers:
+    answers: normalizeAnswerRow(
       value.answers && typeof value.answers === "object"
         ? value.answers
-        : { ...fallbackAnswers },
+        : fallbackAnswers
+    ),
     comments: Array.isArray(value.comments)
       ? value.comments
       : [...fallbackComments],
@@ -216,15 +237,19 @@ async function mergeMemberStates(store, data) {
         saved = null;
       }
       if (!saved) return null;
+      const state = normalizeMemberState(
+        saved,
+        data.answers?.[id] || {},
+        data.comments.filter(
+          comment => String(comment?.memberId || "") === id
+        )
+      );
+      if (Object.values(saved.answers || {}).some(status => status === "△")) {
+        await store.setJSON(memberStateKey(id), state);
+      }
       return {
         id,
-        state: normalizeMemberState(
-          saved,
-          data.answers?.[id] || {},
-          data.comments.filter(
-            comment => String(comment?.memberId || "") === id
-          )
-        ),
+        state,
       };
     })
   );
@@ -400,7 +425,8 @@ function importMatchingDensukeData(data, html) {
     const eventId = String(data.events.find(event => event.date === date)?.id || `schedule_${date.replaceAll("-", "")}`);
     columns.forEach((member, index) => {
       if (!member) return;
-      const status = String(row[memberStart + index] || "").match(/[○△×]/)?.[0];
+      const importedStatus = String(row[memberStart + index] || "").match(/[○△×]/)?.[0];
+      const status = importedStatus === "△" ? "×" : importedStatus;
       if (!status) return;
       data.answers[member.id] ||= {};
       data.answers[member.id][eventId] = status;
@@ -549,7 +575,7 @@ export default async (request, context) => {
       const memberId = String(body.memberId || "");
       const status = String(body.status || "");
       if (!eventId || !memberId) return json({ error: "Missing id" }, 400);
-      if (status && !["○", "△", "×"].includes(status)) return json({ error: "Invalid status" }, 400);
+      if (status && !["○", "×"].includes(status)) return json({ error: "Invalid status" }, 400);
       const memberExists = data.members.some(
         member => String(member?.id || "") === memberId
       );
