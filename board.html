@@ -97,7 +97,9 @@ h1{font-family:serif;font-weight:500;letter-spacing:.08em;margin:8px 0 6px;font-
 .meeting-day-list-row button{align-self:center;padding:8px;border-radius:7px;background:#fff;font-weight:800;cursor:pointer}
 .meeting-event-edit{border:1px solid #c79a3b;color:#7b5b16}
 .meeting-event-delete{border:1px solid #d6bcbc;color:#9b2727}
+.meeting-add-event{width:100%;min-height:46px;margin-top:2px;border:1px solid var(--gold);border-radius:8px;background:var(--gold);color:#fff;font:inherit;font-weight:900;cursor:pointer}
 .meeting-form{padding-top:14px;border-top:1px solid #e0e3e7}
+.meeting-form[hidden]{display:none}
 .meeting-form label{display:block;margin:0 0 11px;color:#263344;font-size:12px;font-weight:800}
 .meeting-form input,.meeting-form textarea{display:block;width:100%;margin-top:5px;padding:11px;border:1px solid #cfd5dc;border-radius:7px;background:#fff;color:#172233;font:inherit;font-size:16px}
 .meeting-form textarea{min-height:76px;resize:vertical}
@@ -478,7 +480,7 @@ html{scroll-padding-top:var(--compact-header-height)}
           <div class="sun">日</div><div>月</div><div>火</div><div>水</div><div>木</div><div>金</div><div class="sat">土</div>
         </div>
         <div id="meetingCalendarGrid" class="meeting-calendar-grid"></div>
-        <p class="meeting-calendar-note">日付をタップすると予定を登録・編集・削除できます。</p>
+        <p class="meeting-calendar-note">日付をタップすると予定を閲覧できます。入力・編集・削除にはパスワードが必要です。</p>
       </div>
     </section>
 
@@ -496,7 +498,8 @@ html{scroll-padding-top:var(--compact-header-height)}
     <button id="meetingEditorClose" class="meeting-editor-close" type="button" aria-label="閉じる">×</button>
     <h2 id="meetingEditorDate" class="meeting-editor-date">事務局予定</h2>
     <div id="meetingDayList" class="meeting-day-list"></div>
-    <form id="meetingForm" class="meeting-form">
+    <button id="meetingAddEvent" class="meeting-add-event" type="button">予定を入力</button>
+    <form id="meetingForm" class="meeting-form" hidden>
       <label>予定名
         <input id="meetingEventTitle" type="text" maxlength="60" placeholder="例：9月事務局" required>
       </label>
@@ -1173,6 +1176,7 @@ html{scroll-padding-top:var(--compact-header-height)}
   const editorClose=document.getElementById('meetingEditorClose');
   const editorDate=document.getElementById('meetingEditorDate');
   const dayList=document.getElementById('meetingDayList');
+  const addEvent=document.getElementById('meetingAddEvent');
   const form=document.getElementById('meetingForm');
   const eventTitle=document.getElementById('meetingEventTitle');
   const eventTime=document.getElementById('meetingEventTime');
@@ -1189,7 +1193,7 @@ html{scroll-padding-top:var(--compact-header-height)}
   let viewYear=now.getFullYear();
   let viewMonth=now.getMonth();
 
-  if(!documentList||!pdfInput||!pdfSave||!calendarGrid||!form||!formSave||!editCancel||!formActions)return;
+  if(!documentList||!pdfInput||!pdfSave||!calendarGrid||!form||!addEvent||!formSave||!editCancel||!formActions)return;
 
   function accessHeaders(json,coachPassword){
     const headers={'x-access-password':sessionStorage.getItem('yachiyoAttendancePass')||''};
@@ -1345,6 +1349,8 @@ html{scroll-padding-top:var(--compact-header-height)}
   function resetFormMode(){
     editingEventId='';
     form.reset();
+    form.hidden=true;
+    addEvent.hidden=false;
     formSave.textContent='予定を保存';
     editCancel.hidden=true;
     formActions.classList.remove('editing');
@@ -1358,15 +1364,15 @@ html{scroll-padding-top:var(--compact-header-height)}
     eventTime.value=item.time||'';
     eventPlace.value=item.place||'';
     eventMemo.value=item.memo||'';
+    form.hidden=false;
+    addEvent.hidden=true;
     formSave.textContent='変更を保存';
     editCancel.hidden=false;
     formActions.classList.add('editing');
     eventTitle.focus();
   }
 
-  async function openEditor(date){
-    const coachPassword=await requireCoachPassword();
-    if(!coachPassword)return;
+  function openEditor(date){
     selectedDate=date;
     editorDate.textContent=date.replace(/-/g,'/')+' の予定';
     resetFormMode();
@@ -1456,6 +1462,15 @@ html{scroll-padding-top:var(--compact-header-height)}
       showSaveNotice('PDFを削除しました');
     }catch(e){alert(e.message||'PDFを削除できませんでした。')}
   }
+
+  addEvent.addEventListener('click',async function(){
+    const coachPassword=await requireCoachPassword();
+    if(!coachPassword)return;
+    resetFormMode();
+    form.hidden=false;
+    addEvent.hidden=true;
+    eventTitle.focus();
+  });
 
   editCancel.addEventListener('click',function(){
     resetFormMode();
