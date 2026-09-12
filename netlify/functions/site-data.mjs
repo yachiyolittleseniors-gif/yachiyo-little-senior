@@ -239,6 +239,37 @@ function boardMeetingFileIsValid(fileName, contentType, bytes) {
   return false;
 }
 
+function normalizeScheduleEntries(value) {
+  if (!Array.isArray(value)) return { data: value, changed: false };
+
+  let changed = false;
+  const data = value.map(item => {
+    if (!item || typeof item !== "object") return item;
+
+    const storedGrades = Array.isArray(item.grades)
+      ? [...new Set(item.grades.map(String).filter(grade => ["1", "2", "3"].includes(grade)))].sort()
+      : [];
+    const legacyGrade = String(item.grade || "");
+    const grades = storedGrades.length
+      ? storedGrades
+      : ["1", "2", "3"].filter(grade => legacyGrade.includes(grade));
+    const normalizedGrades = grades.length ? grades : ["1", "2", "3"];
+    const title = String(item.title || "").replace("昇給対応講習会", "昇級対応講習会");
+
+    if (
+      JSON.stringify(normalizedGrades) !== JSON.stringify(item.grades) ||
+      title !== String(item.title || "")
+    ) {
+      changed = true;
+      return { ...item, title, grades: normalizedGrades };
+    }
+
+    return item;
+  });
+
+  return { data, changed };
+}
+
 const LEGACY_RESULT_SEED = [
   {
     "id": "legacy-44-2024-narita-1",
@@ -765,6 +796,12 @@ export default async (request, context) => {
         consistency: "strong"
       });
 
+      if (section === "schedule" || section === "board-meeting-schedule") {
+        const normalized = normalizeScheduleEntries(data);
+        data = normalized.data;
+        if (normalized.changed) await store.setJSON(key, data);
+      }
+
       if (section === "results") {
         const migrationKey = "migrations/results-legacy-20260910.json";
         const migrated = await store.get(migrationKey, {
@@ -985,7 +1022,7 @@ export default async (request, context) => {
 
       const protectedBoardActions = new Set(["uploadBoardMeetingDocument","deleteBoardMeetingDocument","uploadRefereeDocument","deleteRefereeDocument","saveBoardMeetingEvent","deleteBoardMeetingEvent"]);
       if (protectedBoardActions.has(String(body?.action || "")) && !(await coachAccessPasswordIsValid(store, request.headers.get("x-coach-password") || ""))) {
-        return json({ error: "指導者出欠確認のパスワードが違います。" }, 401);
+        return json({ error: "パスワードが違います。" }, 401);
       }
 
       if (
@@ -1052,6 +1089,9 @@ export default async (request, context) => {
 
         if (!/^\d{4}-\d{2}-\d{2}$/.test(date)) {
           return json({ error: "日付を確認してください。" }, 400);
+        }
+        if (!grades.length) {
+          return json({ error: "対象学年を選択してください。" }, 400);
         }
         if (!title || title.length > 60 || time.length > 40 || place.length > 80 || memo.length > 500) {
           return json({ error: "入力内容を確認してください。" }, 400);
@@ -1374,6 +1414,25 @@ export default async (request, context) => {
       if (!valid) {
         return json({ error: "保存できない画像形式が含まれています。" }, 400);
       }
+    }
+
+    if (section === "schedule") {
+      if (!Array.isArray(body?.data)) {
+        return json({ error: "スケジュールデータを確認してください。" }, 400);
+      }
+
+      const hasMissingGrades = body.data.some(item => {
+        const grades = Array.isArray(item?.grades)
+          ? item.grades.map(String).filter(grade => ["1", "2", "3"].includes(grade))
+          : [];
+        return !grades.length;
+      });
+      if (hasMissingGrades) {
+        return json({ error: "対象学年を選択してください。" }, 400);
+      }
+
+      const normalized = normalizeScheduleEntries(body.data);
+      body.data = normalized.data;
     }
 
     const serialized = JSON.stringify(body.data);

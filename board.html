@@ -698,7 +698,7 @@ html{scroll-padding-top:var(--compact-header-height)}
     <label for="coachPasswordConfirmInput">新しいパスワード（確認）</label>
     <input id="coachPasswordConfirmInput" type="password" minlength="8" maxlength="64" autocomplete="new-password" placeholder="もう一度入力">
     <button id="saveCoachPasswordBtn" type="button">パスワードを変更</button>
-    <p id="coachPasswordStatus">初期パスワード：y20260101</p>
+    <p id="coachPasswordStatus">8文字以上で設定してください。</p>
   </div>
   <div id="tournamentAdminFields">
     <strong>開催中の公式戦PDF</strong>
@@ -1552,10 +1552,12 @@ html{scroll-padding-top:var(--compact-header-height)}
 
   function gradesFor(item){
     if(Array.isArray(item&&item.grades)){
-      return ['1','2','3'].filter(function(grade){return item.grades.map(String).includes(grade)});
+      const grades=['1','2','3'].filter(function(grade){return item.grades.map(String).includes(grade)});
+      return grades.length?grades:['1','2','3'];
     }
     const legacy=String(item&&item.grade||'');
-    return ['1','2','3'].filter(function(grade){return legacy.includes(grade)});
+    const grades=['1','2','3'].filter(function(grade){return legacy.includes(grade)});
+    return grades.length?grades:['1','2','3'];
   }
 
   const gradeColorPalette=[
@@ -1844,6 +1846,10 @@ html{scroll-padding-top:var(--compact-header-height)}
     if(!coachPassword)return;
     const editingId=editingEventId;
     const grades=Array.from(form.querySelectorAll('input[name="meetingGrade"]:checked')).map(function(input){return input.value});
+    if(!grades.length){
+      alert('対象学年を選択してください。');
+      return;
+    }
     formSave.disabled=true;formSave.textContent=editingId?'変更中...':'保存中...';
     try{
       const response=await fetch(SCHEDULE_API,{

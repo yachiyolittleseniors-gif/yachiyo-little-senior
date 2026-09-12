@@ -1993,9 +1993,13 @@ function isJapaneseHoliday(date){
 }
 function eventFor(date){return scheduleData.find(x=>x.date===date)}
 function gradesFor(ev){
-  if(Array.isArray(ev&&ev.grades))return ev.grades.map(String).filter(x=>['1','2','3'].includes(x));
+  if(Array.isArray(ev&&ev.grades)){
+    const grades=ev.grades.map(String).filter(x=>['1','2','3'].includes(x));
+    return grades.length?grades:['1','2','3'];
+  }
   const legacy=String(ev&&ev.grade||'');
-  return ['1','2','3'].filter(x=>legacy.includes(x));
+  const grades=['1','2','3'].filter(x=>legacy.includes(x));
+  return grades.length?grades:['1','2','3'];
 }
 const gradeColorPalette=[
   {icon:'🔴',accent:'#d62432',background:'#fff0f1',text:'#98202a'},
@@ -2119,11 +2123,16 @@ document.getElementById('calendarEditorClose').addEventListener('click',closeEdi
 document.getElementById('calendarEditor').addEventListener('click',e=>{if(e.target.id==='calendarEditor')closeEditor()});
 document.getElementById('calendarForm').addEventListener('submit',async e=>{
   e.preventDefault();
+  const selectedGrades=Array.from(document.querySelectorAll('input[name="calendarGrade"]:checked')).map(input=>input.value);
+  if(!selectedGrades.length){
+    alert('対象学年を選択してください。');
+    return;
+  }
   const item={
     date:selectedDate,
     title:document.getElementById('calendarEventTitle').value.trim(),
     category:document.getElementById('calendarEventCategory').value,
-    grades:Array.from(document.querySelectorAll('input[name="calendarGrade"]:checked')).map(input=>input.value),
+    grades:selectedGrades,
     time:document.getElementById('calendarEventTime').value.trim(),
     place:document.getElementById('calendarEventPlace').value.trim(),
     memo:document.getElementById('calendarEventMemo').value.trim()
