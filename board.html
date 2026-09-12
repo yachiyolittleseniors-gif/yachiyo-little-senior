@@ -60,6 +60,10 @@ h1{font-family:serif;font-weight:500;letter-spacing:.08em;margin:8px 0 6px;font-
 .board-meeting-section:first-of-type{margin-top:16px}
 .board-meeting-heading{margin:0 0 11px;font-size:16px;color:var(--navy);font-weight:900}
 .board-meeting-help{margin:0 0 12px!important;min-height:0!important;font-size:11px!important;line-height:1.65!important}
+.board-meeting-help span{display:block}
+.meeting-admin-panel[hidden],.meeting-admin-open[hidden]{display:none!important}
+.meeting-admin-open{width:100%;border-color:#d8d9dc;background:#e5e3de;color:#8a8f96}
+.meeting-admin-panel{display:grid;gap:12px;margin-top:10px}
 .meeting-upload{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:9px;align-items:center}
 .meeting-upload input{min-width:0;width:100%;padding:10px;border:1px solid #e1e3e6;border-radius:8px;background:#f7f7f5;color:#858c95;font-size:13px}
 .meeting-action{min-height:43px;padding:10px 16px;border:1px solid var(--gold);border-radius:8px;background:var(--gold);color:#fff;font:inherit;font-size:13px;font-weight:900;cursor:pointer}
@@ -74,6 +78,10 @@ h1{font-family:serif;font-weight:500;letter-spacing:.08em;margin:8px 0 6px;font-
 .meeting-document-open,.meeting-document-delete{padding:8px 10px;border-radius:7px;font-size:11px;font-weight:800;text-align:center;cursor:pointer}
 .meeting-document-open{border:1px solid var(--gold);background:var(--gold);color:#fff}
 .meeting-document-delete{border:1px solid #d6bcbc;background:#fff;color:#9b2727}
+.meeting-admin-document-list{display:grid;gap:8px}
+.meeting-admin-document-row{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:8px;align-items:center;padding:10px;border:1px solid #e1ded6;border-radius:9px;background:#fff}
+.meeting-admin-document-name{min-width:0;overflow-wrap:anywhere;font-size:12px;font-weight:800;color:var(--navy)}
+.meeting-admin-document-delete{min-height:38px;padding:8px 12px;border:1px solid #d6bcbc;border-radius:7px;background:#fff;color:#9b2727;font:inherit;font-size:11px;font-weight:900;cursor:pointer}
 .meeting-empty{padding:13px;border:1px dashed #d6d2c8;border-radius:9px;color:#7b8490;font-size:12px;text-align:center}
 .meeting-calendar-toolbar{display:grid;grid-template-columns:42px 1fr 42px;align-items:center;gap:8px;margin-bottom:12px}
 .meeting-calendar-nav{width:42px;height:42px;border:1px solid #d8dce1;border-radius:50%;background:#fff;color:var(--navy);font-size:24px;cursor:pointer}
@@ -469,11 +477,17 @@ html{scroll-padding-top:var(--compact-header-height)}
 
       <div class="board-meeting-section">
         <h3 class="board-meeting-heading">事務局からのお知らせ</h3>
-        <p class="board-meeting-help">事務局からのお知らせは「保存済み資料を見る」からご覧頂けます。</p>
-        <div class="meeting-upload">
-          <input id="meetingPdfInput" type="file" accept="application/pdf,image/jpeg,image/png,image/webp,.pdf,.jpg,.jpeg,.png,.webp" aria-label="事務局からのお知らせ PDF・画像">
-          <button id="meetingPdfSave" class="meeting-action" type="button">資料を保存</button>
-          <button id="meetingPdfCancel" class="meeting-action meeting-action-cancel" type="button">キャンセル</button>
+        <p class="board-meeting-help"><span>事務局からのお知らせは「保存済み資料を見る」からご覧頂けます。</span><span>資料保存と削除はパスワードが必要です。</span></p>
+        <div class="meeting-admin">
+          <button id="meetingAdminOpen" class="meeting-action meeting-admin-open" type="button">資料を保存</button>
+          <div id="meetingAdminPanel" class="meeting-admin-panel" hidden>
+            <div class="meeting-upload">
+              <input id="meetingPdfInput" type="file" accept="application/pdf,image/jpeg,image/png,image/webp,.pdf,.jpg,.jpeg,.png,.webp" aria-label="事務局からのお知らせ PDF・画像">
+              <button id="meetingPdfSave" class="meeting-action" type="button">選択した資料を保存</button>
+              <button id="meetingPdfCancel" class="meeting-action meeting-action-cancel" type="button">キャンセル</button>
+            </div>
+            <div id="meetingAdminDocumentList" class="meeting-admin-document-list"></div>
+          </div>
         </div>
         <div id="meetingDocumentList" class="meeting-document-list">
           <button class="meeting-document-library-link" type="button" data-open-secretariat-documents>保存済み資料を見る</button>
@@ -1175,6 +1189,9 @@ html{scroll-padding-top:var(--compact-header-height)}
   const SCHEDULE_API='/.netlify/functions/site-data?section=board-meeting-schedule';
   const COACH_AUTH_API='/.netlify/functions/coach-attendance-data';
   const documentList=document.getElementById('meetingDocumentList');
+  const adminOpen=document.getElementById('meetingAdminOpen');
+  const adminPanel=document.getElementById('meetingAdminPanel');
+  const adminDocumentList=document.getElementById('meetingAdminDocumentList');
   const pdfInput=document.getElementById('meetingPdfInput');
   const pdfSave=document.getElementById('meetingPdfSave');
   const pdfCancel=document.getElementById('meetingPdfCancel');
@@ -1200,11 +1217,12 @@ html{scroll-padding-top:var(--compact-header-height)}
   let selectedDate='';
   let editingEventId='';
   let activeCoachPassword='';
+  let documentCoachPassword='';
   const now=new Date();
   let viewYear=now.getFullYear();
   let viewMonth=now.getMonth();
 
-  if(!documentList||!pdfInput||!pdfSave||!calendarGrid||!form||!addEvent||!formSave||!editCancel||!formActions)return;
+  if(!documentList||!adminOpen||!adminPanel||!adminDocumentList||!pdfInput||!pdfSave||!pdfCancel||!calendarGrid||!form||!addEvent||!formSave||!editCancel||!formActions)return;
 
   function accessHeaders(json,coachPassword){
     const headers={'x-access-password':sessionStorage.getItem('yachiyoAttendancePass')||''};
@@ -1246,6 +1264,32 @@ html{scroll-padding-top:var(--compact-header-height)}
     button.setAttribute('data-open-secretariat-documents','');
     button.textContent='保存済み資料を見る（'+documents.length+'件）';
     documentList.appendChild(button);
+    renderAdminDocuments();
+  }
+
+  function renderAdminDocuments(){
+    adminDocumentList.replaceChildren();
+    if(!documents.length){
+      const empty=document.createElement('div');
+      empty.className='meeting-empty';
+      empty.textContent='削除できる資料はありません。';
+      adminDocumentList.appendChild(empty);
+      return;
+    }
+    documents.forEach(function(item){
+      const row=document.createElement('div');
+      row.className='meeting-admin-document-row';
+      const name=document.createElement('div');
+      name.className='meeting-admin-document-name';
+      name.textContent=(item.fileName||'事務局資料')+'（'+formatSize(item.size)+'）';
+      const remove=document.createElement('button');
+      remove.type='button';
+      remove.className='meeting-admin-document-delete';
+      remove.textContent='削除';
+      remove.addEventListener('click',function(){deleteDocument(item)});
+      row.append(name,remove);
+      adminDocumentList.appendChild(row);
+    });
   }
 
   function eventsFor(date){
@@ -1401,9 +1445,20 @@ html{scroll-padding-top:var(--compact-header-height)}
     }
   }
 
+  adminOpen.addEventListener('click',async function(){
+    const coachPassword=await requireCoachPassword();
+    if(!coachPassword)return;
+    documentCoachPassword=coachPassword;
+    adminOpen.hidden=true;
+    adminPanel.hidden=false;
+    renderAdminDocuments();
+  });
+
   pdfCancel.addEventListener('click',function(){
     pdfInput.value='';
-    showSaveNotice('PDFの選択を解除しました');
+    documentCoachPassword='';
+    adminPanel.hidden=true;
+    adminOpen.hidden=false;
   });
 
   documentList.addEventListener('click',function(event){
@@ -1419,8 +1474,9 @@ html{scroll-padding-top:var(--compact-header-height)}
     const allowedName=/\.(pdf|jpe?g|png|webp)$/i.test(file&&file.name||'');
     if(!file||!allowedType||!allowedName){alert('PDF・JPEG・PNG・WebPファイルを選択してください。');return}
     if(file.size>6*1024*1024){alert('ファイルは6MB以下にしてください。');return}
-    const coachPassword=await requireCoachPassword();
+    const coachPassword=documentCoachPassword||await requireCoachPassword();
     if(!coachPassword)return;
+    documentCoachPassword=coachPassword;
     pdfSave.disabled=true;
     pdfSave.textContent='保存中...';
     try{
@@ -1436,13 +1492,14 @@ html{scroll-padding-top:var(--compact-header-height)}
       renderDocuments();
       showSaveNotice('事務局からのお知らせを保存しました');
     }catch(e){alert(e.message||'資料を保存できませんでした。')}
-    finally{pdfSave.disabled=false;pdfSave.textContent='資料を保存'}
+    finally{pdfSave.disabled=false;pdfSave.textContent='選択した資料を保存'}
   });
 
   async function deleteDocument(item){
     if(!confirm('「'+(item.fileName||'事務局資料')+'」を削除しますか？'))return;
-    const coachPassword=await requireCoachPassword();
+    const coachPassword=documentCoachPassword||await requireCoachPassword();
     if(!coachPassword)return;
+    documentCoachPassword=coachPassword;
     try{
       const response=await fetch(DOCUMENT_API,{
         method:'POST',headers:accessHeaders(true,coachPassword),
