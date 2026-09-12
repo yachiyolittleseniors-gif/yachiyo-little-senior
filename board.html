@@ -92,7 +92,7 @@ h1{font-family:serif;font-weight:500;letter-spacing:.08em;margin:8px 0 6px;font-
 .meeting-calendar-week .sun{color:#b82929}.meeting-calendar-week .sat{color:#245da8}
 .meeting-calendar-day{min-width:0;min-height:65px;padding:5px 3px;border:0;border-right:1px solid #dfe3e8;border-bottom:1px solid #dfe3e8;background:#fff;color:var(--navy);text-align:left;overflow:hidden;cursor:pointer}
 .meeting-calendar-day.muted{background:#f5f5f2;color:#9da2a7}.meeting-calendar-day.today{box-shadow:inset 0 0 0 2px var(--gold)}
-.meeting-calendar-day.sun .meeting-day-number{color:#b82929}.meeting-calendar-day.sat .meeting-day-number{color:#245da8}
+.meeting-calendar-day.sun .meeting-day-number,.meeting-calendar-day.holiday .meeting-day-number{color:#b82929}.meeting-calendar-day.sat .meeting-day-number{color:#245da8}
 .meeting-day-number{display:block;font-size:11px;font-weight:900}
 .meeting-day-event{display:block;margin-top:4px;padding:3px 4px;border-radius:4px;background:var(--navy);color:#fff;font-size:8px;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .meeting-calendar-note{margin-top:9px!important;min-height:0!important;text-align:right;font-size:10px!important}
@@ -1460,6 +1460,56 @@ html{scroll-padding-top:var(--compact-header-height)}
     return String(year)+'-'+String(month+1).padStart(2,'0')+'-'+String(day).padStart(2,'0');
   }
 
+  const japaneseHolidayCache=new Map();
+  function japaneseHolidays(year){
+    if(japaneseHolidayCache.has(year))return japaneseHolidayCache.get(year);
+    const holidays=new Set();
+    const add=function(month,day){holidays.add(formatDate(year,month-1,day))};
+    const nthMonday=function(month,nth){
+      const first=new Date(year,month-1,1).getDay();
+      return 1+((8-first)%7)+(nth-1)*7;
+    };
+    add(1,1);
+    add(1,nthMonday(1,2));
+    add(2,11);
+    if(year>=2020)add(2,23);
+    add(3,Math.floor(20.8431+.242194*(year-1980)-Math.floor((year-1980)/4)));
+    add(4,29);
+    add(5,3);add(5,4);add(5,5);
+    if(year===2020){add(7,23);add(7,24);add(8,10)}
+    else if(year===2021){add(7,22);add(7,23);add(8,8)}
+    else{add(7,nthMonday(7,3));add(8,11);add(10,nthMonday(10,2))}
+    add(9,nthMonday(9,3));
+    add(9,Math.floor(23.2488+.242194*(year-1980)-Math.floor((year-1980)/4)));
+    add(11,3);add(11,23);
+    for(let time=new Date(year,0,2).getTime(),end=new Date(year,11,30).getTime();time<=end;time+=86400000){
+      const current=new Date(time);
+      const key=formatDate(current.getFullYear(),current.getMonth(),current.getDate());
+      if(holidays.has(key))continue;
+      const previous=new Date(time-86400000),next=new Date(time+86400000);
+      if(holidays.has(formatDate(previous.getFullYear(),previous.getMonth(),previous.getDate()))&&holidays.has(formatDate(next.getFullYear(),next.getMonth(),next.getDate())))holidays.add(key);
+    }
+    Array.from(holidays).sort().forEach(function(key){
+      const parts=key.split('-').map(Number);
+      const holiday=new Date(parts[0],parts[1]-1,parts[2]);
+      if(holiday.getDay()!==0)return;
+      let substitute=new Date(holiday.getFullYear(),holiday.getMonth(),holiday.getDate()+1);
+      let substituteKey=formatDate(substitute.getFullYear(),substitute.getMonth(),substitute.getDate());
+      while(holidays.has(substituteKey)){
+        substitute=new Date(substitute.getFullYear(),substitute.getMonth(),substitute.getDate()+1);
+        substituteKey=formatDate(substitute.getFullYear(),substitute.getMonth(),substitute.getDate());
+      }
+      holidays.add(substituteKey);
+    });
+    japaneseHolidayCache.set(year,holidays);
+    return holidays;
+  }
+
+  function isJapaneseHoliday(date){
+    const year=Number(String(date).slice(0,4));
+    return japaneseHolidays(year).has(date);
+  }
+
   function formatSize(bytes){
     const value=Number(bytes||0);
     return value>=1024*1024?(value/1024/1024).toFixed(1)+'MB':Math.max(1,Math.round(value/1024))+'KB';
@@ -1539,6 +1589,7 @@ html{scroll-padding-top:var(--compact-header-height)}
       if(current.getMonth()!==viewMonth)button.classList.add('muted');
       if(current.getDay()===0)button.classList.add('sun');
       if(current.getDay()===6)button.classList.add('sat');
+      if(isJapaneseHoliday(date))button.classList.add('holiday');
       if(date===today)button.classList.add('today');
       button.dataset.date=date;
       button.setAttribute('aria-label',date+(dayEvents.length?' '+dayEvents.map(function(item){return item.title}).join('、'):''));
