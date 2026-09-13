@@ -11,3 +11,9 @@
 
 /secretariat-documents.html
   Cache-Control: no-cache, no-store, must-revalidate
+
+/results.html
+  Cache-Control: no-cache, no-store, must-revalidate
+
+/results
+  Cache-Control: no-cache, no-store, must-revalidate
