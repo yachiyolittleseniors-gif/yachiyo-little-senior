@@ -1,6 +1,17 @@
 <!DOCTYPE html>
 <html lang="ja">
 <head>
+<script id="page-reload-scroll-reset">
+(function(){
+  if('scrollRestoration' in history)history.scrollRestoration='manual';
+  window.addEventListener('pageshow',function(){
+    window.scrollTo(0,0);
+    requestAnimationFrame(function(){window.scrollTo(0,0)});
+    setTimeout(function(){window.scrollTo(0,0)},120);
+  });
+})();
+</script>
+
 <!-- Google tag (gtag.js) -->
 <script async src="https://www.googletagmanager.com/gtag/js?id=G-L8BMMSXDP9"></script>
 <script>
