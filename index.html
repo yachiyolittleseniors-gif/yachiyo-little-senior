@@ -2657,17 +2657,6 @@ body.photo-admin-on .news-delete{display:block}
   color:#667180;
   font-size:.95em;
 }
-#latestResultCard .latest-tiebreak{
-  display:inline-block;
-  margin-top:7px;
-  padding:3px 9px;
-  border:1px solid rgba(199,154,59,.65);
-  border-radius:999px;
-  color:#8b671d;
-  background:#fffaf0;
-  font-size:11px;
-  font-weight:800;
-}
 </style>
 
 
@@ -3949,7 +3938,6 @@ function openProtectedArea(type){
         `<strong>${esc((latestR.date||'').replace(/-/g,'/'))}</strong><br>`+
         `${esc(latestR.tournament||'試合')}<br>`+
         `<span class="latest-match">${esc(leftName)} <b>${leftScore} - ${rightScore}</b> ${esc(rightName)}</span>`+
-        `${latestR.tiebreak?`<br><span class="latest-tiebreak">${esc(String(latestR.tiebreakInning||8)+'回タイブレーク')}</span>`:''}`+
         `${latestR.venue?`<br><span class="latest-venue">会場：${esc(latestR.venue)}</span>`:''}`+
         `<br><a class="latest-link" href="./results.html">試合結果を見る →</a>`;
     }else{
