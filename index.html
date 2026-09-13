@@ -56,6 +56,24 @@ html{background:#071426}
 <!-- Created by tatsuki.saitoh -->
 <meta name="author" content="tatsuki.saitoh">
 <meta content="width=device-width, initial-scale=1.0, viewport-fit=cover" name="viewport"/>
+<script id="ios-editor-zoom-recovery">
+(function(){
+  const normal='width=device-width, initial-scale=1.0, viewport-fit=cover';
+  function recover(){
+    const viewport=document.querySelector('meta[name="viewport"]');
+    const vv=window.visualViewport;
+    if(!viewport||!vv||vv.scale<=1.01)return;
+    viewport.setAttribute('content','width=device-width, initial-scale=1.0, minimum-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover');
+    window.scrollTo(0,0);
+    setTimeout(function(){
+      viewport.setAttribute('content',normal);
+      window.scrollTo(0,0);
+    },300);
+  }
+  window.addEventListener('pageshow',function(){setTimeout(recover,80)});
+  window.addEventListener('load',function(){setTimeout(recover,180)});
+})();
+</script>
 <title>八千代リトルシニア｜公式サイト</title>
 <style>
 :root{
@@ -4586,7 +4604,6 @@ function openProtectedArea(type){
    detailsInput.value=state.details;
    visibleInput.checked=state.visible;
    modal.hidden=false;
-   setTimeout(()=>textInput.focus(),0);
  }
  function closeEditor(){
    const active=document.activeElement;
@@ -4642,9 +4659,10 @@ function openProtectedArea(type){
      try{localStorage.setItem(cacheKey,JSON.stringify(state))}catch(error){}
      render();
      closeEditor();
-     setTimeout(function(){window.scrollTo(0,0)},250);
-     setTimeout(function(){window.scrollTo(0,0)},800);
      showSaveNotice('保存しました');
+     setTimeout(function(){
+       window.location.replace(window.location.pathname+'?saved='+Date.now());
+     },180);
    }catch(error){alert('トップのお知らせを保存できませんでした。')}
    finally{save.disabled=false;save.textContent='保存する'}
  });
