@@ -3044,6 +3044,9 @@ function openProtectedArea(type){
     if(document.body.classList.contains('admin-mode')){
       sessionStorage.removeItem(KEY);
       sessionStorage.removeItem('yachiyoAdminPassword');
+      if(typeof clearForm==='function')clearForm();
+      if(typeof closeSquadSettings==='function')closeSquadSettings();
+      document.querySelectorAll('details[open]').forEach(item=>item.removeAttribute('open'));
       apply();
       return;
     }
