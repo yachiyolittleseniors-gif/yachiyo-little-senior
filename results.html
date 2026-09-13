@@ -2560,12 +2560,9 @@ function renderResults(){
       const dateVenue=[g.date?escHtml(formatGameDate(g.date)):'',g.venue?escHtml(g.venue):''].filter(Boolean).join(' ／ ');
       const gradeLabel=gradeLifecycle(g).label;
       const ourTeam=squadName(g);
-      const squadBadge=(gradeUsesSquads(gradeLabel)||ourTeam!=='八千代')
-        ? '<span class="squad-badge">'+escHtml(ourTeam)+'</span>'
-        : '';
       return '<article class="game">'+
         '<div class="game-head">'+
-          '<div><div class="tournament">'+(gradeLabel?'<span class="grade-badge">'+escHtml(gradeLabel)+'</span>':'')+squadBadge+round+'</div>'+
+          '<div><div class="tournament">'+(gradeLabel?'<span class="grade-badge">'+escHtml(gradeLabel)+'</span>':'')+round+'</div>'+
           (dateVenue?'<div class="meta">'+dateVenue+'</div>':'')+'</div>'+
           '<span class="badge '+cls+'">'+label+'</span>'+
         '</div>'+
