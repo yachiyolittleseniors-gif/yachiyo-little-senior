@@ -22,6 +22,16 @@ html{background:#071426}
   .mobile-reference-news-title{display:none!important}
 }
 </style>
+<script id="home-reload-scroll-reset">
+(function(){
+  if('scrollRestoration' in history)history.scrollRestoration='manual';
+  window.addEventListener('pageshow',function(){
+    window.scrollTo(0,0);
+    requestAnimationFrame(function(){window.scrollTo(0,0)});
+    setTimeout(function(){window.scrollTo(0,0)},120);
+  });
+})();
+</script>
 <script id="hero-cache-prepaint">
 (function(){
   try{
