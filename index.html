@@ -3468,7 +3468,7 @@ body.photo-admin-on .recruit-mode-admin{display:block}
   .recruit-open-grid div+div{border-left:0;border-top:1px solid rgba(7,20,38,.22)}
   .recruit-open-grid b{margin:0}
   .recruit-open-grid span{font-size:13px}
-  .recruit-mode-admin{text-align:center}
+  .recruit-mode-admin{text-align:right}
 }
 </style>
 
@@ -5049,9 +5049,11 @@ body.photo-admin-on #accessPasswordChange{
   const api='/.netlify/functions/site-data?section=recruitment-settings';
   const cacheKey='yachiyoRecruitingOpen';
   const toggle=document.getElementById('recruitModeToggle');
+  const toggleWrap=document.getElementById('recruitModeAdmin');
   const standard=document.getElementById('recruitStandardCard');
   const openCard=document.getElementById('recruitOpenCard');
-  if(!toggle||!standard||!openCard)return;
+  const standardSection=document.getElementById('homeRecruitSection');
+  if(!toggle||!toggleWrap||!standard||!openCard||!standardSection)return;
 
   let recruiting=true;
   try{
@@ -5062,6 +5064,8 @@ body.photo-admin-on #accessPasswordChange{
   function render(){
     document.documentElement.classList.toggle('recruiting-open',recruiting);
     document.documentElement.classList.toggle('recruiting-standard',!recruiting);
+    if(recruiting) openCard.insertAdjacentElement('afterend',toggleWrap);
+    else standardSection.appendChild(toggleWrap);
     toggle.textContent=recruiting?'通常の選手募集に戻す':'選手募集中カードを表示';
     toggle.setAttribute('aria-pressed',String(recruiting));
   }
