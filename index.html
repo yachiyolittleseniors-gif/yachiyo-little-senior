@@ -4588,12 +4588,22 @@ function openProtectedArea(type){
    modal.hidden=false;
    setTimeout(()=>textInput.focus(),0);
  }
+ function resetEditorZoom(){
+   const viewport=document.querySelector('meta[name="viewport"]');
+   if(!viewport)return;
+   const original=viewport.getAttribute('content')||'width=device-width, initial-scale=1.0, viewport-fit=cover';
+   const currentTop=window.scrollY;
+   viewport.setAttribute('content','width=device-width, initial-scale=1.0, maximum-scale=1.0, viewport-fit=cover');
+   requestAnimationFrame(()=>window.scrollTo({left:0,top:currentTop,behavior:'auto'}));
+   setTimeout(()=>viewport.setAttribute('content',original),180);
+ }
  function closeEditor(){
    const active=document.activeElement;
    if(active&&typeof active.blur==='function')active.blur();
    textInput.blur();
    detailsInput.blur();
    modal.hidden=true;
+   resetEditorZoom();
  }
  function openDetails(){
    if(!state.visible||!state.text||!state.details)return;
