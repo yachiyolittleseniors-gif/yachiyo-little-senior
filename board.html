@@ -480,7 +480,7 @@ html{scroll-padding-top:var(--compact-header-height)}
 
 <main class="wrap">
   <div class="grid">
-    <aside class="latest-update" id="latestUpdateAnnouncement" role="button" tabindex="0" aria-expanded="false" aria-controls="updateHistoryPanel" aria-live="polite" hidden>
+    <aside class="latest-update" id="latestUpdateAnnouncement" role="button" tabindex="0" aria-expanded="false" aria-controls="updateHistoryPanel" aria-live="polite">
       <div class="latest-update-heading">
         <span class="latest-update-kicker">LATEST UPDATE</span>
         <span class="latest-update-title">最新更新</span>
@@ -488,7 +488,7 @@ html{scroll-padding-top:var(--compact-header-height)}
       <div class="latest-update-content">
         <time class="latest-update-date" id="latestUpdateDate"></time>
         <span class="latest-update-category" id="latestUpdateCategory"></span>
-        <span class="latest-update-message" id="latestUpdateMessage"></span>
+        <span class="latest-update-message" id="latestUpdateMessage">更新情報を読み込んでいます。</span>
       </div>
       <span class="latest-update-hint" id="latestUpdateHint">履歴を見る ▼</span>
     </aside>
@@ -787,6 +787,7 @@ html{scroll-padding-top:var(--compact-header-height)}
 // Created by tatsuki.saitoh
 (function(){
   const API='/.netlify/functions/site-data?section=board-latest-update';
+  const CACHE_KEY='yachiyoBoardLatestUpdateCacheV1';
   const announcement=document.getElementById('latestUpdateAnnouncement');
   const dateElement=document.getElementById('latestUpdateDate');
   const categoryElement=document.getElementById('latestUpdateCategory');
@@ -842,12 +843,36 @@ html{scroll-padding-top:var(--compact-header-height)}
     historyHint.textContent=next?'履歴を閉じる ▲':'履歴を見る ▼';
   }
 
+  function displayUpdate(data,preserveOpen){
+    const date=formatDate(data&&data.updatedAt);
+    if(!data||!date||!data.message)return false;
+    const wasOpen=Boolean(preserveOpen&&!historyPanel.hidden);
+    const history=recentHistory(Array.isArray(data.history)?data.history:[data]);
+    renderHistory(history);
+    historyHint.hidden=history.length===0;
+    setHistoryOpen(wasOpen);
+    dateElement.dateTime=String(data.updatedAt||'');
+    dateElement.textContent=date;
+    categoryElement.textContent=categories[data.category]||'更新';
+    messageElement.textContent=String(data.message);
+    announcement.hidden=false;
+    return true;
+  }
+
   announcement.addEventListener('click',()=>setHistoryOpen(historyPanel.hidden));
   announcement.addEventListener('keydown',event=>{
     if(event.key!=='Enter'&&event.key!==' ')return;
     event.preventDefault();
     setHistoryOpen(historyPanel.hidden);
   });
+
+  let hasDisplayedData=false;
+  try{
+    const cached=JSON.parse(sessionStorage.getItem(CACHE_KEY)||'null');
+    hasDisplayedData=displayUpdate(cached,false);
+  }catch(error){
+    sessionStorage.removeItem(CACHE_KEY);
+  }
 
   async function load(){
     try{
@@ -857,17 +882,22 @@ html{scroll-padding-top:var(--compact-header-height)}
       if(!response.ok)throw new Error('load failed');
       const body=await response.json();
       const data=body&&body.data;
-      const date=formatDate(data&&data.updatedAt);
-      if(!data||!date||!data.message){announcement.hidden=true;historyPanel.hidden=true;return}
-      const history=recentHistory(Array.isArray(data.history)?data.history:[data]);
-      renderHistory(history);
-      setHistoryOpen(false);
-      dateElement.dateTime=String(data.updatedAt||'');
-      dateElement.textContent=date;
-      categoryElement.textContent=categories[data.category]||'更新';
-      messageElement.textContent=String(data.message);
+      if(!displayUpdate(data,true)){
+        sessionStorage.removeItem(CACHE_KEY);
+        if(!hasDisplayedData){announcement.hidden=true;historyPanel.hidden=true}
+        return;
+      }
+      hasDisplayedData=true;
+      sessionStorage.setItem(CACHE_KEY,JSON.stringify(data));
+    }catch(e){
+      if(hasDisplayedData)return;
+      dateElement.textContent='';
+      categoryElement.textContent='';
+      messageElement.textContent='更新情報を読み込めませんでした。';
+      historyHint.hidden=true;
+      historyPanel.hidden=true;
       announcement.hidden=false;
-    }catch(e){announcement.hidden=true}
+    }
   }
 
   window.refreshBoardLatestUpdate=load;
