@@ -241,6 +241,7 @@ function boardMeetingFileIsValid(fileName, contentType, bytes) {
 }
 
 const BOARD_LATEST_UPDATE_KEY = "content/board-latest-update.json";
+const BOARD_UPDATE_HISTORY_LIMIT = 100;
 
 function boardUpdateTime(value) {
   const time = Date.parse(String(value || ""));
@@ -249,6 +250,39 @@ function boardUpdateTime(value) {
 
 function cleanBoardUpdateMessage(value, fallback = "更新しました") {
   return String(value || fallback).trim().replace(/\s+/g, " ").slice(0, 180);
+}
+
+function boardUpdateHistoryCutoff(now = Date.now()) {
+  const cutoff = new Date(now);
+  cutoff.setUTCMonth(cutoff.getUTCMonth() - 1);
+  return cutoff.getTime();
+}
+
+function normalizeBoardUpdate(entry) {
+  if (!entry || typeof entry !== "object") return null;
+  const category = String(entry.category || "").trim();
+  const message = cleanBoardUpdateMessage(entry.message, "");
+  const updatedAt = String(entry.updatedAt || "");
+  if (!category || !message || !boardUpdateTime(updatedAt)) return null;
+  if (/(?:削除|並び順)/.test(message)) return null;
+  return { category, message, updatedAt };
+}
+
+function recentBoardUpdates(entries, now = Date.now()) {
+  const cutoff = boardUpdateHistoryCutoff(now);
+  const seen = new Set();
+  return entries
+    .map(normalizeBoardUpdate)
+    .filter(Boolean)
+    .filter(entry => boardUpdateTime(entry.updatedAt) >= cutoff)
+    .sort((a, b) => boardUpdateTime(b.updatedAt) - boardUpdateTime(a.updatedAt))
+    .filter(entry => {
+      const key = `${entry.category}\u0000${entry.message}\u0000${entry.updatedAt}`;
+      if (seen.has(key)) return false;
+      seen.add(key);
+      return true;
+    })
+    .slice(0, BOARD_UPDATE_HISTORY_LIMIT);
 }
 
 async function safeStoreJson(store, key) {
@@ -265,18 +299,29 @@ async function saveBoardLatestUpdate(store, category, message, updatedAt = new D
     message: cleanBoardUpdateMessage(message),
     updatedAt
   };
-  await store.setJSON(BOARD_LATEST_UPDATE_KEY, data);
+  const saved = await safeStoreJson(store, BOARD_LATEST_UPDATE_KEY);
+  const savedHistory = Array.isArray(saved?.history)
+    ? saved.history
+    : normalizeBoardUpdate(saved)
+      ? [saved]
+      : [];
+  const history = recentBoardUpdates([data, ...savedHistory]);
+  await store.setJSON(BOARD_LATEST_UPDATE_KEY, {
+    latest: history[0] || data,
+    history
+  });
   return data;
 }
 
 async function loadBoardLatestUpdate(store) {
   const saved = await safeStoreJson(store, BOARD_LATEST_UPDATE_KEY);
-  if (
-    saved?.category &&
-    saved?.message &&
-    boardUpdateTime(saved.updatedAt) &&
-    !/(?:削除|並び順)/.test(String(saved.message))
-  ) return saved;
+  const savedHistory = Array.isArray(saved?.history)
+    ? saved.history
+    : saved?.latest
+      ? [saved.latest]
+      : normalizeBoardUpdate(saved)
+        ? [saved]
+        : [];
 
   const [secretariat, referee, roster, schedule, rules] = await Promise.all([
     safeStoreJson(store, "content/board-meeting-documents.json"),
@@ -286,35 +331,34 @@ async function loadBoardLatestUpdate(store) {
     safeStoreJson(store, "content/rules.json")
   ]);
   const candidates = [];
-  const newestSecretariat = Array.isArray(secretariat)
-    ? secretariat.slice().sort((a, b) => boardUpdateTime(b?.uploadedAt) - boardUpdateTime(a?.uploadedAt))[0]
-    : null;
-  const newestReferee = Array.isArray(referee)
-    ? referee.slice().sort((a, b) => boardUpdateTime(b?.uploadedAt) - boardUpdateTime(a?.uploadedAt))[0]
-    : null;
-  const newestSchedule = Array.isArray(schedule)
-    ? schedule.slice().sort((a, b) => boardUpdateTime(b?.updatedAt) - boardUpdateTime(a?.updatedAt))[0]
-    : null;
-
-  if (newestSecretariat?.uploadedAt) candidates.push({
-    category: "documents",
-    message: `事務局資料「${cleanBoardUpdateMessage(newestSecretariat.fileName, "資料")}」を保存しました`,
-    updatedAt: newestSecretariat.uploadedAt
+  if (Array.isArray(secretariat)) secretariat.forEach(item => {
+    if (!item?.uploadedAt) return;
+    candidates.push({
+      category: "documents",
+      message: `事務局資料「${cleanBoardUpdateMessage(item.fileName, "資料")}」を保存しました`,
+      updatedAt: item.uploadedAt
+    });
   });
-  if (newestReferee?.uploadedAt) candidates.push({
-    category: "documents",
-    message: `審判部資料「${cleanBoardUpdateMessage(newestReferee.fileName, "資料")}」を保存しました`,
-    updatedAt: newestReferee.uploadedAt
+  if (Array.isArray(referee)) referee.forEach(item => {
+    if (!item?.uploadedAt) return;
+    candidates.push({
+      category: "documents",
+      message: `審判部資料「${cleanBoardUpdateMessage(item.fileName, "資料")}」を保存しました`,
+      updatedAt: item.uploadedAt
+    });
   });
   if (roster?.updatedAt) candidates.push({
     category: "duty-roster",
     message: cleanBoardUpdateMessage(roster.latestUpdateMessage, "当番表を更新しました"),
     updatedAt: roster.updatedAt
   });
-  if (newestSchedule?.updatedAt) candidates.push({
-    category: "schedule",
-    message: `事務局スケジュール「${cleanBoardUpdateMessage(newestSchedule.title, "予定")}」を更新しました`,
-    updatedAt: newestSchedule.updatedAt
+  if (Array.isArray(schedule)) schedule.forEach(item => {
+    if (!item?.updatedAt) return;
+    candidates.push({
+      category: "schedule",
+      message: `事務局スケジュール「${cleanBoardUpdateMessage(item.title, "予定")}」を更新しました`,
+      updatedAt: item.updatedAt
+    });
   });
   const rulesData = Array.isArray(rules) ? rules[0] : null;
   if (rulesData?.updatedAt) candidates.push({
@@ -323,8 +367,9 @@ async function loadBoardLatestUpdate(store) {
     updatedAt: rulesData.updatedAt
   });
 
-  const latest = candidates.sort((a, b) => boardUpdateTime(b.updatedAt) - boardUpdateTime(a.updatedAt))[0];
-  return latest || null;
+  const history = recentBoardUpdates([...savedHistory, ...candidates]);
+  const latest = history[0] || null;
+  return latest ? { ...latest, history } : null;
 }
 
 function normalizeScheduleEntries(value) {
