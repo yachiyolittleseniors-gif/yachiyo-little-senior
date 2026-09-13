@@ -55,7 +55,7 @@ html{background:#071426}
 <meta charset="utf-8"/>
 <!-- Created by tatsuki.saitoh -->
 <meta name="author" content="tatsuki.saitoh">
-<meta content="width=device-width, initial-scale=1.0, minimum-scale=1.0, maximum-scale=1.0, viewport-fit=cover" name="viewport"/>
+<meta content="width=device-width, initial-scale=1.0, viewport-fit=cover" name="viewport"/>
 <title>八千代リトルシニア｜公式サイト</title>
 <style>
 :root{
@@ -4588,22 +4588,12 @@ function openProtectedArea(type){
    modal.hidden=false;
    setTimeout(()=>textInput.focus(),0);
  }
- function resetEditorZoom(){
-   const viewport=document.querySelector('meta[name="viewport"]');
-   if(!viewport)return;
-   const original=viewport.getAttribute('content')||'width=device-width, initial-scale=1.0, viewport-fit=cover';
-   const currentTop=window.scrollY;
-   viewport.setAttribute('content','width=device-width, initial-scale=1.0, maximum-scale=1.0, viewport-fit=cover');
-   requestAnimationFrame(()=>window.scrollTo({left:0,top:currentTop,behavior:'auto'}));
-   setTimeout(()=>viewport.setAttribute('content',original),180);
- }
  function closeEditor(){
    const active=document.activeElement;
    if(active&&typeof active.blur==='function')active.blur();
    textInput.blur();
    detailsInput.blur();
    modal.hidden=true;
-   resetEditorZoom();
  }
  function openDetails(){
    if(!state.visible||!state.text||!state.details)return;
@@ -5206,5 +5196,52 @@ body.photo-admin-on #accessPasswordChange{
   load();
 })();
 </script>
+<style id="home-mobile-width-final">
+/* トップページ：小型スマホでヘッダーとヒーローを画面内に固定 */
+@media(max-width:430px){
+  .header .nav{
+    width:100%!important;
+    max-width:100%!important;
+    min-width:0!important;
+  }
+  .header .brand{
+    min-width:0!important;
+    flex:1 1 auto!important;
+  }
+  .header .official-brand-wrap{
+    width:min(300px,calc(100vw - 82px))!important;
+    max-width:100%!important;
+    min-width:0!important;
+  }
+  .header .menu{
+    flex:0 0 44px!important;
+    width:44px!important;
+    min-width:44px!important;
+  }
+  #home>.hero .hero-inner,
+  #home>.hero .hero-main{
+    width:100%!important;
+    max-width:100%!important;
+    min-width:0!important;
+  }
+  #home>.hero .hero-main>h1{
+    max-width:100%!important;
+    font-size:clamp(28px,8.65vw,34px)!important;
+    letter-spacing:.015em!important;
+    white-space:nowrap!important;
+  }
+  #home>.hero .hero-copy,
+  #home>.hero .hero-announcement-message{
+    max-width:100%!important;
+    overflow-wrap:anywhere!important;
+  }
+  #home>.hero .btns,
+  #home>.hero .btn{
+    width:100%!important;
+    min-width:0!important;
+    max-width:100%!important;
+  }
+}
+</style>
 </body>
 </html>
