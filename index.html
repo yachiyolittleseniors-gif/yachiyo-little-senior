@@ -2152,7 +2152,7 @@ img,video,iframe{max-width:100%}
 body.photo-admin-on .hero-announcement-admin{display:inline-flex!important}
 .hero-announcement-modal-note{margin:0 0 14px;color:#596573;font-size:13px;line-height:1.7}
 #heroAnnouncementText{width:100%;min-height:82px;font-family:inherit;font-size:16px!important;line-height:1.55;resize:none}
-#heroAnnouncementDetails{width:100%;min-height:150px;font-family:inherit;font-size:15px!important;line-height:1.7;resize:vertical}
+#heroAnnouncementDetails{width:100%;min-height:150px;font-family:inherit;font-size:16px!important;line-height:1.7;resize:vertical}
 .hero-announcement-detail-card{border-top:4px solid var(--gold);color:#17202b}
 .hero-announcement-detail-card h3{padding-right:34px;color:var(--navy);font-family:serif;font-size:24px;line-height:1.5;white-space:pre-line}
 .hero-announcement-detail-body{max-height:min(54vh,440px);margin:0;overflow-y:auto;color:#4d5966;font-size:14px;font-weight:600;line-height:1.9;white-space:pre-wrap;overflow-wrap:anywhere}
@@ -4588,7 +4588,13 @@ function openProtectedArea(type){
    modal.hidden=false;
    setTimeout(()=>textInput.focus(),0);
  }
- function closeEditor(){textInput.blur();modal.hidden=true}
+ function closeEditor(){
+   const active=document.activeElement;
+   if(active&&typeof active.blur==='function')active.blur();
+   textInput.blur();
+   detailsInput.blur();
+   modal.hidden=true;
+ }
  function openDetails(){
    if(!state.visible||!state.text||!state.details)return;
    detailTitle.textContent=state.text;
