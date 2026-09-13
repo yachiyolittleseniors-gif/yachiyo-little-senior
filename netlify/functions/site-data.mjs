@@ -1388,7 +1388,7 @@ export default async (request, context) => {
       const documents = Array.isArray(current) ? current : [];
       const item = documents.find(entry => String(entry?.id || "") === id);
       if (!item) {
-        return json({ error: "PDFが見つかりません。" }, 404);
+        return json({ error: "資料が見つかりません。" }, 404);
       }
 
       await store.delete(String(item.storageKey || `result-documents/${id}.pdf`));
