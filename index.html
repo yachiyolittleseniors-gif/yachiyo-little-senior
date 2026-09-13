@@ -58,17 +58,13 @@ html{background:#071426}
 <meta content="width=device-width, initial-scale=1.0, viewport-fit=cover" name="viewport"/>
 <script id="ios-editor-zoom-recovery">
 (function(){
-  const normal='width=device-width, initial-scale=1.0, viewport-fit=cover';
   function recover(){
     const viewport=document.querySelector('meta[name="viewport"]');
     const vv=window.visualViewport;
     if(!viewport||!vv||vv.scale<=1.01)return;
     viewport.setAttribute('content','width=device-width, initial-scale=1.0, minimum-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover');
     window.scrollTo(0,0);
-    setTimeout(function(){
-      viewport.setAttribute('content',normal);
-      window.scrollTo(0,0);
-    },300);
+    requestAnimationFrame(function(){window.scrollTo(0,0)});
   }
   window.addEventListener('pageshow',function(){setTimeout(recover,80)});
   window.addEventListener('load',function(){setTimeout(recover,180)});
