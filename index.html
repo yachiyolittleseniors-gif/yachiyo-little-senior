@@ -56,29 +56,6 @@ html{background:#071426}
 <!-- Created by tatsuki.saitoh -->
 <meta name="author" content="tatsuki.saitoh">
 <meta content="width=device-width, initial-scale=1.0, viewport-fit=cover" name="viewport"/>
-<script id="ios-editor-zoom-recovery">
-(function(){
-  let recovering=false;
-  function recover(){
-    const viewport=document.querySelector('meta[name="viewport"]');
-    const vv=window.visualViewport;
-    if(!viewport||!vv||vv.scale<=1.01||recovering)return;
-    recovering=true;
-    viewport.setAttribute('content','width=device-width, initial-scale=1.0, minimum-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover');
-    window.scrollTo(0,0);
-    requestAnimationFrame(function(){window.scrollTo(0,0)});
-    setTimeout(function(){recovering=false;window.scrollTo(0,0)},400);
-  }
-  function scheduleRecovery(){
-    [0,100,300,700,1200,2000].forEach(function(delay){setTimeout(recover,delay)});
-  }
-  window.addEventListener('pageshow',scheduleRecovery);
-  window.addEventListener('load',scheduleRecovery);
-  if(window.visualViewport){
-    window.visualViewport.addEventListener('resize',recover);
-  }
-})();
-</script>
 <title>八千代リトルシニア｜公式サイト</title>
 <style>
 :root{
@@ -2153,8 +2130,6 @@ img,video,iframe{max-width:100%}
 
 <style id="hero-announcement-style">
 .hero-announcement{display:none;position:relative;isolation:isolate;overflow:hidden;width:100%;box-sizing:border-box;margin:0 0 26px;padding:12px 22px;border:1px solid rgba(226,189,103,.9);background:transparent;color:#f4d98f;line-height:1.45;text-shadow:0 2px 8px rgba(0,0,0,.72);box-shadow:none;overflow-wrap:anywhere}
-.hero-announcement.has-details{cursor:pointer;-webkit-tap-highlight-color:transparent}
-.hero-announcement.has-details:focus-visible{outline:2px solid #f4d98f;outline-offset:3px}
 .hero-announcement.is-visible{display:flex;flex-direction:column;align-items:flex-start;gap:4px;transform:translateY(-50px);margin-bottom:-24px}
 .hero-main>.eyebrow{margin-top:34px}
 .hero-announcement.is-visible+.eyebrow{margin-top:0}
@@ -2167,18 +2142,12 @@ img,video,iframe{max-width:100%}
 }
 .hero-announcement-label{position:relative;z-index:2;color:#d7b45f;font-size:clamp(10px,1.15vw,13px);font-weight:800;line-height:1.25;letter-spacing:.22em}
 .hero-announcement-message{position:relative;z-index:2;width:100%;color:#f4d98f;font-size:clamp(15px,1.7vw,21px);font-weight:800;line-height:1.45;letter-spacing:.08em;text-align:center;white-space:pre-line}
-.hero-announcement-detail-hint{position:relative;z-index:2;align-self:flex-end;color:#e8c978;font-size:10px;font-weight:800;letter-spacing:.08em;text-shadow:0 2px 8px rgba(0,0,0,.72)}
-.hero-announcement-detail-hint[hidden]{display:none}
 .hero-announcement.is-visible::after{content:"";position:absolute;z-index:1;top:-45%;bottom:-45%;left:-38%;width:24%;pointer-events:none;background:linear-gradient(90deg,transparent,rgba(255,232,166,.42),transparent);filter:blur(1px);transform:skewX(-18deg);animation:heroAnnouncementShine 3s ease-in-out infinite}
 @keyframes heroAnnouncementShine{0%,68%{left:-38%;opacity:0}72%{opacity:1}92%{left:118%;opacity:1}100%{left:118%;opacity:0}}
 .hero-announcement-admin{display:none!important}
 body.photo-admin-on .hero-announcement-admin{display:inline-flex!important}
 .hero-announcement-modal-note{margin:0 0 14px;color:#596573;font-size:13px;line-height:1.7}
 #heroAnnouncementText{width:100%;min-height:82px;font-family:inherit;font-size:16px!important;line-height:1.55;resize:none}
-#heroAnnouncementDetails{width:100%;min-height:150px;font-family:inherit;font-size:16px!important;line-height:1.7;resize:vertical}
-.hero-announcement-detail-card{border-top:4px solid var(--gold);color:#17202b}
-.hero-announcement-detail-card h3{padding-right:34px;color:var(--navy);font-family:serif;font-size:24px;line-height:1.5;white-space:pre-line}
-.hero-announcement-detail-body{max-height:min(54vh,440px);margin:0;overflow-y:auto;color:#4d5966;font-size:14px;font-weight:600;line-height:1.9;white-space:pre-wrap;overflow-wrap:anywhere}
 .hero-announcement-visible{display:flex!important;align-items:center;gap:10px;font-size:15px!important}
 .hero-announcement-visible input{width:20px!important;height:20px;margin:0!important}
 .hero-announcement-actions{display:flex;justify-content:flex-end;gap:10px;margin-top:18px}
@@ -3616,7 +3585,7 @@ body.photo-admin-on .recruit-mode-admin{display:block}
 <main class="page show" id="home">
 <section class="hero"><div class="hero-inner">
 <div class="hero-main">
-<div id="heroAnnouncement" class="hero-announcement" role="button" aria-label="お知らせの詳細を見る" aria-live="polite" aria-haspopup="dialog" aria-controls="heroAnnouncementDetailModal"><span class="hero-announcement-label">お知らせ</span><span id="heroAnnouncementMessage" class="hero-announcement-message"></span><span id="heroAnnouncementDetailHint" class="hero-announcement-detail-hint" hidden>詳しく見る ›</span></div>
+<div id="heroAnnouncement" class="hero-announcement" role="status"><span class="hero-announcement-label">お知らせ</span><span id="heroAnnouncementMessage" class="hero-announcement-message"></span></div>
 <div class="pc-reference-hero-copy" aria-hidden="true">
   <h1>硬式野球6年間計画</h1>
   <div class="pc-reference-goldline"></div>
@@ -3723,21 +3692,12 @@ body.photo-admin-on .recruit-mode-admin{display:block}
   </div>
 </div>
 
-<div id="heroAnnouncementDetailModal" class="news-modal" hidden role="dialog" aria-modal="true" aria-labelledby="heroAnnouncementDetailTitle">
-  <div class="news-modal-card hero-announcement-detail-card">
-    <button type="button" id="heroAnnouncementDetailClose" class="news-close" aria-label="閉じる">×</button>
-    <h3 id="heroAnnouncementDetailTitle">お知らせ</h3>
-    <p id="heroAnnouncementDetailBody" class="hero-announcement-detail-body"></p>
-  </div>
-</div>
-
 <div id="heroAnnouncementModal" class="news-modal" hidden role="dialog" aria-modal="true" aria-labelledby="heroAnnouncementModalTitle">
   <div class="news-modal-card">
     <button type="button" id="heroAnnouncementClose" class="news-close" aria-label="閉じる">×</button>
     <h3 id="heroAnnouncementModalTitle">トップのお知らせを編集</h3>
-    <p class="hero-announcement-modal-note">トップの表示文は2行まで、タップ後の詳細内容は改行して入力できます。表示しない場合はチェックを外してください。</p>
-    <label>トップに表示する文章<textarea id="heroAnnouncementText" rows="2" maxlength="100" placeholder="例：祝　関東大会出場 🎉"></textarea></label>
-    <label>タップ後に表示する詳細内容<textarea id="heroAnnouncementDetails" rows="6" maxlength="1000" placeholder="お知らせの詳しい内容を入力"></textarea></label>
+    <p class="hero-announcement-modal-note">改行して2行まで入力できます。表示しない場合はチェックを外してください。</p>
+    <label>表示する文章<textarea id="heroAnnouncementText" rows="2" maxlength="100" placeholder="例：祝　関東大会出場 🎉"></textarea></label>
     <label class="hero-announcement-visible"><input id="heroAnnouncementVisible" type="checkbox">トップに表示する</label>
     <div class="hero-announcement-actions">
       <button type="button" id="heroAnnouncementCancel">キャンセル</button>
@@ -4563,31 +4523,21 @@ function openProtectedArea(type){
  const cancel=document.getElementById('heroAnnouncementCancel');
  const save=document.getElementById('heroAnnouncementSave');
  const textInput=document.getElementById('heroAnnouncementText');
- const detailsInput=document.getElementById('heroAnnouncementDetails');
  const visibleInput=document.getElementById('heroAnnouncementVisible');
- const detailHint=document.getElementById('heroAnnouncementDetailHint');
- const detailModal=document.getElementById('heroAnnouncementDetailModal');
- const detailClose=document.getElementById('heroAnnouncementDetailClose');
- const detailTitle=document.getElementById('heroAnnouncementDetailTitle');
- const detailBody=document.getElementById('heroAnnouncementDetailBody');
- if(!banner||!message||!edit||!modal||!close||!cancel||!save||!textInput||!detailsInput||!visibleInput||!detailHint||!detailModal||!detailClose||!detailTitle||!detailBody)return;
+ if(!banner||!message||!edit||!modal||!close||!cancel||!save||!textInput||!visibleInput)return;
 
  const cacheKey='yachiyoHeroAnnouncement';
- let state={text:'祝　関東大会出場 🎉',details:'',visible:false};
+ let state={text:'祝　関東大会出場 🎉',visible:false};
  function limitToTwoLines(value){
    return String(value||'').replace(/\r\n?/g,'\n').split('\n').slice(0,2).join('\n').slice(0,100);
  }
  function normalize(value){
    if(!value||Array.isArray(value)||typeof value!=='object')return state;
-   return {text:limitToTwoLines(value.text).trim(),details:String(value.details||'').replace(/\r\n?/g,'\n').trim().slice(0,1000),visible:value.visible===true};
+   return {text:limitToTwoLines(value.text).trim(),visible:value.visible===true};
  }
  function render(){
    message.textContent=state.text;
    banner.classList.toggle('is-visible',Boolean(state.visible&&state.text));
-   const hasDetails=Boolean(state.visible&&state.text&&state.details);
-   banner.classList.toggle('has-details',hasDetails);
-   banner.tabIndex=hasDetails?0:-1;
-   detailHint.hidden=!hasDetails;
  }
  try{
    const cached=JSON.parse(localStorage.getItem(cacheKey)||'null');
@@ -4606,25 +4556,11 @@ function openProtectedArea(type){
  }
  function openEditor(){
    textInput.value=state.text;
-   detailsInput.value=state.details;
    visibleInput.checked=state.visible;
    modal.hidden=false;
+   setTimeout(()=>textInput.focus(),0);
  }
- function closeEditor(){
-   const active=document.activeElement;
-   if(active&&typeof active.blur==='function')active.blur();
-   textInput.blur();
-   detailsInput.blur();
-   modal.hidden=true;
- }
- function openDetails(){
-   if(!state.visible||!state.text||!state.details)return;
-   detailTitle.textContent=state.text;
-   detailBody.textContent=state.details;
-   detailModal.hidden=false;
-   setTimeout(()=>detailClose.focus(),0);
- }
- function closeDetails(){detailModal.hidden=true;banner.focus({preventScroll:true})}
+ function closeEditor(){textInput.blur();modal.hidden=true}
 
  textInput.addEventListener('input',function(){
    const limited=limitToTwoLines(textInput.value);
@@ -4632,20 +4568,11 @@ function openProtectedArea(type){
  });
 
  edit.addEventListener('click',openEditor);
- banner.addEventListener('click',openDetails);
- banner.addEventListener('keydown',event=>{
-   if(event.key!=='Enter'&&event.key!==' ')return;
-   event.preventDefault();
-   openDetails();
- });
- detailClose.addEventListener('click',closeDetails);
- detailModal.addEventListener('click',event=>{if(event.target===detailModal)closeDetails()});
- document.addEventListener('keydown',event=>{if(event.key==='Escape'&&!detailModal.hidden)closeDetails()});
  close.addEventListener('click',closeEditor);
  cancel.addEventListener('click',closeEditor);
  modal.addEventListener('click',event=>{if(event.target===modal)closeEditor()});
  save.addEventListener('click',async function(){
-   const next={text:limitToTwoLines(textInput.value).trim(),details:String(detailsInput.value||'').replace(/\r\n?/g,'\n').trim().slice(0,1000),visible:visibleInput.checked};
+   const next={text:limitToTwoLines(textInput.value).trim(),visible:visibleInput.checked};
    if(next.visible&&!next.text){alert('表示する文章を入力してください。');return}
    const password=sessionStorage.getItem('yachiyoAdminPassword')||'';
    if(!password){alert('管理画面に入り直してください。');return}
@@ -4664,10 +4591,9 @@ function openProtectedArea(type){
      try{localStorage.setItem(cacheKey,JSON.stringify(state))}catch(error){}
      render();
      closeEditor();
+     setTimeout(function(){window.scrollTo(0,0)},250);
+     setTimeout(function(){window.scrollTo(0,0)},800);
      showSaveNotice('保存しました');
-     setTimeout(function(){
-       window.location.replace(window.location.pathname+'?saved='+Date.now());
-     },180);
    }catch(error){alert('トップのお知らせを保存できませんでした。')}
    finally{save.disabled=false;save.textContent='保存する'}
  });
@@ -5219,52 +5145,5 @@ body.photo-admin-on #accessPasswordChange{
   load();
 })();
 </script>
-<style id="home-mobile-width-final">
-/* トップページ：小型スマホでヘッダーとヒーローを画面内に固定 */
-@media(max-width:430px){
-  .header .nav{
-    width:100%!important;
-    max-width:100%!important;
-    min-width:0!important;
-  }
-  .header .brand{
-    min-width:0!important;
-    flex:1 1 auto!important;
-  }
-  .header .official-brand-wrap{
-    width:min(300px,calc(100vw - 82px))!important;
-    max-width:100%!important;
-    min-width:0!important;
-  }
-  .header .menu{
-    flex:0 0 44px!important;
-    width:44px!important;
-    min-width:44px!important;
-  }
-  #home>.hero .hero-inner,
-  #home>.hero .hero-main{
-    width:100%!important;
-    max-width:100%!important;
-    min-width:0!important;
-  }
-  #home>.hero .hero-main>h1{
-    max-width:100%!important;
-    font-size:clamp(28px,8.65vw,34px)!important;
-    letter-spacing:.015em!important;
-    white-space:nowrap!important;
-  }
-  #home>.hero .hero-copy,
-  #home>.hero .hero-announcement-message{
-    max-width:100%!important;
-    overflow-wrap:anywhere!important;
-  }
-  #home>.hero .btns,
-  #home>.hero .btn{
-    width:100%!important;
-    min-width:0!important;
-    max-width:100%!important;
-  }
-}
-</style>
 </body>
 </html>
