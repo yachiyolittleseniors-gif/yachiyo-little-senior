@@ -56,6 +56,21 @@ html{background:#071426}
 <!-- Created by tatsuki.saitoh -->
 <meta name="author" content="tatsuki.saitoh">
 <meta content="width=device-width, initial-scale=1.0, viewport-fit=cover" name="viewport"/>
+<script id="ios-refresh-normalize">
+(function(){
+  const navigation=performance.getEntriesByType&&performance.getEntriesByType('navigation')[0];
+  if(!navigation||navigation.type!=='reload')return;
+  const guardKey='yachiyoRefreshZoomReset';
+  function normalize(){
+    const vv=window.visualViewport;
+    if(!vv||vv.scale<=1.01||sessionStorage.getItem(guardKey)==='1')return;
+    sessionStorage.setItem(guardKey,'1');
+    const cleanPath=window.location.pathname||'/';
+    window.location.replace(cleanPath+'?normal='+Date.now());
+  }
+  [150,400,800,1400].forEach(function(delay){setTimeout(normalize,delay)});
+})();
+</script>
 <title>八千代リトルシニア｜公式サイト</title>
 <style>
 :root{
