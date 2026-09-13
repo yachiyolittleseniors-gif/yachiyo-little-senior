@@ -742,26 +742,39 @@ export default async (request, context) => {
             : null;
 
           if (!item) {
-            return new Response("PDF not found", { status: 404 });
+            return new Response("File not found", { status: 404 });
           }
 
-          const pdf = await store.get(`result-documents/${id}.pdf`, {
+          const storageKey = String(item.storageKey || `result-documents/${id}.pdf`);
+          const file = await store.get(storageKey, {
             type: "blob",
             consistency: "strong"
           });
 
-          if (!pdf) {
-            return new Response("PDF not found", { status: 404 });
+          if (!file) {
+            return new Response("File not found", { status: 404 });
           }
 
-          const originalName = String(item.fileName || "document.pdf");
+          const allowedTypes = new Set(["application/pdf","image/jpeg","image/png","image/webp"]);
+          const contentType = allowedTypes.has(String(item.contentType || ""))
+            ? String(item.contentType)
+            : "application/pdf";
+          const originalName = String(item.fileName || "document");
           const encodedName = encodeURIComponent(originalName);
-          return new Response(pdf, {
+          const fallbackName = contentType === "application/pdf"
+            ? "tournament-document.pdf"
+            : contentType === "image/png"
+              ? "tournament-image.png"
+              : contentType === "image/webp"
+                ? "tournament-image.webp"
+                : "tournament-image.jpg";
+
+          return new Response(file, {
             status: 200,
             headers: {
-              "content-type": "application/pdf",
+              "content-type": contentType,
               "content-disposition":
-                `inline; filename="tournament.pdf"; filename*=UTF-8''${encodedName}`,
+                `inline; filename="${fallbackName}"; filename*=UTF-8''${encodedName}`,
               "cache-control": "public, max-age=300",
               "x-content-type-options": "nosniff"
             }
@@ -1162,7 +1175,7 @@ export default async (request, context) => {
         });
         const documents = Array.isArray(current) ? current : [];
         if (!documents.some(entry => String(entry?.id || "") === id)) {
-          return json({ error: "PDFが見つかりません。" }, 404);
+          return json({ error: "資料が見つかりません。" }, 404);
         }
         const item = documents.find(entry => String(entry?.id || "") === id);
         await store.delete(String(item?.storageKey || `${section}/${id}.pdf`));
@@ -1326,20 +1339,16 @@ export default async (request, context) => {
     ) {
       const tournament = String(body.tournament || "").trim();
       const fileName = String(body.fileName || "").trim();
-      const bytes = decodeDataUrl(body.dataUrl);
+      const decoded = decodeBoardMeetingDataUrl(body.dataUrl);
 
       if (!tournament || tournament.length > 160) {
         return json({ error: "大会名を確認してください。" }, 400);
       }
-      if (!fileName.toLowerCase().endsWith(".pdf") || !bytes) {
-        return json({ error: "PDFファイルを選択してください。" }, 400);
+      if (!decoded || !boardMeetingFileIsValid(fileName, decoded.contentType, decoded.bytes)) {
+        return json({ error: "PDF・JPEG・PNG・WebPファイルを選択してください。" }, 400);
       }
-      if (bytes.byteLength > 6 * 1024 * 1024) {
-        return json({ error: "PDFは6MB以下にしてください。" }, 413);
-      }
-      const signature = new TextDecoder().decode(bytes.slice(0, 5));
-      if (signature !== "%PDF-") {
-        return json({ error: "正しいPDFファイルではありません。" }, 400);
+      if (decoded.bytes.byteLength > 6 * 1024 * 1024) {
+        return json({ error: "ファイルは6MB以下にしてください。" }, 413);
       }
 
       const current = await store.get(key, {
@@ -1348,16 +1357,19 @@ export default async (request, context) => {
       });
       const documents = Array.isArray(current) ? current : [];
       const id = crypto.randomUUID();
+      const storageKey = `result-documents/${id}.bin`;
       const item = {
         id,
         tournament,
         fileName,
-        size: bytes.byteLength,
+        contentType: decoded.contentType,
+        storageKey,
+        size: decoded.bytes.byteLength,
         uploadedAt: new Date().toISOString()
       };
 
-      await store.set(`result-documents/${id}.pdf`, bytes.buffer, {
-        metadata: { tournament, fileName }
+      await store.set(storageKey, decoded.bytes.buffer, {
+        metadata: { tournament, fileName, contentType: decoded.contentType }
       });
       const updated = [item, ...documents];
       await store.setJSON(key, updated);
@@ -1379,7 +1391,7 @@ export default async (request, context) => {
         return json({ error: "PDFが見つかりません。" }, 404);
       }
 
-      await store.delete(`result-documents/${id}.pdf`);
+      await store.delete(String(item.storageKey || `result-documents/${id}.pdf`));
       const updated = documents.filter(entry => String(entry?.id || "") !== id);
       await store.setJSON(key, updated);
       return json({ ok: true, data: updated });
