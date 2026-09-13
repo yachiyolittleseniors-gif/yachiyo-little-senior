@@ -2286,7 +2286,7 @@ body.admin-mode .game-admin-actions{display:flex!important}
   </section>
 
   <section id="results" class="results"></section>
-  <input id="tournamentPdfInput" type="file" accept=".pdf,application/pdf" hidden>
+  <input id="tournamentPdfInput" type="file" accept=".pdf,application/pdf,.jpg,.jpeg,image/jpeg,.png,image/png,.webp,image/webp" hidden>
   
 </main>
 
@@ -2524,11 +2524,16 @@ function renderResults(){
 
   box.innerHTML=[...groups.values()].map(group=>{
     const pdfs=resultDocuments.filter(item=>item.tournament===group.key);
+    const documentKind=item=>{
+      const type=String(item&&item.contentType||'').toLowerCase();
+      const name=String(item&&item.fileName||'').toLowerCase();
+      return type.startsWith('image/')||/\.(?:jpe?g|png|webp)$/.test(name)?'画像':'PDF';
+    };
     const pdfOpenHtml=!pdfs.length
       ? ''
       : pdfs.length===1
-        ? '<a class="tournament-head-pdf" style="display:inline!important;min-height:0!important;padding:0!important;border:0!important;border-radius:0!important;background:none!important;background-color:transparent!important;box-shadow:none!important;color:#e2bd67!important;font-size:12px!important;font-weight:900!important;line-height:1.3!important;text-decoration:none!important;" href="'+SHARED_API+'?section=result-documents&amp;file='+encodeURIComponent(pdfs[0].id)+'" target="_blank" rel="noopener" title="'+escHtml(pdfs[0].fileName)+'">PDFを開く</a>'
-        : '<details class="tournament-pdf-picker"><summary>PDFを開く</summary><div class="tournament-pdf-picker-list">'+
+        ? '<a class="tournament-head-pdf" style="display:inline!important;min-height:0!important;padding:0!important;border:0!important;border-radius:0!important;background:none!important;background-color:transparent!important;box-shadow:none!important;color:#e2bd67!important;font-size:12px!important;font-weight:900!important;line-height:1.3!important;text-decoration:none!important;" href="'+SHARED_API+'?section=result-documents&amp;file='+encodeURIComponent(pdfs[0].id)+'" target="_blank" rel="noopener" title="'+escHtml(pdfs[0].fileName)+'">'+documentKind(pdfs[0])+'を開く</a>'
+        : '<details class="tournament-pdf-picker"><summary>資料を開く</summary><div class="tournament-pdf-picker-list">'+
             pdfs.map(item=>'<a href="'+SHARED_API+'?section=result-documents&amp;file='+encodeURIComponent(item.id)+'" target="_blank" rel="noopener">'+escHtml(item.fileName)+'</a>').join('')+
           '</div></details>';
     const pdfHeaderHtml='<div class="tournament-head-pdfs">'+pdfOpenHtml+
@@ -2538,14 +2543,14 @@ function renderResults(){
           '<div class="tournament-pdf">'+
             '<div class="tournament-pdf-name">'+escHtml(item.fileName)+'</div>'+
             '<div class="tournament-pdf-actions">'+
-              '<a class="tournament-pdf-open" href="'+SHARED_API+'?section=result-documents&amp;file='+encodeURIComponent(item.id)+'" target="_blank" rel="noopener">PDFを開く</a>'+
+              '<a class="tournament-pdf-open" href="'+SHARED_API+'?section=result-documents&amp;file='+encodeURIComponent(item.id)+'" target="_blank" rel="noopener">'+documentKind(item)+'を開く</a>'+
               '<button class="tournament-pdf-delete admin-only" type="button" data-pdf-delete="'+escHtml(item.id)+'">削除</button>'+
             '</div>'+
           '</div>'
         ).join('')+'</div>'
       : '';
     const pdfSaveHtml=pdfs.length
-      ? '<details class="tournament-pdf-save-menu admin-only"><summary>PDFを保存</summary><div class="tournament-pdf-save-list">'+
+      ? '<details class="tournament-pdf-save-menu admin-only"><summary>資料を保存</summary><div class="tournament-pdf-save-list">'+
           pdfs.map(item=>'<a href="'+SHARED_API+'?section=result-documents&amp;file='+encodeURIComponent(item.id)+'" download="'+escHtml(item.fileName)+'">'+escHtml(item.fileName)+'</a>').join('')+
         '</div></details>'
       : '';
@@ -2612,7 +2617,7 @@ function renderResults(){
       pdfHeaderHtml+'</div>'+
       pdfHtml+
       pdfSaveHtml+
-      '<button class="tournament-pdf-add admin-only" type="button" data-pdf-add="'+escHtml(group.key)+'">＋ この大会のPDFを追加</button>'+
+      '<button class="tournament-pdf-add admin-only" type="button" data-pdf-add="'+escHtml(group.key)+'">＋ この大会の資料を追加</button>'+
       '<div class="tournament-games">'+gamesHtml+'</div>'+
     '</section>';
   }).join('');
@@ -2860,7 +2865,7 @@ document.getElementById('results').addEventListener('click',async event=>{
   }
   const remove=event.target.closest('[data-pdf-delete]');
   if(remove){
-    if(!confirm('このPDFを削除しますか？'))return;
+    if(!confirm('この資料を削除しますか？'))return;
     try{
       const response=await sharedAction('result-documents',{action:'deleteResultDocument',id:remove.dataset.pdfDelete});
       resultDocuments=Array.isArray(response.data)?response.data:[];
@@ -2871,8 +2876,10 @@ document.getElementById('results').addEventListener('click',async event=>{
 tournamentPdfInput.addEventListener('change',async()=>{
   const file=tournamentPdfInput.files&&tournamentPdfInput.files[0];
   if(!file||!pendingPdfTournament)return;
-  if(!file.name.toLowerCase().endsWith('.pdf')){alert('PDFファイルを選択してください。');return}
-  if(file.size>6*1024*1024){alert('PDFは6MB以下にしてください。');return}
+  const validFile=/\.(?:pdf|jpe?g|png|webp)$/i.test(file.name)&&
+    (!file.type||['application/pdf','image/jpeg','image/png','image/webp'].includes(file.type));
+  if(!validFile){alert('PDF・JPEG・PNG・WebPファイルを選択してください。');return}
+  if(file.size>6*1024*1024){alert('ファイルは6MB以下にしてください。');return}
   const reader=new FileReader();
   reader.onload=async()=>{
     try{
@@ -2884,11 +2891,11 @@ tournamentPdfInput.addEventListener('change',async()=>{
       });
       resultDocuments=Array.isArray(response.data)?response.data:[];
       renderResults();
-      if(typeof showSaveNotice==='function')showSaveNotice('PDFを追加しました');
+      if(typeof showSaveNotice==='function')showSaveNotice('資料を追加しました');
     }catch(e){}
     finally{tournamentPdfInput.value='';pendingPdfTournament=''}
   };
-  reader.onerror=()=>alert('PDFを読み込めませんでした。');
+  reader.onerror=()=>alert('資料を読み込めませんでした。');
   reader.readAsDataURL(file);
 });
 
