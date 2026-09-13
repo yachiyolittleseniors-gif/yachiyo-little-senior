@@ -3700,10 +3700,9 @@ body.photo-admin-on .recruit-mode-admin{display:block}
   </div>
 </div>
 
-<div id="heroAnnouncementDetailModal" class="news-modal" hidden role="dialog" aria-modal="true" aria-labelledby="heroAnnouncementDetailTitle">
+<div id="heroAnnouncementDetailModal" class="news-modal" hidden role="dialog" aria-modal="true" aria-label="お知らせ内容">
   <div class="news-modal-card hero-announcement-detail-card">
     <button type="button" id="heroAnnouncementDetailClose" class="news-close" aria-label="閉じる">×</button>
-    <h3 id="heroAnnouncementDetailTitle">お知らせ</h3>
     <p id="heroAnnouncementDetailBody" class="hero-announcement-detail-body"></p>
   </div>
 </div>
@@ -4545,9 +4544,8 @@ function openProtectedArea(type){
  const detailHint=document.getElementById('heroAnnouncementDetailHint');
  const detailModal=document.getElementById('heroAnnouncementDetailModal');
  const detailClose=document.getElementById('heroAnnouncementDetailClose');
- const detailTitle=document.getElementById('heroAnnouncementDetailTitle');
  const detailBody=document.getElementById('heroAnnouncementDetailBody');
- if(!banner||!message||!edit||!modal||!close||!cancel||!save||!textInput||!detailsInput||!visibleInput||!detailHint||!detailModal||!detailClose||!detailTitle||!detailBody)return;
+ if(!banner||!message||!edit||!modal||!close||!cancel||!save||!textInput||!detailsInput||!visibleInput||!detailHint||!detailModal||!detailClose||!detailBody)return;
 
  const cacheKey='yachiyoHeroAnnouncement';
  let state={text:'祝　関東大会出場 🎉',details:'',visible:false};
@@ -4597,7 +4595,6 @@ function openProtectedArea(type){
  }
  function openDetails(){
    if(!state.visible||!state.text||!state.details)return;
-   detailTitle.textContent=state.text;
    detailBody.textContent=state.details;
    detailModal.hidden=false;
    setTimeout(()=>detailClose.focus(),0);
