@@ -59,8 +59,11 @@ html{background:#071426}
 <script id="ios-refresh-normalize">
 (function(){
   const navigation=performance.getEntriesByType&&performance.getEntriesByType('navigation')[0];
-  if(!navigation||navigation.type!=='reload')return;
   const guardKey='yachiyoRefreshZoomReset';
+  if(!navigation||navigation.type!=='reload'){
+    sessionStorage.removeItem(guardKey);
+    return;
+  }
   function normalize(){
     const vv=window.visualViewport;
     if(!vv||vv.scale<=1.01||sessionStorage.getItem(guardKey)==='1')return;
