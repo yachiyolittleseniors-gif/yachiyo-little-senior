@@ -58,16 +58,25 @@ html{background:#071426}
 <meta content="width=device-width, initial-scale=1.0, viewport-fit=cover" name="viewport"/>
 <script id="ios-editor-zoom-recovery">
 (function(){
+  let recovering=false;
   function recover(){
     const viewport=document.querySelector('meta[name="viewport"]');
     const vv=window.visualViewport;
-    if(!viewport||!vv||vv.scale<=1.01)return;
+    if(!viewport||!vv||vv.scale<=1.01||recovering)return;
+    recovering=true;
     viewport.setAttribute('content','width=device-width, initial-scale=1.0, minimum-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover');
     window.scrollTo(0,0);
     requestAnimationFrame(function(){window.scrollTo(0,0)});
+    setTimeout(function(){recovering=false;window.scrollTo(0,0)},400);
   }
-  window.addEventListener('pageshow',function(){setTimeout(recover,80)});
-  window.addEventListener('load',function(){setTimeout(recover,180)});
+  function scheduleRecovery(){
+    [0,100,300,700,1200,2000].forEach(function(delay){setTimeout(recover,delay)});
+  }
+  window.addEventListener('pageshow',scheduleRecovery);
+  window.addEventListener('load',scheduleRecovery);
+  if(window.visualViewport){
+    window.visualViewport.addEventListener('resize',recover);
+  }
 })();
 </script>
 <title>八千代リトルシニア｜公式サイト</title>
