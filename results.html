@@ -1455,6 +1455,7 @@ body:not(.admin-mode) .delete{display:none!important}
 .scoreline{padding:18px 0 6px}
 .score{min-width:110px;text-align:center;font-variant-numeric:tabular-nums}
 .game .meta{line-height:1.6}
+.game-note{white-space:pre-wrap;overflow-wrap:anywhere}
 @media(max-width:650px){
   .game{padding:16px!important}
   .tournament{font-size:15px!important}
@@ -2275,7 +2276,7 @@ body.admin-mode .game-admin-actions{display:flex!important}
         </div>
         <div class="field full">
           <label for="note">メモ</label>
-          <textarea id="note" rows="3" placeholder="任意"></textarea>
+          <textarea id="note" rows="3" placeholder="任意（改行できます）"></textarea>
         </div>
       </div>
       <div class="actions">
@@ -2603,7 +2604,7 @@ function renderResults(){
             ? '<div class="team">'+opponentHtml+'</div><div class="score">'+Number(g.oppScore)+' - '+Number(g.ourScore)+'</div><div class="team">'+escHtml(ourTeam)+'</div>'
             : '<div class="team">'+escHtml(ourTeam)+'</div><div class="score">'+Number(g.ourScore)+' - '+Number(g.oppScore)+'</div><div class="team">'+opponentHtml+'</div>')+
         '</div>'+
-        (g.note?'<div class="meta" style="margin-top:12px">'+escHtml(g.note)+'</div>':'')+
+        (g.note?'<div class="meta game-note" style="margin-top:12px">'+escHtml(g.note)+'</div>':'')+
         '<div class="game-admin-actions admin-only">'+
           '<button class="game-edit" type="button" data-game-edit="'+escHtml(g.id)+'">編集</button>'+
           '<button class="delete" type="button" onclick="removeGame(\''+escHtml(g.id)+'\')">削除</button>'+
@@ -3031,6 +3032,21 @@ function openProtectedArea(type){
 <script>
 (function(){
   const KEY='yachiyoAdminMode';
+  async function verifyAdminPassword(password){
+    try{
+      const r=await fetch(SHARED_API+'?section=access-settings',{
+        method:'POST',
+        headers:{
+          'content-type':'application/json',
+          'x-admin-password':password
+        },
+        body:JSON.stringify({action:'verifyAdminPassword'})
+      });
+      return {ok:r.ok,status:r.status};
+    }catch(error){
+      return {ok:false,status:0};
+    }
+  }
   function apply(){
     const on=sessionStorage.getItem(KEY)==='1';
     document.body.classList.toggle('admin-mode',on);
@@ -3040,7 +3056,7 @@ function openProtectedArea(type){
       b.style.display=on?'block':'none';
     }
   }
-  window.enableAdminMode=function(){
+  window.enableAdminMode=async function(){
     if(document.body.classList.contains('admin-mode')){
       sessionStorage.removeItem(KEY);
       sessionStorage.removeItem('yachiyoAdminPassword');
@@ -3052,6 +3068,21 @@ function openProtectedArea(type){
     }
     const p=prompt('管理者パスワードを入力してください');
     if(!p)return;
+
+    const b=document.getElementById('adminModeToggle');
+    if(b){b.disabled=true;b.textContent='確認中...'}
+    const auth=await verifyAdminPassword(p);
+    if(b)b.disabled=false;
+    if(!auth.ok){
+      sessionStorage.removeItem(KEY);
+      sessionStorage.removeItem('yachiyoAdminPassword');
+      apply();
+      if(auth.status===429)alert('試行回数の上限です。15分後に再度お試しください。');
+      else if(auth.status===503)alert('Netlifyの管理者パスワード設定を確認してください。');
+      else if(auth.status===0)alert('管理者パスワードを確認できませんでした。通信状況を確認してください。');
+      else alert('管理者パスワードが違います。');
+      return;
+    }
     sessionStorage.setItem('yachiyoAdminPassword',p);
     sessionStorage.setItem(KEY,'1');
     apply();
