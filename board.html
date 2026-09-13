@@ -39,7 +39,8 @@ h1{font-family:serif;font-weight:500;letter-spacing:.08em;margin:8px 0 6px;font-
 .lead strong{flex:0 0 auto;color:var(--navy);font-family:serif;font-size:17px}
 .lead span{color:#69737f}
 .grid{display:grid;grid-template-columns:minmax(0,760px);justify-content:center;gap:18px}
-.latest-update{display:grid;grid-template-columns:auto auto 1fr;align-items:center;gap:8px 12px;padding:16px 20px;border:2px solid #b8892f;border-radius:12px;background:#fffdfa;color:var(--navy);box-shadow:0 8px 20px rgba(7,20,38,.06)}
+.latest-update{display:grid;grid-template-columns:auto auto 1fr;align-items:center;gap:8px 12px;padding:16px 20px;border:2px solid #b8892f;border-radius:12px;background:#fffdfa;color:var(--navy);box-shadow:0 8px 20px rgba(7,20,38,.06);cursor:pointer;-webkit-tap-highlight-color:transparent}
+.latest-update:focus-visible{outline:3px solid rgba(199,154,59,.35);outline-offset:3px}
 .latest-update[hidden]{display:none}
 .latest-update-heading{white-space:nowrap}
 .latest-update-kicker{display:none}
@@ -48,7 +49,18 @@ h1{font-family:serif;font-weight:500;letter-spacing:.08em;margin:8px 0 6px;font-
 .latest-update-date{white-space:nowrap;color:#7f8287;font-size:12px;font-weight:700}
 .latest-update-category{white-space:nowrap;color:#a97922;font-size:12px;font-weight:900}
 .latest-update-message{grid-column:1/-1;min-width:0;color:var(--navy);font-size:14px;font-weight:700;overflow-wrap:anywhere}
-@media(max-width:600px){.latest-update{gap:6px 10px;padding:14px 16px}.latest-update-message{font-size:13px}}
+.latest-update-hint{grid-column:1/-1;justify-self:end;color:#947126;font-size:10px;font-weight:800;line-height:1}
+.update-history{margin-top:-8px;padding:5px 18px 2px;border:1px solid #ded7c6;border-top:0;border-radius:0 0 12px 12px;background:#fff;box-shadow:0 10px 24px rgba(7,20,38,.06)}
+.update-history[hidden]{display:none}
+.update-history-head{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:14px 0 11px;border-bottom:1px solid #e7e3da;color:var(--navy)}
+.update-history-head strong{font-size:14px}.update-history-head span{color:#8a7350;font-size:10px;font-weight:800}
+.update-history-list{display:grid}
+.update-history-item{display:grid;grid-template-columns:auto auto 1fr;gap:5px 9px;padding:12px 0;border-bottom:1px solid #ece9e2}
+.update-history-item:last-child{border-bottom:0}
+.update-history-date{white-space:nowrap;color:#7f8287;font-size:11px;font-weight:700}
+.update-history-category{white-space:nowrap;color:#a97922;font-size:11px;font-weight:900}
+.update-history-message{grid-column:1/-1;color:var(--navy);font-size:12px;font-weight:700;line-height:1.6;overflow-wrap:anywhere}
+@media(max-width:600px){.latest-update{gap:6px 10px;padding:14px 16px}.latest-update-message{font-size:13px}.update-history{padding:5px 14px 2px}}
 .card{position:relative;overflow:hidden;background:#fff;border:1px solid #d8dce1;border-radius:12px;padding:26px 22px 22px;box-shadow:0 10px 28px rgba(7,20,38,.06)}
 .card::before{content:"";position:absolute;left:0;right:0;top:0;height:4px;background:linear-gradient(90deg,var(--gold),var(--gold2))}
 .card-kicker{font-size:10px;letter-spacing:.18em;color:#a27927;font-weight:800;margin-bottom:9px}
@@ -468,7 +480,7 @@ html{scroll-padding-top:var(--compact-header-height)}
 
 <main class="wrap">
   <div class="grid">
-    <aside class="latest-update" id="latestUpdateAnnouncement" aria-live="polite" hidden>
+    <aside class="latest-update" id="latestUpdateAnnouncement" role="button" tabindex="0" aria-expanded="false" aria-controls="updateHistoryPanel" aria-live="polite" hidden>
       <div class="latest-update-heading">
         <span class="latest-update-kicker">LATEST UPDATE</span>
         <span class="latest-update-title">最新更新</span>
@@ -478,7 +490,12 @@ html{scroll-padding-top:var(--compact-header-height)}
         <span class="latest-update-category" id="latestUpdateCategory"></span>
         <span class="latest-update-message" id="latestUpdateMessage"></span>
       </div>
+      <span class="latest-update-hint" id="latestUpdateHint">履歴を見る ▼</span>
     </aside>
+    <section class="update-history" id="updateHistoryPanel" aria-label="直近1か月の更新履歴" hidden>
+      <div class="update-history-head"><strong>更新履歴</strong><span>直近1か月</span></div>
+      <div class="update-history-list" id="updateHistoryList"></div>
+    </section>
     <section class="card attendance-card" id="coachAttendanceCard">
       <div class="card-kicker">COACH ATTENDANCE</div>
       <h2>指導者出欠確認</h2>
@@ -774,15 +791,63 @@ html{scroll-padding-top:var(--compact-header-height)}
   const dateElement=document.getElementById('latestUpdateDate');
   const categoryElement=document.getElementById('latestUpdateCategory');
   const messageElement=document.getElementById('latestUpdateMessage');
+  const historyPanel=document.getElementById('updateHistoryPanel');
+  const historyList=document.getElementById('updateHistoryList');
+  const historyHint=document.getElementById('latestUpdateHint');
   const categories={documents:'資料保存','duty-roster':'当番表',schedule:'カレンダー',rules:'チーム規約'};
 
-  if(!announcement||!dateElement||!categoryElement||!messageElement)return;
+  if(!announcement||!dateElement||!categoryElement||!messageElement||!historyPanel||!historyList||!historyHint)return;
 
   function formatDate(value){
     const date=new Date(value);
     if(Number.isNaN(date.getTime()))return '';
     return new Intl.DateTimeFormat('ja-JP',{timeZone:'Asia/Tokyo',year:'numeric',month:'numeric',day:'numeric'}).format(date);
   }
+
+  function recentHistory(value){
+    const history=Array.isArray(value)?value:[];
+    const cutoff=new Date();
+    cutoff.setMonth(cutoff.getMonth()-1);
+    return history.filter(item=>{
+      const time=new Date(item&&item.updatedAt).getTime();
+      return Number.isFinite(time)&&time>=cutoff.getTime()&&item.message;
+    }).sort((a,b)=>new Date(b.updatedAt)-new Date(a.updatedAt));
+  }
+
+  function renderHistory(history){
+    historyList.replaceChildren();
+    history.forEach(item=>{
+      const row=document.createElement('div');
+      row.className='update-history-item';
+      const date=document.createElement('time');
+      date.className='update-history-date';
+      date.dateTime=String(item.updatedAt||'');
+      date.textContent=formatDate(item.updatedAt);
+      const category=document.createElement('span');
+      category.className='update-history-category';
+      category.textContent=categories[item.category]||'更新';
+      const message=document.createElement('span');
+      message.className='update-history-message';
+      message.textContent=String(item.message||'');
+      row.append(date,category,message);
+      historyList.appendChild(row);
+    });
+  }
+
+  function setHistoryOpen(open){
+    const hasHistory=historyList.childElementCount>0;
+    const next=Boolean(open&&hasHistory);
+    historyPanel.hidden=!next;
+    announcement.setAttribute('aria-expanded',String(next));
+    historyHint.textContent=next?'履歴を閉じる ▲':'履歴を見る ▼';
+  }
+
+  announcement.addEventListener('click',()=>setHistoryOpen(historyPanel.hidden));
+  announcement.addEventListener('keydown',event=>{
+    if(event.key!=='Enter'&&event.key!==' ')return;
+    event.preventDefault();
+    setHistoryOpen(historyPanel.hidden);
+  });
 
   async function load(){
     try{
@@ -793,7 +858,10 @@ html{scroll-padding-top:var(--compact-header-height)}
       const body=await response.json();
       const data=body&&body.data;
       const date=formatDate(data&&data.updatedAt);
-      if(!data||!date||!data.message){announcement.hidden=true;return}
+      if(!data||!date||!data.message){announcement.hidden=true;historyPanel.hidden=true;return}
+      const history=recentHistory(Array.isArray(data.history)?data.history:[data]);
+      renderHistory(history);
+      setHistoryOpen(false);
       dateElement.dateTime=String(data.updatedAt||'');
       dateElement.textContent=date;
       categoryElement.textContent=categories[data.category]||'更新';
