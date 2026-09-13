@@ -1950,11 +1950,30 @@ body.photo-admin-on .seniorcup-admin-control{display:block}
   content:"";position:absolute;right:-55px;top:-55px;width:130px;height:130px;border-radius:50%;
   border:1px solid rgba(199,154,59,.1)
 }
+.kanto-policy-link{
+  display:block;
+  width:min(920px,100%);
+  margin:36px 0 0;
+  padding:14px 16px;
+  background:#fff;
+  border:2px solid #c79a3b;
+  border-radius:12px;
+}
+.kanto-policy-link img{
+  display:block;
+  width:100%;
+  height:auto;
+}
+.kanto-policy-link:focus-visible{
+  outline:3px solid rgba(199,154,59,.35);
+  outline-offset:4px;
+}
 .latest-kicker{font-size:10px!important}
 .latest-title{font-size:20px!important}
 @media(max-width:850px){
   .latest-board h2{font-size:28px!important}
   .latest-card{min-height:auto!important}
+  .kanto-policy-link{margin-top:32px;padding:12px 10px;border-radius:11px}
 }
 </style>
 
@@ -3807,6 +3826,9 @@ function closeModal(){
       <div class="latest-meta">読み込み中...</div>
     </article>
   </div>
+  <a class="kanto-policy-link" href="https://www.kantoleague.net/shop/sphone/" target="_blank" rel="noopener noreferrer" aria-label="日本リトルシニア中学硬式野球協会 関東連盟公式サイトを開く">
+    <img src="./kanto-league-policy.webp" width="1400" height="208" loading="lazy" decoding="async" alt="一般財団法人 日本リトルシニア中学硬式野球協会関東連盟 古き慣習の見直し">
+  </a>
 </section>
 
 <footer class="restored-footer">
