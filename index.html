@@ -3955,7 +3955,7 @@ function openProtectedArea(type){
     const scheduleGradeText=x=>{
       const grades=Array.isArray(x&&x.grades)?x.grades.map(String).filter(v=>['1','2','3'].includes(v)):[];
       if(grades.length===3)return '全学年';
-      return grades.map(v=>v+'年').join('・');
+      return grades.map(v=>v+'年生').join('・');
     };
     const upcomingGrades=scheduleGradeText(upcoming);
     sc.innerHTML=upcoming
