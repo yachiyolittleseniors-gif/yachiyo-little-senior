@@ -500,7 +500,7 @@ const LEGACY_RESULT_SEED = [
     "date": "2026-01",
     "grade": "3年",
     "round": "第一試合",
-    "battingOrder": "first",
+    "battingOrder": "second",
     "tournament": "第5回鹿嶋市長杯交流大会",
     "opponent": "小山ボーイズ",
     "venue": "",
@@ -513,7 +513,7 @@ const LEGACY_RESULT_SEED = [
     "date": "2026-01",
     "grade": "3年",
     "round": "第二試合",
-    "battingOrder": "first",
+    "battingOrder": "second",
     "tournament": "第5回鹿嶋市長杯交流大会",
     "opponent": "世田谷西シニア",
     "venue": "",
@@ -526,7 +526,7 @@ const LEGACY_RESULT_SEED = [
     "date": "2026-01",
     "grade": "3年",
     "round": "第三試合",
-    "battingOrder": "unknown",
+    "battingOrder": "second",
     "tournament": "第5回鹿嶋市長杯交流大会",
     "opponent": "水戸青藍舎ヤング",
     "venue": "",
@@ -539,7 +539,7 @@ const LEGACY_RESULT_SEED = [
     "date": "2026-02",
     "grade": "3年",
     "round": "一回戦",
-    "battingOrder": "first",
+    "battingOrder": "second",
     "tournament": "東関東支部春季大会",
     "opponent": "千葉南シニア",
     "venue": "",
@@ -552,7 +552,7 @@ const LEGACY_RESULT_SEED = [
     "date": "2026-02",
     "grade": "3年",
     "round": "二回戦",
-    "battingOrder": "first",
+    "battingOrder": "second",
     "tournament": "東関東支部春季大会",
     "opponent": "佐倉シニア",
     "venue": "",
@@ -565,7 +565,7 @@ const LEGACY_RESULT_SEED = [
     "date": "2026-02",
     "grade": "3年",
     "round": "敗者復活二回戦",
-    "battingOrder": "first",
+    "battingOrder": "second",
     "tournament": "東関東支部春季大会",
     "opponent": "千葉市ウイナーズ",
     "venue": "",
@@ -578,7 +578,7 @@ const LEGACY_RESULT_SEED = [
     "date": "2026-03",
     "grade": "3年",
     "round": "第一試合",
-    "battingOrder": "first",
+    "battingOrder": "second",
     "tournament": "第11回iwakiサンシャインcup交流大会",
     "opponent": "新庄シニア",
     "venue": "",
@@ -591,7 +591,7 @@ const LEGACY_RESULT_SEED = [
     "date": "2026-03",
     "grade": "3年",
     "round": "第二試合",
-    "battingOrder": "first",
+    "battingOrder": "second",
     "tournament": "第11回iwakiサンシャインcup交流大会",
     "opponent": "郡山シニア",
     "venue": "",
@@ -604,7 +604,7 @@ const LEGACY_RESULT_SEED = [
     "date": "2026-03",
     "grade": "3年",
     "round": "第三試合",
-    "battingOrder": "first",
+    "battingOrder": "second",
     "tournament": "第11回iwakiサンシャインcup交流大会",
     "opponent": "会津シニア",
     "venue": "",
@@ -617,7 +617,7 @@ const LEGACY_RESULT_SEED = [
     "date": "2026-03",
     "grade": "3年",
     "round": "第四試合",
-    "battingOrder": "first",
+    "battingOrder": "second",
     "tournament": "第11回iwakiサンシャインcup交流大会",
     "opponent": "宮城登米シニア",
     "venue": "",
@@ -630,7 +630,7 @@ const LEGACY_RESULT_SEED = [
     "date": "2026-04",
     "grade": "3年",
     "round": "三回戦",
-    "battingOrder": "first",
+    "battingOrder": "second",
     "tournament": "第19回読売新聞社杯兼第48回千葉県大会",
     "opponent": "柏シニア",
     "venue": "",
@@ -643,7 +643,7 @@ const LEGACY_RESULT_SEED = [
     "date": "2026-04",
     "grade": "3年",
     "round": "四回戦",
-    "battingOrder": "first",
+    "battingOrder": "second",
     "tournament": "第19回読売新聞社杯兼第48回千葉県大会",
     "opponent": "市川シニア",
     "venue": "",
@@ -656,7 +656,7 @@ const LEGACY_RESULT_SEED = [
     "date": "2026-05",
     "grade": "3年",
     "round": "一回戦",
-    "battingOrder": "first",
+    "battingOrder": "second",
     "tournament": "関東夏季大会",
     "opponent": "上尾シニア",
     "venue": "",
@@ -669,7 +669,7 @@ const LEGACY_RESULT_SEED = [
     "date": "2026-07",
     "grade": "3年",
     "round": "二回戦",
-    "battingOrder": "first",
+    "battingOrder": "second",
     "tournament": "CHIBA LOTTE MARINES CUP 2026",
     "opponent": "匝瑳シニア",
     "venue": "",
@@ -708,7 +708,7 @@ const LEGACY_RESULT_SEED = [
     "date": "2026-06",
     "grade": "2年",
     "round": "一回戦",
-    "battingOrder": "first",
+    "battingOrder": "second",
     "tournament": "千葉日報社新人大会",
     "opponent": "船橋シニア",
     "venue": "",
@@ -721,7 +721,7 @@ const LEGACY_RESULT_SEED = [
     "date": "2026-06",
     "grade": "2年",
     "round": "二回戦",
-    "battingOrder": "first",
+    "battingOrder": "second",
     "tournament": "千葉日報社新人大会",
     "opponent": "八千代中央V",
     "venue": "",
@@ -992,7 +992,7 @@ export default async (request, context) => {
             data = alreadyExists
               ? current.map(item =>
                   String(item?.id || "") === "legacy-44-2026-kashima-3"
-                    ? { ...item, battingOrder: "unknown" }
+                    ? { ...item, battingOrder: "second" }
                     : item
                 )
               : [...current, missingResult];
@@ -1001,6 +1001,53 @@ export default async (request, context) => {
           await store.setJSON(kashimaThirdMigrationKey, {
             done: true,
             added: Boolean(missingResult && !alreadyExists),
+            updatedAt: new Date().toISOString()
+          });
+        }
+
+        // 旧サイトでは勝敗記号がスコアの前なら八千代が先攻、
+        // 後ろなら八千代が後攻。2026年の旧サイト移行分を表記どおり補正する。
+        const legacySecondBattingIds = new Set([
+          "legacy-44-2026-kashima-1",
+          "legacy-44-2026-kashima-2",
+          "legacy-44-2026-kashima-3",
+          "legacy-44-2026-spring-1",
+          "legacy-44-2026-spring-2",
+          "legacy-44-2026-spring-3",
+          "legacy-44-2026-iwaki-1",
+          "legacy-44-2026-iwaki-2",
+          "legacy-44-2026-iwaki-3",
+          "legacy-44-2026-iwaki-4",
+          "legacy-44-2026-yomiuri-1",
+          "legacy-44-2026-yomiuri-2",
+          "legacy-44-2026-kanto-summer-1",
+          "legacy-44-2026-lotte-1",
+          "legacy-45-2026-chibanippo-1",
+          "legacy-45-2026-chibanippo-2"
+        ]);
+        const battingOrderMigrationKey =
+          "migrations/results-batting-order-20260914-v1.json";
+        const battingOrderMigrated = await store.get(
+          battingOrderMigrationKey,
+          { type: "json", consistency: "strong" }
+        );
+        if (!battingOrderMigrated?.done) {
+          const current = Array.isArray(data) ? data : [];
+          let updated = 0;
+          data = current.map(item => {
+            if (
+              legacySecondBattingIds.has(String(item?.id || "")) &&
+              item?.battingOrder !== "second"
+            ) {
+              updated += 1;
+              return { ...item, battingOrder: "second" };
+            }
+            return item;
+          });
+          if (updated > 0) await store.setJSON(key, data);
+          await store.setJSON(battingOrderMigrationKey, {
+            done: true,
+            updated,
             updatedAt: new Date().toISOString()
           });
         }
