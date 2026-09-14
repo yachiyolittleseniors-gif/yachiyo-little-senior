@@ -539,7 +539,7 @@ const LEGACY_RESULT_SEED = [
     "date": "2026-02",
     "grade": "3年",
     "round": "一回戦",
-    "battingOrder": "second",
+    "battingOrder": "first",
     "tournament": "東関東支部春季大会",
     "opponent": "千葉南シニア",
     "venue": "",
@@ -556,8 +556,8 @@ const LEGACY_RESULT_SEED = [
     "tournament": "東関東支部春季大会",
     "opponent": "佐倉シニア",
     "venue": "",
-    "ourScore": 9,
-    "oppScore": 1,
+    "ourScore": 1,
+    "oppScore": 9,
     "note": ""
   },
   {
@@ -617,7 +617,7 @@ const LEGACY_RESULT_SEED = [
     "date": "2026-03",
     "grade": "3年",
     "round": "第四試合",
-    "battingOrder": "second",
+    "battingOrder": "first",
     "tournament": "第11回iwakiサンシャインcup交流大会",
     "opponent": "宮城登米シニア",
     "venue": "",
@@ -630,7 +630,7 @@ const LEGACY_RESULT_SEED = [
     "date": "2026-04",
     "grade": "3年",
     "round": "三回戦",
-    "battingOrder": "second",
+    "battingOrder": "first",
     "tournament": "第19回読売新聞社杯兼第48回千葉県大会",
     "opponent": "柏シニア",
     "venue": "",
@@ -708,7 +708,7 @@ const LEGACY_RESULT_SEED = [
     "date": "2026-06",
     "grade": "2年",
     "round": "一回戦",
-    "battingOrder": "second",
+    "battingOrder": "first",
     "tournament": "千葉日報社新人大会",
     "opponent": "船橋シニア",
     "venue": "",
@@ -1005,28 +1005,30 @@ export default async (request, context) => {
           });
         }
 
-        // 旧サイトでは勝敗記号がスコアの前なら八千代が先攻、
-        // 後ろなら八千代が後攻。2026年の旧サイト移行分を表記どおり補正する。
+        // 実際の先攻・後攻を確認できない旧サイト移行分は、
+        // ユーザー指定により○（勝ち）を先攻表示、●（負け）を後攻表示にする。
+        const legacyFirstBattingIds = new Set([
+          "legacy-44-2026-spring-1",
+          "legacy-44-2026-iwaki-4",
+          "legacy-44-2026-yomiuri-1",
+          "legacy-45-2026-chibanippo-1"
+        ]);
         const legacySecondBattingIds = new Set([
           "legacy-44-2026-kashima-1",
           "legacy-44-2026-kashima-2",
           "legacy-44-2026-kashima-3",
-          "legacy-44-2026-spring-1",
           "legacy-44-2026-spring-2",
           "legacy-44-2026-spring-3",
           "legacy-44-2026-iwaki-1",
           "legacy-44-2026-iwaki-2",
           "legacy-44-2026-iwaki-3",
-          "legacy-44-2026-iwaki-4",
-          "legacy-44-2026-yomiuri-1",
           "legacy-44-2026-yomiuri-2",
           "legacy-44-2026-kanto-summer-1",
           "legacy-44-2026-lotte-1",
-          "legacy-45-2026-chibanippo-1",
           "legacy-45-2026-chibanippo-2"
         ]);
         const battingOrderMigrationKey =
-          "migrations/results-batting-order-20260914-v1.json";
+          "migrations/results-batting-order-20260914-v4.json";
         const battingOrderMigrated = await store.get(
           battingOrderMigrationKey,
           { type: "json", consistency: "strong" }
@@ -1035,12 +1037,26 @@ export default async (request, context) => {
           const current = Array.isArray(data) ? data : [];
           let updated = 0;
           data = current.map(item => {
+            const id = String(item?.id || "");
+            const battingOrder = legacyFirstBattingIds.has(id)
+              ? "first"
+              : legacySecondBattingIds.has(id)
+                ? "second"
+                : "";
+            const isSakuraResult = id === "legacy-44-2026-spring-2";
+            const scoreNeedsCorrection =
+              isSakuraResult &&
+              (Number(item?.ourScore) !== 1 || Number(item?.oppScore) !== 9);
             if (
-              legacySecondBattingIds.has(String(item?.id || "")) &&
-              item?.battingOrder !== "second"
+              (battingOrder && item?.battingOrder !== battingOrder) ||
+              scoreNeedsCorrection
             ) {
               updated += 1;
-              return { ...item, battingOrder: "second" };
+              return {
+                ...item,
+                battingOrder: battingOrder || item?.battingOrder,
+                ...(isSakuraResult ? { ourScore: 1, oppScore: 9 } : {})
+              };
             }
             return item;
           });
