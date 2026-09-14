@@ -1163,7 +1163,7 @@ renderP=function(){
     const gradeDiff=(order[b.grade]||0)-(order[a.grade]||0);
     if(gradeDiff)return gradeDiff;
     return playerSortKey(a).localeCompare(playerSortKey(b),'ja',{sensitivity:'base'})||String(a.name||'').localeCompare(String(b.name||''),'ja',{sensitivity:'base'});
-  }).filter(player=>currentGrade==='all'||player.grade===currentGrade).map(player=>`<tr data-grade="${ep(player.grade)}"><td class="cohort-col"><div class="cohort-grade-wrap">${gradeDisplayHtml(player)}</div></td><td><div class="player-name-wrap"><strong>${ep(player.name)}</strong><span class="player-name-actions"><button class="player-edit" type="button" onclick="editPlayer('${ep(player.id)}')">編集</button><button class="player-delete" type="button" onclick="deletePlayer('${ep(player.id)}')">削除</button></span></div></td><td>${ep(player.birth||'')}</td><td>${ep(player.team||'')}</td></tr>`).join('');
+  }).filter(player=>currentGrade==='all'||player.grade===currentGrade).map(player=>`<tr data-grade="${ep(player.grade)}"><td class="cohort-col"><div class="cohort-grade-wrap">${gradeDisplayHtml(player)}</div></td><td><div class="player-name-wrap"><strong>${ep(player.name)}</strong><span class="player-name-actions"><button class="player-edit" type="button" onclick="editPlayer('${ep(player.id)}')">編集・ふりがな</button><button class="player-delete" type="button" onclick="deletePlayer('${ep(player.id)}')">削除</button></span></div></td><td>${ep(player.birth||'')}</td><td>${ep(player.team||'')}</td></tr>`).join('');
   countP();
 };
 function resetPlayerEditor(){
