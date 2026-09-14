@@ -500,7 +500,7 @@ const LEGACY_RESULT_SEED = [
     "date": "2026-01",
     "grade": "3年",
     "round": "第一試合",
-    "battingOrder": "second",
+    "battingOrder": "first",
     "tournament": "第5回鹿嶋市長杯交流大会",
     "opponent": "小山ボーイズ",
     "venue": "",
@@ -513,7 +513,7 @@ const LEGACY_RESULT_SEED = [
     "date": "2026-01",
     "grade": "3年",
     "round": "第二試合",
-    "battingOrder": "second",
+    "battingOrder": "first",
     "tournament": "第5回鹿嶋市長杯交流大会",
     "opponent": "世田谷西シニア",
     "venue": "",
@@ -526,7 +526,7 @@ const LEGACY_RESULT_SEED = [
     "date": "2026-01",
     "grade": "3年",
     "round": "第三試合",
-    "battingOrder": "second",
+    "battingOrder": "first",
     "tournament": "第5回鹿嶋市長杯交流大会",
     "opponent": "水戸青藍舎ヤング",
     "venue": "",
@@ -565,7 +565,7 @@ const LEGACY_RESULT_SEED = [
     "date": "2026-02",
     "grade": "3年",
     "round": "敗者復活二回戦",
-    "battingOrder": "second",
+    "battingOrder": "first",
     "tournament": "東関東支部春季大会",
     "opponent": "千葉市ウイナーズ",
     "venue": "",
@@ -578,7 +578,7 @@ const LEGACY_RESULT_SEED = [
     "date": "2026-03",
     "grade": "3年",
     "round": "第一試合",
-    "battingOrder": "second",
+    "battingOrder": "first",
     "tournament": "第11回iwakiサンシャインcup交流大会",
     "opponent": "新庄シニア",
     "venue": "",
@@ -591,7 +591,7 @@ const LEGACY_RESULT_SEED = [
     "date": "2026-03",
     "grade": "3年",
     "round": "第二試合",
-    "battingOrder": "second",
+    "battingOrder": "first",
     "tournament": "第11回iwakiサンシャインcup交流大会",
     "opponent": "郡山シニア",
     "venue": "",
@@ -604,7 +604,7 @@ const LEGACY_RESULT_SEED = [
     "date": "2026-03",
     "grade": "3年",
     "round": "第三試合",
-    "battingOrder": "second",
+    "battingOrder": "first",
     "tournament": "第11回iwakiサンシャインcup交流大会",
     "opponent": "会津シニア",
     "venue": "",
@@ -643,7 +643,7 @@ const LEGACY_RESULT_SEED = [
     "date": "2026-04",
     "grade": "3年",
     "round": "四回戦",
-    "battingOrder": "second",
+    "battingOrder": "first",
     "tournament": "第19回読売新聞社杯兼第48回千葉県大会",
     "opponent": "市川シニア",
     "venue": "",
@@ -656,7 +656,7 @@ const LEGACY_RESULT_SEED = [
     "date": "2026-05",
     "grade": "3年",
     "round": "一回戦",
-    "battingOrder": "second",
+    "battingOrder": "first",
     "tournament": "関東夏季大会",
     "opponent": "上尾シニア",
     "venue": "",
@@ -669,7 +669,7 @@ const LEGACY_RESULT_SEED = [
     "date": "2026-07",
     "grade": "3年",
     "round": "二回戦",
-    "battingOrder": "second",
+    "battingOrder": "first",
     "tournament": "CHIBA LOTTE MARINES CUP 2026",
     "opponent": "匝瑳シニア",
     "venue": "",
@@ -721,7 +721,7 @@ const LEGACY_RESULT_SEED = [
     "date": "2026-06",
     "grade": "2年",
     "round": "二回戦",
-    "battingOrder": "second",
+    "battingOrder": "first",
     "tournament": "千葉日報社新人大会",
     "opponent": "八千代中央V",
     "venue": "",
@@ -992,7 +992,7 @@ export default async (request, context) => {
             data = alreadyExists
               ? current.map(item =>
                   String(item?.id || "") === "legacy-44-2026-kashima-3"
-                    ? { ...item, battingOrder: "second" }
+                    ? { ...item, battingOrder: "first" }
                     : item
                 )
               : [...current, missingResult];
@@ -1005,30 +1005,30 @@ export default async (request, context) => {
           });
         }
 
-        // 実際の先攻・後攻を確認できない旧サイト移行分は、
-        // ユーザー指定により○（勝ち）を先攻表示、●（負け）を後攻表示にする。
+        // 旧サイトの勝敗記号と点数から八千代側を特定し、
+        // 八千代の点数が左なら先攻、右なら後攻として移行する。
         const legacyFirstBattingIds = new Set([
-          "legacy-44-2026-spring-1",
-          "legacy-44-2026-iwaki-4",
-          "legacy-44-2026-yomiuri-1",
-          "legacy-45-2026-chibanippo-1"
-        ]);
-        const legacySecondBattingIds = new Set([
           "legacy-44-2026-kashima-1",
           "legacy-44-2026-kashima-2",
           "legacy-44-2026-kashima-3",
-          "legacy-44-2026-spring-2",
+          "legacy-44-2026-spring-1",
           "legacy-44-2026-spring-3",
           "legacy-44-2026-iwaki-1",
           "legacy-44-2026-iwaki-2",
           "legacy-44-2026-iwaki-3",
+          "legacy-44-2026-iwaki-4",
+          "legacy-44-2026-yomiuri-1",
           "legacy-44-2026-yomiuri-2",
           "legacy-44-2026-kanto-summer-1",
           "legacy-44-2026-lotte-1",
+          "legacy-45-2026-chibanippo-1",
           "legacy-45-2026-chibanippo-2"
         ]);
+        const legacySecondBattingIds = new Set([
+          "legacy-44-2026-spring-2"
+        ]);
         const battingOrderMigrationKey =
-          "migrations/results-batting-order-20260914-v4.json";
+          "migrations/results-batting-order-20260914-v5.json";
         const battingOrderMigrated = await store.get(
           battingOrderMigrationKey,
           { type: "json", consistency: "strong" }
