@@ -1290,12 +1290,32 @@ body:not(.admin-mode) .delete{display:none!important}
 
 <style>
 /* ===== Schedule category colors ===== */
-.calendar-event-title{border-radius:6px;padding:3px 5px!important}
+.calendar-event-title{
+  display:block;
+  width:100%;
+  box-sizing:border-box;
+  margin-top:3px;
+  border-radius:6px;
+  padding:4px 3px!important;
+  font-size:10px;
+  line-height:1.35;
+  overflow-wrap:anywhere;
+  word-break:normal;
+}
 .calendar-event-title.cat-practice{background:#eaf1fb;color:#284d7b}
 .calendar-event-title.cat-official{background:#fff0d1;color:#7a5610}
 .calendar-event-title.cat-friendly{background:#eaf7ee;color:#2f6b42}
 .calendar-event-title.cat-other{background:#f0f1f3;color:#555f69}
-.calendar-event-grade{display:block;margin-top:4px;color:#8f6918;font-size:9px;font-weight:800;line-height:1.25}
+.calendar-event-grade{
+  display:block;
+  width:100%;
+  margin-top:4px;
+  color:#8f6918;
+  font-size:9px;
+  font-weight:800;
+  line-height:1.25;
+  white-space:nowrap;
+}
 .calendar-day.holiday .calendar-day-num{color:#b82929!important}
 .calendar-legend{display:flex;gap:8px;flex-wrap:wrap;margin-top:12px;font-size:11px;color:#5f6975}
 .calendar-legend span{display:inline-flex;align-items:center;gap:5px}
