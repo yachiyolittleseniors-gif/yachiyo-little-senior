@@ -219,6 +219,8 @@ window.coachAccessReady=(async function(){
   }
   function readSaved(){
     try{const current=sessionStorage.getItem(storageKey)||'';if(current)return current}catch(e){}
+    const entry=performance.getEntriesByType&&performance.getEntriesByType('navigation')[0];
+    if(!entry||entry.type!=='reload')return '';
     try{
       const expires=Number(localStorage.getItem(reloadExpiryKey)||0);
       if(expires>Date.now())return localStorage.getItem(reloadKey)||'';
