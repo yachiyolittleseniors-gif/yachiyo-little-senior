@@ -42,6 +42,7 @@ const allowed = new Set([
   "board-meeting-documents",
   "board-meeting-schedule",
   "board-latest-update",
+  "document-archive",
   "access-settings"
 ]);
 
@@ -772,6 +773,60 @@ export default async (request, context) => {
         return json({ data: await loadBoardLatestUpdate(store) });
       }
 
+      if (section === "document-archive") {
+        const adminAuth = await verifyAdminPassword({
+          store,
+          request,
+          context,
+          expectedPassword: process.env.ADMIN_PASSWORD || "",
+        });
+        if (!adminAuth.ok) return adminAuthError(json, adminAuth);
+
+        const documents = await store.get(key, {
+          type: "json",
+          consistency: "strong"
+        });
+
+        if (url.searchParams.has("file")) {
+          const id = String(url.searchParams.get("file") || "");
+          const item = Array.isArray(documents)
+            ? documents.find(entry => String(entry?.id || "") === id)
+            : null;
+          if (!item) return new Response("File not found", { status: 404 });
+
+          const file = await store.get(String(item.storageKey || `document-archive/${id}.bin`), {
+            type: "blob",
+            consistency: "strong"
+          });
+          if (!file) return new Response("File not found", { status: 404 });
+
+          const allowedTypes = new Set(["application/pdf", "image/jpeg", "image/png", "image/webp"]);
+          const contentType = allowedTypes.has(String(item.contentType || ""))
+            ? String(item.contentType)
+            : "application/octet-stream";
+          const originalName = String(item.fileName || "document");
+          const encodedName = encodeURIComponent(originalName);
+          const fallbackName = contentType === "application/pdf"
+            ? "archive-document.pdf"
+            : contentType === "image/png"
+              ? "archive-image.png"
+              : contentType === "image/webp"
+                ? "archive-image.webp"
+                : "archive-image.jpg";
+          return new Response(file, {
+            status: 200,
+            headers: {
+              "content-type": contentType,
+              "content-disposition": `inline; filename="${fallbackName}"; filename*=UTF-8''${encodedName}`,
+              "cache-control": "private, no-store",
+              "x-content-type-options": "nosniff"
+            }
+          });
+        }
+
+        return json({ data: Array.isArray(documents) ? documents : [] });
+      }
+
       if (section === "result-documents") {
         const documents = await store.get(key, {
           type: "json",
@@ -1408,6 +1463,58 @@ export default async (request, context) => {
     }
 
     if (!adminAuth.ok) return adminAuthError(json, adminAuth);
+
+    if (
+      section === "document-archive" &&
+      body?.action === "uploadArchiveDocument"
+    ) {
+      const fileName = String(body.fileName || "").trim();
+      const decoded = decodeBoardMeetingDataUrl(body.dataUrl);
+      if (!decoded || !boardMeetingFileIsValid(fileName, decoded.contentType, decoded.bytes)) {
+        return json({ error: "PDF・JPEG・PNG・WebPファイルを選択してください。" }, 400);
+      }
+      if (decoded.bytes.byteLength > 6 * 1024 * 1024) {
+        return json({ error: "ファイルは6MB以下にしてください。" }, 413);
+      }
+
+      const current = await store.get(key, { type: "json", consistency: "strong" });
+      const documents = Array.isArray(current) ? current : [];
+      if (documents.length >= 12) {
+        return json({ error: "格納庫に保存できる資料は12件までです。" }, 400);
+      }
+
+      const id = crypto.randomUUID();
+      const storageKey = `document-archive/${id}.bin`;
+      const item = {
+        id,
+        fileName,
+        contentType: decoded.contentType,
+        storageKey,
+        size: decoded.bytes.byteLength,
+        uploadedAt: new Date().toISOString()
+      };
+      await store.set(storageKey, decoded.bytes.buffer, {
+        metadata: { fileName, contentType: decoded.contentType }
+      });
+      const updated = [item, ...documents];
+      await store.setJSON(key, updated);
+      return json({ ok: true, data: updated });
+    }
+
+    if (
+      section === "document-archive" &&
+      body?.action === "deleteArchiveDocument"
+    ) {
+      const id = String(body.id || "");
+      const current = await store.get(key, { type: "json", consistency: "strong" });
+      const documents = Array.isArray(current) ? current : [];
+      const item = documents.find(entry => String(entry?.id || "") === id);
+      if (!item) return json({ error: "資料が見つかりません。" }, 404);
+      await store.delete(String(item.storageKey || `document-archive/${id}.bin`));
+      const updated = documents.filter(entry => String(entry?.id || "") !== id);
+      await store.setJSON(key, updated);
+      return json({ ok: true, data: updated });
+    }
 
     if (
       section === "results" &&

@@ -545,6 +545,14 @@ html{scroll-padding-top:var(--compact-header-height)}
     <button id="saveRulesBtn" type="button">資料を追加</button>
     <div id="rulesAdminList"></div>
   </div>
+  <div id="documentArchiveAdminFields">
+    <strong>資料格納庫</strong>
+    <p class="document-archive-help">今後使うPDFや画像を保管できます。ここに保存した資料は、通常画面には公開されません。</p>
+    <label for="documentArchiveInput">資料ファイル（PDF・画像／1ファイル6MB以下・複数選択可）</label>
+    <input id="documentArchiveInput" type="file" accept="application/pdf,image/jpeg,image/png,image/webp,.pdf,.jpg,.jpeg,.png,.webp" multiple>
+    <button id="saveDocumentArchiveBtn" type="button">格納庫に保存</button>
+    <div id="documentArchiveList"></div>
+  </div>
   <button id="closeDensukeAdminBtn" type="button">キャンセル</button>
 </div>
 
@@ -554,6 +562,7 @@ html{scroll-padding-top:var(--compact-header-height)}
 <script src="./board-meetings.js?v=20260914-1"></script>
 <script src="./board-duty-roster.js?v=20260914-1"></script>
 <script src="./board-rules.js?v=20260914-4"></script>
+<script src="./board-archive.js?v=20260914-1"></script>
 <style id="nonblocking-save-notice-style">
 .save-notice{
   position:fixed;
