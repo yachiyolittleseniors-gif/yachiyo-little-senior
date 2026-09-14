@@ -496,7 +496,7 @@ html{scroll-padding-top:var(--fixed-header-height)}
 <section class="download-card">
 <h3>開催要項</h3>
 <p class="file-name" id="guidelineFileName">読み込み中...</p>
-<a class="download-btn is-loading" href="#" id="guidelineView" target="_blank" rel="noopener">PDFを開く</a>
+<a class="download-btn is-loading" href="#" id="guidelineView" target="_blank" rel="noopener">資料を開く</a>
 </section>
 <section class="download-card">
 <h3>申込書・選手名簿</h3>
@@ -523,8 +523,8 @@ html{scroll-padding-top:var(--fixed-header-height)}
 
 <div class="admin-grid">
 <div class="admin-box">
-<label for="guidelineUpload">開催要項を更新（PDF）</label>
-<input accept=".pdf,application/pdf" id="guidelineUpload" type="file"/>
+<label for="guidelineUpload">開催要項を更新（PDF・画像）</label>
+<input accept=".pdf,.jpg,.jpeg,.png,.webp,application/pdf,image/jpeg,image/png,image/webp" id="guidelineUpload" type="file"/>
 <p class="attachment-info" id="guidelineAttachmentInfo">現在の添付ファイル：読み込み中...</p>
 <button data-slot="guideline" type="button">開催要項を保存</button>
 <button class="attachment-delete" data-delete-slot="guideline" hidden type="button">添付ファイルを削除</button>
@@ -536,7 +536,7 @@ html{scroll-padding-top:var(--fixed-header-height)}
 <button data-slot="roster" type="button">申込書・選手名簿を保存</button>
 <button class="attachment-delete" data-delete-slot="roster" hidden type="button">添付ファイルを削除</button>
 </div>
-</div><p class="admin-note">開催要項はPDF、申込書・選手名簿はPDF・Excel（.pdf / .xls / .xlsx）に対応。1ファイル最大5MBです。</p><div class="admin-box" style="margin-bottom:14px">
+</div><p class="admin-note">開催要項はPDF・画像（JPEG / PNG / WebP）、申込書・選手名簿はPDF・Excel（.pdf / .xls / .xlsx）に対応。1ファイル最大5MBです。</p><div class="admin-box" style="margin-bottom:14px">
 <label>申込み返信先の表示</label>
 <p class="admin-note" id="replyModeStatus">現在：大会専用メールアドレス</p>
 <button id="replyModeBtn" type="button">お問い合わせに変更</button>
@@ -557,7 +557,7 @@ html{scroll-padding-top:var(--fixed-header-height)}
 (function(){
   const API='/.netlify/functions/site-data';
   const slots={
-    guideline:{label:'開催要項',section:'downloads-guideline',input:'guidelineUpload',name:'guidelineFileName',link:'guidelineView',openMode:'view',info:'guidelineAttachmentInfo',pdfOnly:true,emptyText:'現在公開されているPDFはありません。'},
+    guideline:{label:'開催要項',section:'downloads-guideline',input:'guidelineUpload',name:'guidelineFileName',link:'guidelineView',openMode:'view',info:'guidelineAttachmentInfo',guideline:true,emptyText:'現在公開されている資料はありません。'},
     roster:{label:'申込書・選手名簿',section:'downloads-roster',input:'rosterUpload',name:'rosterFileName',link:'rosterDownload',info:'rosterAttachmentInfo'}
   };
 
@@ -753,7 +753,7 @@ function renderReplyMode(){
   }
   function fileType(data){
     const ext=String(data&&data.fileName||'').split('.').pop().toUpperCase();
-    return ['PDF','XLS','XLSX'].includes(ext)?ext:'ファイル';
+    return ['PDF','XLS','XLSX','JPG','JPEG','PNG','WEBP'].includes(ext)?ext:'ファイル';
   }
   function render(slot,data){
     const c=slots[slot], n=document.getElementById(c.name), a=document.getElementById(c.link),info=document.getElementById(c.info),del=document.querySelector('[data-delete-slot="'+slot+'"]');
@@ -778,8 +778,9 @@ function renderReplyMode(){
   function valid(f,c){
     if(!f)return 'ファイルを選択してください。';
     const ext=(f.name.split('.').pop()||'').toLowerCase();
-    if(c.pdfOnly&&ext!=='pdf')return 'PDFファイルを選択してください。';
-    if(!['pdf','xls','xlsx'].includes(ext))return 'PDFまたはExcelファイルを選択してください。';
+    if(c.guideline){
+      if(!['pdf','jpg','jpeg','png','webp'].includes(ext))return 'PDF・JPEG・PNG・WebPファイルを選択してください。';
+    }else if(!['pdf','xls','xlsx'].includes(ext))return 'PDFまたはExcelファイルを選択してください。';
     if(f.size>5*1024*1024)return 'ファイルサイズは5MB以下にしてください。';
     return '';
   }

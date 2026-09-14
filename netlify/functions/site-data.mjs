@@ -1165,9 +1165,11 @@ export default async (request, context) => {
           });
         }
 
+        const storedMimeType = data.mimeType || match[1] || "application/octet-stream";
+        const guidelineTypes = new Set(["application/pdf", "image/jpeg", "image/png", "image/webp"]);
         const mimeType = section === "downloads-guideline"
-          ? "application/pdf"
-          : data.mimeType || match[1] || "application/octet-stream";
+          ? (guidelineTypes.has(storedMimeType) ? storedMimeType : "application/pdf")
+          : storedMimeType;
 
         const bytes = match[2]
           ? Uint8Array.from(
@@ -1458,17 +1460,13 @@ export default async (request, context) => {
 
     if (section === "downloads-guideline" && body?.data?.fileName) {
       const fileName = String(body.data.fileName || "").trim();
-      const bytes = decodeDataUrl(body.data.dataUrl);
+      const decoded = decodeBoardMeetingDataUrl(body.data.dataUrl);
 
-      if (!fileName.toLowerCase().endsWith(".pdf") || !bytes) {
-        return json({ error: "PDFファイルを選択してください。" }, 400);
+      if (!decoded || !boardMeetingFileIsValid(fileName, decoded.contentType, decoded.bytes)) {
+        return json({ error: "PDF・JPEG・PNG・WebPファイルを選択してください。" }, 400);
       }
-      if (bytes.byteLength > 5 * 1024 * 1024) {
-        return json({ error: "PDFは5MB以下にしてください。" }, 413);
-      }
-      const signature = new TextDecoder().decode(bytes.slice(0, 5));
-      if (signature !== "%PDF-") {
-        return json({ error: "正しいPDFファイルではありません。" }, 400);
+      if (decoded.bytes.byteLength > 5 * 1024 * 1024) {
+        return json({ error: "ファイルは5MB以下にしてください。" }, 413);
       }
     }
 
