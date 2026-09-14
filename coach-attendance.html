@@ -233,7 +233,13 @@ window.coachAccessReady=(async function(){
 
   const entered=prompt('指導者出欠確認のパスワードを入力してください。');
   if(entered===null){
-    location.replace('./board.html?from=coach');
+    let cameFromBoard=false;
+    try{cameFromBoard=new URL(document.referrer).pathname.endsWith('/board.html')}catch(e){}
+    if(cameFromBoard&&history.length>1){
+      history.back();
+    }else{
+      location.replace('./board.html?from=coach');
+    }
     return false;
   }
   if(await verify(entered)){
