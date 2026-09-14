@@ -142,6 +142,7 @@ h1{font-family:serif;font-weight:500;letter-spacing:.08em;margin:8px 0 6px;font-
 .btn:active{transform:translateY(1px)}
 .btn.gold{background:var(--gold);color:#fff}.btn.densuke-btn{background:var(--gold);color:#fff;border-color:var(--gold)}
 .btn.gold.disabled{background:#e3e3e0;border-color:#d3d3cf;color:#a2a6aa;pointer-events:none;cursor:not-allowed}
+.btn.gold.disabled.admin-gated{pointer-events:auto;cursor:pointer}
 .note{font-size:11px;color:#7b8490;margin-top:10px}
 .attendance-note{color:#9298a0}
 .footer{background:var(--navy);color:#9aa5b1;text-align:center;padding:28px 15px;font-size:11px}

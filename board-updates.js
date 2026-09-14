@@ -136,6 +136,7 @@
   const coachPasswordConfirmInput=document.getElementById('coachPasswordConfirmInput');
   const saveCoachPasswordBtn=document.getElementById('saveCoachPasswordBtn');
   const coachPasswordStatus=document.getElementById('coachPasswordStatus');
+  const DRAFT_ADMIN_KEY='yachiyoAttendanceDraftAdminPass';
 
   if(!attendanceBtn || !attendanceCard || !playerAttendanceBtn || !playerAttendanceCard || !legacyCard || !adminBtn || !panel || !endBtn || !resumeBtn || !closeAdminBtn || !warning) return;
 
@@ -159,7 +160,44 @@
         button.setAttribute('tabindex','-1');
       }
     });
+
+    // 移行前の保護者出欠確認だけは、見た目をグレーのまま管理者が開ける。
+    attendanceBtn.classList.toggle('admin-gated',!enabled);
+    if(!enabled){
+      attendanceBtn.setAttribute('aria-disabled','false');
+      attendanceBtn.removeAttribute('tabindex');
+      attendanceBtn.setAttribute('role','button');
+    }else{
+      attendanceBtn.removeAttribute('role');
+    }
   }
+
+  async function openDraftAttendance(){
+    const saved=sessionStorage.getItem(DRAFT_ADMIN_KEY)||'';
+    const adminPassword=saved||prompt('現在工事中\nパスワードは入力できません');
+    if(!adminPassword)return;
+    try{
+      const response=await fetch(API,{
+        method:'POST',
+        headers:{'content-type':'application/json','x-admin-password':adminPassword},
+        body:JSON.stringify({action:'adminPing'})
+      });
+      if(response.status===429){alert('試行回数の上限です。15分後に再度お試しください。');return}
+      if(response.status===401){sessionStorage.removeItem(DRAFT_ADMIN_KEY);alert('管理者パスワードが違います。');return}
+      if(!response.ok)throw new Error('auth');
+      sessionStorage.setItem(DRAFT_ADMIN_KEY,adminPassword);
+      location.href=attendanceBtn.dataset.href||'./attendance.html';
+    }catch(error){
+      sessionStorage.removeItem(DRAFT_ADMIN_KEY);
+      alert('管理者認証を確認できませんでした。');
+    }
+  }
+
+  attendanceBtn.addEventListener('click',event=>{
+    if(!attendanceBtn.classList.contains('admin-gated'))return;
+    event.preventDefault();
+    openDraftAttendance();
+  });
 
   function setEndedUI(ended){
     setAttendanceEnabled(ended);
@@ -182,14 +220,14 @@
     }
   }
 
-  // 初回表示は保護者出欠確認を優先し、設定取得後に必要な場合だけ伝助へ切り替える。
-  setAttendanceEnabled(true);
+  // 状態を確認できるまでは、保護者・選手出欠確認をグレー表示にする。
+  setAttendanceEnabled(false);
 
   async function loadSetting(){
     try{
       await window.boardAccessReady;
       const accessPassword=sessionStorage.getItem('yachiyoAttendancePass')||'';
-      const r=await fetch(API,{
+      const r=await fetch(API+'?config=1',{
         cache:'no-store',
         headers:{'x-access-password':accessPassword}
       });
@@ -198,7 +236,7 @@
       const ended = j?.config?.migrationEnded === true;
       setEndedUI(ended);
     }catch(e){
-      setEndedUI(true);
+      setEndedUI(false);
     }
   }
 

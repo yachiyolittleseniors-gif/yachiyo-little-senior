@@ -403,7 +403,23 @@ export default async (request, context) => {
         return json({ error: "Unauthorized" }, 401);
       }
 
-      if (url.searchParams.get("config") === "1") return json({ config: await getConfig(store) });
+      const config = await getConfig(store);
+      if (url.searchParams.get("config") === "1") return json({ config });
+
+      let draftAdmin = false;
+      if (!config.migrationEnded) {
+        if (!request.headers.get("x-admin-password")) {
+          return json({ config, locked: true });
+        }
+        const result = await verifyAdminPassword({
+          store,
+          request,
+          context,
+          expectedPassword: process.env.ADMIN_PASSWORD || "",
+        });
+        if (!result.ok) return adminAuthError(json, result);
+        draftAdmin = true;
+      }
 
       let saved = null;
       try { saved = await store.get(KEY, { type: "json" }); } catch { saved = null; }
@@ -412,8 +428,7 @@ export default async (request, context) => {
       data = await mergeMemberStates(store, merged.data);
       data = cleanupOldData(data);
       await store.setJSON(KEY, data);
-      const config = await getConfig(store);
-      return json({ data, config, locked: !config.migrationEnded });
+      return json({ data, config, locked: false, draftAdmin });
     }
 
     if (request.method !== "POST") return json({ error: "Method not allowed" }, 405);
@@ -429,6 +444,11 @@ export default async (request, context) => {
       "resumeDensuke",
       "adminSave",
     ]);
+    const config = await getConfig(store);
+    if (!config.migrationEnded) {
+      adminActions.add("answer");
+      adminActions.add("comment");
+    }
     let adminAuth = null;
     if (adminActions.has(action)) {
       adminAuth = await verifyAdminPassword({
@@ -442,6 +462,7 @@ export default async (request, context) => {
 
     if (
       (action === "answer" || action === "comment") &&
+      config.migrationEnded &&
       !(await accessOK(store, request))
     ) {
       return json({ error: "Unauthorized" }, 401);
@@ -468,9 +489,10 @@ export default async (request, context) => {
     data = cleanupOldData(data);
 
     if (["answer", "comment"].includes(action)) {
-      const config = await getConfig(store);
       if (!config.migrationEnded) {
-        return json({ error: "伝助終了前は保護者出欠確認へ入力できません。", locked: true }, 423);
+        if (!adminAuth?.ok) {
+          return json({ error: "伝助終了前は保護者出欠確認へ入力できません。", locked: true }, 423);
+        }
       }
     }
 
