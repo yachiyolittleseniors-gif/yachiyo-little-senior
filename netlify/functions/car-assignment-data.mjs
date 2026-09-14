@@ -35,12 +35,13 @@ function normalizeCar(car = {}, index = 0) {
 }
 
 function normalizeAssignment(value = {}) {
-  const grade = ["1", "2", "3", "all"].includes(String(value.grade)) ? String(value.grade) : "all";
+  const grade = ["1", "2", "3"].includes(String(value.grade)) ? String(value.grade) : "2";
   const date = /^\d{4}-\d{2}-\d{2}$/.test(String(value.date || "")) ? String(value.date) : "";
+  const allowedGameTypes = new Set(["official", "practice", "opening", "closing"]);
   return {
     date,
     grade,
-    gameType: value.gameType === "practice" ? "practice" : "official",
+    gameType: allowedGameTypes.has(value.gameType) ? value.gameType : "official",
     route: value.route === "highway" ? "highway" : "local",
     opponent: cleanText(value.opponent, 100),
     venue: cleanText(value.venue, 180),
@@ -48,6 +49,7 @@ function normalizeAssignment(value = {}) {
     bus: value.bus === true,
     busPassengers: Math.max(0, Math.min(100, Number(value.busPassengers) || 0)),
     umpireCar: value.umpireCar === true,
+    coachCar: value.coachCar === true,
     carCount: Math.max(0, Math.min(40, Number(value.carCount) || 0)),
     cars: Array.isArray(value.cars) ? value.cars.slice(0, 40).map(normalizeCar) : [],
     updatedAt: new Date().toISOString(),
