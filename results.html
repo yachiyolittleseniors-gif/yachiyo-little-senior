@@ -918,7 +918,7 @@ body.admin-mode .game-admin-actions{display:flex!important}
 <a href="./join">選手募集</a>
 <a href="./contact">お問い合わせ</a>
 </div>
-<button class="menu" onclick="toggleMenu()">☰</button>
+<button class="menu" type="button" aria-label="メニューを開く" aria-controls="mobileLinks" aria-expanded="false" onclick="toggleMenu()">☰</button>
 </nav>
 <div class="mobile-links" id="mobileLinks">
 <a href="./" onclick="toggleMenu()">HOME</a>
@@ -1731,7 +1731,10 @@ tournamentPdfInput.addEventListener('change',async()=>{
 <script>
 function toggleMenu(){
   const menu=document.getElementById('mobileLinks');
-  if(menu) menu.classList.toggle('show');
+  const button=document.querySelector('.menu');
+  if(!menu)return;
+  const open=menu.classList.toggle('show');
+  if(button){button.setAttribute('aria-expanded',open?'true':'false');button.setAttribute('aria-label',open?'メニューを閉じる':'メニューを開く')}
 }
 function openModal(){
   const modal=document.getElementById('modal');

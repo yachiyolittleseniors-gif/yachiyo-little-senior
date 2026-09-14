@@ -1,0 +1,82 @@
+#densukeToggleBtn{
+  display:none;
+  position:fixed !important;
+  right:max(12px,env(safe-area-inset-right)) !important;
+  left:auto !important;
+  top:auto !important;
+  bottom:calc(12px + env(safe-area-inset-bottom)) !important;
+  z-index:10001 !important;
+  margin:0 !important;
+  transform:none !important;
+  padding:10px 16px;
+  border:1px solid #c79a3b;
+  border-radius:999px;
+  background:#071426;
+  color:#c79a3b;
+  font-weight:700;
+  width:auto !important;
+  max-width:none !important;
+}
+#densukeAdminPanel{
+  display:none;
+  position:fixed !important;
+  right:max(12px,env(safe-area-inset-right)) !important;
+  left:auto !important;
+  top:auto !important;
+  bottom:calc(66px + env(safe-area-inset-bottom)) !important;
+  z-index:10000 !important;
+  width:min(92vw,680px) !important;
+  max-width:calc(100vw - 24px) !important;
+  max-height:min(70vh,620px) !important;
+  overflow-y:auto !important;
+  overflow-x:hidden !important;
+  -webkit-overflow-scrolling:touch;
+  overscroll-behavior:contain;
+  touch-action:pan-y;
+  padding:16px;
+  border:1px solid rgba(199,154,59,.45);
+  border-radius:14px;
+  background:rgba(7,20,38,.96);
+  color:#fff;
+  box-shadow:0 12px 35px rgba(0,0,0,.28);
+}
+#densukeAdminPanel.show{display:block}
+#densukeAdminPanel button{margin:6px;padding:10px 14px;border-radius:10px;border:1px solid #c79a3b;background:#071426;color:#fff}
+#densukeEndActions{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+#densukeAdminPanel .danger{background:#5e1515}
+#closeDensukeAdminBtn{background:#4d5662!important}
+#densukeAdminPanel .restore{background:#173e24}
+#densukeWarning{display:none;margin:12px 6px;color:#ff5b5b;font-weight:800;line-height:1.6}
+#densukeAdminStatus{font-size:12px;line-height:1.7;color:#d5dbe3}
+#coachPasswordAdminFields{margin-top:16px;padding-top:16px;border-top:1px solid rgba(255,255,255,.18)}
+#coachPasswordAdminFields label{display:block;margin:10px 6px 5px;font-size:12px;font-weight:700;color:#d5dbe3}
+#coachPasswordAdminFields input{width:100%;padding:11px 12px;border:1px solid rgba(199,154,59,.55);border-radius:9px;background:#fff;color:#17202b;font:inherit}
+#saveCoachPasswordBtn{width:100%;margin:12px 0 4px!important;background:#c79a3b!important;color:#fff!important}
+#coachPasswordStatus{min-height:0!important;margin:7px 6px 0!important;color:#d5dbe3!important;font-size:11px!important;line-height:1.6!important}
+#tournamentAdminFields{margin-top:16px;padding-top:16px;border-top:1px solid rgba(255,255,255,.18)}
+#tournamentAdminFields label{display:block;margin:10px 6px 5px;font-size:12px;font-weight:700;color:#d5dbe3}
+#tournamentAdminFields input{width:100%;padding:11px 12px;border:1px solid rgba(199,154,59,.55);border-radius:9px;background:#fff;color:#17202b;font:inherit}
+#tournamentAdminFields select{width:100%;padding:11px 12px;border:1px solid rgba(199,154,59,.55);border-radius:9px;background:#fff;color:#17202b;font:inherit}
+#uploadTournamentBtn{width:100%;margin:12px 0 4px!important;background:#c79a3b!important;color:#fff!important}
+#tournamentAdminList{display:grid;gap:8px;margin-top:12px}
+.tournament-admin-item{display:flex;align-items:center;gap:8px;padding:9px;border:1px solid rgba(255,255,255,.14);border-radius:9px;background:rgba(255,255,255,.06)}
+.tournament-admin-item span{min-width:0;flex:1;font-size:12px;line-height:1.5;overflow-wrap:anywhere}
+.tournament-admin-item button{flex:0 0 auto;margin:0!important;background:#5e1515!important}
+#dutyRosterAdminFields{margin-top:18px;padding-top:18px;border-top:1px solid rgba(255,255,255,.18)}
+#dutyRosterAdminFields label{display:block;margin:10px 6px 5px;font-size:12px;font-weight:700;color:#d5dbe3}
+#dutyRosterAdminFields input{width:100%;margin:6px 0 10px;color:#fff}
+#dutyRosterAdminHelp{margin:2px 6px 10px!important;min-height:0!important;color:#d5dbe3!important;font-size:11px!important;line-height:1.6!important}
+#saveDutyRosterBtn{width:100%;margin:4px 0!important;background:#c79a3b!important;color:#fff!important}
+#dutyRosterAdminList{display:grid;gap:8px;margin-top:12px}
+.duty-roster-admin-item{display:grid;grid-template-columns:minmax(0,1fr) auto;align-items:center;gap:8px;padding:9px;border:1px solid rgba(255,255,255,.14);border-radius:9px;background:rgba(255,255,255,.06)}
+.duty-roster-admin-item span{min-width:0;font-size:12px;line-height:1.5;overflow-wrap:anywhere}
+.duty-roster-admin-actions{display:flex;gap:4px;align-items:center}
+.duty-roster-admin-actions button{margin:0!important;padding:7px 9px!important}
+.duty-roster-admin-actions .duty-roster-delete{background:#5e1515!important}
+#rulesAdminFields{margin-top:18px;padding-top:18px;border-top:1px solid rgba(255,255,255,.18)}
+#rulesAdminFields input{width:100%;margin:6px 0 10px;color:#fff}
+#saveRulesBtn{width:100%;margin:4px 0!important;background:#c79a3b!important;color:#fff!important}
+#rulesAdminList{display:grid;gap:8px;margin-top:12px}
+.rules-admin-item{display:flex;align-items:center;gap:8px;padding:9px;border:1px solid rgba(255,255,255,.14);border-radius:9px;background:rgba(255,255,255,.06)}
+.rules-admin-item span{min-width:0;flex:1;font-size:12px;line-height:1.5;overflow-wrap:anywhere}
+.rules-admin-item button{flex:0 0 auto;margin:0!important;background:#5e1515!important}

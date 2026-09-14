@@ -1,0 +1,154 @@
+(function(){
+  const API='/.netlify/functions/site-data?section=referee-documents';
+  const COACH_AUTH_API='/.netlify/functions/coach-attendance-data';
+  const documentList=document.getElementById('refereeDocumentList');
+  const adminOpen=document.getElementById('refereeAdminOpen');
+  const adminPanel=document.getElementById('refereeAdminPanel');
+  const adminDocumentList=document.getElementById('refereeAdminDocumentList');
+  const fileInput=document.getElementById('refereeFileInput');
+  const fileSave=document.getElementById('refereeFileSave');
+  const fileCancel=document.getElementById('refereeFileCancel');
+  let documents=[];
+  let documentCoachPassword='';
+
+  if(!documentList||!adminOpen||!adminPanel||!adminDocumentList||!fileInput||!fileSave||!fileCancel)return;
+
+  function accessHeaders(json,coachPassword){
+    const headers={'x-access-password':sessionStorage.getItem('yachiyoAttendancePass')||''};
+    if(coachPassword)headers['x-coach-password']=coachPassword;
+    if(json)headers['content-type']='application/json';
+    return headers;
+  }
+
+  async function requireCoachPassword(){
+    const entered=prompt('パスワードを入力してください。');
+    if(entered===null)return '';
+    try{
+      const response=await fetch(COACH_AUTH_API,{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({action:'verifyCoachPassword',password:entered})});
+      if(response.ok)return entered;
+    }catch(e){}
+    alert('パスワードが違います。');
+    return '';
+  }
+
+  function formatSize(bytes){
+    const value=Number(bytes||0);
+    return value>=1024*1024?(value/1024/1024).toFixed(1)+'MB':Math.max(1,Math.round(value/1024))+'KB';
+  }
+
+  function render(){
+    documentList.replaceChildren();
+    const button=document.createElement('button');
+    button.className='meeting-document-library-link';
+    button.type='button';
+    button.setAttribute('data-open-referee-documents','');
+    button.textContent='保存済み資料を見る（'+documents.length+'件）';
+    documentList.appendChild(button);
+
+    adminDocumentList.replaceChildren();
+    if(!documents.length){
+      const empty=document.createElement('div');
+      empty.className='meeting-empty';
+      empty.textContent='削除できる資料はありません。';
+      adminDocumentList.appendChild(empty);
+      return;
+    }
+    documents.forEach(function(item){
+      const row=document.createElement('div');
+      row.className='meeting-admin-document-row';
+      const name=document.createElement('div');
+      name.className='meeting-admin-document-name';
+      name.textContent=(item.fileName||'審判部資料')+'（'+formatSize(item.size)+'）';
+      const remove=document.createElement('button');
+      remove.type='button';
+      remove.className='meeting-admin-document-delete';
+      remove.textContent='削除';
+      remove.addEventListener('click',function(){deleteDocument(item)});
+      row.append(name,remove);
+      adminDocumentList.appendChild(row);
+    });
+  }
+
+  function readAsDataUrl(file){
+    return new Promise(function(resolve,reject){
+      const reader=new FileReader();
+      reader.onload=function(){resolve(String(reader.result||''))};
+      reader.onerror=reject;
+      reader.readAsDataURL(file);
+    });
+  }
+
+  async function load(){
+    try{
+      await window.boardAccessReady;
+      const response=await fetch(API,{cache:'no-store',headers:accessHeaders(false)});
+      if(!response.ok)throw new Error();
+      const body=await response.json();
+      documents=Array.isArray(body.data)?body.data:[];
+      render();
+    }catch(e){render()}
+  }
+
+  adminOpen.addEventListener('click',async function(){
+    const password=await requireCoachPassword();
+    if(!password)return;
+    documentCoachPassword=password;
+    adminOpen.hidden=true;
+    adminPanel.hidden=false;
+    render();
+  });
+
+  fileCancel.addEventListener('click',function(){
+    fileInput.value='';
+    documentCoachPassword='';
+    adminPanel.hidden=true;
+    adminOpen.hidden=false;
+  });
+
+  documentList.addEventListener('click',function(event){
+    if(!event.target.closest('[data-open-referee-documents]'))return;
+    event.preventDefault();
+    window.location.assign('/secretariat-documents.html?department=referee&v=20260912-3');
+  });
+
+  fileSave.addEventListener('click',async function(){
+    const file=fileInput.files&&fileInput.files[0];
+    const allowedType=/^(application\/pdf|image\/(jpeg|png|webp))$/i.test(file&&file.type||'');
+    const allowedName=/\.(pdf|jpe?g|png|webp)$/i.test(file&&file.name||'');
+    if(!file||!allowedType||!allowedName){alert('PDF・JPEG・PNG・WebPファイルを選択してください。');return}
+    if(file.size>6*1024*1024){alert('ファイルは6MB以下にしてください。');return}
+    const password=documentCoachPassword||await requireCoachPassword();
+    if(!password)return;
+    documentCoachPassword=password;
+    fileSave.disabled=true;
+    fileSave.textContent='保存中...';
+    try{
+      const response=await fetch(API,{method:'POST',headers:accessHeaders(true,password),body:JSON.stringify({action:'uploadRefereeDocument',fileName:file.name,contentType:file.type||'',dataUrl:await readAsDataUrl(file)})});
+      const body=await response.json().catch(function(){return {}});
+      if(!response.ok)throw new Error(body.error||'資料を保存できませんでした。');
+      documents=Array.isArray(body.data)?body.data:documents;
+      fileInput.value='';
+      render();
+      showSaveNotice('審判部からのお知らせを保存しました');
+      window.refreshBoardLatestUpdate?.();
+    }catch(e){alert(e.message||'資料を保存できませんでした。')}
+    finally{fileSave.disabled=false;fileSave.textContent='選択した資料を保存'}
+  });
+
+  async function deleteDocument(item){
+    if(!confirm('「'+(item.fileName||'審判部資料')+'」を削除しますか？'))return;
+    const password=documentCoachPassword||await requireCoachPassword();
+    if(!password)return;
+    documentCoachPassword=password;
+    try{
+      const response=await fetch(API,{method:'POST',headers:accessHeaders(true,password),body:JSON.stringify({action:'deleteRefereeDocument',id:item.id})});
+      const body=await response.json().catch(function(){return {}});
+      if(!response.ok)throw new Error(body.error||'資料を削除できませんでした。');
+      documents=Array.isArray(body.data)?body.data:documents.filter(function(entry){return entry.id!==item.id});
+      render();
+      showSaveNotice('資料を削除しました');
+    }catch(e){alert(e.message||'資料を削除できませんでした。')}
+  }
+
+  load();
+})();

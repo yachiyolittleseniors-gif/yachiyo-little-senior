@@ -326,7 +326,8 @@
     display: block !important;
     color: #fff !important;
   }
-  #home .pc-reference-hero-copy h1 {
+  #home .pc-reference-hero-copy h1,
+  #home .pc-reference-hero-title {
     display: block !important;
     margin: 0 !important;
     font-family: Georgia,"Yu Mincho","Hiragino Mincho ProN",serif !important;

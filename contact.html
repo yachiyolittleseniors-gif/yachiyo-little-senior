@@ -1504,7 +1504,7 @@ html{scroll-padding-top:var(--fixed-header-height)}
 <a href="./join">選手募集</a>
 <a class="active" href="./contact">お問い合わせ</a>
 </div>
-<button class="menu" onclick="toggleMenu()">☰</button>
+<button class="menu" type="button" aria-label="メニューを開く" aria-controls="mobileLinks" aria-expanded="false" onclick="toggleMenu()">☰</button>
 </nav>
 <div class="mobile-links" id="mobileLinks">
 <a href="./" onclick="toggleMenu()">HOME</a>
@@ -1529,12 +1529,17 @@ html{scroll-padding-top:var(--fixed-header-height)}
 <input type="hidden" name="form-name" value="contact"/>
 <input type="hidden" name="subject" data-remove-prefix value="【八千代リトルシニア】お問い合わせ（受付番号：%{submissionId}）"/>
 <p class="hidden-field" aria-hidden="true"><label>この欄は入力しないでください <input name="bot-field"/></label></p>
-<input name="お名前" placeholder="お名前" required="" autocomplete="name" maxlength="80"/>
+<label class="hidden-field" for="contactName">お名前</label>
+<input id="contactName" name="お名前" placeholder="お名前" required="" autocomplete="name" maxlength="80"/>
+<label class="hidden-field" for="contactEmail">メールアドレス</label>
 <input id="contactEmail" name="email" placeholder="メールアドレス" required="" type="email" autocomplete="email" inputmode="email" maxlength="254"/>
+<label class="hidden-field" for="contactEmailConfirm">メールアドレス（確認用）</label>
 <input id="contactEmailConfirm" placeholder="メールアドレス（確認用）" required="" type="email" autocomplete="off" inputmode="email" maxlength="254"/>
 <p class="contact-email-note" id="contactEmailNote" role="alert"></p>
+<label class="hidden-field" for="contactInquiryType">お問い合わせ種別</label>
 <select id="contactInquiryType" name="お問い合わせ種別" required=""><option value="">お問い合わせ内容を選択</option><option value="入団・体験について">入団・体験について</option><option value="チームについて">チームについて</option><option id="seniorcupInquiryOption" value="八千代リトルシニア杯について">八千代リトルシニア杯について</option><option value="その他">その他</option></select>
-<textarea name="お問い合わせ内容" placeholder="お問い合わせ内容" required="" maxlength="3000"></textarea>
+<label class="hidden-field" for="contactMessage">お問い合わせ内容</label>
+<textarea id="contactMessage" name="お問い合わせ内容" placeholder="お問い合わせ内容" required="" maxlength="3000"></textarea>
 <button id="openContactConfirm" type="button">入力内容を送信</button>
 <div class="contact-confirm-overlay" id="contactConfirmOverlay" role="dialog" aria-modal="true" aria-labelledby="contactConfirmTitle" aria-hidden="true">
   <div class="contact-confirm-box">
@@ -1565,7 +1570,10 @@ html{scroll-padding-top:var(--fixed-header-height)}
 <script>
 function toggleMenu(){
   const menu=document.getElementById('mobileLinks');
-  if(menu) menu.classList.toggle('show');
+  const button=document.querySelector('.menu');
+  if(!menu)return;
+  const open=menu.classList.toggle('show');
+  if(button){button.setAttribute('aria-expanded',open?'true':'false');button.setAttribute('aria-label',open?'メニューを閉じる':'メニューを開く')}
 }
 </script>
 <footer class="restored-footer">
