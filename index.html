@@ -3952,10 +3952,19 @@ function openProtectedArea(type){
       .filter(x=>x && x.date && dateKey(x.date)>=todayKey)
       .sort((a,b)=>dateKey(a.date).localeCompare(dateKey(b.date)))[0];
     const sc=document.querySelector('#latestScheduleCard .latest-meta');
+    const scheduleGradeIcon=(date,grade)=>{
+      const parts=String(date||'').split('-').map(Number);
+      const year=parts[0]||now.getFullYear();
+      const month=parts[1]||now.getMonth()+1;
+      const academicYear=month>=4?year:year-1;
+      const shift=((academicYear-2026)%3+3)%3;
+      const index=((Number(grade)-1-shift)%3+3)%3;
+      return ['🔴','🟢','🔵'][index];
+    };
     const scheduleGradeText=x=>{
       const grades=Array.isArray(x&&x.grades)?x.grades.map(String).filter(v=>['1','2','3'].includes(v)):[];
-      if(grades.length===3)return '全学年';
-      return grades.map(v=>v+'年生').join('・');
+      if(grades.length===3)return '🟡全学年';
+      return grades.map(v=>scheduleGradeIcon(x&&x.date,v)+v+'年生').join('・');
     };
     const upcomingGrades=scheduleGradeText(upcoming);
     sc.innerHTML=upcoming
