@@ -1,0 +1,148 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="author" content="tatsuki.saitoh">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="robots" content="noindex,nofollow">
+<meta name="theme-color" content="#071426">
+<title>チーム規約資料｜八千代リトルシニア</title>
+<style>
+:root{--navy:#071426;--gold:#c79a3b;--gold2:#e2bd67;--bg:#f4f3ef}
+*{box-sizing:border-box}
+body{min-height:100vh;margin:0;background:#e8e8e6;font-family:-apple-system,BlinkMacSystemFont,"Hiragino Kaku Gothic ProN","Yu Gothic",Meiryo,sans-serif;color:var(--navy)}
+.viewer{width:min(900px,100%);min-height:100vh;margin:auto;text-align:center}
+.viewer:not(.ready):not(.error-state) #status{position:fixed;inset:0;z-index:5;display:flex;align-items:center;justify-content:center;padding:20px;background:var(--bg);color:#737d89;font-size:14px;font-weight:800}
+.viewer:not(.error-state) #detail,.ready #status{display:none}
+.back{display:none;margin:16px auto 28px;width:max-content;padding:11px 18px;border:1px solid var(--gold);border-radius:8px;background:var(--navy);color:var(--gold2);font-size:12px;font-weight:900;text-decoration:none}
+.pages{display:grid;gap:10px}
+.page{display:block;width:100%;height:auto;background:#fff}
+.ready .back{display:block}
+.error-state{width:min(760px,calc(100% - 24px));min-height:0;margin:18px auto;padding:24px 14px;border:1px solid #ddd9d0;border-top:4px solid var(--gold);border-radius:12px;background:#fff;box-shadow:0 12px 30px rgba(7,20,38,.08)}
+.error-state #status{display:block;font-size:18px;color:#9b2727}.error-state #detail{display:block;margin:10px 0 0;color:#737d89;font-size:13px;line-height:1.7}.error-state .back{display:block}
+</style>
+</head>
+<body>
+<main class="viewer">
+  <strong id="status">資料を読み込んでいます。</strong>
+  <p id="detail">そのままお待ちください。</p>
+  <div class="pages" id="pages"></div>
+  <a class="back" href="./board.html#teamRulesCard">チーム規約へ戻る</a>
+</main>
+<script>
+(()=>{
+  const API='/.netlify/functions/site-data?section=rules';
+  const AUTH_API='/.netlify/functions/site-data?section=access-settings';
+  const status=document.getElementById('status');
+  const detail=document.getElementById('detail');
+  const pages=document.getElementById('pages');
+  const panel=document.querySelector('.viewer');
+  let workerSource='';
+
+  async function verifyAccess(password){
+    if(!password)return false;
+    try{
+      const response=await fetch(AUTH_API,{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({action:'verifyAccessPassword',password})});
+      if(response.ok){sessionStorage.setItem('yachiyoAttendancePass',password);return true}
+    }catch(error){}
+    return false;
+  }
+
+  async function requireAccess(){
+    const saved=sessionStorage.getItem('yachiyoAttendancePass')||'';
+    if(await verifyAccess(saved))return saved;
+    const entered=prompt('パスワードを入力してください。');
+    if(entered!==null&&await verifyAccess(entered))return entered;
+    return '';
+  }
+
+  function loadScript(source){
+    return new Promise((resolve,reject)=>{
+      const script=document.createElement('script');
+      const timer=setTimeout(()=>{script.remove();reject(new Error('timeout'))},10000);
+      script.src=source;script.async=true;
+      script.onload=()=>{clearTimeout(timer);resolve()};
+      script.onerror=()=>{clearTimeout(timer);script.remove();reject(new Error('load failed'))};
+      document.head.appendChild(script);
+    });
+  }
+
+  async function loadPdfLibrary(){
+    if(window.pdfjsLib)return;
+    try{
+      await loadScript('https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js');
+      workerSource='https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+    }catch(error){
+      await loadScript('https://cdn.jsdelivr.net/npm/pdfjs-dist@3.11.174/build/pdf.min.js');
+      workerSource='https://cdn.jsdelivr.net/npm/pdfjs-dist@3.11.174/build/pdf.worker.min.js';
+    }
+  }
+
+  function decodeDataUrl(dataUrl){
+    const match=String(dataUrl||'').match(/^data:([^;,]+)(;base64)?,([\s\S]*)$/);
+    if(!match)throw new Error('invalid data');
+    const binary=match[2]?atob(match[3]):decodeURIComponent(match[3]);
+    const bytes=new Uint8Array(binary.length);
+    for(let i=0;i<binary.length;i++)bytes[i]=binary.charCodeAt(i);
+    return {mime:match[1].toLowerCase(),bytes};
+  }
+
+  async function renderPdf(bytes){
+    await loadPdfLibrary();
+    if(!window.pdfjsLib)throw new Error('viewer unavailable');
+    window.pdfjsLib.GlobalWorkerOptions.workerSrc=workerSource;
+    const pdf=await window.pdfjsLib.getDocument({data:bytes}).promise;
+    for(let number=1;number<=pdf.numPages;number++){
+      const page=await pdf.getPage(number);
+      const base=page.getViewport({scale:1});
+      const targetWidth=Math.min(1400,Math.max(800,window.innerWidth*2));
+      const viewport=page.getViewport({scale:targetWidth/base.width});
+      const canvas=document.createElement('canvas');
+      canvas.className='page';canvas.width=Math.ceil(viewport.width);canvas.height=Math.ceil(viewport.height);
+      canvas.setAttribute('aria-label','チーム規約 '+number+'ページ目');pages.appendChild(canvas);
+      await page.render({canvasContext:canvas.getContext('2d'),viewport}).promise;
+    }
+  }
+
+  async function renderImage(mime,bytes,name){
+    const image=document.createElement('img');image.className='page';image.alt=name||'チーム規約資料';
+    const url=URL.createObjectURL(new Blob([bytes],{type:mime}));
+    await new Promise((resolve,reject)=>{image.onload=resolve;image.onerror=reject;image.src=url});
+    pages.appendChild(image);URL.revokeObjectURL(url);
+  }
+
+  function normalize(raw){
+    const files=raw&&Array.isArray(raw.pdfs)?raw.pdfs.filter(item=>item&&item.data).map(item=>({name:item.name||'チーム規約資料',data:item.data})):[];
+    if(raw&&raw.pdf&&!files.some(item=>item.data===raw.pdf))files.unshift({name:raw.pdfName||'チーム規約.pdf',data:raw.pdf});
+    return files;
+  }
+
+  function showError(message){
+    panel.classList.add('error-state');status.textContent=message;detail.textContent='チーム規約へ戻り、ページを再読み込みしてから再度お試しください。';
+  }
+
+  async function open(){
+    const index=Number.parseInt(new URLSearchParams(location.search).get('index')||'',10);
+    if(!Number.isInteger(index)||index<0){showError('資料が指定されていません。');return}
+    const access=await requireAccess();
+    if(!access){showError('パスワードを確認できませんでした。');return}
+    try{
+      const response=await fetch(API,{cache:'no-store',headers:{'x-access-password':access}});
+      if(!response.ok)throw new Error('load failed');
+      const body=await response.json();
+      const data=Array.isArray(body.data)?body.data:[];
+      const file=normalize(data[0]||{})[index];
+      if(!file)throw new Error('not found');
+      document.title=(file.name||'チーム規約資料')+'｜八千代リトルシニア';
+      const decoded=decodeDataUrl(file.data);
+      if(decoded.mime.startsWith('image/'))await renderImage(decoded.mime,decoded.bytes,file.name);
+      else await renderPdf(decoded.bytes);
+      panel.classList.add('ready');
+    }catch(error){showError('資料を開けませんでした。')}
+  }
+
+  open();
+})();
+</script>
+</body>
+</html>

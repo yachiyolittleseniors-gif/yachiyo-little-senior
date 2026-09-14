@@ -7,7 +7,6 @@
   const adminList=document.getElementById('rulesAdminList');
   const panel=document.getElementById('densukeAdminPanel');
   let rules={text:'',pdfs:[]};
-  let blobUrls=[];
 
   if(!textView||!pdfList||!fileInput||!saveBtn||!adminList||!panel)return;
 
@@ -20,20 +19,6 @@
     return out;
   }
 
-  function toBlobUrl(dataUrl){
-    if(!dataUrl||!dataUrl.startsWith('data:'))return dataUrl;
-    try{
-      const parts=dataUrl.split(',');
-      const mime=(parts[0].match(/data:([^;]+)/)||[])[1]||'application/pdf';
-      const binary=atob(parts[1]);
-      const bytes=new Uint8Array(binary.length);
-      for(let i=0;i<binary.length;i++)bytes[i]=binary.charCodeAt(i);
-      const url=URL.createObjectURL(new Blob([bytes],{type:mime}));
-      blobUrls.push(url);
-      return url;
-    }catch(e){return dataUrl}
-  }
-
   function render(){
     textView.classList.remove('rules-loading');
     textView.removeAttribute('aria-busy');
@@ -41,12 +26,11 @@
     textView.textContent=rules.text||(hasPdfs?'':'現在、公開中のチーム規約はありません。');
     textView.hidden=!hasText&&hasPdfs;
     textView.classList.toggle('empty',!hasText&&!hasPdfs);
-    blobUrls.forEach(function(url){URL.revokeObjectURL(url)});blobUrls=[];
     pdfList.replaceChildren();adminList.replaceChildren();pdfList.hidden=!hasPdfs;
     rules.pdfs.forEach(function(pdf,index){
       const item=document.createElement('div');item.className='rules-pdf-item';
       const name=document.createElement('div');name.className='rules-pdf-name';name.textContent=pdf.name||('チーム規約資料 '+(index+1));
-      const open=document.createElement('a');open.className='rules-pdf-open btn gold';open.href=toBlobUrl(pdf.data);open.textContent='資料を開く';
+      const open=document.createElement('a');open.className='rules-pdf-open btn gold';open.href='./team-rules-viewer.html?index='+encodeURIComponent(index)+'&v=20260914-1';open.textContent='資料を開く';
       item.append(name,open);pdfList.appendChild(item);
       const adminItem=document.createElement('div');adminItem.className='rules-admin-item';
       const adminName=document.createElement('span');adminName.textContent=pdf.name||('チーム規約資料 '+(index+1));
