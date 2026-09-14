@@ -29,7 +29,7 @@ gtag('config','G-L8BMMSXDP9',{allow_google_signals:false,allow_ad_personalizatio
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>リンク集｜八千代リトルシニア公式</title>
 <meta name="description" content="八千代リトルシニアの関連リンク集です。">
-<link rel="canonical" href="https://yachiyo-little-senior.netlify.app/links.html">
+<link rel="canonical" href="https://yachiyo-little-senior.netlify.app/links">
 <style>
 *{box-sizing:border-box}
 :root{--navy:#07162b;--navy2:#0b213b;--gold:#caa64b;--gold2:#dfbf70;--paper:#f6f5f1;--line:#ddd8cd;--ink:#0a1729}
@@ -208,15 +208,15 @@ html{scroll-padding-top:var(--compact-header-height)}
     </a>
     <button class="site-menu-button" id="siteMenuButton" type="button" aria-label="メニューを開く" aria-controls="siteMenu" aria-expanded="false">☰</button>
     <div class="site-menu" id="siteMenu">
-      <a href="./index.html">HOME</a>
-      <a href="./team.html">チーム紹介</a>
-      <a href="./players.html">選手紹介</a>
-      <a href="./results.html">試合結果</a>
-      <a href="./schedule.html">スケジュール</a>
-      <a href="./join.html">入団案内</a>
-      <a href="./contact.html">お問い合わせ</a>
-      <a href="./links.html">リンク集</a>
-      <a href="./terms.html">サイト利用について</a>
+      <a href="./">HOME</a>
+      <a href="./team">チーム紹介</a>
+      <a href="./players">選手紹介</a>
+      <a href="./results">試合結果</a>
+      <a href="./schedule">スケジュール</a>
+      <a href="./join">入団案内</a>
+      <a href="./contact">お問い合わせ</a>
+      <a href="./links">リンク集</a>
+      <a href="./terms">サイト利用について</a>
       <a href="./board.html">チーム専用ページ 🔒</a>
     </div>
   </nav>
@@ -241,24 +241,24 @@ html{scroll-padding-top:var(--compact-header-height)}
 <footer class="restored-footer">
   <div class="restored-footer-inner">
     <nav class="restored-footer-nav" aria-label="フッターナビゲーション">
-      <a href="./index.html">HOME</a>
-      <a href="./team.html">チーム紹介</a>
-      <a href="./players.html">選手紹介</a>
-      <a href="./results.html">試合結果</a>
-      <a href="./schedule.html">スケジュール</a>
-      <a href="./join.html">入団案内</a>
-      <a href="./contact.html">お問い合わせ</a>
-      <a href="./links.html">リンク集</a>
+      <a href="./">HOME</a>
+      <a href="./team">チーム紹介</a>
+      <a href="./players">選手紹介</a>
+      <a href="./results">試合結果</a>
+      <a href="./schedule">スケジュール</a>
+      <a href="./join">入団案内</a>
+      <a href="./contact">お問い合わせ</a>
+      <a href="./links">リンク集</a>
       <a href="https://www.instagram.com/yachiyo_little_senior/" rel="noopener noreferrer" target="_blank">Instagram</a>
       <a href="https://www.facebook.com/874baseball" rel="noopener noreferrer" target="_blank">Facebook</a>
-      <a href="./terms.html">サイト利用について</a>
+      <a href="./terms">サイト利用について</a>
       <a href="./board.html">チーム専用ページ 🔒</a>
     </nav>
     <div class="ground-address">
       <div class="ground-access-address">アクセス：千葉県八千代市島田台775</div>
       <a class="ground-map-link" href="https://www.google.com/maps/search/?api=1&amp;query=%E5%8D%83%E8%91%89%E7%9C%8C%E5%85%AB%E5%8D%83%E4%BB%A3%E5%B8%82%E5%B3%B6%E7%94%B0%E5%8F%B0%EF%BC%97%EF%BC%97%EF%BC%95" target="_blank" rel="noopener noreferrer">Googleマップで見る <span aria-hidden="true">↗</span></a>
     </div>
-    <div class="footer-privacy-link"><a href="./privacy.html">プライバシーポリシー</a></div>
+    <div class="footer-privacy-link"><a href="./privacy">プライバシーポリシー</a></div>
     <div class="restored-footer-copy footer-copy">© YACHIYO LITTLE SENIOR. All Rights Reserved.</div>
   </div>
 </footer>
@@ -623,7 +623,7 @@ body.photo-admin-on #accessPasswordChange{
     let link=menu.querySelector('[data-seniorcup-menu-link]');
     if(!link){
       link=document.createElement('a');
-      link.href='./seniorcup.html';
+      link.href='./seniorcup';
       link.textContent='八千代リトルシニア杯';
       link.setAttribute('data-seniorcup-menu-link','');
       const termsLink=[...menu.querySelectorAll('a')].find(item=>{

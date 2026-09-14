@@ -224,15 +224,15 @@ html{scroll-padding-top:var(--compact-header-height)}
     </a>
     <button class="site-menu-button" id="siteMenuButton" type="button" aria-label="メニューを開く" aria-controls="siteMenu" aria-expanded="false">☰</button>
     <div class="site-menu" id="siteMenu">
-      <a href="./index.html">HOME</a>
-      <a href="./team.html">チーム紹介</a>
-      <a href="./players.html">選手紹介</a>
-      <a href="./results.html">試合結果</a>
-      <a href="./schedule.html">スケジュール</a>
-      <a href="./join.html">入団案内</a>
-      <a href="./contact.html">お問い合わせ</a>
-      <a href="./links.html">リンク集</a>
-      <a href="./terms.html">サイト利用について</a>
+      <a href="./">HOME</a>
+      <a href="./team">チーム紹介</a>
+      <a href="./players">選手紹介</a>
+      <a href="./results">試合結果</a>
+      <a href="./schedule">スケジュール</a>
+      <a href="./join">入団案内</a>
+      <a href="./contact">お問い合わせ</a>
+      <a href="./links">リンク集</a>
+      <a href="./terms">サイト利用について</a>
 <a href="./board.html">チーム専用ページ 🔒</a>
     </div>
   </nav>
@@ -269,7 +269,7 @@ document.documentElement.style.visibility='hidden';
 window.rulesAccessReady=(async function requireRulesPassword(){
   const p=prompt('パスワードを入力してください');
   if(p===null){
-    if(history.length>1){history.back()}else{location.replace('./index.html')}
+    if(history.length>1){history.back()}else{location.replace('./')}
     return;
   }
   try{
@@ -284,11 +284,11 @@ window.rulesAccessReady=(async function requireRulesPassword(){
     }
   }catch(e){
     alert('パスワードを確認できませんでした。通信状況を確認してください。');
-    location.replace('./index.html');
+    location.replace('./');
     return;
   }
   alert('パスワードが違います。');
-  location.replace('./index.html');
+  location.replace('./');
 })();
 
 
@@ -769,7 +769,7 @@ body.photo-admin-on #accessPasswordChange{
     let link=menu.querySelector('[data-seniorcup-menu-link]');
     if(!link){
       link=document.createElement('a');
-      link.href='./seniorcup.html';
+      link.href='./seniorcup';
       link.textContent='八千代リトルシニア杯';
       link.setAttribute('data-seniorcup-menu-link','');
       const termsLink=[...menu.querySelectorAll('a')].find(item=>{

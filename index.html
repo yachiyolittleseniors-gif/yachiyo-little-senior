@@ -1514,7 +1514,7 @@ footer .official-brand-img{
 
 
 /* 選手紹介：背景はそのまま、ポーンだけ金色 */
-.quick a[href="./players.html"] .player-pawn-gold{
+.quick a[href="./players"] .player-pawn-gold{
   color:#d7b457!important;
   -webkit-text-fill-color:#d7b457!important;
   font-family:"Arial Unicode MS","Noto Sans Symbols 2","Segoe UI Symbol",serif!important;
@@ -3168,10 +3168,10 @@ window.__loadYachiyoPhotos = function(){
 
 /* 形ごとの視覚補正 */
 .quick > a[href="team.html"] .ico{font-size:27px!important}
-.quick > a[href="./players.html"] .player-pawn-gold{font-size:39px!important}
-.quick > a[href="./results.html"] .ico{font-size:35px!important}
-.quick > a[href="./schedule.html"] .ico{font-size:34px!important}
-.quick > a[href="./join.html"] .ico{font-size:26px!important}
+.quick > a[href="./players"] .player-pawn-gold{font-size:39px!important}
+.quick > a[href="./results"] .ico{font-size:35px!important}
+.quick > a[href="./schedule"] .ico{font-size:34px!important}
+.quick > a[href="./join"] .ico{font-size:26px!important}
 
 /* お問い合わせは40px枠内で他アイコンと同程度の存在感に */
 .quick .contact-official-icon{
@@ -3585,8 +3585,8 @@ body.photo-admin-on .recruit-mode-admin{display:block}
 <a href='/schedule' onclick='toggleMenu()'>スケジュール</a>
 <a href='/join' onclick='toggleMenu()'>入団案内</a>
 <a href='/contact' onclick='toggleMenu()'>お問い合わせ</a>
-<a href='./links.html' onclick='toggleMenu()'>リンク集</a>
-<a href="./terms.html" onclick="toggleMenu()">サイト利用について</a>
+<a href='./links' onclick='toggleMenu()'>リンク集</a>
+<a href="./terms" onclick="toggleMenu()">サイト利用について</a>
 <a href="./board.html" onclick="toggleMenu()">チーム専用ページ 🔒</a>
 
 </div>
@@ -3852,17 +3852,17 @@ function closeModal(){
 <footer class="restored-footer">
 <div class="restored-footer-inner">
 <nav aria-label="フッターナビゲーション" class="restored-footer-nav">
-<a href="./index.html">HOME</a>
-<a href="./team.html">チーム紹介</a>
-<a href="./players.html">選手紹介</a>
-<a href="./results.html">試合結果</a>
-<a href="./schedule.html">スケジュール</a>
-<a href="./join.html">入団案内</a>
-<a href="./contact.html">お問い合わせ</a>
-<a href="./links.html">リンク集</a>
+<a href="./">HOME</a>
+<a href="./team">チーム紹介</a>
+<a href="./players">選手紹介</a>
+<a href="./results">試合結果</a>
+<a href="./schedule">スケジュール</a>
+<a href="./join">入団案内</a>
+<a href="./contact">お問い合わせ</a>
+<a href="./links">リンク集</a>
 <a href="https://www.instagram.com/yachiyo_little_senior/" rel="noopener noreferrer" target="_blank">Instagram</a>
 <a href="https://www.facebook.com/874baseball" rel="noopener noreferrer" target="_blank">Facebook</a>
-<a href="./terms.html">サイト利用について</a>
+<a href="./terms">サイト利用について</a>
 <a href="./board.html">チーム専用ページ 🔒</a>
 </nav>
 
@@ -3957,8 +3957,8 @@ function openProtectedArea(type){
     };
     const upcomingGrades=scheduleGradeText(upcoming);
     sc.innerHTML=upcoming
-      ? `<strong>${esc(upcoming.date.replace(/-/g,'/'))}</strong>${upcomingGrades?'<br>'+esc(upcomingGrades):''}<br>${esc(upcoming.title)}${upcoming.time?'<br>'+esc(upcoming.time):''}${upcoming.place?'<br>'+esc(upcoming.place):''}<br><a class="latest-link" href="./schedule.html">スケジュールを見る →</a>`
-      : `現在、公開スケジュールはありません。<br><a class="latest-link" href="./schedule.html">スケジュールを見る →</a>`;
+      ? `<strong>${esc(upcoming.date.replace(/-/g,'/'))}</strong>${upcomingGrades?'<br>'+esc(upcomingGrades):''}<br>${esc(upcoming.title)}${upcoming.time?'<br>'+esc(upcoming.time):''}${upcoming.place?'<br>'+esc(upcoming.place):''}<br><a class="latest-link" href="./schedule">スケジュールを見る →</a>`
+      : `現在、公開スケジュールはありません。<br><a class="latest-link" href="./schedule">スケジュールを見る →</a>`;
 
     const cleanResults=[...results].filter(x=>x&&x.date);
     const latestR=cleanResults.sort((a,b)=>{
@@ -3979,9 +3979,9 @@ function openProtectedArea(type){
         `${esc(latestR.tournament||'試合')}<br>`+
         `<span class="latest-match">${esc(leftName)} <b>${leftScore} - ${rightScore}</b> ${esc(rightName)}</span>`+
         `${latestR.venue?`<br><span class="latest-venue">会場：${esc(latestR.venue)}</span>`:''}`+
-        `<br><a class="latest-link" href="./results.html">試合結果を見る →</a>`;
+        `<br><a class="latest-link" href="./results">試合結果を見る →</a>`;
     }else{
-      rc.innerHTML=`まだ試合結果は登録されていません。<br><a class="latest-link" href="./results.html">試合結果を見る →</a>`;
+      rc.innerHTML=`まだ試合結果は登録されていません。<br><a class="latest-link" href="./results">試合結果を見る →</a>`;
     }
   }catch(e){
     document.querySelectorAll('.latest-meta').forEach(el=>el.textContent='最新情報を読み込めませんでした。');
@@ -5083,7 +5083,7 @@ body.photo-admin-on #accessPasswordChange{
     let link=menu.querySelector('[data-seniorcup-menu-link]');
     if(!link){
       link=document.createElement('a');
-      link.href='./seniorcup.html';
+      link.href='./seniorcup';
       link.textContent='八千代リトルシニア杯';
       link.setAttribute('data-seniorcup-menu-link','');
       const termsLink=[...menu.querySelectorAll('a')].find(item=>{
