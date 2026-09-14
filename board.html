@@ -532,9 +532,9 @@ html{scroll-padding-top:var(--compact-header-height)}
   </div>
   <div id="rulesAdminFields">
     <strong>チーム規約</strong>
-    <label for="rulesPdfInput">PDFファイル（1ファイル5MB以下・複数選択可）</label>
-    <input id="rulesPdfInput" type="file" accept="application/pdf,.pdf" multiple>
-    <button id="saveRulesBtn" type="button">PDFを追加</button>
+    <label for="rulesPdfInput">資料ファイル（PDF・画像／1ファイル5MB以下・複数選択可）</label>
+    <input id="rulesPdfInput" type="file" accept="application/pdf,image/jpeg,image/png,image/webp,.pdf,.jpg,.jpeg,.png,.webp" multiple>
+    <button id="saveRulesBtn" type="button">資料を追加</button>
     <div id="rulesAdminList"></div>
   </div>
   <button id="closeDensukeAdminBtn" type="button">キャンセル</button>
@@ -545,7 +545,7 @@ html{scroll-padding-top:var(--compact-header-height)}
 <script src="./board-tournaments.js?v=20260914-1"></script>
 <script src="./board-meetings.js?v=20260914-1"></script>
 <script src="./board-duty-roster.js?v=20260914-1"></script>
-<script src="./board-rules.js?v=20260914-1"></script>
+<script src="./board-rules.js?v=20260914-2"></script>
 <style id="nonblocking-save-notice-style">
 .save-notice{
   position:fixed;
