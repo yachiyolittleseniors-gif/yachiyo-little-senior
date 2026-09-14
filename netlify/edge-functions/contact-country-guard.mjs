@@ -1,8 +1,8 @@
 export default function contactCountryGuard(request, context) {
-  if (request.method !== "POST") return;
+  if (request.method !== "POST") return context.next();
 
   const countryCode = context.geo?.country?.code;
-  if (!countryCode || countryCode === "JP") return;
+  if (!countryCode || countryCode === "JP") return context.next();
 
   const html = `<!doctype html>
 <html lang="ja"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
@@ -21,5 +21,5 @@ export default function contactCountryGuard(request, context) {
 }
 
 export const config = {
-  path: "/contact.html",
+  path: "/",
 };
