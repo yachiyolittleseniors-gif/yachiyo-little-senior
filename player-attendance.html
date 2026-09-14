@@ -298,7 +298,7 @@ $('#eventDate').addEventListener('change',syncEventDateLabel);
 function showError(m=''){const e=$('#errorBox');e.textContent=m;e.classList.toggle('show',!!m)}
 function statusClass(s){return s==='○'?'status-o':s==='×'?'status-x':''}
 function nextStatus(s){return s==='○'?'×':s==='×'?'':'○'}
-function normalizeMember(member){const sourceGrades=Array.isArray(member?.grades)?member.grades:[member?.grade];const grade=sourceGrades.map(String).find(value=>['1','2','3'].includes(value))||'';const normalized={...member,id:String(member?.id||''),name:String(member?.name||''),grades:grade?[grade]:[]};delete normalized.grade;delete normalized.parent;return normalized}
+function normalizeMember(member){const sourceGrades=Array.isArray(member?.grades)?member.grades:[member?.grade];const grade=sourceGrades.map(String).find(value=>['1','2','3'].includes(value))||'';const normalized={...member,id:String(member?.id||''),name:String(member?.name||''),kana:String(member?.kana||'').trim(),grades:grade?[grade]:[]};delete normalized.grade;delete normalized.parent;return normalized}
 function normalize(v){return{events:Array.isArray(v?.events)?v.events:[],members:Array.isArray(v?.members)?v.members.map(normalizeMember):[],answers:v?.answers&&typeof v.answers==='object'?v.answers:{},comments:Array.isArray(v?.comments)?v.comments:[]}}
 async function api(method,body,admin=false){const headers={'content-type':'application/json'};if(admin)headers['x-admin-password']=adminPass;else headers['x-access-password']=accessPass;const r=await fetch(API,{method,headers,cache:'no-store',body:body?JSON.stringify(body):undefined});let j={};try{j=await r.json()}catch{}if(!r.ok)throw new Error(j.error||'通信に失敗しました');return j}
 async function loadScheduleEvents(){try{const response=await fetch(SCHEDULE_API,{cache:'no-store'});if(!response.ok)return[];const body=await response.json();return Array.isArray(body.data)?body.data:[]}catch{return[]}}
@@ -311,7 +311,7 @@ function countStatuses(eventId,members=data.members){const counts={o:0,x:0,u:0};
 function countMarkup(counts){return `<span class="sum-o">○${counts.o}</span><span class="sum-x">×${counts.x}</span><span class="sum-u">未入力${counts.u}</span>`}
 function memberDisplayName(member){const grade=member.grades[0];return `${grade?grade+'年 ':''}${member.name}`}
 function memberDisplayHtml(member){const grade=member.grades[0];return `${grade?`<span class="member-grade-badge grade-${esc(grade)}">${esc(grade)}年</span>`:''}<span class="member-name-text">${esc(member.name)}</span>`}
-function sortedMembers(){const gradeOrder={'3':3,'2':2,'1':1};return [...data.members].sort((a,b)=>{const gradeDiff=(gradeOrder[b.grades?.[0]]||0)-(gradeOrder[a.grades?.[0]]||0);if(gradeDiff)return gradeDiff;return String(a.name||'').localeCompare(String(b.name||''),'ja',{sensitivity:'base'})})}
+function sortedMembers(){const gradeOrder={'3':3,'2':2,'1':1};return [...data.members].sort((a,b)=>{const gradeDiff=(gradeOrder[b.grades?.[0]]||0)-(gradeOrder[a.grades?.[0]]||0);if(gradeDiff)return gradeDiff;return String(a.kana||a.name||'').localeCompare(String(b.kana||b.name||''),'ja',{sensitivity:'base'})||String(a.name||'').localeCompare(String(b.name||''),'ja',{sensitivity:'base'})})}
 
 function preferredEvent(events){
   if(!events.length)return null;

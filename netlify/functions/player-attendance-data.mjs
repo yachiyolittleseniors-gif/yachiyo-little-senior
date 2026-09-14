@@ -141,6 +141,7 @@ async function syncPlayersFromRoster(store, data) {
       id: String(existing?.id || `roster_${rosterId}`),
       rosterId,
       name,
+      kana: String(player?.kana || "").trim(),
       grades: grade ? [grade] : [],
     };
   }).filter(member => member.name);

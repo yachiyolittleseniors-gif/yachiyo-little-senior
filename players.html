@@ -199,9 +199,11 @@ body.admin-mode .player-editor:not([hidden]){display:block!important}
   padding:10px 18px!important;border-radius:10px!important;line-height:1.2!important;
   white-space:nowrap!important
 }
-.player-delete{display:none;border:0;background:transparent;color:#b42318;font-weight:800;font-size:12px}
-.admin-mode .player-delete{display:inline-block}
+.player-edit,.player-delete{display:none;border:0;background:transparent;font-weight:800;font-size:12px}
+.player-edit{color:#765718}.player-delete{color:#b42318}
+.admin-mode .player-edit,.admin-mode .player-delete{display:inline-block}
 .player-name-wrap{display:flex;align-items:center;justify-content:space-between;gap:8px}
+.player-name-actions{display:flex;align-items:center;gap:5px}
 .admin-toggle{display:none;position:static;z-index:1;margin:14px 0 0 auto;border:1px solid rgba(215,180,87,.7);background:#071426;color:#d7b457;border-radius:999px;padding:9px 12px;font-size:12px;font-weight:800;opacity:.82}
 @media(max-width:650px){
   .player-admin{justify-content:stretch}
@@ -603,7 +605,7 @@ html{scroll-padding-top:var(--fixed-header-height)}
 
 <main class="wrap">
 <p class="count" id="playerCount">読み込み中…</p>
-<div class="player-admin admin-only block"><button class="admin-btn" type="button" onclick="togglePlayerPanel()">＋ 選手を追加</button><button class="admin-btn" type="button" onclick="promoteGrades()">学年繰り上げ</button></div><div class="player-editor admin-only" id="playerEditor" hidden><div class="player-form-grid"><div><label for="playerGrade">学年</label><select id="playerGrade"><option value="1年">1年生</option><option value="2年">2年生</option><option value="3年">3年生</option></select></div><div><label for="playerName">選手名</label><input id="playerName" type="text"></div><div><label for="playerBirth">生年度</label><input id="playerBirth" type="text" placeholder="例：2013年度"></div><div><label for="playerTeam">出身チーム</label><input id="playerTeam" type="text"></div></div><div class="player-form-actions"><button class="admin-btn" type="button" onclick="savePlayer()">登録する</button><button class="admin-btn" type="button" onclick="togglePlayerPanel(false)">閉じる</button></div></div><div class="tabs">
+<div class="player-admin admin-only block"><button class="admin-btn" type="button" onclick="startNewPlayer()">＋ 選手を追加</button><button class="admin-btn" type="button" onclick="promoteGrades()">学年繰り上げ</button></div><div class="player-editor admin-only" id="playerEditor" hidden><div class="player-form-grid"><div><label for="playerGrade">学年</label><select id="playerGrade"><option value="1年">1年生</option><option value="2年">2年生</option><option value="3年">3年生</option></select></div><div><label for="playerName">選手名</label><input id="playerName" type="text"></div><div><label for="playerKana">ふりがな</label><input id="playerKana" type="text" maxlength="60" placeholder="同じ苗字は名前まで入力"></div><div><label for="playerBirth">生年度</label><input id="playerBirth" type="text" placeholder="例：2013年度"></div><div><label for="playerTeam">出身チーム</label><input id="playerTeam" type="text"></div></div><div class="player-form-actions"><button class="admin-btn" id="playerSaveBtn" type="button" onclick="savePlayer()">登録する</button><button class="admin-btn" type="button" onclick="togglePlayerPanel(false)">閉じる</button></div></div><div class="tabs">
 <button class="active" onclick="filterGrade('all',this)">全選手</button>
 <button onclick="filterGrade('3年',this)" id="tabGrade3" class="grade-3"><span class="tab-cohort">44期</span><span class="tab-grade">3年生</span></button>
 <button onclick="filterGrade('2年',this)" id="tabGrade2" class="grade-2"><span class="tab-cohort">45期</span><span class="tab-grade">2年生</span></button>
@@ -1150,6 +1152,71 @@ body.photo-admin-on #accessPasswordChange{
     else if(document.querySelector('.seniorcup-home-banner'))apply(true);
   }).observe(document.documentElement,{attributes:true,attributeFilter:['class']});
 })();
+</script>
+<script id="player-kana-editing">
+let editingPlayerId='';
+function playerSortKey(player){return String(player?.kana||player?.name||'').trim()}
+renderP=function(){
+  updateGradeTabs();
+  const order={'3年':3,'2年':2,'1年':1},body=document.getElementById('playersBody');
+  body.innerHTML=playersData.slice().sort((a,b)=>{
+    const gradeDiff=(order[b.grade]||0)-(order[a.grade]||0);
+    if(gradeDiff)return gradeDiff;
+    return playerSortKey(a).localeCompare(playerSortKey(b),'ja',{sensitivity:'base'})||String(a.name||'').localeCompare(String(b.name||''),'ja',{sensitivity:'base'});
+  }).filter(player=>currentGrade==='all'||player.grade===currentGrade).map(player=>`<tr data-grade="${ep(player.grade)}"><td class="cohort-col"><div class="cohort-grade-wrap">${gradeDisplayHtml(player)}</div></td><td><div class="player-name-wrap"><strong>${ep(player.name)}</strong><span class="player-name-actions"><button class="player-edit" type="button" onclick="editPlayer('${ep(player.id)}')">編集</button><button class="player-delete" type="button" onclick="deletePlayer('${ep(player.id)}')">削除</button></span></div></td><td>${ep(player.birth||'')}</td><td>${ep(player.team||'')}</td></tr>`).join('');
+  countP();
+};
+function resetPlayerEditor(){
+  editingPlayerId='';
+  document.getElementById('playerGrade').value='1年';
+  document.getElementById('playerName').value='';
+  document.getElementById('playerKana').value='';
+  document.getElementById('playerBirth').value='';
+  document.getElementById('playerTeam').value='';
+  document.getElementById('playerSaveBtn').textContent='登録する';
+}
+function startNewPlayer(){resetPlayerEditor();togglePlayerPanel(true)}
+togglePlayerPanel=function(open){
+  const editor=document.getElementById('playerEditor');
+  const shouldOpen=typeof open==='boolean'?open:editor.hasAttribute('hidden');
+  if(shouldOpen)editor.removeAttribute('hidden');
+  else{editor.setAttribute('hidden','');resetPlayerEditor()}
+};
+function editPlayer(id){
+  const player=playersData.find(item=>String(item.id)===String(id));
+  if(!player)return;
+  editingPlayerId=String(player.id);
+  document.getElementById('playerGrade').value=player.grade||'1年';
+  document.getElementById('playerName').value=player.name||'';
+  document.getElementById('playerKana').value=player.kana||'';
+  document.getElementById('playerBirth').value=player.birth||'';
+  document.getElementById('playerTeam').value=player.team||'';
+  document.getElementById('playerSaveBtn').textContent='変更を保存';
+  togglePlayerPanel(true);
+  document.getElementById('playerEditor').scrollIntoView({behavior:'smooth',block:'start'});
+}
+savePlayer=async function(){
+  const grade=document.getElementById('playerGrade').value;
+  const name=document.getElementById('playerName').value.trim();
+  const kana=document.getElementById('playerKana').value.trim();
+  const birth=document.getElementById('playerBirth').value.trim();
+  const team=document.getElementById('playerTeam').value.trim();
+  if(!name)return alert('選手名を入力してください。');
+  if(!kana)return alert('ふりがなを入力してください。');
+  let next;
+  if(editingPlayerId){
+    next=playersData.map(player=>String(player.id)===editingPlayerId?{...player,grade,name,kana,birth,team}:player);
+  }else{
+    next=playersData.concat([{id:'p'+Date.now(),grade,cohort:cohortForGrade(grade),name,kana,birth,team}]);
+  }
+  try{
+    await saveP(next);
+    playersData=next;
+    renderP();
+    togglePlayerPanel(false);
+  }catch(error){alert(error.message)}
+};
+renderP();
 </script>
 </body>
 </html>
