@@ -526,7 +526,7 @@ const LEGACY_RESULT_SEED = [
     "date": "2026-01",
     "grade": "3年",
     "round": "第三試合",
-    "battingOrder": "first",
+    "battingOrder": "unknown",
     "tournament": "第5回鹿嶋市長杯交流大会",
     "opponent": "水戸青藍舎ヤング",
     "venue": "",
@@ -975,7 +975,7 @@ export default async (request, context) => {
         // 旧サイト照合で判明した鹿嶋市長杯・第三試合を既存データへ補完する。
         // 初回の旧試合移行が完了済みの環境でも、この1件だけを一度追加する。
         const kashimaThirdMigrationKey =
-          "migrations/results-kashima-third-20260914.json";
+          "migrations/results-kashima-third-20260914-v2.json";
         const kashimaThirdMigrated = await store.get(
           kashimaThirdMigrationKey,
           { type: "json", consistency: "strong" }
@@ -988,8 +988,14 @@ export default async (request, context) => {
           const alreadyExists = current.some(
             item => String(item?.id || "") === "legacy-44-2026-kashima-3"
           );
-          if (missingResult && !alreadyExists) {
-            data = [...current, missingResult];
+          if (missingResult) {
+            data = alreadyExists
+              ? current.map(item =>
+                  String(item?.id || "") === "legacy-44-2026-kashima-3"
+                    ? { ...item, battingOrder: "unknown" }
+                    : item
+                )
+              : [...current, missingResult];
             await store.setJSON(key, data);
           }
           await store.setJSON(kashimaThirdMigrationKey, {
