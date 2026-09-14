@@ -1517,6 +1517,37 @@ export default async (request, context) => {
     }
 
     if (
+      section === "document-archive" &&
+      body?.action === "renameArchiveDocument"
+    ) {
+      const id = String(body.id || "");
+      const fileName = String(body.fileName || "").trim();
+      const current = await store.get(key, { type: "json", consistency: "strong" });
+      const documents = Array.isArray(current) ? current : [];
+      const item = documents.find(entry => String(entry?.id || "") === id);
+      if (!item) return json({ error: "資料が見つかりません。" }, 404);
+
+      const extensionPattern = item.contentType === "application/pdf"
+        ? /\.pdf$/i
+        : item.contentType === "image/png"
+          ? /\.png$/i
+          : item.contentType === "image/webp"
+            ? /\.webp$/i
+            : /\.jpe?g$/i;
+      if (!fileName || fileName.length > 160 || !extensionPattern.test(fileName)) {
+        return json({ error: "元のファイル形式と同じ拡張子を付けてください。" }, 400);
+      }
+
+      const updated = documents.map(entry =>
+        String(entry?.id || "") === id
+          ? { ...entry, fileName, renamedAt: new Date().toISOString() }
+          : entry
+      );
+      await store.setJSON(key, updated);
+      return json({ ok: true, data: updated });
+    }
+
+    if (
       section === "results" &&
       body?.action === "renameResultTournament"
     ) {

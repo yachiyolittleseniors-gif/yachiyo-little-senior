@@ -63,10 +63,13 @@
       const download=document.createElement('button');
       download.type='button';download.textContent='ダウンロード';
       download.addEventListener('click',function(){downloadDocument(item,download)});
+      const rename=document.createElement('button');
+      rename.type='button';rename.textContent='名前変更';
+      rename.addEventListener('click',function(){renameDocument(item)});
       const remove=document.createElement('button');
       remove.type='button';remove.className='document-archive-delete';remove.textContent='削除';
       remove.addEventListener('click',function(){deleteDocument(item)});
-      actions.append(open,download,remove);row.append(name,actions);list.appendChild(row);
+      actions.append(open,download,rename,remove);row.append(name,actions);list.appendChild(row);
     });
   }
 
@@ -152,6 +155,22 @@
       setTimeout(function(){URL.revokeObjectURL(url)},60000);
     }catch(e){alert(e.message||'資料をダウンロードできませんでした。')}
     finally{button.disabled=false;button.textContent='ダウンロード'}
+  }
+
+  async function renameDocument(item){
+    const currentName=item.fileName||'保管資料';
+    const entered=prompt('新しいファイル名を入力してください。',currentName);
+    if(entered===null)return;
+    const fileName=entered.trim();
+    if(!fileName){alert('ファイル名を入力してください。');return}
+    if(fileName===currentName)return;
+    try{
+      const response=await fetch(API,{method:'POST',headers:headers(true),body:JSON.stringify({action:'renameArchiveDocument',id:item.id,fileName:fileName})});
+      const body=await response.json().catch(function(){return {}});
+      if(!response.ok)throw new Error(body.error||'ファイル名を変更できませんでした。');
+      documents=Array.isArray(body.data)?body.data:documents.map(function(entry){return entry.id===item.id?Object.assign({},entry,{fileName:fileName}):entry});
+      render();showSaveNotice('ファイル名を変更しました');
+    }catch(e){alert(e.message||'ファイル名を変更できませんでした。')}
   }
 
   saveBtn.addEventListener('click',async function(){
