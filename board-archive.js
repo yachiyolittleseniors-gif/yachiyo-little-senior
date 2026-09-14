@@ -7,6 +7,8 @@
   const list=document.getElementById('documentArchiveList');
   let documents=[];
   let loadedForPassword='';
+  let previewUrl='';
+  let previewHistoryActive=false;
 
   if(!panel||!fields||!input||!saveBtn||!list)return;
 
@@ -58,10 +60,13 @@
       const open=document.createElement('button');
       open.type='button';open.textContent='開く';
       open.addEventListener('click',function(){openDocument(item,open)});
+      const download=document.createElement('button');
+      download.type='button';download.textContent='ダウンロード';
+      download.addEventListener('click',function(){downloadDocument(item,download)});
       const remove=document.createElement('button');
       remove.type='button';remove.className='document-archive-delete';remove.textContent='削除';
       remove.addEventListener('click',function(){deleteDocument(item)});
-      actions.append(open,remove);row.append(name,actions);list.appendChild(row);
+      actions.append(open,download,remove);row.append(name,actions);list.appendChild(row);
     });
   }
 
@@ -82,19 +87,71 @@
     }
   }
 
+  function ensurePreview(){
+    let preview=document.getElementById('documentArchivePreview');
+    if(preview)return preview;
+    preview=document.createElement('div');
+    preview.id='documentArchivePreview';
+    preview.hidden=true;
+    preview.innerHTML='<div class="document-archive-preview-bar"><strong id="documentArchivePreviewName">資料</strong><button id="documentArchivePreviewClose" type="button">閉じる</button></div><div id="documentArchivePreviewBody" class="document-archive-preview-body"></div>';
+    document.body.appendChild(preview);
+    preview.querySelector('#documentArchivePreviewClose').addEventListener('click',function(){
+      if(previewHistoryActive)history.back();
+      else closePreview();
+    });
+    return preview;
+  }
+
+  function closePreview(){
+    const preview=document.getElementById('documentArchivePreview');
+    if(preview){preview.hidden=true;preview.querySelector('#documentArchivePreviewBody').replaceChildren()}
+    document.body.classList.remove('document-archive-preview-open');
+    if(previewUrl){URL.revokeObjectURL(previewUrl);previewUrl=''}
+    previewHistoryActive=false;
+  }
+
+  async function fetchDocument(item){
+    const response=await fetch(API+'&file='+encodeURIComponent(item.id),{cache:'no-store',headers:headers(false)});
+    if(!response.ok)throw new Error('資料を開けませんでした。');
+    return response.blob();
+  }
+
   async function openDocument(item,button){
-    const popup=window.open('','_blank');
     button.disabled=true;button.textContent='準備中...';
     try{
-      const response=await fetch(API+'&file='+encodeURIComponent(item.id),{cache:'no-store',headers:headers(false)});
-      if(!response.ok)throw new Error('資料を開けませんでした。');
-      const blob=await response.blob();
-      const url=URL.createObjectURL(blob);
-      if(popup)popup.location.replace(url);
-      else window.location.assign(url);
-      setTimeout(function(){URL.revokeObjectURL(url)},60000);
-    }catch(e){if(popup)popup.close();alert(e.message||'資料を開けませんでした。')}
+      const blob=await fetchDocument(item);
+      const preview=ensurePreview();
+      const previewBody=preview.querySelector('#documentArchivePreviewBody');
+      preview.querySelector('#documentArchivePreviewName').textContent=item.fileName||'資料';
+      if(previewUrl)URL.revokeObjectURL(previewUrl);
+      previewUrl=URL.createObjectURL(blob);
+      if(String(item.contentType||blob.type).startsWith('image/')){
+        const image=document.createElement('img');
+        image.src=previewUrl;image.alt=item.fileName||'保管画像';
+        previewBody.appendChild(image);
+      }else{
+        const frame=document.createElement('iframe');
+        frame.src=previewUrl;frame.title=item.fileName||'保管資料';
+        previewBody.appendChild(frame);
+      }
+      preview.hidden=false;
+      document.body.classList.add('document-archive-preview-open');
+      if(!previewHistoryActive){history.pushState({documentArchivePreview:true},'',location.href);previewHistoryActive=true}
+    }catch(e){alert(e.message||'資料を開けませんでした。')}
     finally{button.disabled=false;button.textContent='開く'}
+  }
+
+  async function downloadDocument(item,button){
+    button.disabled=true;button.textContent='準備中...';
+    try{
+      const blob=await fetchDocument(item);
+      const url=URL.createObjectURL(blob);
+      const link=document.createElement('a');
+      link.href=url;link.download=item.fileName||'資料';
+      document.body.appendChild(link);link.click();link.remove();
+      setTimeout(function(){URL.revokeObjectURL(url)},60000);
+    }catch(e){alert(e.message||'資料をダウンロードできませんでした。')}
+    finally{button.disabled=false;button.textContent='ダウンロード'}
   }
 
   saveBtn.addEventListener('click',async function(){
@@ -136,4 +193,5 @@
     if(panel.classList.contains('show'))load();
     else loadedForPassword='';
   }).observe(panel,{attributes:true,attributeFilter:['class']});
+  window.addEventListener('popstate',function(){if(previewHistoryActive)closePreview()});
 })();
