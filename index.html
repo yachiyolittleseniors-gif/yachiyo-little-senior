@@ -3949,8 +3949,14 @@ function openProtectedArea(type){
     const dateKey=v=>String(v??'').trim().replace(/[./]/g,'-').replace(/年|月/g,'-').replace(/日/g,'').split('T')[0];
     const todayKey=[now.getFullYear(),String(now.getMonth()+1).padStart(2,'0'),String(now.getDate()).padStart(2,'0')].join('-');
     const upcoming=schedule
-      .filter(x=>x && x.date && dateKey(x.date)>=todayKey)
-      .sort((a,b)=>dateKey(a.date).localeCompare(dateKey(b.date)))[0];
+      .map((item,index)=>({item,index}))
+      .filter(entry=>entry.item && entry.item.date && dateKey(entry.item.date)>=todayKey)
+      .sort((a,b)=>{
+        const updatedA=Date.parse(a.item.updatedAt||'')||0;
+        const updatedB=Date.parse(b.item.updatedAt||'')||0;
+        if(updatedA!==updatedB)return updatedB-updatedA;
+        return b.index-a.index;
+      })[0]?.item;
     const sc=document.querySelector('#latestScheduleCard .latest-meta');
     const scheduleGradeIcon=(date,grade)=>{
       const parts=String(date||'').split('-').map(Number);

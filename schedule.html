@@ -2164,7 +2164,8 @@ document.getElementById('calendarForm').addEventListener('submit',async e=>{
     grades:selectedGrades,
     time:document.getElementById('calendarEventTime').value.trim(),
     place:document.getElementById('calendarEventPlace').value.trim(),
-    memo:document.getElementById('calendarEventMemo').value.trim()
+    memo:document.getElementById('calendarEventMemo').value.trim(),
+    updatedAt:new Date().toISOString()
   };
   const next=scheduleData.filter(x=>x.date!==selectedDate);next.push(item);
   try{await sharedSave('schedule',next);scheduleData=next;window.scheduleData=scheduleData;closeEditor();renderCalendar();}
