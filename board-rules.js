@@ -27,11 +27,14 @@
     textView.hidden=!hasText&&hasPdfs;
     textView.classList.toggle('empty',!hasText&&!hasPdfs);
     pdfList.replaceChildren();adminList.replaceChildren();pdfList.hidden=!hasPdfs;
+    if(hasPdfs){
+      const open=document.createElement('a');
+      open.className='rules-pdf-open btn gold';
+      open.href='./secretariat-documents.html?department=rules&v=20260914-1';
+      open.textContent='保存済み資料を見る（'+rules.pdfs.length+'件）';
+      pdfList.appendChild(open);
+    }
     rules.pdfs.forEach(function(pdf,index){
-      const item=document.createElement('div');item.className='rules-pdf-item';
-      const name=document.createElement('div');name.className='rules-pdf-name';name.textContent=pdf.name||('チーム規約資料 '+(index+1));
-      const open=document.createElement('a');open.className='rules-pdf-open btn gold';open.href='./team-rules-viewer.html?index='+encodeURIComponent(index)+'&v=20260914-1';open.textContent='資料を開く';
-      item.append(name,open);pdfList.appendChild(item);
       const adminItem=document.createElement('div');adminItem.className='rules-admin-item';
       const adminName=document.createElement('span');adminName.textContent=pdf.name||('チーム規約資料 '+(index+1));
       const remove=document.createElement('button');remove.type='button';remove.textContent='削除';remove.addEventListener('click',function(){removePdf(index)});
