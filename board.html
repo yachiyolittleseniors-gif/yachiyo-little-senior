@@ -196,10 +196,11 @@ window.boardAccessReady=(async function requireBoardPassword(){
     document.documentElement.style.visibility='';
     return true;
   }
-  const returningFromDocuments=new URLSearchParams(location.search).get('from')==='documents';
+  const returnSource=new URLSearchParams(location.search).get('from');
+  const returningFromProtectedPage=returnSource==='documents'||returnSource==='coach';
   const navigationEntry=performance.getEntriesByType&&performance.getEntriesByType('navigation')[0];
   const isPageReload=navigationEntry&&navigationEntry.type==='reload';
-  if(returningFromDocuments||isPageReload){
+  if(returningFromProtectedPage||isPageReload){
     try{
       const saved=sessionStorage.getItem('yachiyoAttendancePass')||'';
       if(saved&&await verify(saved)){
