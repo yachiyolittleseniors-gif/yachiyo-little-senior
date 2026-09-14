@@ -209,6 +209,27 @@ document.documentElement.style.visibility='hidden';
 window.coachAccessReady=(async function(){
   const API='/.netlify/functions/coach-attendance-data';
   const storageKey='yachiyoCoachAttendancePass';
+  const reloadKey='yachiyoCoachAttendanceReloadPass';
+  const reloadExpiryKey='yachiyoCoachAttendanceReloadPassExpires';
+  const reloadLifetime=12*60*60*1000;
+
+  function remember(password){
+    try{sessionStorage.setItem(storageKey,password)}catch(e){}
+    try{localStorage.setItem(reloadKey,password);localStorage.setItem(reloadExpiryKey,String(Date.now()+reloadLifetime))}catch(e){}
+  }
+  function readSaved(){
+    try{const current=sessionStorage.getItem(storageKey)||'';if(current)return current}catch(e){}
+    try{
+      const expires=Number(localStorage.getItem(reloadExpiryKey)||0);
+      if(expires>Date.now())return localStorage.getItem(reloadKey)||'';
+      localStorage.removeItem(reloadKey);localStorage.removeItem(reloadExpiryKey);
+    }catch(e){}
+    return '';
+  }
+  function forget(){
+    try{sessionStorage.removeItem(storageKey)}catch(e){}
+    try{localStorage.removeItem(reloadKey);localStorage.removeItem(reloadExpiryKey)}catch(e){}
+  }
 
   async function verify(password){
     if(!password)return false;
@@ -224,12 +245,13 @@ window.coachAccessReady=(async function(){
     }
   }
 
-  const saved=sessionStorage.getItem(storageKey)||'';
+  const saved=readSaved();
   if(saved&&await verify(saved)){
+    remember(saved);
     document.documentElement.style.visibility='';
     return true;
   }
-  sessionStorage.removeItem(storageKey);
+  forget();
 
   const entered=prompt('指導者出欠確認のパスワードを入力してください。');
   if(entered===null){
@@ -243,7 +265,7 @@ window.coachAccessReady=(async function(){
     return false;
   }
   if(await verify(entered)){
-    sessionStorage.setItem(storageKey,entered);
+    remember(entered);
     document.documentElement.style.visibility='';
     return true;
   }

@@ -24,6 +24,30 @@
 <script>
 document.documentElement.style.visibility='hidden';
 window.boardAccessReady=(async function requireBoardPassword(){
+  const accessKey='yachiyoAttendancePass';
+  const reloadKey='yachiyoAttendanceReloadPass';
+  const reloadExpiryKey='yachiyoAttendanceReloadPassExpires';
+  const reloadLifetime=12*60*60*1000;
+  function saveAccess(password){
+    try{sessionStorage.setItem(accessKey,password)}catch(e){}
+    try{
+      localStorage.setItem(reloadKey,password);
+      localStorage.setItem(reloadExpiryKey,String(Date.now()+reloadLifetime));
+    }catch(e){}
+  }
+  function readReloadAccess(){
+    try{
+      const expires=Number(localStorage.getItem(reloadExpiryKey)||0);
+      if(expires>Date.now())return localStorage.getItem(reloadKey)||'';
+      localStorage.removeItem(reloadKey);
+      localStorage.removeItem(reloadExpiryKey);
+    }catch(e){}
+    return '';
+  }
+  function clearAccess(){
+    try{sessionStorage.removeItem(accessKey)}catch(e){}
+    try{localStorage.removeItem(reloadKey);localStorage.removeItem(reloadExpiryKey)}catch(e){}
+  }
   async function verify(password){
     const response=await fetch('/.netlify/functions/site-data?section=access-settings',{
       method:'POST',
@@ -31,7 +55,7 @@ window.boardAccessReady=(async function requireBoardPassword(){
       body:JSON.stringify({action:'verifyAccessPassword',password:password})
     });
     if(!response.ok)return false;
-    try{sessionStorage.setItem('yachiyoAttendancePass',password)}catch(e){}
+    saveAccess(password);
     document.documentElement.style.visibility='';
     return true;
   }
@@ -41,15 +65,15 @@ window.boardAccessReady=(async function requireBoardPassword(){
   const isPageReload=navigationEntry&&navigationEntry.type==='reload';
   if(returningFromProtectedPage||isPageReload){
     try{
-      const saved=sessionStorage.getItem('yachiyoAttendancePass')||'';
+      const saved=sessionStorage.getItem(accessKey)||readReloadAccess();
       if(saved&&await verify(saved)){
         history.replaceState(null,'','./board.html');
         return;
       }
-      if(saved)sessionStorage.removeItem('yachiyoAttendancePass');
+      if(saved)clearAccess();
     }catch(e){}
   }else{
-    try{sessionStorage.removeItem('yachiyoAttendancePass')}catch(e){}
+    clearAccess();
   }
   const p=prompt('パスワードを入力してください。');
   if(p===null){
