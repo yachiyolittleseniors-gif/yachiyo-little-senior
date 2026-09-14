@@ -233,7 +233,7 @@ window.coachAccessReady=(async function(){
 
   const entered=prompt('指導者出欠確認のパスワードを入力してください。');
   if(entered===null){
-    location.replace('./board.html');
+    location.replace('./board.html?from=coach');
     return false;
   }
   if(await verify(entered)){
