@@ -95,7 +95,8 @@ body{min-height:100vh;margin:0;background:#e8e8e6;font-family:-apple-system,Blin
     for(let number=1;number<=pdf.numPages;number++){
       const page=await pdf.getPage(number);
       const base=page.getViewport({scale:1});
-      const targetWidth=Math.min(1400,Math.max(800,window.innerWidth*2));
+      const pixelRatio=Math.min(3,Math.max(1,window.devicePixelRatio||1));
+      const targetWidth=Math.min(2000,Math.max(1600,window.innerWidth*pixelRatio));
       const viewport=page.getViewport({scale:targetWidth/base.width});
       const canvas=document.createElement('canvas');
       canvas.className='page';canvas.width=Math.ceil(viewport.width);canvas.height=Math.ceil(viewport.height);
