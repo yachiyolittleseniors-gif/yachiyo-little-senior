@@ -60,7 +60,7 @@ window.boardAccessReady=(async function requireBoardPassword(){
     return true;
   }
   const returnSource=new URLSearchParams(location.search).get('from');
-  const returningFromProtectedPage=returnSource==='documents'||returnSource==='coach';
+  const returningFromProtectedPage=['documents','coach','attendance','player'].includes(returnSource);
   const navigationEntry=performance.getEntriesByType&&performance.getEntriesByType('navigation')[0];
   const isPageReload=navigationEntry&&navigationEntry.type==='reload';
   if(returningFromProtectedPage||isPageReload){
