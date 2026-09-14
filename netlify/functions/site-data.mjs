@@ -972,6 +972,33 @@ export default async (request, context) => {
           });
         }
 
+        // 旧サイト照合で判明した鹿嶋市長杯・第三試合を既存データへ補完する。
+        // 初回の旧試合移行が完了済みの環境でも、この1件だけを一度追加する。
+        const kashimaThirdMigrationKey =
+          "migrations/results-kashima-third-20260914.json";
+        const kashimaThirdMigrated = await store.get(
+          kashimaThirdMigrationKey,
+          { type: "json", consistency: "strong" }
+        );
+        if (!kashimaThirdMigrated?.done) {
+          const current = Array.isArray(data) ? data : [];
+          const missingResult = LEGACY_RESULT_SEED.find(
+            item => item.id === "legacy-44-2026-kashima-3"
+          );
+          const alreadyExists = current.some(
+            item => String(item?.id || "") === "legacy-44-2026-kashima-3"
+          );
+          if (missingResult && !alreadyExists) {
+            data = [...current, missingResult];
+            await store.setJSON(key, data);
+          }
+          await store.setJSON(kashimaThirdMigrationKey, {
+            done: true,
+            added: Boolean(missingResult && !alreadyExists),
+            updatedAt: new Date().toISOString()
+          });
+        }
+
         const currentResults = Array.isArray(data) ? data : [];
         const activeResults = currentResults.filter(item => !resultIsExpired(item));
         if (activeResults.length !== currentResults.length) {
