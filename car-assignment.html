@@ -197,7 +197,7 @@ function carName(car){const driver=String(car?.driver||'').trim();return driver?
 function coachPassengerCount(coaches=[]){return coaches.reduce((sum,value)=>{const match=String(value||'').match(/(\d+)\s*名/);return sum+(match?Number(match[1]):String(value||'').trim()?1:0)},0)}
 function carOccupancy(car){return new Set([car.driver,car.navigator,...car.parents].filter(Boolean)).size+(Number(car.players)||0)+coachPassengerCount(car.coaches)}
 function spouseFor(driver,parents){const base=String(driver||'').replace(/[父母]$/,'');const suffix=String(driver||'').endsWith('父')?'母':String(driver||'').endsWith('母')?'父':'';return suffix?parents.find(member=>String(member.name||'')===base+suffix):null}
-function makeCar(type,candidate,index,parents,used,withNavigator=true){const car=blankCar(type,index);if(candidate){car.driver=candidate.name;car.vehicle=candidate.vehicle;car.capacity=candidate.capacity||7;used.add(candidate.name)}if(car.driver&&withNavigator){const driverIsMother=candidate?.parent==='mother'||String(car.driver).endsWith('母');if(driverIsMother){const mother=parents.find(member=>parentType(member)==='mother'&&!used.has(member.name)&&member.name!==car.driver);if(mother){car.navigator=mother.name;used.add(mother.name)}}else{const spouse=spouseFor(car.driver,parents);if(spouse&&!used.has(spouse.name)){car.navigator=spouse.name;used.add(spouse.name)}else{const father=parents.find(member=>parentType(member)==='father'&&!used.has(member.name)&&member.name!==car.driver);if(father){car.navigator=father.name;used.add(father.name)}}}}car.parents=[];return car}
+function makeCar(type,candidate,index,parents,used,withNavigator=true){const car=blankCar(type,index);if(candidate){car.driver=candidate.name;car.vehicle=candidate.vehicle;car.capacity=candidate.capacity||7;used.add(candidate.name)}car.parents=[];return car}
 function completeManualCar(car,parents,used){if(!car.driver||car.navigator||car.type==='umpire'||car.type==='coach')return;const driver=parents.find(member=>member.name===car.driver),driverIsMother=parentType(driver)==='mother'||String(car.driver).endsWith('母');if(driverIsMother){const mother=parents.find(member=>parentType(member)==='mother'&&!used.has(member.name)&&member.name!==car.driver);if(mother){car.navigator=mother.name;used.add(mother.name)}}else{const spouse=spouseFor(car.driver,parents);if(spouse&&!used.has(spouse.name)){car.navigator=spouse.name;used.add(spouse.name)}else{const father=parents.find(member=>parentType(member)==='father'&&!used.has(member.name)&&member.name!==car.driver);if(father){car.navigator=father.name;used.add(father.name)}}}}
 function autoCreate(){
   showError('');showCompletion('');
@@ -263,7 +263,6 @@ function autoCreate(){
       if(candidate){car.driver=candidate.name;if(!car.vehicle)car.vehicle=candidate.vehicle;if(candidate.capacity)car.capacity=candidate.capacity;used.add(candidate.name)}
     }
     if(car.driver)used.add(car.driver);
-    completeManualCar(car,info.parents,used);
   });
   cars=[];
 
@@ -284,6 +283,7 @@ function autoCreate(){
     cars.push(makeCar(type,candidate,cars.length,info.parents,used));
   }
   cars.push(...manualCars);
+  cars.forEach(car=>completeManualCar(car,info.parents,used));
 
   const manualPlayerCount=manualCars.reduce((sum,car)=>sum+(Number(car.players)||0),0);
   const playerCars=cars.filter(car=>car.type==='player');
