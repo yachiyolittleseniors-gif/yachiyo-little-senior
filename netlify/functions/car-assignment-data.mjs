@@ -64,7 +64,7 @@ function normalizeAssignment(value = {}) {
     equipmentCount: value.equipmentCount == null ? null : Math.max(0, Math.min(1, Number(value.equipmentCount) || 0)),
     cargoCount: value.cargoCount == null ? null : Math.max(0, Math.min(1, Number(value.cargoCount) || 0)),
     supportCar: typeof value.supportCar === "boolean" ? value.supportCar : null,
-    supportCarCount: Math.max(0, Math.min(1, Number(value.supportCarCount) || 0)),
+    supportCarCount: Math.max(0, Math.min(40, Number(value.supportCarCount) || 0)),
     carCount: value.carCount == null ? null : Math.max(0, Math.min(40, Number(value.carCount) || 0)),
     cars: Array.isArray(value.cars) ? value.cars.slice(0, 40).map(normalizeCar) : [],
     updatedAt: new Date().toISOString(),
