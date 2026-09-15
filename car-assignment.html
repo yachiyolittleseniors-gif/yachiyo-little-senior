@@ -188,7 +188,7 @@ function renderAllComments(){const date=currentDate(),title=$('#allCommentsTitle
 function vehicleFrom(text){const models=[['ハイエース',/ハイエース/i],['デリカD:5',/デリカ\s*(?:D\s*[:：]?\s*5)?/i],['ヴォクシー',/ヴォクシー|VOXY/i],['セレナ',/セレナ/i],['ノア',/ノア/i],['アルファード',/アルファード/i],['ヴェルファイア',/ヴェルファイア/i],['ステップワゴン',/ステップ\s*ワゴン/i],['フリード',/フリード/i],['シエンタ',/シエンタ/i],['エスクァイア',/エスクァイア/i]];return models.find(([,pattern])=>pattern.test(text))?.[0]||''}
 function capacityFrom(text){const extra=text.match(/運転手(?:を|は)?除(?:いて|き)\s*(\d+)\s*人|運転手以外(?:に)?\s*(\d+)\s*人/);if(extra)return Number(extra[1]||extra[2])+1;const match=text.match(/(\d+)\s*人乗り/);return match?Number(match[1]):0}
 function canDrive(text){const value=String(text||'').replace(/\s+/g,'');if(/車を?出せ(?:ない|ません)/i.test(value)||/(?:車出し|車だし|配車|運転|送迎).{0,10}(?:不可|できない|出来ない|できません|出せない|出せません|無理|なし|×)/i.test(value))return false;return /(?:車出し|車だし)(?:可|可能|できます|出来ます|できる|出来る|します|OK|ＯＫ|○|◯|〇)?|車を?出せ(?:ます|る)?|配車(?:可|可能|できます|出来ます|できる|出来る|します|OK|ＯＫ|○|◯|〇)|車(?:可|可能|OK|ＯＫ|○|◯|〇)|運転(?:可|可能|します|できます|出来ます|できる|出来る)|送迎(?:可|可能|します|できます|出来ます|できる|出来る)/i.test(value)}
-function candidates(){const date=currentDate();return parentData.members.map(member=>{const text=candidateCommentForMember(member,date),grade=memberGrade(member);return{member,name:String(member.name||''),grade,accompany:grade!==selectedGrade,parent:parentType(member),text,vehicle:vehicleFrom(text),capacity:capacityFrom(text),equipment:/道具/i.test(text),cargo:/荷物|クーラー/i.test(text),umpire:/審判/i.test(text),drive:canDrive(text)}}).filter(item=>item.text&&(item.drive||item.vehicle||item.capacity||item.equipment||item.cargo||item.umpire)).sort((a,b)=>(a.parent==='father'?0:1)-(b.parent==='father'?0:1)||Number(b.grade||0)-Number(a.grade||0))}
+function candidates(){const date=currentDate();return parentData.members.map(member=>{const text=candidateCommentForMember(member,date),grade=memberGrade(member),anythingOk=/(?:なんでも|何でも).{0,4}(?:ok|ＯＫ|可|可能|大丈夫)/i.test(text);return{member,name:String(member.name||''),grade,accompany:grade!==selectedGrade,parent:parentType(member),text,vehicle:vehicleFrom(text),capacity:capacityFrom(text),equipment:anythingOk||/道具/i.test(text),cargo:anythingOk||/荷物|クーラー/i.test(text),umpire:/審判/i.test(text),drive:anythingOk||canDrive(text)}}).filter(item=>item.text&&(item.drive||item.vehicle||item.capacity||item.equipment||item.cargo||item.umpire)).sort((a,b)=>(a.parent==='father'?0:1)-(b.parent==='father'?0:1)||Number(b.grade||0)-Number(a.grade||0))}
 function renderCandidates(){const list=candidates();$('#candidateTotal').textContent=list.length+'名';$('#candidateList').innerHTML=list.length?list.map(item=>`<div class="candidate ${item.parent==='mother'?'mother':''}"><b>${esc(item.name)} <small>${esc(item.grade||'-')}年</small>${item.accompany?'<small class="candidate-accompany">帯同</small>':''}</b><small>${item.drive?'配車可・':''}車種：${esc(item.vehicle||'未入力')}・${item.capacity?item.capacity+'人乗り':'乗車人数未入力'}${item.equipment?'・道具可':''}${item.cargo?'・荷物可':''}${item.umpire?'・審判':''}</small></div>`).join(''):'<div class="empty">この日のコメントから配車候補を抽出できませんでした。手入力で追加できます。</div>'}
 function blankCar(type='player',index=cars.length,manual=false){return{id:'car_'+Date.now().toString(36)+'_'+index,type,driver:'',vehicle:'',capacity:7,navigator:'',players:0,parents:[],coaches:[],manual}}
 function addManualCar(){showError('');if(!currentDate()){showError('先に日付を選択してください。');$('#eventDate').focus();return}if(!selectedGrade){showError('先に対象学年を選択してください。');return}const configuredCount=numberValue('#carCount');cars.push(blankCar('player',cars.length,true));$('#carCount').value=Math.max(configuredCount+1,cars.length);renderCars();renderPreview();saveDraft();const cards=$$('#carList .car-edit');cards.at(-1)?.scrollIntoView({behavior:'smooth',block:'center'})}
@@ -238,6 +238,7 @@ function autoCreate(){
   const manualPeople=manualCars.flatMap(car=>[car.driver,car.navigator,...car.parents]).filter(Boolean);
   const pool=candidates(),used=new Set(manualPeople);
   const nextCandidate=predicate=>pool.find(item=>!used.has(item.name)&&predicate(item));
+  const nextDriver=(preferred=()=>false)=>nextCandidate(item=>item.parent==='father'&&preferred(item))||nextCandidate(item=>item.parent==='father')||nextCandidate(preferred)||nextCandidate(()=>true);
   manualCars.forEach(car=>{
     if(!car.driver&&car.type==='coach'){
       const managerDriving=$('#coachManagerDriver').checked;
@@ -245,8 +246,7 @@ function autoCreate(){
       if(!car.vehicle)car.vehicle=$('#coachVehicle').value.trim();
     }
     if(!car.driver&&car.type!=='coach'){
-      const preferred=car.type==='equipment'?nextCandidate(item=>item.equipment):car.type==='cargo'?nextCandidate(item=>item.cargo):car.type==='umpire'?nextCandidate(item=>item.umpire):null;
-      const candidate=preferred||nextCandidate(item=>item.parent==='father')||nextCandidate(()=>true);
+      const candidate=car.type==='equipment'?nextDriver(item=>item.equipment):car.type==='cargo'?nextDriver(item=>item.cargo):car.type==='umpire'?nextDriver(item=>item.umpire):nextDriver();
       if(candidate){car.driver=candidate.name;if(!car.vehicle)car.vehicle=candidate.vehicle;if(candidate.capacity)car.capacity=candidate.capacity;used.add(candidate.name)}
     }
     if(car.driver)used.add(car.driver);
@@ -261,12 +261,12 @@ function autoCreate(){
     coach.coaches=[...($('#coachManager').checked&&!managerDriving?['監督']:[]),...(coachCount?[`コーチ ${coachCount}名`]:[])];
     cars.push(coach);
   }
-  for(let i=0;i<needed.equipment;i++){const candidate=nextCandidate(item=>item.equipment)||nextCandidate(item=>item.parent==='father')||nextCandidate(()=>true);cars.push(makeCar('equipment',candidate,cars.length,info.parents,used))}
-  for(let i=0;i<needed.cargo;i++){const candidate=nextCandidate(item=>item.cargo)||nextCandidate(item=>item.parent==='father')||nextCandidate(()=>true);cars.push(makeCar('cargo',candidate,cars.length,info.parents,used))}
-  for(let i=0;i<needed.umpire;i++){const candidate=nextCandidate(item=>item.umpire)||nextCandidate(item=>item.parent==='father')||nextCandidate(()=>true);cars.push(makeCar('umpire',candidate,cars.length,info.parents,used,false))}
+  for(let i=0;i<needed.equipment;i++){const candidate=nextDriver(item=>item.equipment);cars.push(makeCar('equipment',candidate,cars.length,info.parents,used))}
+  for(let i=0;i<needed.cargo;i++){const candidate=nextDriver(item=>item.cargo);cars.push(makeCar('cargo',candidate,cars.length,info.parents,used))}
+  for(let i=0;i<needed.umpire;i++){const candidate=nextDriver(item=>item.umpire);cars.push(makeCar('umpire',candidate,cars.length,info.parents,used,false))}
   while(cars.length+manualCars.length<requested){
     const remaining=requested-cars.length-manualCars.length;
-    const father=nextCandidate(item=>item.parent==='father'),candidate=father||nextCandidate(()=>true);
+    const candidate=nextDriver();
     const type=remaining===1&&cars.some(car=>car.type==='player')&&(!candidate||candidate.parent==='mother')?'support':'player';
     cars.push(makeCar(type,candidate,cars.length,info.parents,used));
   }
