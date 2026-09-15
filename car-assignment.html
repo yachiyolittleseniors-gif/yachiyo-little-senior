@@ -240,6 +240,18 @@ function autoCreate(){
   const pool=candidates(),used=new Set(manualPeople);
   const nextCandidate=predicate=>pool.find(item=>!used.has(item.name)&&predicate(item));
   const nextDriver=(preferred=()=>false)=>nextCandidate(item=>item.parent==='father'&&preferred(item))||nextCandidate(item=>item.parent==='father')||nextCandidate(preferred)||nextCandidate(()=>true);
+  const specialHistory=new Map();
+  Object.values(savedAssignments).forEach(assignment=>{
+    const date=String(assignment?.date||'');
+    if(!date||date>=currentDate())return;
+    (Array.isArray(assignment?.cars)?assignment.cars:[]).forEach(car=>{
+      if(!['equipment','cargo'].includes(car?.type)||!String(car?.driver||'').trim())return;
+      const name=String(car.driver).trim(),history=specialHistory.get(name)||{count:0,last:''};
+      history.count+=1;if(date>history.last)history.last=date;specialHistory.set(name,history);
+    });
+  });
+  const rotatingCandidate=predicate=>pool.filter(item=>!used.has(item.name)&&predicate(item)).sort((a,b)=>{const ah=specialHistory.get(a.name)||{count:0,last:''},bh=specialHistory.get(b.name)||{count:0,last:''};return ah.count-bh.count||ah.last.localeCompare(bh.last)||pool.indexOf(a)-pool.indexOf(b)})[0];
+  const nextSpecialDriver=(preferred=()=>false)=>rotatingCandidate(item=>item.parent==='father'&&preferred(item))||rotatingCandidate(item=>item.parent==='father')||rotatingCandidate(preferred)||rotatingCandidate(()=>true);
   manualCars.forEach(car=>{
     if(!car.driver&&car.type==='coach'){
       const managerDriving=$('#coachManagerDriver').checked;
@@ -247,7 +259,7 @@ function autoCreate(){
       if(!car.vehicle)car.vehicle=$('#coachVehicle').value.trim();
     }
     if(!car.driver&&car.type!=='coach'){
-      const candidate=car.type==='equipment'?nextDriver(item=>item.equipment):car.type==='cargo'?nextDriver(item=>item.cargo):car.type==='umpire'?nextDriver(item=>item.umpire):nextDriver();
+      const candidate=car.type==='equipment'?nextSpecialDriver(item=>item.equipment):car.type==='cargo'?nextSpecialDriver(item=>item.cargo):car.type==='umpire'?nextDriver(item=>item.umpire):nextDriver();
       if(candidate){car.driver=candidate.name;if(!car.vehicle)car.vehicle=candidate.vehicle;if(candidate.capacity)car.capacity=candidate.capacity;used.add(candidate.name)}
     }
     if(car.driver)used.add(car.driver);
@@ -262,8 +274,8 @@ function autoCreate(){
     coach.coaches=[...($('#coachManager').checked&&!managerDriving?['監督']:[]),...(coachCount?[`コーチ ${coachCount}名`]:[])];
     cars.push(coach);
   }
-  for(let i=0;i<needed.equipment;i++){const candidate=nextDriver(item=>item.equipment);cars.push(makeCar('equipment',candidate,cars.length,info.parents,used))}
-  for(let i=0;i<needed.cargo;i++){const candidate=nextDriver(item=>item.cargo);cars.push(makeCar('cargo',candidate,cars.length,info.parents,used))}
+  for(let i=0;i<needed.equipment;i++){const candidate=nextSpecialDriver(item=>item.equipment);cars.push(makeCar('equipment',candidate,cars.length,info.parents,used))}
+  for(let i=0;i<needed.cargo;i++){const candidate=nextSpecialDriver(item=>item.cargo);cars.push(makeCar('cargo',candidate,cars.length,info.parents,used))}
   for(let i=0;i<needed.umpire;i++){const candidate=nextDriver(item=>item.umpire);cars.push(makeCar('umpire',candidate,cars.length,info.parents,used,false))}
   while(cars.length+manualCars.length<requested){
     const remaining=requested-cars.length-manualCars.length;
