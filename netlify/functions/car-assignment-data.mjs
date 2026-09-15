@@ -52,6 +52,8 @@ function normalizeAssignment(value = {}) {
     coachCar: value.coachCar === true,
     coachManager: value.coachManager === true,
     coachCount: Math.max(0, Math.min(20, Number(value.coachCount) || 0)),
+    equipmentCount: Math.max(0, Math.min(1, Number(value.equipmentCount) || 0)),
+    cargoCount: Math.max(0, Math.min(1, Number(value.cargoCount) || 0)),
     carCount: Math.max(0, Math.min(40, Number(value.carCount) || 0)),
     cars: Array.isArray(value.cars) ? value.cars.slice(0, 40).map(normalizeCar) : [],
     updatedAt: new Date().toISOString(),
