@@ -50,6 +50,8 @@ function normalizeAssignment(value = {}) {
     busPassengers: Math.max(0, Math.min(100, Number(value.busPassengers) || 0)),
     umpireCar: value.umpireCar === true,
     coachCar: value.coachCar === true,
+    coachDriver: String(value.coachDriver || "").trim().slice(0, 80),
+    coachVehicle: String(value.coachVehicle || "").trim().slice(0, 80),
     coachManager: value.coachManager === true,
     coachManagerDriver: value.coachManagerDriver === true,
     coachCount: Math.max(0, Math.min(5, Number(value.coachCount) || 0)),
