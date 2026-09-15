@@ -47,6 +47,7 @@
   X-Robots-Tag: noindex, nofollow, noarchive
 
 /car-assignment.html
+  Cache-Control: no-cache, no-store, must-revalidate
   X-Robots-Tag: noindex, nofollow, noarchive
 
 /secretariat-document-viewer.html
