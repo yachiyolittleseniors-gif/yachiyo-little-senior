@@ -193,7 +193,7 @@ function renderCandidates(){const list=candidates();$('#candidateTotal').textCon
 function blankCar(type='player',index=cars.length,manual=false){return{id:'car_'+Date.now().toString(36)+'_'+index,type,driver:'',vehicle:'',capacity:7,navigator:'',players:0,parents:[],coaches:[],manual}}
 function addManualCar(){showError('');if(!currentDate()){showError('先に日付を選択してください。');$('#eventDate').focus();return}if(!selectedGrade){showError('先に対象学年を選択してください。');return}const configuredCount=numberValue('#carCount');cars.push(blankCar('player',cars.length,true));$('#carCount').value=Math.max(configuredCount+1,cars.length);renderCars();renderPreview();saveDraft();const cards=$$('#carList .car-edit');cards.at(-1)?.scrollIntoView({behavior:'smooth',block:'center'})}
 function sortCars(){cars.sort((a,b)=>(typeOrder[a.type]??99)-(typeOrder[b.type]??99))}
-function carName(car){const driver=String(car?.driver||'').trim().replace(/[父母]$/,'');return driver?driver+'号':'未定号'}
+function carName(car){const driver=String(car?.driver||'').trim();return driver?driver+'号':'未定号'}
 function coachPassengerCount(coaches=[]){return coaches.reduce((sum,value)=>{const match=String(value||'').match(/(\d+)\s*名/);return sum+(match?Number(match[1]):String(value||'').trim()?1:0)},0)}
 function carOccupancy(car){return new Set([car.driver,car.navigator,...car.parents].filter(Boolean)).size+(Number(car.players)||0)+coachPassengerCount(car.coaches)}
 function spouseFor(driver,parents){const base=String(driver||'').replace(/[父母]$/,'');const suffix=String(driver||'').endsWith('父')?'母':String(driver||'').endsWith('母')?'父':'';return suffix?parents.find(member=>String(member.name||'')===base+suffix):null}
