@@ -175,11 +175,108 @@ function canDrive(text){return /車出し|車だし|車を?出せ|配車(?:可|�
 function candidates(){const date=currentDate();return parentData.members.map(member=>{const text=candidateCommentForMember(member,date),grade=memberGrade(member);return{member,name:String(member.name||''),grade,accompany:grade!==selectedGrade,parent:parentType(member),text,vehicle:vehicleFrom(text),capacity:capacityFrom(text),equipment:/道具/i.test(text),cargo:/荷物|クーラー/i.test(text),umpire:/審判/i.test(text),drive:canDrive(text)}}).filter(item=>item.text&&(item.drive||item.vehicle||item.capacity||item.equipment||item.cargo||item.umpire)).sort((a,b)=>(a.parent==='father'?0:1)-(b.parent==='father'?0:1)||Number(b.grade||0)-Number(a.grade||0))}
 function renderCandidates(){const list=candidates();$('#candidateTotal').textContent=list.length+'名';$('#candidateList').innerHTML=list.length?list.map(item=>`<div class="candidate ${item.parent==='mother'?'mother':''}"><b>${esc(item.name)} <small>${esc(item.grade||'-')}年</small>${item.accompany?'<small class="candidate-accompany">帯同</small>':''}</b><small>車種：${esc(item.vehicle||'未入力')}・${item.capacity?item.capacity+'人乗り':'乗車人数未入力'}${item.equipment?'・道具可':''}${item.cargo?'・荷物可':''}${item.umpire?'・審判':''}</small></div>`).join(''):'<div class="empty">この日のコメントから配車候補を抽出できませんでした。手入力で追加できます。</div>'}
 function blankCar(type='player',index=cars.length,manual=false){return{id:'car_'+Date.now().toString(36)+'_'+index,type,driver:'',vehicle:'',capacity:7,navigator:'',players:0,parents:[],coaches:[],manual}}
-function addManualCar(){showError('');if(!currentDate()){showError('先に日付を選択してください。');$('#eventDate').focus();return}if(!selectedGrade){showError('先に対象学年を選択してください。');return}cars.push(blankCar('player',cars.length,true));$('#carCount').value=cars.length;renderCars();renderPreview();saveDraft();const cards=$$('#carList .car-edit');cards.at(-1)?.scrollIntoView({behavior:'smooth',block:'center'})}
+function addManualCar(){showError('');if(!currentDate()){showError('先に日付を選択してください。');$('#eventDate').focus();return}if(!selectedGrade){showError('先に対象学年を選択してください。');return}const configuredCount=numberValue('#carCount');cars.push(blankCar('player',cars.length,true));$('#carCount').value=Math.max(configuredCount,cars.length);renderCars();renderPreview();saveDraft();const cards=$$('#carList .car-edit');cards.at(-1)?.scrollIntoView({behavior:'smooth',block:'center'})}
 function sortCars(){cars.sort((a,b)=>(typeOrder[a.type]??99)-(typeOrder[b.type]??99))}
 function spouseFor(driver,parents){const base=String(driver||'').replace(/[父母]$/,'');const suffix=String(driver||'').endsWith('父')?'母':String(driver||'').endsWith('母')?'父':'';return suffix?parents.find(member=>String(member.name||'')===base+suffix):null}
 function makeCar(type,candidate,index,parents,used,withNavigator=true){const car=blankCar(type,index);if(candidate){car.driver=candidate.name;car.vehicle=candidate.vehicle;car.capacity=candidate.capacity||7;used.add(candidate.name)}if(car.driver&&withNavigator){const driverIsMother=candidate?.parent==='mother'||String(car.driver).endsWith('母');if(driverIsMother){const mother=parents.find(member=>parentType(member)==='mother'&&!used.has(member.name)&&member.name!==car.driver);if(mother){car.navigator=mother.name;used.add(mother.name)}}else{const spouse=spouseFor(car.driver,parents);if(spouse&&!used.has(spouse.name)){car.navigator=spouse.name;used.add(spouse.name)}else{const father=parents.find(member=>parentType(member)==='father'&&!used.has(member.name)&&member.name!==car.driver);if(father){car.navigator=father.name;used.add(father.name)}}}}car.parents=[];return car}
-function autoCreate(){showError('');showCompletion('');if(!currentDate()){showError('日付を選択してください。');return}if(!selectedGrade){showError('対象学年を選択してください。');return}if(!$('#gameType').value){showError('試合区分を選択してください。');return}if(!$('#route').value){showError('移動経路を選択してください。');return}if(!$('#equipmentCount').value){showError('道具車のあり・なしを選択してください。');return}if(!$('#cargoCount').value){showError('荷物車のあり・なしを選択してください。');return}if(numberValue('#carCount')<1){showError('配車数を入力してください。');return}if(!$('#bus').value){showError('バスのあり・なしを選択してください。');return}if(!$('#umpireCar').value){showError('審判号のあり・なしを選択してください。');return}if(!$('#coachCar').value){showError('指導者号のあり・なしを選択してください。');return}if($('#coachCar').value==='yes'&&!$('#coachCount').value){showError('コーチ人数を選択してください。');return}document.querySelector('#status').textContent='' ;const info=attendeeSnapshot();const requested=Math.max(1,numberValue('#carCount'));const equipment=$('#equipmentCount').value==='yes'?1:0;const cargo=$('#cargoCount').value==='yes'?1:0;const umpire=$('#umpireCar').value==='yes';const includeCoach=$('#coachCar').value==='yes';const special=equipment+cargo+(umpire?1:0)+(includeCoach?1:0);if(special>requested){showError('配車数より指導者号・道具車・荷物車・審判号の合計が多くなっています。');return}const manualCars=cars.filter(car=>car.manual===true),manualDrivers=manualCars.flatMap(car=>[car.driver,car.navigator,...car.parents]).filter(Boolean),pool=candidates(),used=new Set(manualDrivers),nextCandidate=predicate=>pool.find(item=>!used.has(item.name)&&predicate(item));cars=[];if(includeCoach){const coach=blankCar('coach',cars.length);const managerDriving=$('#coachManagerDriver').checked;coach.driver=managerDriving?'監督':$('#coachDriver').value.trim();coach.vehicle=$('#coachVehicle').value.trim();coach.capacity=7;const coachCount=numberValue('#coachCount');coach.coaches=[...($('#coachManager').checked&&!managerDriving?['監督']:[]),...(coachCount?[`コーチ ${coachCount}名`]:[])];cars.push(coach)}for(let i=0;i<equipment;i++){const candidate=nextCandidate(item=>item.equipment)||nextCandidate(item=>item.parent==='father')||nextCandidate(()=>true);cars.push(makeCar('equipment',candidate,cars.length,info.parents,used))}for(let i=0;i<cargo;i++){const candidate=nextCandidate(item=>item.cargo)||nextCandidate(item=>item.parent==='father')||nextCandidate(()=>true);cars.push(makeCar('cargo',candidate,cars.length,info.parents,used))}if(umpire){const candidate=nextCandidate(item=>item.umpire)||nextCandidate(item=>item.parent==='father')||nextCandidate(()=>true);cars.push(makeCar('umpire',candidate,cars.length,info.parents,used,false))}while(cars.length+manualCars.length<requested){const remaining=requested-cars.length-manualCars.length;const father=nextCandidate(item=>item.parent==='father');const any=father||nextCandidate(()=>true);const type=remaining===1&&cars.some(car=>car.type==='player')&&(!any||any.parent==='mother')?'support':'player';cars.push(makeCar(type,any,cars.length,info.parents,used))}cars.push(...manualCars);const manualPlayerCount=manualCars.reduce((sum,car)=>sum+(Number(car.players)||0),0);const playerCars=cars.filter(car=>car.type==='player'&&car.manual!==true);let playersLeft=Math.max(0,info.playerCount+info.escort-manualPlayerCount);playerCars.forEach(car=>{car.players=0});let placedPlayer=true;while(playersLeft>0&&placedPlayer){placedPlayer=false;for(const car of playerCars){const occupied=new Set([car.driver,car.navigator,...car.parents].filter(Boolean)).size+car.coaches.length;if(car.players<Math.max(0,car.capacity-occupied)){car.players+=1;playersLeft-=1;placedPlayer=true;if(playersLeft===0)break}}}if(playersLeft>0)$('#status').textContent='選手が'+playersLeft+'名乗り切れていません。配車数または乗車人数を増やしてください。';const remainingParents=info.parents.map(member=>member.name).filter(name=>!used.has(name));const supportCars=cars.filter(car=>car.type==='support');const otherCars=cars.filter(car=>!['equipment','cargo'].includes(car.type));const hasRoom=car=>new Set([car.driver,car.navigator,...car.parents].filter(Boolean)).size+car.players+car.coaches.length<car.capacity;const motherNames=remainingParents.filter(name=>name.endsWith('母'));const otherNames=remainingParents.filter(name=>!name.endsWith('母'));for(const name of [...motherNames,...otherNames]){const target=name.endsWith('母')?(supportCars.find(hasRoom)||otherCars.find(hasRoom)):otherCars.find(hasRoom);if(target){target.parents.push(name);used.add(name)}}renderCars();renderPreview();const completed=manualCars.length?'手入力の号車を残して配車案が完成しました。内容を確認してください。':'配車案が完成しました。内容を確認してください。';$('#status').textContent=$('#status').textContent||completed;showCompletion(completed);saveDraft();$('.cars-section').scrollIntoView({behavior:'smooth',block:'start'})}
+function completeManualCar(car,parents,used){if(!car.driver||car.navigator||car.type==='umpire')return;const driver=parents.find(member=>member.name===car.driver),driverIsMother=parentType(driver)==='mother'||String(car.driver).endsWith('母');if(driverIsMother){const mother=parents.find(member=>parentType(member)==='mother'&&!used.has(member.name)&&member.name!==car.driver);if(mother){car.navigator=mother.name;used.add(mother.name)}}else{const spouse=spouseFor(car.driver,parents);if(spouse&&!used.has(spouse.name)){car.navigator=spouse.name;used.add(spouse.name)}else{const father=parents.find(member=>parentType(member)==='father'&&!used.has(member.name)&&member.name!==car.driver);if(father){car.navigator=father.name;used.add(father.name)}}}}
+function autoCreate(){
+  showError('');showCompletion('');
+  if(!currentDate()){showError('日付を選択してください。');return}
+  if(!selectedGrade){showError('対象学年を選択してください。');return}
+  if(!$('#gameType').value){showError('試合区分を選択してください。');return}
+  if(!$('#route').value){showError('移動経路を選択してください。');return}
+  if(!$('#equipmentCount').value){showError('道具車のあり・なしを選択してください。');return}
+  if(!$('#cargoCount').value){showError('荷物車のあり・なしを選択してください。');return}
+  if(numberValue('#carCount')<1){showError('配車数を入力してください。');return}
+  if(!$('#bus').value){showError('バスのあり・なしを選択してください。');return}
+  if(!$('#umpireCar').value){showError('審判号のあり・なしを選択してください。');return}
+  if(!$('#coachCar').value){showError('指導者号のあり・なしを選択してください。');return}
+  if($('#coachCar').value==='yes'&&!$('#coachCount').value){showError('コーチ人数を選択してください。');return}
+
+  $('#status').textContent='';
+  const info=attendeeSnapshot();
+  const requested=Math.max(1,numberValue('#carCount'));
+  const manualCars=cars.filter(car=>car.manual===true);
+  if(manualCars.length>requested){showError('手入力した号車数より配車数が少なくなっています。配車数を増やしてください。');return}
+
+  const desired={
+    equipment:$('#equipmentCount').value==='yes'?1:0,
+    cargo:$('#cargoCount').value==='yes'?1:0,
+    umpire:$('#umpireCar').value==='yes'?1:0,
+    coach:$('#coachCar').value==='yes'?1:0
+  };
+  const manualTypeCount=type=>manualCars.filter(car=>car.type===type).length;
+  const needed={
+    equipment:Math.max(0,desired.equipment-manualTypeCount('equipment')),
+    cargo:Math.max(0,desired.cargo-manualTypeCount('cargo')),
+    umpire:Math.max(0,desired.umpire-manualTypeCount('umpire')),
+    coach:Math.max(0,desired.coach-manualTypeCount('coach'))
+  };
+  const requiredCars=manualCars.length+needed.equipment+needed.cargo+needed.umpire+needed.coach;
+  if(requiredCars>requested){showError('手入力した号車と必要な専用車を合わせると配車数を超えます。配車数を増やしてください。');return}
+
+  const manualPeople=manualCars.flatMap(car=>[car.driver,car.navigator,...car.parents]).filter(Boolean);
+  const pool=candidates(),used=new Set(manualPeople);
+  const nextCandidate=predicate=>pool.find(item=>!used.has(item.name)&&predicate(item));
+  manualCars.forEach(car=>{
+    if(!car.driver&&car.type==='coach'){
+      const managerDriving=$('#coachManagerDriver').checked;
+      car.driver=managerDriving?'監督':$('#coachDriver').value.trim();
+      if(!car.vehicle)car.vehicle=$('#coachVehicle').value.trim();
+    }
+    if(!car.driver&&car.type!=='coach'){
+      const preferred=car.type==='equipment'?nextCandidate(item=>item.equipment):car.type==='cargo'?nextCandidate(item=>item.cargo):car.type==='umpire'?nextCandidate(item=>item.umpire):null;
+      const candidate=preferred||nextCandidate(item=>item.parent==='father')||nextCandidate(()=>true);
+      if(candidate){car.driver=candidate.name;if(!car.vehicle)car.vehicle=candidate.vehicle;if(candidate.capacity)car.capacity=candidate.capacity;used.add(candidate.name)}
+    }
+    if(car.driver)used.add(car.driver);
+    completeManualCar(car,info.parents,used);
+  });
+  cars=[];
+
+  if(needed.coach){
+    const coach=blankCar('coach',cars.length),managerDriving=$('#coachManagerDriver').checked;
+    coach.driver=managerDriving?'監督':$('#coachDriver').value.trim();coach.vehicle=$('#coachVehicle').value.trim();coach.capacity=7;
+    const coachCount=numberValue('#coachCount');
+    coach.coaches=[...($('#coachManager').checked&&!managerDriving?['監督']:[]),...(coachCount?[`コーチ ${coachCount}名`]:[])];
+    cars.push(coach);
+  }
+  for(let i=0;i<needed.equipment;i++){const candidate=nextCandidate(item=>item.equipment)||nextCandidate(item=>item.parent==='father')||nextCandidate(()=>true);cars.push(makeCar('equipment',candidate,cars.length,info.parents,used))}
+  for(let i=0;i<needed.cargo;i++){const candidate=nextCandidate(item=>item.cargo)||nextCandidate(item=>item.parent==='father')||nextCandidate(()=>true);cars.push(makeCar('cargo',candidate,cars.length,info.parents,used))}
+  for(let i=0;i<needed.umpire;i++){const candidate=nextCandidate(item=>item.umpire)||nextCandidate(item=>item.parent==='father')||nextCandidate(()=>true);cars.push(makeCar('umpire',candidate,cars.length,info.parents,used,false))}
+  while(cars.length+manualCars.length<requested){
+    const remaining=requested-cars.length-manualCars.length;
+    const father=nextCandidate(item=>item.parent==='father'),candidate=father||nextCandidate(()=>true);
+    const type=remaining===1&&cars.some(car=>car.type==='player')&&(!candidate||candidate.parent==='mother')?'support':'player';
+    cars.push(makeCar(type,candidate,cars.length,info.parents,used));
+  }
+  cars.push(...manualCars);
+
+  const manualPlayerCount=manualCars.reduce((sum,car)=>sum+(Number(car.players)||0),0);
+  const playerCars=cars.filter(car=>car.type==='player');
+  playerCars.filter(car=>car.manual!==true).forEach(car=>{car.players=0});
+  let playersLeft=Math.max(0,info.playerCount+info.escort-manualPlayerCount);
+  while(playersLeft>0){
+    const available=playerCars.filter(car=>{const occupied=new Set([car.driver,car.navigator,...car.parents].filter(Boolean)).size+car.coaches.length;return car.players<Math.max(0,car.capacity-occupied)});
+    if(!available.length)break;
+    available.sort((a,b)=>(Number(a.players)||0)-(Number(b.players)||0));
+    available[0].players=(Number(available[0].players)||0)+1;playersLeft-=1;
+  }
+  if(playersLeft>0)$('#status').textContent='選手が'+playersLeft+'名乗り切れていません。配車数または乗車人数を増やしてください。';
+
+  const remainingParents=info.parents.map(member=>member.name).filter(name=>!used.has(name));
+  const supportCars=cars.filter(car=>car.type==='support');
+  const otherCars=cars.filter(car=>!['equipment','cargo'].includes(car.type));
+  const hasRoom=car=>new Set([car.driver,car.navigator,...car.parents].filter(Boolean)).size+car.players+car.coaches.length<car.capacity;
+  const motherNames=remainingParents.filter(name=>name.endsWith('母'));
+  const otherNames=remainingParents.filter(name=>!name.endsWith('母'));
+  for(const name of [...motherNames,...otherNames]){const target=name.endsWith('母')?(supportCars.find(hasRoom)||otherCars.find(hasRoom)):otherCars.find(hasRoom);if(target){target.parents.push(name);used.add(name)}}
+
+  renderCars();renderPreview();
+  const completed=manualCars.length?'手入力した号車も含めて、全体の配車案を作り直しました。内容を確認してください。':'配車案が完成しました。内容を確認してください。';
+  $('#status').textContent=$('#status').textContent||completed;showCompletion(completed);saveDraft();$('.cars-section').scrollIntoView({behavior:'smooth',block:'start'});
+}
 function typeOptions(selected){return Object.entries(typeLabels).map(([value,label])=>`<option value="${value}" ${value===selected?'selected':''}>${label}</option>`).join('')}
 function renderCars(){sortCars();if(!cars.length){$('#carList').innerHTML='<div class="empty car-empty">上の「配車案を自動作成」を押してください。</div>';return}$('#carList').innerHTML=cars.map((car,index)=>`<article class="car-edit" data-kind="${esc(car.type)}" data-index="${index}"><div class="car-card-head"><div class="car-no">${index+1}号車</div><label class="car-field car-type">車両区分<select data-key="type">${typeOptions(car.type)}</select></label><button class="remove-car" data-remove="${index}" type="button">削除</button></div><div class="car-main-grid"><label class="car-field">運転手<input data-key="driver" value="${esc(car.driver)}" placeholder="手入力"></label><label class="car-field">車種<input data-key="vehicle" value="${esc(car.vehicle)}" placeholder="必要なら入力"></label><label class="car-field">乗車可能人数<input data-key="capacity" type="number" min="1" max="60" value="${car.capacity}"></label><label class="car-field">ナビ<input data-key="navigator" value="${esc(car.navigator)}" placeholder="なし"></label><label class="car-field players">選手人数<input data-key="players" type="number" min="0" max="60" value="${car.players}"></label><label class="car-field coaches">監督・コーチ<input data-key="coaches" value="${esc(car.coaches.join('、'))}" placeholder="指導者号のみ"></label><label class="car-field parents">保護者名（読点区切り）<input data-key="parents" value="${esc(car.parents.join('、'))}" placeholder="例：山田父、山田母"></label></div></article>`).join('');$$('[data-index]').forEach(card=>{const index=Number(card.dataset.index);card.querySelectorAll('[data-key]').forEach(input=>input.addEventListener('input',()=>{const key=input.dataset.key;if(key==='parents'||key==='coaches')cars[index][key]=input.value.split(/[、,]/).map(value=>value.trim()).filter(Boolean);else if(key==='capacity'||key==='players')cars[index][key]=Math.max(0,Number(input.value)||0);else cars[index][key]=input.value;if(key==='type')renderCars();renderPreview();saveDraft()}))});$$('[data-remove]').forEach(button=>button.onclick=()=>{cars.splice(Number(button.dataset.remove),1);$('#carCount').value=cars.length;renderCars();renderPreview();saveDraft()})}
 function currentAssignment(){sortCars();return{date:currentDate(),grade:selectedGrade,gameType:$('#gameType').value,route:$('#route').value,opponent:$('#opponent').value.trim(),venue:$('#venue').value.trim(),playerCount:$('#playerCountInput').value===''?null:numberValue('#playerCountInput'),firstGradeEscort:$('#firstGradeEscort').value===''?null:numberValue('#firstGradeEscort'),equipmentCount:$('#equipmentCount').value===''?null:$('#equipmentCount').value==='yes'?1:0,cargoCount:$('#cargoCount').value===''?null:$('#cargoCount').value==='yes'?1:0,bus:$('#bus').value===''?null:$('#bus').value==='yes',busPassengers:$('#busPassengers').value===''?null:numberValue('#busPassengers'),umpireCar:$('#umpireCar').value===''?null:$('#umpireCar').value==='yes',coachCar:$('#coachCar').value===''?null:$('#coachCar').value==='yes',coachDriver:$('#coachDriver').value.trim(),coachVehicle:$('#coachVehicle').value.trim(),coachManager:$('#coachManager').checked,coachManagerDriver:$('#coachManagerDriver').checked,coachCount:$('#coachCount').value===''?null:numberValue('#coachCount'),carCount:$('#carCount').value===''?null:numberValue('#carCount'),cars}}
