@@ -286,11 +286,12 @@ function autoCreate(){
 
   const remainingParents=info.parents.map(member=>member.name).filter(name=>!used.has(name));
   const supportCars=cars.filter(car=>car.type==='support');
+  const motherCars=cars.filter(car=>!['coach','umpire'].includes(car.type));
   const otherCars=cars.filter(car=>car.type!=='coach');
   const hasRoom=car=>carOccupancy(car)<car.capacity;
   const motherNames=remainingParents.filter(name=>name.endsWith('母'));
   const otherNames=remainingParents.filter(name=>!name.endsWith('母'));
-  for(const name of [...motherNames,...otherNames]){const target=name.endsWith('母')?(supportCars.find(hasRoom)||otherCars.find(hasRoom)):otherCars.find(hasRoom);if(target){target.parents.push(name);used.add(name)}}
+  for(const name of [...motherNames,...otherNames]){const target=name.endsWith('母')?(supportCars.find(hasRoom)||motherCars.find(hasRoom)):otherCars.find(hasRoom);if(target){target.parents.push(name);used.add(name)}}
 
   renderCars();renderPreview();
   const parentsLeft=remainingParents.filter(name=>!used.has(name));
