@@ -177,6 +177,8 @@ function renderCandidates(){const list=candidates();$('#candidateTotal').textCon
 function blankCar(type='player',index=cars.length,manual=false){return{id:'car_'+Date.now().toString(36)+'_'+index,type,driver:'',vehicle:'',capacity:7,navigator:'',players:0,parents:[],coaches:[],manual}}
 function addManualCar(){showError('');if(!currentDate()){showError('先に日付を選択してください。');$('#eventDate').focus();return}if(!selectedGrade){showError('先に対象学年を選択してください。');return}const configuredCount=numberValue('#carCount');cars.push(blankCar('player',cars.length,true));$('#carCount').value=Math.max(configuredCount+1,cars.length);renderCars();renderPreview();saveDraft();const cards=$$('#carList .car-edit');cards.at(-1)?.scrollIntoView({behavior:'smooth',block:'center'})}
 function sortCars(){cars.sort((a,b)=>(typeOrder[a.type]??99)-(typeOrder[b.type]??99))}
+function coachPassengerCount(coaches=[]){return coaches.reduce((sum,value)=>{const match=String(value||'').match(/(\d+)\s*名/);return sum+(match?Number(match[1]):String(value||'').trim()?1:0)},0)}
+function carOccupancy(car){return new Set([car.driver,car.navigator,...car.parents].filter(Boolean)).size+(Number(car.players)||0)+coachPassengerCount(car.coaches)}
 function spouseFor(driver,parents){const base=String(driver||'').replace(/[父母]$/,'');const suffix=String(driver||'').endsWith('父')?'母':String(driver||'').endsWith('母')?'父':'';return suffix?parents.find(member=>String(member.name||'')===base+suffix):null}
 function makeCar(type,candidate,index,parents,used,withNavigator=true){const car=blankCar(type,index);if(candidate){car.driver=candidate.name;car.vehicle=candidate.vehicle;car.capacity=candidate.capacity||7;used.add(candidate.name)}if(car.driver&&withNavigator){const driverIsMother=candidate?.parent==='mother'||String(car.driver).endsWith('母');if(driverIsMother){const mother=parents.find(member=>parentType(member)==='mother'&&!used.has(member.name)&&member.name!==car.driver);if(mother){car.navigator=mother.name;used.add(mother.name)}}else{const spouse=spouseFor(car.driver,parents);if(spouse&&!used.has(spouse.name)){car.navigator=spouse.name;used.add(spouse.name)}else{const father=parents.find(member=>parentType(member)==='father'&&!used.has(member.name)&&member.name!==car.driver);if(father){car.navigator=father.name;used.add(father.name)}}}}car.parents=[];return car}
 function completeManualCar(car,parents,used){if(!car.driver||car.navigator||car.type==='umpire')return;const driver=parents.find(member=>member.name===car.driver),driverIsMother=parentType(driver)==='mother'||String(car.driver).endsWith('母');if(driverIsMother){const mother=parents.find(member=>parentType(member)==='mother'&&!used.has(member.name)&&member.name!==car.driver);if(mother){car.navigator=mother.name;used.add(mother.name)}}else{const spouse=spouseFor(car.driver,parents);if(spouse&&!used.has(spouse.name)){car.navigator=spouse.name;used.add(spouse.name)}else{const father=parents.find(member=>parentType(member)==='father'&&!used.has(member.name)&&member.name!==car.driver);if(father){car.navigator=father.name;used.add(father.name)}}}}
@@ -259,22 +261,33 @@ function autoCreate(){
   playerCars.filter(car=>car.manual!==true).forEach(car=>{car.players=0});
   let playersLeft=Math.max(0,info.playerCount+info.escort-manualPlayerCount);
   while(playersLeft>0){
-    const available=playerCars.filter(car=>{const occupied=new Set([car.driver,car.navigator,...car.parents].filter(Boolean)).size+car.coaches.length;return car.players<Math.max(0,car.capacity-occupied)});
+    const available=playerCars.filter(car=>carOccupancy(car)<car.capacity);
     if(!available.length)break;
     available.sort((a,b)=>(Number(a.players)||0)-(Number(b.players)||0));
     available[0].players=(Number(available[0].players)||0)+1;playersLeft-=1;
   }
-  if(playersLeft>0)$('#status').textContent='選手が'+playersLeft+'名乗り切れていません。配車数または乗車人数を増やしてください。';
 
   const remainingParents=info.parents.map(member=>member.name).filter(name=>!used.has(name));
   const supportCars=cars.filter(car=>car.type==='support');
-  const otherCars=cars.filter(car=>!['equipment','cargo'].includes(car.type));
-  const hasRoom=car=>new Set([car.driver,car.navigator,...car.parents].filter(Boolean)).size+car.players+car.coaches.length<car.capacity;
+  const otherCars=cars;
+  const hasRoom=car=>carOccupancy(car)<car.capacity;
   const motherNames=remainingParents.filter(name=>name.endsWith('母'));
   const otherNames=remainingParents.filter(name=>!name.endsWith('母'));
   for(const name of [...motherNames,...otherNames]){const target=name.endsWith('母')?(supportCars.find(hasRoom)||otherCars.find(hasRoom)):otherCars.find(hasRoom);if(target){target.parents.push(name);used.add(name)}}
 
   renderCars();renderPreview();
+  const parentsLeft=remainingParents.filter(name=>!used.has(name));
+  const missingDrivers=cars.filter(car=>!String(car.driver||'').trim()).length;
+  const overCapacity=cars.reduce((sum,car)=>sum+Math.max(0,carOccupancy(car)-Math.max(0,Number(car.capacity)||0)),0);
+  const problems=[];
+  if(playersLeft)problems.push(`選手が${playersLeft}名`);
+  if(parentsLeft.length)problems.push(`保護者が${parentsLeft.length}名`);
+  if(missingDrivers)problems.push(`運転手未入力が${missingDrivers}台`);
+  if(overCapacity)problems.push(`定員超過が${overCapacity}名分`);
+  if(problems.length){
+    const message=`配車が足りません（${problems.join('・')}）。配車数または乗車可能人数を増やして、もう一度「配車案を自動作成」を押してください。`;
+    showError(message);$('#status').textContent=message;showCompletion('');saveDraft();$('#createError').scrollIntoView({behavior:'smooth',block:'center'});return;
+  }
   const completed=manualCars.length?'手入力した号車も含めて、全体の配車案を作り直しました。内容を確認してください。':'配車案が完成しました。内容を確認してください。';
   $('#status').textContent=$('#status').textContent||completed;showCompletion(completed);saveDraft();$('.cars-section').scrollIntoView({behavior:'smooth',block:'start'});
 }
