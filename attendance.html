@@ -259,7 +259,7 @@ body{padding-top:var(--fixed-header-height)!important}
 </script>
 <section class="pagehero"><div class="pagehero-inner"><div class="eyebrow">ATTENDANCE</div><h1>保護者出欠確認</h1><div class="crumb">HOME / チーム専用ページ / 保護者出欠確認</div></div></section>
 <main class="wrap">
-  <div class="team-board-return-row"><a class="team-board-return" href="./board.html?from=attendance">← チーム専用ページへ戻る</a><a class="car-assignment-btn" id="carAssignmentBtn" href="./car-assignment.html?fresh=1&amp;v=20260916-1" hidden>配車案を自動作成</a></div>
+  <div class="team-board-return-row"><a class="team-board-return" href="./board.html?from=attendance">← チーム専用ページへ戻る</a><a class="car-assignment-btn" id="carAssignmentBtn" href="./car-assignment.html?v=20260916-2" hidden>配車案を自動作成</a></div>
   <div class="error" id="errorBox"></div>
   <section class="locked-card hidden" id="lockedView">
     <h2>保護者出欠確認は準備中です</h2>
@@ -308,7 +308,7 @@ body{padding-top:var(--fixed-header-height)!important}
 // Created by tatsuki.saitoh
 const API='/.netlify/functions/attendance-data';
 const SCHEDULE_API='/.netlify/functions/site-data?section=schedule';
-const ACCESS_KEY='yachiyoAttendancePass',DRAFT_ADMIN_KEY='yachiyoAttendanceDraftAdminPass',CAR_START_FRESH_KEY='yachiyoCarAssignmentStartFresh',CAR_TEMP_DENSUKE_KEY='yachiyoCarAssignmentTempDensuke',RELOAD_KEY='yachiyoAttendanceReloadPass',RELOAD_EXPIRY_KEY='yachiyoAttendanceReloadPassExpires',RELOAD_LIFETIME=12*60*60*1000;
+const ACCESS_KEY='yachiyoAttendancePass',DRAFT_ADMIN_KEY='yachiyoAttendanceDraftAdminPass',CAR_TEMP_DENSUKE_KEY='yachiyoCarAssignmentTempDensuke',RELOAD_KEY='yachiyoAttendanceReloadPass',RELOAD_EXPIRY_KEY='yachiyoAttendanceReloadPassExpires',RELOAD_LIFETIME=12*60*60*1000;
 function isReloadNavigation(){const entry=performance.getEntriesByType&&performance.getEntriesByType('navigation')[0];return !!entry&&entry.type==='reload'}
 function readAccessPass(){try{const current=sessionStorage.getItem(ACCESS_KEY)||'';if(current)return current}catch(e){}if(!isReloadNavigation())return'';try{const expires=Number(localStorage.getItem(RELOAD_EXPIRY_KEY)||0);if(expires>Date.now()){const saved=localStorage.getItem(RELOAD_KEY)||'';if(saved){sessionStorage.setItem(ACCESS_KEY,saved);return saved}}localStorage.removeItem(RELOAD_KEY);localStorage.removeItem(RELOAD_EXPIRY_KEY)}catch(e){}return''}
 function rememberAccessPass(password){if(!password)return;try{sessionStorage.setItem(ACCESS_KEY,password)}catch(e){}try{localStorage.setItem(RELOAD_KEY,password);localStorage.setItem(RELOAD_EXPIRY_KEY,String(Date.now()+RELOAD_LIFETIME))}catch(e){}}
@@ -317,7 +317,7 @@ let adminPass='',draftAdminPass=sessionStorage.getItem(DRAFT_ADMIN_KEY)||'',acce
 sessionStorage.removeItem('yachiyoAdminPassword');
 const $=s=>document.querySelector(s);
 const esc=s=>String(s??'').replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));
-$('#carAssignmentBtn').addEventListener('click',()=>{try{sessionStorage.setItem(CAR_START_FRESH_KEY,'1');sessionStorage.setItem(CAR_TEMP_DENSUKE_KEY,'1')}catch(e){}});
+$('#carAssignmentBtn').addEventListener('click',()=>{try{sessionStorage.setItem(CAR_TEMP_DENSUKE_KEY,'1')}catch(e){}});
 const uid=p=>p+'_'+Date.now().toString(36)+'_'+Math.random().toString(36).slice(2,7);
 function syncEventDateLabel(){const value=$('#eventDate').value,label=$('#eventDateLabel');label.textContent=value?value.replaceAll('-','/'):'日付を選択';label.classList.toggle('has-value',!!value)}
 $('#eventDate').addEventListener('change',syncEventDateLabel);
