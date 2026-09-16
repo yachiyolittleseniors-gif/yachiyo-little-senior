@@ -279,7 +279,7 @@ function addEscortFathers(){showError('');if(!currentDate()){showError('先に�
 function sortCars(){cars.sort((a,b)=>(typeOrder[a.type]??99)-(typeOrder[b.type]??99))}
 function carName(car){if(car?.type==='coach')return'指導者号';const driver=String(car?.driver||'').trim();return driver?driver+'号':'未定号'}
 function coachPassengerCount(coaches=[]){return coaches.reduce((sum,value)=>{const match=String(value||'').match(/(\d+)\s*名/);return sum+(match?Number(match[1]):String(value||'').trim()?1:0)},0)}
-function carOccupancy(car){return new Set([car.driver,car.navigator,...car.parents].filter(Boolean)).size+(Number(car.players)||0)+coachPassengerCount(car.coaches)}
+function carOccupancy(car){const coachCount=coachPassengerCount(car.coaches),navigator=car.type==='coach'&&car.navigator==='コーチ'&&coachCount>0?'':car.navigator;return new Set([car.driver,navigator,...car.parents].filter(Boolean)).size+(Number(car.players)||0)+coachCount}
 function spouseFor(driver,parents){const base=String(driver||'').replace(/[父母]$/,'');const suffix=String(driver||'').endsWith('父')?'母':String(driver||'').endsWith('母')?'父':'';return suffix?parents.find(member=>String(member.name||'')===base+suffix):null}
 function makeCar(type,candidate,index,parents,used,withNavigator=true){const car=blankCar(type,index);if(candidate){car.driver=candidate.name;car.vehicle=candidate.vehicle;car.capacity=candidate.capacity||7;used.add(candidate.name)}car.parents=[];return car}
 function completeManualCar(car,parents,used){if(!car.driver||car.navigator||car.type==='umpire'||car.type==='coach')return;const driver=parents.find(member=>member.name===car.driver),driverIsMother=parentType(driver)==='mother'||String(car.driver).endsWith('母'),avoidEscort=['equipment','cargo'].includes(car.type),available=predicate=>{const list=parents.filter(member=>predicate(member)&&!used.has(member.name)&&member.name!==car.driver);return avoidEscort?(list.find(member=>!isEscortParent(member))||list[0]):list[0]};if(driverIsMother){const mother=available(member=>parentType(member)==='mother');if(mother){car.navigator=mother.name;used.add(mother.name)}}else{const spouse=spouseFor(car.driver,parents),regularFather=available(member=>parentType(member)==='father');if(spouse&&!used.has(spouse.name)&&(!avoidEscort||!isEscortParent(spouse))){car.navigator=spouse.name;used.add(spouse.name)}else if(regularFather){car.navigator=regularFather.name;used.add(regularFather.name)}else if(spouse&&!used.has(spouse.name)){car.navigator=spouse.name;used.add(spouse.name)}}}
@@ -350,6 +350,7 @@ function autoCreate(){
       const candidate=car.type==='equipment'?nextSpecialDriver(item=>item.equipment):car.type==='cargo'?nextSpecialDriver(item=>item.cargo):car.type==='umpire'?nextDriver(item=>item.umpire):car.type==='support'?nextSupportDriver():nextDriver();
       if(candidate){car.driver=candidate.name;if(!car.vehicle)car.vehicle=candidate.vehicle;if(candidate.capacity)car.capacity=candidate.capacity;used.add(candidate.name)}
     }
+    if(car.type==='coach'&&!car.navigator&&numberValue('#coachCount')>0)car.navigator='コーチ';
     if(car.driver)used.add(car.driver);
   });
   cars=[];
@@ -359,6 +360,7 @@ function autoCreate(){
     coach.driver=managerDriving?'監督':$('#coachDriver').value.trim();coach.vehicle=$('#coachVehicle').value.trim();coach.capacity=7;
     const coachCount=numberValue('#coachCount');
     coach.coaches=[...($('#coachManager').checked&&!managerDriving?['監督']:[]),...(coachCount?[`コーチ ${coachCount}名`]:[])];
+    if(coachCount>0)coach.navigator='コーチ';
     cars.push(coach);
   }
   for(let i=0;i<needed.equipment;i++){const candidate=nextSpecialDriver(item=>item.equipment);cars.push(makeCar('equipment',candidate,cars.length,info.parents,used))}
