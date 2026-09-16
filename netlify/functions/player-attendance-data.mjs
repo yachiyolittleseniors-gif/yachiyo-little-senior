@@ -486,7 +486,7 @@ export default async (request, context) => {
     try { body = await request.json(); } catch { return json({ error: "Invalid JSON" }, 400); }
     const action = body.action || "";
 
-    const adminActions = new Set(["adminPing", "adminSave"]);
+    const adminActions = new Set(["adminPing", "adminSave", "previewDensuke"]);
     let adminAuth = null;
     if (adminActions.has(action)) {
       adminAuth = await verifyAdminPassword({
@@ -505,7 +505,7 @@ export default async (request, context) => {
       return json({ error: "Unauthorized" }, 401);
     }
 
-    if (!["adminPing", "adminSave", "answer", "comment"].includes(action)) {
+    if (!["adminPing", "adminSave", "previewDensuke", "answer", "comment"].includes(action)) {
       return json({ error: "Unknown action" }, 400);
     }
 
@@ -530,6 +530,18 @@ export default async (request, context) => {
     data = await syncPlayersFromRoster(store, data);
     data = await syncEventsFromParentAttendance(store, data);
     data = cleanupOldData(data);
+
+    // 伝助終了までの配車作成用一時機能。取得結果は保存しない。
+    if (action === "previewDensuke") {
+      const html = await fetchDensukeHtml();
+      const imported = importMatchingDensukeData(data, html);
+      return json({
+        ok: true,
+        data: cleanupOldData(data),
+        temporary: true,
+        ...imported,
+      });
+    }
 
     if (action === "endDensuke") {
       const html = await fetchDensukeHtml();
