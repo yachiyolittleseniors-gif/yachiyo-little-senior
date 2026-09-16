@@ -3,6 +3,8 @@ import { adminAuthError, verifyAdminPassword } from "./admin-rate-limit.mjs";
 
 const STORE = "yachiyo-public-site";
 const KEY = "content/car-assignments.json";
+const COACH_KEY = "content/coach-attendance.json";
+const COACH_MEMBER_STATE_PREFIX = "coach-attendance/member-state/";
 
 function json(data, status = 200, extraHeaders = {}) {
   return new Response(JSON.stringify(data), {
@@ -17,6 +19,32 @@ function json(data, status = 200, extraHeaders = {}) {
 
 function cleanText(value, max = 200) {
   return String(value || "").trim().slice(0, max);
+}
+
+async function loadCoachAttendanceCounts(store) {
+  let data = {};
+  try {
+    data = (await store.get(COACH_KEY, { type: "json", consistency: "strong" })) || {};
+  } catch {
+    data = {};
+  }
+  const members = Array.isArray(data.members) ? data.members : [];
+  const events = Array.isArray(data.events) ? data.events : [];
+  const answers = data.answers && typeof data.answers === "object" ? structuredClone(data.answers) : {};
+  await Promise.all(members.map(async member => {
+    const id = String(member?.id || "");
+    if (!id) return;
+    try {
+      const state = await store.get(`${COACH_MEMBER_STATE_PREFIX}${encodeURIComponent(id)}.json`, { type: "json", consistency: "strong" });
+      if (state?.answers && typeof state.answers === "object") answers[id] = state.answers;
+    } catch {}
+  }));
+  return Object.fromEntries(events.map(event => {
+    const eventId = String(event?.id || "");
+    const date = String(event?.date || "");
+    const count = members.filter(member => answers?.[String(member?.id || "")]?.[eventId] === "○").length;
+    return [date, count];
+  }).filter(([date]) => /^\d{4}-\d{2}-\d{2}$/.test(date)));
 }
 
 function normalizeCar(car = {}, index = 0) {
@@ -90,7 +118,7 @@ export default async (request, context) => {
     } catch {
       assignments = {};
     }
-    if (request.method === "GET") return json({ assignments });
+    if (request.method === "GET") return json({ assignments, coachAttendanceCounts: await loadCoachAttendanceCounts(store) });
     if (request.method !== "POST") return json({ error: "Method not allowed" }, 405);
     let body = {};
     try {
