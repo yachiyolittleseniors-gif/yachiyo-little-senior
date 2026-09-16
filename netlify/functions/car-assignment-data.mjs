@@ -98,6 +98,14 @@ export default async (request, context) => {
     } catch {
       return json({ error: "Invalid JSON" }, 400);
     }
+    if (body.action === "delete") {
+      const date = /^\d{4}-\d{2}-\d{2}$/.test(String(body.date || "")) ? String(body.date) : "";
+      const grade = ["1", "2", "3"].includes(String(body.grade)) ? String(body.grade) : "";
+      if (!date || !grade) return json({ error: "削除する日付と学年を選択してください。" }, 400);
+      delete assignments[`${date}_${grade}`];
+      await store.setJSON(KEY, assignments);
+      return json({ ok: true, assignments });
+    }
     if (body.action !== "save") return json({ error: "Unknown action" }, 400);
     const assignment = normalizeAssignment(body.assignment);
     if (!assignment.date) return json({ error: "日付を選択してください。" }, 400);
