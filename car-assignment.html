@@ -51,12 +51,13 @@ body{background:#f5f5f2}.page{width:min(860px,100%);padding:24px 18px 64px}.topl
 </style>
 <style>
 .bottom-actions.single-action{grid-template-columns:1fr}
+.create-panel .auto-box{display:flex!important;overflow:visible;flex-direction:column}.create-panel .primary-create-btn{position:relative!important;inset:auto!important;display:grid!important;flex:none;width:100%!important;height:auto!important;min-height:72px!important;margin:0!important;transform:none!important;overflow:visible!important;align-items:center;visibility:visible!important;opacity:1!important}
 .counts{grid-template-columns:repeat(5,1fr)}
 .preview-counts{grid-template-columns:repeat(7,1fr)}
 .current-vehicle-total{display:grid;grid-template-columns:1fr auto;gap:12px;align-items:center;margin:-4px 0 18px;padding:14px 16px;border:1px solid #cfd6df;border-radius:12px;background:#f7f9fb}.current-vehicle-copy{display:grid;gap:7px}.current-vehicle-copy>strong{color:var(--navy);font-size:16px}.current-vehicle-breakdown{display:flex;flex-wrap:wrap;gap:6px}.current-vehicle-breakdown span{padding:4px 8px;border-radius:999px;background:#e8edf3;color:#344559;font-size:11px;font-weight:800}.current-vehicle-value{display:flex;align-items:baseline;gap:4px;color:var(--navy)}.current-vehicle-value output{font-size:30px;font-weight:900;line-height:1}.current-vehicle-value span{font-size:14px;font-weight:800}
 @media(min-width:701px){.topline .title{transform:translateX(40px)}}
 @media(max-width:700px){.counts{grid-template-columns:1fr 1fr}.count-row:nth-child(even){border-right:0}.count-row.total{grid-column:1/-1;border:0;border-radius:0 0 12px 12px}.preview-counts{grid-template-columns:repeat(4,1fr)}.preview-count{border-right:1px solid #ded7c8;border-bottom:0}.preview-count:nth-child(-n+4){border-bottom:1px solid var(--line)}.preview-count:nth-child(4),.preview-count:last-child{border-right:0}.preview-count:last-child{grid-column:span 2;border-bottom:0}}
-@media(max-width:430px){.current-vehicle-total{grid-template-columns:1fr auto;padding:12px}.current-vehicle-breakdown{gap:5px}.current-vehicle-breakdown span{padding:4px 6px;font-size:10px}}
+@media(max-width:430px){.create-panel .primary-create-btn{min-height:66px!important}.current-vehicle-total{grid-template-columns:1fr auto;padding:12px}.current-vehicle-breakdown{gap:5px}.current-vehicle-breakdown span{padding:4px 6px;font-size:10px}}
 </style>
 <style>
 .preview-sheet.image-export{width:760px}
