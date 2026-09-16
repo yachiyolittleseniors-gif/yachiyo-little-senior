@@ -51,7 +51,7 @@ function normalizeAssignment(value = {}) {
       ? [...new Set(value.manualEscortFathers.map(item => cleanText(item, 60)).filter(Boolean))].slice(0, 30)
       : [],
     bus: typeof value.bus === "boolean" ? value.bus : null,
-    busCount: Math.max(0, Math.min(1, Number(value.busCount) || 0)),
+    busCount: Math.max(0, Math.min(10, Number(value.busCount) || 0)),
     busPassengers: Math.max(0, Math.min(100, Number(value.busPassengers) || 0)),
     umpireCar: typeof value.umpireCar === "boolean" ? value.umpireCar : null,
     umpireCarCount: Math.max(0, Math.min(1, Number(value.umpireCarCount) || 0)),
