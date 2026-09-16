@@ -440,6 +440,7 @@ export default async (request, context) => {
     const adminActions = new Set([
       "adminPing",
       "setConfig",
+      "previewDensuke",
       "endDensuke",
       "resumeDensuke",
       "adminSave",
@@ -494,6 +495,18 @@ export default async (request, context) => {
           return json({ error: "伝助終了前は保護者出欠確認へ入力できません。", locked: true }, 423);
         }
       }
+    }
+
+    // 伝助終了までの配車作成用一時機能。取得結果は保存しない。
+    if (action === "previewDensuke") {
+      const html = await fetchDensukeHtml();
+      const imported = importMatchingDensukeData(data, html);
+      return json({
+        ok: true,
+        data: cleanupOldData(data),
+        temporary: true,
+        ...imported,
+      });
     }
 
     if (action === "endDensuke") {
