@@ -143,11 +143,12 @@ body{padding-top:var(--fixed-header-height)!important}
 </style>
 
 <style id="attendance-report-styles">
-.report-launch{margin:16px 0;padding:18px;background:#fff;border:1px solid #d8dde4;border-radius:16px;box-shadow:0 8px 24px rgba(7,20,38,.06)}
+.report-launch{margin:16px 0;padding:18px;background:#fff;border:1px solid #d8dde4;border-top:5px solid #c79a3b;border-radius:16px;box-shadow:0 8px 24px rgba(7,20,38,.06)}
 .report-launch h2{margin:0 0 12px;font-size:20px;color:#071426}
 .report-launch-grid{display:grid;grid-template-columns:minmax(180px,1fr) minmax(220px,1.35fr);gap:12px;align-items:end}
 .report-launch label,.comment-date-field{display:grid;gap:6px;font-size:13px;font-weight:800;color:#536072}
 .report-launch select,.comment-date-field select{width:100%;min-height:46px;border:1px solid #cbd2dc;border-radius:10px;background:#fff;color:#071426;padding:0 12px;font:inherit}
+.report-date-field{padding:12px;border:2px solid #d2ad5a;border-radius:13px;background:linear-gradient(135deg,#fff9e8,#fffdf8);color:#765718!important}.report-date-label{display:flex;align-items:center;gap:7px;font-size:14px;font-weight:900}.report-date-field select{min-height:60px!important;margin-top:2px;padding:0 15px!important;border:2px solid #071426!important;border-radius:11px!important;background-color:#fff!important;color:#071426!important;font-size:18px!important;font-weight:900!important;box-shadow:0 3px 10px rgba(7,20,38,.08)}
 .report-launch button{min-height:46px;border:1.5px solid #c79a3b;border-radius:999px;background:#fff;color:#9a6d12;font-weight:900}
 .report-launch p{margin:9px 0 0;color:#788392;font-size:12px}
 .upper-grade-check{display:flex;align-items:center;gap:10px;margin-top:10px;padding:12px 14px;border:1px solid #d8dde4;border-radius:10px;background:#fff;color:#071426;font-weight:800;cursor:pointer}
@@ -181,6 +182,7 @@ body{padding-top:var(--fixed-header-height)!important}
 .report-comment-name{font-weight:900}.report-empty{color:#788392}
 @media(max-width:680px){
  .report-launch-grid{grid-template-columns:1fr}
+ .report-launch{padding:15px}.report-date-field{padding:11px}.report-date-field select{min-height:62px!important;font-size:17px!important}
  .report-dialog-frame{padding:10px}
  .report-dialog-actions{display:grid;grid-template-columns:1fr;padding:8px}
  .report-dialog-actions .report-close{margin:0}
@@ -260,7 +262,7 @@ body{padding-top:var(--fixed-header-height)!important}
     <section class="report-launch" id="reportLaunch">
       <h2>出席一覧の出力</h2>
       <div class="report-launch-grid">
-        <label>日程を選択<select id="reportEventSelect" aria-label="出力する日程"></select></label>
+        <label class="report-date-field"><span class="report-date-label">📅 日程を選択</span><select id="reportEventSelect" aria-label="出力する日程"></select></label>
         <button id="openReportBtn" type="button">学年別出席一覧を出力</button>
       </div>
       <p>学年・父母別の○・×・未入力と、選択した日のコメントを表示します。</p>
