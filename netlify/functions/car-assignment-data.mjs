@@ -47,6 +47,9 @@ function normalizeAssignment(value = {}) {
     opponent: cleanText(value.opponent, 100),
     venue: cleanText(value.venue, 180),
     firstGradeEscort: Math.max(0, Math.min(60, Number(value.firstGradeEscort) || 0)),
+    manualEscortFathers: Array.isArray(value.manualEscortFathers)
+      ? [...new Set(value.manualEscortFathers.map(item => cleanText(item, 60)).filter(Boolean))].slice(0, 30)
+      : [],
     bus: typeof value.bus === "boolean" ? value.bus : null,
     busCount: Math.max(0, Math.min(1, Number(value.busCount) || 0)),
     busPassengers: Math.max(0, Math.min(100, Number(value.busPassengers) || 0)),
