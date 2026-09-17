@@ -93,11 +93,16 @@ function normalizeAnswerTable(answers = {}) {
 }
 
 function normalize(data = {}) {
+  const savedGradeOrder = Array.isArray(data.gradeOrder)
+    ? data.gradeOrder.map(String).filter(grade => ["1", "2", "3"].includes(grade))
+    : [];
+  const gradeOrder = [...new Set([...savedGradeOrder, "2", "1", "3"])].slice(0, 3);
   return {
     events: Array.isArray(data.events) ? data.events : [],
     members: Array.isArray(data.members) ? data.members : [],
     answers: normalizeAnswerTable(data.answers),
     comments: Array.isArray(data.comments) ? data.comments : [],
+    gradeOrder,
     migrationInitialized: data.migrationInitialized === true,
   };
 }
