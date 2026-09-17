@@ -305,7 +305,7 @@ function vehicleRecommendation(){
     if(item.umpire&&counts.umpire<1){counts.umpire+=1;continue}
     if(item.equipment&&counts.equipment<1){counts.equipment+=1;continue}
     if(item.cargo&&counts.cargo<1){counts.cargo+=1;continue}
-    if(/応援/.test(item.text)){counts.support+=1;continue}
+    if(item.parent==='mother'||/応援/.test(item.text)){counts.support+=1;continue}
     counts.player+=1;
     playerSeats+=Math.max(1,(item.capacity||7)-2);
   }
