@@ -246,6 +246,7 @@
       documents=Array.isArray(body.data)?body.data:documents.map(function(entry){return entry.id===item.id?Object.assign({},entry,{fileName:fileName}):entry});
       render();
       showSaveNotice('ファイル名を変更しました');
+      window.refreshBoardLatestUpdate?.();
       return true;
     }catch(e){alert(e.message||'ファイル名を変更できませんでした。');return false}
   }

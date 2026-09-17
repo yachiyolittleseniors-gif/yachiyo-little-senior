@@ -312,6 +312,38 @@ async function saveBoardLatestUpdate(store, category, message, updatedAt = new D
   return data;
 }
 
+async function renameBoardDocumentUpdateHistory(store, documentLabel, item, fileName) {
+  const uploadedAt = String(item?.uploadedAt || "");
+  if (!boardUpdateTime(uploadedAt)) return;
+  const saved = await safeStoreJson(store, BOARD_LATEST_UPDATE_KEY);
+  const savedHistory = Array.isArray(saved?.history)
+    ? saved.history
+    : saved?.latest
+      ? [saved.latest]
+      : normalizeBoardUpdate(saved)
+        ? [saved]
+        : [];
+  let changed = false;
+  const message = cleanBoardUpdateMessage(`${documentLabel}「${fileName}」を保存しました`);
+  const rewritten = savedHistory.map(entry => {
+    const normalized = normalizeBoardUpdate(entry);
+    if (
+      normalized?.category === "documents" &&
+      String(normalized.updatedAt) === uploadedAt
+    ) {
+      changed = true;
+      return { ...normalized, message };
+    }
+    return entry;
+  });
+  if (!changed) return;
+  const history = recentBoardUpdates(rewritten);
+  await store.setJSON(BOARD_LATEST_UPDATE_KEY, {
+    latest: history[0] || null,
+    history
+  });
+}
+
 async function loadBoardLatestUpdate(store) {
   const saved = await safeStoreJson(store, BOARD_LATEST_UPDATE_KEY);
   const savedHistory = Array.isArray(saved?.history)
@@ -366,7 +398,17 @@ async function loadBoardLatestUpdate(store) {
     updatedAt: rulesData.updatedAt
   });
 
-  const history = recentBoardUpdates([...savedHistory, ...candidates]);
+  const currentDocumentUpdates = new Map(
+    candidates
+      .filter(entry => entry.category === "documents")
+      .map(entry => [String(entry.updatedAt || ""), entry])
+  );
+  const reconciledSavedHistory = savedHistory.map(entry => {
+    const normalized = normalizeBoardUpdate(entry);
+    if (normalized?.category !== "documents") return entry;
+    return currentDocumentUpdates.get(String(normalized.updatedAt || "")) || entry;
+  });
+  const history = recentBoardUpdates([...reconciledSavedHistory, ...candidates]);
   const latest = history[0] || null;
   return latest ? { ...latest, history } : null;
 }
@@ -1477,6 +1519,8 @@ export default async (request, context) => {
             : entry
         );
         await store.setJSON(key, updated);
+        const documentLabel = section === "referee-documents" ? "審判部資料" : "事務局資料";
+        await renameBoardDocumentUpdateHistory(store, documentLabel, item, fileName);
         return json({ ok: true, data: updated });
       }
 
