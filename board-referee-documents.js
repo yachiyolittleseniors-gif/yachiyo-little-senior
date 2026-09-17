@@ -89,6 +89,31 @@
     }finally{clearTimeout(timer)}
   }
 
+  async function uploadFileInChunks(url,file,password,action,button){
+    const chunkSize=1024*1024;
+    const total=Math.ceil(file.size/chunkSize);
+    const uploadId=(crypto.randomUUID?crypto.randomUUID():Date.now().toString(36)+Math.random().toString(36).slice(2)).replace(/[^a-zA-Z0-9_-]/g,'');
+    let result={};
+    for(let index=0;index<total;index+=1){
+      button.textContent='保存中...（'+(index+1)+'/'+total+'）';
+      const response=await uploadWithTimeout(url,{
+        method:'POST',
+        headers:Object.assign(accessHeaders(false,password),{
+          'content-type':file.type||'application/octet-stream',
+          'x-upload-action':action+'Chunk',
+          'x-upload-id':uploadId,
+          'x-upload-index':String(index),
+          'x-upload-total':String(total),
+          'x-file-name':encodeURIComponent(file.name)
+        }),
+        body:file.slice(index*chunkSize,Math.min(file.size,(index+1)*chunkSize),file.type)
+      });
+      result=await response.json().catch(function(){return {}});
+      if(!response.ok)throw new Error(result.error||('資料を保存できませんでした。（通信エラー '+response.status+'）'));
+    }
+    return result;
+  }
+
   async function load(){
     try{
       await window.boardAccessReady;
@@ -134,17 +159,7 @@
     fileSave.disabled=true;
     fileSave.textContent='保存中...';
     try{
-      const response=await uploadWithTimeout(API,{
-        method:'POST',
-        headers:Object.assign(accessHeaders(false,password),{
-          'content-type':file.type||'application/octet-stream',
-          'x-upload-action':'uploadRefereeDocument',
-          'x-file-name':encodeURIComponent(file.name)
-        }),
-        body:file
-      });
-      const body=await response.json().catch(function(){return {}});
-      if(!response.ok)throw new Error(body.error||'資料を保存できませんでした。');
+      const body=await uploadFileInChunks(API,file,password,'uploadRefereeDocument',fileSave);
       documents=Array.isArray(body.data)?body.data:documents;
       fileInput.value='';
       render();
