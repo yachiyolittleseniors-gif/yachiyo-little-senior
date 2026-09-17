@@ -10,6 +10,7 @@ const CONFIG_KEY = "content/player-attendance-config.json";
 const ACCESS_CONFIG_KEY = "content/access-settings.json";
 const PLAYERS_KEY = "content/players.json";
 const PARENT_ATTENDANCE_KEY = "content/attendance.json";
+const PARENT_CONFIG_KEY = "content/attendance-config.json";
 const MEMBER_STATE_PREFIX = "player-attendance/member-state/";
 const DENSUKE_URL = "https://densuke.biz/list?mode=s&cd=Uq6CGKWk4E4VLP2J";
 const DEFAULT_ACCESS_SALT = "yachiyo-access-v1";
@@ -346,7 +347,16 @@ function cleanupOldData(data, now = new Date()) {
 }
 
 async function getConfig(store) {
-  return { densukeVisible: false, migrationEnded: true, endedAt: "" };
+  try {
+    const saved = await store.get(PARENT_CONFIG_KEY, { type: "json" });
+    return {
+      densukeVisible: saved?.densukeVisible !== false,
+      migrationEnded: saved?.migrationEnded === true,
+      endedAt: String(saved?.endedAt || ""),
+    };
+  } catch {
+    return { densukeVisible: true, migrationEnded: false, endedAt: "" };
+  }
 }
 
 function mergeInitial(data) {
@@ -489,18 +499,21 @@ export default async (request, context) => {
         return json({ error: "Unauthorized" }, 401);
       }
 
-      if (url.searchParams.get("config") === "1") return json({ config: await getConfig(store) });
+      const config = await getConfig(store);
+      if (url.searchParams.get("config") === "1") return json({ config });
 
-      if (!request.headers.get("x-admin-password")) {
-        return json({ error: "管理者パスワードが必要です。" }, 401);
+      if (!config.migrationEnded) {
+        if (!request.headers.get("x-admin-password")) {
+          return json({ error: "管理者パスワードが必要です。" }, 401);
+        }
+        const entryAdminAuth = await verifyAdminPassword({
+          store,
+          request,
+          context,
+          expectedPassword: process.env.ADMIN_PASSWORD || "",
+        });
+        if (!entryAdminAuth.ok) return adminAuthError(json, entryAdminAuth);
       }
-      const entryAdminAuth = await verifyAdminPassword({
-        store,
-        request,
-        context,
-        expectedPassword: process.env.ADMIN_PASSWORD || "",
-      });
-      if (!entryAdminAuth.ok) return adminAuthError(json, entryAdminAuth);
 
       let saved = null;
       try { saved = await store.get(KEY, { type: "json" }); } catch { saved = null; }
@@ -515,7 +528,6 @@ export default async (request, context) => {
         await saveAllMemberStates(store, data);
       }
       await store.setJSON(KEY, data);
-      const config = await getConfig(store);
       return json({ data, config, locked: false });
     }
 
@@ -525,7 +537,12 @@ export default async (request, context) => {
     try { body = await request.json(); } catch { return json({ error: "Invalid JSON" }, 400); }
     const action = body.action || "";
 
-    const adminActions = new Set(["adminPing", "adminSave", "previewDensuke", "endDensuke", "answer", "comment"]);
+    const config = await getConfig(store);
+    const adminActions = new Set(["adminPing", "adminSave", "previewDensuke", "endDensuke"]);
+    if (!config.migrationEnded) {
+      adminActions.add("answer");
+      adminActions.add("comment");
+    }
     let adminAuth = null;
     if (adminActions.has(action)) {
       adminAuth = await verifyAdminPassword({
