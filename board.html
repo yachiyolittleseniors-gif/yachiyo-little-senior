@@ -59,15 +59,18 @@ window.boardAccessReady=(async function requireBoardPassword(){
     document.documentElement.style.visibility='';
     return true;
   }
-  const returnSource=new URLSearchParams(location.search).get('from');
+  const searchParams=new URLSearchParams(location.search);
+  const returnSource=searchParams.get('from');
+  const historyFocus=searchParams.get('focus');
   const returningFromProtectedPage=['documents','coach','attendance','player'].includes(returnSource);
+  const returningFromUpdateHistory=['schedule','duty-roster','rules'].includes(historyFocus);
   const navigationEntry=performance.getEntriesByType&&performance.getEntriesByType('navigation')[0];
   const isPageReload=navigationEntry&&navigationEntry.type==='reload';
-  if(returningFromProtectedPage||isPageReload){
+  if(returningFromProtectedPage||returningFromUpdateHistory||isPageReload){
     try{
       const saved=sessionStorage.getItem(accessKey)||readReloadAccess();
       if(saved&&await verify(saved)){
-        history.replaceState(null,'','./board.html');
+        if(returningFromProtectedPage)history.replaceState(null,'','./board.html');
         return;
       }
       if(saved)clearAccess();
