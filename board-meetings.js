@@ -405,7 +405,7 @@
     const allowedType=/^(application\/pdf|image\/(jpeg|png|webp))$/i.test(file&&file.type||'');
     const allowedName=/\.(pdf|jpe?g|png|webp)$/i.test(file&&file.name||'');
     if(!file||!allowedType||!allowedName){alert('PDF・JPEG・PNG・WebPファイルを選択してください。');return}
-    if(file.size>4*1024*1024){alert('ファイルは4MB以下にしてください。');return}
+    if(file.size>6*1024*1024){alert('ファイルは6MB以下にしてください。');return}
     const coachPassword=documentCoachPassword||await requireCoachPassword();
     if(!coachPassword)return;
     documentCoachPassword=coachPassword;
@@ -414,8 +414,12 @@
     try{
       const response=await uploadWithTimeout(DOCUMENT_API,{
         method:'POST',
-        headers:accessHeaders(true,coachPassword),
-        body:JSON.stringify({action:'uploadBoardMeetingDocument',fileName:file.name,contentType:file.type||'',dataUrl:await readAsDataUrl(file)})
+        headers:Object.assign(accessHeaders(false,coachPassword),{
+          'content-type':file.type||'application/octet-stream',
+          'x-upload-action':'uploadBoardMeetingDocument',
+          'x-file-name':encodeURIComponent(file.name)
+        }),
+        body:file
       });
       const body=await response.json().catch(function(){return {}});
       if(!response.ok)throw new Error(body.error||'資料を保存できませんでした。');
