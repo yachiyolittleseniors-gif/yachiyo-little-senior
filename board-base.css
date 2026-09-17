@@ -99,7 +99,15 @@ h1{font-family:serif;font-weight:500;letter-spacing:.08em;margin:8px 0 6px;font-
 .meeting-admin-document-name{min-width:0;overflow-wrap:anywhere;font-size:12px;font-weight:800;color:var(--navy)}
 .meeting-admin-document-actions{display:flex;align-items:center;gap:6px}
 .meeting-admin-document-rename{min-height:38px;padding:8px 10px;border:1px solid var(--gold);border-radius:7px;background:#fff;color:#9a7123;font:inherit;font-size:11px;font-weight:900;cursor:pointer}
+.meeting-admin-document-row.is-renaming{grid-template-columns:minmax(0,1fr) auto}
+.meeting-admin-document-name:has(.meeting-admin-document-name-input){display:flex;align-items:center;gap:3px}
+.meeting-admin-document-name-input{width:100%;min-width:0;padding:9px 10px;border:1px solid var(--gold);border-radius:7px;background:#fff;color:var(--navy);font:inherit;font-size:12px;font-weight:800}
+.meeting-admin-document-extension{flex:0 0 auto;color:#6f7882;font-size:11px;font-weight:800}
+.meeting-admin-document-save,.meeting-admin-document-cancel{min-height:38px;padding:8px 10px;border-radius:7px;font:inherit;font-size:11px;font-weight:900;cursor:pointer}
+.meeting-admin-document-save{border:1px solid var(--gold);background:var(--gold);color:#fff}
+.meeting-admin-document-cancel{border:1px solid #c9c9c9;background:#fff;color:#5f6872}
 .meeting-admin-document-delete{min-height:38px;padding:8px 12px;border:1px solid #d6bcbc;border-radius:7px;background:#fff;color:#9b2727;font:inherit;font-size:11px;font-weight:900;cursor:pointer}
+@media(max-width:520px){.meeting-admin-document-row.is-renaming{grid-template-columns:1fr}.meeting-admin-document-row.is-renaming .meeting-admin-document-actions{justify-content:flex-end}}
 .meeting-empty{padding:13px;border:1px dashed #d6d2c8;border-radius:9px;color:#7b8490;font-size:12px;text-align:center}
 .meeting-calendar-toolbar{display:grid;grid-template-columns:42px 1fr 42px;align-items:center;gap:8px;margin-bottom:12px}
 .meeting-calendar-nav{width:42px;height:42px;border:1px solid #d8dce1;border-radius:50%;background:#fff;color:var(--navy);font-size:24px;cursor:pointer}

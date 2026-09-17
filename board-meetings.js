@@ -153,7 +153,7 @@
       rename.type='button';
       rename.className='meeting-admin-document-rename';
       rename.textContent='名前変更';
-      rename.addEventListener('click',function(){renameDocument(item)});
+      rename.addEventListener('click',function(){startRenameDocument(item,row,name,actions)});
       const remove=document.createElement('button');
       remove.type='button';
       remove.className='meeting-admin-document-delete';
@@ -503,18 +503,52 @@
     }catch(e){alert(e.message||'PDFを削除できませんでした。')}
   }
 
-  async function renameDocument(item){
+  function startRenameDocument(item,row,name,actions){
     const currentName=String(item.fileName||'事務局資料.pdf');
     const extension=(currentName.match(/\.(?:pdf|jpe?g|png|webp)$/i)||[])[0]||({"application/pdf":'.pdf',"image/jpeg":'.jpg',"image/png":'.png',"image/webp":'.webp'}[item.contentType]||'');
     const baseName=extension?currentName.slice(0,-extension.length):currentName;
-    const entered=prompt('新しいファイル名を入力してください。',baseName);
-    if(entered===null)return;
+    row.classList.add('is-renaming');
+    const input=document.createElement('input');
+    input.className='meeting-admin-document-name-input';
+    input.type='text';
+    input.maxLength=150;
+    input.value=baseName;
+    input.setAttribute('aria-label','新しいファイル名');
+    const suffix=document.createElement('span');
+    suffix.className='meeting-admin-document-extension';
+    suffix.textContent=extension;
+    name.replaceChildren(input,suffix);
+    const save=document.createElement('button');
+    save.type='button';
+    save.className='meeting-admin-document-save';
+    save.textContent='保存';
+    const cancel=document.createElement('button');
+    cancel.type='button';
+    cancel.className='meeting-admin-document-cancel';
+    cancel.textContent='キャンセル';
+    actions.replaceChildren(save,cancel);
+    const submit=async function(){
+      save.disabled=true;
+      if(!await renameDocument(item,input.value))save.disabled=false;
+    };
+    save.addEventListener('click',submit);
+    cancel.addEventListener('click',renderAdminDocuments);
+    input.addEventListener('keydown',function(event){
+      if(event.key==='Enter'){event.preventDefault();submit()}
+      if(event.key==='Escape'){event.preventDefault();renderAdminDocuments()}
+    });
+    input.focus();input.select();
+  }
+
+  async function renameDocument(item,entered){
+    const currentName=String(item.fileName||'事務局資料.pdf');
+    const extension=(currentName.match(/\.(?:pdf|jpe?g|png|webp)$/i)||[])[0]||({"application/pdf":'.pdf',"image/jpeg":'.jpg',"image/png":'.png',"image/webp":'.webp'}[item.contentType]||'');
     const nextBase=entered.trim().replace(/\.(?:pdf|jpe?g|png|webp)$/i,'').trim();
-    if(!nextBase){alert('ファイル名を入力してください。');return}
+    if(!nextBase){alert('ファイル名を入力してください。');return false}
     const fileName=nextBase+extension;
-    if(fileName===currentName)return;
+    if(fileName===currentName){renderAdminDocuments();return true}
     const coachPassword=documentCoachPassword||await requireCoachPassword();
-    if(!coachPassword)return;
+    if(!coachPassword)return false;
     documentCoachPassword=coachPassword;
     try{
       const response=await fetch(DOCUMENT_API,{
@@ -526,7 +560,8 @@
       documents=Array.isArray(body.data)?body.data:documents.map(function(entry){return entry.id===item.id?Object.assign({},entry,{fileName:fileName}):entry});
       renderDocuments();
       showSaveNotice('ファイル名を変更しました');
-    }catch(e){alert(e.message||'ファイル名を変更できませんでした。')}
+      return true;
+    }catch(e){alert(e.message||'ファイル名を変更できませんでした。');return false}
   }
 
   addEvent.addEventListener('click',async function(){
