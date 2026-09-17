@@ -260,7 +260,8 @@ function syncVehicleTotal(){
   const selectedCounts=[['指導者号',numberValue('#coachCar')],['審判号',numberValue('#umpireCar')],['選手号',numberValue('#playerCarCount')],['道具車号',numberValue('#equipmentCount')],['荷物車号',numberValue('#cargoCount')],['応援者号',numberValue('#supportCar')],['バス',numberValue('#bus')]],selectedTotal=selectedCounts.reduce((sum,[,count])=>sum+count,0),info=attendeeSnapshot(),mothers=info.parents.filter(member=>parentType(member)==='mother').length,recommendation=vehicleRecommendation(),estimatedTotal=Math.max(3,recommendation.total+numberValue('#bus'));
   const recommendationLabels={coach:'指導者号',umpire:'審判号',player:'選手号',equipment:'道具車号',cargo:'荷物車号',support:'応援者号'},recommendationBreakdown=Object.entries(recommendation.counts).filter(([,count])=>count>0).map(([type,count])=>`${recommendationLabels[type]}${count}台`).join('・');
   $('#carCount').value=String(estimatedTotal);
-  $('#vehicleEstimateDetail').textContent=`選手・帯同${info.playerCount+info.escort}名／保護者${info.parents.length}名（母${mothers}名）／監督・コーチ${currentManagerCoachCount()}名・スコアラー${currentScorerCount()}名／予測内訳：${recommendationBreakdown}${numberValue('#bus')>0?`・バス${numberValue('#bus')}台`:''}`;
+  const motherEstimateText=recommendation.navigatorMotherCount>0?`母${mothers}名のうちナビ見込み${recommendation.navigatorMotherCount}名`:`母${mothers}名`;
+  $('#vehicleEstimateDetail').textContent=`選手・帯同${info.playerCount+info.escort}名／保護者${info.parents.length}名（${motherEstimateText}）／監督・コーチ${currentManagerCoachCount()}名・スコアラー${currentScorerCount()}名／予測内訳：${recommendationBreakdown}${numberValue('#bus')>0?`・バス${numberValue('#bus')}台`:''}`;
   $('#currentCarCount').value=String(selectedTotal);
   const breakdown=selectedCounts.filter(([,count])=>count>0);
   $('#currentVehicleBreakdown').innerHTML=breakdown.length?breakdown.map(([label,count])=>`<span>${label} ${count}台</span>`).join(''):'<span>未選択</span>';
@@ -312,13 +313,15 @@ function vehicleRecommendation(){
   counts.cargo=Math.max(1,counts.cargo);
   const playerNeed=Math.max(0,info.playerCount+info.escort-busPassengers),carsForPlayers=Math.ceil(Math.max(0,playerNeed-playerSeats)/5),carsForEveryone=Math.max(0,Math.ceil(neededPeople/7)-selected.length);
   counts.player=Math.max(1,counts.player+Math.max(carsForPlayers,carsForEveryone));
-  const motherSupportCars=motherCount>0?Math.ceil(motherCount/7):0;
+  const navigatorMothers=new Set(selected.filter(item=>item.parent==='father').map(item=>spouseFor(item.name,info.parents)).filter(member=>member&&parentType(member)==='mother').map(member=>member.name));
+  const supportMotherCount=Math.max(0,motherCount-navigatorMothers.size);
+  const motherSupportCars=supportMotherCount>0?Math.ceil(supportMotherCount/7):0;
   const supportShortage=Math.max(0,motherSupportCars-counts.support);
   const reclassifiedPlayerCars=Math.min(supportShortage,Math.max(0,counts.player-1));
   counts.player-=reclassifiedPlayerCars;
   counts.support+=supportShortage;
   const requiredCandidateCars=counts.player+counts.equipment+counts.cargo+counts.support+counts.umpire,fallbackCars=Math.max(0,requiredCandidateCars-pool.length);
-  return{counts,total:Object.values(counts).reduce((sum,value)=>sum+value,0),candidateCount:pool.length,selectedCount:selected.length,fallbackCars};
+  return{counts,total:Object.values(counts).reduce((sum,value)=>sum+value,0),candidateCount:pool.length,selectedCount:selected.length,fallbackCars,motherCount,navigatorMotherCount:navigatorMothers.size,supportMotherCount};
 }
 function recommendationMessage(result){const labels={coach:'指導者号',player:'選手号',equipment:'道具車号',cargo:'荷物車号',support:'応援者号',umpire:'審判号'},parts=Object.entries(result.counts).filter(([,count])=>count>0).map(([type,count])=>`${labels[type]}${count}台`);return `配車数が未選択です。現在の人数とコメントから、合計${result.total}台（${parts.join('・')||'選手号の入力が必要'}）が必要な見込みです。台数を選択して、もう一度「配車案を自動作成」を押してください。`}
 function setVehicleCountValue(targetId,value){const minimum=['playerCarCount','equipmentCount','cargoCount'].includes(targetId)?1:0;$('#'+targetId).value=String(Math.max(minimum,Number(value)||0));syncVehicleChoice(targetId);updateConditionalFields()}
