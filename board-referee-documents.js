@@ -127,14 +127,22 @@
     const allowedType=/^(application\/pdf|image\/(jpeg|png|webp))$/i.test(file&&file.type||'');
     const allowedName=/\.(pdf|jpe?g|png|webp)$/i.test(file&&file.name||'');
     if(!file||!allowedType||!allowedName){alert('PDF・JPEG・PNG・WebPファイルを選択してください。');return}
-    if(file.size>4*1024*1024){alert('ファイルは4MB以下にしてください。');return}
+    if(file.size>6*1024*1024){alert('ファイルは6MB以下にしてください。');return}
     const password=documentCoachPassword||await requireCoachPassword();
     if(!password)return;
     documentCoachPassword=password;
     fileSave.disabled=true;
     fileSave.textContent='保存中...';
     try{
-      const response=await uploadWithTimeout(API,{method:'POST',headers:accessHeaders(true,password),body:JSON.stringify({action:'uploadRefereeDocument',fileName:file.name,contentType:file.type||'',dataUrl:await readAsDataUrl(file)})});
+      const response=await uploadWithTimeout(API,{
+        method:'POST',
+        headers:Object.assign(accessHeaders(false,password),{
+          'content-type':file.type||'application/octet-stream',
+          'x-upload-action':'uploadRefereeDocument',
+          'x-file-name':encodeURIComponent(file.name)
+        }),
+        body:file
+      });
       const body=await response.json().catch(function(){return {}});
       if(!response.ok)throw new Error(body.error||'資料を保存できませんでした。');
       documents=Array.isArray(body.data)?body.data:documents;
