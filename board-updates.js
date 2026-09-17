@@ -173,8 +173,8 @@
   }
 
   async function openDraftAttendance(){
-    const saved=sessionStorage.getItem(DRAFT_ADMIN_KEY)||'';
-    const adminPassword=saved||prompt('現在工事中\nパスワードは入力できません');
+    sessionStorage.removeItem(DRAFT_ADMIN_KEY);
+    const adminPassword=prompt('現在工事中\nパスワードを入力してください。');
     if(!adminPassword)return;
     try{
       const response=await fetch(API,{
