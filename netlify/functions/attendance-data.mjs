@@ -436,7 +436,11 @@ export default async (request, context) => {
       let data = normalize(saved || {});
       const merged = mergeInitial(data);
       data = await mergeMemberStates(store, merged.data);
+      const commentCountBeforeCleanup = data.comments.length;
       data = cleanupOldData(data);
+      if (data.comments.length !== commentCountBeforeCleanup) {
+        await saveAllMemberStates(store, data);
+      }
       await store.setJSON(KEY, data);
       return json({ data, config, locked: false, draftAdmin });
     }

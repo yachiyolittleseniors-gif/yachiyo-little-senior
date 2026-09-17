@@ -483,7 +483,11 @@ export default async (request, context) => {
       data = await mergeMemberStates(store, merged.data);
       data = await syncStaffFromRoster(store, data);
       data = await syncEventsFromParentAttendance(store, data);
+      const commentCountBeforeCleanup = data.comments.length;
       data = cleanupOldData(data);
+      if (data.comments.length !== commentCountBeforeCleanup) {
+        await saveAllMemberStates(store, data);
+      }
       await store.setJSON(KEY, data);
       const config = await getConfig(store);
       return json({ data, config, locked: false });
