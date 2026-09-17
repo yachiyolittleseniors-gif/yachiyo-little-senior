@@ -433,7 +433,7 @@
     }
 
     const ok=confirm(
-      '伝助を終了しますか？\n\n登録済みの同名回答者について、日付が一致する○△×とコメントだけを1回取り込みます。\n伝助側の名前や日程は追加しません。'
+      '伝助を終了しますか？\n\n保護者用・選手用の両方から、登録済みの同名回答者について、日付が一致する○△×とコメントだけを1回取り込みます。\n伝助側の名前や日程は追加しません。'
     );
     if(!ok) return;
 
@@ -441,6 +441,33 @@
     endBtn.textContent='移行中...';
 
     try{
+      // 選手用を先に取り込み、成功後に保護者用を終了する。
+      // 保護者用の終了状態が画面全体の利用開始状態になる。
+      const playerResponse=await fetch(PLAYER_API,{
+        method:'POST',
+        headers:{
+          'content-type':'application/json',
+          'x-admin-password':adminPassword
+        },
+        body:JSON.stringify({action:'endDensuke'})
+      });
+
+      let playerResult={};
+      try{ playerResult=await playerResponse.json(); }catch(e){}
+
+      if(playerResponse.status===429){
+        alert('試行回数の上限です。15分後に再度お試しください。');
+        return;
+      }
+      if(playerResponse.status===401){
+        alert('パスワードが違います。');
+        return;
+      }
+      if(!playerResponse.ok){
+        alert(playerResult?.error || '選手用伝助の取り込みに失敗しました。');
+        return;
+      }
+
       const r=await fetch(API,{
         method:'POST',
         headers:{
@@ -468,7 +495,7 @@
       }
 
       setEndedUI(true);
-      showSaveNotice(`回答${j?.importedAnswers||0}件・コメント${j?.importedComments||0}件を取り込み、伝助を終了しました`);
+      showSaveNotice(`保護者：回答${j?.importedAnswers||0}件・コメント${j?.importedComments||0}件／選手：回答${playerResult?.importedAnswers||0}件・コメント${playerResult?.importedComments||0}件を取り込み、伝助を終了しました`);
     }catch(e){
       alert('通信エラーのため、伝助は終了していません。');
     }finally{
