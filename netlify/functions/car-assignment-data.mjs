@@ -100,6 +100,7 @@ function normalizeAssignment(value = {}) {
     coachManager: value.coachManager === true,
     coachManagerDriver: value.coachManagerDriver === true,
     coachCount: Math.max(0, Math.min(5, Number(value.coachCount) || 0)),
+    scorerName: cleanText(value.scorerName, 60),
     playerCount: value.playerCount == null ? null : Math.max(0, Math.min(100, Number(value.playerCount) || 0)),
     playerCarCount: Math.max(0, Math.min(40, Number(value.playerCarCount) || 0)),
     equipmentCount: value.equipmentCount == null ? null : Math.max(0, Math.min(1, Number(value.equipmentCount) || 0)),
