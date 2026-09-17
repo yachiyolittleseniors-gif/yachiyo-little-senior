@@ -1341,8 +1341,8 @@ export default async (request, context) => {
         if (!decoded || !boardMeetingFileIsValid(fileName, decoded.contentType, decoded.bytes)) {
           return json({ error: "PDF・JPEG・PNG・WebPファイルを選択してください。" }, 400);
         }
-        if (decoded.bytes.byteLength > 6 * 1024 * 1024) {
-          return json({ error: "ファイルは6MB以下にしてください。" }, 413);
+        if (decoded.bytes.byteLength > 4 * 1024 * 1024) {
+          return json({ error: "ファイルは4MB以下にしてください。" }, 413);
         }
 
         const current = await store.get(key, {type: "json", consistency: "strong"});
