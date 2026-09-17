@@ -55,7 +55,7 @@ body{background:#f5f5f2}.page{width:min(860px,100%);padding:24px 18px 64px}.topl
 .counts{grid-template-columns:repeat(5,1fr)}
 .preview-counts{grid-template-columns:repeat(7,1fr)}
 .current-vehicle-total{display:grid;grid-template-columns:1fr auto;gap:12px;align-items:center;margin:-4px 0 18px;padding:14px 16px;border:1px solid #cfd6df;border-radius:12px;background:#f7f9fb}.current-vehicle-copy{display:grid;gap:7px}.current-vehicle-copy>strong{color:var(--navy);font-size:16px}.current-vehicle-breakdown{display:flex;flex-wrap:wrap;gap:6px}.current-vehicle-breakdown span{padding:4px 8px;border-radius:999px;background:#e8edf3;color:#344559;font-size:11px;font-weight:800}.current-vehicle-value{display:flex;align-items:baseline;gap:4px;color:var(--navy)}.current-vehicle-value output{font-size:30px;font-weight:900;line-height:1}.current-vehicle-value span{font-size:14px;font-weight:800}
-.quick-create .auto-box{min-height:0}.quick-create{padding:14px}.car-main-grid .parents textarea{min-height:56px}
+.create-panel .auto-box{min-height:0}.quick-create{padding:14px}.car-main-grid .parents textarea{min-height:56px}
 .preview-column{display:grid;align-content:start;gap:12px}.preview-column-title{margin:0;padding:7px 10px;border-radius:8px;background:var(--navy);color:#fff;font-size:13px;letter-spacing:.06em}
 @media(min-width:701px){.topline .title{transform:translateX(40px)}}
 @media(max-width:700px){.counts{grid-template-columns:1fr 1fr}.count-row:nth-child(even){border-right:0}.count-row.total{grid-column:1/-1;border:0;border-radius:0 0 12px 12px}.car-main-grid{gap:7px;padding:8px}.car-main-grid .car-field{padding:7px}.car-main-grid .car-field input{min-height:32px;padding:4px 2px}.preview-counts{grid-template-columns:repeat(4,1fr)}.preview-count{border-right:1px solid #ded7c8;border-bottom:0}.preview-count:nth-child(-n+4){border-bottom:1px solid var(--line)}.preview-count:nth-child(4),.preview-count:last-child{border-right:0}.preview-count:last-child{grid-column:span 2;border-bottom:0}}
@@ -191,7 +191,6 @@ body{background:#f5f5f2}.page{width:min(860px,100%);padding:24px 18px 64px}.topl
             <span class="auto-btn-copy"><small>AUTO ASSIGN</small><strong>配車案を自動作成</strong></span>
             <span class="auto-btn-arrow" aria-hidden="true">›</span>
           </button>
-          <p class="auto-help">選択した日付・学年の出席者を反映し、父の運転を優先して配置します。</p>
           <div class="create-error" id="createError" role="alert"></div>
         </div>
       </section>
