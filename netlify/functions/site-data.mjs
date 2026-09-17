@@ -1000,6 +1000,17 @@ export default async (request, context) => {
         consistency: "strong"
       });
 
+      if (section === "staff" && Array.isArray(data)) {
+        let changed = false;
+        data = data.map(item => {
+          const compactName = String(item?.name || "").replace(/[\s　]+/g, "");
+          if (!compactName.startsWith("松野") || String(item?.role || "").trim() === "スコアラー") return item;
+          changed = true;
+          return { ...item, role: "スコアラー" };
+        });
+        if (changed) await store.setJSON(key, data);
+      }
+
       if (section === "schedule" || section === "board-meeting-schedule") {
         const normalized = normalizeScheduleEntries(data);
         data = normalized.data;
