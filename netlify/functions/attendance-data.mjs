@@ -416,20 +416,17 @@ export default async (request, context) => {
       const config = await getConfig(store);
       if (url.searchParams.get("config") === "1") return json({ config });
 
-      let draftAdmin = false;
-      if (!config.migrationEnded) {
-        if (!request.headers.get("x-admin-password")) {
-          return json({ config, locked: true });
-        }
-        const result = await verifyAdminPassword({
-          store,
-          request,
-          context,
-          expectedPassword: process.env.ADMIN_PASSWORD || "",
-        });
-        if (!result.ok) return adminAuthError(json, result);
-        draftAdmin = true;
+      if (!request.headers.get("x-admin-password")) {
+        return json({ error: "管理者パスワードが必要です。" }, 401);
       }
+      const entryAdminAuth = await verifyAdminPassword({
+        store,
+        request,
+        context,
+        expectedPassword: process.env.ADMIN_PASSWORD || "",
+      });
+      if (!entryAdminAuth.ok) return adminAuthError(json, entryAdminAuth);
+      const draftAdmin = true;
 
       let saved = null;
       try { saved = await store.get(KEY, { type: "json" }); } catch { saved = null; }
@@ -460,10 +457,8 @@ export default async (request, context) => {
       "adminSave",
     ]);
     const config = await getConfig(store);
-    if (!config.migrationEnded) {
-      adminActions.add("answer");
-      adminActions.add("comment");
-    }
+    adminActions.add("answer");
+    adminActions.add("comment");
     let adminAuth = null;
     if (adminActions.has(action)) {
       adminAuth = await verifyAdminPassword({

@@ -237,6 +237,24 @@
   // 状態を確認できるまでは、保護者・選手出欠確認をグレー表示にする。
   setAttendanceEnabled(false);
 
+  attendanceBtn.addEventListener('click',async function(event){
+    if(attendanceBtn.getAttribute('aria-disabled')==='true')return;
+    event.preventDefault();
+    const adminPassword=prompt('管理者パスワードを入力してください。');
+    if(!adminPassword)return;
+    try{
+      const response=await fetch(API,{
+        method:'POST',
+        headers:{'content-type':'application/json','x-admin-password':adminPassword},
+        body:JSON.stringify({action:'adminPing'})
+      });
+      if(response.status===429){alert('試行回数の上限です。15分後に再度お試しください。');return}
+      if(!response.ok){alert('管理者パスワードが違います。');return}
+      sessionStorage.setItem('yachiyoAttendanceDraftAdminPass',adminPassword);
+      location.assign(attendanceBtn.dataset.href||'./attendance.html');
+    }catch(e){alert('管理者認証を確認できませんでした。')}
+  });
+
   async function loadSetting(){
     try{
       await window.boardAccessReady;
