@@ -27,8 +27,12 @@ function isScorer(member) {
   return role === "スコアラー" || compactName.startsWith("松野");
 }
 
+function isManager(member) {
+  return String(member?.role || "").trim() === "監督";
+}
+
 function countsAsCoach(member) {
-  return !isScorer(member);
+  return !isScorer(member) && !isManager(member);
 }
 
 async function loadCoachAttendanceCounts(store) {
@@ -52,6 +56,7 @@ async function loadCoachAttendanceCounts(store) {
   const validEvents = events.filter(event => /^\d{4}-\d{2}-\d{2}$/.test(String(event?.date || "")));
   const attendanceCount = (event, predicate) => members.filter(member => predicate(member) && answers?.[String(member?.id || "")]?.[String(event?.id || "")] === "○").length;
   return {
+    managers: Object.fromEntries(validEvents.map(event => [String(event.date), attendanceCount(event, isManager)])),
     coaches: Object.fromEntries(validEvents.map(event => [String(event.date), attendanceCount(event, countsAsCoach)])),
     scorers: Object.fromEntries(validEvents.map(event => [String(event.date), attendanceCount(event, isScorer)])),
   };
@@ -131,7 +136,7 @@ export default async (request, context) => {
     }
     if (request.method === "GET") {
       const attendance = await loadCoachAttendanceCounts(store);
-      return json({ assignments, coachAttendanceCounts: attendance.coaches, scorerAttendanceCounts: attendance.scorers });
+      return json({ assignments, managerAttendanceCounts: attendance.managers, coachAttendanceCounts: attendance.coaches, scorerAttendanceCounts: attendance.scorers });
     }
     if (request.method !== "POST") return json({ error: "Method not allowed" }, 405);
     let body = {};
