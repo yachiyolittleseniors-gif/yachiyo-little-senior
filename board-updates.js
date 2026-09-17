@@ -212,10 +212,22 @@
       }
     });
 
+    // 伝助移行中はグレーの「工事中」表示を保ち、管理者だけ隠し入力で開ける。
+    [attendanceBtn,playerAttendanceBtn].forEach(button=>{
+      button.classList.toggle('admin-gated',!enabled);
+      if(!enabled){
+        button.setAttribute('aria-disabled','false');
+        button.removeAttribute('tabindex');
+        button.setAttribute('role','button');
+      }else{
+        button.removeAttribute('role');
+      }
+    });
+
   }
 
-  function setEndedUI(ended,attendanceAvailable=true){
-    setAttendanceEnabled(attendanceAvailable);
+  function setEndedUI(ended){
+    setAttendanceEnabled(ended);
     warning.style.display='none';
     endBtn.dataset.warningShown='0';
     endBtn.textContent='伝助を終了';
@@ -231,47 +243,41 @@
       attendanceCard.style.display='block';
       endBtn.style.display='';
       resumeBtn.style.display='none';
-      adminStatus.textContent='伝助終了前は、保護者・選手出欠確認を管理者パスワードで利用できます。';
+      adminStatus.textContent='伝助終了前は、保護者・選手出欠確認を通常利用することはできません。';
     }
   }
 
   // 状態を確認できるまでは、保護者・選手出欠確認をグレー表示にする。
   setAttendanceEnabled(false);
 
-  attendanceBtn.addEventListener('click',async function(event){
+  async function openProtectedAttendance(button,api,storageKey){
+    const hidden=button.classList.contains('admin-gated');
+    const saved=hidden?(sessionStorage.getItem(storageKey)||''):'';
+    const adminPassword=saved||prompt(hidden?'現在工事中\nパスワードは入力できません':'管理者パスワードを入力してください。');
+    if(!adminPassword)return;
+    try{
+      const response=await fetch(api,{
+        method:'POST',
+        headers:{'content-type':'application/json','x-admin-password':adminPassword},
+        body:JSON.stringify({action:'adminPing'})
+      });
+      if(response.status===429){alert('試行回数の上限です。15分後に再度お試しください。');return}
+      if(!response.ok){sessionStorage.removeItem(storageKey);alert('管理者パスワードが違います。');return}
+      sessionStorage.setItem(storageKey,adminPassword);
+      location.assign(button.dataset.href||button.getAttribute('href'));
+    }catch(e){sessionStorage.removeItem(storageKey);alert('管理者認証を確認できませんでした。')}
+  }
+
+  attendanceBtn.addEventListener('click',function(event){
     if(attendanceBtn.getAttribute('aria-disabled')==='true')return;
     event.preventDefault();
-    const adminPassword=prompt('管理者パスワードを入力してください。');
-    if(!adminPassword)return;
-    try{
-      const response=await fetch(API,{
-        method:'POST',
-        headers:{'content-type':'application/json','x-admin-password':adminPassword},
-        body:JSON.stringify({action:'adminPing'})
-      });
-      if(response.status===429){alert('試行回数の上限です。15分後に再度お試しください。');return}
-      if(!response.ok){alert('管理者パスワードが違います。');return}
-      sessionStorage.setItem('yachiyoAttendanceDraftAdminPass',adminPassword);
-      location.assign(attendanceBtn.dataset.href||'./attendance.html');
-    }catch(e){alert('管理者認証を確認できませんでした。')}
+    openProtectedAttendance(attendanceBtn,API,'yachiyoAttendanceDraftAdminPass');
   });
 
-  playerAttendanceBtn.addEventListener('click',async function(event){
+  playerAttendanceBtn.addEventListener('click',function(event){
     if(playerAttendanceBtn.getAttribute('aria-disabled')==='true')return;
     event.preventDefault();
-    const adminPassword=prompt('管理者パスワードを入力してください。');
-    if(!adminPassword)return;
-    try{
-      const response=await fetch(PLAYER_API,{
-        method:'POST',
-        headers:{'content-type':'application/json','x-admin-password':adminPassword},
-        body:JSON.stringify({action:'adminPing'})
-      });
-      if(response.status===429){alert('試行回数の上限です。15分後に再度お試しください。');return}
-      if(!response.ok){alert('管理者パスワードが違います。');return}
-      sessionStorage.setItem('yachiyoPlayerAttendanceAdminPass',adminPassword);
-      location.assign(playerAttendanceBtn.dataset.href||'./player-attendance.html');
-    }catch(e){alert('管理者認証を確認できませんでした。')}
+    openProtectedAttendance(playerAttendanceBtn,PLAYER_API,'yachiyoPlayerAttendanceAdminPass');
   });
 
   async function loadSetting(){
@@ -287,7 +293,7 @@
       const ended = j?.config?.migrationEnded === true;
       setEndedUI(ended);
     }catch(e){
-      setEndedUI(false,false);
+      setEndedUI(false);
     }
   }
 
