@@ -351,7 +351,7 @@ function autoCreate(){
   const pool=candidates(),used=new Set(manualPeople);
   const nextCandidate=predicate=>pool.find(item=>!used.has(item.name)&&predicate(item));
   const hasAvailableSpouse=item=>item.parent==='father'&&!!spouseFor(item.name,info.parents)&&!used.has(spouseFor(item.name,info.parents).name);
-  const nextDriver=(preferred=()=>false)=>nextCandidate(item=>hasAvailableSpouse(item)&&preferred(item))||nextCandidate(hasAvailableSpouse)||nextCandidate(item=>item.parent==='father'&&preferred(item))||nextCandidate(item=>item.parent==='father')||nextCandidate(preferred)||nextCandidate(()=>true);
+  const nextDriver=(preferred=()=>false)=>nextCandidate(item=>hasAvailableSpouse(item)&&preferred(item))||nextCandidate(item=>item.parent==='father'&&preferred(item))||nextCandidate(hasAvailableSpouse)||nextCandidate(item=>item.parent==='father')||nextCandidate(preferred)||nextCandidate(()=>true);
   const nextSupportDriver=()=>nextCandidate(item=>item.parent==='mother'&&!item.accompany)||nextCandidate(item=>item.parent==='mother')||nextDriver();
   const specialHistory=new Map();
   Object.values(savedAssignments).forEach(assignment=>{
