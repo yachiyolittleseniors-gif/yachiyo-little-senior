@@ -136,7 +136,6 @@
   const coachPasswordConfirmInput=document.getElementById('coachPasswordConfirmInput');
   const saveCoachPasswordBtn=document.getElementById('saveCoachPasswordBtn');
   const coachPasswordStatus=document.getElementById('coachPasswordStatus');
-  const DRAFT_ADMIN_KEY='yachiyoAttendanceDraftAdminPass';
 
   if(!attendanceBtn || !attendanceCard || !playerAttendanceBtn || !playerAttendanceCard || !legacyCard || !adminBtn || !panel || !endBtn || !resumeBtn || !closeAdminBtn || !warning) return;
 
@@ -161,43 +160,7 @@
       }
     });
 
-    // 移行前の保護者出欠確認だけは、見た目をグレーのまま管理者が開ける。
-    attendanceBtn.classList.toggle('admin-gated',!enabled);
-    if(!enabled){
-      attendanceBtn.setAttribute('aria-disabled','false');
-      attendanceBtn.removeAttribute('tabindex');
-      attendanceBtn.setAttribute('role','button');
-    }else{
-      attendanceBtn.removeAttribute('role');
-    }
   }
-
-  async function openDraftAttendance(){
-    sessionStorage.removeItem(DRAFT_ADMIN_KEY);
-    const adminPassword=prompt('現在工事中\nパスワードを入力してください。');
-    if(!adminPassword)return;
-    try{
-      const response=await fetch(API,{
-        method:'POST',
-        headers:{'content-type':'application/json','x-admin-password':adminPassword},
-        body:JSON.stringify({action:'adminPing'})
-      });
-      if(response.status===429){alert('試行回数の上限です。15分後に再度お試しください。');return}
-      if(response.status===401){sessionStorage.removeItem(DRAFT_ADMIN_KEY);alert('管理者パスワードが違います。');return}
-      if(!response.ok)throw new Error('auth');
-      sessionStorage.setItem(DRAFT_ADMIN_KEY,adminPassword);
-      location.href=attendanceBtn.dataset.href||'./attendance.html';
-    }catch(error){
-      sessionStorage.removeItem(DRAFT_ADMIN_KEY);
-      alert('管理者認証を確認できませんでした。');
-    }
-  }
-
-  attendanceBtn.addEventListener('click',event=>{
-    if(!attendanceBtn.classList.contains('admin-gated'))return;
-    event.preventDefault();
-    openDraftAttendance();
-  });
 
   function setEndedUI(ended){
     setAttendanceEnabled(ended);
