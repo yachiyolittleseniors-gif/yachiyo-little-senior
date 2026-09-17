@@ -463,7 +463,77 @@ function renderPreview(){sortCars();const info=attendeeSnapshot(),parentCounts=p
 function setView(view){const preview=view==='preview';$('#editView').hidden=preview;$('#previewView').hidden=!preview;$('#editTab').classList.toggle('active',!preview);$('#previewTab').classList.toggle('active',preview);$('#editTab').setAttribute('aria-selected',String(!preview));$('#previewTab').setAttribute('aria-selected',String(preview));if(preview)renderPreview();window.scrollTo({top:0,behavior:'smooth'})}
 async function syncAttendanceData(){const button=$('#syncAttendance'),original=button.textContent;button.disabled=true;button.textContent='同期中…';showError('');try{const temporaryRequest={method:'POST',body:JSON.stringify({action:'previewDensuke'})},parentRequest=temporaryDensukeActive?api(PARENT_API,temporaryRequest,true):api(PARENT_API,{},true),playerRequest=temporaryDensukeActive?api(PLAYER_API,temporaryRequest,true):api(PLAYER_API);const [parents,players,assignments]=await Promise.all([parentRequest,playerRequest,api(ASSIGNMENT_API,{},true)]);parentData=normalize(parents.data);playerData=normalize(players.data);savedAssignments=assignments.assignments||savedAssignments;if(currentDate()&&selectedGrade){$('#playerCountInput').value='';$('#playerCountInput').value=String(attendeeSnapshot().players.length);$('#firstGradeEscort').value=autoFirstGradeEscort()||'';$('#coachCount').value=String(Math.min(5,currentCoachCount()))}updateCounts();renderCandidates();renderAllComments();renderPreview();saveDraft();$('#status').textContent=temporaryDensukeActive?`伝助から保護者回答${parents.importedAnswers||0}件・選手回答${players.importedAnswers||0}件・コメント${parents.importedComments||0}件を一時取得しました。`:'最新の出欠・コメントに同期しました。'}catch(error){showError(error.message||'出欠・コメントを同期できませんでした。')}finally{button.disabled=false;button.textContent=original}}
 async function clearAllInputs(){if(!confirm('現在の入力内容と配車案をすべてクリアします。よろしいですか？'))return;const button=$('#clearAll'),date=currentDate(),grade=selectedGrade,original=button.textContent;button.disabled=true;button.textContent='クリア中…';clearTimeout(autoSaveTimer);autoSavePending=false;draftReady=false;try{while(autoSaveBusy)await new Promise(resolve=>setTimeout(resolve,50));if(date&&grade){const result=await api(ASSIGNMENT_API,{method:'POST',body:JSON.stringify({action:'delete',date,grade})},true);savedAssignments=result.assignments||savedAssignments}try{localStorage.removeItem(CAR_DRAFT_KEY)}catch{}resetFreshEntry();setView('edit');$('#status').textContent='入力内容をすべてクリアしました。'}catch(error){showError(error.message||'入力内容をクリアできませんでした。');}finally{draftReady=true;button.disabled=false;button.textContent=original}}
-async function saveImage(){const button=$('#saveImage'),original=button.textContent;button.disabled=true;button.textContent='画像を作成中…';$('#imageStatus').textContent='';try{if(typeof html2canvas!=='function')throw new Error('画像機能を読み込めませんでした');const canvas=await html2canvas($('#previewSheet'),{backgroundColor:'#f4f3ef',scale:1.4,useCORS:true,logging:false,onclone:documentClone=>documentClone.getElementById('previewSheet')?.classList.add('image-export')});const blob=await new Promise(resolve=>canvas.toBlob(resolve,'image/png',1));if(!blob)throw new Error('画像を作成できませんでした');const fileName='配車表_'+currentDate().replaceAll('-','')+'.png',file=new File([blob],fileName,{type:'image/png'});if(navigator.share&&navigator.canShare?.({files:[file]})){try{await navigator.share({files:[file],title:formatDate(currentDate())+' 配車表'});return}catch(error){if(error?.name==='AbortError')return}}const url=URL.createObjectURL(blob),link=document.createElement('a');link.href=url;link.download=fileName;document.body.appendChild(link);link.click();link.remove();setTimeout(()=>URL.revokeObjectURL(url),5000);$('#imageStatus').textContent='画像を保存しました。'}catch(error){$('#imageStatus').textContent='画像を保存できませんでした。もう一度お試しください。'}finally{button.disabled=false;button.textContent=original}}
+function buildExportPage(start,end,pageNumber,totalPages){
+  const sheet=$('#previewSheet').cloneNode(true);
+  sheet.removeAttribute('id');
+  sheet.classList.add('image-export');
+  sheet.style.position='fixed';
+  sheet.style.left='-10000px';
+  sheet.style.top='0';
+  sheet.style.zIndex='-1';
+  const vehicleRows=[...sheet.querySelectorAll('.preview-car')];
+  vehicleRows.forEach((row,index)=>{if(index<start||index>=end)row.remove()});
+  sheet.querySelectorAll('.preview-group').forEach(group=>{if(!group.querySelector('.preview-car'))group.remove()});
+  sheet.querySelectorAll('.preview-column').forEach(column=>{if(!column.querySelector('.preview-group'))column.remove()});
+  const columns=sheet.querySelectorAll('.preview-column');
+  const groups=sheet.querySelector('.preview-groups');
+  if(groups&&columns.length===1)groups.style.gridTemplateColumns='1fr';
+  if(totalPages>1){
+    const title=sheet.querySelector('.preview-title');
+    if(title)title.textContent+=`（${pageNumber}/${totalPages}）`;
+  }
+  document.body.appendChild(sheet);
+  return sheet;
+}
+async function exportPageBlob(sheet){
+  await new Promise(resolve=>requestAnimationFrame(()=>requestAnimationFrame(resolve)));
+  const canvas=await html2canvas(sheet,{backgroundColor:'#f4f3ef',scale:1.4,useCORS:true,logging:false});
+  const blob=await new Promise(resolve=>canvas.toBlob(resolve,'image/png',1));
+  if(!blob)throw new Error('画像を作成できませんでした');
+  return blob;
+}
+async function saveImage(){
+  const button=$('#saveImage'),original=button.textContent;
+  button.disabled=true;
+  button.textContent='画像を作成中…';
+  $('#imageStatus').textContent='';
+  try{
+    if(typeof html2canvas!=='function')throw new Error('画像機能を読み込めませんでした');
+    const vehicleCount=$$('#previewSheet .preview-car').length;
+    const perPage=10,totalPages=Math.max(1,Math.ceil(vehicleCount/perPage)),files=[];
+    for(let page=0;page<totalPages;page+=1){
+      const sheet=buildExportPage(page*perPage,(page+1)*perPage,page+1,totalPages);
+      try{
+        const blob=await exportPageBlob(sheet);
+        const suffix=totalPages>1?`_${page+1}`:'';
+        const fileName=`配車表_${currentDate().replaceAll('-','')}${suffix}.png`;
+        files.push(new File([blob],fileName,{type:'image/png'}));
+      }finally{
+        sheet.remove();
+      }
+    }
+    if(navigator.share&&navigator.canShare?.({files})){
+      try{
+        await navigator.share({files,title:formatDate(currentDate())+' 配車表'});
+        $('#imageStatus').textContent=totalPages>1?`${totalPages}枚の画像を作成しました。`:'画像を保存しました。';
+        return;
+      }catch(error){if(error?.name==='AbortError')return}
+    }
+    files.forEach((file,index)=>{
+      const url=URL.createObjectURL(file),link=document.createElement('a');
+      link.href=url;
+      link.download=file.name;
+      document.body.appendChild(link);
+      setTimeout(()=>{link.click();link.remove();setTimeout(()=>URL.revokeObjectURL(url),5000)},index*250);
+    });
+    $('#imageStatus').textContent=totalPages>1?`${totalPages}枚の画像を保存しました。`:'画像を保存しました。';
+  }catch(error){
+    $('#imageStatus').textContent='画像を保存できませんでした。もう一度お試しください。';
+  }finally{
+    button.disabled=false;
+    button.textContent=original;
+  }
+}
 async function load(){accessPass=readAccessPass();draftAdminPass=sessionStorage.getItem(DRAFT_ADMIN_KEY)||'';if(!accessPass||!draftAdminPass){alert('管理者パスワードを入力して保護者出欠確認から開いてください。');location.replace('./board.html');return}const startFresh=consumeFreshStart();temporaryDensukeActive=consumeTemporaryDensukeStart();$('#carPage').hidden=false;try{const temporaryRequest={method:'POST',body:JSON.stringify({action:'previewDensuke'})},parentRequest=temporaryDensukeActive?api(PARENT_API,temporaryRequest,true):api(PARENT_API,{},true),playerRequest=temporaryDensukeActive?api(PLAYER_API,temporaryRequest,true):api(PLAYER_API);const [parents,players,assignments,schedule]=await Promise.all([parentRequest,playerRequest,api(ASSIGNMENT_API,{},true),fetch(SCHEDULE_API,{cache:'no-store'}).then(response=>response.ok?response.json():{data:[]}).catch(()=>({data:[]}))]);parentData=normalize(parents.data);playerData=normalize(players.data);scheduleEvents=Array.isArray(schedule.data)?schedule.data:[];savedAssignments=assignments.assignments||{};const dates=allEventDates();$('#eventDate').innerHTML='<option value="">選択</option>'+dates.map(date=>`<option value="${date}">${esc(formatDate(date))}</option>`).join('');if(!dates.length)throw new Error('日程がありません');$('#eventDate').value='';$('#loading').hidden=true;$('#editView').hidden=false;draftReady=true;if(startFresh)resetFreshEntry();else if(!restoreDraft()){updateCounts();renderCandidates();renderPreview()}if(temporaryDensukeActive)$('#status').textContent=`伝助から保護者回答${parents.importedAnswers||0}件・選手回答${players.importedAnswers||0}件・コメント${parents.importedComments||0}件を一時取得しました。`;}catch(error){sessionStorage.removeItem(DRAFT_ADMIN_KEY);$('#loading').hidden=true;showError(error.message||'管理者認証を確認できませんでした。チーム専用ページから開き直してください。')}}
 $('#editTab').onclick=()=>setView('edit');$('#previewTab').onclick=()=>setView('preview');$('#showPreview').onclick=()=>setView('preview');$('#backToEdit').onclick=()=>setView('edit');$('#createAssignment').onclick=autoCreate;$('#saveImage').onclick=saveImage;$('#addCar').onclick=addManualCar;$('#showEscortFather').onclick=()=>{const panel=$('#escortFatherPanel'),open=panel.hidden;panel.hidden=!open;$('#showEscortFather').setAttribute('aria-expanded',String(open));if(open)setTimeout(()=>$('#escortFatherInput').focus(),0)};$('#addEscortFather').onclick=addEscortFathers;$('#escortFatherInput').addEventListener('keydown',event=>{if(event.key==='Enter'){event.preventDefault();addEscortFathers()}});$$('.grade-btn').forEach(button=>button.onclick=()=>{$$('.grade-btn').forEach(item=>item.classList.remove('active'));button.classList.add('active');selectedGrade=button.dataset.grade;loadSavedForSelection();saveDraft()});$('#eventDate').onchange=()=>{if(currentDate())loadSavedForSelection();saveDraft()};['#playerCountInput','#firstGradeEscort','#gameType','#route','#opponent','#venue','#playerCarCount','#equipmentCount','#cargoCount','#supportCar','#bus','#busPassengers','#umpireCar','#coachCar','#coachCount','#scorerName'].forEach(selector=>$(selector).addEventListener('change',()=>{showError('');updateConditionalFields();updateCounts();renderCandidates();renderPreview();saveDraft()}));$('#scorerName').addEventListener('input',()=>{updateCounts();renderPreview()});$('#playerCarCount').addEventListener('input',()=>{syncVehicleTotal();renderPreview()});$('#coachManager').addEventListener('change',()=>{if($('#coachManager').checked){$('#coachManagerDriver').checked=false;if($('#coachDriver').value.trim()==='監督')$('#coachDriver').value=''}updateCounts();renderPreview();saveDraft()});$('#coachManagerDriver').addEventListener('change',()=>{if($('#coachManagerDriver').checked){$('#coachManager').checked=false;$('#coachDriver').value='監督'}else if($('#coachDriver').value.trim()==='監督')$('#coachDriver').value='';updateCounts();renderPreview();saveDraft()});$$('#editView input,#editView select').forEach(element=>element.addEventListener('input',saveDraft));window.addEventListener('beforeunload',()=>{if(draftReady&&currentDate()&&selectedGrade){try{localStorage.setItem(CAR_DRAFT_KEY,JSON.stringify({date:currentDate(),grade:selectedGrade,assignment:currentAssignment(),savedAt:Date.now()}))}catch{}}});load();
 $('#clearAll').onclick=clearAllInputs;
