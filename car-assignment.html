@@ -260,7 +260,7 @@ function syncVehicleTotal(){
   const selectedCounts=[['指導者号',numberValue('#coachCar')],['審判号',numberValue('#umpireCar')],['選手号',numberValue('#playerCarCount')],['道具車号',numberValue('#equipmentCount')],['荷物車号',numberValue('#cargoCount')],['応援者号',numberValue('#supportCar')],['バス',numberValue('#bus')]],selectedTotal=selectedCounts.reduce((sum,[,count])=>sum+count,0),info=attendeeSnapshot(),mothers=info.parents.filter(member=>parentType(member)==='mother').length,recommendation=vehicleRecommendation(),estimatedTotal=Math.max(3,recommendation.total+numberValue('#bus'));
   const recommendationLabels={coach:'指導者号',umpire:'審判号',player:'選手号',equipment:'道具車号',cargo:'荷物車号',support:'応援者号'},recommendationBreakdown=Object.entries(recommendation.counts).filter(([,count])=>count>0).map(([type,count])=>`${recommendationLabels[type]}${count}台`).join('・');
   $('#carCount').value=String(estimatedTotal);
-  const motherEstimateText=recommendation.navigatorMotherCount>0?`母${mothers}名のうちナビ見込み${recommendation.navigatorMotherCount}名`:`母${mothers}名`;
+  const motherEstimateText=`母${mothers}名：ナビ見込み${recommendation.navigatorMotherCount}名・応援者号対象${recommendation.supportMotherCount}名（運転手含む）`;
   $('#vehicleEstimateDetail').textContent=`選手・帯同${info.playerCount+info.escort}名／保護者${info.parents.length}名（${motherEstimateText}）／監督・コーチ${currentManagerCoachCount()}名・スコアラー${currentScorerCount()}名／予測内訳：${recommendationBreakdown}${numberValue('#bus')>0?`・バス${numberValue('#bus')}台`:''}`;
   $('#currentCarCount').value=String(selectedTotal);
   const breakdown=selectedCounts.filter(([,count])=>count>0);
