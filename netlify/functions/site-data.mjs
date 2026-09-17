@@ -1275,9 +1275,9 @@ export default async (request, context) => {
     }
 
     const rawUploadAction = request.headers.get("x-upload-action") || "";
-    const isRawBoardUpload =
-      (section === "board-meeting-documents" && rawUploadAction === "uploadBoardMeetingDocument") ||
-      (section === "referee-documents" && rawUploadAction === "uploadRefereeDocument");
+    const isSecretariatUpload = section === "board-meeting-documents" && /^uploadBoardMeetingDocument(?:Chunk)?$/.test(rawUploadAction);
+    const isRefereeUpload = section === "referee-documents" && /^uploadRefereeDocument(?:Chunk)?$/.test(rawUploadAction);
+    const isRawBoardUpload = isSecretariatUpload || isRefereeUpload;
 
     if (isRawBoardUpload) {
       const accessPassword = request.headers.get("x-access-password") || "";
@@ -1296,7 +1296,39 @@ export default async (request, context) => {
         return json({ error: "ファイル名を確認してください。" }, 400);
       }
       const contentType = String(request.headers.get("content-type") || "").split(";")[0].toLowerCase();
-      const bytes = new Uint8Array(await request.arrayBuffer());
+      let bytes = new Uint8Array(await request.arrayBuffer());
+      const isChunk = rawUploadAction.endsWith("Chunk");
+      const pendingKeys = [];
+
+      if (isChunk) {
+        const uploadId = String(request.headers.get("x-upload-id") || "");
+        const chunkIndex = Number(request.headers.get("x-upload-index"));
+        const chunkTotal = Number(request.headers.get("x-upload-total"));
+        if (!/^[a-zA-Z0-9_-]{8,100}$/.test(uploadId) || !Number.isInteger(chunkIndex) || !Number.isInteger(chunkTotal) || chunkIndex < 0 || chunkTotal < 1 || chunkTotal > 8 || chunkIndex >= chunkTotal) {
+          return json({ error: "アップロード情報を確認してください。" }, 400);
+        }
+        if (bytes.byteLength > 1024 * 1024) return json({ error: "分割データが大きすぎます。" }, 413);
+        const pendingPrefix = `${section}/pending/${uploadId}`;
+        const pendingKey = `${pendingPrefix}/${chunkIndex}.bin`;
+        await store.set(pendingKey, bytes.buffer);
+        if (chunkIndex < chunkTotal - 1) return json({ ok: true, complete: false });
+
+        const parts = [];
+        let combinedSize = 0;
+        for (let index = 0; index < chunkTotal; index += 1) {
+          const partKey = `${pendingPrefix}/${index}.bin`;
+          const partBlob = await store.get(partKey, {type: "blob", consistency: "strong"});
+          if (!partBlob) return json({ error: "分割データの一部を確認できませんでした。もう一度お試しください。" }, 409);
+          const part = new Uint8Array(await partBlob.arrayBuffer());
+          parts.push(part);
+          pendingKeys.push(partKey);
+          combinedSize += part.byteLength;
+        }
+        bytes = new Uint8Array(combinedSize);
+        let offset = 0;
+        for (const part of parts) { bytes.set(part, offset); offset += part.byteLength; }
+      }
+
       if (!boardMeetingFileIsValid(fileName, contentType, bytes)) {
         return json({ error: "PDF・JPEG・PNG・WebPファイルを選択してください。" }, 400);
       }
@@ -1314,9 +1346,10 @@ export default async (request, context) => {
       await store.set(storageKey, bytes.buffer, {metadata: {fileName, contentType}});
       const updated = [item, ...documents];
       await store.setJSON(key, updated);
+      await Promise.all(pendingKeys.map(partKey => store.delete(partKey)));
       const documentLabel = section === "referee-documents" ? "審判部資料" : "事務局資料";
       await saveBoardLatestUpdate(store, "documents", `${documentLabel}「${fileName}」を保存しました`, item.uploadedAt);
-      return json({ ok: true, data: updated });
+      return json({ ok: true, complete: true, data: updated });
     }
 
     let body;
