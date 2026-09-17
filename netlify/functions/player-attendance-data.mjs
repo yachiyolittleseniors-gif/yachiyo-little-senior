@@ -11,7 +11,7 @@ const ACCESS_CONFIG_KEY = "content/access-settings.json";
 const PLAYERS_KEY = "content/players.json";
 const PARENT_ATTENDANCE_KEY = "content/attendance.json";
 const MEMBER_STATE_PREFIX = "player-attendance/member-state/";
-const DENSUKE_URL = "https://densuke.biz/list?cd=ZhxJNW9dPNGVtm7c";
+const DENSUKE_URL = "https://densuke.biz/list?mode=s&cd=Uq6CGKWk4E4VLP2J";
 const DEFAULT_ACCESS_SALT = "yachiyo-access-v1";
 const DEFAULT_ACCESS_HASH =
   "19eb403934ae615b2961d9f6b5ddd86aab32a0fdf4e96adeb8aa2fcb351276ba";
@@ -400,6 +400,26 @@ function dateFromMonthDay(month, day, now = new Date()) {
   return `${chosen.getFullYear()}-${String(month).padStart(2, "0")}-${String(day).padStart(2, "0")}`;
 }
 
+function eventDateFromComment(text, events = []) {
+  const monthDay = String(text || "").match(/(\d{1,2})\s*(?:\/|月)\s*(\d{1,2})(?:日)?/);
+  if (monthDay) return dateFromMonthDay(Number(monthDay[1]), Number(monthDay[2]));
+
+  const dayOnly = String(text || "").match(/(?:^|\D)(\d{1,2})\s*日/);
+  if (!dayOnly) return "";
+  const day = Number(dayOnly[1]);
+  const matching = events
+    .map(event => String(event?.date || ""))
+    .filter(date => /^\d{4}-\d{2}-\d{2}$/.test(date) && Number(date.slice(-2)) === day)
+    .sort();
+  if (!matching.length) return "";
+
+  const now = Date.now();
+  return matching.sort((a, b) =>
+    Math.abs(new Date(a + "T00:00:00").getTime() - now) -
+    Math.abs(new Date(b + "T00:00:00").getTime() - now)
+  )[0];
+}
+
 async function fetchDensukeHtml() {
   const response = await fetch(DENSUKE_URL, { headers: { "user-agent": "Yachiyo-Little-Senior/1.0" } });
   if (!response.ok) throw new Error("Densuke fetch failed");
@@ -451,8 +471,7 @@ function importMatchingDensukeData(data, html) {
     const member = registered.get(normalizedName(match[1]));
     const text = String(match[2] || "").replace(/\s*\[\d{1,2}\/\d{1,2}\s+\d{1,2}:\d{2}\]\s*$/, "").trim();
     if (!member || !text || existing.has(`${member.id}\n${text}`)) continue;
-    const dateMatch = text.match(/(\d{1,2})\s*(?:\/|月)\s*(\d{1,2})(?:日)?/);
-    const eventDate = dateMatch ? dateFromMonthDay(Number(dateMatch[1]), Number(dateMatch[2])) : "";
+    const eventDate = eventDateFromComment(text, data.events);
     data.comments.push({ id: `densuke_${Date.now().toString(36)}_${importedComments}`, memberId: member.id, text, eventDate, updatedAt: new Date().toISOString(), source: "densuke" });
     existing.add(`${member.id}\n${text}`);
     importedComments++;
@@ -506,7 +525,7 @@ export default async (request, context) => {
     try { body = await request.json(); } catch { return json({ error: "Invalid JSON" }, 400); }
     const action = body.action || "";
 
-    const adminActions = new Set(["adminPing", "adminSave", "previewDensuke", "answer", "comment"]);
+    const adminActions = new Set(["adminPing", "adminSave", "previewDensuke", "endDensuke", "answer", "comment"]);
     let adminAuth = null;
     if (adminActions.has(action)) {
       adminAuth = await verifyAdminPassword({
@@ -525,7 +544,7 @@ export default async (request, context) => {
       return json({ error: "Unauthorized" }, 401);
     }
 
-    if (!["adminPing", "adminSave", "previewDensuke", "answer", "comment"].includes(action)) {
+    if (!["adminPing", "adminSave", "previewDensuke", "endDensuke", "answer", "comment"].includes(action)) {
       return json({ error: "Unknown action" }, 400);
     }
 
