@@ -228,6 +228,10 @@
 
   function setEndedUI(ended){
     setAttendanceEnabled(ended);
+    if(ended){
+      sessionStorage.removeItem('yachiyoAttendanceDraftAdminPass');
+      sessionStorage.removeItem('yachiyoPlayerAttendanceAdminPass');
+    }
     warning.style.display='none';
     endBtn.dataset.warningShown='0';
     endBtn.textContent='伝助を終了';
@@ -270,12 +274,14 @@
 
   attendanceBtn.addEventListener('click',function(event){
     if(attendanceBtn.getAttribute('aria-disabled')==='true')return;
+    if(!attendanceBtn.classList.contains('admin-gated'))return;
     event.preventDefault();
     openProtectedAttendance(attendanceBtn,API,'yachiyoAttendanceDraftAdminPass');
   });
 
   playerAttendanceBtn.addEventListener('click',function(event){
     if(playerAttendanceBtn.getAttribute('aria-disabled')==='true')return;
+    if(!playerAttendanceBtn.classList.contains('admin-gated'))return;
     event.preventDefault();
     openProtectedAttendance(playerAttendanceBtn,PLAYER_API,'yachiyoPlayerAttendanceAdminPass');
   });
@@ -521,7 +527,7 @@
     if(!adminPassword) return;
 
     const ok=confirm(
-      '伝助移行を再開しますか？\n\n保護者出欠確認は再びグレーになり、開けない状態に戻ります。\n保存済みの保護者出欠確認データは削除しません。'
+      '伝助移行を再開しますか？\n\n保護者出欠確認・選手出欠確認は再びグレーになり、工事中の隠しパスワード状態に戻ります。\n保存済みの出欠データは削除しません。'
     );
     if(!ok) return;
 
