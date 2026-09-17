@@ -796,7 +796,51 @@ function renderP(){updateGradeTabs();const o={'3年':3,'2年':2,'1年':1},b=docu
   const gd=(o[c.grade]||0)-(o[a.grade]||0);
   if(gd!==0)return gd;
   return String(a.name||'').localeCompare(String(c.name||''),'ja',{sensitivity:'base'});
-}).filter(p=>currentGrade==='all'||p.grade===currentGrade).map(p=>`<tr data-grade="${ep(p.grade)}"><td class="cohort-col"><div class="cohort-grade-wrap">${gradeDisplayHtml(p)}</div></td><td><div class="player-name-wrap"><strong>${ep(p.name)}</strong><button class="player-delete" type="button" onclick="deletePlayer('${ep(p.id)}')">削除</button></div></td><td>${ep(p.birth||'')}</td><td>${ep(p.team||'')}</td></tr>`).join('');countP()}function filterGrade(g,b){currentGrade=g;document.querySelectorAll('.tabs button').forEach(x=>x.classList.remove('active'));if(b)b.classList.add('active');renderP()}function togglePlayerPanel(f){const e=document.getElementById('playerEditor'),o=typeof f==='boolean'?f:e.hasAttribute('hidden');o?e.removeAttribute('hidden'):e.setAttribute('hidden','')}async function savePlayer(){const grade=playerGrade.value,name=playerName.value.trim(),birth=playerBirth.value.trim(),team=playerTeam.value.trim();if(!name)return alert('選手名を入力してください。');const cohort=cohortForGrade(grade);const n=playersData.concat([{id:'p'+Date.now(),grade,cohort,name,birth,team}]);try{await saveP(n);playersData=n;renderP();playerName.value=playerBirth.value=playerTeam.value='';togglePlayerPanel(false)}catch(e){alert(e.message)}}async function promoteGrades(){
+}).filter(p=>currentGrade==='all'||p.grade===currentGrade).map(p=>`<tr data-grade="${ep(p.grade)}"><td class="cohort-col"><div class="cohort-grade-wrap">${gradeDisplayHtml(p)}</div></td><td><div class="player-name-wrap"><strong>${ep(p.name)}</strong><button class="player-delete" type="button" onclick="deletePlayer('${ep(p.id)}')">削除</button></div></td><td>${ep(p.birth||'')}</td><td>${ep(p.team||'')}</td></tr>`).join('');countP()}function filterGrade(g,b){currentGrade=g;document.querySelectorAll('.tabs button').forEach(x=>x.classList.remove('active'));if(b)b.classList.add('active');renderP()}function togglePlayerPanel(f){const e=document.getElementById('playerEditor'),o=typeof f==='boolean'?f:e.hasAttribute('hidden');o?e.removeAttribute('hidden'):e.setAttribute('hidden','')}async function savePlayer(){const grade=playerGrade.value,name=playerName.value.trim(),birth=playerBirth.value.trim(),team=playerTeam.value.trim();if(!name)return alert('選手名を入力してください。');const cohort=cohortForGrade(grade);const n=playersData.concat([{id:'p'+Date.now(),grade,cohort,name,birth,team}]);try{await saveP(n);playersData=n;renderP();playerName.value=playerBirth.value=playerTeam.value='';togglePlayerPanel(false)}catch(e){alert(e.message)}}function promotionDate(){
+  const d=new Date();
+  return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');
+}
+function scheduleGradesForPromotion(ev){
+  if(Array.isArray(ev&&ev.grades)){
+    return [...new Set(ev.grades.map(String).filter(x=>['1','2','3'].includes(x)))];
+  }
+  const legacy=String(ev&&ev.grade||'');
+  const grades=['1','2','3'].filter(x=>legacy.includes(x));
+  return grades.length?grades:['1','2','3'];
+}
+async function promoteScheduleGrades(){
+  const p=ap();
+  if(!p)throw Error('パスワードが必要です。');
+  const read=await fetch(SHARED_API+'?section=schedule',{cache:'no-store'});
+  if(!read.ok)throw Error('ホームのスケジュールを読み込めませんでした。');
+  const json=await read.json();
+  const original=Array.isArray(json.data)?json.data:[];
+  const from=promotionDate();
+  let changed=0;
+  const data=original.map(ev=>{
+    if(!ev||!ev.date||String(ev.date)<from)return ev;
+    const grades=scheduleGradesForPromotion(ev);
+    if(grades.length===0||grades.length===3)return ev;
+    const promoted=[...new Set(grades.map(g=>g==='1'?'2':g==='2'?'3':'').filter(Boolean))];
+    if(promoted.join(',')===grades.join(','))return ev;
+    changed++;
+    return {...ev,grades:promoted,grade:promoted.join(',')};
+  });
+  if(!changed)return 0;
+  const write=await fetch(SHARED_API+'?section=schedule',{
+    method:'POST',
+    headers:{'content-type':'application/json','x-admin-password':p},
+    body:JSON.stringify({data})
+  });
+  if(write.status===429)throw Error('試行回数の上限です。15分後に再度お試しください。');
+  if(write.status===401){
+    sessionStorage.removeItem('yachiyoAdminPassword');
+    throw Error('管理者パスワードが違います。');
+  }
+  if(!write.ok)throw Error('ホームのスケジュールを更新できませんでした。');
+  return changed;
+}
+async function promoteGrades(){
   if(!playersData.length)return alert('選手データがありません。');
   const third=playersData.filter(p=>p.grade==='3年').length;
   const second=playersData.filter(p=>p.grade==='2年').length;
@@ -806,6 +850,7 @@ function renderP(){updateGradeTabs();const o={'3年':3,'2年':2,'1年':1},b=docu
     '3年生 '+third+'名 → 選手紹介から外す\n'+
     '2年生 '+second+'名 → 3年生\n'+
     '1年生 '+first+'名 → 2年生\n\n'+
+    'ホームのスケジュールも本日以降の予定を同じ学年に更新します。\n'+
     'この操作を実行しますか？'
   );
   if(!ok)return;
@@ -814,11 +859,12 @@ function renderP(){updateGradeTabs();const o={'3年':3,'2年':2,'1年':1},b=docu
     .map(p=>({...p,grade:p.grade==='2年'?'3年':p.grade==='1年'?'2年':p.grade}));
   try{
     await saveP(n);
+    const scheduleCount=await promoteScheduleGrades();
     playersData=n;
     currentGrade='all';
     document.querySelectorAll('.tabs button').forEach((x,i)=>x.classList.toggle('active',i===0));
     renderP();
-    alert('学年を繰り上げました。');
+    alert('学年を繰り上げました。ホームのスケジュール '+scheduleCount+'件も更新しました。');
   }catch(e){
     alert(e.message||'学年の繰り上げに失敗しました。');
   }
