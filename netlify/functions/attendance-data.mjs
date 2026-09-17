@@ -106,6 +106,7 @@ function normalize(data = {}) {
     answers: normalizeAnswerTable(data.answers),
     comments: Array.isArray(data.comments) ? data.comments : [],
     gradeOrder: normalizeGradeOrder(data.gradeOrder),
+    densukeImportVersion: Number(data.densukeImportVersion || 0),
     migrationInitialized: data.migrationInitialized === true,
   };
 }
@@ -334,13 +335,70 @@ function htmlText(value) {
 }
 
 function normalizedName(value) {
-  return String(value || "").normalize("NFKC").replace(/[\s　]+/g, "").trim();
+  return String(value || "")
+    .normalize("NFKC")
+    .replace(/[\s　]+/g, "")
+    .replace(/髙/g, "高")
+    .replace(/﨑/g, "崎")
+    .trim();
+}
+
+function resolveDensukeMembers(names, members, savedGradeOrder = []) {
+  const gradeOrder = [...new Set([
+    ...(Array.isArray(savedGradeOrder) ? savedGradeOrder.map(String) : []),
+    "2", "1", "3",
+  ])].filter(grade => ["1", "2", "3"].includes(grade));
+  const gradeRank = new Map(gradeOrder.map((grade, index) => [grade, index]));
+  const resolved = Array(names.length).fill(null);
+  const assigned = new Set();
+  const indexes = names.map((_, index) => index).sort((a, b) =>
+    normalizedName(names[b]).length - normalizedName(names[a]).length || a - b
+  );
+
+  for (const index of indexes) {
+    const key = normalizedName(names[index]);
+    if (!key) continue;
+    const candidates = members
+      .filter(member => !assigned.has(String(member?.id || "")))
+      .filter(member => normalizedName(member?.name).startsWith(key))
+      .sort((a, b) => {
+        const aName = normalizedName(a?.name);
+        const bName = normalizedName(b?.name);
+        const exactDiff = Number(bName === key) - Number(aName === key);
+        if (exactDiff) return exactDiff;
+        const gradeDiff = (gradeRank.get(String(a?.grades?.[0] || "")) ?? 99) -
+          (gradeRank.get(String(b?.grades?.[0] || "")) ?? 99);
+        if (gradeDiff) return gradeDiff;
+        return aName.localeCompare(bName, "ja");
+      });
+    if (!candidates.length) continue;
+    resolved[index] = candidates[0];
+    assigned.add(String(candidates[0].id));
+  }
+  return resolved;
 }
 
 function dateFromMonthDay(month, day, now = new Date()) {
   const candidates = [-1, 0, 1].map(offset => new Date(now.getFullYear() + offset, month - 1, day));
   const chosen = candidates.sort((a, b) => Math.abs(a - now) - Math.abs(b - now))[0];
   return `${chosen.getFullYear()}-${String(month).padStart(2, "0")}-${String(day).padStart(2, "0")}`;
+}
+
+function eventDateFromComment(text, events = []) {
+  const monthDay = String(text || "").match(/(\d{1,2})\s*(?:\/|月)\s*(\d{1,2})(?:日)?/);
+  if (monthDay) return dateFromMonthDay(Number(monthDay[1]), Number(monthDay[2]));
+  const dayOnly = String(text || "").match(/(?:^|\D)(\d{1,2})\s*日/);
+  if (!dayOnly) return "";
+  const day = Number(dayOnly[1]);
+  const matching = events
+    .map(event => String(event?.date || ""))
+    .filter(date => /^\d{4}-\d{2}-\d{2}$/.test(date) && Number(date.slice(-2)) === day);
+  if (!matching.length) return "";
+  const now = Date.now();
+  return matching.sort((a, b) =>
+    Math.abs(new Date(a + "T00:00:00").getTime() - now) -
+    Math.abs(new Date(b + "T00:00:00").getTime() - now)
+  )[0];
 }
 
 async function fetchDensukeHtml() {
@@ -356,18 +414,37 @@ async function fetchDensukeHtml() {
 }
 
 function importMatchingDensukeData(data, html) {
-  const rows = [...html.matchAll(/<tr\b[^>]*>([\s\S]*?)<\/tr>/gi)].map(row =>
-    [...row[1].matchAll(/<t[hd]\b[^>]*>([\s\S]*?)<\/t[hd]>/gi)].map(cell => htmlText(cell[1]))
+  const rowCells = [...html.matchAll(/<tr\b[^>]*>([\s\S]*?)<\/tr>/gi)].map(row =>
+    [...row[1].matchAll(/<t[hd]\b[^>]*>([\s\S]*?)<\/t[hd]>/gi)].map(cell => ({
+      html: cell[1],
+      text: htmlText(cell[1]),
+    }))
   ).filter(row => row.length);
-  const header = rows.find(row => row.includes("○") && row.includes("△") && row.includes("×"));
-  if (!header) throw new Error("Densuke table not found");
+  const headerCells = rowCells.find(row => {
+    const values = row.map(cell => cell.text);
+    return values.includes("○") && values.includes("△") && values.includes("×");
+  });
+  if (!headerCells) throw new Error("Densuke table not found");
+  const header = headerCells.map(cell => cell.text);
   const statusEnd = Math.max(header.indexOf("○"), header.indexOf("△"), header.indexOf("×"));
   const memberStart = statusEnd + 1;
-  const registered = new Map(data.members.map(member => [normalizedName(member.name), member]));
-  const columns = header.slice(memberStart).map(name => registered.get(normalizedName(name)) || null);
+  const labels = header.slice(memberStart);
+  const columns = resolveDensukeMembers(labels, data.members, data.gradeOrder);
+  const memberByDensukeId = new Map();
+  const membersByLabel = new Map();
+  headerCells.slice(memberStart).forEach((cell, index) => {
+    const member = columns[index];
+    if (!member) return;
+    const densukeId = String(cell.html.match(/memberdata\(\s*(\d+)\s*\)/i)?.[1] || "");
+    if (densukeId) memberByDensukeId.set(densukeId, member);
+    const label = normalizedName(labels[index]);
+    if (!membersByLabel.has(label)) membersByLabel.set(label, []);
+    membersByLabel.get(label).push(member);
+  });
   let importedAnswers = 0;
 
-  for (const row of rows) {
+  for (const cells of rowCells) {
+    const row = cells.map(cell => cell.text);
     const dateMatch = String(row[0] || "").match(/(\d{1,2})\s*\/\s*(\d{1,2})/);
     if (!dateMatch) continue;
     const date = dateFromMonthDay(Number(dateMatch[1]), Number(dateMatch[2]));
@@ -384,23 +461,30 @@ function importMatchingDensukeData(data, html) {
   }
 
   const commentArea = html.match(/(?:【\s*コメント\s*】|コメント一覧)([\s\S]*)/i)?.[1] || "";
-  const blocks = [...commentArea.matchAll(/<li\b[^>]*>([\s\S]*?)<\/li>/gi)].map(match => htmlText(match[1]));
+  const blocks = [...commentArea.matchAll(/<li\b[^>]*>([\s\S]*?)(?=<li\b|<\/ul>|$)/gi)].map(match => match[1]);
   const candidates = blocks.length ? blocks : htmlText(commentArea).split("\n");
+  data.comments = data.comments.filter(comment => comment?.source !== "densuke");
   const existing = new Set(data.comments.map(comment => `${comment.memberId}\n${String(comment.text || "").trim()}`));
   let importedComments = 0;
-  for (const candidate of candidates) {
+  for (const candidateHtml of candidates) {
+    const candidate = htmlText(candidateHtml);
     const match = candidate.match(/^\s*[（(]([^）)]+)[）)]\s*(.+)$/s);
     if (!match) continue;
-    const member = registered.get(normalizedName(match[1]));
+    const densukeId = String(String(candidateHtml).match(/memberdata\(\s*(\d+)\s*\)/i)?.[1] || "");
+    const member = memberByDensukeId.get(densukeId) || membersByLabel.get(normalizedName(match[1]))?.[0];
     const text = String(match[2] || "").replace(/\s*\[\d{1,2}\/\d{1,2}\s+\d{1,2}:\d{2}\]\s*$/, "").trim();
     if (!member || !text || existing.has(`${member.id}\n${text}`)) continue;
-    const dateMatch = text.match(/(\d{1,2})\s*(?:\/|月)\s*(\d{1,2})(?:日)?/);
-    const eventDate = dateMatch ? dateFromMonthDay(Number(dateMatch[1]), Number(dateMatch[2])) : "";
+    const eventDate = eventDateFromComment(text, data.events);
     data.comments.push({ id: `densuke_${Date.now().toString(36)}_${importedComments}`, memberId: member.id, text, eventDate, updatedAt: new Date().toISOString(), source: "densuke" });
     existing.add(`${member.id}\n${text}`);
     importedComments++;
   }
-  return { importedAnswers, importedComments };
+  return {
+    importedAnswers,
+    importedComments,
+    matchedMembers: columns.filter(Boolean).length,
+    unmatchedMembers: columns.filter(member => !member).length,
+  };
 }
 
 export default async (request, context) => {
@@ -436,6 +520,16 @@ export default async (request, context) => {
       let data = normalize(saved || {});
       const merged = mergeInitial(data);
       data = await mergeMemberStates(store, merged.data);
+      if (config.migrationEnded && data.densukeImportVersion < 2) {
+        try {
+          const html = await fetchDensukeHtml();
+          importMatchingDensukeData(data, html);
+          data.densukeImportVersion = 2;
+          await saveAllMemberStates(store, data);
+        } catch (error) {
+          console.error("parent Densuke repair import error:", error);
+        }
+      }
       const commentCountBeforeCleanup = data.comments.length;
       data = cleanupOldData(data);
       if (data.comments.length !== commentCountBeforeCleanup) {
@@ -526,6 +620,7 @@ export default async (request, context) => {
     if (action === "endDensuke") {
       const html = await fetchDensukeHtml();
       const imported = importMatchingDensukeData(data, html);
+      data.densukeImportVersion = 2;
       data = cleanupOldData(data);
       const config = {
         ...(await getConfig(store)),
