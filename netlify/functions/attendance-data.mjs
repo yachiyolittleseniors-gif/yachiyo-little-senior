@@ -90,12 +90,22 @@ function normalizeAnswerTable(answers = {}) {
   );
 }
 
+function normalizeGradeOrder(value) {
+  const order = Array.isArray(value) ? value.map(String) : [];
+  return order.length === 3 &&
+    new Set(order).size === 3 &&
+    order.every(grade => ["1", "2", "3"].includes(grade))
+    ? order
+    : ["2", "1", "3"];
+}
+
 function normalize(data = {}) {
   return {
     events: Array.isArray(data.events) ? data.events : [],
     members: Array.isArray(data.members) ? data.members : [],
     answers: normalizeAnswerTable(data.answers),
     comments: Array.isArray(data.comments) ? data.comments : [],
+    gradeOrder: normalizeGradeOrder(data.gradeOrder),
     migrationInitialized: data.migrationInitialized === true,
   };
 }
