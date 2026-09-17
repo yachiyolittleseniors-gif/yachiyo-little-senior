@@ -147,12 +147,20 @@
       const name=document.createElement('div');
       name.className='meeting-admin-document-name';
       name.textContent=(item.fileName||'事務局資料')+'（'+formatSize(item.size)+'）';
+      const actions=document.createElement('div');
+      actions.className='meeting-admin-document-actions';
+      const rename=document.createElement('button');
+      rename.type='button';
+      rename.className='meeting-admin-document-rename';
+      rename.textContent='名前変更';
+      rename.addEventListener('click',function(){renameDocument(item)});
       const remove=document.createElement('button');
       remove.type='button';
       remove.className='meeting-admin-document-delete';
       remove.textContent='削除';
       remove.addEventListener('click',function(){deleteDocument(item)});
-      row.append(name,remove);
+      actions.append(rename,remove);
+      row.append(name,actions);
       adminDocumentList.appendChild(row);
     });
   }
@@ -493,6 +501,32 @@
       renderDocuments();
       showSaveNotice('PDFを削除しました');
     }catch(e){alert(e.message||'PDFを削除できませんでした。')}
+  }
+
+  async function renameDocument(item){
+    const currentName=String(item.fileName||'事務局資料.pdf');
+    const extension=(currentName.match(/\.(?:pdf|jpe?g|png|webp)$/i)||[])[0]||({"application/pdf":'.pdf',"image/jpeg":'.jpg',"image/png":'.png',"image/webp":'.webp'}[item.contentType]||'');
+    const baseName=extension?currentName.slice(0,-extension.length):currentName;
+    const entered=prompt('新しいファイル名を入力してください。',baseName);
+    if(entered===null)return;
+    const nextBase=entered.trim().replace(/\.(?:pdf|jpe?g|png|webp)$/i,'').trim();
+    if(!nextBase){alert('ファイル名を入力してください。');return}
+    const fileName=nextBase+extension;
+    if(fileName===currentName)return;
+    const coachPassword=documentCoachPassword||await requireCoachPassword();
+    if(!coachPassword)return;
+    documentCoachPassword=coachPassword;
+    try{
+      const response=await fetch(DOCUMENT_API,{
+        method:'POST',headers:accessHeaders(true,coachPassword),
+        body:JSON.stringify({action:'renameBoardMeetingDocument',id:item.id,fileName:fileName})
+      });
+      const body=await response.json().catch(function(){return {}});
+      if(!response.ok)throw new Error(body.error||'ファイル名を変更できませんでした。');
+      documents=Array.isArray(body.data)?body.data:documents.map(function(entry){return entry.id===item.id?Object.assign({},entry,{fileName:fileName}):entry});
+      renderDocuments();
+      showSaveNotice('ファイル名を変更しました');
+    }catch(e){alert(e.message||'ファイル名を変更できませんでした。')}
   }
 
   addEvent.addEventListener('click',async function(){

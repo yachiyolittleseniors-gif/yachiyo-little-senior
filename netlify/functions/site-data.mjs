@@ -1415,7 +1415,7 @@ export default async (request, context) => {
         return json({ error: "unauthorized" }, 401);
       }
 
-      const protectedBoardActions = new Set(["uploadBoardMeetingDocument","deleteBoardMeetingDocument","uploadRefereeDocument","deleteRefereeDocument","saveBoardMeetingEvent","deleteBoardMeetingEvent"]);
+      const protectedBoardActions = new Set(["uploadBoardMeetingDocument","renameBoardMeetingDocument","deleteBoardMeetingDocument","uploadRefereeDocument","renameRefereeDocument","deleteRefereeDocument","saveBoardMeetingEvent","deleteBoardMeetingEvent"]);
       if (protectedBoardActions.has(String(body?.action || "")) && !(await coachAccessPasswordIsValid(store, request.headers.get("x-coach-password") || ""))) {
         return json({ error: "パスワードが違います。" }, 401);
       }
@@ -1446,6 +1446,37 @@ export default async (request, context) => {
         await store.setJSON(key, updated);
         const documentLabel = section === "referee-documents" ? "審判部資料" : "事務局資料";
         await saveBoardLatestUpdate(store, "documents", `${documentLabel}「${fileName}」を保存しました`, item.uploadedAt);
+        return json({ ok: true, data: updated });
+      }
+
+      if (
+        (section === "board-meeting-documents" && body?.action === "renameBoardMeetingDocument") ||
+        (section === "referee-documents" && body?.action === "renameRefereeDocument")
+      ) {
+        const id = String(body.id || "");
+        const fileName = String(body.fileName || "").trim();
+        const current = await store.get(key, {type: "json", consistency: "strong"});
+        const documents = Array.isArray(current) ? current : [];
+        const item = documents.find(entry => String(entry?.id || "") === id);
+        if (!item) return json({ error: "資料が見つかりません。" }, 404);
+
+        const extensionPattern = item.contentType === "application/pdf"
+          ? /\.pdf$/i
+          : item.contentType === "image/png"
+            ? /\.png$/i
+            : item.contentType === "image/webp"
+              ? /\.webp$/i
+              : /\.jpe?g$/i;
+        if (!fileName || fileName.length > 160 || /[\\/\u0000-\u001f]/.test(fileName) || !extensionPattern.test(fileName)) {
+          return json({ error: "ファイル名を確認してください。" }, 400);
+        }
+
+        const updated = documents.map(entry =>
+          String(entry?.id || "") === id
+            ? { ...entry, fileName, renamedAt: new Date().toISOString() }
+            : entry
+        );
+        await store.setJSON(key, updated);
         return json({ ok: true, data: updated });
       }
 
