@@ -347,6 +347,17 @@
     });
   }
 
+  async function uploadWithTimeout(url,options){
+    const controller=new AbortController();
+    const timer=setTimeout(function(){controller.abort()},60000);
+    try{
+      return await fetch(url,Object.assign({},options,{signal:controller.signal}));
+    }catch(error){
+      if(error&&error.name==='AbortError')throw new Error('保存に時間がかかりすぎたため中止しました。通信状況を確認して、もう一度お試しください。');
+      throw error;
+    }finally{clearTimeout(timer)}
+  }
+
   async function loadData(){
     try{
       await window.boardAccessReady;
@@ -394,14 +405,14 @@
     const allowedType=/^(application\/pdf|image\/(jpeg|png|webp))$/i.test(file&&file.type||'');
     const allowedName=/\.(pdf|jpe?g|png|webp)$/i.test(file&&file.name||'');
     if(!file||!allowedType||!allowedName){alert('PDF・JPEG・PNG・WebPファイルを選択してください。');return}
-    if(file.size>6*1024*1024){alert('ファイルは6MB以下にしてください。');return}
+    if(file.size>4*1024*1024){alert('ファイルは4MB以下にしてください。');return}
     const coachPassword=documentCoachPassword||await requireCoachPassword();
     if(!coachPassword)return;
     documentCoachPassword=coachPassword;
     pdfSave.disabled=true;
     pdfSave.textContent='保存中...';
     try{
-      const response=await fetch(DOCUMENT_API,{
+      const response=await uploadWithTimeout(DOCUMENT_API,{
         method:'POST',
         headers:accessHeaders(true,coachPassword),
         body:JSON.stringify({action:'uploadBoardMeetingDocument',fileName:file.name,contentType:file.type||'',dataUrl:await readAsDataUrl(file)})
