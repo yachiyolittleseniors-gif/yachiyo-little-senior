@@ -21,10 +21,14 @@ function cleanText(value, max = 200) {
   return String(value || "").trim().slice(0, max);
 }
 
-function countsAsCoach(member) {
+function isScorer(member) {
   const role = String(member?.role || "").trim();
   const compactName = String(member?.name || "").replace(/[\s　]+/g, "");
-  return role !== "スコアラー" && !compactName.startsWith("松野");
+  return role === "スコアラー" || compactName.startsWith("松野");
+}
+
+function countsAsCoach(member) {
+  return !isScorer(member);
 }
 
 async function loadCoachAttendanceCounts(store) {
@@ -45,12 +49,12 @@ async function loadCoachAttendanceCounts(store) {
       if (state?.answers && typeof state.answers === "object") answers[id] = state.answers;
     } catch {}
   }));
-  return Object.fromEntries(events.map(event => {
-    const eventId = String(event?.id || "");
-    const date = String(event?.date || "");
-    const count = members.filter(member => countsAsCoach(member) && answers?.[String(member?.id || "")]?.[eventId] === "○").length;
-    return [date, count];
-  }).filter(([date]) => /^\d{4}-\d{2}-\d{2}$/.test(date)));
+  const validEvents = events.filter(event => /^\d{4}-\d{2}-\d{2}$/.test(String(event?.date || "")));
+  const attendanceCount = (event, predicate) => members.filter(member => predicate(member) && answers?.[String(member?.id || "")]?.[String(event?.id || "")] === "○").length;
+  return {
+    coaches: Object.fromEntries(validEvents.map(event => [String(event.date), attendanceCount(event, countsAsCoach)])),
+    scorers: Object.fromEntries(validEvents.map(event => [String(event.date), attendanceCount(event, isScorer)])),
+  };
 }
 
 function normalizeCar(car = {}, index = 0) {
@@ -124,7 +128,10 @@ export default async (request, context) => {
     } catch {
       assignments = {};
     }
-    if (request.method === "GET") return json({ assignments, coachAttendanceCounts: await loadCoachAttendanceCounts(store) });
+    if (request.method === "GET") {
+      const attendance = await loadCoachAttendanceCounts(store);
+      return json({ assignments, coachAttendanceCounts: attendance.coaches, scorerAttendanceCounts: attendance.scorers });
+    }
     if (request.method !== "POST") return json({ error: "Method not allowed" }, 405);
     let body = {};
     try {
