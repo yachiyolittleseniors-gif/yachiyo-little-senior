@@ -358,6 +358,31 @@
     }finally{clearTimeout(timer)}
   }
 
+  async function uploadFileInChunks(url,file,password,action,button){
+    const chunkSize=1024*1024;
+    const total=Math.ceil(file.size/chunkSize);
+    const uploadId=(crypto.randomUUID?crypto.randomUUID():Date.now().toString(36)+Math.random().toString(36).slice(2)).replace(/[^a-zA-Z0-9_-]/g,'');
+    let result={};
+    for(let index=0;index<total;index+=1){
+      button.textContent='保存中...（'+(index+1)+'/'+total+'）';
+      const response=await uploadWithTimeout(url,{
+        method:'POST',
+        headers:Object.assign(accessHeaders(false,password),{
+          'content-type':file.type||'application/octet-stream',
+          'x-upload-action':action+'Chunk',
+          'x-upload-id':uploadId,
+          'x-upload-index':String(index),
+          'x-upload-total':String(total),
+          'x-file-name':encodeURIComponent(file.name)
+        }),
+        body:file.slice(index*chunkSize,Math.min(file.size,(index+1)*chunkSize),file.type)
+      });
+      result=await response.json().catch(function(){return {}});
+      if(!response.ok)throw new Error(result.error||('資料を保存できませんでした。（通信エラー '+response.status+'）'));
+    }
+    return result;
+  }
+
   async function loadData(){
     try{
       await window.boardAccessReady;
@@ -412,17 +437,7 @@
     pdfSave.disabled=true;
     pdfSave.textContent='保存中...';
     try{
-      const response=await uploadWithTimeout(DOCUMENT_API,{
-        method:'POST',
-        headers:Object.assign(accessHeaders(false,coachPassword),{
-          'content-type':file.type||'application/octet-stream',
-          'x-upload-action':'uploadBoardMeetingDocument',
-          'x-file-name':encodeURIComponent(file.name)
-        }),
-        body:file
-      });
-      const body=await response.json().catch(function(){return {}});
-      if(!response.ok)throw new Error(body.error||'資料を保存できませんでした。');
+      const body=await uploadFileInChunks(DOCUMENT_API,file,coachPassword,'uploadBoardMeetingDocument',pdfSave);
       documents=Array.isArray(body.data)?body.data:documents;
       pdfInput.value='';
       renderDocuments();
