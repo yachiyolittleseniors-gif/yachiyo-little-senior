@@ -214,8 +214,8 @@
 
   }
 
-  function setEndedUI(ended){
-    setAttendanceEnabled(ended);
+  function setEndedUI(ended,attendanceAvailable=true){
+    setAttendanceEnabled(attendanceAvailable);
     warning.style.display='none';
     endBtn.dataset.warningShown='0';
     endBtn.textContent='伝助を終了';
@@ -231,7 +231,7 @@
       attendanceCard.style.display='block';
       endBtn.style.display='';
       resumeBtn.style.display='none';
-      adminStatus.textContent='伝助終了前は、保護者出欠確認を開くことはできません。';
+      adminStatus.textContent='伝助終了前は、保護者・選手出欠確認を管理者パスワードで利用できます。';
     }
   }
 
@@ -287,7 +287,7 @@
       const ended = j?.config?.migrationEnded === true;
       setEndedUI(ended);
     }catch(e){
-      setEndedUI(false);
+      setEndedUI(false,false);
     }
   }
 
