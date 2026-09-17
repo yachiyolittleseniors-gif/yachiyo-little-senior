@@ -138,7 +138,11 @@ async function syncStaffFromRoster(store, data) {
   );
 
   const eligibleRoles = new Set(["監督", "ヘッドコーチ", "コーチ"]);
-  const members = roster.filter(coach => eligibleRoles.has(String(coach?.role || "").trim())).map((coach, index) => {
+  const members = roster.filter(coach => {
+    const role = String(coach?.role || "").trim();
+    const compactName = normalizedRosterName(coach?.name);
+    return eligibleRoles.has(role) && !compactName.startsWith("松野");
+  }).map((coach, index) => {
     const role = String(coach?.role || "").trim();
     const name = String(coach?.name || "").trim();
     const rosterId = String(coach?.id || `${role}:${normalizedRosterName(name)}` || `index-${index}`);
