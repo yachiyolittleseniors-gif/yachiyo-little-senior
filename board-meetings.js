@@ -30,6 +30,7 @@
   let events=[];
   let selectedDate='';
   let editingEventId='';
+  let historyFocusEventId='';
   let activeCoachPassword='';
   let documentCoachPassword='';
   const now=new Date();
@@ -267,6 +268,7 @@
     selectedEvents.forEach(function(item){
       const row=document.createElement('div');
       row.className='meeting-day-list-row';
+      if(historyFocusEventId&&String(item.id||'')===historyFocusEventId)row.classList.add('history-focus-event');
       const info=document.createElement('div');
       const title=document.createElement('strong');
       title.textContent=(gradeText(item)?gradeText(item)+'　':'')+(item.title||'事務局');
@@ -396,10 +398,38 @@
       events=Array.isArray(bodies[1].data)?bodies[1].data:[];
       renderDocuments();
       renderCalendar();
+      openHistoryScheduleTarget();
     }catch(e){
       documentList.innerHTML='<button class="meeting-document-library-link" type="button" data-open-secretariat-documents>保存済み資料を見る</button>';
       renderCalendar();
     }
+  }
+
+  function openHistoryScheduleTarget(){
+    const params=new URLSearchParams(location.search);
+    if(params.get('focus')!=='schedule')return;
+    const title=params.get('focusTitle')||'';
+    const updatedAt=params.get('focusUpdatedAt')||'';
+    let target=events.find(function(item){return updatedAt&&String(item.updatedAt||'')===updatedAt});
+    if(!target&&title){
+      target=events.filter(function(item){return String(item.title||'')===title}).sort(function(a,b){return new Date(b.updatedAt||0)-new Date(a.updatedAt||0)})[0];
+    }
+    const card=document.getElementById('boardMeetingCard');
+    if(target){
+      const parts=String(target.date||'').split('-').map(Number);
+      if(parts.length===3&&parts.every(Number.isFinite)){
+        viewYear=parts[0];viewMonth=parts[1]-1;renderCalendar();
+      }
+      historyFocusEventId=String(target.id||'');
+    }
+    setTimeout(function(){
+      if(card){
+        card.scrollIntoView({behavior:'smooth',block:'center'});
+        card.classList.add('history-focus-target');
+        setTimeout(function(){card.classList.remove('history-focus-target')},2600);
+      }
+      if(target)openEditor(target.date);
+    },280);
   }
 
   adminOpen.addEventListener('click',async function(){

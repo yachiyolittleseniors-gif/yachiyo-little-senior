@@ -29,11 +29,40 @@
     }).sort((a,b)=>new Date(b.updatedAt)-new Date(a.updatedAt));
   }
 
+  function quotedName(message){
+    const match=String(message||'').match(/[「『](.+?)[」』]/);
+    return match?match[1]:'';
+  }
+
+  function historyHref(item){
+    const message=String(item&&item.message||'');
+    const category=String(item&&item.category||'');
+    if(category==='documents'){
+      const params=new URLSearchParams();
+      if(message.startsWith('審判部資料'))params.set('department','referee');
+      const name=quotedName(message);
+      if(name)params.set('focusName',name);
+      return './secretariat-documents.html?'+params.toString();
+    }
+    if(category==='schedule'){
+      const params=new URLSearchParams({focus:'schedule'});
+      const title=quotedName(message);
+      if(title)params.set('focusTitle',title);
+      if(item&&item.updatedAt)params.set('focusUpdatedAt',String(item.updatedAt));
+      return './board.html?'+params.toString();
+    }
+    if(category==='duty-roster')return './board.html?focus=duty-roster';
+    if(category==='rules')return './secretariat-documents.html?department=rules';
+    return './board.html';
+  }
+
   function renderHistory(history){
     historyList.replaceChildren();
     history.forEach(item=>{
-      const row=document.createElement('div');
+      const row=document.createElement('a');
       row.className='update-history-item';
+      row.href=historyHref(item);
+      row.setAttribute('aria-label',String(item.message||'')+'の画面を開く');
       const date=document.createElement('time');
       date.className='update-history-date';
       date.dateTime=String(item.updatedAt||'');
@@ -44,8 +73,29 @@
       const message=document.createElement('span');
       message.className='update-history-message';
       message.textContent=String(item.message||'');
-      row.append(date,category,message);
+      const arrow=document.createElement('span');
+      arrow.className='update-history-arrow';
+      arrow.setAttribute('aria-hidden','true');
+      arrow.textContent='›';
+      row.append(date,category,message,arrow);
       historyList.appendChild(row);
+    });
+  }
+
+  function focusRequestedBoardSection(){
+    const focus=new URLSearchParams(location.search).get('focus')||'';
+    const target=focus==='duty-roster'
+      ?document.getElementById('dutyRosterCard')
+      :focus==='rules'
+        ?document.getElementById('teamRulesCard')
+        :null;
+    if(!target)return;
+    Promise.resolve(window.boardAccessReady).catch(()=>{}).finally(()=>{
+      setTimeout(()=>{
+        target.scrollIntoView({behavior:'smooth',block:'center'});
+        target.classList.add('history-focus-target');
+        setTimeout(()=>target.classList.remove('history-focus-target'),2600);
+      },260);
     });
   }
 
@@ -116,6 +166,7 @@
 
   window.refreshBoardLatestUpdate=load;
   load();
+  focusRequestedBoardSection();
 })();
 
 (function(){
