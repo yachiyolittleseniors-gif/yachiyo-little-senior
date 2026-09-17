@@ -241,7 +241,7 @@
       attendanceCard.style.display='block';
       endBtn.style.display='none';
       resumeBtn.style.display='';
-      adminStatus.textContent='伝助の移行は終了しています。保護者出欠確認を利用できます。';
+      adminStatus.textContent='伝助の移行は終了しています。保護者出欠確認・選手出欠確認を利用できます。';
     }else{
       legacyCard.style.display='block';
       attendanceCard.style.display='block';
