@@ -2023,8 +2023,7 @@ function isJapaneseHoliday(date){
 function eventFor(date){return scheduleData.find(x=>x.date===date)}
 function gradesFor(ev){
   if(Array.isArray(ev&&ev.grades)){
-    const grades=ev.grades.map(String).filter(x=>['1','2','3'].includes(x));
-    return grades.length?grades:['1','2','3'];
+    return ev.grades.map(String).filter(x=>['1','2','3'].includes(x));
   }
   const legacy=String(ev&&ev.grade||'');
   const grades=['1','2','3'].filter(x=>legacy.includes(x));
