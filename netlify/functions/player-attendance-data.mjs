@@ -467,6 +467,17 @@ export default async (request, context) => {
 
       if (url.searchParams.get("config") === "1") return json({ config: await getConfig(store) });
 
+      if (!request.headers.get("x-admin-password")) {
+        return json({ error: "管理者パスワードが必要です。" }, 401);
+      }
+      const entryAdminAuth = await verifyAdminPassword({
+        store,
+        request,
+        context,
+        expectedPassword: process.env.ADMIN_PASSWORD || "",
+      });
+      if (!entryAdminAuth.ok) return adminAuthError(json, entryAdminAuth);
+
       let saved = null;
       try { saved = await store.get(KEY, { type: "json" }); } catch { saved = null; }
       let data = normalize(saved || {});
@@ -490,7 +501,7 @@ export default async (request, context) => {
     try { body = await request.json(); } catch { return json({ error: "Invalid JSON" }, 400); }
     const action = body.action || "";
 
-    const adminActions = new Set(["adminPing", "adminSave", "previewDensuke"]);
+    const adminActions = new Set(["adminPing", "adminSave", "previewDensuke", "answer", "comment"]);
     let adminAuth = null;
     if (adminActions.has(action)) {
       adminAuth = await verifyAdminPassword({

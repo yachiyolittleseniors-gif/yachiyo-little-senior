@@ -171,6 +171,7 @@
 
 (function(){
   const API='/.netlify/functions/attendance-data';
+  const PLAYER_API='/.netlify/functions/player-attendance-data';
   const attendanceBtn=document.getElementById('attendanceOpenBtn');
   const attendanceCard=document.getElementById('attendanceCard');
   const playerAttendanceBtn=document.getElementById('playerAttendanceOpenBtn');
@@ -252,6 +253,24 @@
       if(!response.ok){alert('管理者パスワードが違います。');return}
       sessionStorage.setItem('yachiyoAttendanceDraftAdminPass',adminPassword);
       location.assign(attendanceBtn.dataset.href||'./attendance.html');
+    }catch(e){alert('管理者認証を確認できませんでした。')}
+  });
+
+  playerAttendanceBtn.addEventListener('click',async function(event){
+    if(playerAttendanceBtn.getAttribute('aria-disabled')==='true')return;
+    event.preventDefault();
+    const adminPassword=prompt('管理者パスワードを入力してください。');
+    if(!adminPassword)return;
+    try{
+      const response=await fetch(PLAYER_API,{
+        method:'POST',
+        headers:{'content-type':'application/json','x-admin-password':adminPassword},
+        body:JSON.stringify({action:'adminPing'})
+      });
+      if(response.status===429){alert('試行回数の上限です。15分後に再度お試しください。');return}
+      if(!response.ok){alert('管理者パスワードが違います。');return}
+      sessionStorage.setItem('yachiyoPlayerAttendanceAdminPass',adminPassword);
+      location.assign(playerAttendanceBtn.dataset.href||'./player-attendance.html');
     }catch(e){alert('管理者認証を確認できませんでした。')}
   });
 
