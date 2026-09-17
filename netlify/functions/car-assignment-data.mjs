@@ -21,6 +21,12 @@ function cleanText(value, max = 200) {
   return String(value || "").trim().slice(0, max);
 }
 
+function countsAsCoach(member) {
+  const role = String(member?.role || "").trim();
+  const compactName = String(member?.name || "").replace(/[\s　]+/g, "");
+  return role !== "スコアラー" && !compactName.startsWith("松野");
+}
+
 async function loadCoachAttendanceCounts(store) {
   let data = {};
   try {
@@ -42,7 +48,7 @@ async function loadCoachAttendanceCounts(store) {
   return Object.fromEntries(events.map(event => {
     const eventId = String(event?.id || "");
     const date = String(event?.date || "");
-    const count = members.filter(member => answers?.[String(member?.id || "")]?.[eventId] === "○").length;
+    const count = members.filter(member => countsAsCoach(member) && answers?.[String(member?.id || "")]?.[eventId] === "○").length;
     return [date, count];
   }).filter(([date]) => /^\d{4}-\d{2}-\d{2}$/.test(date)));
 }
