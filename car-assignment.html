@@ -95,6 +95,93 @@ body{background:#f5f5f2}.page{width:min(860px,100%);padding:24px 18px 64px}.topl
 .preview-sheet.image-export .preview-detail span:last-child{grid-column:1/-1}
 .preview-sheet.image-export .preview-note{padding:6px 9px;font-size:9px;line-height:1.4}
 </style>
+<style id="auto-assign-centered-sparkle">
+.create-panel .primary-create-btn{
+  position:relative!important;
+  grid-template-columns:auto minmax(0,auto)!important;
+  justify-content:center!important;
+  gap:16px!important;
+  min-height:86px!important;
+  padding:14px 58px 14px 24px!important;
+  overflow:hidden!important;
+  text-align:center!important;
+  border-color:#dfbd69;
+  background:linear-gradient(135deg,#fff 0%,#fffaf0 48%,#fff3cf 100%);
+  box-shadow:0 8px 22px rgba(0,0,0,.18),inset 0 0 0 1px rgba(255,255,255,.9);
+}
+.create-panel .primary-create-btn>span{position:relative;z-index:2}
+.create-panel .primary-create-btn::before{
+  position:absolute;
+  z-index:1;
+  top:-70%;
+  bottom:-70%;
+  left:-42%;
+  width:30%;
+  background:linear-gradient(90deg,transparent,rgba(255,255,255,.18),rgba(255,222,132,.72),rgba(255,255,255,.85),transparent);
+  transform:skewX(-20deg);
+  animation:autoAssignShine 3.6s ease-in-out infinite;
+  content:"";
+  pointer-events:none;
+}
+.create-panel .primary-create-btn::after{
+  position:absolute;
+  z-index:2;
+  top:10px;
+  right:54px;
+  color:#c99a32;
+  font-size:15px;
+  line-height:1;
+  text-shadow:0 0 8px rgba(222,174,65,.8);
+  animation:autoAssignTwinkle 2.2s ease-in-out infinite;
+  content:"✦";
+  pointer-events:none;
+}
+.create-panel .auto-btn-icon{
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.55),0 0 0 2px rgba(216,173,80,.16),0 5px 13px rgba(155,104,14,.25);
+  animation:autoAssignIconGlow 2.8s ease-in-out infinite;
+}
+.create-panel .auto-btn-copy{justify-items:center;text-align:center}
+.create-panel .auto-btn-copy small{font-size:10px;letter-spacing:.22em}
+.create-panel .auto-btn-copy strong{font-size:19px;letter-spacing:.02em}
+.create-panel .auto-btn-arrow{
+  position:absolute!important;
+  z-index:3!important;
+  top:50%;
+  right:20px;
+  transform:translateY(-50%);
+}
+@keyframes autoAssignShine{
+  0%,38%{left:-42%;opacity:0}
+  48%{opacity:1}
+  68%,100%{left:116%;opacity:0}
+}
+@keyframes autoAssignTwinkle{
+  0%,100%{transform:scale(.55) rotate(0);opacity:.25}
+  45%{transform:scale(1.25) rotate(20deg);opacity:1}
+  70%{transform:scale(.85) rotate(40deg);opacity:.55}
+}
+@keyframes autoAssignIconGlow{
+  0%,100%{filter:brightness(1);transform:translateY(0)}
+  50%{filter:brightness(1.12);transform:translateY(-1px)}
+}
+@media(max-width:430px){
+  .create-panel .primary-create-btn{
+    grid-template-columns:40px minmax(0,auto)!important;
+    gap:12px!important;
+    min-height:78px!important;
+    padding:12px 46px 12px 14px!important;
+  }
+  .create-panel .auto-btn-copy strong{font-size:16px}
+  .create-panel .auto-btn-copy small{font-size:9px;letter-spacing:.18em}
+  .create-panel .primary-create-btn::after{top:9px;right:43px;font-size:12px}
+  .create-panel .auto-btn-arrow{right:15px}
+}
+@media(prefers-reduced-motion:reduce){
+  .create-panel .primary-create-btn::before,
+  .create-panel .primary-create-btn::after,
+  .create-panel .auto-btn-icon{animation:none}
+}
+</style>
 </head>
 <body>
 <main class="page" id="carPage" hidden>
