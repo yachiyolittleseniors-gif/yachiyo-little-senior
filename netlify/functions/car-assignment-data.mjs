@@ -1,10 +1,13 @@
 import { getStore } from "@netlify/blobs";
-import { adminAuthError, verifyAdminPassword } from "./admin-rate-limit.mjs";
 
 const STORE = "yachiyo-public-site";
 const KEY = "content/car-assignments.json";
+const ACCESS_CONFIG_KEY = "content/access-settings.json";
 const COACH_KEY = "content/coach-attendance.json";
 const COACH_MEMBER_STATE_PREFIX = "coach-attendance/member-state/";
+const DEFAULT_ACCESS_SALT = "yachiyo-access-v1";
+const DEFAULT_ACCESS_HASH =
+  "19eb403934ae615b2961d9f6b5ddd86aab32a0fdf4e96adeb8aa2fcb351276ba";
 
 function json(data, status = 200, extraHeaders = {}) {
   return new Response(JSON.stringify(data), {
@@ -15,6 +18,39 @@ function json(data, status = 200, extraHeaders = {}) {
       ...extraHeaders,
     },
   });
+}
+
+function bytesToHex(bytes) {
+  return Array.from(bytes, byte => byte.toString(16).padStart(2, "0")).join("");
+}
+
+async function hashAccessPassword(password, salt) {
+  const input = new TextEncoder().encode(`${salt}:${password}`);
+  const digest = await crypto.subtle.digest("SHA-256", input);
+  return bytesToHex(new Uint8Array(digest));
+}
+
+function safeEqual(a, b) {
+  const left = String(a || "");
+  const right = String(b || "");
+  let difference = left.length ^ right.length;
+  const length = Math.max(left.length, right.length);
+  for (let i = 0; i < length; i++) {
+    difference |= (left.charCodeAt(i) || 0) ^ (right.charCodeAt(i) || 0);
+  }
+  return difference === 0;
+}
+
+async function accessOK(store, request) {
+  const entered = String(request.headers.get("x-access-password") || "");
+  if (!entered || entered.length > 128) return false;
+  const saved = await store.get(ACCESS_CONFIG_KEY, {
+    type: "json",
+    consistency: "strong",
+  });
+  const salt = saved?.salt || DEFAULT_ACCESS_SALT;
+  const expectedHash = saved?.hash || DEFAULT_ACCESS_HASH;
+  return safeEqual(await hashAccessPassword(entered, salt), expectedHash);
 }
 
 function cleanText(value, max = 200) {
@@ -121,13 +157,9 @@ function normalizeAssignment(value = {}) {
 export default async (request, context) => {
   const store = getStore({ name: STORE, consistency: "strong" });
   try {
-    const adminAuth = await verifyAdminPassword({
-      store,
-      request,
-      context,
-      expectedPassword: process.env.ADMIN_PASSWORD || "",
-    });
-    if (!adminAuth.ok) return adminAuthError(json, adminAuth);
+    if (!(await accessOK(store, request))) {
+      return json({ error: "Unauthorized" }, 401);
+    }
     let assignments = {};
     try {
       assignments = (await store.get(KEY, { type: "json", consistency: "strong" })) || {};
