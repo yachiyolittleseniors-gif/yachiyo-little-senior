@@ -859,14 +859,19 @@ async function promoteGrades(){
     .map(p=>({...p,grade:p.grade==='2年'?'3年':p.grade==='1年'?'2年':p.grade}));
   try{
     await saveP(n);
+  }catch(e){
+    alert(e.message||'選手紹介の学年繰り上げに失敗しました。');
+    return;
+  }
+  playersData=n;
+  currentGrade='all';
+  document.querySelectorAll('.tabs button').forEach((x,i)=>x.classList.toggle('active',i===0));
+  renderP();
+  try{
     const scheduleCount=await promoteScheduleGrades();
-    playersData=n;
-    currentGrade='all';
-    document.querySelectorAll('.tabs button').forEach((x,i)=>x.classList.toggle('active',i===0));
-    renderP();
     alert('学年を繰り上げました。ホームのスケジュール '+scheduleCount+'件も更新しました。');
   }catch(e){
-    alert(e.message||'学年の繰り上げに失敗しました。');
+    alert('選手紹介の学年は繰り上げましたが、'+(e.message||'ホームのスケジュール更新に失敗しました。'));
   }
 }
 async function deletePlayer(id){if(!confirm('この選手を削除しますか？'))return;const n=playersData.filter(p=>String(p.id)!==String(id));try{await saveP(n);playersData=n;renderP()}catch(e){alert(e.message)}}loadP().then(x=>{playersData=normalizeCohorts(x);renderP()}).catch(()=>{playersData=normalizeCohorts(DEFAULT_PLAYERS);renderP()});</script><script>(function(){
