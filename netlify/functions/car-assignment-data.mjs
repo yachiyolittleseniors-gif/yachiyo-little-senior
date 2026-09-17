@@ -3,6 +3,10 @@ import { getStore } from "@netlify/blobs";
 const STORE = "yachiyo-public-site";
 const KEY = "content/car-assignments.json";
 const ACCESS_CONFIG_KEY = "content/access-settings.json";
+const PARENT_KEY = "content/attendance.json";
+const PLAYER_KEY = "content/player-attendance.json";
+const PARENT_MEMBER_STATE_PREFIX = "attendance/member-state/";
+const PLAYER_MEMBER_STATE_PREFIX = "player-attendance/member-state/";
 const COACH_KEY = "content/coach-attendance.json";
 const COACH_MEMBER_STATE_PREFIX = "coach-attendance/member-state/";
 const DEFAULT_ACCESS_SALT = "yachiyo-access-v1";
@@ -98,6 +102,44 @@ async function loadCoachAttendanceCounts(store) {
   };
 }
 
+async function loadAttendanceData(store, key, memberStatePrefix) {
+  let data = {};
+  try {
+    data = (await store.get(key, { type: "json", consistency: "strong" })) || {};
+  } catch {
+    data = {};
+  }
+  const members = Array.isArray(data.members) ? data.members : [];
+  const answers = data.answers && typeof data.answers === "object"
+    ? structuredClone(data.answers)
+    : {};
+  let comments = Array.isArray(data.comments) ? structuredClone(data.comments) : [];
+  await Promise.all(members.map(async member => {
+    const id = String(member?.id || "");
+    if (!id) return;
+    try {
+      const state = await store.get(`${memberStatePrefix}${encodeURIComponent(id)}.json`, {
+        type: "json",
+        consistency: "strong",
+      });
+      if (!state) return;
+      if (state.answers && typeof state.answers === "object") answers[id] = state.answers;
+      if (Array.isArray(state.comments)) {
+        comments = [
+          ...comments.filter(comment => String(comment?.memberId || "") !== id),
+          ...state.comments,
+        ];
+      }
+    } catch {}
+  }));
+  return {
+    events: Array.isArray(data.events) ? data.events : [],
+    members,
+    answers,
+    comments,
+  };
+}
+
 function normalizeCar(car = {}, index = 0) {
   const allowedTypes = new Set(["coach", "player", "equipment", "cargo", "support", "umpire"]);
   return {
@@ -167,8 +209,19 @@ export default async (request, context) => {
       assignments = {};
     }
     if (request.method === "GET") {
-      const attendance = await loadCoachAttendanceCounts(store);
-      return json({ assignments, managerAttendanceCounts: attendance.managers, coachAttendanceCounts: attendance.coaches, scorerAttendanceCounts: attendance.scorers });
+      const [attendance, parentData, playerData] = await Promise.all([
+        loadCoachAttendanceCounts(store),
+        loadAttendanceData(store, PARENT_KEY, PARENT_MEMBER_STATE_PREFIX),
+        loadAttendanceData(store, PLAYER_KEY, PLAYER_MEMBER_STATE_PREFIX),
+      ]);
+      return json({
+        assignments,
+        parentData,
+        playerData,
+        managerAttendanceCounts: attendance.managers,
+        coachAttendanceCounts: attendance.coaches,
+        scorerAttendanceCounts: attendance.scorers,
+      });
     }
     if (request.method !== "POST") return json({ error: "Method not allowed" }, 405);
     let body = {};
