@@ -1274,6 +1274,51 @@ export default async (request, context) => {
       }, 405);
     }
 
+    const rawUploadAction = request.headers.get("x-upload-action") || "";
+    const isRawBoardUpload =
+      (section === "board-meeting-documents" && rawUploadAction === "uploadBoardMeetingDocument") ||
+      (section === "referee-documents" && rawUploadAction === "uploadRefereeDocument");
+
+    if (isRawBoardUpload) {
+      const accessPassword = request.headers.get("x-access-password") || "";
+      const accessGranted =
+        await boardSessionIsValid(request) ||
+        await accessPasswordIsValid(store, accessPassword);
+      if (!accessGranted) return json({ error: "unauthorized" }, 401);
+      if (!(await coachAccessPasswordIsValid(store, request.headers.get("x-coach-password") || ""))) {
+        return json({ error: "パスワードが違います。" }, 401);
+      }
+
+      let fileName = "";
+      try {
+        fileName = decodeURIComponent(request.headers.get("x-file-name") || "").trim();
+      } catch {
+        return json({ error: "ファイル名を確認してください。" }, 400);
+      }
+      const contentType = String(request.headers.get("content-type") || "").split(";")[0].toLowerCase();
+      const bytes = new Uint8Array(await request.arrayBuffer());
+      if (!boardMeetingFileIsValid(fileName, contentType, bytes)) {
+        return json({ error: "PDF・JPEG・PNG・WebPファイルを選択してください。" }, 400);
+      }
+      if (bytes.byteLength > 6 * 1024 * 1024) {
+        return json({ error: "ファイルは6MB以下にしてください。" }, 413);
+      }
+
+      const current = await store.get(key, {type: "json", consistency: "strong"});
+      const documents = Array.isArray(current) ? current : [];
+      if (documents.length >= 12) return json({ error: "保存できる資料は12件までです。" }, 400);
+
+      const id = crypto.randomUUID();
+      const storageKey = `${section}/${id}.bin`;
+      const item = {id, fileName, contentType, storageKey, size: bytes.byteLength, uploadedAt: new Date().toISOString()};
+      await store.set(storageKey, bytes.buffer, {metadata: {fileName, contentType}});
+      const updated = [item, ...documents];
+      await store.setJSON(key, updated);
+      const documentLabel = section === "referee-documents" ? "審判部資料" : "事務局資料";
+      await saveBoardLatestUpdate(store, "documents", `${documentLabel}「${fileName}」を保存しました`, item.uploadedAt);
+      return json({ ok: true, data: updated });
+    }
+
     let body;
 
     try {
@@ -1341,8 +1386,8 @@ export default async (request, context) => {
         if (!decoded || !boardMeetingFileIsValid(fileName, decoded.contentType, decoded.bytes)) {
           return json({ error: "PDF・JPEG・PNG・WebPファイルを選択してください。" }, 400);
         }
-        if (decoded.bytes.byteLength > 4 * 1024 * 1024) {
-          return json({ error: "ファイルは4MB以下にしてください。" }, 413);
+        if (decoded.bytes.byteLength > 6 * 1024 * 1024) {
+          return json({ error: "ファイルは6MB以下にしてください。" }, 413);
         }
 
         const current = await store.get(key, {type: "json", consistency: "strong"});
