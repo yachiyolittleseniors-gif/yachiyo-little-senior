@@ -338,7 +338,7 @@ function countStatuses(eventId,members=data.members){const counts={o:0,x:0,u:0};
 function countMarkup(counts){return `<span class="sum-o">○${counts.o}</span><span class="sum-x">×${counts.x}</span><span class="sum-u">未入力${counts.u}</span>`}
 function memberDisplayName(member){const grade=member.grades[0];return `${grade?grade+'年 ':''}${member.name}`}
 function memberDisplayHtml(member){const grade=member.grades[0],parent=member.parent==='father'?'parent-father':member.parent==='mother'?'parent-mother':'';return `${grade?`<span class="member-grade-badge grade-${esc(grade)}">${esc(grade)}年</span>`:''}<span class="member-name-text ${parent}">${esc(member.name)}</span>`}
-function sortedMembers(){const gradeOrder={'3':3,'2':2,'1':1},parentOrder={father:0,mother:1};return [...data.members].sort((a,b)=>{const parentDiff=(parentOrder[a.parent]??2)-(parentOrder[b.parent]??2);if(parentDiff)return parentDiff;const gradeDiff=(gradeOrder[b.grades?.[0]]||0)-(gradeOrder[a.grades?.[0]]||0);if(gradeDiff)return gradeDiff;const aKey=String(a.kana||a.name||'').replace(/[父母]$/,'').trim(),bKey=String(b.kana||b.name||'').replace(/[父母]$/,'').trim();return aKey.localeCompare(bKey,'ja',{sensitivity:'base'})||String(a.name||'').localeCompare(String(b.name||''),'ja',{sensitivity:'base'})})}
+function sortedMembers(){const gradeOrder={'2':0,'1':1,'3':2},parentOrder={father:0,mother:1};return [...data.members].sort((a,b)=>{const parentDiff=(parentOrder[a.parent]??2)-(parentOrder[b.parent]??2);if(parentDiff)return parentDiff;const gradeDiff=(gradeOrder[a.grades?.[0]]??99)-(gradeOrder[b.grades?.[0]]??99);if(gradeDiff)return gradeDiff;const aKey=String(a.kana||a.name||'').replace(/[父母]$/,'').trim(),bKey=String(b.kana||b.name||'').replace(/[父母]$/,'').trim();return aKey.localeCompare(bKey,'ja',{sensitivity:'base'})||String(a.name||'').localeCompare(String(b.name||''),'ja',{sensitivity:'base'})})}
 
 function preferredEvent(events){
   if(!events.length)return null;
@@ -368,7 +368,7 @@ function reportSnapshot(eventId){
   if(!event)return null;
   const ordered=sortedMembers();
   const statuses=['○','×',''];
-  const grades=['3','2','1'].map(grade=>({
+  const grades=['2','1','3'].map(grade=>({
     grade,
     groups:statuses.map(status=>({status,members:ordered.filter(member=>member.grades?.[0]===grade&&(data.answers?.[member.id]?.[event.id]||'')===status)}))
   }));
@@ -501,7 +501,7 @@ function jumpToParentGrade(parent,grade){
 function render(){
   const events=visibleEvents(),members=sortedMembers(),seenGroups=new Set();
   const hasGroup=(parent,grade)=>members.some(member=>member.parent===parent&&member.grades?.[0]===grade);
-  const gradeButtons=parent=>['3','2','1'].map(grade=>`<button type="button" data-jump-parent="${parent}" data-jump-grade="${grade}" ${hasGroup(parent,grade)?'':'disabled'}>${grade}年</button>`).join('');
+  const gradeButtons=parent=>['2','1','3'].map(grade=>`<button type="button" data-jump-parent="${parent}" data-jump-grade="${grade}" ${hasGroup(parent,grade)?'':'disabled'}>${grade}年</button>`).join('');
   let h='<table><thead><tr><th class="name-col head-name"><span class="head-name-label">回答者</span><span class="parent-jumps"><button class="parent-jump parent-jump-father" type="button" data-open-parent-jump="father" aria-expanded="false">父 ↓</button><button class="parent-jump parent-jump-mother" type="button" data-open-parent-jump="mother" aria-expanded="false">母 ↓</button><span class="grade-jump-menu" data-parent-jump-menu="father" hidden>'+gradeButtons('father')+'</span><span class="grade-jump-menu" data-parent-jump-menu="mother" hidden>'+gradeButtons('mother')+'</span></span></th>';
   for(const e of events){const counts=countStatuses(e.id);h+=`<th class="event-head"><button class="event-summary-btn" type="button" data-summary-event="${esc(e.id)}" aria-label="${esc(formatDate(e.date))}の学年・父母別内訳を開く"><span class="event-date">${esc(formatDate(e.date))}</span><span class="event-counts">${countMarkup(counts)}</span></button></th>`}
   h+='</tr></thead><tbody>';
