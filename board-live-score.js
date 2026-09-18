@@ -139,10 +139,19 @@
     }
   }
 
-  // SBO / bases are shared live state and must come from the server.
-  // Do not overwrite them with a device-local draft, otherwise another
-  // phone can display its own stale values instead of the shared values.
   function applyRememberedDraft(game) {
+    const draft = rememberedDraft();
+    if (!draft || !game || draft.identity !== draftIdentity(game)) return game;
+    if (draft.sbo) game.sbo = {
+      strikes: Math.max(0, Math.min(2, Number(draft.sbo.strikes) || 0)),
+      balls: Math.max(0, Math.min(3, Number(draft.sbo.balls) || 0)),
+      outs: Math.max(0, Math.min(2, Number(draft.sbo.outs) || 0)),
+    };
+    if (draft.bases) game.bases = {
+      first: Boolean(draft.bases.first),
+      second: Boolean(draft.bases.second),
+      third: Boolean(draft.bases.third),
+    };
     return game;
   }
 
@@ -220,9 +229,9 @@
         dirty = true;
         changeVersion += 1;
         renderSbo();
-        // SBO is shared live state: persist immediately so other devices
-        // receive the change without waiting for the debounce timer.
+        // BSO is shared live state: persist immediately, with a retry if a prior save is still in flight.
         save('', { quiet: true, renderAfter: false });
+        scheduleAutoSave();
       });
 
       group.addEventListener('dblclick', event => {
@@ -426,8 +435,8 @@
       state.updatedAt = new Date().toISOString();
       const result = await request('POST', state);
       const saved = normalize(result.data || state);
-      if (saved.current) saved.current = applyRememberedDraft(saved.current);
       if (renderAfter) state = saved;
+      if (saved.current) rememberDraft(saved.current);
       else state.updatedAt = saved.updatedAt;
       if (changeVersion === savingVersion) dirty = false;
       if (renderAfter) render();
@@ -503,8 +512,9 @@
     dirty = true;
     changeVersion += 1;
     renderBases();
-    // Base changes are important shared live state: persist immediately.
+    // Base changes are shared live state: persist immediately, with a retry if needed.
     save('', { quiet: true, renderAfter: false });
+    scheduleAutoSave();
   });
 
   elements.bases.addEventListener('dblclick', event => {
@@ -568,7 +578,8 @@
       const result = await request();
       state = normalize(result.data);
       if (state.current) {
-        state.current = applyRememberedDraft(state.current);
+        // The server is authoritative for shared live BSO/base state.
+        // Do not merge device-local drafts into these fields on another device.
         rememberDraft(state.current);
       }
       render();
