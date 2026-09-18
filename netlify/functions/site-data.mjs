@@ -780,6 +780,10 @@ function normalizeLiveScoreGame(value) {
       second: Boolean(value.bases?.second),
       third: Boolean(value.bases?.third),
     },
+    currentAtBat: {
+      inning: Number.isInteger(Number(value.currentAtBat?.inning)) ? Math.max(0, Math.min(6, Number(value.currentAtBat.inning))) : 0,
+      side: value.currentAtBat?.side === 'ours' ? 'ours' : 'opponent',
+    },
     tieBreaks,
     completedAt: value.completedAt ? String(value.completedAt).slice(0, 40) : "",
   };
