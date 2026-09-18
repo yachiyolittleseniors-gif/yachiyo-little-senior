@@ -39,9 +39,9 @@
 .live-score-board{margin-top:14px;border:2px solid #8797ab;border-radius:10px;overflow:hidden}
 .live-score-board-head,.live-score-row{display:grid;grid-template-columns:minmax(92px,1.5fr) repeat(7,minmax(31px,.52fr)) minmax(36px,.58fr) minmax(40px,.62fr);align-items:stretch}
 .live-score-board-head span{display:grid;place-items:center;min-height:34px;border-left:1px solid #8797ab;color:#e9ca83;font-size:12px;font-weight:900}.live-score-board-head span:first-child{border-left:0}
-.live-score-row{border-top:2px solid #8797ab}.live-score-row>*{border-left:1px solid #7d8794}.live-score-row>*:first-child{border-left:0}
+.live-score-row{min-height:40px;border-top:1px solid #8797ab}.live-score-row>*{border-left:1px solid #7d8794}.live-score-row>*:first-child{border-left:0}
 .live-score-team{display:flex;align-items:center;padding:0 9px;overflow:hidden;color:#fff;font-size:13px;white-space:nowrap;text-overflow:ellipsis}
-.live-score-number{width:100%;min-width:0;height:40px;padding:0;border:0;border-left:1px solid #7d8794!important;background:#f7f8fa;color:#071426;font:inherit;font-size:16px;font-weight:900;text-align:center;border-radius:0;-moz-appearance:textfield}.live-score-number::-webkit-inner-spin-button,.live-score-number::-webkit-outer-spin-button{-webkit-appearance:none;margin:0}
+.live-score-number{width:100%;min-width:0;height:40px;min-height:40px;box-sizing:border-box;padding:0;border:0!important;border-left:1px solid #7d8794!important;background:#f7f8fa;color:#071426;font:inherit;font-size:16px;font-weight:900;text-align:center;border-radius:0;-moz-appearance:textfield}.live-score-number.is-selected{outline:3px solid #d6a43b!important;outline-offset:-3px;position:relative;z-index:2}.live-score-number::-webkit-inner-spin-button,.live-score-number::-webkit-outer-spin-button{-webkit-appearance:none;margin:0}
 .live-score-tb-total,.live-score-total{display:grid;place-items:center;background:rgba(199,154,59,.11);color:#f1d28d;font-size:15px}.live-score-total{background:rgba(199,154,59,.2);font-size:20px}
 .live-score-tb-actions{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:8px;margin-top:11px}.live-score-tb-actions .live-score-button{min-height:42px}
 .live-score-tb-list{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:8px;margin-top:8px}

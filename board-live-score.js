@@ -332,6 +332,17 @@
     input.className = 'live-score-number';
     input.value = value;
     input.setAttribute('aria-label', label);
+    // スコア入力中のセルを常に金枠で表示。別セルをタップすると選択を移動する。
+    const selectScoreCell = () => {
+      if (!inputMode || replayMode) return;
+      elements.rows?.querySelectorAll('.live-score-number.is-selected').forEach(cell => {
+        cell.classList.remove('is-selected');
+      });
+      input.classList.add('is-selected');
+    };
+    input.addEventListener('focus', selectScoreCell);
+    input.addEventListener('pointerdown', selectScoreCell);
+    input.addEventListener('click', selectScoreCell);
     input.addEventListener('input', () => {
       if (!inputMode || replayMode) return;
       const next = score(input.value);
