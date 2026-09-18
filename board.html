@@ -30,7 +30,7 @@
 <meta name="theme-color" content="#071426">
 <title>チーム専用ページ｜八千代リトルシニア</title>
 <link rel="stylesheet" href="./board-base.css?v=20260918-1">
-<link rel="stylesheet" href="./board-live-score.css?v=20260918-12">
+<link rel="stylesheet" href="./board-live-score.css?v=20260918-13">
 <script src="./board-passkey.js?v=20260918-1"></script>
 <script src="./coach-passkey.js?v=20260918-2"></script>
 <script>
@@ -369,35 +369,137 @@ html{scroll-padding-top:var(--compact-header-height)}
 @media(max-width:640px){.passkey-setup.is-registered.is-collapsed{margin-top:-16px}.passkey-setup-summary{padding:8px 2px 10px;font-size:15px}.passkey-setup-details{align-items:stretch;flex-direction:column;gap:12px;padding:14px}.passkey-setup-button{width:100%}}
 </style>
 <style id="live-score-time-grade-equal-style">
-@media(max-width:700px){
-  .live-score-fields,.live-score-team-settings{grid-template-columns:minmax(0,1fr) minmax(0,1.75fr)!important;column-gap:14px!important;}
+/* Live score layout refinements: preserve the original field positions and only
+   make the left-column fields equal width. */
+@media (max-width:700px){
+  .live-score-fields,
+  .live-score-team-settings{
+    grid-template-columns:minmax(0,1fr) minmax(0,1.75fr)!important;
+    column-gap:14px!important;
+  }
 }
-.live-score-base-controls{display:grid!important;grid-template-columns:minmax(0,1.65fr) minmax(120px,.75fr)!important;gap:12px!important;align-items:center!important;margin:0 0 18px!important;width:100%!important;box-sizing:border-box!important;}
-.live-score-sbo{display:flex!important;align-items:center!important;justify-content:space-around!important;gap:8px!important;min-width:0!important;padding:10px 12px!important;border:2px solid rgba(199,154,59,.9)!important;border-radius:18px!important;background:#071426!important;box-sizing:border-box!important;height:76px!important;}
-.live-score-count{display:flex!important;align-items:center!important;gap:6px!important;font-weight:900!important;color:#fff!important;white-space:nowrap!important;}
-.live-score-count b{font-size:20px!important;color:#fff!important;min-width:18px!important;text-align:center!important;}
-.live-score-dots{display:flex!important;gap:5px!important;}
-.live-score-dot{width:15px!important;height:15px!important;border-radius:50%!important;background:#31445a!important;border:0!important;padding:0!important;cursor:pointer!important;}
-.live-score-dot.on-s{background:#e2bd67!important}.live-score-dot.on-b{background:#4fc36b!important}.live-score-dot.on-o{background:#ef5350!important}
-.live-score-diamond-wrap{display:flex!important;align-items:center!important;justify-content:center!important;gap:7px!important;height:76px!important;min-width:0!important;overflow:visible!important;}
-.live-score-diamond{position:relative!important;width:62px!important;height:62px!important;transform:rotate(45deg)!important;border:2px solid #91a2ba!important;border-radius:8px!important;box-sizing:border-box!important;flex:0 0 auto!important;}
-.live-score-base{position:absolute!important;width:16px!important;height:16px!important;background:#fff!important;border:2px solid #91a2ba!important;border-radius:3px!important;transform:none!important;cursor:pointer!important;padding:0!important;box-sizing:border-box!important;}
-.live-score-base.first{top:-9px!important;right:-9px!important}.live-score-base.second{top:-9px!important;left:-9px!important}.live-score-base.third{bottom:-9px!important;left:-9px!important}.live-score-base.home{bottom:-9px!important;right:-9px!important}
+
+/* SBO + diamond: keep them in one compact row below the title, without overlap. */
+.live-score-base-controls{
+  display:grid!important;
+  grid-template-columns:minmax(0,1fr) 176px!important;
+  gap:14px!important;
+  align-items:center!important;
+  margin:0 0 18px!important;
+  width:100%!important;
+  box-sizing:border-box!important;
+}
+.live-score-sbo{
+  display:flex!important;
+  align-items:center!important;
+  justify-content:space-around!important;
+  gap:12px!important;
+  min-width:0!important;
+  height:76px!important;
+  padding:10px 14px!important;
+  border:2px solid rgba(199,154,59,.9)!important;
+  border-radius:22px!important;
+  background:#071426!important;
+  box-sizing:border-box!important;
+}
+.live-score-count{
+  display:flex!important;
+  align-items:center!important;
+  gap:8px!important;
+  font-weight:900!important;
+  color:#fff!important;
+  white-space:nowrap!important;
+}
+.live-score-count b{font-size:22px!important;color:#fff!important;min-width:18px!important;text-align:center!important}
+.live-score-dots{display:flex!important;gap:6px!important}
+.live-score-dot{width:15px!important;height:15px!important;border-radius:50%!important;background:#31445a!important;border:0!important;padding:0!important;cursor:pointer!important}
+.live-score-dot.on-s{background:#e2bd67!important}
+.live-score-dot.on-b{background:#4fc36b!important}
+.live-score-dot.on-o{background:#ef5350!important}
+
+.live-score-diamond-wrap{
+  display:flex!important;
+  align-items:center!important;
+  justify-content:center!important;
+  gap:12px!important;
+  height:76px!important;
+  min-width:0!important;
+  overflow:visible!important;
+}
+.live-score-diamond{
+  position:relative!important;
+  width:58px!important;
+  height:58px!important;
+  transform:rotate(45deg)!important;
+  border:3px solid #91a2ba!important;
+  border-radius:6px!important;
+  box-sizing:border-box!important;
+  flex:0 0 auto!important;
+}
+.live-score-base{
+  position:absolute!important;
+  width:15px!important;
+  height:15px!important;
+  background:#fff!important;
+  border:2px solid #91a2ba!important;
+  border-radius:3px!important;
+  transform:none!important;
+  cursor:pointer!important;
+  padding:0!important;
+  box-sizing:border-box!important;
+}
+.live-score-base.first{top:-9px!important;right:-9px!important}
+.live-score-base.second{top:-9px!important;left:-9px!important}
+.live-score-base.third{bottom:-9px!important;left:-9px!important}
+.live-score-base.home{bottom:-9px!important;right:-9px!important}
 .live-score-base.on{background:#e2bd67!important;border-color:#e2bd67!important}
-.live-score-base-labels{display:flex!important;flex-direction:column!important;gap:3px!important;font-size:11px!important;line-height:1.1!important;font-weight:900!important;color:#fff!important;white-space:nowrap!important;}
+.live-score-base-labels{
+  display:flex!important;
+  flex-direction:column!important;
+  gap:6px!important;
+  font-size:13px!important;
+  line-height:1!important;
+  font-weight:900!important;
+  color:#fff!important;
+  white-space:nowrap!important;
+}
+
+/* Keep the time and grade controls exactly the same width on the left column. */
+.live-score-fields .live-score-field:not(.wide),
+.live-score-team-settings .live-score-field:first-child{
+  min-width:0!important;
+}
+
 @media(max-width:700px){
- .live-score-base-controls{grid-template-columns:minmax(0,1.65fr) minmax(115px,.75fr)!important;gap:8px!important;}
- .live-score-sbo{padding:10px 7px!important;height:70px!important;} .live-score-diamond-wrap{height:70px!important;}
- .live-score-count{gap:4px!important}.live-score-count b{font-size:18px!important}.live-score-dot{width:14px!important;height:14px!important;}
- .live-score-diamond{width:54px!important;height:54px!important;} .live-score-base{width:14px!important;height:14px!important;}
- .live-score-base.first,.live-score-base.second{top:-8px!important}.live-score-base.third,.live-score-base.home{bottom:-8px!important}.live-score-base.first,.live-score-base.home{right:-8px!important}.live-score-base.second,.live-score-base.third{left:-8px!important}
+  .live-score-base-controls{grid-template-columns:minmax(0,1fr) 160px!important;gap:10px!important}
+  .live-score-sbo{height:70px!important;padding:10px 8px!important;gap:7px!important}
+  .live-score-count{gap:4px!important}
+  .live-score-count b{font-size:19px!important}
+  .live-score-dots{gap:5px!important}
+  .live-score-dot{width:13px!important;height:13px!important}
+  .live-score-diamond-wrap{height:70px!important;gap:10px!important}
+  .live-score-diamond{width:52px!important;height:52px!important}
+  .live-score-base{width:14px!important;height:14px!important}
+  .live-score-base.first,.live-score-base.second{top:-8px!important}
+  .live-score-base.third,.live-score-base.home{bottom:-8px!important}
+  .live-score-base.first,.live-score-base.home{right:-8px!important}
+  .live-score-base.second,.live-score-base.third{left:-8px!important}
+  .live-score-base-labels{font-size:12px!important;gap:5px!important}
 }
 @media(max-width:430px){
- .live-score-base-controls{grid-template-columns:minmax(0,1.55fr) minmax(105px,.75fr)!important;}
- .live-score-sbo{height:66px!important}.live-score-diamond-wrap{height:66px!important;}
- .live-score-dot{width:12px!important;height:12px!important}.live-score-diamond{width:48px!important;height:48px!important;}
- .live-score-base{width:12px!important;height:12px!important;}
- .live-score-base.first,.live-score-base.second{top:-7px!important}.live-score-base.third,.live-score-base.home{bottom:-7px!important}.live-score-base.first,.live-score-base.home{right:-7px!important}.live-score-base.second,.live-score-base.third{left:-7px!important}
+  .live-score-base-controls{grid-template-columns:minmax(0,1fr) 142px!important;gap:7px!important}
+  .live-score-sbo{height:66px!important;padding:9px 6px!important}
+  .live-score-count{gap:3px!important}
+  .live-score-count b{font-size:17px!important}
+  .live-score-dot{width:12px!important;height:12px!important}
+  .live-score-diamond-wrap{height:66px!important;gap:8px!important}
+  .live-score-diamond{width:46px!important;height:46px!important}
+  .live-score-base{width:12px!important;height:12px!important}
+  .live-score-base.first,.live-score-base.second{top:-7px!important}
+  .live-score-base.third,.live-score-base.home{bottom:-7px!important}
+  .live-score-base.first,.live-score-base.home{right:-7px!important}
+  .live-score-base.second,.live-score-base.third{left:-7px!important}
+  .live-score-base-labels{font-size:11px!important;gap:4px!important}
 }
 </style>
 </head>
@@ -803,7 +905,7 @@ html{scroll-padding-top:var(--compact-header-height)}
   <button id="closeDensukeAdminBtn" type="button">キャンセル</button>
 </div>
 
-<script src="./board-live-score.js?v=20260918-10"></script>
+<script src="./board-live-score.js?v=20260918-13"></script>
 <script src="./board-updates.js?v=20260918-13"></script>
 <script src="./board-referee-documents.js?v=20260918-7"></script>
 <script src="./board-tournaments.js?v=20260914-1"></script>

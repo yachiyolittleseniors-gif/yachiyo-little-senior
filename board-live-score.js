@@ -72,7 +72,7 @@
       ground: String(game.ground || '').slice(0, 100),
       grade: ['1','2','3'].includes(String(game.grade || '')) ? String(game.grade) : '',
       ourName: String(game.ourName || '八千代').slice(0, 40) || '八千代',
-      sbo: { s: Math.max(0, Math.min(2, Number(game.sbo?.s) || 0)), b: Math.max(0, Math.min(3, Number(game.sbo?.b) || 0)), o: Math.max(0, Math.min(2, Number(game.sbo?.o) || 0)) },
+      sbo: { s: Math.max(0, Math.min(3, Number(game.sbo?.s) || 0)), b: Math.max(0, Math.min(3, Number(game.sbo?.b) || 0)), o: Math.max(0, Math.min(2, Number(game.sbo?.o) || 0)) },
       bases: { first: Boolean(game.bases?.first), second: Boolean(game.bases?.second), third: Boolean(game.bases?.third) },
       opponent: String(game.opponent || '').slice(0, 40),
       battingOrder: game.battingOrder === 'first' ? 'first' : 'second',
@@ -173,7 +173,7 @@
     const sbo = state.current.sbo || (state.current.sbo = {s:0,b:0,o:0});
     if (elements.sbo) {
       elements.sbo.innerHTML = '';
-      [['S','s',2,'on-s'],['B','b',3,'on-b'],['O','o',2,'on-o']].forEach(([label,key,max,cls]) => {
+      [['S','s',3,'on-s'],['B','b',3,'on-b'],['O','o',2,'on-o']].forEach(([label,key,max,cls]) => {
         const wrap=document.createElement('div'); wrap.className='live-score-count';
         const title=document.createElement('b'); title.textContent=label; wrap.appendChild(title);
         const dots=document.createElement('div'); dots.className='live-score-dots';
