@@ -22,9 +22,9 @@
 .live-score-badge.live{border-color:#c79a3b;color:#fff}.live-score-badge.live::before{content:'';display:inline-block;width:8px;height:8px;margin-right:6px;border-radius:50%;background:#ff4a4a;box-shadow:0 0 0 4px rgba(255,74,74,.14)}
 .live-score-badge.is-visible{border-color:#c79a3b;background:#c79a3b;color:#071426}
 .live-score-fields{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px;margin-top:18px}
-.live-score-field{display:grid;gap:6px;color:#fff;font-size:12px;font-weight:900}
+.live-score-field{display:grid;min-width:0;gap:6px;color:#fff;font-size:12px;font-weight:900}
 .live-score-field.wide{grid-column:1/-1}
-.live-score-field input{width:100%;min-width:0;height:46px;padding:0 12px;border:1px solid #c6ccd4;border-radius:9px;background:#fff;color:#071426;font:inherit;font-size:15px;font-weight:800}
+.live-score-field input{box-sizing:border-box;width:100%;min-width:0;max-width:100%;height:46px;padding:0 12px;border:1px solid #c6ccd4;border-radius:9px;background:#fff;color:#071426;font:inherit;font-size:15px;font-weight:800}
 .live-score-team-settings{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr) minmax(190px,1.15fr);gap:12px;margin-top:12px}
 .live-score-order{display:grid;gap:6px}.live-score-order>span{font-size:12px;font-weight:900}
 .live-score-segments{display:grid;grid-template-columns:1fr 1fr;height:46px;border:1px solid #8390a0;border-radius:9px;overflow:hidden}
