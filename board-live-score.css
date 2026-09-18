@@ -79,3 +79,20 @@
 .live-score-board-head span:first-child.current,
 .live-score-board-head span:first-child.active,
 .live-score-board-head span:first-child.selected { border-left: 0 !important; }
+
+
+/* 2026-09-18: 得点欄の上下行間に出る黒帯をなくし、選択中セルを金枠で固定表示 */
+.live-score-row .live-score-number{
+  height:100%!important;
+  min-height:40px!important;
+  align-self:stretch!important;
+}
+.live-score-row .live-score-number.is-selected{
+  outline:3px solid #d6a43b!important;
+  outline-offset:-3px!important;
+  position:relative!important;
+  z-index:3!important;
+}
+@media(max-width:700px){
+  .live-score-row .live-score-number{min-height:35px!important;}
+}
