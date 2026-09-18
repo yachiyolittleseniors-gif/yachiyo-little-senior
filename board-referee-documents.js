@@ -21,6 +21,9 @@
   }
 
   async function requireCoachPassword(){
+    if(window.YLSCoachPasskeys?.authorize){
+      return window.YLSCoachPasskeys.authorize('パスワードを入力してください。');
+    }
     const entered=prompt('パスワードを入力してください。');
     if(entered===null)return '';
     try{

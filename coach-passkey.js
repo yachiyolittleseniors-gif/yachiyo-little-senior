@@ -88,5 +88,41 @@
       credential: authenticationJSON(credential),
     });
   }
-  window.YLSCoachPasskeys = { authenticate, register, supported };
+  async function authorize(promptMessage = "パスワードを入力してください。") {
+    let registered = false;
+    try {
+      registered = localStorage.getItem("yachiyoCoachPasskeyRegistered") === "1";
+    } catch (error) {}
+
+    if (registered && supported()) {
+      try {
+        const result = await authenticate();
+        if (result?.token) {
+          try { sessionStorage.setItem("yachiyoCoachAttendancePass", result.token); } catch (error) {}
+          return result.token;
+        }
+      } catch (error) {}
+    }
+
+    const entered = prompt(promptMessage);
+    if (entered === null) return "";
+    try {
+      const response = await fetch("/.netlify/functions/coach-attendance-data", {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        credentials: "same-origin",
+        body: JSON.stringify({ action: "verifyCoachPassword", password: entered }),
+      });
+      const result = await response.json().catch(() => ({}));
+      if (response.ok) {
+        const value = result.token || entered;
+        try { sessionStorage.setItem("yachiyoCoachAttendancePass", value); } catch (error) {}
+        return value;
+      }
+    } catch (error) {}
+    alert("パスワードが違います。");
+    return "";
+  }
+
+  window.YLSCoachPasskeys = { authenticate, authorize, register, supported };
 })();

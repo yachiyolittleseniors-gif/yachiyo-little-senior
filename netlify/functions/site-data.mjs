@@ -5,6 +5,7 @@ import {
   boardSessionTokenIsValid,
   createBoardSessionToken,
 } from "./_board-session.mjs";
+import { coachSessionTokenIsValid } from "./_coach-session.mjs";
 import {
   adminAuthError,
   verifyAdminPassword,
@@ -112,6 +113,7 @@ async function accessPasswordIsValid(store, enteredPassword) {
 
 async function coachAccessPasswordIsValid(store, enteredPassword) {
   const entered = String(enteredPassword || '');
+  if (await coachSessionTokenIsValid(entered)) return true;
   if (!entered || entered.length > 128) return false;
   let saved = null;
   try {
