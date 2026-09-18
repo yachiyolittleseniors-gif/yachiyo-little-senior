@@ -1480,12 +1480,19 @@ export default async (request, context) => {
       if (!normalized) {
         return json({ error: "試合速報の内容を確認してください。" }, 400);
       }
+      const existing = await store.get(key, {
+        type: "json",
+        consistency: "strong"
+      });
       if (!normalized.lastGame) {
-        const existing = await store.get(key, {
-          type: "json",
-          consistency: "strong"
-        });
         normalized.lastGame = normalizeLiveScoreGame(existing?.lastGame);
+      }
+      // Always persist SBO / base state from the submitted current game.
+      // This makes these live indicators part of the shared server state,
+      // rather than relying on device-local storage.
+      if (normalized.current && existing?.current) {
+        normalized.current.sbo = normalized.current.sbo || normalizeLiveScoreGame(existing.current)?.sbo;
+        normalized.current.bases = normalized.current.bases || normalizeLiveScoreGame(existing.current)?.bases;
       }
       await store.setJSON(key, normalized);
       return json({ ok: true, data: normalized });
