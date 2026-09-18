@@ -323,7 +323,7 @@
     return state.current.tieBreaks.reduce((sum, item) => sum + (Number(item[side]) || 0), regulation);
   }
 
-  function scoreInput(side, index, value, label, tieBreak = false) {
+  function scoreInput(side, index, value, label, tieBreak = false, halfLabel = '') {
     const input = document.createElement('input');
     input.type = 'number';
     input.min = '0';
@@ -332,6 +332,19 @@
     input.className = 'live-score-number';
     input.value = value;
     input.setAttribute('aria-label', label);
+    if (!tieBreak && halfLabel) {
+      input.dataset.inning = String(index + 1);
+      input.dataset.half = halfLabel;
+      input.title = `${index + 1}回${halfLabel}`;
+      const selectCurrent = () => {
+        root.querySelectorAll('.live-score-number.is-current-inning').forEach(cell => {
+          cell.classList.remove('is-current-inning');
+        });
+        input.classList.add('is-current-inning');
+      };
+      input.addEventListener('focus', selectCurrent);
+      input.addEventListener('pointerdown', selectCurrent);
+    }
     input.addEventListener('input', () => {
       if (!inputMode || replayMode) return;
       const next = score(input.value);
@@ -382,8 +395,10 @@
       name.className = 'live-score-team';
       name.textContent = team.name;
       row.appendChild(name);
+      const teamIndex = teamOrder().findIndex(item => item.key === team.key);
+      const halfLabel = teamIndex === 0 ? '表' : '裏';
       state.current.innings[team.key].forEach((value, index) => {
-        row.appendChild(scoreInput(team.key, index, value, `${team.name} ${index + 1}回`));
+        row.appendChild(scoreInput(team.key, index, value, `${team.name} ${index + 1}回${halfLabel}`, false, halfLabel));
       });
       const tieBreakTotal = document.createElement('strong');
       tieBreakTotal.className = 'live-score-tb-total';
