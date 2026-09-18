@@ -396,11 +396,11 @@ html{scroll-padding-top:var(--compact-header-height)}
 <main class="wrap">
   <section class="passkey-setup" id="passkeySetupPanel" aria-live="polite" hidden>
     <button class="passkey-setup-summary" id="passkeySetupSummary" type="button" aria-expanded="false" aria-controls="passkeySetupDetails">
-      <span class="passkey-setup-summary-text"><span>Face ID・指紋認証を登録済み</span><span class="passkey-setup-chevron" id="passkeySetupChevron">▼</span></span>
+      <span class="passkey-setup-summary-text"><span>生体認証を登録済み</span><span class="passkey-setup-chevron" id="passkeySetupChevron">▼</span></span>
     </button>
     <div class="passkey-setup-details" id="passkeySetupDetails">
       <div class="passkey-setup-copy">
-        <p class="passkey-setup-title" id="passkeySetupTitle">Face ID・指紋認証で次回からログイン</p>
+        <p class="passkey-setup-title" id="passkeySetupTitle">生体認証で次回からログイン</p>
         <p class="passkey-setup-text" id="passkeySetupText">この端末に登録すると、次回からパスワード入力を省略できます。使えない場合は従来のパスワードで入れます。</p>
       </div>
       <button class="passkey-setup-button" id="passkeySetupButton" type="button">この端末に登録</button>
@@ -1043,7 +1043,7 @@ body.photo-admin-on #accessPasswordChange{
   }
   function showRegisteredState(){
     panel.classList.add('is-registered');
-    title.textContent='Face ID・指紋認証を登録済み';
+    title.textContent='生体認証を登録済み';
     text.textContent='次回から生体認証でログインできます。別の端末にも登録する場合は、その端末でパスワードログイン後に登録してください。';
     button.textContent='追加・再登録';
     setCollapsed(true);

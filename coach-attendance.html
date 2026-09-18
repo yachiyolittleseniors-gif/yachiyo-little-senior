@@ -334,11 +334,11 @@ window.coachAccessReady=(async function(){
   <div class="team-board-return-row"><a class="team-board-return" href="./board.html?from=coach">← チーム専用ページへ戻る</a></div>
   <section class="coach-passkey-setup" id="coachPasskeySetupPanel" aria-live="polite" hidden>
     <button class="coach-passkey-summary" id="coachPasskeySetupSummary" type="button" aria-expanded="false" aria-controls="coachPasskeySetupDetails">
-      <span class="coach-passkey-summary-text"><span>Face ID・指紋認証を登録済み</span><span class="coach-passkey-chevron" id="coachPasskeySetupChevron">▼</span></span>
+      <span class="coach-passkey-summary-text"><span>生体認証を登録済み</span><span class="coach-passkey-chevron" id="coachPasskeySetupChevron">▼</span></span>
     </button>
     <div class="coach-passkey-details" id="coachPasskeySetupDetails">
       <div class="coach-passkey-copy">
-        <p class="coach-passkey-title" id="coachPasskeySetupTitle">Face ID・指紋認証で次回からログイン</p>
+        <p class="coach-passkey-title" id="coachPasskeySetupTitle">生体認証で次回からログイン</p>
         <p class="coach-passkey-text" id="coachPasskeySetupText">この端末に登録すると、次回から指導者用パスワードの入力を省略できます。</p>
       </div>
       <button class="coach-passkey-button" id="coachPasskeySetupButton" type="button">この端末に登録</button>
@@ -915,7 +915,7 @@ body.photo-admin-on #accessPasswordChange{
   }
   function showRegisteredState(){
     panel.classList.add('is-registered');
-    title.textContent='指導者用のFace ID・指紋認証を登録済み';
+    title.textContent='指導者用の生体認証を登録済み';
     text.textContent='次回から生体認証で入れます。認証できない場合は従来の指導者用パスワードを使えます。';
     button.textContent='追加・再登録';
     setCollapsed(true);
