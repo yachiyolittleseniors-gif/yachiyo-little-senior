@@ -32,9 +32,6 @@
   let editorCollapsed = false;
   let replayMode = false;
   let inputMode = false;
-  let lockToken = '';
-  let lockExpiresAt = 0;
-  let heartbeatTimer = 0;
   let pollTimer = 0;
   // Keep one device id for the entire page lifetime. On some iPhone/Safari
   // privacy modes storage writes can fail; generating a new id on every call
@@ -95,68 +92,6 @@
       try { sessionStorage.setItem(DEVICE_KEY, clientDeviceId); } catch (_) {}
     }
     return clientDeviceId;
-  }
-
-  async function lockAction(action) {
-    const result = await request('POST', null, { action, deviceId: deviceId(), lockToken });
-    return result;
-  }
-
-  async function claimInputLock() {
-    try {
-      const result = await lockAction('claimEditorLock');
-      lockToken = String(result.lockToken || '');
-      lockExpiresAt = Number(result.lock?.expiresAt || 0);
-      inputMode = Boolean(lockToken);
-      render();
-      startHeartbeat();
-      return inputMode;
-    } catch (error) {
-      inputMode = false;
-      lockToken = '';
-      if (error.status === 409) {
-        await load({ silent: true, force: true });
-        render();
-        return false;
-      }
-      alert(error.message || '入力モードを開始できませんでした。');
-      return false;
-    }
-  }
-
-  async function releaseInputLock() {
-    if (!lockToken) return;
-    const token = lockToken;
-    lockToken = '';
-    inputMode = false;
-    clearInterval(heartbeatTimer);
-    heartbeatTimer = 0;
-    try {
-      await request('POST', null, { action: 'releaseEditorLock', deviceId: deviceId(), lockToken: token });
-    } catch (_) {}
-    render();
-  }
-
-  function startHeartbeat() {
-    clearInterval(heartbeatTimer);
-    heartbeatTimer = setInterval(async () => {
-      if (!inputMode || !lockToken) return;
-      try {
-        const result = await lockAction('heartbeatEditorLock');
-        if (!result.lockToken) throw Object.assign(new Error('入力権限が解除されました。'), { status: 409 });
-        lockExpiresAt = Number(result.lock?.expiresAt || 0);
-      } catch (error) {
-        inputMode = false;
-        lockToken = '';
-        clearInterval(heartbeatTimer);
-        heartbeatTimer = 0;
-        if (error.status === 409) {
-          alert('入力権限が解除されたため、閲覧中モードに切り替えました。');
-          await load({ silent: true, force: true });
-        }
-        render();
-      }
-    }, 10000);
   }
 
   function score(value) {
@@ -312,25 +247,12 @@
       return;
     }
     elements.lockPanel.hidden = false;
-    const serverLock = state.lock || { active: false, owner: false, expiresAt: 0 };
-    const owned = inputMode && lockToken;
-    if (owned) {
-      elements.lockPanel.classList.add('is-input');
-      elements.lockText.textContent = '入力中モード：この端末だけ操作できます。';
-      elements.lockButton.textContent = '入力を終了';
-      elements.lockButton.disabled = false;
-    } else {
-      elements.lockPanel.classList.remove('is-input');
-      if (serverLock.active) {
-        elements.lockText.textContent = '閲覧中モード：現在、別の端末で入力中です。';
-        elements.lockButton.textContent = '入力中';
-        elements.lockButton.disabled = true;
-      } else {
-        elements.lockText.textContent = '閲覧中モード：入力する端末を1台だけ選べます。';
-        elements.lockButton.textContent = 'この端末で入力する';
-        elements.lockButton.disabled = false;
-      }
-    }
+    elements.lockPanel.classList.toggle('is-input', inputMode);
+    elements.lockText.textContent = inputMode
+      ? '入力中モード：この端末で入力できます。'
+      : '閲覧中モード：現在の試合状況を表示しています。';
+    elements.lockButton.textContent = inputMode ? '閲覧モードに戻る' : 'この端末で入力する';
+    elements.lockButton.disabled = false;
   }
 
   function renderSbo() {
@@ -575,7 +497,7 @@
     root.classList.add('is-saving');
     try {
       state.updatedAt = new Date().toISOString();
-      const result = await request('POST', state, { action: 'saveLiveScore', lockToken });
+      const result = await request('POST', state, { action: 'saveLiveScore' });
       const saved = normalize(result.data || state);
       if (renderAfter) state = saved;
       if (saved.current) rememberDraft(saved.current);
@@ -586,16 +508,6 @@
       if (!quiet && window.showSaveNotice) window.showSaveNotice(message || '試合速報を保存しました');
       return true;
     } catch (error) {
-      if (error.status === 409) {
-        inputMode = false;
-        lockToken = '';
-        clearInterval(heartbeatTimer);
-        heartbeatTimer = 0;
-        await load({ silent: true, force: true });
-        render();
-        if (!quiet) alert('入力権限が解除されたため、閲覧中モードに切り替えました。');
-        return false;
-      }
       alert(error.message || '試合速報を保存できませんでした。');
       return false;
     } finally {
@@ -606,7 +518,7 @@
   }
 
   async function startGame(game = null, visible = true) {
-    if (!inputMode && !(await claimInputLock())) return;
+    inputMode = true;
     editorCollapsed = false;
     replayMode = false;
     state.active = true;
@@ -625,7 +537,7 @@
 
   elements.start.addEventListener('click', async () => {
     if (state.active && !inputMode) {
-      await claimInputLock();
+      enterInputMode();
       return;
     }
     if (state.active && editorCollapsed) {
@@ -635,14 +547,14 @@
     }
     startGame();
   });
-  elements.lockButton?.addEventListener('click', async () => {
-    if (!state.active) return;
+  elements.lockButton?.addEventListener('click', () => {
+    if (!state.active || replayMode) return;
     if (inputMode) {
-      if (!confirm('入力を終了して閲覧中モードに戻りますか？')) return;
-      await releaseInputLock();
-      return;
+      if (!confirm('閲覧モードに戻りますか？')) return;
+      leaveInputMode();
+    } else {
+      enterInputMode();
     }
-    await claimInputLock();
   });
 
   elements.restore.addEventListener('click', () => {
@@ -738,7 +650,7 @@
     dirty = true;
     changeVersion += 1;
     if (await save('試合速報を終了しました')) {
-      await releaseInputLock();
+      leaveInputMode();
       render();
     }
   });
@@ -749,19 +661,8 @@
       const result = await request();
       const previousActive = state.active;
       state = normalize(result.data);
-      const serverLock = state.lock || { active: false, owner: false, expiresAt: 0 };
-      if (inputMode && !serverLock.owner) {
-        inputMode = false;
-        lockToken = '';
-        clearInterval(heartbeatTimer);
-        heartbeatTimer = 0;
-      }
-      if (!state.current) {
-        inputMode = false;
-        lockToken = '';
-        clearInterval(heartbeatTimer);
-        heartbeatTimer = 0;
-      }
+      // Manual mode: every page load starts in viewing mode.
+      if (!state.current) inputMode = false;
       if (state.current) {
         rememberDraft(state.current);
       }
@@ -773,24 +674,15 @@
     }
   }
 
-  window.addEventListener('pagehide', () => {
-    if (!lockToken) return;
-    const access = accessValue();
-    const headers = { 'content-type': 'application/json' };
-    if (access) headers['x-access-password'] = access;
-    try {
-      fetch(API, {
-        method: 'POST', headers, credentials: 'same-origin', keepalive: true,
-        body: JSON.stringify({ action: 'releaseEditorLock', deviceId: deviceId(), lockToken })
-      });
-    } catch (_) {}
-  });
+
 
   (async () => {
     const allowed = await window.boardAccessReady;
     if (!allowed) return;
     await load();
-    if (state.active && state.lock?.owner) await claimInputLock();
+    // Standard is viewing mode after every page load.
+    inputMode = false;
+    render();
     pollTimer = setInterval(() => load({ silent: true }), 5000);
   })();
 })();
