@@ -25,7 +25,7 @@
     cutoff.setMonth(cutoff.getMonth()-1);
     return history.filter(item=>{
       const time=new Date(item&&item.updatedAt).getTime();
-      return Number.isFinite(time)&&time>=cutoff.getTime()&&item.message;
+      return item.category!=='duty-roster'&&Number.isFinite(time)&&time>=cutoff.getTime()&&item.message;
     }).sort((a,b)=>new Date(b.updatedAt)-new Date(a.updatedAt));
   }
 
@@ -108,10 +108,18 @@
   }
 
   function displayUpdate(data,preserveOpen){
-    const date=formatDate(data&&data.updatedAt);
-    if(!data||!date||!data.message)return false;
     const wasOpen=Boolean(preserveOpen&&!historyPanel.hidden);
-    const history=recentHistory(Array.isArray(data.history)?data.history:[data]);
+    const history=recentHistory(data&&Array.isArray(data.history)?data.history:[data]);
+    // 当番表は専用の変更履歴で確認するため、共通の更新案内から除外する。
+    const latest=data&&data.category!=='duty-roster'?data:history[0];
+    const date=formatDate(latest&&latest.updatedAt);
+    if(!latest||!date||!latest.message){
+      renderHistory([]);
+      setHistoryOpen(false);
+      announcement.hidden=true;
+      return false;
+    }
+    data=latest;
     renderHistory(history);
     historyHint.hidden=history.length===0;
     setHistoryOpen(wasOpen);
