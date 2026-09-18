@@ -1976,16 +1976,20 @@ body.photo-admin-on #accessPasswordChange{
   #liveScoreGrade{padding:0 27px 0 11px!important;font-size:12px!important;line-height:38px!important;white-space:nowrap!important;}
 }
 </style>
-<style id="live-score-team-font-final-13px">
-/* 最終：チーム名の文字サイズだけを小さく固定。両チーム同じサイズ。 */
+<style id="live-score-team-font-final-wrap">
+/* 最終：チーム名はさらに小さく。6文字以上は自然に2行で表示可能。 */
 .live-score-row .live-score-team,
 .live-score-row .live-score-team.live-score-team-long,
 .live-score-row .live-score-team.live-score-team-medium{
-  font-size:13px!important;
-  line-height:1!important;
-  white-space:nowrap!important;
-  overflow:hidden!important;
+  font-size:11px!important;
+  line-height:1.1!important;
+  white-space:normal!important;
+  overflow:visible!important;
   text-overflow:clip!important;
+  overflow-wrap:anywhere!important;
+  word-break:break-all!important;
   transform:none!important;
+  padding-left:3px!important;
+  padding-right:3px!important;
 }
 </style>

@@ -133,3 +133,19 @@
   text-overflow:clip!important;
   transform:none!important;
 }
+
+
+/* FINAL TEAM NAME SIZE — 2026-09-18 */
+.live-score-row .live-score-team,
+.live-score-row .live-score-team.live-score-team-long,
+.live-score-row .live-score-team.live-score-team-medium{
+  font-size:11px!important;
+  line-height:1.1!important;
+  white-space:normal!important;
+  overflow:visible!important;
+  text-overflow:clip!important;
+  overflow-wrap:anywhere!important;
+  word-break:break-all!important;
+  padding-left:3px!important;
+  padding-right:3px!important;
+}
