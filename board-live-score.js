@@ -1,5 +1,6 @@
 (() => {
   const API = '/.netlify/functions/site-data?section=live-score';
+  const LAST_GAME_KEY = 'yachiyoLiveScoreLastGame';
   const $ = selector => document.querySelector(selector);
   const root = $('#liveScoreCard');
   if (!root) return;
@@ -79,14 +80,31 @@
     };
   }
 
+  function rememberedLastGame() {
+    try {
+      return normalizeGame(JSON.parse(localStorage.getItem(LAST_GAME_KEY) || 'null'));
+    } catch (_) {
+      return null;
+    }
+  }
+
+  function rememberLastGame(game) {
+    if (!game) return;
+    try {
+      localStorage.setItem(LAST_GAME_KEY, JSON.stringify(game));
+    } catch (_) {}
+  }
+
   function normalize(value) {
     const data = value && typeof value === 'object' && !Array.isArray(value) ? value : {};
     const current = normalizeGame(data.current);
+    const lastGame = normalizeGame(data.lastGame) || rememberedLastGame();
+    if (lastGame) rememberLastGame(lastGame);
     return {
       active: Boolean(data.active && current),
       visible: Boolean(data.active && current),
       current,
-      lastGame: normalizeGame(data.lastGame),
+      lastGame,
       updatedAt: String(data.updatedAt || ''),
     };
   }
@@ -388,6 +406,7 @@
     if (!confirm('この試合の速報を終了しますか？\n直前の試合として保存され、速報は非表示になります。')) return;
     const completed = normalizeGame(state.current);
     completed.completedAt = new Date().toISOString();
+    rememberLastGame(completed);
     state.lastGame = completed;
     state.current = null;
     state.active = false;
