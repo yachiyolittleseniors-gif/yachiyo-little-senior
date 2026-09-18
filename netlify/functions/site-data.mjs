@@ -50,6 +50,7 @@ const allowed = new Set([
   "board-meeting-schedule",
   "board-latest-update",
   "document-archive",
+  "live-score",
   "access-settings"
 ]);
 
@@ -729,6 +730,63 @@ const LEGACY_RESULT_SEED = [
   }
 ];
 
+
+function normalizeLiveScoreNumber(value) {
+  if (value === "" || value === null || value === undefined) return "";
+  const number = Number(value);
+  return Number.isInteger(number) && number >= 0 && number <= 99 ? number : "";
+}
+
+function normalizeLiveScoreText(value, maxLength) {
+  return String(value || "").replace(/[\u0000-\u001f]/g, " ").trim().slice(0, maxLength);
+}
+
+function normalizeLiveScoreGame(value) {
+  if (!value || typeof value !== "object" || Array.isArray(value)) return null;
+  const innings = value.innings && typeof value.innings === "object" ? value.innings : {};
+  const seven = values => Array.from(
+    { length: 7 },
+    (_, index) => normalizeLiveScoreNumber(Array.isArray(values) ? values[index] : "")
+  );
+  const tieBreaks = Array.isArray(value.tieBreaks)
+    ? value.tieBreaks.slice(0, 8).map((item, index) => ({
+        inning: 8 + index,
+        ours: normalizeLiveScoreNumber(item?.ours),
+        opponent: normalizeLiveScoreNumber(item?.opponent),
+      }))
+    : [];
+  const startTime = /^\d{2}:\d{2}$/.test(String(value.startTime || ""))
+    ? String(value.startTime)
+    : "";
+  return {
+    tournament: normalizeLiveScoreText(value.tournament, 100),
+    startTime,
+    ground: normalizeLiveScoreText(value.ground, 100),
+    ourName: normalizeLiveScoreText(value.ourName, 40) || "八千代",
+    opponent: normalizeLiveScoreText(value.opponent, 40),
+    battingOrder: value.battingOrder === "first" ? "first" : "second",
+    innings: {
+      ours: seven(innings.ours),
+      opponent: seven(innings.opponent),
+    },
+    tieBreaks,
+    completedAt: value.completedAt ? String(value.completedAt).slice(0, 40) : "",
+  };
+}
+
+function normalizeLiveScoreData(value) {
+  if (!value || typeof value !== "object" || Array.isArray(value)) return null;
+  const current = normalizeLiveScoreGame(value.current);
+  const active = Boolean(value.active && current);
+  return {
+    active,
+    visible: Boolean(value.visible && active),
+    current: active ? current : null,
+    lastGame: normalizeLiveScoreGame(value.lastGame),
+    updatedAt: new Date().toISOString(),
+  };
+}
+
 export default async (request, context) => {
   try {
     const url = new URL(request.url);
@@ -756,7 +814,8 @@ export default async (request, context) => {
         section === "referee-documents" ||
         section === "board-meeting-documents" ||
         section === "board-meeting-schedule" ||
-        section === "board-latest-update"
+        section === "board-latest-update" ||
+        section === "live-score"
       ) {
         const accessPassword = request.headers.get("x-access-password") || "";
         const accessGranted =
@@ -1393,6 +1452,25 @@ export default async (request, context) => {
         200,
         { "set-cookie": boardSessionCookie(token) }
       );
+    }
+
+    if (section === "live-score") {
+      const accessPassword = request.headers.get("x-access-password") || "";
+      const accessGranted =
+        await boardSessionIsValid(request) ||
+        await accessPasswordIsValid(store, accessPassword);
+      if (!accessGranted) return json({ error: "unauthorized" }, 401);
+
+      const serialized = JSON.stringify(body?.data ?? null);
+      if (serialized.length > 20000) {
+        return json({ error: "試合速報のデータが大きすぎます。" }, 413);
+      }
+      const normalized = normalizeLiveScoreData(body?.data);
+      if (!normalized) {
+        return json({ error: "試合速報の内容を確認してください。" }, 400);
+      }
+      await store.setJSON(key, normalized);
+      return json({ ok: true, data: normalized });
     }
 
     const boardDirectSection =
