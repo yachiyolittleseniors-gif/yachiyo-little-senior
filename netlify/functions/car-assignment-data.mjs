@@ -1,4 +1,8 @@
 import { getStore } from "@netlify/blobs";
+import {
+  boardSessionIsValid,
+  boardSessionTokenIsValid,
+} from "./_board-session.mjs";
 
 const STORE = "yachiyo-public-site";
 const KEY = "content/car-assignments.json";
@@ -46,7 +50,9 @@ function safeEqual(a, b) {
 }
 
 async function accessOK(store, request) {
+  if (await boardSessionIsValid(request)) return true;
   const entered = String(request.headers.get("x-access-password") || "");
+  if (await boardSessionTokenIsValid(entered)) return true;
   if (!entered || entered.length > 128) return false;
   const saved = await store.get(ACCESS_CONFIG_KEY, {
     type: "json",

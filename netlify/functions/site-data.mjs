@@ -1,5 +1,11 @@
 import { getStore } from "@netlify/blobs";
 import {
+  boardSessionCookie,
+  boardSessionIsValid,
+  boardSessionTokenIsValid,
+  createBoardSessionToken,
+} from "./_board-session.mjs";
+import {
   adminAuthError,
   verifyAdminPassword,
 } from "./admin-rate-limit.mjs";
@@ -46,9 +52,6 @@ const allowed = new Set([
   "access-settings"
 ]);
 
-const BOARD_SESSION_COOKIE = "yls_board_session";
-const BOARD_SESSION_SECONDS = 60 * 60 * 4;
-
 function bytesToHex(bytes) {
   return Array.from(
     bytes,
@@ -79,6 +82,8 @@ function safeEqual(a, b) {
 
 async function accessPasswordIsValid(store, enteredPassword) {
   const entered = String(enteredPassword || "");
+
+  if (await boardSessionTokenIsValid(entered)) return true;
 
   if (!entered || entered.length > 128) {
     return false;
@@ -128,56 +133,6 @@ function json(data, status = 200, extraHeaders = {}) {
       ...extraHeaders
     }
   });
-}
-
-function base64Url(bytes) {
-  return btoa(String.fromCharCode(...bytes))
-    .replace(/\+/g, "-")
-    .replace(/\//g, "_")
-    .replace(/=+$/g, "");
-}
-
-async function signBoardSession(value) {
-  const secret =
-    process.env.ADMIN_PASSWORD ||
-    process.env.ACCESS_PASSWORD ||
-    DEFAULT_ACCESS_HASH;
-  const key = await crypto.subtle.importKey(
-    "raw",
-    new TextEncoder().encode(secret),
-    { name: "HMAC", hash: "SHA-256" },
-    false,
-    ["sign"]
-  );
-  const signature = await crypto.subtle.sign(
-    "HMAC",
-    key,
-    new TextEncoder().encode(value)
-  );
-  return base64Url(new Uint8Array(signature));
-}
-
-async function createBoardSessionToken() {
-  const expiresAt = Math.floor(Date.now() / 1000) + BOARD_SESSION_SECONDS;
-  const value = String(expiresAt);
-  return `${value}.${await signBoardSession(value)}`;
-}
-
-function getCookie(request, name) {
-  const cookie = request.headers.get("cookie") || "";
-  const prefix = `${name}=`;
-  const part = cookie.split(";").map(item => item.trim())
-    .find(item => item.startsWith(prefix));
-  return part ? decodeURIComponent(part.slice(prefix.length)) : "";
-}
-
-async function boardSessionIsValid(request) {
-  const token = getCookie(request, BOARD_SESSION_COOKIE);
-  const [expiresAt, signature] = token.split(".");
-  if (!expiresAt || !signature || Number(expiresAt) < Math.floor(Date.now() / 1000)) {
-    return false;
-  }
-  return safeEqual(signature, await signBoardSession(expiresAt));
 }
 
 const LEGACY_GRADE_BASE_YEAR = 2026;
@@ -1432,13 +1387,9 @@ export default async (request, context) => {
 
       const token = await createBoardSessionToken();
       return json(
-        { ok: true },
+        { ok: true, token },
         200,
-        {
-          "set-cookie":
-            `${BOARD_SESSION_COOKIE}=${encodeURIComponent(token)}; ` +
-            `Path=/; Max-Age=${BOARD_SESSION_SECONDS}; HttpOnly; Secure; SameSite=Strict`
-        }
+        { "set-cookie": boardSessionCookie(token) }
       );
     }
 

@@ -30,17 +30,19 @@
 <meta name="theme-color" content="#071426">
 <title>チーム専用ページ｜八千代リトルシニア</title>
 <link rel="stylesheet" href="./board-base.css?v=20260918-1">
+<script src="./board-passkey.js?v=20260918-1"></script>
 <script>
 document.documentElement.style.visibility='hidden';
 window.boardAccessReady=(async function requireBoardPassword(){
   const accessKey='yachiyoAttendancePass';
   const reloadKey='yachiyoAttendanceReloadPass';
   const reloadExpiryKey='yachiyoAttendanceReloadPassExpires';
+  const passkeyKey='yachiyoBoardPasskeyRegistered';
   const reloadLifetime=12*60*60*1000;
-  function saveAccess(password){
-    try{sessionStorage.setItem(accessKey,password)}catch(e){}
+  function saveAccess(value){
+    try{sessionStorage.setItem(accessKey,value)}catch(e){}
     try{
-      localStorage.setItem(reloadKey,password);
+      localStorage.setItem(reloadKey,value);
       localStorage.setItem(reloadExpiryKey,String(Date.now()+reloadLifetime));
     }catch(e){}
   }
@@ -57,16 +59,30 @@ window.boardAccessReady=(async function requireBoardPassword(){
     try{sessionStorage.removeItem(accessKey)}catch(e){}
     try{localStorage.removeItem(reloadKey);localStorage.removeItem(reloadExpiryKey)}catch(e){}
   }
-  async function verify(password){
+  async function verify(value){
     const response=await fetch('/.netlify/functions/site-data?section=access-settings',{
       method:'POST',
       headers:{'content-type':'application/json'},
-      body:JSON.stringify({action:'verifyAccessPassword',password:password})
+      credentials:'same-origin',
+      body:JSON.stringify({action:'verifyAccessPassword',password:value})
     });
     if(!response.ok)return false;
-    saveAccess(password);
+    const result=await response.json().catch(()=>({}));
+    saveAccess(result.token||value);
     document.documentElement.style.visibility='';
     return true;
+  }
+  async function verifyPasskey(){
+    let registered=false;
+    try{registered=localStorage.getItem(passkeyKey)==='1'}catch(e){}
+    if(!registered||!window.YLSPasskeys?.supported())return false;
+    try{
+      const result=await window.YLSPasskeys.authenticate();
+      if(!result?.token)return false;
+      saveAccess(result.token);
+      document.documentElement.style.visibility='';
+      return true;
+    }catch(e){return false}
   }
   const searchParams=new URLSearchParams(location.search);
   const returnSource=searchParams.get('from');
@@ -80,27 +96,27 @@ window.boardAccessReady=(async function requireBoardPassword(){
       const saved=sessionStorage.getItem(accessKey)||readReloadAccess();
       if(saved&&await verify(saved)){
         if(returningFromProtectedPage)history.replaceState(null,'','./board.html');
-        return;
+        return true;
       }
       if(saved)clearAccess();
     }catch(e){}
-  }else{
-    clearAccess();
-  }
+  }else{clearAccess()}
+  if(await verifyPasskey())return true;
   const p=prompt('パスワードを入力してください。');
   if(p===null){
     if(history.length>1){history.back()}else{location.replace('./')}
-    return;
+    return false;
   }
   try{
-    if(await verify(p))return;
+    if(await verify(p))return true;
   }catch(e){
     alert('パスワードを確認できませんでした。通信状況を確認してください。');
     location.replace('./');
-    return;
+    return false;
   }
   alert('パスワードが違います。');
   location.replace('./');
+  return false;
 })();
 </script>
 <link rel="preload" as="image" href="./official-logo-crisp-final.png">
@@ -331,6 +347,15 @@ html{scroll-padding-top:var(--compact-header-height)}
   }
 }
 </style>
+<style id="passkey-setup-style">
+.passkey-setup{display:flex;align-items:center;gap:16px;justify-content:space-between;margin:0 0 18px;padding:16px 18px;border:1px solid rgba(199,154,59,.48);border-radius:16px;background:#fffdf8;box-shadow:0 8px 22px rgba(7,20,38,.06)}
+.passkey-setup[hidden]{display:none}.passkey-setup-copy{min-width:0}
+.passkey-setup-title{margin:0 0 4px;color:#071426;font-size:18px;font-weight:900}
+.passkey-setup-text{margin:0;color:#667084;font-size:13px;font-weight:700;line-height:1.65}
+.passkey-setup-button{flex:0 0 auto;min-height:46px;padding:0 18px;border:1px solid #b58a31;border-radius:12px;background:#071426;color:#fff;font:inherit;font-size:14px;font-weight:900;cursor:pointer}
+.passkey-setup-button:disabled{cursor:wait;opacity:.6}
+@media(max-width:640px){.passkey-setup{align-items:stretch;flex-direction:column;gap:12px;padding:14px}.passkey-setup-button{width:100%}}
+</style>
 </head>
 <body id="page-top">
 <header class="site-header">
@@ -363,6 +388,13 @@ html{scroll-padding-top:var(--compact-header-height)}
 </section>
 
 <main class="wrap">
+  <section class="passkey-setup" id="passkeySetupPanel" aria-live="polite" hidden>
+    <div class="passkey-setup-copy">
+      <p class="passkey-setup-title" id="passkeySetupTitle">Face ID・指紋認証で次回からログイン</p>
+      <p class="passkey-setup-text" id="passkeySetupText">この端末に登録すると、次回からパスワード入力を省略できます。使えない場合は従来のパスワードで入れます。</p>
+    </div>
+    <button class="passkey-setup-button" id="passkeySetupButton" type="button">この端末に登録</button>
+  </section>
   <div class="grid">
     <aside class="latest-update" id="latestUpdateAnnouncement" role="button" tabindex="0" aria-expanded="false" aria-controls="updateHistoryPanel" aria-live="polite">
       <div class="latest-update-heading">
@@ -978,6 +1010,43 @@ body.photo-admin-on #accessPasswordChange{
     if(document.documentElement.classList.contains('seniorcup-hidden'))apply(false);
     else if(document.querySelector('.seniorcup-home-banner'))apply(true);
   }).observe(document.documentElement,{attributes:true,attributeFilter:['class']});
+})();
+</script>
+<script id="board-passkey-setup">
+(async()=>{
+  const allowed=await window.boardAccessReady;
+  if(!allowed||!window.YLSPasskeys?.supported())return;
+  const panel=document.getElementById('passkeySetupPanel');
+  const button=document.getElementById('passkeySetupButton');
+  const title=document.getElementById('passkeySetupTitle');
+  const text=document.getElementById('passkeySetupText');
+  if(!panel||!button)return;
+  panel.hidden=false;
+  let registered=false;
+  try{registered=localStorage.getItem('yachiyoBoardPasskeyRegistered')==='1'}catch(e){}
+  if(registered){
+    title.textContent='Face ID・指紋認証を登録済み';
+    text.textContent='次回から生体認証でログインできます。別の端末にも登録する場合は、その端末でパスワードログイン後に登録してください。';
+    button.textContent='追加・再登録';
+  }
+  button.addEventListener('click',async()=>{
+    button.disabled=true;
+    button.textContent='端末で認証してください';
+    try{
+      const accessValue=sessionStorage.getItem('yachiyoAttendancePass')||localStorage.getItem('yachiyoAttendanceReloadPass')||'';
+      const deviceLabel=navigator.userAgentData?.platform||navigator.platform||'登録端末';
+      await window.YLSPasskeys.register(accessValue,deviceLabel);
+      try{localStorage.setItem('yachiyoBoardPasskeyRegistered','1')}catch(e){}
+      registered=true;
+      title.textContent='Face ID・指紋認証を登録しました';
+      text.textContent='次回から生体認証でログインできます。認証できない場合は従来のパスワードを使えます。';
+      button.textContent='登録済み';
+    }catch(error){
+      const cancelled=error?.name==='NotAllowedError'||/キャンセル/.test(error?.message||'');
+      if(!cancelled)alert(error?.message||'生体認証を登録できませんでした。');
+      button.textContent=registered?'追加・再登録':'この端末に登録';
+    }finally{button.disabled=false}
+  });
 })();
 </script>
 </body>
