@@ -68,7 +68,7 @@
 .duty-change-admin{margin-top:12px;padding:12px;border:1px solid rgba(199,154,59,.38);border-radius:11px;background:rgba(255,255,255,.05)}
 .duty-change-admin>p{margin:5px 0 9px!important;min-height:0!important;color:#d5dbe3!important;font-size:11px!important;line-height:1.6!important}
 .duty-change-admin-meta{display:grid;grid-template-columns:1fr 1fr;gap:8px}.duty-change-admin-meta label{margin:0!important}.duty-change-admin-meta input,.duty-change-admin-meta select,#dutyChangeText{width:100%;margin:5px 0 0!important;padding:10px 11px;border:1px solid rgba(199,154,59,.55);border-radius:8px;background:#fff;color:#17202b!important;font:inherit}.duty-change-admin-meta select{min-height:43px}#dutyChangeText{display:block;resize:vertical;line-height:1.6}
-.duty-change-preview{margin-top:9px;padding:9px;border:1px dashed rgba(255,255,255,.25);border-radius:8px;color:#d5dbe3;font-size:11px;line-height:1.7}.duty-change-preview.has-items{border-style:solid;border-color:rgba(199,154,59,.55);background:rgba(199,154,59,.1);color:#fff}.duty-change-preview-error{color:#ffb9be;font-weight:700}
+.duty-change-preview{margin-top:9px;padding:9px;border:1px dashed rgba(255,255,255,.25);border-radius:8px;color:#d5dbe3;font-size:11px;line-height:1.7}.duty-change-preview.has-items{border-style:solid;border-color:rgba(199,154,59,.55);background:rgba(199,154,59,.1);color:#fff}.duty-change-preview-row{display:grid;grid-template-columns:minmax(0,1fr) 112px;align-items:center;gap:8px;padding:7px 0;border-bottom:1px solid rgba(255,255,255,.12)}.duty-change-preview-row:last-child{border-bottom:0}.duty-change-preview-row select{width:100%;min-height:36px;padding:6px 7px;border:1px solid rgba(199,154,59,.55);border-radius:7px;background:#fff;color:#17202b;font:inherit}.duty-change-preview-error{color:#ffb9be;font-weight:700}
 #saveDutyChangesBtn{width:100%;margin:10px 0 0!important;background:#c79a3b!important;color:#fff!important}.duty-change-admin-list{display:grid;gap:7px;margin-top:10px}.duty-change-admin-item{display:grid;grid-template-columns:minmax(0,1fr) auto;align-items:center;gap:8px;padding:8px;border:1px solid rgba(255,255,255,.14);border-radius:8px;background:rgba(255,255,255,.06);font-size:11px}.duty-change-admin-item span{line-height:1.55}.duty-change-admin-item button{margin:0!important;padding:7px 9px!important;background:#5e1515!important}.duty-image-admin{margin-top:14px;padding-top:14px;border-top:1px solid rgba(255,255,255,.14)}
 #dutyRosterAdminHelp{margin:2px 6px 10px!important;min-height:0!important;color:#d5dbe3!important;font-size:11px!important;line-height:1.6!important}
 #saveDutyRosterBtn{width:100%;margin:4px 0!important;background:#c79a3b!important;color:#fff!important}
@@ -78,7 +78,7 @@
 .duty-roster-admin-actions{display:flex;gap:4px;align-items:center}
 .duty-roster-admin-actions button{margin:0!important;padding:7px 9px!important}
 .duty-roster-admin-actions .duty-roster-delete{background:#5e1515!important}
-@media(max-width:440px){.duty-change-admin-meta{grid-template-columns:1fr}}
+@media(max-width:440px){.duty-change-admin-meta{grid-template-columns:1fr}.duty-change-preview-row{grid-template-columns:1fr}.duty-change-preview-row select{min-height:40px}}
 #rulesAdminFields{margin-top:18px;padding-top:18px;border-top:1px solid rgba(255,255,255,.18)}
 #rulesAdminFields input{width:100%;margin:6px 0 10px;color:#fff}
 #saveRulesBtn{width:100%;margin:4px 0!important;background:#c79a3b!important;color:#fff!important}

@@ -83,7 +83,7 @@
   function validDate(year,month,day){const date=new Date(year,month-1,day);return date.getFullYear()===year&&date.getMonth()===month-1&&date.getDate()===day}
   function parseChangeLines(){
     const year=Number(changeYear.value),grade=String(changeGrade.value||''),results=[],errors=[];
-    if(!Number.isInteger(year)||year<2020||year>2100||!['1','2','3'].includes(grade))return{results:[],errors:['年と対象学年を選択してください。']};
+    if(!Number.isInteger(year)||year<2020||year>2100)return{results:[],errors:['年を選択してください。']};
     changeText.value.split(/\r?\n/).forEach(function(source){
       const line=source.normalize('NFKC').trim();if(!line)return;
       const match=line.match(/(\d{1,2})\s*\/\s*(\d{1,2})(?:\s*[（(][^）)]*[）)])?\s*(.+?)\s*(?:→|⇒|＞|->)\s*(.+?)\s*$/);if(!match)return;
@@ -91,18 +91,24 @@
       if(!validDate(year,month,day)||!from||!to){errors.push('判定できません：'+source.trim());return}
       results.push({id:'change-'+Date.now().toString(36)+'-'+Math.random().toString(36).slice(2,7),date:year+'-'+String(month).padStart(2,'0')+'-'+String(day).padStart(2,'0'),grade:grade,from:from,to:to,createdAt:new Date().toISOString()});
     });
-    if(changeText.value.trim()&&!results.length&&!errors.length)errors.push('「10/3 竹内→矢羽田」のような変更行が見つかりませんでした。');return{results:results,errors:errors};
+    if(changeText.value.trim()&&!results.length&&!errors.length)errors.push('「10/3 山田→佐藤」のような変更行が見つかりませんでした。');return{results:results,errors:errors};
   }
 
-  function updateChangePreview(){
-    const parsed=parseChangeLines();parsedChanges=parsed.results;changePreview.classList.toggle('has-items',parsedChanges.length>0);
-    const items=parsedChanges.map(function(item){return'<div>'+displayDate(item.date)+'・'+item.grade+'年生　'+escapeHtml(item.from)+' → <b>'+escapeHtml(item.to)+'</b></div>'}).join('');
+  function changeKey(item){return[item.date,item.from,item.to].join('|')}
+  function gradeOptions(selected){return'<option value="">学年を選択</option>'+['3','2','1'].map(function(grade){return'<option value="'+grade+'" '+(selected===grade?'selected':'')+'>'+grade+'年生</option>'}).join('')}
+  function updateChangePreview(forceGrade){
+    const previousGrades=new Map(parsedChanges.map(function(item){return[changeKey(item),item.grade]}));
+    const parsed=parseChangeLines(),batchGrade=String(changeGrade.value||'');
+    parsedChanges=parsed.results.map(function(item){return{...item,grade:forceGrade?batchGrade:(previousGrades.get(changeKey(item))||item.grade||batchGrade)}});
+    changePreview.classList.toggle('has-items',parsedChanges.length>0);
+    const items=parsedChanges.map(function(item,index){return'<div class="duty-change-preview-row"><span>'+displayDate(item.date)+'　'+escapeHtml(item.from)+' → <b>'+escapeHtml(item.to)+'</b></span><select data-duty-preview-grade="'+index+'" aria-label="'+displayDate(item.date)+'の当番枠の学年">'+gradeOptions(item.grade)+'</select></div>'}).join('');
     const errors=parsed.errors.map(function(error){return'<div class="duty-change-preview-error">'+escapeHtml(error)+'</div>'}).join('');
     changePreview.innerHTML=items+errors||(changeText.value.trim()?'変更内容を確認してください。':'変更内容を貼り付けると、ここに確認結果が表示されます。');
+    changePreview.querySelectorAll('[data-duty-preview-grade]').forEach(function(select){select.addEventListener('change',function(){const item=parsedChanges[Number(select.dataset.dutyPreviewGrade)];if(item)item.grade=select.value})});
   }
 
   async function saveChanges(){
-    updateChangePreview();if(!parsedChanges.length){alert('保存できる当番変更がありません。');return}const previous=changes.slice();
+    updateChangePreview();if(!parsedChanges.length){alert('保存できる当番変更がありません。');return}if(parsedChanges.some(function(item){return!['1','2','3'].includes(item.grade)})){alert('各変更行の「当番枠の学年」を選択してください。');return}const previous=changes.slice();
     parsedChanges.forEach(function(item){const index=changes.findIndex(function(current){return current.date===item.date&&current.grade===item.grade&&current.from===item.from});if(index>=0)changes[index]={...item,id:changes[index].id};else changes.push(item)});
     saveChangesBtn.disabled=true;saveChangesBtn.textContent='保存中…';
     try{await persist(parsedChanges.length+'件の当番変更を保存しました','当番変更を'+parsedChanges.length+'件反映しました',true);changeText.value='';parsedChanges=[];updateChangePreview()}catch(e){changes=previous;render();alert(e.message||'当番変更を保存できませんでした。')}finally{saveChangesBtn.disabled=false;saveChangesBtn.textContent='確認した変更を保存'}
@@ -125,6 +131,7 @@
   async function removeImage(index){const target=images[index];if(!target||!confirm('「'+(target.name||'当番表')+'」を削除しますか？'))return;const previous=images.slice();images.splice(index,1);render();try{await persist('画像を削除しました','当番表「'+(target.name||'画像')+'」を削除しました')}catch(e){images=previous;render();alert(e.message||'画像を削除できませんでした。')}}
 
   changeYear.value=String(new Date().getFullYear());
-  [changeYear,changeGrade,changeText].forEach(function(element){element.addEventListener('input',updateChangePreview);element.addEventListener('change',updateChangePreview)});
+  [changeYear,changeText].forEach(function(element){element.addEventListener('input',function(){updateChangePreview(false)});element.addEventListener('change',function(){updateChangePreview(false)})});
+  changeGrade.addEventListener('change',function(){updateChangePreview(true)});
   saveChangesBtn.addEventListener('click',saveChanges);saveBtn.addEventListener('click',addImages);loadCache();render();load();
 })();

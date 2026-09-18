@@ -524,7 +524,7 @@ html{scroll-padding-top:var(--compact-header-height)}
 
 <footer class="footer">© YACHIYO LITTLE SENIOR. All Rights Reserved.</footer>
 
-<link rel="stylesheet" href="./board-content.css?v=20260918-1">
+<link rel="stylesheet" href="./board-content.css?v=20260918-2">
 
 <button id="densukeToggleBtn" type="button">管理</button>
 <div id="densukeAdminPanel">
@@ -565,13 +565,13 @@ html{scroll-padding-top:var(--compact-header-height)}
     <strong>当番表</strong>
     <div class="duty-change-admin">
       <b>LINEの文章から当番変更を登録</b>
-      <p>変更連絡をコピーして貼り付け、対象学年と年を選んでください。</p>
+      <p>変更連絡を貼り付け、年を選んでください。学年をまたぐ場合は、確認欄で変更行ごとに当番枠の学年を選べます。</p>
       <div class="duty-change-admin-meta">
         <label for="dutyChangeYear">年<input id="dutyChangeYear" type="number" min="2020" max="2100" inputmode="numeric"></label>
-        <label for="dutyChangeGrade">対象学年<select id="dutyChangeGrade"><option value="">選択</option><option value="3">3年生</option><option value="2">2年生</option><option value="1">1年生</option></select></label>
+        <label for="dutyChangeGrade">学年を一括指定（任意）<select id="dutyChangeGrade"><option value="">行ごとに選択</option><option value="3">3年生</option><option value="2">2年生</option><option value="1">1年生</option></select></label>
       </div>
       <label for="dutyChangeText">LINEの変更連絡</label>
-      <textarea id="dutyChangeText" rows="6" placeholder="例：&#10;お疲れ様です。&#10;10/3(土) 竹内→矢羽田さん&#10;10/11(日) 矢羽田さん→竹内"></textarea>
+      <textarea id="dutyChangeText" rows="6" placeholder="例：&#10;お疲れ様です。&#10;10/3(土) 山田→佐藤さん&#10;10/11(日) 佐藤さん→山田"></textarea>
       <div id="dutyChangePreview" class="duty-change-preview">変更内容を貼り付けると、ここに確認結果が表示されます。</div>
       <button id="saveDutyChangesBtn" type="button">確認した変更を保存</button>
       <div id="dutyChangeAdminList" class="duty-change-admin-list"></div>
@@ -607,7 +607,7 @@ html{scroll-padding-top:var(--compact-header-height)}
 <script src="./board-referee-documents.js?v=20260917-6"></script>
 <script src="./board-tournaments.js?v=20260914-1"></script>
 <script src="./board-meetings.js?v=20260917-7"></script>
-<script src="./board-duty-roster.js?v=20260918-1"></script>
+<script src="./board-duty-roster.js?v=20260918-2"></script>
 <script src="./board-rules.js?v=20260914-4"></script>
 <script src="./board-archive.js?v=20260914-3"></script>
 <style id="nonblocking-save-notice-style">
