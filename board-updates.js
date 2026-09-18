@@ -25,8 +25,8 @@
     cutoff.setMonth(cutoff.getMonth()-1);
     return history.filter(item=>{
       const time=new Date(item&&item.updatedAt).getTime();
-      return item.category!=='duty-roster'&&Number.isFinite(time)&&time>=cutoff.getTime()&&item.message;
-    }).sort((a,b)=>new Date(b.updatedAt)-new Date(a.updatedAt));
+      return item.category!=='duty-roster'&&Number.isFinite(time)&&item.message;
+    }).sort((a,b)=>new Date(b.updatedAt)-new Date(a.updatedAt)).slice(0,20);
   }
 
   function quotedName(message){
