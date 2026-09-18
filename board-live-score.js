@@ -199,8 +199,8 @@
     if (!elements.sbo || !state.current) return;
     elements.sbo.innerHTML = '';
     const groups = [
-      ['S', 'strikes', 2, 'on-s'],
       ['B', 'balls', 3, 'on-b'],
+      ['S', 'strikes', 2, 'on-s'],
       ['O', 'outs', 2, 'on-o'],
     ];
     groups.forEach(([label, key, max, activeClass]) => {
