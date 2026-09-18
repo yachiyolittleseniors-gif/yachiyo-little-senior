@@ -766,6 +766,11 @@ function normalizeLiveScoreGame(value) {
     ourName: normalizeLiveScoreText(value.ourName, 40) || "八千代",
     opponent: normalizeLiveScoreText(value.opponent, 40),
     battingOrder: value.battingOrder === "first" ? "first" : "second",
+    selectedScoreCell: value.selectedScoreCell && ["ours", "opponent"].includes(String(value.selectedScoreCell.side || "")) ? {
+      side: String(value.selectedScoreCell.side),
+      index: Math.max(0, Math.min(7, Number(value.selectedScoreCell.index) || 0)),
+      tieBreak: Boolean(value.selectedScoreCell.tieBreak),
+    } : null,
     innings: {
       ours: seven(innings.ours),
       opponent: seven(innings.opponent),
