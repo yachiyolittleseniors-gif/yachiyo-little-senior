@@ -413,22 +413,6 @@ html{scroll-padding-top:var(--compact-header-height)}
     </div>
   </section>
   <div class="grid">
-    <aside class="latest-update" id="latestUpdateAnnouncement" role="button" tabindex="0" aria-expanded="false" aria-controls="updateHistoryPanel" aria-live="polite">
-      <div class="latest-update-heading">
-        <span class="latest-update-kicker">LATEST UPDATE</span>
-        <span class="latest-update-title">最新更新</span>
-      </div>
-      <div class="latest-update-content">
-        <time class="latest-update-date" id="latestUpdateDate"></time>
-        <span class="latest-update-category" id="latestUpdateCategory"></span>
-        <span class="latest-update-message" id="latestUpdateMessage">更新情報を読み込んでいます。</span>
-      </div>
-      <span class="latest-update-hint" id="latestUpdateHint">履歴を見る ▼</span>
-    </aside>
-    <section class="update-history" id="updateHistoryPanel" aria-label="直近1か月の更新履歴" hidden>
-      <div class="update-history-head"><strong>更新履歴</strong><span>直近1か月</span></div>
-      <div class="update-history-list" id="updateHistoryList"></div>
-    </section>
     <section class="card live-score-card" id="liveScoreCard" aria-labelledby="liveScoreTitle">
       <div class="live-score-idle" id="liveScoreIdle">
         <div class="live-score-idle-head">
@@ -509,6 +493,22 @@ html{scroll-padding-top:var(--compact-header-height)}
       <div class="live-score-restore-wrap" id="liveScoreRestoreWrap" hidden>
         <button class="live-score-button" id="liveScoreRestore" type="button">直前の試合を再表示</button>
       </div>
+    </section>
+    <aside class="latest-update" id="latestUpdateAnnouncement" role="button" tabindex="0" aria-expanded="false" aria-controls="updateHistoryPanel" aria-live="polite">
+      <div class="latest-update-heading">
+        <span class="latest-update-kicker">LATEST UPDATE</span>
+        <span class="latest-update-title">最新更新</span>
+      </div>
+      <div class="latest-update-content">
+        <time class="latest-update-date" id="latestUpdateDate"></time>
+        <span class="latest-update-category" id="latestUpdateCategory"></span>
+        <span class="latest-update-message" id="latestUpdateMessage">更新情報を読み込んでいます。</span>
+      </div>
+      <span class="latest-update-hint" id="latestUpdateHint">履歴を見る ▼</span>
+    </aside>
+    <section class="update-history" id="updateHistoryPanel" aria-label="直近1か月の更新履歴" hidden>
+      <div class="update-history-head"><strong>更新履歴</strong><span>直近1か月</span></div>
+      <div class="update-history-list" id="updateHistoryList"></div>
     </section>
 
     <section class="card attendance-card" id="coachAttendanceCard">
