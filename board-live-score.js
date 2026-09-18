@@ -378,6 +378,7 @@
   }
 
   function render() {
+    document.body.classList.toggle('live-score-replay-only', replayMode);
     const showingEditor = state.active || replayMode;
     elements.idle.hidden = showingEditor && !editorCollapsed;
     elements.editor.hidden = !showingEditor || editorCollapsed;

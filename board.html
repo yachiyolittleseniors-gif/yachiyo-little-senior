@@ -721,6 +721,40 @@ html{scroll-padding-top:var(--compact-header-height)}
   }
 }
 </style>
+<style id="live-score-replay-only-style">
+/* 「直前の試合を再表示」中は試合速報だけを表示 */
+body.live-score-replay-only{
+  overflow-x:hidden!important;
+}
+body.live-score-replay-only .site-header,
+body.live-score-replay-only .hero,
+body.live-score-replay-only .passkey-setup,
+body.live-score-replay-only footer{
+  display:none!important;
+}
+body.live-score-replay-only .wrap{
+  width:100%!important;
+  max-width:none!important;
+  margin:0!important;
+  padding:0!important;
+}
+body.live-score-replay-only .wrap > .grid{
+  display:block!important;
+  width:100%!important;
+  margin:0!important;
+}
+body.live-score-replay-only .wrap > .grid > :not(#liveScoreCard){
+  display:none!important;
+}
+body.live-score-replay-only #liveScoreCard{
+  display:block!important;
+  width:100%!important;
+  max-width:none!important;
+  min-height:100vh!important;
+  margin:0!important;
+  border-radius:0!important;
+}
+</style>
 </head>
 <body id="page-top">
 <header class="site-header">
@@ -1138,7 +1172,7 @@ html{scroll-padding-top:var(--compact-header-height)}
   <button id="closeDensukeAdminBtn" type="button">キャンセル</button>
 </div>
 
-<script src="./board-live-score.js?v=20260918-15"></script>
+<script src="./board-live-score.js?v=20260918-16"></script>
 <script src="./board-updates.js?v=20260918-13"></script>
 <script src="./board-referee-documents.js?v=20260918-7"></script>
 <script src="./board-tournaments.js?v=20260914-1"></script>
