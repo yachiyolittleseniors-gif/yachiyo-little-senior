@@ -30,7 +30,7 @@
 <meta name="theme-color" content="#071426">
 <title>チーム専用ページ｜八千代リトルシニア</title>
 <link rel="stylesheet" href="./board-base.css?v=20260918-1">
-<link rel="stylesheet" href="./board-live-score.css?v=20260918-10">
+<link rel="stylesheet" href="./board-live-score.css?v=20260918-11">
 <script src="./board-passkey.js?v=20260918-1"></script>
 <script src="./coach-passkey.js?v=20260918-2"></script>
 <script>
@@ -420,6 +420,9 @@ html{scroll-padding-top:var(--compact-header-height)}
             <div class="live-score-kicker">GAME速報</div>
             <h2 id="liveScoreTitle">試合速報</h2>
           </div>
+          <div class="live-score-restore-wrap" id="liveScoreRestoreWrap" hidden>
+            <button class="live-score-button" id="liveScoreRestore" type="button">直前の試合を再表示</button>
+          </div>
         </div>
         <p>試合開始後、得点を入力してチーム内へ速報を共有できます。</p>
         <div class="live-score-idle-actions">
@@ -489,9 +492,6 @@ html{scroll-padding-top:var(--compact-header-height)}
           </div>
           <button class="live-score-button back" id="liveScoreBack" type="button" hidden>戻る</button>
         </div>
-      </div>
-      <div class="live-score-restore-wrap" id="liveScoreRestoreWrap" hidden>
-        <button class="live-score-button" id="liveScoreRestore" type="button">直前の試合を再表示</button>
       </div>
     </section>
     <aside class="latest-update" id="latestUpdateAnnouncement" role="button" tabindex="0" aria-expanded="false" aria-controls="updateHistoryPanel" aria-live="polite">
