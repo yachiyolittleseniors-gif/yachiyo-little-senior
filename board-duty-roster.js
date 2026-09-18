@@ -20,27 +20,10 @@
   let changes=[];
   let parsedChanges=[];
 
-  const INITIAL_TABLES=[
-    {year:2026,month:9,activityDays:[12,26],rows:[
-      [5,'土','草野','古賀','本吉','山澤'],[6,'日','齋藤','篠崎','山本（要）','山本（諒）'],
-      [12,'土','椙浦','高橋','赤羽','秋葉'],[13,'日','竹内','筒井','石川（晃）','井上（遙）'],
-      [19,'土','永井','藤澤','井上（竜）','宇山'],[20,'日','本村','森田','江見','加賀原'],
-      [21,'月','矢羽田','荒木','粕谷','亀井'],[22,'火','石川（圭）','石山','川村','小池'],
-      [23,'水','大谷部','加藤','高祖','小堀'],[26,'土','古賀','齋藤','紺野','内藤'],
-      [27,'日','篠崎','椙浦','中濱','長峰']
-    ]},
-    {year:2026,month:10,activityDays:[10,24],rows:[
-      [3,'土','高橋','竹内','松井','松浦'],[4,'日','筒井','永井','溝上','村山'],
-      [10,'土','藤澤','本村','本吉','山澤'],[11,'日','森田','矢羽田','山本（要）','山本（諒）'],
-      [12,'月','荒木','石川（圭）','赤羽','秋葉'],[17,'土','石山','大谷部','石川（晃）','井上（遙）'],
-      [18,'日','加藤','古賀','井上（竜）','宇山'],[24,'土','齋藤','篠崎','江見','加賀原'],
-      [25,'日','椙浦','高橋','粕谷','亀井'],[31,'土','竹内','筒井','川村','小池']
-    ]}
-  ];
 
   if(!list||!tableList||!adminList||!fileInput||!saveBtn||!panel||!changeSection||!changeList||!changeYear||!changeGrade||!changeText||!pasteChangeBtn||!changePreview||!saveChangesBtn||!changeAdminList)return;
 
-  function cleanName(value){return String(value||'').normalize('NFKC').replace(/[\s　]+/g,'').replace(/(?:さん|様)$/,'').replace(/[。、,，]+$/,'').trim().slice(0,60).replace(/^桓浦(?=$|\()/,'椙浦')}
+  function cleanName(value){return window.DutyRosterData.cleanName(value)}
   function escapeHtml(value){return String(value||'').replace(/[&<>"']/g,function(char){return{'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[char]})}
 
 
@@ -67,7 +50,7 @@
     const imageList=raw&&raw.initialized===true&&Array.isArray(raw.images)?raw.images:[];
     const changeItems=raw&&raw.initialized===true&&Array.isArray(raw.changes)?raw.changes:[];
     return{
-      images:imageList.filter(function(item){return item&&typeof item==='object'&&(item.data||item.src)}).slice(0,8).map(function(item,index){return{id:String(item.id||('duty-'+index)),name:String(item.name||('当番表 '+(index+1))),data:item.data?String(item.data):'',src:item.src?String(item.src):'',table:item.table||({'duty-mtwelqz2-e6tiec':INITIAL_TABLES[0],'duty-mtwelqz8-wzdvxy':INITIAL_TABLES[1]}[item.id])||null}}),
+      images:imageList.filter(function(item){return item&&typeof item==='object'&&(item.data||item.src)}).slice(0,8).map(function(item,index){return{id:String(item.id||('duty-'+index)),name:String(item.name||('当番表 '+(index+1))),data:item.data?String(item.data):'',src:item.src?String(item.src):'',table:window.DutyRosterData.tableForImage(item)}}),
       changes:changeItems.filter(function(item){return item&&/^\d{4}-\d{2}-\d{2}$/.test(String(item.date||''))&&['1','2','3'].includes(String(item.grade||''))&&cleanName(item.from)&&cleanName(item.to)}).slice(0,300).map(function(item,index){return{id:String(item.id||('change-'+index)),date:String(item.date),grade:String(item.grade),from:cleanName(item.from),to:cleanName(item.to),createdAt:String(item.createdAt||'')}})
     };
   }
@@ -88,11 +71,8 @@
 
   function tableDate(table,day){return table.year+'-'+String(table.month).padStart(2,'0')+'-'+String(day).padStart(2,'0')}
   function appliedCell(table,row,grade,column,name){
-    const date=tableDate(table,row[0]);let value=name,wasChanged=false,original='';
-    changes.filter(function(item){return item.date===date&&item.grade===String(grade)}).forEach(function(item){
-      if(cleanName(value)===cleanName(item.from)){original=original||value;value=item.to;wasChanged=true}
-    });
-    return{value:displayName(value,grade),changed:wasChanged,original:displayName(original,grade),column:column};
+    const result=window.DutyRosterData.applyChanges(table,row[0],grade,name,changes);
+    return{value:displayName(result.value,grade),changed:result.changed,original:displayName(result.original,grade),column:column};
   }
   function renderTables(){
     tableList.innerHTML=images.filter(function(item){return item.table}).map(function(item){const table=item.table;const grades=table.grades||[2,1];

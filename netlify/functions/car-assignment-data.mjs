@@ -174,6 +174,10 @@ function normalizeAssignment(value = {}) {
     manualEscortFathers: Array.isArray(value.manualEscortFathers)
       ? [...new Set(value.manualEscortFathers.map(item => cleanText(item, 60)).filter(Boolean))].slice(0, 30)
       : [],
+    dutyOverrides: Array.isArray(value.dutyOverrides)
+      ? value.dutyOverrides.filter(item => item && typeof item.checked === "boolean" && cleanText(item.name, 60))
+          .slice(0, 300).map(item => ({ name: cleanText(item.name, 60), checked: item.checked }))
+      : undefined,
     bus: typeof value.bus === "boolean" ? value.bus : null,
     busCount: Math.max(0, Math.min(10, Number(value.busCount) || 0)),
     busPassengers: Math.max(0, Math.min(100, Number(value.busPassengers) || 0)),
