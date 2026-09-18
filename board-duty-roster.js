@@ -180,6 +180,14 @@
   async function removeImage(index){const target=images[index];if(!target||!confirm('「'+(target.name||'当番表')+'」を削除しますか？'))return;const previous=images.slice();images.splice(index,1);render();try{await persist('画像を削除しました','当番表「'+(target.name||'画像')+'」を削除しました')}catch(e){images=previous;render();alert(e.message||'画像を削除できませんでした。')}}
 
   changeYear.value=String(new Date().getFullYear());
+  const originalsToggle=document.getElementById('toggleDutyOriginals');
+  const originalsPanel=document.getElementById('dutyRosterOriginals');
+  if(originalsToggle&&originalsPanel)originalsToggle.addEventListener('click',function(){
+    const open=originalsPanel.hidden;
+    originalsPanel.hidden=!open;
+    originalsToggle.setAttribute('aria-expanded',String(open));
+    originalsToggle.textContent=open?'原本を閉じる':'原本を見る';
+  });
   [changeYear,changeText].forEach(function(element){element.addEventListener('input',function(){updateChangePreview(false)});element.addEventListener('change',function(){updateChangePreview(false)})});
   changeGrade.addEventListener('change',function(){updateChangePreview(true)});
   pasteChangeBtn.addEventListener('click',pasteChangeText);

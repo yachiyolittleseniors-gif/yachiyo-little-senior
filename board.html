@@ -405,16 +405,15 @@ html{scroll-padding-top:var(--compact-header-height)}
 
     <section class="card duty-roster-card" id="dutyRosterCard">
       <div class="card-kicker">DUTY ROSTER</div>
-      <h2>当番表</h2>
-      <div id="dutyRosterTableList" class="duty-roster-table-list">
-        <div class="duty-roster-loading">当番表を読み込んでいます。</div>
-      </div>
-      <details id="dutyRosterOriginals" class="duty-roster-originals">
-        <summary>原本画像を見る</summary>
+      <div class="duty-roster-title-row"><h2>当番表</h2><button id="toggleDutyOriginals" type="button" aria-expanded="false" aria-controls="dutyRosterOriginals">原本を見る</button></div>
+      <div id="dutyRosterOriginals" class="duty-roster-originals" hidden>
         <div id="dutyRosterList" class="duty-roster-list">
           <div class="duty-roster-loading">当番表を読み込んでいます。</div>
         </div>
-      </details>
+      </div>
+      <div id="dutyRosterTableList" class="duty-roster-table-list">
+        <div class="duty-roster-loading">当番表を読み込んでいます。</div>
+      </div>
       <section id="dutyChangeSection" class="duty-change-section" hidden>
         <div class="duty-change-heading"><strong>反映済みの当番変更</strong><span>LINE連絡の変更内容</span></div>
         <div id="dutyChangeList" class="duty-change-list"></div>
@@ -530,7 +529,7 @@ html{scroll-padding-top:var(--compact-header-height)}
 
 <footer class="footer">© YACHIYO LITTLE SENIOR. All Rights Reserved.</footer>
 
-<link rel="stylesheet" href="./board-content.css?v=20260918-6">
+<link rel="stylesheet" href="./board-content.css?v=20260918-7">
 
 <button id="densukeToggleBtn" type="button">管理</button>
 <div id="densukeAdminPanel">
@@ -615,7 +614,7 @@ html{scroll-padding-top:var(--compact-header-height)}
 <script src="./board-referee-documents.js?v=20260917-6"></script>
 <script src="./board-tournaments.js?v=20260914-1"></script>
 <script src="./board-meetings.js?v=20260917-7"></script>
-<script src="./board-duty-roster.js?v=20260918-6"></script>
+<script src="./board-duty-roster.js?v=20260918-7"></script>
 <script src="./board-rules.js?v=20260914-4"></script>
 <script src="./board-archive.js?v=20260914-3"></script>
 <style id="nonblocking-save-notice-style">
