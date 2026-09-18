@@ -23,6 +23,8 @@
   let saving = false;
   let changeVersion = 0;
   let autoSaveTimer = 0;
+  let editorCollapsed = false;
+  let replayMode = false;
 
   function accessValue() {
     try {
@@ -94,6 +96,7 @@
     editor: $('#liveScoreEditor'),
     start: $('#liveScoreStart'),
     restore: $('#liveScoreRestore'),
+    restoreWrap: $('#liveScoreRestoreWrap'),
     tournament: $('#liveScoreTournament'),
     startTime: $('#liveScoreStartTime'),
     ground: $('#liveScoreGround'),
@@ -106,6 +109,7 @@
     removeTieBreak: $('#liveScoreRemoveTieBreak'),
     visibility: $('#liveScoreVisibility'),
     finish: $('#liveScoreFinish'),
+    back: $('#liveScoreBack'),
     liveBadge: $('#liveScoreLiveBadge'),
     visibilityBadge: $('#liveScoreVisibilityBadge'),
     status: $('#liveScoreStatus'),
@@ -235,17 +239,30 @@
   }
 
   function render() {
-    elements.idle.hidden = state.active;
-    elements.editor.hidden = !state.active;
-    elements.restore.hidden = !state.lastGame;
-    if (!state.active || !state.current) return;
+    const showingEditor = state.active || replayMode;
+    elements.idle.hidden = showingEditor && !editorCollapsed;
+    elements.editor.hidden = !showingEditor || editorCollapsed;
+    elements.start.textContent = state.active ? '試合速報に戻る' : '試合速報を開始';
+    elements.restoreWrap.hidden = showingEditor || !state.lastGame;
+    root.classList.toggle('is-replay', replayMode);
+    if (!showingEditor || !state.current) return;
     syncFields();
     renderScoreRows();
     renderTieBreaks();
-    elements.liveBadge.hidden = !state.visible;
+    elements.liveBadge.hidden = replayMode || !state.visible;
+    elements.visibilityBadge.hidden = replayMode;
     elements.visibilityBadge.textContent = state.visible ? '公開中' : '未公開';
     elements.visibilityBadge.classList.toggle('is-visible', state.visible);
     elements.visibility.textContent = state.visible ? '試合速報を非公開' : '試合速報を公開';
+    elements.visibility.hidden = replayMode;
+    elements.finish.hidden = replayMode;
+    elements.addTieBreak.hidden = replayMode;
+    if (replayMode) elements.removeTieBreak.hidden = true;
+    elements.status.parentElement.hidden = replayMode;
+    elements.back.hidden = !replayMode;
+    root.querySelectorAll('.live-score-editor input,.live-score-segments button').forEach(control => {
+      control.disabled = replayMode;
+    });
     updateStatus();
   }
 
@@ -302,6 +319,8 @@
   }
 
   async function startGame(game = null, visible = false) {
+    editorCollapsed = false;
+    replayMode = false;
     state.active = true;
     state.visible = visible;
     state.current = normalizeGame(game) || blankGame();
@@ -311,8 +330,28 @@
     await save(visible ? '直前の試合を再表示しました' : '試合速報を開始しました');
   }
 
-  elements.start.addEventListener('click', () => startGame());
-  elements.restore.addEventListener('click', () => startGame(state.lastGame, true));
+  elements.start.addEventListener('click', () => {
+    if (state.active && editorCollapsed) {
+      editorCollapsed = false;
+      render();
+      return;
+    }
+    startGame();
+  });
+  elements.restore.addEventListener('click', () => {
+    if (!state.lastGame) return;
+    replayMode = true;
+    editorCollapsed = false;
+    state.current = normalizeGame(state.lastGame);
+    render();
+  });
+  elements.back.addEventListener('click', () => {
+    replayMode = false;
+    editorCollapsed = false;
+    state.current = null;
+    render();
+    root.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  });
 
   [elements.tournament, elements.startTime, elements.ground, elements.ourName, elements.opponent]
     .forEach(input => input.addEventListener('input', () => {
@@ -380,13 +419,15 @@
     state.current = null;
     state.active = false;
     state.visible = false;
+    editorCollapsed = false;
+    replayMode = false;
     dirty = true;
     changeVersion += 1;
     if (await save('試合速報を終了しました')) render();
   });
 
   async function load({ silent = false } = {}) {
-    if (dirty || saving || root.contains(document.activeElement)) return;
+    if (replayMode || dirty || saving || root.contains(document.activeElement)) return;
     try {
       const result = await request();
       state = normalize(result.data);
