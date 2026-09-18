@@ -1,6 +1,7 @@
 (function(){
   const API='/.netlify/functions/site-data?section=duty-roster';
   const list=document.getElementById('dutyRosterList');
+  const tableList=document.getElementById('dutyRosterTableList');
   const adminList=document.getElementById('dutyRosterAdminList');
   const fileInput=document.getElementById('dutyRosterImageInput');
   const saveBtn=document.getElementById('saveDutyRosterBtn');
@@ -19,7 +20,25 @@
   let changes=[];
   let parsedChanges=[];
 
-  if(!list||!adminList||!fileInput||!saveBtn||!panel||!changeSection||!changeList||!changeYear||!changeGrade||!changeText||!pasteChangeBtn||!changePreview||!saveChangesBtn||!changeAdminList)return;
+  const INITIAL_TABLES=[
+    {year:2026,month:9,activityDays:[12,26],rows:[
+      [5,'土','草野','古賀','本吉','山澤'],[6,'日','齋藤','篠崎','山本（要）','山本（諒）'],
+      [12,'土','桓浦','高橋','赤羽','秋葉'],[13,'日','竹内','筒井','石川（晃）','井上（遙）'],
+      [19,'土','永井','藤澤','井上（竜）','宇山'],[20,'日','本村','森田','江見','加賀原'],
+      [21,'月','矢羽田','荒木','粕谷','亀井'],[22,'火','石川（圭）','石山','川村','小池'],
+      [23,'水','大谷部','加藤','高祖','小堀'],[26,'土','古賀','齋藤','紺野','内藤'],
+      [27,'日','篠崎','桓浦','中濱','長峰']
+    ]},
+    {year:2026,month:10,activityDays:[10,24],rows:[
+      [3,'土','高橋','竹内','松井','松浦'],[4,'日','筒井','永井','溝上','村山'],
+      [10,'土','藤澤','本村','本吉','山澤'],[11,'日','森田','矢羽田','山本（要）','山本（諒）'],
+      [12,'月','荒木','石川（圭）','赤羽','秋葉'],[17,'土','石山','大谷部','石川（晃）','井上（遙）'],
+      [18,'日','加藤','古賀','井上（竜）','宇山'],[24,'土','齋藤','篠崎','江見','加賀原'],
+      [25,'日','桓浦','高橋','粕谷','亀井'],[31,'土','竹内','筒井','川村','小池']
+    ]}
+  ];
+
+  if(!list||!tableList||!adminList||!fileInput||!saveBtn||!panel||!changeSection||!changeList||!changeYear||!changeGrade||!changeText||!pasteChangeBtn||!changePreview||!saveChangesBtn||!changeAdminList)return;
 
   function cleanName(value){return String(value||'').normalize('NFKC').replace(/[\s　]+/g,'').replace(/(?:さん|様)$/,'').replace(/[。、,，]+$/,'').trim().slice(0,60)}
   function escapeHtml(value){return String(value||'').replace(/[&<>"']/g,function(char){return{'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[char]})}
@@ -38,6 +57,26 @@
   function sortChanges(items){return items.slice().sort(function(a,b){return a.date.localeCompare(b.date)||Number(b.grade)-Number(a.grade)||a.from.localeCompare(b.from,'ja')})}
   function displayDate(value){const parts=String(value||'').split('-').map(Number);if(parts.length!==3)return value;const date=new Date(parts[0],parts[1]-1,parts[2]);return parts[1]+'/'+parts[2]+'（'+'日月火水木金土'[date.getDay()]+'）'}
   function changeMarkup(item){return'<span class="duty-change-date">'+displayDate(item.date)+'</span><span class="duty-change-grade">'+item.grade+'年生</span><span class="duty-change-names"><span class="duty-change-before">'+escapeHtml(item.from)+'</span><b class="duty-change-arrow">→</b><span class="duty-change-after">'+escapeHtml(item.to)+'</span></span>'}
+
+  function tableDate(table,day){return table.year+'-'+String(table.month).padStart(2,'0')+'-'+String(day).padStart(2,'0')}
+  function appliedCell(table,row,grade,column,name){
+    const date=tableDate(table,row[0]);let value=name,wasChanged=false,original='';
+    changes.filter(function(item){return item.date===date&&item.grade===String(grade)}).forEach(function(item){
+      if(cleanName(value)===cleanName(item.from)){original=original||value;value=item.to;wasChanged=true}
+    });
+    return{value:value,changed:wasChanged,original:original,column:column};
+  }
+  function renderTables(){
+    tableList.innerHTML=INITIAL_TABLES.map(function(table){
+      const rows=table.rows.map(function(row){
+        const cells=[appliedCell(table,row,2,0,row[2]),appliedCell(table,row,2,1,row[3]),appliedCell(table,row,1,0,row[4]),appliedCell(table,row,1,1,row[5])];
+        const cellMarkup=cells.map(function(cell){const title=cell.changed?' title="変更前：'+escapeHtml(cell.original)+'"':'';return'<td class="'+(cell.changed?'is-changed':'')+'"'+title+'><span>'+escapeHtml(cell.value)+'</span>'+(cell.changed?'<b>変更</b>':'')+'</td>'}).join('');
+        return'<tr class="'+(table.activityDays.includes(row[0])?'is-activity':'')+'"><th scope="row">'+row[0]+'</th><td class="duty-weekday duty-weekday-'+row[1]+'">'+row[1]+'</td>'+cellMarkup+'</tr>';
+      }).join('');
+      const hasChanges=changes.some(function(item){return item.date.startsWith(table.year+'-'+String(table.month).padStart(2,'0')+'-')});
+      return'<section class="duty-digital-roster"><div class="duty-digital-heading"><strong>'+table.year+'年 '+table.month+'月</strong><span>'+(hasChanges?'変更反映済み':'登録済み')+'</span></div><div class="duty-table-scroll"><table><thead><tr><th>日付</th><th>曜日</th><th colspan="2">2年生</th><th colspan="2">1年生</th></tr></thead><tbody>'+rows+'</tbody></table></div></section>';
+    }).join('');
+  }
 
   function saveCache(){try{const value=JSON.stringify({initialized:true,images:images,changes:changes});if(value.length<=4*1024*1024)sessionStorage.setItem(CACHE_KEY,value);else sessionStorage.removeItem(CACHE_KEY)}catch(e){}}
   function loadCache(){try{const cached=normalize(JSON.parse(sessionStorage.getItem(CACHE_KEY)||'null'));if(cached.images.length||cached.changes.length){images=cached.images;changes=cached.changes;render()}}catch(e){sessionStorage.removeItem(CACHE_KEY)}}
@@ -65,7 +104,7 @@
       const remove=document.createElement('button');remove.type='button';remove.textContent='削除';remove.className='duty-roster-delete';remove.addEventListener('click',function(){removeImage(index)});
       actions.append(up,down,remove);row.append(name,actions);adminList.appendChild(row);
     });
-    if(images.length)list.replaceChildren(imageFragment);renderChanges();
+    if(images.length)list.replaceChildren(imageFragment);renderTables();renderChanges();
   }
 
   async function load(){
