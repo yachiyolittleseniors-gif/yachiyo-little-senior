@@ -354,28 +354,31 @@
 
   function fitLiveScoreTeamName(name) {
     if (!name) return;
-    // チーム名は必ず1行。通常は大きく表示し、長い名前だけ実測して縮める。
+    const text = String(name.textContent || '');
+    name.classList.remove('live-score-team-long', 'live-score-team-medium');
+    // 5文字以上は20〜22px、4文字は24〜27px。短い名前は大きく表示。
+    if (text.length >= 5) name.classList.add('live-score-team-long');
+    else if (text.length === 4) name.classList.add('live-score-team-medium');
+
     name.style.setProperty('white-space', 'nowrap', 'important');
     name.style.setProperty('overflow', 'hidden', 'important');
     name.style.setProperty('text-overflow', 'clip', 'important');
     name.style.setProperty('min-width', '0', 'important');
-    name.style.setProperty('display', 'block', 'important');
-    const isMobile = window.matchMedia && window.matchMedia('(max-width: 700px)').matches;
-    let size = isMobile ? 28 : 30;
-    const minSize = 14;
-    name.style.setProperty('font-size', `${size}px`, 'important');
-    // レイアウト確定後の実寸で判定する。Safariでも確実に1行に収める。
-    const fit = () => {
+    name.style.setProperty('width', '100%', 'important');
+    name.style.setProperty('box-sizing', 'border-box', 'important');
+
+    // 念のため実測して、まだ収まらなければ1pxずつ縮める。
+    requestAnimationFrame(() => {
       if (!name.isConnected) return;
+      let size = parseFloat(getComputedStyle(name).fontSize) || 20;
+      const minSize = 14;
       const available = name.clientWidth;
       if (!available) return;
       while (size > minSize && name.scrollWidth > available + 1) {
         size -= 1;
         name.style.setProperty('font-size', `${size}px`, 'important');
       }
-    };
-    fit();
-    requestAnimationFrame(fit);
+    });
   }
 
   function fitAllLiveScoreTeamNames() {

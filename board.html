@@ -946,6 +946,7 @@ body.live-score-replay-only #liveScoreCard{
   .live-score-board-head,.live-score-row{min-height:42px!important;}
   .live-score-number{min-height:36px!important;height:36px!important;font-size:16px!important;}
 }
+</style>
 <style id="live-score-team-name-single-line-final">
 /* チーム名は省略記号ではなく、1行のまま枠内に収める（長い名前はJS側で自動縮小）。 */
 .live-score-team{
@@ -955,6 +956,34 @@ body.live-score-replay-only #liveScoreCard{
   min-width:0!important;
   display:block!important;
   line-height:1.05!important;
+}
+</style>
+<style id="live-score-team-name-fit-verified">
+/* チーム名：1行固定。長い名前は文字だけ縮小して必ず枠内へ。 */
+.live-score-row .live-score-team{
+  display:flex!important;
+  align-items:center!important;
+  min-width:0!important;
+  width:100%!important;
+  box-sizing:border-box!important;
+  padding:0 5px!important;
+  white-space:nowrap!important;
+  overflow:hidden!important;
+  text-overflow:clip!important;
+  line-height:1!important;
+  font-weight:900!important;
+}
+@media(max-width:700px){
+  .live-score-row .live-score-team{font-size:28px!important;}
+}
+@media(max-width:390px){
+  .live-score-row .live-score-team{font-size:27px!important;}
+}
+.live-score-row .live-score-team.live-score-team-long{font-size:20px!important;}
+.live-score-row .live-score-team.live-score-team-medium{font-size:24px!important;}
+@media(min-width:701px){
+  .live-score-row .live-score-team.live-score-team-long{font-size:22px!important;}
+  .live-score-row .live-score-team.live-score-team-medium{font-size:27px!important;}
 }
 </style>
 </head>
