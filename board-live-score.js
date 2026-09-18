@@ -354,17 +354,22 @@
 
   function fitLiveScoreTeamName(name) {
     if (!name) return;
-    // チーム名は必ず1行で表示し、長い名前だけ文字を少しずつ縮めて枠内に収める。
+    // チーム名は必ず1行。通常サイズを維持しつつ、枠に入らない時だけ自動で縮小する。
     name.style.whiteSpace = 'nowrap';
     name.style.overflow = 'hidden';
     name.style.textOverflow = 'clip';
+    name.style.minWidth = '0';
     const isMobile = window.matchMedia && window.matchMedia('(max-width: 700px)').matches;
-    let size = isMobile ? 13 : 14;
-    const minSize = 9;
-    name.style.fontSize = `${size}px`;
-    while (size > minSize && name.scrollWidth > name.clientWidth) {
+    let size = isMobile ? 24 : 26;
+    const minSize = 15;
+    // CSSの!important指定にも負けないよう、インライン!importantで設定する。
+    name.style.setProperty('font-size', `${size}px`, 'important');
+    // レイアウト確定後の実幅で測り、0.5pxずつ縮める。
+    let guard = 0;
+    while (size > minSize && name.scrollWidth > name.clientWidth && guard < 30) {
       size -= 0.5;
-      name.style.fontSize = `${size}px`;
+      name.style.setProperty('font-size', `${size}px`, 'important');
+      guard += 1;
     }
   }
 
