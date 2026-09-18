@@ -108,7 +108,7 @@
       tournament: String(game.tournament || '').slice(0, 100),
       startTime: String(game.startTime || '').slice(0, 10),
       ground: String(game.ground || '').slice(0, 100),
-      grade: ['1','2','3'].includes(String(game.grade || '')) ? String(game.grade) : '',
+      grade: ({'1':'1','2':'2','3':'3','1年生':'1','2年生':'2','3年生':'3'}[String(game.grade || '')] || ''),
       ourName: String(game.ourName || '八千代').slice(0, 40) || '八千代',
       opponent: String(game.opponent || '').slice(0, 40),
       battingOrder: game.battingOrder === 'first' ? 'first' : 'second',
@@ -356,27 +356,29 @@
     if (!name) return;
     const text = String(name.textContent || '');
     name.classList.remove('live-score-team-long', 'live-score-team-medium');
-    // 長い名前ほど少し小さく表示。基本サイズも控えめにして1行を優先。
     if (text.length >= 5) name.classList.add('live-score-team-long');
     else if (text.length === 4) name.classList.add('live-score-team-medium');
-
     name.style.setProperty('white-space', 'nowrap', 'important');
     name.style.setProperty('overflow', 'hidden', 'important');
     name.style.setProperty('text-overflow', 'clip', 'important');
     name.style.setProperty('min-width', '0', 'important');
     name.style.setProperty('width', '100%', 'important');
     name.style.setProperty('box-sizing', 'border-box', 'important');
-
-    // 念のため実測して、まだ収まらなければ1pxずつ縮める。
+    // チーム名は大きくしすぎず、長い名前も最初から確実に1行へ。
+    let size = text.length >= 5 ? 16 : (text.length === 4 ? 17 : 18);
+    name.style.setProperty('font-size', `${size}px`, 'important');
+    name.style.setProperty('line-height', '1', 'important');
     requestAnimationFrame(() => {
       if (!name.isConnected) return;
-      let size = parseFloat(getComputedStyle(name).fontSize) || 20;
-      const minSize = 14;
+      let current = parseFloat(getComputedStyle(name).fontSize) || size;
+      const minSize = 12;
       const available = name.clientWidth;
       if (!available) return;
-      while (size > minSize && name.scrollWidth > available + 1) {
-        size -= 1;
-        name.style.setProperty('font-size', `${size}px`, 'important');
+      let guard = 0;
+      while (current > minSize && name.scrollWidth > available + 1 && guard < 20) {
+        current -= 0.5;
+        name.style.setProperty('font-size', `${current}px`, 'important');
+        guard += 1;
       }
     });
   }
