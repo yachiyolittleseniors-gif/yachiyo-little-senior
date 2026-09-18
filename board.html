@@ -30,7 +30,7 @@
 <meta name="theme-color" content="#071426">
 <title>チーム専用ページ｜八千代リトルシニア</title>
 <link rel="stylesheet" href="./board-base.css?v=20260918-1">
-<link rel="stylesheet" href="./board-live-score.css?v=20260918-21">
+<link rel="stylesheet" href="./board-live-score.css?v=20260918-final-22">
 <script src="./board-passkey.js?v=20260918-1"></script>
 <script src="./coach-passkey.js?v=20260918-2"></script>
 <script>
@@ -1974,5 +1974,18 @@ body.photo-admin-on #accessPasswordChange{
   .live-score-team-settings{grid-template-columns:112px minmax(0,1fr)!important;column-gap:7px!important;}
   .live-score-team-settings .live-score-field:first-child,#liveScoreGrade{width:112px!important;max-width:112px!important;height:38px!important;min-height:38px!important;box-sizing:border-box!important;border-radius:8px!important;}
   #liveScoreGrade{padding:0 27px 0 11px!important;font-size:12px!important;line-height:38px!important;white-space:nowrap!important;}
+}
+</style>
+<style id="live-score-team-font-final-13px">
+/* 最終：チーム名の文字サイズだけを小さく固定。両チーム同じサイズ。 */
+.live-score-row .live-score-team,
+.live-score-row .live-score-team.live-score-team-long,
+.live-score-row .live-score-team.live-score-team-medium{
+  font-size:13px!important;
+  line-height:1!important;
+  white-space:nowrap!important;
+  overflow:hidden!important;
+  text-overflow:clip!important;
+  transform:none!important;
 }
 </style>

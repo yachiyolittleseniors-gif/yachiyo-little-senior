@@ -121,3 +121,15 @@
 .live-score-card.live-score-view-mode #liveScoreFinish:disabled{
   pointer-events:none!important;
 }
+
+/* FINAL TEAM NAME FONT OVERRIDE */
+.live-score-row .live-score-team,
+.live-score-row .live-score-team.live-score-team-long,
+.live-score-row .live-score-team.live-score-team-medium{
+  font-size:13px!important;
+  line-height:1!important;
+  white-space:nowrap!important;
+  overflow:hidden!important;
+  text-overflow:clip!important;
+  transform:none!important;
+}

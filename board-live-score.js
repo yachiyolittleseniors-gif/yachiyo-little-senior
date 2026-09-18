@@ -390,7 +390,7 @@
     // 両チームを同じ固定サイズにする。表示幅に応じて毎フレーム縮小する処理は
     // iPhone Safariで文字が揺れて見えるため廃止。チーム名欄に十分な幅を確保する。
     name.classList.remove('live-score-team-long', 'live-score-team-medium');
-    name.style.setProperty('font-size', '16px', 'important');
+    name.style.setProperty('font-size', '13px', 'important');
     name.style.setProperty('line-height', '1', 'important');
     name.style.setProperty('white-space', 'nowrap', 'important');
     name.style.setProperty('overflow', 'hidden', 'important');
