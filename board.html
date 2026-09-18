@@ -30,7 +30,7 @@
 <meta name="theme-color" content="#071426">
 <title>チーム専用ページ｜八千代リトルシニア</title>
 <link rel="stylesheet" href="./board-base.css?v=20260918-1">
-<link rel="stylesheet" href="./board-live-score.css?v=20260918-final-22">
+<link rel="stylesheet" href="./board-live-score.css?v=20260918-23">
 <script src="./board-passkey.js?v=20260918-1"></script>
 <script src="./coach-passkey.js?v=20260918-2"></script>
 <script>
@@ -1084,40 +1084,23 @@ body.live-score-replay-only #liveScoreCard{
 /* 試合開始時間は左寄せ */
 #liveScoreStartTime{text-align:left!important;}
 </style>
-<style id="live-score-team-current-final-fix">
-/* 最終修正：チーム名は両チーム同じ16px。動的な文字サイズ変更はしない。 */
+<style id="live-score-final-team-time-size-20260918-22">
+/* 最終修正：チーム名は両チーム14pxで統一。長い名前も1行。描画後の縮小アニメーションなし。 */
 .live-score-row .live-score-team{
-  font-size:16px!important;
+  font-size:14px!important;
   line-height:1!important;
   white-space:nowrap!important;
   overflow:hidden!important;
   text-overflow:clip!important;
   min-width:0!important;
   width:100%!important;
-  padding:0 4px!important;
   box-sizing:border-box!important;
+  padding:0 4px!important;
   font-weight:900!important;
 }
-@media(max-width:700px){.live-score-row .live-score-team{font-size:16px!important;}}
-@media(max-width:390px){.live-score-row .live-score-team{font-size:16px!important;}}
-</style>
-
-<style id="live-score-teamname-final-only">
-/* チーム名：サイズ指定をここ1か所に固定 */
-.live-score-row .live-score-team {
-  font-size: 12px !important;
-  line-height: 1.12 !important;
-  white-space: normal !important;
-  overflow-wrap: anywhere !important;
-  word-break: break-all !important;
-  overflow: hidden !important;
-  text-overflow: clip !important;
-  min-width: 0 !important;
-}
-.live-score-row .live-score-team * {
-  font-size: 12px !important;
-  line-height: 1.12 !important;
-}
+/* iPhoneのtime入力内部文字も左寄せ */
+#liveScoreStartTime{text-align:left!important;-webkit-appearance:none!important;appearance:none!important;}
+#liveScoreStartTime::-webkit-date-and-time-value{text-align:left!important;}
 </style>
 </head>
 <body id="page-top">
@@ -1541,7 +1524,7 @@ body.live-score-replay-only #liveScoreCard{
   <button id="closeDensukeAdminBtn" type="button">キャンセル</button>
 </div>
 
-<script src="./board-live-score.js?v=20260918-21"></script>
+<script src="./board-live-score.js?v=20260918-23"></script>
 <script src="./board-updates.js?v=20260918-13"></script>
 <script src="./board-referee-documents.js?v=20260918-7"></script>
 <script src="./board-tournaments.js?v=20260914-1"></script>
@@ -1994,70 +1977,3 @@ body.photo-admin-on #accessPasswordChange{
   #liveScoreGrade{padding:0 27px 0 11px!important;font-size:12px!important;line-height:38px!important;white-space:nowrap!important;}
 }
 </style>
-<style id="live-score-team-font-final-wrap">
-/* 最終：チーム名はさらに小さく。6文字以上は自然に2行で表示可能。 */
-.live-score-row .live-score-team,
-.live-score-row .live-score-team.live-score-team-long,
-.live-score-row .live-score-team.live-score-team-medium{
-  font-size:11px!important;
-  line-height:1.1!important;
-  white-space:normal!important;
-  overflow:visible!important;
-  text-overflow:clip!important;
-  overflow-wrap:anywhere!important;
-  word-break:break-all!important;
-  transform:none!important;
-  padding-left:3px!important;
-  padding-right:3px!important;
-}
-</style>
-
-<style id="live-score-team-font-final-last">
-/* 最終：チーム名をもう一段小さく。5文字までは1行、6文字以上は折り返し可。 */
-.live-score-row .live-score-team,
-.live-score-row .live-score-team.live-score-team-long,
-.live-score-row .live-score-team.live-score-team-medium{
-  font-size:7px!important;
-  line-height:1.15!important;
-  white-space:normal!important;
-  overflow:visible!important;
-  text-overflow:clip!important;
-  overflow-wrap:normal!important;
-  word-break:normal!important;
-  transform:none!important;
-  padding-left:3px!important;
-  padding-right:3px!important;
-}
-@media(max-width:700px){
-  .live-score-row .live-score-team,
-  .live-score-row .live-score-team.live-score-team-long,
-  .live-score-row .live-score-team.live-score-team-medium{font-size:7px!important;}
-}
-</style>
-
-<script id="live-score-team-name-actual-final-fix">
-(function(){
-  const SIZE='10px';
-  function fix(){
-    document.querySelectorAll('.live-score-row .live-score-team').forEach(el=>{
-      el.classList.remove('live-score-team-long','live-score-team-medium');
-      el.style.setProperty('font-size',SIZE,'important');
-      el.style.setProperty('line-height','1.15','important');
-      el.style.setProperty('white-space','normal','important');
-      el.style.setProperty('overflow','hidden','important');
-      el.style.setProperty('text-overflow','clip','important');
-      el.style.setProperty('overflow-wrap','normal','important');
-      el.style.setProperty('word-break','break-all','important');
-      el.style.setProperty('transform','none','important');
-      el.style.setProperty('width','100%','important');
-      el.style.setProperty('min-width','0','important');
-      el.style.setProperty('box-sizing','border-box','important');
-      el.style.setProperty('padding-left','3px','important');
-      el.style.setProperty('padding-right','3px','important');
-    });
-  }
-  if(document.readyState==='loading') document.addEventListener('DOMContentLoaded',fix,{once:true}); else fix();
-  new MutationObserver(fix).observe(document.documentElement,{subtree:true,childList:true});
-  window.addEventListener('resize',fix,{passive:true});
-})();
-</script>

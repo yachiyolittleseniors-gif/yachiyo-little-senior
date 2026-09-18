@@ -22,7 +22,6 @@
     tieBreaks: [],
     sbo: { strikes: 0, balls: 0, outs: 0 },
     bases: { first: false, second: false, third: false },
-    currentAtBat: { inning: 0, side: 'opponent' },
   });
 
   let state = { active: false, visible: false, current: null, lastGame: null, updatedAt: '' };
@@ -123,10 +122,6 @@
         first: Boolean(game.bases?.first),
         second: Boolean(game.bases?.second),
         third: Boolean(game.bases?.third),
-      },
-      currentAtBat: {
-        inning: Number.isInteger(Number(game.currentAtBat?.inning)) ? Math.max(0, Math.min(6, Number(game.currentAtBat.inning))) : 0,
-        side: game.currentAtBat?.side === 'ours' ? 'ours' : 'opponent',
       },
       tieBreaks: Array.isArray(game.tieBreaks) ? game.tieBreaks.slice(0, 8).map((item, index) => ({
         inning: 8 + index,
@@ -328,27 +323,6 @@
     return state.current.tieBreaks.reduce((sum, item) => sum + (Number(item[side]) || 0), regulation);
   }
 
-  function setCurrentAtBat(side, index) {
-    if (!state.current || !inputMode || replayMode || index < 0 || index > 6) return;
-    state.current.currentAtBat = { inning: index, side };
-    markCurrentAtBat();
-    dirty = true;
-    changeVersion += 1;
-    scheduleAutoSave();
-  }
-
-  function markCurrentAtBat() {
-    if (!elements.rows) return;
-    const current = state.current?.currentAtBat;
-    elements.rows.querySelectorAll('.live-score-number').forEach(input => input.classList.remove('is-current-at-bat'));
-    if (!current || current.inning < 0 || current.inning > 6) return;
-    const teams = teamOrder();
-    const rowIndex = teams.findIndex(team => team.key === current.side);
-    const row = rowIndex >= 0 ? elements.rows.children[rowIndex] : null;
-    const cell = row?.querySelectorAll('.live-score-number')[current.inning];
-    if (cell) cell.classList.add('is-current-at-bat');
-  }
-
   function scoreInput(side, index, value, label, tieBreak = false) {
     const input = document.createElement('input');
     input.type = 'number';
@@ -358,18 +332,11 @@
     input.className = 'live-score-number';
     input.value = value;
     input.setAttribute('aria-label', label);
-    if (!tieBreak) {
-      input.addEventListener('focus', () => setCurrentAtBat(side, index));
-      input.addEventListener('click', () => setCurrentAtBat(side, index));
-    }
     input.addEventListener('input', () => {
       if (!inputMode || replayMode) return;
       const next = score(input.value);
       if (tieBreak) state.current.tieBreaks[index][side] = next;
-      else {
-        state.current.innings[side][index] = next;
-        setCurrentAtBat(side, index);
-      }
+      else state.current.innings[side][index] = next;
       dirty = true;
       changeVersion += 1;
       updateDisplayedTotals();
@@ -387,12 +354,12 @@
 
   function fitLiveScoreTeamName(name) {
     if (!name) return;
-    // 両チームを同じ固定サイズにする。表示幅に応じて毎フレーム縮小する処理は
-    // iPhone Safariで文字が揺れて見えるため廃止。チーム名欄に十分な幅を確保する。
+    // 両チームを同じ固定サイズにして、描画後に文字サイズが揺れる処理をしない。
+    // 5文字程度のチーム名も収まるよう、得点板では14pxを基準にする。
     name.classList.remove('live-score-team-long', 'live-score-team-medium');
-    name.style.setProperty('font-size', '13px', 'important');
+    name.style.setProperty('font-size', '10px', 'important');
     name.style.setProperty('line-height', '1', 'important');
-    name.style.setProperty('white-space', 'nowrap', 'important');
+    name.style.setProperty('white-space', 'normal', 'important');
     name.style.setProperty('overflow', 'hidden', 'important');
     name.style.setProperty('text-overflow', 'clip', 'important');
     name.style.setProperty('min-width', '0', 'important');
@@ -429,7 +396,6 @@
       elements.rows.appendChild(row);
       fitLiveScoreTeamName(name);
     });
-    markCurrentAtBat();
   }
 
   function updateDisplayedTotals() {
@@ -518,7 +484,6 @@
     renderBases();
     renderScoreRows();
     renderTieBreaks();
-    markCurrentAtBat();
     elements.liveBadge.hidden = replayMode || !state.visible;
     elements.visibilityBadge.hidden = replayMode;
     elements.visibilityBadge.textContent = state.visible ? '公開中' : '未公開';
@@ -770,6 +735,6 @@
     render();
     pollTimer = setInterval(() => load({ silent: true }), 5000);
   })();
-  window.addEventListener('resize', () => { window.requestAnimationFrame(fitAllLiveScoreTeamNames); });
+  window.addEventListener('resize', () => { fitAllLiveScoreTeamNames(); });
 
 })();

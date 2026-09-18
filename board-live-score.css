@@ -29,7 +29,9 @@
 .live-score-fields{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;margin-top:14px}
 .live-score-field{display:grid;min-width:0;gap:5px;color:#fff;font-size:12px;font-weight:900}
 .live-score-field.wide{grid-column:1/-1}
-.live-score-field input{box-sizing:border-box;width:100%;min-width:0;max-width:100%;height:42px;padding:0 11px;border:1px solid #c6ccd4;border-radius:8px;background:#fff;color:#071426;font:inherit;font-size:14px;font-weight:800}.live-score-field select{box-sizing:border-box;width:100%;min-width:0;max-width:100%;height:42px;padding:0 34px 0 11px;border:1px solid #c6ccd4;border-radius:8px;background:#fff;color:#071426;font:inherit;font-size:14px;font-weight:800;cursor:pointer}
+.live-score-field input{box-sizing:border-box;width:100%;min-width:0;max-width:100%;height:42px;padding:0 11px;border:1px solid #c6ccd4;border-radius:8px;background:#fff;color:#071426;font:inherit;font-size:14px;font-weight:800}
+#liveScoreStartTime{ text-align:left!important; -webkit-appearance:none; appearance:none; }
+#liveScoreStartTime::-webkit-date-and-time-value{ text-align:left!important; }.live-score-field select{box-sizing:border-box;width:100%;min-width:0;max-width:100%;height:42px;padding:0 34px 0 11px;border:1px solid #c6ccd4;border-radius:8px;background:#fff;color:#071426;font:inherit;font-size:14px;font-weight:800;cursor:pointer}
 .live-score-team-settings{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr) minmax(190px,1.15fr);gap:10px;margin-top:10px}
 .live-score-order{display:grid;gap:6px}.live-score-order>span{font-size:12px;font-weight:900}
 .live-score-segments{display:grid;grid-template-columns:1fr 1fr;height:42px;border:1px solid #8390a0;border-radius:8px;overflow:hidden}
@@ -62,90 +64,18 @@
   .live-score-publish{gap:7px;margin-top:10px}.live-score-publish>.live-score-button{min-height:41px;padding:8px 12px}.live-score-status{display:grid;gap:2px}.live-score-field input,.live-score-field select{font-size:13px}
 }
 
+/* FINAL 2026-09-18: team names are intentionally small and identical; no dynamic resizing. */
+.live-score-row .live-score-team{font-size:10px!important;line-height:1.15!important;white-space:normal!important;overflow:hidden!important;text-overflow:clip!important;min-width:0!important;width:100%!important;box-sizing:border-box!important;padding:0 4px!important;font-weight:900!important;}
+#liveScoreStartTime{text-align:left!important;-webkit-appearance:none!important;appearance:none!important;}
+#liveScoreStartTime::-webkit-date-and-time-value{text-align:left!important;}
 
-/* 現在の攻撃回：該当する回の見出しと、そのチームの得点セルを太枠で表示。
-   表・裏の文字ラベルは表示せず、行（チーム）との組み合わせで判別する。 */
-.live-score-number.is-current-at-bat{
-  position:relative;
-  z-index:2;
-  box-shadow:inset 0 0 0 3px #c79a3b!important;
-}
-
-
-/* FINAL OVERRIDES — 2026-09-18
-   Team names use one fixed size; current inning is shown only by the score-cell border.
-*/
-.live-score-row .live-score-team{
-  font-size:16px!important;
-  line-height:1!important;
-  font-weight:900!important;
-  white-space:nowrap!important;
-  overflow:hidden!important;
-  text-overflow:clip!important;
-  min-width:0!important;
-  width:100%!important;
-  box-sizing:border-box!important;
-  padding:0 4px!important;
-  display:flex!important;
-  align-items:center!important;
-}
-.live-score-row .live-score-team.live-score-team-long,
-.live-score-row .live-score-team.live-score-team-medium{font-size:16px!important;}
-#liveScoreStartTime{
-  text-align:left!important;
-  text-align-last:left!important;
-}
-.live-score-number.is-current-at-bat{
-  position:relative;
-  z-index:2;
-  box-shadow:inset 0 0 0 3px #c79a3b!important;
-}
-.live-score-board-head span.is-current-at-bat-header{
-  box-shadow:none!important;
-  outline:none!important;
-}
-.live-score-card.live-score-view-mode .live-score-field input:disabled,
-.live-score-card.live-score-view-mode .live-score-field select:disabled{
-  background:#6f7885!important;
-  color:#142033!important;
-  border-color:#566476!important;
-  opacity:1!important;
-  -webkit-text-fill-color:#142033!important;
-  pointer-events:none!important;
-}
-.live-score-card.live-score-view-mode .live-score-number:disabled,
-.live-score-card.live-score-view-mode .live-score-segments button:disabled,
-.live-score-card.live-score-view-mode .live-score-count:disabled,
-.live-score-card.live-score-view-mode .live-score-base:disabled,
-.live-score-card.live-score-view-mode .live-score-tb-actions button:disabled,
-.live-score-card.live-score-view-mode #liveScoreFinish:disabled{
-  pointer-events:none!important;
-}
-
-/* FINAL TEAM NAME FONT OVERRIDE */
-.live-score-row .live-score-team,
-.live-score-row .live-score-team.live-score-team-long,
-.live-score-row .live-score-team.live-score-team-medium{
-  font-size:13px!important;
-  line-height:1!important;
-  white-space:nowrap!important;
-  overflow:hidden!important;
-  text-overflow:clip!important;
-  transform:none!important;
-}
-
-
-/* FINAL TEAM NAME SIZE — 2026-09-18 */
-.live-score-row .live-score-team,
-.live-score-row .live-score-team.live-score-team-long,
-.live-score-row .live-score-team.live-score-team-medium{
-  font-size:11px!important;
-  line-height:1.1!important;
-  white-space:normal!important;
-  overflow:visible!important;
-  text-overflow:clip!important;
-  overflow-wrap:anywhere!important;
-  word-break:break-all!important;
-  padding-left:3px!important;
-  padding-right:3px!important;
-}
+/* FINAL: 現在回は下段の得点セルだけで示し、回番号セルには枠を付けない。 */
+.live-score-board-head span { outline: none !important; box-shadow: none !important; }
+.live-score-board-head span.live-score-current,
+.live-score-board-head span.current,
+.live-score-board-head span.active,
+.live-score-board-head span.selected { outline: none !important; box-shadow: none !important; border: 0 !important; border-left: 1px solid #8797ab !important; }
+.live-score-board-head span:first-child.live-score-current,
+.live-score-board-head span:first-child.current,
+.live-score-board-head span:first-child.active,
+.live-score-board-head span:first-child.selected { border-left: 0 !important; }
