@@ -354,23 +354,28 @@
 
   function fitLiveScoreTeamName(name) {
     if (!name) return;
-    // チーム名は必ず1行。通常サイズを維持しつつ、枠に入らない時だけ自動で縮小する。
-    name.style.whiteSpace = 'nowrap';
-    name.style.overflow = 'hidden';
-    name.style.textOverflow = 'clip';
-    name.style.minWidth = '0';
+    // チーム名は必ず1行。通常は大きく表示し、長い名前だけ実測して縮める。
+    name.style.setProperty('white-space', 'nowrap', 'important');
+    name.style.setProperty('overflow', 'hidden', 'important');
+    name.style.setProperty('text-overflow', 'clip', 'important');
+    name.style.setProperty('min-width', '0', 'important');
+    name.style.setProperty('display', 'block', 'important');
     const isMobile = window.matchMedia && window.matchMedia('(max-width: 700px)').matches;
-    let size = isMobile ? 24 : 26;
-    const minSize = 15;
-    // CSSの!important指定にも負けないよう、インライン!importantで設定する。
+    let size = isMobile ? 28 : 30;
+    const minSize = 14;
     name.style.setProperty('font-size', `${size}px`, 'important');
-    // レイアウト確定後の実幅で測り、0.5pxずつ縮める。
-    let guard = 0;
-    while (size > minSize && name.scrollWidth > name.clientWidth && guard < 30) {
-      size -= 0.5;
-      name.style.setProperty('font-size', `${size}px`, 'important');
-      guard += 1;
-    }
+    // レイアウト確定後の実寸で判定する。Safariでも確実に1行に収める。
+    const fit = () => {
+      if (!name.isConnected) return;
+      const available = name.clientWidth;
+      if (!available) return;
+      while (size > minSize && name.scrollWidth > available + 1) {
+        size -= 1;
+        name.style.setProperty('font-size', `${size}px`, 'important');
+      }
+    };
+    fit();
+    requestAnimationFrame(fit);
   }
 
   function fitAllLiveScoreTeamNames() {
