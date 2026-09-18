@@ -45,6 +45,7 @@
 .live-score-tb-list{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:8px;margin-top:8px}
 .live-score-tb-block{padding:8px 10px;border:1px solid #596b81;border-radius:8px;background:rgba(255,255,255,.04)}.live-score-tb-block>strong{display:block;margin-bottom:5px;color:#e2bd67;font-size:12px}.live-score-tb-block label{display:grid;grid-template-columns:minmax(0,1fr) 46px;align-items:center;gap:7px;margin-top:4px;color:#fff;font-size:12px;font-weight:800}.live-score-tb-block .live-score-number{height:32px;border-radius:6px}
 .live-score-publish{display:grid;gap:8px;margin-top:12px}.live-score-publish>.live-score-button{width:100%}.live-score-publish>.primary{font-size:15px}.live-score-status{display:flex;justify-content:space-between;gap:10px;margin:0 2px;color:#bac3cf;font-size:11px;font-weight:700}.live-score-status time{flex:0 0 auto}
+.live-score-status[hidden]{display:none}
 .live-score-card.is-saving{opacity:.72;pointer-events:none}
 .live-score-card.is-replay .live-score-field input:disabled,
 .live-score-card.is-replay .live-score-number:disabled,
