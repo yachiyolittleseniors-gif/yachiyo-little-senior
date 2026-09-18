@@ -141,7 +141,7 @@ async function loadAttendanceData(store, key, memberStatePrefix) {
 }
 
 function normalizeCar(car = {}, index = 0) {
-  const allowedTypes = new Set(["coach", "player", "equipment", "cargo", "support", "umpire"]);
+  const allowedTypes = new Set(["coach", "bus", "player", "equipment", "cargo", "support", "umpire"]);
   return {
     id: cleanText(car.id, 80) || `car_${index + 1}`,
     type: allowedTypes.has(car.type) ? car.type : "player",
@@ -150,8 +150,10 @@ function normalizeCar(car = {}, index = 0) {
     capacity: Math.max(1, Math.min(60, Number(car.capacity) || 1)),
     navigator: cleanText(car.navigator, 60),
     players: Math.max(0, Math.min(60, Number(car.players) || 0)),
+    escortPlayers: Math.max(0, Math.min(Number(car.players) || 0, Number(car.escortPlayers) || 0)),
     parents: Array.isArray(car.parents) ? car.parents.map(item => cleanText(item, 60)).filter(Boolean).slice(0, 30) : [],
     coaches: Array.isArray(car.coaches) ? car.coaches.map(item => cleanText(item, 60)).filter(Boolean).slice(0, 20) : [],
+    dutyMembers: Array.isArray(car.dutyMembers) ? [...new Set(car.dutyMembers.map(item => cleanText(item, 60)).filter(Boolean))].slice(0, 30) : [],
     manual: car.manual === true,
   };
 }
@@ -184,6 +186,11 @@ function normalizeAssignment(value = {}) {
     coachManagerDriver: value.coachManagerDriver === true,
     coachCount: Math.max(0, Math.min(5, Number(value.coachCount) || 0)),
     scorerName: cleanText(value.scorerName, 60),
+    teamEquipmentCarId: cleanText(value.teamEquipmentCarId, 80),
+    playerEquipmentCarId: cleanText(value.playerEquipmentCarId, 80),
+    playerBelongings: cleanText(value.playerBelongings, 300),
+    infectionPrecaution: value.infectionPrecaution === true,
+    heatPrecaution: value.heatPrecaution === true,
     playerCount: value.playerCount == null ? null : Math.max(0, Math.min(100, Number(value.playerCount) || 0)),
     playerCarCount: Math.max(0, Math.min(40, Number(value.playerCarCount) || 0)),
     equipmentCount: value.equipmentCount == null ? null : Math.max(0, Math.min(1, Number(value.equipmentCount) || 0)),
