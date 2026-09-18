@@ -910,6 +910,39 @@ body.live-score-replay-only #liveScoreCard{
   .live-score-base.third{top:18px!important;}
 }
 </style>
+
+<style id="live-score-board-size-final">
+/* 得点板を少し見やすく拡大。全体のコンパクトさは維持。 */
+.live-score-board{
+  font-size:15px!important;
+}
+.live-score-board-head,.live-score-row{
+  min-height:46px!important;
+}
+.live-score-board-head span,.live-score-row .live-score-team,.live-score-row .live-score-tb-total,.live-score-row .live-score-total{
+  font-size:14px!important;
+}
+.live-score-row .live-score-team{
+  font-weight:900!important;
+}
+.live-score-number{
+  width:100%!important;
+  min-height:40px!important;
+  height:40px!important;
+  font-size:18px!important;
+  font-weight:900!important;
+}
+@media(max-width:600px){
+  .live-score-board{font-size:14px!important;}
+  .live-score-board-head,.live-score-row{min-height:44px!important;}
+  .live-score-board-head span,.live-score-row .live-score-team,.live-score-row .live-score-tb-total,.live-score-row .live-score-total{font-size:13px!important;}
+  .live-score-number{min-height:38px!important;height:38px!important;font-size:17px!important;}
+}
+@media(max-width:390px){
+  .live-score-board-head,.live-score-row{min-height:42px!important;}
+  .live-score-number{min-height:36px!important;height:36px!important;font-size:16px!important;}
+}
+</style>
 </head>
 <body id="page-top">
 <header class="site-header">

@@ -517,6 +517,17 @@
     }
   }
 
+  function enterInputMode() {
+    if (!state.active || replayMode) return;
+    inputMode = true;
+    render();
+  }
+
+  function leaveInputMode() {
+    inputMode = false;
+    render();
+  }
+
   async function startGame(game = null, visible = true) {
     inputMode = true;
     editorCollapsed = false;
