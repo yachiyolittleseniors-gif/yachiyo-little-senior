@@ -510,7 +510,8 @@
     dirty = true;
     changeVersion += 1;
     renderBases();
-    scheduleAutoSave();
+    // Base changes are important shared live state: persist immediately.
+    save('', { quiet: true, renderAfter: false });
   });
 
   elements.bases.addEventListener('dblclick', event => {
