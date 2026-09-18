@@ -1529,9 +1529,9 @@ export default async (request, context) => {
       }
       if (action !== "saveLiveScore") return json({ error: "不正な試合速報操作です。" }, 400);
 
-      const currentLock = await getLiveScoreLock(store);
-      const token = String(body?.lockToken || "");
-      if (!currentLock || currentLock.deviceId !== deviceId || currentLock.token !== token) return json({ error: "現在、別の端末で入力中です。" }, 409);
+      // Live-score input/view mode is intentionally manual. Saving does not require
+      // the old server-side editor lock, so switching to input mode on one device
+      // cannot unexpectedly kick that device back to viewing mode.
       const serialized = JSON.stringify(body?.data ?? null);
       if (serialized.length > 20000) return json({ error: "試合速報のデータが大きすぎます。" }, 413);
       const normalized = normalizeLiveScoreData(body?.data);
@@ -1539,11 +1539,7 @@ export default async (request, context) => {
       const existing = await store.get(key, { type: "json", consistency: "strong" });
       if (!normalized.lastGame) normalized.lastGame = normalizeLiveScoreGame(existing?.lastGame);
       await store.setJSON(key, normalized);
-      const renewed = { ...currentLock, expiresAt: Date.now() + LIVE_SCORE_LOCK_TTL_MS };
-      await store.setJSON(LIVE_SCORE_LOCK_KEY, renewed);
-      const confirmed = await getLiveScoreLock(store);
-      if (!confirmed || confirmed.token !== token || confirmed.deviceId !== deviceId) return json({ error: "入力権限がありません。" }, 409);
-      return json({ ok: true, data: normalized, lock: publicLiveScoreLock(confirmed, deviceId) });
+      return json({ ok: true, data: normalized, lock: { active: false, owner: false, expiresAt: 0 } });
     }
 
     const boardDirectSection =
