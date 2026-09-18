@@ -1,5 +1,11 @@
 import { getStore } from "@netlify/blobs";
 import {
+  coachSessionCookie,
+  coachSessionIsValid,
+  coachSessionTokenIsValid,
+  createCoachSessionToken,
+} from "./_coach-session.mjs";
+import {
   adminAuthError,
   verifyAdminPassword,
 } from "./admin-rate-limit.mjs";
@@ -57,6 +63,7 @@ function safeEqual(a, b) {
 
 async function coachAccessPasswordIsValid(store, enteredPassword) {
   const entered = String(enteredPassword || "");
+  if (await coachSessionTokenIsValid(entered)) return true;
   if (!entered || entered.length > 128) return false;
 
   let saved = null;
@@ -76,6 +83,7 @@ async function coachAccessPasswordIsValid(store, enteredPassword) {
 }
 
 async function coachAccessOK(store, request) {
+  if (await coachSessionIsValid(request)) return true;
   return coachAccessPasswordIsValid(
     store,
     request.headers.get("x-coach-password") || ""
@@ -501,7 +509,13 @@ export default async (request, context) => {
 
     if (action === "verifyCoachPassword") {
       const valid = await coachAccessPasswordIsValid(store, body.password);
-      return valid ? json({ ok: true }) : json({ ok: false }, 401);
+      if (!valid) return json({ ok: false }, 401);
+      const token = await createCoachSessionToken();
+      return json(
+        { ok: true, token },
+        200,
+        { "set-cookie": coachSessionCookie(token) }
+      );
     }
 
     const adminActions = new Set([

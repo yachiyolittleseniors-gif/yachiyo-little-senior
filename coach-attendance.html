@@ -204,6 +204,7 @@ body{padding-top:var(--fixed-header-height)!important}
 }
 </style>
 <style id="coach-attendance-polish">.name-col{min-width:148px}@media(max-width:700px){.name-col{min-width:136px}}</style>
+<script src="./coach-passkey.js?v=20260918-1"></script>
 <script>
 document.documentElement.style.visibility='hidden';
 window.coachAccessReady=(async function(){
@@ -211,11 +212,12 @@ window.coachAccessReady=(async function(){
   const storageKey='yachiyoCoachAttendancePass';
   const reloadKey='yachiyoCoachAttendanceReloadPass';
   const reloadExpiryKey='yachiyoCoachAttendanceReloadPassExpires';
+  const passkeyKey='yachiyoCoachPasskeyRegistered';
   const reloadLifetime=12*60*60*1000;
 
-  function remember(password){
-    try{sessionStorage.setItem(storageKey,password)}catch(e){}
-    try{localStorage.setItem(reloadKey,password);localStorage.setItem(reloadExpiryKey,String(Date.now()+reloadLifetime))}catch(e){}
+  function remember(value){
+    try{sessionStorage.setItem(storageKey,value)}catch(e){}
+    try{localStorage.setItem(reloadKey,value);localStorage.setItem(reloadExpiryKey,String(Date.now()+reloadLifetime))}catch(e){}
   }
   function readSaved(){
     try{const current=sessionStorage.getItem(storageKey)||'';if(current)return current}catch(e){}
@@ -232,42 +234,50 @@ window.coachAccessReady=(async function(){
     try{sessionStorage.removeItem(storageKey)}catch(e){}
     try{localStorage.removeItem(reloadKey);localStorage.removeItem(reloadExpiryKey)}catch(e){}
   }
-
-  async function verify(password){
-    if(!password)return false;
+  async function verify(value){
+    if(!value)return false;
     try{
       const response=await fetch(API,{
         method:'POST',
         headers:{'content-type':'application/json'},
-        body:JSON.stringify({action:'verifyCoachPassword',password:password})
+        credentials:'same-origin',
+        body:JSON.stringify({action:'verifyCoachPassword',password:value})
       });
-      return response.ok;
-    }catch(e){
-      return false;
-    }
+      if(!response.ok)return false;
+      const result=await response.json().catch(()=>({}));
+      remember(result.token||value);
+      return true;
+    }catch(e){return false}
   }
-
+  async function verifyPasskey(){
+    let registered=false;
+    try{registered=localStorage.getItem(passkeyKey)==='1'}catch(e){}
+    if(!registered||!window.YLSCoachPasskeys?.supported())return false;
+    try{
+      const result=await window.YLSCoachPasskeys.authenticate();
+      if(!result?.token)return false;
+      remember(result.token);
+      return true;
+    }catch(e){return false}
+  }
   const saved=readSaved();
   if(saved&&await verify(saved)){
-    remember(saved);
     document.documentElement.style.visibility='';
     return true;
   }
   forget();
-
+  if(await verifyPasskey()){
+    document.documentElement.style.visibility='';
+    return true;
+  }
   const entered=prompt('指導者出欠確認のパスワードを入力してください。');
   if(entered===null){
     let cameFromBoard=false;
     try{cameFromBoard=new URL(document.referrer).pathname.endsWith('/board.html')}catch(e){}
-    if(cameFromBoard&&history.length>1){
-      history.back();
-    }else{
-      location.replace('./board.html?from=coach');
-    }
+    if(cameFromBoard&&history.length>1){history.back()}else{location.replace('./board.html?from=coach')}
     return false;
   }
   if(await verify(entered)){
-    remember(entered);
     document.documentElement.style.visibility='';
     return true;
   }
@@ -278,6 +288,15 @@ window.coachAccessReady=(async function(){
 </script>
 <style id="team-board-return-style">
 .event-form[hidden]{display:none!important}.team-board-return-row{display:flex;justify-content:flex-start;margin:0 0 14px}.team-board-return{display:inline-flex;align-items:center;min-height:40px;padding:9px 14px;border:1px solid var(--gold);border-radius:999px;background:#fff;color:#765718;font-size:12px;font-weight:800}@media(max-width:600px){.team-board-return{min-height:38px;padding:8px 12px;font-size:11px}}
+</style>
+<style id="coach-passkey-setup-style">
+.coach-passkey-setup{display:flex;align-items:center;justify-content:space-between;gap:14px;margin:0 0 14px;padding:14px 16px;border:1px solid rgba(199,154,59,.48);border-radius:12px;background:#fffdf8}
+.coach-passkey-setup[hidden]{display:none}.coach-passkey-copy{min-width:0}
+.coach-passkey-title{margin:0 0 3px;color:#071426;font-size:16px;font-weight:900}
+.coach-passkey-text{margin:0;color:#6f7884;font-size:12px;font-weight:700;line-height:1.6}
+.coach-passkey-button{flex:0 0 auto;min-height:42px;padding:0 15px;border:1px solid #b58a31;border-radius:9px;background:#071426;color:#fff;font-weight:900;cursor:pointer}
+.coach-passkey-button:disabled{cursor:wait;opacity:.6}
+@media(max-width:640px){.coach-passkey-setup{align-items:stretch;flex-direction:column}.coach-passkey-button{width:100%}}
 </style>
 </head><body id="page-top">
 <header class="header">
@@ -308,6 +327,13 @@ window.coachAccessReady=(async function(){
 <section class="pagehero"><div class="pagehero-inner"><div class="eyebrow">ATTENDANCE</div><h1>指導者出欠確認</h1><div class="crumb">HOME / チーム専用ページ / 指導者出欠確認</div></div></section>
 <main class="wrap">
   <div class="team-board-return-row"><a class="team-board-return" href="./board.html?from=coach">← チーム専用ページへ戻る</a></div>
+  <section class="coach-passkey-setup" id="coachPasskeySetupPanel" aria-live="polite" hidden>
+    <div class="coach-passkey-copy">
+      <p class="coach-passkey-title" id="coachPasskeySetupTitle">Face ID・指紋認証で次回からログイン</p>
+      <p class="coach-passkey-text" id="coachPasskeySetupText">この端末に登録すると、次回から指導者用パスワードの入力を省略できます。</p>
+    </div>
+    <button class="coach-passkey-button" id="coachPasskeySetupButton" type="button">この端末に登録</button>
+  </section>
   <div class="error" id="errorBox"></div>
   <section class="locked-card hidden" id="lockedView"></section>
 
@@ -857,6 +883,43 @@ body.photo-admin-on #accessPasswordChange{
     if(document.documentElement.classList.contains('seniorcup-hidden'))apply(false);
     else if(document.querySelector('.seniorcup-home-banner'))apply(true);
   }).observe(document.documentElement,{attributes:true,attributeFilter:['class']});
+})();
+</script>
+<script id="coach-passkey-setup">
+(async()=>{
+  const allowed=await window.coachAccessReady;
+  if(!allowed||!window.YLSCoachPasskeys?.supported())return;
+  const panel=document.getElementById('coachPasskeySetupPanel');
+  const button=document.getElementById('coachPasskeySetupButton');
+  const title=document.getElementById('coachPasskeySetupTitle');
+  const text=document.getElementById('coachPasskeySetupText');
+  if(!panel||!button)return;
+  panel.hidden=false;
+  let registered=false;
+  try{registered=localStorage.getItem('yachiyoCoachPasskeyRegistered')==='1'}catch(e){}
+  if(registered){
+    title.textContent='指導者用のFace ID・指紋認証を登録済み';
+    text.textContent='次回から生体認証で入れます。認証できない場合は従来の指導者用パスワードを使えます。';
+    button.textContent='追加・再登録';
+  }
+  button.addEventListener('click',async()=>{
+    button.disabled=true;
+    button.textContent='端末で認証してください';
+    try{
+      const accessValue=sessionStorage.getItem('yachiyoCoachAttendancePass')||localStorage.getItem('yachiyoCoachAttendanceReloadPass')||'';
+      const deviceLabel=navigator.userAgentData?.platform||navigator.platform||'登録端末';
+      await window.YLSCoachPasskeys.register(accessValue,deviceLabel);
+      try{localStorage.setItem('yachiyoCoachPasskeyRegistered','1')}catch(e){}
+      registered=true;
+      title.textContent='指導者用のFace ID・指紋認証を登録しました';
+      text.textContent='次回から生体認証で入れます。従来の指導者用パスワードも引き続き使えます。';
+      button.textContent='登録済み';
+    }catch(error){
+      const cancelled=error?.name==='NotAllowedError'||/キャンセル/.test(error?.message||'');
+      if(!cancelled)alert(error?.message||'生体認証を登録できませんでした。');
+      button.textContent=registered?'追加・再登録':'この端末に登録';
+    }finally{button.disabled=false}
+  });
 })();
 </script>
 </body></html>
