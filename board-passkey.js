@@ -88,5 +88,12 @@
       credential: authenticationJSON(credential),
     });
   }
-  window.YLSPasskeys = { authenticate, register, supported };
+  async function remove() {
+    if (!supported()) throw new Error("この端末は生体認証に対応していません。");
+    const auth = await authenticate();
+    const credentialID = auth?.credentialID;
+    if (!credentialID) throw new Error("削除する生体認証を確認できませんでした。");
+    return request({ action: "delete-credential", credentialID });
+  }
+  window.YLSPasskeys = { authenticate, register, remove, supported };
 })();
