@@ -139,19 +139,10 @@
     }
   }
 
+  // SBO / bases are shared live state and must come from the server.
+  // Do not overwrite them with a device-local draft, otherwise another
+  // phone can display its own stale values instead of the shared values.
   function applyRememberedDraft(game) {
-    const draft = rememberedDraft();
-    if (!draft || !game || draft.identity !== draftIdentity(game)) return game;
-    if (draft.sbo) game.sbo = {
-      strikes: Math.max(0, Math.min(2, Number(draft.sbo.strikes) || 0)),
-      balls: Math.max(0, Math.min(3, Number(draft.sbo.balls) || 0)),
-      outs: Math.max(0, Math.min(2, Number(draft.sbo.outs) || 0)),
-    };
-    if (draft.bases) game.bases = {
-      first: Boolean(draft.bases.first),
-      second: Boolean(draft.bases.second),
-      third: Boolean(draft.bases.third),
-    };
     return game;
   }
 
@@ -229,7 +220,9 @@
         dirty = true;
         changeVersion += 1;
         renderSbo();
-        scheduleAutoSave();
+        // SBO is shared live state: persist immediately so other devices
+        // receive the change without waiting for the debounce timer.
+        save('', { quiet: true, renderAfter: false });
       });
 
       group.addEventListener('dblclick', event => {
