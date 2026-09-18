@@ -30,7 +30,7 @@
 <meta name="theme-color" content="#071426">
 <title>チーム専用ページ｜八千代リトルシニア</title>
 <link rel="stylesheet" href="./board-base.css?v=20260918-1">
-<link rel="stylesheet" href="./board-live-score.css?v=20260918-15">
+<link rel="stylesheet" href="./board-live-score.css?v=20260918-16">
 <script src="./board-passkey.js?v=20260918-1"></script>
 <script src="./coach-passkey.js?v=20260918-2"></script>
 <script>
@@ -760,6 +760,34 @@ body.live-score-replay-only #liveScoreCard{
   min-height:100vh!important;
   margin:0!important;
   border-radius:0!important;
+}
+</style>
+
+<style id="live-score-grade-match-starttime-final">
+/* 学年の選択枠を「試合開始時間」の入力枠と完全に同じ見た目・サイズにする */
+@media (max-width:700px){
+  #liveScoreGrade{
+    appearance:none!important;
+    -webkit-appearance:none!important;
+    width:100%!important;
+    min-width:0!important;
+    max-width:100%!important;
+    height:42px!important;
+    min-height:42px!important;
+    max-height:42px!important;
+    box-sizing:border-box!important;
+    padding:0 11px!important;
+    border:1px solid #c6ccd4!important;
+    border-radius:8px!important;
+    background:#fff!important;
+    color:#071426!important;
+    font:inherit!important;
+    font-size:14px!important;
+    font-weight:800!important;
+    line-height:42px!important;
+    align-self:start!important;
+  }
+  #liveScoreGrade::-ms-expand{display:none!important;}
 }
 </style>
 </head>
