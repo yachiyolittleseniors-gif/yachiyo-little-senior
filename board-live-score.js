@@ -341,16 +341,12 @@
     if (!elements.rows) return;
     const current = state.current?.currentAtBat;
     elements.rows.querySelectorAll('.live-score-number').forEach(input => input.classList.remove('is-current-at-bat'));
-    document.querySelectorAll('.live-score-board-head .is-current-at-bat-header').forEach(el => el.classList.remove('is-current-at-bat-header'));
     if (!current || current.inning < 0 || current.inning > 6) return;
     const teams = teamOrder();
     const rowIndex = teams.findIndex(team => team.key === current.side);
     const row = rowIndex >= 0 ? elements.rows.children[rowIndex] : null;
     const cell = row?.querySelectorAll('.live-score-number')[current.inning];
     if (cell) cell.classList.add('is-current-at-bat');
-    const header = document.querySelector('.live-score-board-head');
-    const headCell = header?.children[current.inning + 1];
-    if (headCell) headCell.classList.add('is-current-at-bat-header');
   }
 
   function scoreInput(side, index, value, label, tieBreak = false) {

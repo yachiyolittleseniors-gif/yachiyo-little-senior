@@ -70,8 +70,54 @@
   z-index:2;
   box-shadow:inset 0 0 0 3px #c79a3b!important;
 }
-.live-score-board-head span.is-current-at-bat-header{
+
+
+/* FINAL OVERRIDES — 2026-09-18
+   Team names use one fixed size; current inning is shown only by the score-cell border.
+*/
+.live-score-row .live-score-team{
+  font-size:16px!important;
+  line-height:1!important;
+  font-weight:900!important;
+  white-space:nowrap!important;
+  overflow:hidden!important;
+  text-overflow:clip!important;
+  min-width:0!important;
+  width:100%!important;
+  box-sizing:border-box!important;
+  padding:0 4px!important;
+  display:flex!important;
+  align-items:center!important;
+}
+.live-score-row .live-score-team.live-score-team-long,
+.live-score-row .live-score-team.live-score-team-medium{font-size:16px!important;}
+#liveScoreStartTime{
+  text-align:left!important;
+  text-align-last:left!important;
+}
+.live-score-number.is-current-at-bat{
   position:relative;
   z-index:2;
   box-shadow:inset 0 0 0 3px #c79a3b!important;
+}
+.live-score-board-head span.is-current-at-bat-header{
+  box-shadow:none!important;
+  outline:none!important;
+}
+.live-score-card.live-score-view-mode .live-score-field input:disabled,
+.live-score-card.live-score-view-mode .live-score-field select:disabled{
+  background:#6f7885!important;
+  color:#142033!important;
+  border-color:#566476!important;
+  opacity:1!important;
+  -webkit-text-fill-color:#142033!important;
+  pointer-events:none!important;
+}
+.live-score-card.live-score-view-mode .live-score-number:disabled,
+.live-score-card.live-score-view-mode .live-score-segments button:disabled,
+.live-score-card.live-score-view-mode .live-score-count:disabled,
+.live-score-card.live-score-view-mode .live-score-base:disabled,
+.live-score-card.live-score-view-mode .live-score-tb-actions button:disabled,
+.live-score-card.live-score-view-mode #liveScoreFinish:disabled{
+  pointer-events:none!important;
 }
