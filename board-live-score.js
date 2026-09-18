@@ -9,6 +9,7 @@
     tournament: '',
     startTime: '',
     ground: '',
+    grade: '',
     ourName: '八千代',
     opponent: '',
     battingOrder: 'second',
@@ -67,6 +68,7 @@
       tournament: String(game.tournament || '').slice(0, 100),
       startTime: String(game.startTime || '').slice(0, 10),
       ground: String(game.ground || '').slice(0, 100),
+      grade: ['1','2','3'].includes(String(game.grade || '')) ? String(game.grade) : '',
       ourName: String(game.ourName || '八千代').slice(0, 40) || '八千代',
       opponent: String(game.opponent || '').slice(0, 40),
       battingOrder: game.battingOrder === 'first' ? 'first' : 'second',
@@ -118,7 +120,7 @@
     tournament: $('#liveScoreTournament'),
     startTime: $('#liveScoreStartTime'),
     ground: $('#liveScoreGround'),
-    ourName: $('#liveScoreOurName'),
+    grade: $('#liveScoreGrade'),
     opponent: $('#liveScoreOpponent'),
     order: $('#liveScoreOrder'),
     rows: $('#liveScoreRows'),
@@ -246,7 +248,7 @@
     elements.tournament.value = game.tournament;
     elements.startTime.value = game.startTime;
     elements.ground.value = game.ground;
-    elements.ourName.value = game.ourName;
+    elements.grade.value = game.grade || '';
     elements.opponent.value = game.opponent;
     elements.order.querySelectorAll('button').forEach(button => {
       const selected = button.dataset.order === game.battingOrder;
@@ -286,7 +288,7 @@
     state.current.tournament = elements.tournament.value.trim();
     state.current.startTime = elements.startTime.value;
     state.current.ground = elements.ground.value.trim();
-    state.current.ourName = elements.ourName.value.trim() || '八千代';
+    state.current.grade = elements.grade.value;
     state.current.opponent = elements.opponent.value.trim();
   }
 
@@ -358,7 +360,7 @@
     window.scrollTo({ top: 0, behavior: 'smooth' });
   });
 
-  [elements.tournament, elements.startTime, elements.ground, elements.ourName, elements.opponent]
+  [elements.tournament, elements.startTime, elements.ground, elements.grade, elements.opponent]
     .forEach(input => input.addEventListener('input', () => {
       readFields();
       dirty = true;
