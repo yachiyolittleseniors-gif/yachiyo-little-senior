@@ -356,7 +356,7 @@
     if (!name) return;
     const text = String(name.textContent || '');
     name.classList.remove('live-score-team-long', 'live-score-team-medium');
-    // 5文字以上は20〜22px、4文字は24〜27px。短い名前は大きく表示。
+    // 長い名前ほど少し小さく表示。基本サイズも控えめにして1行を優先。
     if (text.length >= 5) name.classList.add('live-score-team-long');
     else if (text.length === 4) name.classList.add('live-score-team-medium');
 

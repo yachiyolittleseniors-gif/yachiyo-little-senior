@@ -986,6 +986,32 @@ body.live-score-replay-only #liveScoreCard{
   .live-score-row .live-score-team.live-score-team-medium{font-size:27px!important;}
 }
 </style>
+<style id="live-score-team-name-size-final-v2">
+/* 得点板のチーム名を全体的に少し小さくして、長いチーム名も自然に1行表示。 */
+.live-score-row .live-score-team{
+  font-size:22px!important;
+  line-height:1!important;
+  white-space:nowrap!important;
+  overflow:hidden!important;
+  text-overflow:clip!important;
+  min-width:0!important;
+  width:100%!important;
+  padding:0 5px!important;
+  box-sizing:border-box!important;
+}
+.live-score-row .live-score-team.live-score-team-medium{font-size:20px!important;}
+.live-score-row .live-score-team.live-score-team-long{font-size:18px!important;}
+@media(max-width:600px){
+  .live-score-row .live-score-team{font-size:21px!important;}
+  .live-score-row .live-score-team.live-score-team-medium{font-size:19px!important;}
+  .live-score-row .live-score-team.live-score-team-long{font-size:17px!important;}
+}
+@media(max-width:390px){
+  .live-score-row .live-score-team{font-size:20px!important;}
+  .live-score-row .live-score-team.live-score-team-medium{font-size:18px!important;}
+  .live-score-row .live-score-team.live-score-team-long{font-size:16px!important;}
+}
+</style>
 </head>
 <body id="page-top">
 <header class="site-header">
