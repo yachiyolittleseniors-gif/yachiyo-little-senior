@@ -100,8 +100,9 @@
 #dutyRosterCard .duty-digital-roster{padding:0;border:0;border-radius:0}
 #dutyRosterCard .duty-sheet-note{padding:0 6px}
 .duty-digital-roster tbody tr.is-activity td.is-changed{background:#fff49a}
-#dutyChangeSection{padding:0;border:0;background:transparent}
-#toggleDutyHistory{width:100%;min-height:44px;padding:10px 14px;border:1px solid #c79a3b;border-radius:8px;background:transparent;color:#866322;font:inherit;font-size:12px;font-weight:700;cursor:pointer}
+#dutyChangeSection{margin-left:18px;margin-right:18px;padding:0;border:0;background:transparent}
+@media(max-width:650px){#dutyChangeSection{margin-left:15px;margin-right:15px}}
+#toggleDutyHistory{width:100%;min-height:43px;padding:10px 16px;border:1px solid #c79a3b;border-radius:8px;background:transparent;color:#866322;font:inherit;font-size:12px;font-weight:700;cursor:pointer}
 #dutyHistoryContent{margin-top:12px;padding:12px;border:1px solid #dac68d;border-radius:12px;background:#fffaf0}
 #dutyHistoryContent[hidden]{display:none}
 #dutyImageReview{margin-top:12px;padding:10px;border:1px solid #c79a3b;border-radius:10px}
