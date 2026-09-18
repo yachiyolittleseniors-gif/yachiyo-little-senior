@@ -369,34 +369,42 @@ html{scroll-padding-top:var(--compact-header-height)}
 @media(max-width:640px){.passkey-setup.is-registered.is-collapsed{margin-top:-16px}.passkey-setup-summary{padding:8px 2px 10px;font-size:15px}.passkey-setup-details{align-items:stretch;flex-direction:column;gap:12px;padding:14px}.passkey-setup-button{width:100%}}
 </style>
 <style id="live-score-time-grade-equal-style">
-/* Live score layout refinements: preserve the original field positions and only
-   make the left-column fields equal width. */
+/* Keep the original form layout. Only equalize the left-column field widths. */
 @media (max-width:700px){
   .live-score-fields,
   .live-score-team-settings{
     grid-template-columns:minmax(0,1fr) minmax(0,1.75fr)!important;
     column-gap:14px!important;
   }
+  .live-score-fields .live-score-field:not(.wide),
+  .live-score-team-settings .live-score-field:first-child{
+    min-width:0!important;
+    width:100%!important;
+  }
+  .live-score-team-settings select{
+    width:100%!important;
+    box-sizing:border-box!important;
+  }
 }
 
-/* SBO + diamond: keep them in one compact row below the title, without overlap. */
+/* SBO + diamond: compact status strip under the title, never over the title. */
 .live-score-base-controls{
   display:grid!important;
-  grid-template-columns:minmax(0,1fr) 176px!important;
-  gap:14px!important;
+  grid-template-columns:minmax(0,1fr) 148px!important;
+  gap:10px!important;
   align-items:center!important;
-  margin:0 0 18px!important;
+  margin:10px 0 20px!important;
   width:100%!important;
   box-sizing:border-box!important;
 }
 .live-score-sbo{
   display:flex!important;
   align-items:center!important;
-  justify-content:space-around!important;
-  gap:12px!important;
+  justify-content:space-between!important;
+  gap:8px!important;
   min-width:0!important;
-  height:76px!important;
-  padding:10px 14px!important;
+  height:68px!important;
+  padding:9px 12px!important;
   border:2px solid rgba(199,154,59,.9)!important;
   border-radius:22px!important;
   background:#071426!important;
@@ -405,41 +413,42 @@ html{scroll-padding-top:var(--compact-header-height)}
 .live-score-count{
   display:flex!important;
   align-items:center!important;
-  gap:8px!important;
+  gap:5px!important;
   font-weight:900!important;
   color:#fff!important;
   white-space:nowrap!important;
 }
-.live-score-count b{font-size:22px!important;color:#fff!important;min-width:18px!important;text-align:center!important}
-.live-score-dots{display:flex!important;gap:6px!important}
-.live-score-dot{width:15px!important;height:15px!important;border-radius:50%!important;background:#31445a!important;border:0!important;padding:0!important;cursor:pointer!important}
+.live-score-count b{font-size:19px!important;color:#fff!important;min-width:16px!important;text-align:center!important}
+.live-score-dots{display:flex!important;gap:5px!important}
+.live-score-dot{width:13px!important;height:13px!important;border-radius:50%!important;background:#31445a!important;border:0!important;padding:0!important;cursor:pointer!important;flex:0 0 auto!important}
 .live-score-dot.on-s{background:#e2bd67!important}
 .live-score-dot.on-b{background:#4fc36b!important}
 .live-score-dot.on-o{background:#ef5350!important}
 
 .live-score-diamond-wrap{
-  display:flex!important;
+  display:grid!important;
+  grid-template-columns:56px 1fr!important;
   align-items:center!important;
-  justify-content:center!important;
-  gap:12px!important;
-  height:76px!important;
+  gap:10px!important;
+  height:68px!important;
   min-width:0!important;
   overflow:visible!important;
 }
 .live-score-diamond{
   position:relative!important;
-  width:58px!important;
-  height:58px!important;
+  width:48px!important;
+  height:48px!important;
   transform:rotate(45deg)!important;
   border:3px solid #91a2ba!important;
-  border-radius:6px!important;
+  border-radius:5px!important;
   box-sizing:border-box!important;
+  margin-left:3px!important;
   flex:0 0 auto!important;
 }
 .live-score-base{
   position:absolute!important;
-  width:15px!important;
-  height:15px!important;
+  width:13px!important;
+  height:13px!important;
   background:#fff!important;
   border:2px solid #91a2ba!important;
   border-radius:3px!important;
@@ -448,52 +457,32 @@ html{scroll-padding-top:var(--compact-header-height)}
   padding:0!important;
   box-sizing:border-box!important;
 }
-.live-score-base.first{top:-9px!important;right:-9px!important}
-.live-score-base.second{top:-9px!important;left:-9px!important}
-.live-score-base.third{bottom:-9px!important;left:-9px!important}
-.live-score-base.home{bottom:-9px!important;right:-9px!important}
+.live-score-base.first{top:-8px!important;right:-8px!important}
+.live-score-base.second{top:-8px!important;left:-8px!important}
+.live-score-base.third{bottom:-8px!important;left:-8px!important}
+.live-score-base.home{bottom:-8px!important;right:-8px!important}
 .live-score-base.on{background:#e2bd67!important;border-color:#e2bd67!important}
 .live-score-base-labels{
   display:flex!important;
   flex-direction:column!important;
-  gap:6px!important;
-  font-size:13px!important;
+  justify-content:center!important;
+  gap:5px!important;
+  font-size:11px!important;
   line-height:1!important;
   font-weight:900!important;
   color:#fff!important;
   white-space:nowrap!important;
 }
 
-/* Keep the time and grade controls exactly the same width on the left column. */
-.live-score-fields .live-score-field:not(.wide),
-.live-score-team-settings .live-score-field:first-child{
-  min-width:0!important;
-}
-
-@media(max-width:700px){
-  .live-score-base-controls{grid-template-columns:minmax(0,1fr) 160px!important;gap:10px!important}
-  .live-score-sbo{height:70px!important;padding:10px 8px!important;gap:7px!important}
-  .live-score-count{gap:4px!important}
-  .live-score-count b{font-size:19px!important}
-  .live-score-dots{gap:5px!important}
-  .live-score-dot{width:13px!important;height:13px!important}
-  .live-score-diamond-wrap{height:70px!important;gap:10px!important}
-  .live-score-diamond{width:52px!important;height:52px!important}
-  .live-score-base{width:14px!important;height:14px!important}
-  .live-score-base.first,.live-score-base.second{top:-8px!important}
-  .live-score-base.third,.live-score-base.home{bottom:-8px!important}
-  .live-score-base.first,.live-score-base.home{right:-8px!important}
-  .live-score-base.second,.live-score-base.third{left:-8px!important}
-  .live-score-base-labels{font-size:12px!important;gap:5px!important}
-}
 @media(max-width:430px){
-  .live-score-base-controls{grid-template-columns:minmax(0,1fr) 142px!important;gap:7px!important}
-  .live-score-sbo{height:66px!important;padding:9px 6px!important}
+  .live-score-base-controls{grid-template-columns:minmax(0,1fr) 136px!important;gap:7px!important;margin-top:10px!important}
+  .live-score-sbo{height:64px!important;padding:8px 7px!important}
   .live-score-count{gap:3px!important}
   .live-score-count b{font-size:17px!important}
+  .live-score-dots{gap:4px!important}
   .live-score-dot{width:12px!important;height:12px!important}
-  .live-score-diamond-wrap{height:66px!important;gap:8px!important}
-  .live-score-diamond{width:46px!important;height:46px!important}
+  .live-score-diamond-wrap{grid-template-columns:50px 1fr!important;gap:7px!important;height:64px!important}
+  .live-score-diamond{width:44px!important;height:44px!important;margin-left:2px!important}
   .live-score-base{width:12px!important;height:12px!important}
   .live-score-base.first,.live-score-base.second{top:-7px!important}
   .live-score-base.third,.live-score-base.home{bottom:-7px!important}
