@@ -30,7 +30,7 @@
 <meta name="theme-color" content="#071426">
 <title>チーム専用ページ｜八千代リトルシニア</title>
 <link rel="stylesheet" href="./board-base.css?v=20260918-1">
-<link rel="stylesheet" href="./board-live-score.css?v=20260918-6">
+<link rel="stylesheet" href="./board-live-score.css?v=20260918-7">
 <script src="./board-passkey.js?v=20260918-1"></script>
 <script src="./coach-passkey.js?v=20260918-2"></script>
 <script>
@@ -494,19 +494,16 @@ html{scroll-padding-top:var(--compact-header-height)}
         <div class="live-score-tb-actions">
           <button class="live-score-button" id="liveScoreAddTieBreak" type="button">＋ タイブレークを追加</button>
           <button class="live-score-button danger" id="liveScoreRemoveTieBreak" type="button" hidden>最後のTBを削除</button>
-          <small>8回以降を追加</small>
         </div>
         <div class="live-score-tb-list" id="liveScoreTieBreaks" hidden></div>
 
         <div class="live-score-publish">
           <button class="live-score-button primary" id="liveScoreVisibility" type="button">試合速報を公開</button>
+          <button class="live-score-button subdued" id="liveScoreFinish" type="button">試合終了</button>
           <div class="live-score-status">
             <span id="liveScoreStatus">まだ他の端末には公開されていません。</span>
             <time id="liveScoreUpdated"></time>
           </div>
-        </div>
-        <div class="live-score-secondary-actions">
-          <button class="live-score-button subdued" id="liveScoreFinish" type="button">試合終了</button>
         </div>
       </div>
     </section>
@@ -1160,4 +1157,3 @@ body.photo-admin-on #accessPasswordChange{
 </script>
 </body>
 </html>
-
