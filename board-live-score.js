@@ -32,6 +32,7 @@
   let editorCollapsed = false;
   let replayMode = false;
   let inputMode = false;
+  let selectedInning = null;
   let pollTimer = 0;
   // Keep one device id for the entire page lifetime. On some iPhone/Safari
   // privacy modes storage writes can fail; generating a new id on every call
@@ -323,7 +324,7 @@
     return state.current.tieBreaks.reduce((sum, item) => sum + (Number(item[side]) || 0), regulation);
   }
 
-  function scoreInput(side, index, value, label, tieBreak = false, halfLabel = '') {
+  function scoreInput(side, index, value, label, tieBreak = false) {
     const input = document.createElement('input');
     input.type = 'number';
     input.min = '0';
@@ -332,19 +333,19 @@
     input.className = 'live-score-number';
     input.value = value;
     input.setAttribute('aria-label', label);
-    if (!tieBreak && halfLabel) {
-      input.dataset.inning = String(index + 1);
-      input.dataset.half = halfLabel;
-      input.title = `${index + 1}回${halfLabel}`;
-      const selectCurrent = () => {
-        root.querySelectorAll('.live-score-number.is-current-inning').forEach(cell => {
-          cell.classList.remove('is-current-inning');
-        });
-        input.classList.add('is-current-inning');
-      };
-      input.addEventListener('focus', selectCurrent);
-      input.addEventListener('pointerdown', selectCurrent);
+
+    if (!tieBreak) {
+      input.dataset.side = side;
+      input.dataset.inning = String(index);
+      const isTopHalf = side === 'ours'
+        ? state.current.battingOrder === 'first'
+        : state.current.battingOrder === 'second';
+      input.dataset.half = isTopHalf ? '表' : '裏';
+      input.addEventListener('focus', () => selectInningCell(input));
+      input.addEventListener('click', () => selectInningCell(input));
+      input.addEventListener('touchstart', () => selectInningCell(input), { passive: true });
     }
+
     input.addEventListener('input', () => {
       if (!inputMode || replayMode) return;
       const next = score(input.value);
@@ -356,6 +357,30 @@
       scheduleAutoSave();
     });
     return input;
+  }
+
+  function selectInningCell(input) {
+    if (!input || input.dataset.inning === undefined || !state.current) return;
+    selectedInning = {
+      side: input.dataset.side,
+      index: Number(input.dataset.inning),
+      half: input.dataset.half || '',
+    };
+    elements.rows?.querySelectorAll('.live-score-number.is-selected-inning').forEach(cell => {
+      cell.classList.remove('is-selected-inning');
+    });
+    input.classList.add('is-selected-inning');
+    input.setAttribute('aria-current', `${Number(input.dataset.inning) + 1}回${input.dataset.half || ''}`);
+  }
+
+  function restoreSelectedInningCell() {
+    if (!selectedInning || !elements.rows) return;
+    const selector = `.live-score-number[data-side="${selectedInning.side}"][data-inning="${selectedInning.index}"]`;
+    const input = elements.rows.querySelector(selector);
+    if (input) {
+      input.classList.add('is-selected-inning');
+      input.setAttribute('aria-current', `${selectedInning.index + 1}回${selectedInning.half || input.dataset.half || ''}`);
+    }
   }
 
   function teamOrder() {
@@ -395,10 +420,8 @@
       name.className = 'live-score-team';
       name.textContent = team.name;
       row.appendChild(name);
-      const teamIndex = teamOrder().findIndex(item => item.key === team.key);
-      const halfLabel = teamIndex === 0 ? '表' : '裏';
       state.current.innings[team.key].forEach((value, index) => {
-        row.appendChild(scoreInput(team.key, index, value, `${team.name} ${index + 1}回${halfLabel}`, false, halfLabel));
+        row.appendChild(scoreInput(team.key, index, value, `${team.name} ${index + 1}回`));
       });
       const tieBreakTotal = document.createElement('strong');
       tieBreakTotal.className = 'live-score-tb-total';
@@ -411,6 +434,7 @@
       elements.rows.appendChild(row);
       fitLiveScoreTeamName(name);
     });
+    restoreSelectedInningCell();
   }
 
   function updateDisplayedTotals() {
