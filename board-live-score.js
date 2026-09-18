@@ -1,6 +1,7 @@
 (() => {
   const API = '/.netlify/functions/site-data?section=live-score';
   const LAST_GAME_KEY = 'yachiyoLiveScoreLastGame';
+  const DRAFT_KEY = 'yachiyoLiveScoreDraft';
   const $ = selector => document.querySelector(selector);
   const root = $('#liveScoreCard');
   if (!root) return;
@@ -109,6 +110,51 @@
     } catch (_) {}
   }
 
+  // Keep a device-local draft so SBO / bases survive page refreshes even if
+  // the server response is briefly stale or does not echo the new fields.
+  function draftIdentity(game) {
+    if (!game) return '';
+    return [game.tournament, game.startTime, game.ground, game.grade, game.opponent].join('|');
+  }
+
+  function rememberDraft(game) {
+    if (!game) return;
+    try {
+      localStorage.setItem(DRAFT_KEY, JSON.stringify({
+        identity: draftIdentity(game),
+        savedAt: Date.now(),
+        sbo: { ...game.sbo },
+        bases: { ...game.bases },
+      }));
+    } catch (_) {}
+  }
+
+  function rememberedDraft() {
+    try {
+      const draft = JSON.parse(localStorage.getItem(DRAFT_KEY) || 'null');
+      if (!draft || !draft.identity) return null;
+      return draft;
+    } catch (_) {
+      return null;
+    }
+  }
+
+  function applyRememberedDraft(game) {
+    const draft = rememberedDraft();
+    if (!draft || !game || draft.identity !== draftIdentity(game)) return game;
+    if (draft.sbo) game.sbo = {
+      strikes: Math.max(0, Math.min(2, Number(draft.sbo.strikes) || 0)),
+      balls: Math.max(0, Math.min(3, Number(draft.sbo.balls) || 0)),
+      outs: Math.max(0, Math.min(2, Number(draft.sbo.outs) || 0)),
+    };
+    if (draft.bases) game.bases = {
+      first: Boolean(draft.bases.first),
+      second: Boolean(draft.bases.second),
+      third: Boolean(draft.bases.third),
+    };
+    return game;
+  }
+
   function normalize(value) {
     const data = value && typeof value === 'object' && !Array.isArray(value) ? value : {};
     const current = normalizeGame(data.current);
@@ -161,6 +207,8 @@
       const group = document.createElement('button');
       group.type = 'button';
       group.className = 'live-score-count';
+      group.style.touchAction = 'manipulation';
+      group.style.webkitUserSelect = 'none';
       group.setAttribute('aria-label', `${label}カウント ${state.current.sbo[key]} / ${max}`);
       group.disabled = replayMode;
 
@@ -200,6 +248,8 @@
       const base = button.dataset.base;
       const active = base !== 'home' && Boolean(state.current.bases[base]);
       button.classList.toggle('on', active);
+      button.style.touchAction = 'manipulation';
+      button.style.webkitUserSelect = 'none';
       button.setAttribute('aria-pressed', String(active));
       button.disabled = replayMode;
     });
@@ -365,6 +415,7 @@
   }
 
   function scheduleAutoSave() {
+    if (state.current) rememberDraft(state.current);
     clearTimeout(autoSaveTimer);
     updateStatus('自動保存中…');
     autoSaveTimer = setTimeout(() => save('', { quiet: true, renderAfter: false }), 900);
@@ -372,6 +423,7 @@
 
   async function save(message, { quiet = false, renderAfter = true } = {}) {
     if (saving) return false;
+    if (state.current) rememberDraft(state.current);
     clearTimeout(autoSaveTimer);
     const savingVersion = changeVersion;
     saving = true;
@@ -380,6 +432,7 @@
       state.updatedAt = new Date().toISOString();
       const result = await request('POST', state);
       const saved = normalize(result.data || state);
+      if (saved.current) saved.current = applyRememberedDraft(saved.current);
       if (renderAfter) state = saved;
       else state.updatedAt = saved.updatedAt;
       if (changeVersion === savingVersion) dirty = false;
@@ -403,6 +456,11 @@
     state.active = true;
     state.visible = visible;
     state.current = normalizeGame(game) || blankGame();
+    try {
+      const draft = rememberedDraft();
+      if (draft && draft.identity !== draftIdentity(state.current)) localStorage.removeItem(DRAFT_KEY);
+    } catch (_) {}
+    rememberDraft(state.current);
     dirty = true;
     changeVersion += 1;
     render();
@@ -514,6 +572,10 @@
     try {
       const result = await request();
       state = normalize(result.data);
+      if (state.current) {
+        state.current = applyRememberedDraft(state.current);
+        rememberDraft(state.current);
+      }
       render();
     } catch (error) {
       if (!silent) {
