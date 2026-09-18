@@ -350,7 +350,7 @@
     editorCollapsed = false;
     state.current = null;
     render();
-    root.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    window.scrollTo({ top: 0, behavior: 'smooth' });
   });
 
   [elements.tournament, elements.startTime, elements.ground, elements.ourName, elements.opponent]
