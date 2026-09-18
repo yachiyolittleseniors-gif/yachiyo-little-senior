@@ -77,7 +77,7 @@
       innings: { ours: seven(innings.ours), opponent: seven(innings.opponent) },
       sbo: {
         strikes: Math.max(0, Math.min(2, Number(game.sbo?.strikes) || 0)),
-        balls: Math.max(0, Math.min(4, Number(game.sbo?.balls) || 0)),
+        balls: Math.max(0, Math.min(3, Number(game.sbo?.balls) || 0)),
         outs: Math.max(0, Math.min(2, Number(game.sbo?.outs) || 0)),
       },
       bases: {
@@ -154,7 +154,7 @@
     elements.sbo.innerHTML = '';
     const groups = [
       ['S', 'strikes', 2, 'on-s'],
-      ['B', 'balls', 4, 'on-b'],
+      ['B', 'balls', 3, 'on-b'],
       ['O', 'outs', 2, 'on-o'],
     ];
     groups.forEach(([label, key, max, activeClass]) => {
