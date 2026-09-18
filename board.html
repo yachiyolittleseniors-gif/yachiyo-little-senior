@@ -30,7 +30,7 @@
 <meta name="theme-color" content="#071426">
 <title>チーム専用ページ｜八千代リトルシニア</title>
 <link rel="stylesheet" href="./board-base.css?v=20260918-1">
-<link rel="stylesheet" href="./board-live-score.css?v=20260918-16">
+<link rel="stylesheet" href="./board-live-score.css?v=20260918-21">
 <script src="./board-passkey.js?v=20260918-1"></script>
 <script src="./coach-passkey.js?v=20260918-2"></script>
 <script>
@@ -1028,6 +1028,62 @@ body.live-score-replay-only #liveScoreCard{
   font-weight:900!important;
 }
 </style>
+
+<style id="live-score-final-mode-and-team-fix">
+/* 最終調整：チーム名は両チーム同じ大きさ。閲覧モードでは入力系を操作不可。 */
+.live-score-row .live-score-team{
+  font-size:18px!important;
+  font-weight:900!important;
+  line-height:1!important;
+  white-space:nowrap!important;
+  overflow:hidden!important;
+  text-overflow:clip!important;
+  min-width:0!important;
+  width:100%!important;
+  padding:0 4px!important;
+  box-sizing:border-box!important;
+  display:flex!important;
+  align-items:center!important;
+}
+@media(max-width:700px){.live-score-row .live-score-team{font-size:18px!important;}}
+@media(max-width:390px){.live-score-row .live-score-team{font-size:18px!important;}}
+
+/* 閲覧モードの入力欄は明確にグレーアウト。操作はJSでもdisabled固定。 */
+.live-score-card.live-score-view-mode .live-score-field input:disabled,
+.live-score-card.live-score-view-mode .live-score-field select:disabled{
+  background:#6f7885!important;
+  color:#142033!important;
+  border-color:#566476!important;
+  opacity:1!important;
+  cursor:default!important;
+  -webkit-text-fill-color:#142033!important;
+}
+.live-score-card.live-score-view-mode .live-score-number:disabled{
+  cursor:default!important;
+  opacity:1!important;
+  pointer-events:none!important;
+}
+.live-score-card.live-score-view-mode .live-score-segments button:disabled{
+  cursor:default!important;
+  pointer-events:none!important;
+  opacity:1!important;
+}
+/* BSO・ダイヤモンドは見た目を変えず、閲覧モードではタップ不可。 */
+.live-score-card.live-score-view-mode .live-score-count:disabled,
+.live-score-card.live-score-view-mode .live-score-base:disabled{
+  opacity:1!important;
+  cursor:default!important;
+  pointer-events:none!important;
+}
+.live-score-card.live-score-view-mode .live-score-tb-actions button:disabled,
+.live-score-card.live-score-view-mode .live-score-publish #liveScoreFinish:disabled{
+  opacity:.55!important;
+  cursor:default!important;
+  pointer-events:none!important;
+}
+/* 試合開始時間は左寄せ */
+#liveScoreStartTime{text-align:left!important;}
+</style>
 </head>
 <body id="page-top">
 <header class="site-header">
@@ -1450,7 +1506,7 @@ body.live-score-replay-only #liveScoreCard{
   <button id="closeDensukeAdminBtn" type="button">キャンセル</button>
 </div>
 
-<script src="./board-live-score.js?v=20260918-20"></script>
+<script src="./board-live-score.js?v=20260918-21"></script>
 <script src="./board-updates.js?v=20260918-13"></script>
 <script src="./board-referee-documents.js?v=20260918-7"></script>
 <script src="./board-tournaments.js?v=20260914-1"></script>

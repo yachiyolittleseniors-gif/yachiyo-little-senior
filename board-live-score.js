@@ -22,6 +22,7 @@
     tieBreaks: [],
     sbo: { strikes: 0, balls: 0, outs: 0 },
     bases: { first: false, second: false, third: false },
+    currentAtBat: { inning: 0, side: 'opponent' },
   });
 
   let state = { active: false, visible: false, current: null, lastGame: null, updatedAt: '' };
@@ -122,6 +123,10 @@
         first: Boolean(game.bases?.first),
         second: Boolean(game.bases?.second),
         third: Boolean(game.bases?.third),
+      },
+      currentAtBat: {
+        inning: Number.isInteger(Number(game.currentAtBat?.inning)) ? Math.max(0, Math.min(6, Number(game.currentAtBat.inning))) : 0,
+        side: game.currentAtBat?.side === 'ours' ? 'ours' : 'opponent',
       },
       tieBreaks: Array.isArray(game.tieBreaks) ? game.tieBreaks.slice(0, 8).map((item, index) => ({
         inning: 8 + index,
@@ -323,6 +328,36 @@
     return state.current.tieBreaks.reduce((sum, item) => sum + (Number(item[side]) || 0), regulation);
   }
 
+  function setCurrentAtBat(side, index) {
+    if (!state.current || !inputMode || replayMode || index < 0 || index > 6) return;
+    state.current.currentAtBat = { inning: index, side };
+    markCurrentAtBat();
+    dirty = true;
+    changeVersion += 1;
+    scheduleAutoSave();
+  }
+
+  function markCurrentAtBat() {
+    if (!elements.rows) return;
+    const current = state.current?.currentAtBat;
+    elements.rows.querySelectorAll('.live-score-number').forEach(input => input.classList.remove('is-current-at-bat'));
+    elements.rows.querySelectorAll('.live-score-board-current-marker').forEach(el => el.remove());
+    if (!current || current.inning < 0 || current.inning > 6) return;
+    const teams = teamOrder();
+    const rowIndex = teams.findIndex(team => team.key === current.side);
+    const row = rowIndex >= 0 ? elements.rows.children[rowIndex] : null;
+    const cell = row?.querySelectorAll('.live-score-number')[current.inning];
+    if (cell) cell.classList.add('is-current-at-bat');
+    const header = document.querySelector('.live-score-board-head');
+    const headCell = header?.children[current.inning + 1];
+    if (headCell) {
+      const marker = document.createElement('span');
+      marker.className = 'live-score-board-current-marker';
+      marker.textContent = current.side === 'ours' ? '表' : '裏';
+      headCell.appendChild(marker);
+    }
+  }
+
   function scoreInput(side, index, value, label, tieBreak = false) {
     const input = document.createElement('input');
     input.type = 'number';
@@ -332,11 +367,18 @@
     input.className = 'live-score-number';
     input.value = value;
     input.setAttribute('aria-label', label);
+    if (!tieBreak) {
+      input.addEventListener('focus', () => setCurrentAtBat(side, index));
+      input.addEventListener('click', () => setCurrentAtBat(side, index));
+    }
     input.addEventListener('input', () => {
       if (!inputMode || replayMode) return;
       const next = score(input.value);
       if (tieBreak) state.current.tieBreaks[index][side] = next;
-      else state.current.innings[side][index] = next;
+      else {
+        state.current.innings[side][index] = next;
+        setCurrentAtBat(side, index);
+      }
       dirty = true;
       changeVersion += 1;
       updateDisplayedTotals();
@@ -354,23 +396,20 @@
 
   function fitLiveScoreTeamName(name) {
     if (!name) return;
-    const text = String(name.textContent || '');
     name.classList.remove('live-score-team-long', 'live-score-team-medium');
+    name.style.setProperty('font-size', '18px', 'important');
+    name.style.setProperty('line-height', '1', 'important');
     name.style.setProperty('white-space', 'nowrap', 'important');
     name.style.setProperty('overflow', 'hidden', 'important');
     name.style.setProperty('text-overflow', 'clip', 'important');
     name.style.setProperty('min-width', '0', 'important');
     name.style.setProperty('width', '100%', 'important');
     name.style.setProperty('box-sizing', 'border-box', 'important');
-    // チーム名は大きくしすぎず、長い名前も最初から確実に1行へ。
-    // 両チームを同じ基準サイズにする。長さによる極端な大小差は付けない。
-    let size = 18;
-    name.style.setProperty('font-size', `${size}px`, 'important');
-    name.style.setProperty('line-height', '1', 'important');
+    name.style.setProperty('font-weight', '900', 'important');
     requestAnimationFrame(() => {
       if (!name.isConnected) return;
-      let current = parseFloat(getComputedStyle(name).fontSize) || size;
-      const minSize = 12;
+      let current = 18;
+      const minSize = 13;
       const available = name.clientWidth;
       if (!available) return;
       let guard = 0;
@@ -410,6 +449,7 @@
       elements.rows.appendChild(row);
       fitLiveScoreTeamName(name);
     });
+    markCurrentAtBat();
   }
 
   function updateDisplayedTotals() {
@@ -466,6 +506,7 @@
     const game = state.current;
     elements.tournament.value = game.tournament;
     elements.startTime.value = game.startTime;
+    elements.startTime.style.textAlign = 'left';
     elements.ground.value = game.ground;
     // 保存値は 1/2/3、古いデータは 1年生/2年生/3年生 の場合がある。
     // select の実値と表示文字の両方を見て確実に復元する。
@@ -497,6 +538,7 @@
     renderBases();
     renderScoreRows();
     renderTieBreaks();
+    markCurrentAtBat();
     elements.liveBadge.hidden = replayMode || !state.visible;
     elements.visibilityBadge.hidden = replayMode;
     elements.visibilityBadge.textContent = state.visible ? '公開中' : '未公開';
@@ -506,8 +548,17 @@
     if (replayMode) elements.removeTieBreak.hidden = true;
     elements.status.parentElement.hidden = replayMode;
     elements.back.hidden = !replayMode;
-    root.querySelectorAll('.live-score-editor input,.live-score-segments button,.live-score-tb-actions button,.live-score-number').forEach(control => {
-      control.disabled = replayMode || !inputMode;
+    const viewOnly = !inputMode || replayMode;
+    root.classList.toggle('live-score-view-mode', viewOnly);
+    root.querySelectorAll('.live-score-editor input,.live-score-editor select,.live-score-segments button,.live-score-tb-actions button,.live-score-number').forEach(control => {
+      control.disabled = viewOnly;
+    });
+    // BSO / ダイヤモンドも閲覧モードでは必ず操作不可。ただし見た目は変えない。
+    root.querySelectorAll('.live-score-count,.live-score-base').forEach(control => {
+      control.disabled = viewOnly;
+      control.setAttribute('aria-disabled', String(viewOnly));
+      if (viewOnly) control.tabIndex = -1;
+      else control.removeAttribute('tabindex');
     });
     renderLock();
     updateStatus(inputMode && !replayMode
