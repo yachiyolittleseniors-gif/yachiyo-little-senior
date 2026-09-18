@@ -43,6 +43,26 @@
   function cleanName(value){return String(value||'').normalize('NFKC').replace(/[\s　]+/g,'').replace(/(?:さん|様)$/,'').replace(/[。、,，]+$/,'').trim().slice(0,60)}
   function escapeHtml(value){return String(value||'').replace(/[&<>"']/g,function(char){return{'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[char]})}
 
+
+  function displayName(value,grade){
+    const name=cleanName(value);
+    const key=name.replace(/[()]/g,'');
+    const matches=new Set();
+    images.forEach(function(image){
+      const table=image.table;if(!table)return;
+      const grades=table.grades||[2,1];
+      table.rows.forEach(function(row){
+        row.slice(2,6).forEach(function(candidate,index){
+          if(String(grades[Math.floor(index/2)])!==String(grade))return;
+          const normalized=cleanName(candidate);
+          if(/\([^()]+\)/.test(normalized)&&normalized.replace(/[()]/g,'')===key)matches.add(normalized);
+        });
+      });
+    });
+    const result=matches.size===1?Array.from(matches)[0]:name;
+    return result.replace(/\(/g,'（').replace(/\)/g,'）');
+  }
+
   function normalize(raw){
     const imageList=raw&&raw.initialized===true&&Array.isArray(raw.images)?raw.images:[];
     const changeItems=raw&&raw.initialized===true&&Array.isArray(raw.changes)?raw.changes:[];
@@ -56,7 +76,7 @@
   function imageSourceKey(item){const source=imageSource(item);return String(item.id)+'-'+source.length+'-'+source.slice(-24)}
   function sortChanges(items){return items.slice().sort(function(a,b){return a.date.localeCompare(b.date)||Number(b.grade)-Number(a.grade)||a.from.localeCompare(b.from,'ja')})}
   function displayDate(value){const parts=String(value||'').split('-').map(Number);if(parts.length!==3)return value;const date=new Date(parts[0],parts[1]-1,parts[2]);return parts[1]+'/'+parts[2]+'（'+'日月火水木金土'[date.getDay()]+'）'}
-  function changeMarkup(item){return'<span class="duty-change-date">'+displayDate(item.date)+'</span><span class="duty-change-grade">'+item.grade+'年生</span><span class="duty-change-names"><span class="duty-change-before">'+escapeHtml(item.from)+'</span><b class="duty-change-arrow">→</b><span class="duty-change-after">'+escapeHtml(item.to)+'</span></span>'}
+  function changeMarkup(item){return'<span class="duty-change-date">'+displayDate(item.date)+'</span><span class="duty-change-grade">'+item.grade+'年生</span><span class="duty-change-names"><span class="duty-change-before">'+escapeHtml(displayName(item.from,item.grade))+'</span><b class="duty-change-arrow">→</b><span class="duty-change-after">'+escapeHtml(displayName(item.to,item.grade))+'</span></span>'}
 
   function tableDate(table,day){return table.year+'-'+String(table.month).padStart(2,'0')+'-'+String(day).padStart(2,'0')}
   function appliedCell(table,row,grade,column,name){
@@ -64,7 +84,7 @@
     changes.filter(function(item){return item.date===date&&item.grade===String(grade)}).forEach(function(item){
       if(cleanName(value)===cleanName(item.from)){original=original||value;value=item.to;wasChanged=true}
     });
-    return{value:value,changed:wasChanged,original:original,column:column};
+    return{value:displayName(value,grade),changed:wasChanged,original:displayName(original,grade),column:column};
   }
   function renderTables(){
     tableList.innerHTML=images.filter(function(item){return item.table}).map(function(item){const table=item.table;const grades=table.grades||[2,1];
@@ -85,7 +105,7 @@
     const ordered=sortChanges(changes);changeSection.hidden=!ordered.length;
     changeList.innerHTML=ordered.map(function(item){return'<div class="duty-change-item">'+changeMarkup(item)+'</div>'}).join('');
     const adminOrdered=ordered.slice().reverse();
-    changeAdminList.innerHTML=adminOrdered.length?adminOrdered.map(function(item){return'<div class="duty-change-admin-item"><span>'+displayDate(item.date)+'・'+item.grade+'年生　'+escapeHtml(item.from)+' → <b>'+escapeHtml(item.to)+'</b></span><button type="button" data-remove-duty-change="'+escapeHtml(item.id)+'">取消</button></div>'}).join(''):'<div class="duty-change-preview">登録済みの当番変更はありません。</div>';
+    changeAdminList.innerHTML=adminOrdered.length?adminOrdered.map(function(item){return'<div class="duty-change-admin-item"><span>'+displayDate(item.date)+'・'+item.grade+'年生　'+escapeHtml(displayName(item.from,item.grade))+' → <b>'+escapeHtml(displayName(item.to,item.grade))+'</b></span><button type="button" data-remove-duty-change="'+escapeHtml(item.id)+'">取消</button></div>'}).join(''):'<div class="duty-change-preview">登録済みの当番変更はありません。</div>';
     changeAdminList.querySelectorAll('[data-remove-duty-change]').forEach(function(button){button.addEventListener('click',function(){removeChange(button.dataset.removeDutyChange)})});
   }
 
@@ -141,7 +161,7 @@
     const parsed=parseChangeLines(),batchGrade=String(changeGrade.value||'');
     parsedChanges=parsed.results.map(function(item){return{...item,grade:forceGrade?batchGrade:(previousGrades.get(changeKey(item))||item.grade||batchGrade)}});
     changePreview.classList.toggle('has-items',parsedChanges.length>0);
-    const items=parsedChanges.map(function(item,index){return'<div class="duty-change-preview-row"><span>'+displayDate(item.date)+'　'+escapeHtml(item.from)+' → <b>'+escapeHtml(item.to)+'</b></span><select data-duty-preview-grade="'+index+'" aria-label="'+displayDate(item.date)+'の当番枠の学年">'+gradeOptions(item.grade)+'</select></div>'}).join('');
+    const items=parsedChanges.map(function(item,index){return'<div class="duty-change-preview-row"><span>'+displayDate(item.date)+'　'+escapeHtml(displayName(item.from,item.grade))+' → <b>'+escapeHtml(displayName(item.to,item.grade))+'</b></span><select data-duty-preview-grade="'+index+'" aria-label="'+displayDate(item.date)+'の当番枠の学年">'+gradeOptions(item.grade)+'</select></div>'}).join('');
     const errors=parsed.errors.map(function(error){return'<div class="duty-change-preview-error">'+escapeHtml(error)+'</div>'}).join('');
     changePreview.innerHTML=items+errors||(changeText.value.trim()?'変更内容を確認してください。':'変更内容を貼り付けると、ここに確認結果が表示されます。');
     changePreview.querySelectorAll('[data-duty-preview-grade]').forEach(function(select){select.addEventListener('change',function(){const item=parsedChanges[Number(select.dataset.dutyPreviewGrade)];if(item)item.grade=select.value})});
