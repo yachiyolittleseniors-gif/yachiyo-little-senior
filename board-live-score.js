@@ -76,7 +76,7 @@
       battingOrder: game.battingOrder === 'first' ? 'first' : 'second',
       innings: { ours: seven(innings.ours), opponent: seven(innings.opponent) },
       sbo: {
-        strikes: Math.max(0, Math.min(3, Number(game.sbo?.strikes) || 0)),
+        strikes: Math.max(0, Math.min(2, Number(game.sbo?.strikes) || 0)),
         balls: Math.max(0, Math.min(4, Number(game.sbo?.balls) || 0)),
         outs: Math.max(0, Math.min(2, Number(game.sbo?.outs) || 0)),
       },
@@ -153,7 +153,7 @@
     if (!elements.sbo || !state.current) return;
     elements.sbo.innerHTML = '';
     const groups = [
-      ['S', 'strikes', 3, 'on-s'],
+      ['S', 'strikes', 2, 'on-s'],
       ['B', 'balls', 4, 'on-b'],
       ['O', 'outs', 2, 'on-o'],
     ];
