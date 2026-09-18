@@ -21,8 +21,6 @@
 
   function recentHistory(value){
     const history=Array.isArray(value)?value:[];
-    const cutoff=new Date();
-    cutoff.setMonth(cutoff.getMonth()-1);
     return history.filter(item=>{
       const time=new Date(item&&item.updatedAt).getTime();
       return item.category!=='duty-roster'&&Number.isFinite(time)&&item.message;
