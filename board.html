@@ -370,23 +370,35 @@ html{scroll-padding-top:var(--compact-header-height)}
 </style>
 <style id="live-score-time-grade-equal-style">
 @media(max-width:700px){
-  .live-score-fields{grid-template-columns:minmax(0,1fr) minmax(0,1.75fr)!important;}
-  .live-score-team-settings{grid-template-columns:minmax(0,1fr) minmax(0,1.75fr)!important;}
+  .live-score-fields,.live-score-team-settings{grid-template-columns:minmax(0,1fr) minmax(0,1.75fr)!important;column-gap:14px!important;}
 }
-.live-score-base-controls{display:grid;grid-template-columns:minmax(0,1.35fr) minmax(150px,.65fr);gap:16px;align-items:center;margin:0 0 18px;}
-.live-score-sbo{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:14px 16px;border:2px solid rgba(199,154,59,.9);border-radius:18px;background:#071426;}
-.live-score-count{display:flex;align-items:center;gap:8px;font-weight:900;color:#fff;}
-.live-score-count b{font-size:18px;color:#fff;min-width:20px;text-align:center;}
-.live-score-dots{display:flex;gap:5px;}
-.live-score-dot{width:15px;height:15px;border-radius:50%;background:#31445a;border:0;padding:0;cursor:pointer;}
-.live-score-dot.on-s{background:#e2bd67}.live-score-dot.on-b{background:#4fc36b}.live-score-dot.on-o{background:#ef5350}
-.live-score-diamond-wrap{display:flex;align-items:center;justify-content:center;gap:10px;}
-.live-score-diamond{position:relative;width:92px;height:92px;transform:rotate(45deg);border:2px solid #91a2ba;border-radius:12px;}
-.live-score-base{position:absolute;width:20px;height:20px;background:#fff;border:2px solid #91a2ba;transform:translate(-50%,-50%);cursor:pointer;padding:0;}
-.live-score-base.first{top:0;right:0}.live-score-base.second{top:0;left:0}.live-score-base.third{bottom:0;left:0}.live-score-base.home{bottom:0;right:0}
-.live-score-base.on{background:#e2bd67;border-color:#e2bd67}
-.live-score-base-labels{display:flex;flex-direction:column;gap:4px;font-size:12px;font-weight:900;color:#fff;}
-@media(max-width:700px){.live-score-base-controls{grid-template-columns:1fr;gap:12px}.live-score-diamond-wrap{justify-content:flex-start}}
+.live-score-base-controls{display:grid!important;grid-template-columns:minmax(0,1.65fr) minmax(120px,.75fr)!important;gap:12px!important;align-items:center!important;margin:0 0 18px!important;width:100%!important;box-sizing:border-box!important;}
+.live-score-sbo{display:flex!important;align-items:center!important;justify-content:space-around!important;gap:8px!important;min-width:0!important;padding:10px 12px!important;border:2px solid rgba(199,154,59,.9)!important;border-radius:18px!important;background:#071426!important;box-sizing:border-box!important;height:76px!important;}
+.live-score-count{display:flex!important;align-items:center!important;gap:6px!important;font-weight:900!important;color:#fff!important;white-space:nowrap!important;}
+.live-score-count b{font-size:20px!important;color:#fff!important;min-width:18px!important;text-align:center!important;}
+.live-score-dots{display:flex!important;gap:5px!important;}
+.live-score-dot{width:15px!important;height:15px!important;border-radius:50%!important;background:#31445a!important;border:0!important;padding:0!important;cursor:pointer!important;}
+.live-score-dot.on-s{background:#e2bd67!important}.live-score-dot.on-b{background:#4fc36b!important}.live-score-dot.on-o{background:#ef5350!important}
+.live-score-diamond-wrap{display:flex!important;align-items:center!important;justify-content:center!important;gap:7px!important;height:76px!important;min-width:0!important;overflow:visible!important;}
+.live-score-diamond{position:relative!important;width:62px!important;height:62px!important;transform:rotate(45deg)!important;border:2px solid #91a2ba!important;border-radius:8px!important;box-sizing:border-box!important;flex:0 0 auto!important;}
+.live-score-base{position:absolute!important;width:16px!important;height:16px!important;background:#fff!important;border:2px solid #91a2ba!important;border-radius:3px!important;transform:none!important;cursor:pointer!important;padding:0!important;box-sizing:border-box!important;}
+.live-score-base.first{top:-9px!important;right:-9px!important}.live-score-base.second{top:-9px!important;left:-9px!important}.live-score-base.third{bottom:-9px!important;left:-9px!important}.live-score-base.home{bottom:-9px!important;right:-9px!important}
+.live-score-base.on{background:#e2bd67!important;border-color:#e2bd67!important}
+.live-score-base-labels{display:flex!important;flex-direction:column!important;gap:3px!important;font-size:11px!important;line-height:1.1!important;font-weight:900!important;color:#fff!important;white-space:nowrap!important;}
+@media(max-width:700px){
+ .live-score-base-controls{grid-template-columns:minmax(0,1.65fr) minmax(115px,.75fr)!important;gap:8px!important;}
+ .live-score-sbo{padding:10px 7px!important;height:70px!important;} .live-score-diamond-wrap{height:70px!important;}
+ .live-score-count{gap:4px!important}.live-score-count b{font-size:18px!important}.live-score-dot{width:14px!important;height:14px!important;}
+ .live-score-diamond{width:54px!important;height:54px!important;} .live-score-base{width:14px!important;height:14px!important;}
+ .live-score-base.first,.live-score-base.second{top:-8px!important}.live-score-base.third,.live-score-base.home{bottom:-8px!important}.live-score-base.first,.live-score-base.home{right:-8px!important}.live-score-base.second,.live-score-base.third{left:-8px!important}
+}
+@media(max-width:430px){
+ .live-score-base-controls{grid-template-columns:minmax(0,1.55fr) minmax(105px,.75fr)!important;}
+ .live-score-sbo{height:66px!important}.live-score-diamond-wrap{height:66px!important;}
+ .live-score-dot{width:12px!important;height:12px!important}.live-score-diamond{width:48px!important;height:48px!important;}
+ .live-score-base{width:12px!important;height:12px!important;}
+ .live-score-base.first,.live-score-base.second{top:-7px!important}.live-score-base.third,.live-score-base.home{bottom:-7px!important}.live-score-base.first,.live-score-base.home{right:-7px!important}.live-score-base.second,.live-score-base.third{left:-7px!important}
+}
 </style>
 </head>
 <body id="page-top">
