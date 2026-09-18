@@ -36,6 +36,10 @@
   let lockExpiresAt = 0;
   let heartbeatTimer = 0;
   let pollTimer = 0;
+  // Keep one device id for the entire page lifetime. On some iPhone/Safari
+  // privacy modes storage writes can fail; generating a new id on every call
+  // would make the server think the lock belongs to another device.
+  let clientDeviceId = '';
 
   function accessValue() {
     try {
@@ -70,16 +74,27 @@
   }
 
   function deviceId() {
+    if (clientDeviceId) return clientDeviceId;
     try {
-      let id = localStorage.getItem(DEVICE_KEY) || '';
-      if (!id) {
-        id = (crypto.randomUUID ? crypto.randomUUID() : `device-${Date.now()}-${Math.random().toString(36).slice(2)}`);
-        localStorage.setItem(DEVICE_KEY, id);
-      }
-      return id;
-    } catch (_) {
-      return `device-${Date.now()}-${Math.random().toString(36).slice(2)}`;
+      clientDeviceId = localStorage.getItem(DEVICE_KEY) || '';
+    } catch (_) {}
+    if (!clientDeviceId) {
+      try {
+        clientDeviceId = sessionStorage.getItem(DEVICE_KEY) || '';
+      } catch (_) {}
     }
+    if (!clientDeviceId) {
+      try {
+        clientDeviceId = (typeof crypto !== 'undefined' && typeof crypto.randomUUID === 'function')
+          ? crypto.randomUUID()
+          : `device-${Date.now()}-${Math.random().toString(36).slice(2)}`;
+      } catch (_) {
+        clientDeviceId = `device-${Date.now()}-${Math.random().toString(36).slice(2)}`;
+      }
+      try { localStorage.setItem(DEVICE_KEY, clientDeviceId); } catch (_) {}
+      try { sessionStorage.setItem(DEVICE_KEY, clientDeviceId); } catch (_) {}
+    }
+    return clientDeviceId;
   }
 
   async function lockAction(action) {
