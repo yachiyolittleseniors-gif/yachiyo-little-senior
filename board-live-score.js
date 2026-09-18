@@ -241,7 +241,8 @@
     elements.liveBadge.hidden = !state.visible;
     elements.visibilityBadge.textContent = state.visible ? '公開中' : '未公開';
     elements.visibilityBadge.classList.toggle('is-visible', state.visible);
-    elements.visibility.textContent = state.visible ? '試合速報を非表示' : '試合速報を表示';
+    elements.visibility.textContent = state.visible ? '得点を更新' : '試合速報を公開';
+    elements.update.textContent = state.visible ? '速報を非公開' : '下書きを保存';
     updateStatus();
   }
 
@@ -327,15 +328,26 @@
 
   elements.update.addEventListener('click', async () => {
     readFields();
-    await save('試合速報を更新しました');
+    if (state.visible) {
+      state.visible = false;
+      dirty = true;
+      await save('試合速報を非公開にしました');
+      return;
+    }
+    await save('下書きを保存しました');
   });
 
   elements.visibility.addEventListener('click', async () => {
+    if (state.visible) {
+      readFields();
+      await save('得点を更新しました');
+      return;
+    }
     const error = validateForDisplay();
-    if (error && !state.visible) { alert(error); return; }
-    state.visible = !state.visible;
+    if (error) { alert(error); return; }
+    state.visible = true;
     dirty = true;
-    await save(state.visible ? '試合速報を表示しました' : '試合速報を非表示にしました');
+    await save('試合速報を公開しました');
   });
 
   elements.finish.addEventListener('click', async () => {
