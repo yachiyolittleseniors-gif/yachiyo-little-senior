@@ -155,6 +155,15 @@ export default async request => {
       await store.setJSON(CREDENTIALS_KEY, { credentials: updated });
       return json({ ok: true });
     }
+    if (action === "delete-credential") {
+      const credentialID = String(body?.credentialID || "");
+      if (!credentialID) return json({ error: "削除する生体認証を確認できませんでした。" }, 400);
+      const credentials = await loadCredentials(store);
+      const updated = credentials.filter(item => item.id !== credentialID);
+      if (updated.length === credentials.length) return json({ error: "登録済みの生体認証が見つかりません。" }, 404);
+      await store.setJSON(CREDENTIALS_KEY, { credentials: updated });
+      return json({ ok: true });
+    }
     if (action === "authentication-options") {
       const credentials = await loadCredentials(store);
       if (!credentials.length) return json({ error: "registered passkey not found" }, 404);
