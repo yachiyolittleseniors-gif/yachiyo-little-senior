@@ -103,6 +103,7 @@
     rows: $('#liveScoreRows'),
     tieBreaks: $('#liveScoreTieBreaks'),
     addTieBreak: $('#liveScoreAddTieBreak'),
+    removeTieBreak: $('#liveScoreRemoveTieBreak'),
     visibility: $('#liveScoreVisibility'),
     finish: $('#liveScoreFinish'),
     liveBadge: $('#liveScoreLiveBadge'),
@@ -186,6 +187,7 @@
   function renderTieBreaks() {
     elements.tieBreaks.innerHTML = '';
     elements.tieBreaks.hidden = !state.current?.tieBreaks.length;
+    elements.removeTieBreak.hidden = !state.current?.tieBreaks.length;
     if (!state.current) return;
     state.current.tieBreaks.forEach((item, index) => {
       const block = document.createElement('div');
@@ -336,6 +338,18 @@
     if (!state.current || state.current.tieBreaks.length >= 8) return;
     readFields();
     state.current.tieBreaks.push({ inning: 8 + state.current.tieBreaks.length, ours: '', opponent: '' });
+    dirty = true;
+    changeVersion += 1;
+    renderScoreRows();
+    renderTieBreaks();
+    scheduleAutoSave();
+  });
+
+  elements.removeTieBreak.addEventListener('click', () => {
+    if (!state.current?.tieBreaks.length) return;
+    const last = state.current.tieBreaks[state.current.tieBreaks.length - 1];
+    if (!confirm(`${last.inning}回のタイブレークを削除しますか？`)) return;
+    state.current.tieBreaks.pop();
     dirty = true;
     changeVersion += 1;
     renderScoreRows();

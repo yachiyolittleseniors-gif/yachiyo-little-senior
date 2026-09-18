@@ -15,6 +15,7 @@
 .live-score-button{min-height:48px;padding:11px 18px;border:1px solid #c79a3b;border-radius:10px;background:transparent;color:#f2cd76;font:inherit;font-size:14px;font-weight:900;cursor:pointer}
 .live-score-button.primary{background:linear-gradient(135deg,#c6922f,#e2bd67);color:#071426}
 .live-score-button.subdued{border-color:#7f8997;background:#26384c;color:#fff}
+.live-score-button.danger{border-color:#b76464;color:#ffc4c4}
 .live-score-idle-actions .live-score-button{flex:1}
 .live-score-editor{padding:22px}
 .live-score-badges{display:flex;flex-wrap:wrap;justify-content:flex-end;gap:7px}
