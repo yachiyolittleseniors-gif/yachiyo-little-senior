@@ -371,30 +371,33 @@ html{scroll-padding-top:var(--compact-header-height)}
 <style id="live-score-time-grade-equal-style">
 /* Keep the original form layout. Only equalize the left-column field widths. */
 @media (max-width:700px){
-  /* 学年を「試合開始時間」と完全に同寸にする */
-  .live-score-fields{
-    grid-template-columns:112px minmax(0,1fr)!important;
-    column-gap:7px!important;
-  }
+  /* 学年欄は試合開始時間欄と同じ左列サイズ・高さに揃える */
+  .live-score-fields,
   .live-score-team-settings{
     grid-template-columns:112px minmax(0,1fr)!important;
     column-gap:7px!important;
   }
-  #liveScoreStartTime,
+  .live-score-fields .live-score-field:not(.wide),
+  .live-score-team-settings .live-score-field:first-child{
+    min-width:0!important;
+    width:112px!important;
+    max-width:112px!important;
+  }
+  .live-score-team-settings .live-score-field:first-child{
+    align-self:start!important;
+  }
+  .live-score-team-settings select,
   #liveScoreGrade{
     width:112px!important;
-    min-width:112px!important;
     max-width:112px!important;
     height:38px!important;
     min-height:38px!important;
-    max-height:38px!important;
     box-sizing:border-box!important;
+    align-self:start!important;
+    padding:0 34px 0 11px!important;
+    line-height:normal!important;
     border-radius:8px!important;
-  }
-  .live-score-team-settings .live-score-field:first-child{
-    width:112px!important;
-    min-width:112px!important;
-    max-width:112px!important;
+    font-size:13px!important;
   }
 }
 
@@ -732,6 +735,40 @@ html{scroll-padding-top:var(--compact-header-height)}
   }
 }
 </style>
+<style id="live-score-replay-only-style">
+/* 「直前の試合を再表示」中は試合速報だけを表示 */
+body.live-score-replay-only{
+  overflow-x:hidden!important;
+}
+body.live-score-replay-only .site-header,
+body.live-score-replay-only .hero,
+body.live-score-replay-only .passkey-setup,
+body.live-score-replay-only footer{
+  display:none!important;
+}
+body.live-score-replay-only .wrap{
+  width:100%!important;
+  max-width:none!important;
+  margin:0!important;
+  padding:0!important;
+}
+body.live-score-replay-only .wrap > .grid{
+  display:block!important;
+  width:100%!important;
+  margin:0!important;
+}
+body.live-score-replay-only .wrap > .grid > :not(#liveScoreCard){
+  display:none!important;
+}
+body.live-score-replay-only #liveScoreCard{
+  display:block!important;
+  width:100%!important;
+  max-width:none!important;
+  min-height:100vh!important;
+  margin:0!important;
+  border-radius:0!important;
+}
+</style>
 </head>
 <body id="page-top">
 <header class="site-header">
@@ -787,6 +824,20 @@ html{scroll-padding-top:var(--compact-header-height)}
           <div class="live-score-restore-wrap" id="liveScoreRestoreWrap" hidden>
             <button class="live-score-button" id="liveScoreRestore" type="button">直前の試合を再表示</button>
           </div>
+          <script>
+          (function(){
+            try{
+              const saved=localStorage.getItem('yachiyoLiveScoreLastGame');
+              if(saved){
+                const game=JSON.parse(saved);
+                if(game&&typeof game==='object'){
+                  const wrap=document.getElementById('liveScoreRestoreWrap');
+                  if(wrap)wrap.hidden=false;
+                }
+              }
+            }catch(e){}
+          })();
+          </script>
         </div>
         <p>試合開始後、得点を入力してチーム内へ速報を共有できます。</p>
         <div class="live-score-idle-actions">
@@ -1135,7 +1186,7 @@ html{scroll-padding-top:var(--compact-header-height)}
   <button id="closeDensukeAdminBtn" type="button">キャンセル</button>
 </div>
 
-<script src="./board-live-score.js?v=20260918-13"></script>
+<script src="./board-live-score.js?v=20260918-17"></script>
 <script src="./board-updates.js?v=20260918-13"></script>
 <script src="./board-referee-documents.js?v=20260918-7"></script>
 <script src="./board-tournaments.js?v=20260914-1"></script>
