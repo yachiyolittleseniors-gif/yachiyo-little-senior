@@ -18,6 +18,8 @@
       opponent: ['', '', '', '', '', '', ''],
     },
     tieBreaks: [],
+    sbo: { strikes: 0, balls: 0, outs: 0 },
+    bases: { first: false, second: false, third: false },
   });
 
   let state = { active: false, visible: false, current: null, lastGame: null, updatedAt: '' };
@@ -73,6 +75,16 @@
       opponent: String(game.opponent || '').slice(0, 40),
       battingOrder: game.battingOrder === 'first' ? 'first' : 'second',
       innings: { ours: seven(innings.ours), opponent: seven(innings.opponent) },
+      sbo: {
+        strikes: Math.max(0, Math.min(3, Number(game.sbo?.strikes) || 0)),
+        balls: Math.max(0, Math.min(4, Number(game.sbo?.balls) || 0)),
+        outs: Math.max(0, Math.min(2, Number(game.sbo?.outs) || 0)),
+      },
+      bases: {
+        first: Boolean(game.bases?.first),
+        second: Boolean(game.bases?.second),
+        third: Boolean(game.bases?.third),
+      },
       tieBreaks: Array.isArray(game.tieBreaks) ? game.tieBreaks.slice(0, 8).map((item, index) => ({
         inning: 8 + index,
         ours: score(item?.ours),
@@ -133,7 +145,57 @@
     visibilityBadge: $('#liveScoreVisibilityBadge'),
     status: $('#liveScoreStatus'),
     updated: $('#liveScoreUpdated'),
+    sbo: $('#liveScoreSbo'),
+    bases: $('#liveScoreDiamond'),
   };
+
+  function renderSbo() {
+    if (!elements.sbo || !state.current) return;
+    elements.sbo.innerHTML = '';
+    const groups = [
+      ['S', 'strikes', 3, 'on-s'],
+      ['B', 'balls', 4, 'on-b'],
+      ['O', 'outs', 2, 'on-o'],
+    ];
+    groups.forEach(([label, key, max, activeClass]) => {
+      const group = document.createElement('div');
+      group.className = 'live-score-count';
+      const title = document.createElement('b');
+      title.textContent = label;
+      const dots = document.createElement('div');
+      dots.className = 'live-score-dots';
+      for (let i = 0; i < max; i += 1) {
+        const dot = document.createElement('button');
+        dot.type = 'button';
+        dot.className = 'live-score-dot' + (i < state.current.sbo[key] ? ` ${activeClass}` : '');
+        dot.setAttribute('aria-label', `${label}${i + 1}`);
+        dot.setAttribute('aria-pressed', String(i < state.current.sbo[key]));
+        dot.disabled = replayMode;
+        dot.addEventListener('click', () => {
+          if (replayMode) return;
+          state.current.sbo[key] = i < state.current.sbo[key] ? i : i + 1;
+          dirty = true;
+          changeVersion += 1;
+          renderSbo();
+          scheduleAutoSave();
+        });
+        dots.appendChild(dot);
+      }
+      group.append(title, dots);
+      elements.sbo.appendChild(group);
+    });
+  }
+
+  function renderBases() {
+    if (!elements.bases || !state.current) return;
+    elements.bases.querySelectorAll('.live-score-base').forEach(button => {
+      const base = button.dataset.base;
+      const active = base !== 'home' && Boolean(state.current.bases[base]);
+      button.classList.toggle('on', active);
+      button.setAttribute('aria-pressed', String(active));
+      button.disabled = replayMode;
+    });
+  }
 
   function total(side) {
     if (!state.current) return 0;
@@ -266,6 +328,8 @@
     root.classList.toggle('is-replay', replayMode);
     if (!showingEditor || !state.current) return;
     syncFields();
+    renderSbo();
+    renderBases();
     renderScoreRows();
     renderTieBreaks();
     elements.liveBadge.hidden = replayMode || !state.visible;
@@ -369,6 +433,18 @@
       renderTieBreaks();
       scheduleAutoSave();
     }));
+
+  elements.bases.addEventListener('click', event => {
+    const button = event.target.closest('[data-base]');
+    if (!button || !state.current || replayMode) return;
+    const base = button.dataset.base;
+    if (base === 'home') return;
+    state.current.bases[base] = !state.current.bases[base];
+    dirty = true;
+    changeVersion += 1;
+    renderBases();
+    scheduleAutoSave();
+  });
 
   elements.order.addEventListener('click', event => {
     const button = event.target.closest('[data-order]');

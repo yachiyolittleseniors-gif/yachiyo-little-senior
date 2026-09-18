@@ -491,6 +491,152 @@ html{scroll-padding-top:var(--compact-header-height)}
   .live-score-base-labels{font-size:11px!important;gap:4px!important}
 }
 </style>
+
+<style id="live-score-sbo-diamond-final-style">
+/* Final SBO / diamond layout: preserve the original form layout and keep all controls inside the card. */
+.live-score-base-controls{
+  display:grid!important;
+  grid-template-columns:minmax(0,1fr) 170px!important;
+  gap:12px!important;
+  align-items:center!important;
+  margin:8px 0 22px!important;
+  width:100%!important;
+  min-width:0!important;
+  box-sizing:border-box!important;
+}
+.live-score-sbo{
+  display:grid!important;
+  grid-template-columns:repeat(3,minmax(0,1fr))!important;
+  align-items:center!important;
+  gap:8px!important;
+  height:72px!important;
+  min-width:0!important;
+  padding:10px 12px!important;
+  border:2px solid #c79a3b!important;
+  border-radius:24px!important;
+  background:#071426!important;
+  box-sizing:border-box!important;
+  overflow:hidden!important;
+}
+.live-score-count{
+  display:flex!important;
+  align-items:center!important;
+  justify-content:center!important;
+  gap:7px!important;
+  min-width:0!important;
+  color:#fff!important;
+  font-weight:900!important;
+  white-space:nowrap!important;
+}
+.live-score-count b{font-size:21px!important;line-height:1!important;min-width:16px!important;color:#fff!important;text-align:center!important}
+.live-score-dots{display:flex!important;gap:5px!important;align-items:center!important}
+.live-score-dot{
+  appearance:none!important;
+  width:14px!important;height:14px!important;min-width:14px!important;
+  padding:0!important;margin:0!important;border:0!important;border-radius:50%!important;
+  background:#30435a!important;box-shadow:none!important;cursor:pointer!important;
+}
+.live-score-dot.on-s{background:#e2bd67!important}
+.live-score-dot.on-b{background:#43bd68!important}
+.live-score-dot.on-o{background:#ef5350!important}
+.live-score-dot:disabled{cursor:default!important}
+
+.live-score-diamond-wrap{
+  display:flex!important;
+  align-items:center!important;
+  justify-content:flex-start!important;
+  gap:12px!important;
+  width:170px!important;
+  height:84px!important;
+  min-width:0!important;
+  overflow:visible!important;
+  box-sizing:border-box!important;
+}
+.live-score-diamond{
+  position:relative!important;
+  width:70px!important;height:70px!important;
+  flex:0 0 70px!important;
+  margin:0!important;
+  transform:none!important;
+  border:0!important;
+  box-sizing:border-box!important;
+}
+.live-score-diamond::before{
+  content:""!important;
+  position:absolute!important;
+  inset:9px!important;
+  transform:rotate(45deg)!important;
+  border:3px solid #91a2ba!important;
+  border-radius:4px!important;
+  box-sizing:border-box!important;
+}
+.live-score-base{
+  position:absolute!important;
+  width:16px!important;height:16px!important;
+  min-width:16px!important;
+  padding:0!important;margin:0!important;
+  background:#fff!important;
+  border:2px solid #91a2ba!important;
+  border-radius:4px!important;
+  transform:none!important;
+  z-index:2!important;
+  box-sizing:border-box!important;
+  cursor:pointer!important;
+}
+.live-score-base.second{top:0!important;left:27px!important}
+.live-score-base.first{top:27px!important;right:0!important}
+.live-score-base.home{bottom:0!important;left:27px!important}
+.live-score-base.third{top:27px!important;left:0!important}
+.live-score-base.on{background:#e2bd67!important;border-color:#e2bd67!important}
+.live-score-base-labels{
+  display:flex!important;
+  flex-direction:column!important;
+  justify-content:center!important;
+  gap:6px!important;
+  min-width:45px!important;
+  color:#fff!important;
+  font-size:13px!important;
+  line-height:1!important;
+  font-weight:900!important;
+  white-space:nowrap!important;
+}
+
+@media(max-width:600px){
+  .live-score-base-controls{
+    grid-template-columns:minmax(0,1fr) 150px!important;
+    gap:8px!important;
+    margin:8px 0 20px!important;
+  }
+  .live-score-sbo{height:68px!important;padding:8px 8px!important;gap:3px!important;border-radius:22px!important}
+  .live-score-count{gap:4px!important}
+  .live-score-count b{font-size:18px!important;min-width:14px!important}
+  .live-score-dots{gap:4px!important}
+  .live-score-dot{width:12px!important;height:12px!important;min-width:12px!important}
+  .live-score-diamond-wrap{width:150px!important;height:78px!important;gap:8px!important}
+  .live-score-diamond{width:62px!important;height:62px!important;flex-basis:62px!important}
+  .live-score-diamond::before{inset:8px!important;border-width:3px!important}
+  .live-score-base{width:14px!important;height:14px!important;min-width:14px!important}
+  .live-score-base.second{top:0!important;left:24px!important}
+  .live-score-base.first{top:24px!important;right:0!important}
+  .live-score-base.home{bottom:0!important;left:24px!important}
+  .live-score-base.third{top:24px!important;left:0!important}
+  .live-score-base-labels{font-size:12px!important;gap:5px!important}
+}
+
+@media(max-width:390px){
+  .live-score-base-controls{grid-template-columns:minmax(0,1fr) 136px!important;gap:6px!important}
+  .live-score-diamond-wrap{width:136px!important}
+  .live-score-diamond{width:56px!important;height:56px!important;flex-basis:56px!important}
+  .live-score-base.second{left:21px!important}
+  .live-score-base.first{top:21px!important}
+  .live-score-base.home{left:21px!important}
+  .live-score-base.third{top:21px!important}
+  .live-score-base-labels{font-size:11px!important;min-width:40px!important}
+  .live-score-count b{font-size:17px!important}
+  .live-score-dot{width:11px!important;height:11px!important;min-width:11px!important}
+}
+</style>
+
 </head>
 <body id="page-top">
 <header class="site-header">
