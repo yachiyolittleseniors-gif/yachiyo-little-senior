@@ -942,6 +942,15 @@ body.live-score-replay-only #liveScoreCard{
   .live-score-board-head,.live-score-row{min-height:42px!important;}
   .live-score-number{min-height:36px!important;height:36px!important;font-size:16px!important;}
 }
+<style id="live-score-team-name-single-line-final">
+/* チーム名は省略記号ではなく、1行のまま枠内に収める（長い名前はJS側で自動縮小）。 */
+.live-score-team{
+  white-space:nowrap!important;
+  overflow:hidden!important;
+  text-overflow:clip!important;
+  min-width:0!important;
+}
+</style>
 </style>
 </head>
 <body id="page-top">

@@ -352,6 +352,27 @@
     return state.current.battingOrder === 'first' ? [ours, opponent] : [opponent, ours];
   }
 
+  function fitLiveScoreTeamName(name) {
+    if (!name) return;
+    // チーム名は必ず1行で表示し、長い名前だけ文字を少しずつ縮めて枠内に収める。
+    name.style.whiteSpace = 'nowrap';
+    name.style.overflow = 'hidden';
+    name.style.textOverflow = 'clip';
+    const isMobile = window.matchMedia && window.matchMedia('(max-width: 700px)').matches;
+    let size = isMobile ? 13 : 14;
+    const minSize = 9;
+    name.style.fontSize = `${size}px`;
+    while (size > minSize && name.scrollWidth > name.clientWidth) {
+      size -= 0.5;
+      name.style.fontSize = `${size}px`;
+    }
+  }
+
+  function fitAllLiveScoreTeamNames() {
+    if (!elements.rows) return;
+    elements.rows.querySelectorAll('.live-score-team').forEach(fitLiveScoreTeamName);
+  }
+
   function renderScoreRows() {
     elements.rows.innerHTML = '';
     teamOrder().forEach(team => {
@@ -373,6 +394,7 @@
       totalCell.textContent = String(total(team.key));
       row.appendChild(totalCell);
       elements.rows.appendChild(row);
+      fitLiveScoreTeamName(name);
     });
   }
 
@@ -696,4 +718,6 @@
     render();
     pollTimer = setInterval(() => load({ silent: true }), 5000);
   })();
+  window.addEventListener('resize', () => { window.requestAnimationFrame(fitAllLiveScoreTeamNames); });
+
 })();
