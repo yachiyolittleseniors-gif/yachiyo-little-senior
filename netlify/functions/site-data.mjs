@@ -1469,6 +1469,13 @@ export default async (request, context) => {
       if (!normalized) {
         return json({ error: "試合速報の内容を確認してください。" }, 400);
       }
+      if (!normalized.lastGame) {
+        const existing = await store.get(key, {
+          type: "json",
+          consistency: "strong"
+        });
+        normalized.lastGame = normalizeLiveScoreGame(existing?.lastGame);
+      }
       await store.setJSON(key, normalized);
       return json({ ok: true, data: normalized });
     }
