@@ -20,7 +20,7 @@
 <meta name="robots" content="noindex,nofollow">
 <meta name="theme-color" content="#071426">
 <title>チーム専用ページ｜八千代リトルシニア</title>
-<link rel="stylesheet" href="./board-base.css?v=20260917-7">
+<link rel="stylesheet" href="./board-base.css?v=20260918-1">
 <script>
 document.documentElement.style.visibility='hidden';
 window.boardAccessReady=(async function requireBoardPassword(){
@@ -409,7 +409,11 @@ html{scroll-padding-top:var(--compact-header-height)}
       <div id="dutyRosterList" class="duty-roster-list">
         <div class="duty-roster-loading">当番表を読み込んでいます。</div>
       </div>
-      <p class="duty-roster-note">※個別にお当番日を変更した場合は反映されません。</p>
+      <section id="dutyChangeSection" class="duty-change-section" hidden>
+        <div class="duty-change-heading"><strong>反映済みの当番変更</strong><span>LINE連絡の変更内容</span></div>
+        <div id="dutyChangeList" class="duty-change-list"></div>
+      </section>
+      <p class="duty-roster-note">※当番変更は、管理画面で登録した内容が反映されます。</p>
     </section>
 
     <section class="card board-meeting-card" id="refereeCard">
@@ -520,7 +524,7 @@ html{scroll-padding-top:var(--compact-header-height)}
 
 <footer class="footer">© YACHIYO LITTLE SENIOR. All Rights Reserved.</footer>
 
-<link rel="stylesheet" href="./board-content.css?v=20260917-2">
+<link rel="stylesheet" href="./board-content.css?v=20260918-1">
 
 <button id="densukeToggleBtn" type="button">管理</button>
 <div id="densukeAdminPanel">
@@ -559,11 +563,27 @@ html{scroll-padding-top:var(--compact-header-height)}
   </div>
   <div id="dutyRosterAdminFields">
     <strong>当番表</strong>
+    <div class="duty-change-admin">
+      <b>LINEの文章から当番変更を登録</b>
+      <p>変更連絡をコピーして貼り付け、対象学年と年を選んでください。</p>
+      <div class="duty-change-admin-meta">
+        <label for="dutyChangeYear">年<input id="dutyChangeYear" type="number" min="2020" max="2100" inputmode="numeric"></label>
+        <label for="dutyChangeGrade">対象学年<select id="dutyChangeGrade"><option value="">選択</option><option value="3">3年生</option><option value="2">2年生</option><option value="1">1年生</option></select></label>
+      </div>
+      <label for="dutyChangeText">LINEの変更連絡</label>
+      <textarea id="dutyChangeText" rows="6" placeholder="例：&#10;お疲れ様です。&#10;10/3(土) 竹内→矢羽田さん&#10;10/11(日) 矢羽田さん→竹内"></textarea>
+      <div id="dutyChangePreview" class="duty-change-preview">変更内容を貼り付けると、ここに確認結果が表示されます。</div>
+      <button id="saveDutyChangesBtn" type="button">確認した変更を保存</button>
+      <div id="dutyChangeAdminList" class="duty-change-admin-list"></div>
+    </div>
+    <div class="duty-image-admin">
+      <b>当番表画像</b>
     <label for="dutyRosterImageInput">画像ファイル（複数選択可）</label>
     <input id="dutyRosterImageInput" type="file" accept="image/jpeg,image/png,image/webp,.jpg,.jpeg,.png,.webp" multiple>
     <p id="dutyRosterAdminHelp">画像を選択後、下のボタンを押すと保存されます。</p>
     <button id="saveDutyRosterBtn" type="button">画像を保存</button>
     <div id="dutyRosterAdminList"></div>
+    </div>
   </div>
   <div id="rulesAdminFields">
     <strong>チーム規約</strong>
@@ -587,7 +607,7 @@ html{scroll-padding-top:var(--compact-header-height)}
 <script src="./board-referee-documents.js?v=20260917-6"></script>
 <script src="./board-tournaments.js?v=20260914-1"></script>
 <script src="./board-meetings.js?v=20260917-7"></script>
-<script src="./board-duty-roster.js?v=20260914-1"></script>
+<script src="./board-duty-roster.js?v=20260918-1"></script>
 <script src="./board-rules.js?v=20260914-4"></script>
 <script src="./board-archive.js?v=20260914-3"></script>
 <style id="nonblocking-save-notice-style">

@@ -1947,13 +1947,15 @@ export default async (request, context) => {
     if (section === "duty-roster") {
       const roster = body?.data;
       const images = roster?.images;
+      const changes = Array.isArray(roster?.changes) ? roster.changes : [];
 
       if (
         roster?.initialized !== true ||
         !Array.isArray(images) ||
-        images.length > 8
+        images.length > 8 ||
+        changes.length > 300
       ) {
-        return json({ error: "画像データを確認してください。" }, 400);
+        return json({ error: "当番表データを確認してください。" }, 400);
       }
 
       const valid = images.every(item => {
@@ -1970,6 +1972,32 @@ export default async (request, context) => {
       if (!valid) {
         return json({ error: "保存できない画像形式が含まれています。" }, 400);
       }
+
+      const validChanges = changes.every(item => {
+        const date = String(item?.date || "");
+        const grade = String(item?.grade || "");
+        const from = String(item?.from || "").trim();
+        const to = String(item?.to || "").trim();
+        const createdAt = String(item?.createdAt || "");
+        return /^\d{4}-\d{2}-\d{2}$/.test(date) &&
+          ["1", "2", "3"].includes(grade) &&
+          from.length > 0 && from.length <= 60 &&
+          to.length > 0 && to.length <= 60 &&
+          createdAt.length <= 60;
+      });
+
+      if (!validChanges) {
+        return json({ error: "当番変更データを確認してください。" }, 400);
+      }
+
+      body.data.changes = changes.map((item, index) => ({
+        id: String(item?.id || `change-${index}`).slice(0, 100),
+        date: String(item.date),
+        grade: String(item.grade),
+        from: String(item.from).trim(),
+        to: String(item.to).trim(),
+        createdAt: String(item?.createdAt || "").slice(0, 60),
+      }));
 
       if (body?.announceLatest === true) {
         body.data.updatedAt = new Date().toISOString();

@@ -154,6 +154,7 @@ function normalizeCar(car = {}, index = 0) {
     parents: Array.isArray(car.parents) ? car.parents.map(item => cleanText(item, 60)).filter(Boolean).slice(0, 30) : [],
     coaches: Array.isArray(car.coaches) ? car.coaches.map(item => cleanText(item, 60)).filter(Boolean).slice(0, 20) : [],
     dutyMembers: Array.isArray(car.dutyMembers) ? [...new Set(car.dutyMembers.map(item => cleanText(item, 60)).filter(Boolean))].slice(0, 30) : [],
+    dutyAutoMembers: Array.isArray(car.dutyAutoMembers) ? [...new Set(car.dutyAutoMembers.map(item => cleanText(item, 60)).filter(Boolean))].slice(0, 10) : [],
     manual: car.manual === true,
   };
 }
