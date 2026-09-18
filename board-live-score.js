@@ -2,6 +2,7 @@
   const API = '/.netlify/functions/site-data?section=live-score';
   const LAST_GAME_KEY = 'yachiyoLiveScoreLastGame';
   const DRAFT_KEY = 'yachiyoLiveScoreDraft';
+  const DEVICE_KEY = 'yachiyoLiveScoreEditorDeviceId';
   const $ = selector => document.querySelector(selector);
   const root = $('#liveScoreCard');
   if (!root) return;
@@ -30,6 +31,11 @@
   let autoSaveTimer = 0;
   let editorCollapsed = false;
   let replayMode = false;
+  let inputMode = false;
+  let lockToken = '';
+  let lockExpiresAt = 0;
+  let heartbeatTimer = 0;
+  let pollTimer = 0;
 
   function accessValue() {
     try {
@@ -40,21 +46,102 @@
     }
   }
 
-  async function request(method = 'GET', data) {
+  async function request(method = 'GET', data, extra = {}) {
     const headers = {};
     const access = accessValue();
     if (access) headers['x-access-password'] = access;
+    if (method === 'GET') headers['x-live-score-device-id'] = deviceId();
     if (method === 'POST') headers['content-type'] = 'application/json';
+    const payload = method === 'POST' ? { data, ...extra } : undefined;
     const response = await fetch(API, {
       method,
       headers,
       credentials: 'same-origin',
       cache: 'no-store',
-      body: method === 'POST' ? JSON.stringify({ data }) : undefined,
+      body: method === 'POST' ? JSON.stringify(payload) : undefined,
     });
     const result = await response.json().catch(() => ({}));
-    if (!response.ok) throw new Error(result.error || '試合速報を保存できませんでした。');
+    if (!response.ok) {
+      const error = new Error(result.error || '試合速報を保存できませんでした。');
+      error.status = response.status;
+      throw error;
+    }
     return result;
+  }
+
+  function deviceId() {
+    try {
+      let id = localStorage.getItem(DEVICE_KEY) || '';
+      if (!id) {
+        id = (crypto.randomUUID ? crypto.randomUUID() : `device-${Date.now()}-${Math.random().toString(36).slice(2)}`);
+        localStorage.setItem(DEVICE_KEY, id);
+      }
+      return id;
+    } catch (_) {
+      return `device-${Date.now()}-${Math.random().toString(36).slice(2)}`;
+    }
+  }
+
+  async function lockAction(action) {
+    const result = await request('POST', null, { action, deviceId: deviceId(), lockToken });
+    return result;
+  }
+
+  async function claimInputLock() {
+    try {
+      const result = await lockAction('claimEditorLock');
+      lockToken = String(result.lockToken || '');
+      lockExpiresAt = Number(result.lock?.expiresAt || 0);
+      inputMode = Boolean(lockToken);
+      render();
+      startHeartbeat();
+      return inputMode;
+    } catch (error) {
+      inputMode = false;
+      lockToken = '';
+      if (error.status === 409) {
+        await load({ silent: true, force: true });
+        render();
+        return false;
+      }
+      alert(error.message || '入力モードを開始できませんでした。');
+      return false;
+    }
+  }
+
+  async function releaseInputLock() {
+    if (!lockToken) return;
+    const token = lockToken;
+    lockToken = '';
+    inputMode = false;
+    clearInterval(heartbeatTimer);
+    heartbeatTimer = 0;
+    try {
+      await request('POST', null, { action: 'releaseEditorLock', deviceId: deviceId(), lockToken: token });
+    } catch (_) {}
+    render();
+  }
+
+  function startHeartbeat() {
+    clearInterval(heartbeatTimer);
+    heartbeatTimer = setInterval(async () => {
+      if (!inputMode || !lockToken) return;
+      try {
+        const result = await lockAction('heartbeatEditorLock');
+        if (!result.lockToken) throw Object.assign(new Error('入力権限が解除されました。'), { status: 409 });
+        lockExpiresAt = Number(result.lock?.expiresAt || 0);
+      } catch (error) {
+        inputMode = false;
+        lockToken = '';
+        clearInterval(heartbeatTimer);
+        heartbeatTimer = 0;
+        if (error.status === 409) {
+          alert('入力権限が解除されたため、閲覧中モードに切り替えました。');
+          await load({ silent: true, force: true });
+        }
+        render();
+      }
+    }, 10000);
   }
 
   function score(value) {
@@ -160,12 +247,18 @@
     const current = normalizeGame(data.current);
     const lastGame = normalizeGame(data.lastGame) || rememberedLastGame();
     if (lastGame) rememberLastGame(lastGame);
+    const lock = data.lock && typeof data.lock === 'object' ? {
+      active: Boolean(data.lock.active),
+      owner: Boolean(data.lock.owner),
+      expiresAt: Number(data.lock.expiresAt || 0),
+    } : { active: false, owner: false, expiresAt: 0 };
     return {
       active: Boolean(data.active && current),
       visible: Boolean(data.active && current),
       current,
       lastGame,
       updatedAt: String(data.updatedAt || ''),
+      lock,
     };
   }
 
@@ -193,7 +286,37 @@
     updated: $('#liveScoreUpdated'),
     sbo: $('#liveScoreSbo'),
     bases: $('#liveScoreDiamond'),
+    lockPanel: $('#liveScoreLockPanel'),
+    lockText: $('#liveScoreLockText'),
+    lockButton: $('#liveScoreLockButton'),
   };
+
+  function renderLock() {
+    if (!elements.lockPanel || !state.active || replayMode) {
+      if (elements.lockPanel) elements.lockPanel.hidden = true;
+      return;
+    }
+    elements.lockPanel.hidden = false;
+    const serverLock = state.lock || { active: false, owner: false, expiresAt: 0 };
+    const owned = inputMode && lockToken;
+    if (owned) {
+      elements.lockPanel.classList.add('is-input');
+      elements.lockText.textContent = '入力中モード：この端末だけ操作できます。';
+      elements.lockButton.textContent = '入力を終了';
+      elements.lockButton.disabled = false;
+    } else {
+      elements.lockPanel.classList.remove('is-input');
+      if (serverLock.active) {
+        elements.lockText.textContent = '閲覧中モード：現在、別の端末で入力中です。';
+        elements.lockButton.textContent = '入力中';
+        elements.lockButton.disabled = true;
+      } else {
+        elements.lockText.textContent = '閲覧中モード：入力する端末を1台だけ選べます。';
+        elements.lockButton.textContent = 'この端末で入力する';
+        elements.lockButton.disabled = false;
+      }
+    }
+  }
 
   function renderSbo() {
     if (!elements.sbo || !state.current) return;
@@ -210,7 +333,7 @@
       group.style.touchAction = 'manipulation';
       group.style.webkitUserSelect = 'none';
       group.setAttribute('aria-label', `${label}カウント ${state.current.sbo[key]} / ${max}`);
-      group.disabled = replayMode;
+      group.disabled = replayMode || !inputMode;
 
       const title = document.createElement('b');
       title.textContent = label;
@@ -253,7 +376,7 @@
       button.style.touchAction = 'manipulation';
       button.style.webkitUserSelect = 'none';
       button.setAttribute('aria-pressed', String(active));
-      button.disabled = replayMode;
+      button.disabled = replayMode || !inputMode;
     });
   }
 
@@ -273,6 +396,7 @@
     input.value = value;
     input.setAttribute('aria-label', label);
     input.addEventListener('input', () => {
+      if (!inputMode || replayMode) return;
       const next = score(input.value);
       if (tieBreak) state.current.tieBreaks[index][side] = next;
       else state.current.innings[side][index] = next;
@@ -402,10 +526,13 @@
     if (replayMode) elements.removeTieBreak.hidden = true;
     elements.status.parentElement.hidden = replayMode;
     elements.back.hidden = !replayMode;
-    root.querySelectorAll('.live-score-editor input,.live-score-segments button').forEach(control => {
-      control.disabled = replayMode;
+    root.querySelectorAll('.live-score-editor input,.live-score-segments button,.live-score-tb-actions button,.live-score-number').forEach(control => {
+      control.disabled = replayMode || !inputMode;
     });
-    updateStatus();
+    renderLock();
+    updateStatus(inputMode && !replayMode
+      ? '入力中モード・入力内容は自動保存されます。'
+      : (!replayMode ? '閲覧中モード・現在の試合状況を表示しています。' : ''));
   }
 
   function readFields() {
@@ -433,7 +560,7 @@
     root.classList.add('is-saving');
     try {
       state.updatedAt = new Date().toISOString();
-      const result = await request('POST', state);
+      const result = await request('POST', state, { action: 'saveLiveScore', lockToken });
       const saved = normalize(result.data || state);
       if (renderAfter) state = saved;
       if (saved.current) rememberDraft(saved.current);
@@ -444,6 +571,16 @@
       if (!quiet && window.showSaveNotice) window.showSaveNotice(message || '試合速報を保存しました');
       return true;
     } catch (error) {
+      if (error.status === 409) {
+        inputMode = false;
+        lockToken = '';
+        clearInterval(heartbeatTimer);
+        heartbeatTimer = 0;
+        await load({ silent: true, force: true });
+        render();
+        if (!quiet) alert('入力権限が解除されたため、閲覧中モードに切り替えました。');
+        return false;
+      }
       alert(error.message || '試合速報を保存できませんでした。');
       return false;
     } finally {
@@ -454,6 +591,7 @@
   }
 
   async function startGame(game = null, visible = true) {
+    if (!inputMode && !(await claimInputLock())) return;
     editorCollapsed = false;
     replayMode = false;
     state.active = true;
@@ -470,7 +608,11 @@
     await save(visible ? '試合速報を開始・公開しました' : '試合速報を開始しました');
   }
 
-  elements.start.addEventListener('click', () => {
+  elements.start.addEventListener('click', async () => {
+    if (state.active && !inputMode) {
+      await claimInputLock();
+      return;
+    }
     if (state.active && editorCollapsed) {
       editorCollapsed = false;
       render();
@@ -478,6 +620,16 @@
     }
     startGame();
   });
+  elements.lockButton?.addEventListener('click', async () => {
+    if (!state.active) return;
+    if (inputMode) {
+      if (!confirm('入力を終了して閲覧中モードに戻りますか？')) return;
+      await releaseInputLock();
+      return;
+    }
+    await claimInputLock();
+  });
+
   elements.restore.addEventListener('click', () => {
     if (!state.lastGame) return;
     replayMode = true;
@@ -495,17 +647,17 @@
 
   [elements.tournament, elements.startTime, elements.ground, elements.grade, elements.opponent]
     .forEach(input => input.addEventListener('input', () => {
+      if (!inputMode || replayMode) return;
       readFields();
       dirty = true;
-      changeVersion += 1;
-      renderScoreRows();
+      changeVersion += 1;      renderScoreRows();
       renderTieBreaks();
       scheduleAutoSave();
     }));
 
   elements.bases.addEventListener('click', event => {
     const button = event.target.closest('[data-base]');
-    if (!button || !state.current || replayMode) return;
+    if (!button || !state.current || replayMode || !inputMode) return;
     const base = button.dataset.base;
     if (base === 'home') return;
     state.current.bases[base] = !state.current.bases[base];
@@ -524,7 +676,7 @@
 
   elements.order.addEventListener('click', event => {
     const button = event.target.closest('[data-order]');
-    if (!button || !state.current) return;
+    if (!button || !state.current || replayMode || !inputMode) return;
     state.current.battingOrder = button.dataset.order;
     dirty = true;
     changeVersion += 1;
@@ -533,7 +685,7 @@
   });
 
   elements.addTieBreak.addEventListener('click', () => {
-    if (!state.current || state.current.tieBreaks.length >= 8) return;
+    if (!state.current || state.current.tieBreaks.length >= 8 || replayMode || !inputMode) return;
     readFields();
     state.current.tieBreaks.push({ inning: 8 + state.current.tieBreaks.length, ours: '', opponent: '' });
     dirty = true;
@@ -544,7 +696,7 @@
   });
 
   elements.removeTieBreak.addEventListener('click', () => {
-    if (!state.current?.tieBreaks.length) return;
+    if (!state.current?.tieBreaks.length || replayMode || !inputMode) return;
     const last = state.current.tieBreaks[state.current.tieBreaks.length - 1];
     if (!confirm(`${last.inning}回のタイブレークを削除しますか？`)) return;
     state.current.tieBreaks.pop();
@@ -556,6 +708,7 @@
   });
 
   elements.finish.addEventListener('click', async () => {
+    if (!inputMode || replayMode) return;
     readFields();
     if (!confirm('この試合の速報を終了しますか？\n直前の試合として保存され、速報は非表示になります。')) return;
     const completed = normalizeGame(state.current);
@@ -569,17 +722,32 @@
     replayMode = false;
     dirty = true;
     changeVersion += 1;
-    if (await save('試合速報を終了しました')) render();
+    if (await save('試合速報を終了しました')) {
+      await releaseInputLock();
+      render();
+    }
   });
 
-  async function load({ silent = false } = {}) {
-    if (replayMode || dirty || saving || root.contains(document.activeElement)) return;
+  async function load({ silent = false, force = false } = {}) {
+    if (!force && (replayMode || dirty || saving || root.contains(document.activeElement))) return;
     try {
       const result = await request();
+      const previousActive = state.active;
       state = normalize(result.data);
+      const serverLock = state.lock || { active: false, owner: false, expiresAt: 0 };
+      if (inputMode && !serverLock.owner) {
+        inputMode = false;
+        lockToken = '';
+        clearInterval(heartbeatTimer);
+        heartbeatTimer = 0;
+      }
+      if (!state.current) {
+        inputMode = false;
+        lockToken = '';
+        clearInterval(heartbeatTimer);
+        heartbeatTimer = 0;
+      }
       if (state.current) {
-        // The server is authoritative for shared live BSO/base state.
-        // Do not merge device-local drafts into these fields on another device.
         rememberDraft(state.current);
       }
       render();
@@ -590,10 +758,24 @@
     }
   }
 
+  window.addEventListener('pagehide', () => {
+    if (!lockToken) return;
+    const access = accessValue();
+    const headers = { 'content-type': 'application/json' };
+    if (access) headers['x-access-password'] = access;
+    try {
+      fetch(API, {
+        method: 'POST', headers, credentials: 'same-origin', keepalive: true,
+        body: JSON.stringify({ action: 'releaseEditorLock', deviceId: deviceId(), lockToken })
+      });
+    } catch (_) {}
+  });
+
   (async () => {
     const allowed = await window.boardAccessReady;
     if (!allowed) return;
     await load();
-    setInterval(() => load({ silent: true }), 10000);
+    if (state.active && state.lock?.owner) await claimInputLock();
+    pollTimer = setInterval(() => load({ silent: true }), 5000);
   })();
 })();

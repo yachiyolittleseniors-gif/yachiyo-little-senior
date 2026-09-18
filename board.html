@@ -769,6 +769,31 @@ body.live-score-replay-only #liveScoreCard{
   border-radius:0!important;
 }
 </style>
+
+<style id="live-score-input-lock-style">
+.live-score-lock-panel{
+  display:flex!important;
+  align-items:center!important;
+  justify-content:space-between!important;
+  gap:10px!important;
+  margin:0 0 12px!important;
+  padding:9px 11px!important;
+  border:1px solid rgba(145,162,186,.45)!important;
+  border-radius:10px!important;
+  background:rgba(7,20,38,.72)!important;
+  color:#fff!important;
+  font-size:12px!important;
+  font-weight:700!important;
+  line-height:1.45!important;
+}
+.live-score-lock-panel.is-input{border-color:rgba(226,189,103,.8)!important}
+.live-score-lock-panel .live-score-button{flex:0 0 auto!important;padding:7px 10px!important;font-size:11px!important}
+@media(max-width:700px){
+  .live-score-lock-panel{align-items:flex-start!important}
+  .live-score-lock-panel .live-score-button{white-space:nowrap!important}
+}
+</style>
+
 </head>
 <body id="page-top">
 <header class="site-header">
@@ -855,6 +880,11 @@ body.live-score-replay-only #liveScoreCard{
             <span class="live-score-badge live" id="liveScoreLiveBadge" hidden>試合中</span>
             <span class="live-score-badge" id="liveScoreVisibilityBadge">未公開</span>
           </div>
+        </div>
+
+        <div class="live-score-lock-panel" id="liveScoreLockPanel" hidden>
+          <span id="liveScoreLockText">閲覧中モード</span>
+          <button class="live-score-button" id="liveScoreLockButton" type="button">この端末で入力する</button>
         </div>
 
         <div class="live-score-base-controls" aria-label="試合状況">
@@ -1186,7 +1216,7 @@ body.live-score-replay-only #liveScoreCard{
   <button id="closeDensukeAdminBtn" type="button">キャンセル</button>
 </div>
 
-<script src="./board-live-score.js?v=20260918-19"></script>
+<script src="./board-live-score.js?v=20260918-20"></script>
 <script src="./board-updates.js?v=20260918-13"></script>
 <script src="./board-referee-documents.js?v=20260918-7"></script>
 <script src="./board-tournaments.js?v=20260914-1"></script>
