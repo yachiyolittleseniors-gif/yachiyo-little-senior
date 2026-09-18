@@ -235,11 +235,8 @@
   }
 
   function setEndedUI(ended){
-    setAttendanceEnabled(ended);
-    if(ended){
-      sessionStorage.removeItem('yachiyoAttendanceDraftAdminPass');
-      sessionStorage.removeItem('yachiyoPlayerAttendanceAdminPass');
-    }
+    // 公開準備中のため、伝助終了後も保護者・選手出欠確認はグレー表示と隠しパスワードを維持する。
+    setAttendanceEnabled(false);
     warning.style.display='none';
     endBtn.dataset.warningShown='0';
     endBtn.textContent='伝助を終了';
@@ -249,7 +246,7 @@
       attendanceCard.style.display='block';
       endBtn.style.display='none';
       resumeBtn.style.display='';
-      adminStatus.textContent='伝助の移行は終了しています。保護者出欠確認・選手出欠確認を利用できます。';
+      adminStatus.textContent='伝助の移行は終了しています。保護者出欠確認・選手出欠確認は公開準備中です。';
     }else{
       legacyCard.style.display='block';
       attendanceCard.style.display='block';
