@@ -393,7 +393,10 @@
       coachPasswordInput.value='';
       coachPasswordConfirmInput.value='';
       sessionStorage.removeItem('yachiyoCoachAttendancePass');
-      coachPasswordStatus.textContent='パスワードを変更しました。';
+      localStorage.removeItem('yachiyoCoachAttendanceReloadPass');
+      localStorage.removeItem('yachiyoCoachAttendanceReloadPassExpires');
+      localStorage.removeItem('yachiyoCoachPasskeyRegistered');
+      coachPasswordStatus.textContent='パスワードを変更しました。生体認証は再登録が必要です。';
       showSaveNotice('指導者出欠確認のパスワードを変更しました');
     }catch(e){
       coachPasswordStatus.textContent=e.message||'パスワードを変更できませんでした。';

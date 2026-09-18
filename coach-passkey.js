@@ -101,7 +101,11 @@
           try { sessionStorage.setItem("yachiyoCoachAttendancePass", result.token); } catch (error) {}
           return result.token;
         }
-      } catch (error) {}
+      } catch (error) {
+        if (error?.status === 401 || error?.status === 404) {
+          try { localStorage.removeItem("yachiyoCoachPasskeyRegistered"); } catch (_) {}
+        }
+      }
     }
 
     const entered = prompt(promptMessage);

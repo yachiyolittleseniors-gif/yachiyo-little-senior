@@ -4149,7 +4149,10 @@ function openProtectedArea(type){
         alert('閲覧パスワードを変更できませんでした。');
         return;
       }
-      sessionStorage.setItem('yachiyoAttendancePass',next);
+      sessionStorage.removeItem('yachiyoAttendancePass');
+      localStorage.removeItem('yachiyoAttendanceReloadPass');
+      localStorage.removeItem('yachiyoAttendanceReloadPassExpires');
+      localStorage.removeItem('yachiyoBoardPasskeyRegistered');
       showSaveNotice('保存しました');
     }catch(e){
       alert('通信エラーのため、閲覧パスワードを変更できませんでした。');

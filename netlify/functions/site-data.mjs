@@ -1893,8 +1893,9 @@ export default async (request, context) => {
         hash,
         updatedAt: new Date().toISOString()
       });
+      await store.delete("auth/board-passkeys.json").catch(() => {});
 
-      return json({ ok: true });
+      return json({ ok: true, passkeysReset: true });
     }
 
     if (section === "duty-roster") {

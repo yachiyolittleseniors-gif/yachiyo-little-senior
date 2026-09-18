@@ -83,7 +83,12 @@ window.boardAccessReady=(async function requireBoardPassword(){
       saveAccess(result.token);
       document.documentElement.style.visibility='';
       return true;
-    }catch(e){return false}
+    }catch(e){
+      if(e?.status===401||e?.status===404){
+        try{localStorage.removeItem(passkeyKey)}catch(_){}
+      }
+      return false;
+    }
   }
   const searchParams=new URLSearchParams(location.search);
   const returnSource=searchParams.get('from');

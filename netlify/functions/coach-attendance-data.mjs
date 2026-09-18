@@ -561,7 +561,8 @@ export default async (request, context) => {
         hash,
         updatedAt: new Date().toISOString(),
       });
-      return json({ ok: true });
+      await store.delete("auth/coach-passkeys.json").catch(() => {});
+      return json({ ok: true, passkeysReset: true });
     }
 
     if (action === "setConfig") {
