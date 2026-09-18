@@ -30,7 +30,7 @@
 <meta name="theme-color" content="#071426">
 <title>チーム専用ページ｜八千代リトルシニア</title>
 <link rel="stylesheet" href="./board-base.css?v=20260918-1">
-<link rel="stylesheet" href="./board-live-score.css?v=20260918-8">
+<link rel="stylesheet" href="./board-live-score.css?v=20260918-9">
 <script src="./board-passkey.js?v=20260918-1"></script>
 <script src="./coach-passkey.js?v=20260918-2"></script>
 <script>
@@ -440,7 +440,6 @@ html{scroll-padding-top:var(--compact-header-height)}
         <p>試合開始後、得点を入力してチーム内へ速報を共有できます。</p>
         <div class="live-score-idle-actions">
           <button class="live-score-button primary" id="liveScoreStart" type="button">試合速報を開始</button>
-          <button class="live-score-button" id="liveScoreRestore" type="button" hidden>直前の試合を再表示</button>
         </div>
       </div>
 
@@ -504,9 +503,13 @@ html{scroll-padding-top:var(--compact-header-height)}
             <span id="liveScoreStatus">まだ他の端末には公開されていません。</span>
             <time id="liveScoreUpdated"></time>
           </div>
+          <button class="live-score-button back" id="liveScoreBack" type="button" hidden>戻る</button>
         </div>
       </div>
     </section>
+    <div class="live-score-restore-wrap" id="liveScoreRestoreWrap" hidden>
+      <button class="live-score-button" id="liveScoreRestore" type="button">直前の試合を再表示</button>
+    </div>
 
     <section class="card attendance-card" id="coachAttendanceCard">
       <div class="card-kicker">COACH ATTENDANCE</div>
@@ -751,7 +754,7 @@ html{scroll-padding-top:var(--compact-header-height)}
   <button id="closeDensukeAdminBtn" type="button">キャンセル</button>
 </div>
 
-<script src="./board-live-score.js?v=20260918-5"></script>
+<script src="./board-live-score.js?v=20260918-6"></script>
 <script src="./board-updates.js?v=20260918-13"></script>
 <script src="./board-referee-documents.js?v=20260918-7"></script>
 <script src="./board-tournaments.js?v=20260914-1"></script>
