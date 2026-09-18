@@ -415,8 +415,11 @@ html{scroll-padding-top:var(--compact-header-height)}
         <div class="duty-roster-loading">当番表を読み込んでいます。</div>
       </div>
       <section id="dutyChangeSection" class="duty-change-section" hidden>
+        <button id="toggleDutyHistory" type="button" aria-expanded="false" aria-controls="dutyHistoryContent">変更履歴を確認する</button>
+        <div id="dutyHistoryContent" hidden>
         <div class="duty-change-heading"><strong>反映済みの当番変更</strong><span>LINE連絡の変更内容</span></div>
         <div id="dutyChangeList" class="duty-change-list"></div>
+        </div>
       </section>
       <p class="duty-roster-note">※当番変更は、管理画面で登録した内容が反映されます。</p>
     </section>
@@ -529,7 +532,7 @@ html{scroll-padding-top:var(--compact-header-height)}
 
 <footer class="footer">© YACHIYO LITTLE SENIOR. All Rights Reserved.</footer>
 
-<link rel="stylesheet" href="./board-content.css?v=20260918-7">
+<link rel="stylesheet" href="./board-content.css?v=20260918-8">
 
 <button id="densukeToggleBtn" type="button">管理</button>
 <div id="densukeAdminPanel">
@@ -614,7 +617,7 @@ html{scroll-padding-top:var(--compact-header-height)}
 <script src="./board-referee-documents.js?v=20260917-6"></script>
 <script src="./board-tournaments.js?v=20260914-1"></script>
 <script src="./board-meetings.js?v=20260917-7"></script>
-<script src="./board-duty-roster.js?v=20260918-7"></script>
+<script src="./board-duty-roster.js?v=20260918-8"></script>
 <script src="./board-rules.js?v=20260914-4"></script>
 <script src="./board-archive.js?v=20260914-3"></script>
 <style id="nonblocking-save-notice-style">

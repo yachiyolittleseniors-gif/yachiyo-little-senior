@@ -95,6 +95,15 @@
 #toggleDutyOriginals{flex:none;min-height:44px;padding:6px 10px;border:1px solid #c79a3b;border-radius:8px;background:transparent;color:#866322;font:inherit;font-size:12px;font-weight:700;white-space:nowrap;cursor:pointer}
 #dutyRosterOriginals[hidden]{display:none}
 @media(max-width:440px){#dutyRosterCard{padding-left:12px;padding-right:12px}.duty-digital-roster{padding:6px}.duty-roster-table-list{gap:14px}.duty-digital-roster tbody th,.duty-digital-roster tbody td{padding-top:5px;padding-bottom:5px}}
+#dutyRosterCard{padding-left:4px;padding-right:4px}
+#dutyRosterCard>.card-kicker,#dutyRosterCard>.duty-roster-title-row,#dutyRosterCard>.duty-roster-note{margin-left:12px;margin-right:12px}
+#dutyRosterCard .duty-digital-roster{padding:0;border:0;border-radius:0}
+#dutyRosterCard .duty-sheet-note{padding:0 6px}
+.duty-digital-roster tbody tr.is-activity td.is-changed{background:#fff49a}
+#dutyChangeSection{padding:0;border:0;background:transparent}
+#toggleDutyHistory{width:100%;min-height:44px;padding:10px 14px;border:1px solid #c79a3b;border-radius:8px;background:transparent;color:#866322;font:inherit;font-size:12px;font-weight:700;cursor:pointer}
+#dutyHistoryContent{margin-top:12px;padding:12px;border:1px solid #dac68d;border-radius:12px;background:#fffaf0}
+#dutyHistoryContent[hidden]{display:none}
 #rulesAdminFields{margin-top:18px;padding-top:18px;border-top:1px solid rgba(255,255,255,.18)}
 #rulesAdminFields input{width:100%;margin:6px 0 10px;color:#fff}
 #saveRulesBtn{width:100%;margin:4px 0!important;background:#c79a3b!important;color:#fff!important}

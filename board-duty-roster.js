@@ -180,6 +180,14 @@
   async function removeImage(index){const target=images[index];if(!target||!confirm('「'+(target.name||'当番表')+'」を削除しますか？'))return;const previous=images.slice();images.splice(index,1);render();try{await persist('画像を削除しました','当番表「'+(target.name||'画像')+'」を削除しました')}catch(e){images=previous;render();alert(e.message||'画像を削除できませんでした。')}}
 
   changeYear.value=String(new Date().getFullYear());
+  const historyToggle=document.getElementById('toggleDutyHistory');
+  const historyContent=document.getElementById('dutyHistoryContent');
+  if(historyToggle&&historyContent)historyToggle.addEventListener('click',function(){
+    const open=historyContent.hidden;
+    historyContent.hidden=!open;
+    historyToggle.setAttribute('aria-expanded',String(open));
+    historyToggle.textContent=open?'変更履歴を閉じる':'変更履歴を確認する';
+  });
   const originalsToggle=document.getElementById('toggleDutyOriginals');
   const originalsPanel=document.getElementById('dutyRosterOriginals');
   if(originalsToggle&&originalsPanel)originalsToggle.addEventListener('click',function(){
