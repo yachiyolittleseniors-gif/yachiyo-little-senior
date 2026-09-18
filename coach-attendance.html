@@ -922,13 +922,33 @@ body.photo-admin-on #accessPasswordChange{
     panel.classList.add('is-registered');
     title.textContent='指導者用の生体認証を登録済み';
     text.textContent='次回から生体認証で入れます。認証できない場合は従来の指導者用パスワードを使えます。';
-    button.textContent='追加・再登録';
+    button.textContent='この端末の生体認証を削除';
     setCollapsed(true);
   }
   try{registered=localStorage.getItem('yachiyoCoachPasskeyRegistered')==='1'}catch(e){}
   if(registered)showRegisteredState();
   summary.addEventListener('click',()=>setCollapsed(!panel.classList.contains('is-collapsed')));
   button.addEventListener('click',async()=>{
+    if(registered){
+      if(!confirm('この端末の生体認証を削除しますか？\n削除後はパスワードでログインし直すと再登録できます。'))return;
+      button.disabled=true;
+      button.textContent='端末で認証してください';
+      try{
+        await window.YLSCoachPasskeys.remove();
+        try{localStorage.removeItem('yachiyoCoachPasskeyRegistered')}catch(e){}
+        registered=false;
+        panel.classList.remove('is-registered');
+        title.textContent='生体認証を登録';
+        text.textContent='この端末に生体認証を登録すると、次回から生体認証でログインできます。';
+        button.textContent='この端末に登録';
+        setCollapsed(false);
+      }catch(error){
+        const cancelled=error?.name==='NotAllowedError'||/キャンセル/.test(error?.message||'');
+        if(!cancelled)alert(error?.message||'生体認証を削除できませんでした。');
+        button.textContent='この端末の生体認証を削除';
+      }finally{button.disabled=false}
+      return;
+    }
     button.disabled=true;
     button.textContent='端末で認証してください';
     try{
@@ -941,7 +961,7 @@ body.photo-admin-on #accessPasswordChange{
     }catch(error){
       const cancelled=error?.name==='NotAllowedError'||/キャンセル/.test(error?.message||'');
       if(!cancelled)alert(error?.message||'生体認証を登録できませんでした。');
-      button.textContent=registered?'追加・再登録':'この端末に登録';
+      button.textContent=registered?'この端末の生体認証を削除':'この端末に登録';
     }finally{button.disabled=false}
   });
 })();
