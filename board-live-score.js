@@ -114,6 +114,11 @@
       ourName: String(game.ourName || '八千代').slice(0, 40) || '八千代',
       opponent: String(game.opponent || '').slice(0, 40),
       battingOrder: game.battingOrder === 'first' ? 'first' : 'second',
+      selectedScoreCell: game.selectedScoreCell && ['ours','opponent'].includes(game.selectedScoreCell.side) ? {
+        side: game.selectedScoreCell.side,
+        index: Math.max(0, Math.min(7, Number(game.selectedScoreCell.index) || 0)),
+        tieBreak: Boolean(game.selectedScoreCell.tieBreak),
+      } : null,
       innings: { ours: seven(innings.ours), opponent: seven(innings.opponent) },
       sbo: {
         strikes: Math.max(0, Math.min(2, Number(game.sbo?.strikes) || 0)),
@@ -338,12 +343,17 @@
     const selectScoreCell = () => {
       if (!inputMode || replayMode) return;
       selectedScoreCell = { side, index, tieBreak };
+      state.current.selectedScoreCell = { ...selectedScoreCell };
+      dirty = true;
+      changeVersion += 1;
       root.querySelectorAll('.live-score-number.is-selected').forEach(cell => {
         cell.classList.remove('is-selected');
       });
       input.classList.add('is-selected');
+      scheduleAutoSave();
     };
-    if (selectedScoreCell && selectedScoreCell.side === side && selectedScoreCell.index === index && selectedScoreCell.tieBreak === tieBreak) {
+    const sharedSelected = state.current?.selectedScoreCell || selectedScoreCell;
+    if (sharedSelected && sharedSelected.side === side && sharedSelected.index === index && sharedSelected.tieBreak === tieBreak) {
       input.classList.add('is-selected');
     }
     input.addEventListener('focus', selectScoreCell);
@@ -728,6 +738,7 @@
       const result = await request();
       const previousActive = state.active;
       state = normalize(result.data);
+      selectedScoreCell = state.current?.selectedScoreCell || null;
       // Manual mode: every page load starts in viewing mode.
       if (!state.current) inputMode = false;
       if (state.current) {
