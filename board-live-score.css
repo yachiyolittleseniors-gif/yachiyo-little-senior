@@ -63,26 +63,15 @@
 }
 
 
-/* 現在の攻撃回：入力中に選択した回を太枠で表示。閲覧モードでも同じ状態を表示する。 */
+/* 現在の攻撃回：該当する回の見出しと、そのチームの得点セルを太枠で表示。
+   表・裏の文字ラベルは表示せず、行（チーム）との組み合わせで判別する。 */
 .live-score-number.is-current-at-bat{
   position:relative;
   z-index:2;
   box-shadow:inset 0 0 0 3px #c79a3b!important;
 }
-.live-score-board-head span:has(.live-score-board-current-marker){
+.live-score-board-head span.is-current-at-bat-header{
   position:relative;
+  z-index:2;
   box-shadow:inset 0 0 0 3px #c79a3b!important;
-}
-.live-score-board-current-marker{
-  display:block!important;
-  position:absolute;
-  right:2px;
-  bottom:1px;
-  margin:0!important;
-  color:#c79a3b!important;
-  font-size:8px!important;
-  line-height:1!important;
-  font-weight:900!important;
-  border:0!important;
-  min-height:0!important;
 }

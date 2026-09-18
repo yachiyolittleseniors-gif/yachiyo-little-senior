@@ -341,7 +341,7 @@
     if (!elements.rows) return;
     const current = state.current?.currentAtBat;
     elements.rows.querySelectorAll('.live-score-number').forEach(input => input.classList.remove('is-current-at-bat'));
-    elements.rows.querySelectorAll('.live-score-board-current-marker').forEach(el => el.remove());
+    document.querySelectorAll('.live-score-board-head .is-current-at-bat-header').forEach(el => el.classList.remove('is-current-at-bat-header'));
     if (!current || current.inning < 0 || current.inning > 6) return;
     const teams = teamOrder();
     const rowIndex = teams.findIndex(team => team.key === current.side);
@@ -350,12 +350,7 @@
     if (cell) cell.classList.add('is-current-at-bat');
     const header = document.querySelector('.live-score-board-head');
     const headCell = header?.children[current.inning + 1];
-    if (headCell) {
-      const marker = document.createElement('span');
-      marker.className = 'live-score-board-current-marker';
-      marker.textContent = current.side === 'ours' ? '表' : '裏';
-      headCell.appendChild(marker);
-    }
+    if (headCell) headCell.classList.add('is-current-at-bat-header');
   }
 
   function scoreInput(side, index, value, label, tieBreak = false) {
@@ -396,8 +391,10 @@
 
   function fitLiveScoreTeamName(name) {
     if (!name) return;
+    // 両チームを同じ固定サイズにする。表示幅に応じて毎フレーム縮小する処理は
+    // iPhone Safariで文字が揺れて見えるため廃止。チーム名欄に十分な幅を確保する。
     name.classList.remove('live-score-team-long', 'live-score-team-medium');
-    name.style.setProperty('font-size', '18px', 'important');
+    name.style.setProperty('font-size', '16px', 'important');
     name.style.setProperty('line-height', '1', 'important');
     name.style.setProperty('white-space', 'nowrap', 'important');
     name.style.setProperty('overflow', 'hidden', 'important');
@@ -406,19 +403,6 @@
     name.style.setProperty('width', '100%', 'important');
     name.style.setProperty('box-sizing', 'border-box', 'important');
     name.style.setProperty('font-weight', '900', 'important');
-    requestAnimationFrame(() => {
-      if (!name.isConnected) return;
-      let current = 18;
-      const minSize = 13;
-      const available = name.clientWidth;
-      if (!available) return;
-      let guard = 0;
-      while (current > minSize && name.scrollWidth > available + 1 && guard < 20) {
-        current -= 0.5;
-        name.style.setProperty('font-size', `${current}px`, 'important');
-        guard += 1;
-      }
-    });
   }
 
   function fitAllLiveScoreTeamNames() {

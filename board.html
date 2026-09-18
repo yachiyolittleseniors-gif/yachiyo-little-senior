@@ -1084,6 +1084,23 @@ body.live-score-replay-only #liveScoreCard{
 /* 試合開始時間は左寄せ */
 #liveScoreStartTime{text-align:left!important;}
 </style>
+<style id="live-score-team-current-final-fix">
+/* 最終修正：チーム名は両チーム同じ16px。動的な文字サイズ変更はしない。 */
+.live-score-row .live-score-team{
+  font-size:16px!important;
+  line-height:1!important;
+  white-space:nowrap!important;
+  overflow:hidden!important;
+  text-overflow:clip!important;
+  min-width:0!important;
+  width:100%!important;
+  padding:0 4px!important;
+  box-sizing:border-box!important;
+  font-weight:900!important;
+}
+@media(max-width:700px){.live-score-row .live-score-team{font-size:16px!important;}}
+@media(max-width:390px){.live-score-row .live-score-team{font-size:16px!important;}}
+</style>
 </head>
 <body id="page-top">
 <header class="site-header">
