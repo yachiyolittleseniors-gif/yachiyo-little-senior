@@ -318,7 +318,7 @@
     }
   }
 
-  async function startGame(game = null, visible = false) {
+  async function startGame(game = null, visible = true) {
     editorCollapsed = false;
     replayMode = false;
     state.active = true;
@@ -327,7 +327,7 @@
     dirty = true;
     changeVersion += 1;
     render();
-    await save(visible ? '直前の試合を再表示しました' : '試合速報を開始しました');
+    await save(visible ? '試合速報を開始・公開しました' : '試合速報を開始しました');
   }
 
   elements.start.addEventListener('click', () => {
