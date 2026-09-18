@@ -1959,6 +1959,20 @@ export default async (request, context) => {
       }
 
       const valid = images.every(item => {
+        const t=item?.table;
+        if(t){
+          if(!Number.isInteger(t.year)||t.year<2020||t.year>2100||!Number.isInteger(t.month)||t.month<1||t.month>12||!Array.isArray(t.rows)||!t.rows.length||t.rows.length>31||!Array.isArray(t.activityDays))return false;
+          if(t.grades&&(!Array.isArray(t.grades)||t.grades.length!==2||new Set(t.grades).size!==2||t.grades.some(g=>![1,2,3].includes(g))))return false;
+          const seen=new Set();
+          for(const row of t.rows){
+            if(!Array.isArray(row)||row.length!==6)return false;
+            const d=new Date(Date.UTC(t.year,t.month-1,row[0]));
+            if(!Number.isInteger(row[0])||d.getUTCMonth()!==t.month-1||d.getUTCDate()!==row[0]||seen.has(row[0])||row.slice(2).some(n=>typeof n!=='string'||!n.trim()||n.length>60))return false;
+            seen.add(row[0]);
+            row[1]='日月火水木金土'[d.getUTCDay()];
+          }
+          if(t.activityDays.some(d=>!seen.has(d)))return false;
+        }
         const name = String(item?.name || "");
         const data = String(item?.data || "");
         const src = String(item?.src || "");

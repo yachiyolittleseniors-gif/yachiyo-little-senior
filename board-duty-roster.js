@@ -47,7 +47,7 @@
     const imageList=raw&&raw.initialized===true&&Array.isArray(raw.images)?raw.images:[];
     const changeItems=raw&&raw.initialized===true&&Array.isArray(raw.changes)?raw.changes:[];
     return{
-      images:imageList.filter(function(item){return item&&typeof item==='object'&&(item.data||item.src)}).slice(0,8).map(function(item,index){return{id:String(item.id||('duty-'+index)),name:String(item.name||('当番表 '+(index+1))),data:item.data?String(item.data):'',src:item.src?String(item.src):''}}),
+      images:imageList.filter(function(item){return item&&typeof item==='object'&&(item.data||item.src)}).slice(0,8).map(function(item,index){return{id:String(item.id||('duty-'+index)),name:String(item.name||('当番表 '+(index+1))),data:item.data?String(item.data):'',src:item.src?String(item.src):'',table:item.table||({'duty-mtwelqz2-e6tiec':INITIAL_TABLES[0],'duty-mtwelqz8-wzdvxy':INITIAL_TABLES[1]}[item.id])||null}}),
       changes:changeItems.filter(function(item){return item&&/^\d{4}-\d{2}-\d{2}$/.test(String(item.date||''))&&['1','2','3'].includes(String(item.grade||''))&&cleanName(item.from)&&cleanName(item.to)}).slice(0,300).map(function(item,index){return{id:String(item.id||('change-'+index)),date:String(item.date),grade:String(item.grade),from:cleanName(item.from),to:cleanName(item.to),createdAt:String(item.createdAt||'')}})
     };
   }
@@ -67,14 +67,14 @@
     return{value:value,changed:wasChanged,original:original,column:column};
   }
   function renderTables(){
-    tableList.innerHTML=INITIAL_TABLES.map(function(table){
+    tableList.innerHTML=images.filter(function(item){return item.table}).map(function(item){const table=item.table;const grades=table.grades||[2,1];
       const rows=table.rows.map(function(row,index){
-        const cells=[appliedCell(table,row,2,0,row[2]),appliedCell(table,row,2,1,row[3]),appliedCell(table,row,1,0,row[4]),appliedCell(table,row,1,1,row[5])];
+        const cells=[appliedCell(table,row,grades[0],0,row[2]),appliedCell(table,row,grades[0],1,row[3]),appliedCell(table,row,grades[1],0,row[4]),appliedCell(table,row,grades[1],1,row[5])];
         const cellMarkup=cells.map(function(cell){const title=cell.changed?' title="変更前：'+escapeHtml(cell.original)+'"':'';return'<td class="'+(cell.changed?'is-changed':'')+'"'+title+'><span>'+escapeHtml(cell.value)+'</span>'+(cell.changed?'<b>変更</b>':'')+'</td>'}).join('');
         return'<tr class="'+(table.activityDays.includes(row[0])?'is-activity':'')+'">'+(index===0?'<th class="duty-month" scope="rowgroup" rowspan="'+table.rows.length+'">'+table.month+'月</th>':'')+'<th scope="row">'+row[0]+'</th><td class="duty-weekday duty-weekday-'+row[1]+'">'+row[1]+'</td>'+cellMarkup+'</tr>';
       }).join('');
       const hasChanges=changes.some(function(item){return item.date.startsWith(table.year+'-'+String(table.month).padStart(2,'0')+'-')});
-      return'<section class="duty-digital-roster" aria-label="'+table.year+'年'+table.month+'月の当番表"><div class="duty-table-scroll"><table><colgroup><col style="width:12%"><col style="width:8%"><col style="width:8%"><col span="4" style="width:18%"></colgroup><thead><tr><th>'+table.year+'年</th><th>日付</th><th>曜日</th><th colspan="2">2年生</th><th colspan="2">1年生</th></tr></thead><tbody>'+rows+'</tbody></table></div><div class="duty-sheet-note">黄色の日は里山活動日です。駐車場所にご注意ください。'+(hasChanges?'<br>赤字・「変更」は登録済みの当番変更です。':'')+'</div></section>';
+      return'<section class="duty-digital-roster" aria-label="'+table.year+'年'+table.month+'月の当番表"><div class="duty-table-scroll"><table><colgroup><col style="width:12%"><col style="width:8%"><col style="width:8%"><col span="4" style="width:18%"></colgroup><thead><tr><th>'+table.year+'年</th><th>日付</th><th>曜日</th><th colspan="2">'+grades[0]+'年生</th><th colspan="2">'+grades[1]+'年生</th></tr></thead><tbody>'+rows+'</tbody></table></div><div class="duty-sheet-note">黄色の日は里山活動日です。駐車場所にご注意ください。'+(hasChanges?'<br>赤字・「変更」は登録済みの当番変更です。':'')+'</div></section>';
     }).join('');
   }
 
@@ -114,8 +114,8 @@
   function readAsDataUrl(file){return new Promise(function(resolve,reject){const reader=new FileReader();reader.onload=function(){resolve(String(reader.result||''))};reader.onerror=reject;reader.readAsDataURL(file)})}
 
   async function persist(successMessage,updateMessage,announceLatest){
-    const adminPassword=panel.dataset.adminPassword||'';if(!adminPassword){alert('管理画面を開き直してください。');return false}
-    const payload={initialized:true,images:images,changes:changes};if(JSON.stringify(payload).length>7500000){alert('画像の合計容量が大きすぎます。画像を減らしてください。');return false}
+    const adminPassword=panel.dataset.adminPassword||'';if(!adminPassword)throw new Error('管理画面を開き直してください。')
+    const payload={initialized:true,images:images,changes:changes};if(JSON.stringify(payload).length>7500000){throw new Error('画像の合計容量が大きすぎます。画像を減らしてください。')}
     const response=await fetch(API,{method:'POST',headers:{'content-type':'application/json','x-admin-password':adminPassword},body:JSON.stringify({data:payload,updateMessage:updateMessage||'当番表を更新しました',announceLatest:announceLatest===true})});
     const body=await response.json().catch(function(){return{}});if(!response.ok)throw new Error(body.error||'保存できませんでした。');saveCache();render();showSaveNotice(successMessage||'保存しました');if(announceLatest)window.refreshBoardLatestUpdate?.();return true;
   }
@@ -172,12 +172,29 @@
   async function addImages(){
     const files=Array.from(fileInput.files||[]);if(!files.length){alert('追加する画像を選択してください。');return}if(images.length+files.length>8){alert('当番表は8枚まで保存できます。');return}
     for(const file of files){if(!/^image\/(jpeg|png|webp)$/i.test(file.type)&&!(/\.(jpe?g|png|webp)$/i.test(file.name))){alert('JPEG・PNG・WebP画像を選択してください。');return}if(file.size>4*1024*1024){alert(file.name+' は4MBを超えています。');return}}
-    saveBtn.disabled=true;saveBtn.textContent='保存中…';const previous=images.slice();
-    try{for(const file of files)images.push({id:'duty-'+Date.now().toString(36)+'-'+Math.random().toString(36).slice(2,8),name:file.name,data:await readAsDataUrl(file),src:''});await persist(files.length+'枚の画像を保存しました','当番表の画像を'+files.length+'枚保存しました',true);fileInput.value=''}catch(e){images=previous;render();alert(e.message||'画像を保存できませんでした。')}finally{saveBtn.disabled=false;saveBtn.textContent='画像を保存'}
+    saveBtn.disabled=true;saveBtn.textContent='読み取り・確認中…';const previous=images.slice();
+    try{
+      const pending=[];
+      for(const file of files){
+        const data=await readAsDataUrl(file),table=await window.readDutyImage(data);
+        if(!table)return;
+        if(images.concat(pending).some(item=>item.table&&item.table.year===table.year&&item.table.month===table.month))throw new Error('同じ月の当番表が登録されています。原本一覧を確認してください。');
+        pending.push({id:'duty-'+Date.now().toString(36)+'-'+Math.random().toString(36).slice(2,8),name:file.name,data:data,src:'',table:table});
+      }
+      images=images.concat(pending);await persist('当番表を保存しました','当番表を更新しました',true);fileInput.value='';
+    }catch(e){images=previous;render();alert(e.message||'保存できませんでした。')}finally{saveBtn.disabled=false;saveBtn.textContent='画像から表を作成'}
   }
 
   async function move(index,direction){const next=index+direction;if(next<0||next>=images.length)return;const previous=images.slice();[images[index],images[next]]=[images[next],images[index]];render();try{await persist('並び順を保存しました','当番表の並び順を変更しました')}catch(e){images=previous;render();alert(e.message||'並び順を保存できませんでした。')}}
-  async function removeImage(index){const target=images[index];if(!target||!confirm('「'+(target.name||'当番表')+'」を削除しますか？'))return;const previous=images.slice();images.splice(index,1);render();try{await persist('画像を削除しました','当番表「'+(target.name||'画像')+'」を削除しました')}catch(e){images=previous;render();alert(e.message||'画像を削除できませんでした。')}}
+  async function removeImage(index){
+    const target=images[index];if(!target)return;
+    const key=target.table?target.table.year+'-'+String(target.table.month).padStart(2,'0'):null;
+    const deleteHistory=key&&!images.some((item,i)=>i!==index&&item.table&&item.table.year===target.table.year&&item.table.month===target.table.month);
+    if(!confirm('「'+target.name+'」を削除しますか？'+(deleteHistory?' '+key+'の表と変更履歴も削除します。':'')))return;
+    const previous=images.slice(),previousChanges=changes.slice();images.splice(index,1);
+    if(deleteHistory)changes=changes.filter(item=>!item.date.startsWith(key+'-'));
+    try{await persist('当番表と関連する変更履歴を削除しました','当番表を削除しました')}catch(e){images=previous;changes=previousChanges;render();alert(e.message)}
+  }
 
   changeYear.value=String(new Date().getFullYear());
   const historyToggle=document.getElementById('toggleDutyHistory');

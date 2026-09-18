@@ -532,7 +532,7 @@ html{scroll-padding-top:var(--compact-header-height)}
 
 <footer class="footer">© YACHIYO LITTLE SENIOR. All Rights Reserved.</footer>
 
-<link rel="stylesheet" href="./board-content.css?v=20260918-8">
+<link rel="stylesheet" href="./board-content.css?v=20260918-9">
 
 <button id="densukeToggleBtn" type="button">管理</button>
 <div id="densukeAdminPanel">
@@ -590,8 +590,9 @@ html{scroll-padding-top:var(--compact-header-height)}
       <b>当番表画像</b>
     <label for="dutyRosterImageInput">画像ファイル（複数選択可）</label>
     <input id="dutyRosterImageInput" type="file" accept="image/jpeg,image/png,image/webp,.jpg,.jpeg,.png,.webp" multiple>
-    <p id="dutyRosterAdminHelp">画像を選択後、下のボタンを押すと保存されます。</p>
-    <button id="saveDutyRosterBtn" type="button">画像を保存</button>
+    <p id="dutyRosterAdminHelp">1枚につき1か月分の画像を選択し、読み取り結果を原本と照合して保存してください。</p>
+    <button id="saveDutyRosterBtn" type="button">画像から表を作成</button>
+    <div id="dutyImageReview" hidden></div>
     <div id="dutyRosterAdminList"></div>
     </div>
   </div>
@@ -617,7 +618,8 @@ html{scroll-padding-top:var(--compact-header-height)}
 <script src="./board-referee-documents.js?v=20260917-6"></script>
 <script src="./board-tournaments.js?v=20260914-1"></script>
 <script src="./board-meetings.js?v=20260917-7"></script>
-<script src="./board-duty-roster.js?v=20260918-8"></script>
+<script src="./duty-image-reader.js?v=20260918-1"></script>
+<script src="./board-duty-roster.js?v=20260918-9"></script>
 <script src="./board-rules.js?v=20260914-4"></script>
 <script src="./board-archive.js?v=20260914-3"></script>
 <style id="nonblocking-save-notice-style">

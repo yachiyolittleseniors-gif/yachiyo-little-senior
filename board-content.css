@@ -104,6 +104,11 @@
 #toggleDutyHistory{width:100%;min-height:44px;padding:10px 14px;border:1px solid #c79a3b;border-radius:8px;background:transparent;color:#866322;font:inherit;font-size:12px;font-weight:700;cursor:pointer}
 #dutyHistoryContent{margin-top:12px;padding:12px;border:1px solid #dac68d;border-radius:12px;background:#fffaf0}
 #dutyHistoryContent[hidden]{display:none}
+#dutyImageReview{margin-top:12px;padding:10px;border:1px solid #c79a3b;border-radius:10px}
+#dutyImageReview[hidden]{display:none}
+#dutyRosterAdminFields #dutyImageReview input,#dutyImageReview textarea{box-sizing:border-box;width:100%;padding:10px;background:#fff;color:#17202b;font-size:16px;border-radius:6px;border:1px solid #c79a3b}
+#dutyImageReview p{min-height:0;font-size:12px;color:#fff;line-height:1.6}
+#dutyImageReview pre{white-space:pre-wrap;overflow-wrap:anywhere}
 #rulesAdminFields{margin-top:18px;padding-top:18px;border-top:1px solid rgba(255,255,255,.18)}
 #rulesAdminFields input{width:100%;margin:6px 0 10px;color:#fff}
 #saveRulesBtn{width:100%;margin:4px 0!important;background:#c79a3b!important;color:#fff!important}
