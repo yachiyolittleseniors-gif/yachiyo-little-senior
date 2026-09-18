@@ -211,8 +211,8 @@
 
   function updateStatus(message = '') {
     elements.status.textContent = message || (state.visible
-      ? 'チーム専用ページに表示中です。'
-      : '現在はチーム専用ページに表示されていません。');
+      ? '他の端末にも試合速報を公開中です。'
+      : 'まだ他の端末には公開されていません。');
     elements.updated.textContent = formatUpdated(state.updatedAt);
   }
 
@@ -239,7 +239,7 @@
     renderScoreRows();
     renderTieBreaks();
     elements.liveBadge.hidden = !state.visible;
-    elements.visibilityBadge.textContent = state.visible ? '表示中' : '非表示中';
+    elements.visibilityBadge.textContent = state.visible ? '公開中' : '未公開';
     elements.visibilityBadge.classList.toggle('is-visible', state.visible);
     elements.visibility.textContent = state.visible ? '試合速報を非表示' : '試合速報を表示';
     updateStatus();
