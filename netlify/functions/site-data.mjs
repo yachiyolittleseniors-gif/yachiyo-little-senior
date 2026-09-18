@@ -762,12 +762,23 @@ function normalizeLiveScoreGame(value) {
     tournament: normalizeLiveScoreText(value.tournament, 100),
     startTime,
     ground: normalizeLiveScoreText(value.ground, 100),
+    grade: ["1年生", "2年生", "3年生"].includes(String(value.grade || "")) ? String(value.grade) : "",
     ourName: normalizeLiveScoreText(value.ourName, 40) || "八千代",
     opponent: normalizeLiveScoreText(value.opponent, 40),
     battingOrder: value.battingOrder === "first" ? "first" : "second",
     innings: {
       ours: seven(innings.ours),
       opponent: seven(innings.opponent),
+    },
+    sbo: {
+      strikes: Math.max(0, Math.min(2, Number(value.sbo?.strikes) || 0)),
+      balls: Math.max(0, Math.min(3, Number(value.sbo?.balls) || 0)),
+      outs: Math.max(0, Math.min(2, Number(value.sbo?.outs) || 0)),
+    },
+    bases: {
+      first: Boolean(value.bases?.first),
+      second: Boolean(value.bases?.second),
+      third: Boolean(value.bases?.third),
     },
     tieBreaks,
     completedAt: value.completedAt ? String(value.completedAt).slice(0, 40) : "",
