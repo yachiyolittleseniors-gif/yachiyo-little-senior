@@ -40,7 +40,7 @@
 .live-score-tb-list{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:9px;margin-top:10px}
 .live-score-tb-block{padding:10px;border:1px solid #596b81;border-radius:9px;background:rgba(255,255,255,.04)}.live-score-tb-block>strong{display:block;margin-bottom:7px;color:#e2bd67;font-size:12px}.live-score-tb-block label{display:grid;grid-template-columns:minmax(0,1fr) 48px;align-items:center;gap:8px;margin-top:5px;color:#fff;font-size:12px;font-weight:800}.live-score-tb-block .live-score-number{height:36px;border-radius:6px}
 .live-score-publish{margin-top:18px}.live-score-publish>.primary{width:100%;font-size:16px}.live-score-status{display:flex;justify-content:space-between;gap:10px;margin:8px 2px 0;color:#bac3cf;font-size:11px;font-weight:700}.live-score-status time{flex:0 0 auto}
-.live-score-secondary-actions{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:13px}.live-score-secondary-actions .live-score-button{width:100%}
+.live-score-secondary-actions{display:block;margin-top:13px}.live-score-secondary-actions .live-score-button{width:100%}
 .live-score-card.is-saving{opacity:.72;pointer-events:none}
 @media(max-width:700px){
   .live-score-idle,.live-score-editor{padding:17px 13px}.live-score-card h2{font-size:25px}.live-score-idle-actions{flex-direction:column}

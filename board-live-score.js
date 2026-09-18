@@ -21,6 +21,8 @@
   let state = { active: false, visible: false, current: null, lastGame: null, updatedAt: '' };
   let dirty = false;
   let saving = false;
+  let changeVersion = 0;
+  let autoSaveTimer = 0;
 
   function accessValue() {
     try {
@@ -102,7 +104,6 @@
     tieBreaks: $('#liveScoreTieBreaks'),
     addTieBreak: $('#liveScoreAddTieBreak'),
     visibility: $('#liveScoreVisibility'),
-    update: $('#liveScoreUpdate'),
     finish: $('#liveScoreFinish'),
     liveBadge: $('#liveScoreLiveBadge'),
     visibilityBadge: $('#liveScoreVisibilityBadge'),
@@ -130,8 +131,9 @@
       if (tieBreak) state.current.tieBreaks[index][side] = next;
       else state.current.innings[side][index] = next;
       dirty = true;
+      changeVersion += 1;
       updateDisplayedTotals();
-      updateStatus('未保存の変更があります');
+      scheduleAutoSave();
     });
     return input;
   }
@@ -211,8 +213,8 @@
 
   function updateStatus(message = '') {
     elements.status.textContent = message || (state.visible
-      ? '他の端末にも試合速報を公開中です。'
-      : 'まだ他の端末には公開されていません。');
+      ? '公開中・入力内容は自動保存されます。'
+      : '未公開・入力内容は自動保存されます。');
     elements.updated.textContent = formatUpdated(state.updatedAt);
   }
 
@@ -241,8 +243,7 @@
     elements.liveBadge.hidden = !state.visible;
     elements.visibilityBadge.textContent = state.visible ? '公開中' : '未公開';
     elements.visibilityBadge.classList.toggle('is-visible', state.visible);
-    elements.visibility.textContent = state.visible ? '得点を更新' : '試合速報を公開';
-    elements.update.textContent = state.visible ? '速報を非公開' : '下書きを保存';
+    elements.visibility.textContent = state.visible ? '試合速報を非公開' : '試合速報を公開';
     updateStatus();
   }
 
@@ -265,17 +266,28 @@
     return '';
   }
 
-  async function save(message) {
+  function scheduleAutoSave() {
+    clearTimeout(autoSaveTimer);
+    updateStatus('自動保存中…');
+    autoSaveTimer = setTimeout(() => save('', { quiet: true, renderAfter: false }), 900);
+  }
+
+  async function save(message, { quiet = false, renderAfter = true } = {}) {
     if (saving) return false;
+    clearTimeout(autoSaveTimer);
+    const savingVersion = changeVersion;
     saving = true;
     root.classList.add('is-saving');
     try {
       state.updatedAt = new Date().toISOString();
       const result = await request('POST', state);
-      state = normalize(result.data || state);
-      dirty = false;
-      render();
-      if (window.showSaveNotice) window.showSaveNotice(message || '試合速報を保存しました');
+      const saved = normalize(result.data || state);
+      if (renderAfter) state = saved;
+      else state.updatedAt = saved.updatedAt;
+      if (changeVersion === savingVersion) dirty = false;
+      if (renderAfter) render();
+      else updateStatus(state.visible ? '公開中・自動保存しました。' : '未公開・自動保存しました。');
+      if (!quiet && window.showSaveNotice) window.showSaveNotice(message || '試合速報を保存しました');
       return true;
     } catch (error) {
       alert(error.message || '試合速報を保存できませんでした。');
@@ -283,6 +295,7 @@
     } finally {
       saving = false;
       root.classList.remove('is-saving');
+      if (dirty && changeVersion !== savingVersion) scheduleAutoSave();
     }
   }
 
@@ -291,6 +304,7 @@
     state.visible = visible;
     state.current = normalizeGame(game) || blankGame();
     dirty = true;
+    changeVersion += 1;
     render();
     await save(visible ? '直前の試合を再表示しました' : '試合速報を開始しました');
   }
@@ -302,9 +316,10 @@
     .forEach(input => input.addEventListener('input', () => {
       readFields();
       dirty = true;
+      changeVersion += 1;
       renderScoreRows();
       renderTieBreaks();
-      updateStatus('未保存の変更があります');
+      scheduleAutoSave();
     }));
 
   elements.order.addEventListener('click', event => {
@@ -312,8 +327,9 @@
     if (!button || !state.current) return;
     state.current.battingOrder = button.dataset.order;
     dirty = true;
+    changeVersion += 1;
     render();
-    updateStatus('未保存の変更があります');
+    scheduleAutoSave();
   });
 
   elements.addTieBreak.addEventListener('click', () => {
@@ -321,33 +337,24 @@
     readFields();
     state.current.tieBreaks.push({ inning: 8 + state.current.tieBreaks.length, ours: '', opponent: '' });
     dirty = true;
+    changeVersion += 1;
     renderScoreRows();
     renderTieBreaks();
-    updateStatus('未保存の変更があります');
-  });
-
-  elements.update.addEventListener('click', async () => {
-    readFields();
-    if (state.visible) {
-      state.visible = false;
-      dirty = true;
-      await save('試合速報を非公開にしました');
-      return;
-    }
-    await save('下書きを保存しました');
+    scheduleAutoSave();
   });
 
   elements.visibility.addEventListener('click', async () => {
-    if (state.visible) {
+    const nextVisible = !state.visible;
+    if (nextVisible) {
+      const error = validateForDisplay();
+      if (error) { alert(error); return; }
+    } else {
       readFields();
-      await save('得点を更新しました');
-      return;
     }
-    const error = validateForDisplay();
-    if (error) { alert(error); return; }
-    state.visible = true;
+    state.visible = nextVisible;
     dirty = true;
-    await save('試合速報を公開しました');
+    changeVersion += 1;
+    await save(state.visible ? '試合速報を公開しました' : '試合速報を非公開にしました');
   });
 
   elements.finish.addEventListener('click', async () => {
@@ -360,11 +367,12 @@
     state.active = false;
     state.visible = false;
     dirty = true;
+    changeVersion += 1;
     if (await save('試合速報を終了しました')) render();
   });
 
   async function load({ silent = false } = {}) {
-    if (dirty || saving) return;
+    if (dirty || saving || root.contains(document.activeElement)) return;
     try {
       const result = await request();
       state = normalize(result.data);
