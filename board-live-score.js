@@ -199,8 +199,8 @@
     if (!elements.sbo || !state.current) return;
     elements.sbo.innerHTML = '';
     const groups = [
-      ['B', 'balls', 3, 'on-b'],
       ['S', 'strikes', 2, 'on-s'],
+      ['B', 'balls', 3, 'on-b'],
       ['O', 'outs', 2, 'on-o'],
     ];
     groups.forEach(([label, key, max, activeClass]) => {
@@ -378,7 +378,6 @@
   }
 
   function render() {
-    document.body.classList.toggle('live-score-replay-only', replayMode);
     const showingEditor = state.active || replayMode;
     elements.idle.hidden = showingEditor && !editorCollapsed;
     elements.editor.hidden = !showingEditor || editorCollapsed;

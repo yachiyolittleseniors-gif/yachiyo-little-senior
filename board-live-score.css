@@ -29,7 +29,7 @@
 .live-score-fields{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;margin-top:14px}
 .live-score-field{display:grid;min-width:0;gap:5px;color:#fff;font-size:12px;font-weight:900}
 .live-score-field.wide{grid-column:1/-1}
-.live-score-field input{box-sizing:border-box;width:100%;min-width:0;max-width:100%;height:42px;padding:0 11px;border:1px solid #c6ccd4;border-radius:8px;background:#fff;color:#071426;font:inherit;font-size:14px;font-weight:800}
+.live-score-field input{box-sizing:border-box;width:100%;min-width:0;max-width:100%;height:42px;padding:0 11px;border:1px solid #c6ccd4;border-radius:8px;background:#fff;color:#071426;font:inherit;font-size:14px;font-weight:800}.live-score-field select{box-sizing:border-box;width:100%;min-width:0;max-width:100%;height:42px;padding:0 34px 0 11px;border:1px solid #c6ccd4;border-radius:8px;background:#fff;color:#071426;font:inherit;font-size:14px;font-weight:800;cursor:pointer}
 .live-score-team-settings{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr) minmax(190px,1.15fr);gap:10px;margin-top:10px}
 .live-score-order{display:grid;gap:6px}.live-score-order>span{font-size:12px;font-weight:900}
 .live-score-segments{display:grid;grid-template-columns:1fr 1fr;height:42px;border:1px solid #8390a0;border-radius:8px;overflow:hidden}
@@ -52,12 +52,12 @@
 .live-score-card.is-replay .live-score-segments button:disabled{opacity:1;cursor:default;-webkit-text-fill-color:currentColor}
 @media(max-width:700px){
   .live-score-idle{padding:12px 10px}.live-score-editor{padding:14px 10px}.live-score-card h2{font-size:21px}.live-score-kicker{margin-bottom:2px;font-size:10px}.live-score-idle p{margin-top:6px;font-size:12px;line-height:1.45}.live-score-idle-actions{gap:6px;margin-top:9px}.live-score-idle-actions .live-score-button{min-height:38px;padding:7px 6px;font-size:11px;white-space:nowrap}.live-score-restore-wrap{padding:0}.live-score-restore-wrap .live-score-button{min-height:32px;padding:5px 8px;font-size:10px}
-  .live-score-fields{grid-template-columns:112px minmax(0,1fr);gap:7px;margin-top:11px}.live-score-field{gap:4px}.live-score-field.wide{grid-column:1/-1}#liveScoreStartTime{width:112px!important;max-width:112px!important}.live-score-team-settings{grid-template-columns:1fr 1fr;gap:7px;margin-top:8px}.live-score-order{grid-column:1/-1}
+  .live-score-fields{grid-template-columns:112px minmax(0,1fr);gap:7px;margin-top:11px}.live-score-field{gap:4px}.live-score-field.wide{grid-column:1/-1}#liveScoreStartTime{width:112px!important;max-width:112px!important}.live-score-team-settings{grid-template-columns:1fr 1fr 1fr;gap:7px;margin-top:8px}.live-score-order{grid-column:1/-1}
   .live-score-field input,.live-score-segments{height:38px}.live-score-segments button{font-size:13px}
   .live-score-board{margin-top:11px}
   .live-score-board-head,.live-score-row{grid-template-columns:minmax(62px,1.3fr) repeat(7,minmax(0,.55fr)) minmax(27px,.58fr) minmax(29px,.62fr)}
   .live-score-board-head span{min-height:29px;font-size:9px}.live-score-team{padding:0 4px;font-size:9px}.live-score-number{height:35px;font-size:13px}.live-score-tb-total{font-size:12px}.live-score-total{font-size:15px}
   .live-score-tb-actions{grid-template-columns:minmax(0,1fr) auto;gap:6px;margin-top:9px}.live-score-tb-actions .live-score-button{width:auto;min-height:39px;padding:8px 10px;font-size:12px}.live-score-tb-actions .danger{min-width:105px}
   .live-score-tb-list{margin-top:7px}.live-score-tb-block{padding:7px 9px}.live-score-tb-block>strong{margin-bottom:3px}.live-score-tb-block label{margin-top:3px}.live-score-tb-block .live-score-number{height:30px}
-  .live-score-publish{gap:7px;margin-top:10px}.live-score-publish>.live-score-button{min-height:41px;padding:8px 12px}.live-score-status{display:grid;gap:2px}.live-score-field input{font-size:14px}
+  .live-score-publish{gap:7px;margin-top:10px}.live-score-publish>.live-score-button{min-height:41px;padding:8px 12px}.live-score-status{display:grid;gap:2px}.live-score-field input,.live-score-field select{font-size:13px}
 }
