@@ -56,6 +56,7 @@
   }
 
   function imageSource(item){return item.data||item.src||''}
+  function adminImageLabel(item,index){const table=item&&item.table;const title=table&&Number(table.year)&&Number(table.month)?table.year+'年'+table.month+'月 当番表':String(item&&item.name||('当番表 '+(index+1)));return(index+1)+'番目　'+title}
   function imageSourceKey(item){const source=imageSource(item);return String(item.id)+'-'+source.length+'-'+source.slice(-24)}
   function sortChanges(items){return items.slice().sort(function(a,b){return a.date.localeCompare(b.date)||Number(b.grade)-Number(a.grade)||a.from.localeCompare(b.from,'ja')})}
   function displayDate(value){const parts=String(value||'').split('-').map(Number);if(parts.length!==3)return value;const date=new Date(parts[0],parts[1]-1,parts[2]);return parts[1]+'/'+parts[2]+'（'+'日月火水木金土'[date.getDay()]+'）'}
@@ -106,7 +107,7 @@
       const sourceKey=imageSourceKey(item);let image=existingImages.get(String(item.id));
       if(!image||image.dataset.sourceKey!==sourceKey){image=document.createElement('img');image.className='duty-roster-image';image.src=imageSource(item);image.dataset.dutyId=String(item.id);image.dataset.sourceKey=sourceKey}
       image.alt=item.name||('当番表 '+(index+1));image.loading=index===0?'eager':'lazy';image.decoding='async';imageFragment.appendChild(image);
-      const row=document.createElement('div');row.className='duty-roster-admin-item';const name=document.createElement('span');name.textContent=item.name||('当番表 '+(index+1));const actions=document.createElement('div');actions.className='duty-roster-admin-actions';
+      const row=document.createElement('div');row.className='duty-roster-admin-item';const name=document.createElement('span');name.textContent=adminImageLabel(item,index);const actions=document.createElement('div');actions.className='duty-roster-admin-actions';
       const up=document.createElement('button');up.type='button';up.textContent='↑';up.title='上へ';up.disabled=index===0;up.addEventListener('click',function(){move(index,-1)});
       const down=document.createElement('button');down.type='button';down.textContent='↓';down.title='下へ';down.disabled=index===images.length-1;down.addEventListener('click',function(){move(index,1)});
       const remove=document.createElement('button');remove.type='button';remove.textContent='削除';remove.className='duty-roster-delete';remove.addEventListener('click',function(){removeImage(index)});
