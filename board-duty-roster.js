@@ -10,6 +10,7 @@
   const changeYear=document.getElementById('dutyChangeYear');
   const changeGrade=document.getElementById('dutyChangeGrade');
   const changeText=document.getElementById('dutyChangeText');
+  const pasteChangeBtn=document.getElementById('pasteDutyChangeBtn');
   const changePreview=document.getElementById('dutyChangePreview');
   const saveChangesBtn=document.getElementById('saveDutyChangesBtn');
   const changeAdminList=document.getElementById('dutyChangeAdminList');
@@ -18,7 +19,7 @@
   let changes=[];
   let parsedChanges=[];
 
-  if(!list||!adminList||!fileInput||!saveBtn||!panel||!changeSection||!changeList||!changeYear||!changeGrade||!changeText||!changePreview||!saveChangesBtn||!changeAdminList)return;
+  if(!list||!adminList||!fileInput||!saveBtn||!panel||!changeSection||!changeList||!changeYear||!changeGrade||!changeText||!pasteChangeBtn||!changePreview||!saveChangesBtn||!changeAdminList)return;
 
   function cleanName(value){return String(value||'').normalize('NFKC').replace(/[\s　]+/g,'').replace(/(?:さん|様)$/,'').replace(/[。、,，]+$/,'').trim().slice(0,60)}
   function escapeHtml(value){return String(value||'').replace(/[&<>"']/g,function(char){return{'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[char]})}
@@ -86,12 +87,12 @@
     if(!Number.isInteger(year)||year<2020||year>2100)return{results:[],errors:['年を選択してください。']};
     changeText.value.split(/\r?\n/).forEach(function(source){
       const line=source.normalize('NFKC').trim();if(!line)return;
-      const match=line.match(/(\d{1,2})\s*\/\s*(\d{1,2})(?:\s*[（(][^）)]*[）)])?\s*(.+?)\s*(?:→|⇒|＞|->)\s*(.+?)\s*$/);if(!match)return;
+      const match=line.match(/(\d{1,2})\s*(?:\/|月)\s*(\d{1,2})\s*日?(?:\s*[（(〔［【]\s*[日月火水木金土](?:曜(?:日)?)?\s*[）)〕］】])?\s*(.+?)\s*(?:→|⇒|＞|->)\s*(.+?)\s*$/);if(!match)return;
       const month=Number(match[1]),day=Number(match[2]),from=cleanName(match[3]),to=cleanName(match[4]);
       if(!validDate(year,month,day)||!from||!to){errors.push('判定できません：'+source.trim());return}
       results.push({id:'change-'+Date.now().toString(36)+'-'+Math.random().toString(36).slice(2,7),date:year+'-'+String(month).padStart(2,'0')+'-'+String(day).padStart(2,'0'),grade:grade,from:from,to:to,createdAt:new Date().toISOString()});
     });
-    if(changeText.value.trim()&&!results.length&&!errors.length)errors.push('「10/3 山田→佐藤」のような変更行が見つかりませんでした。');return{results:results,errors:errors};
+    if(changeText.value.trim()&&!results.length&&!errors.length)errors.push('「10/3 山田→佐藤」または「10月3日 山田→佐藤」のような変更行が見つかりませんでした。');return{results:results,errors:errors};
   }
 
   function changeKey(item){return[item.date,item.from,item.to].join('|')}
@@ -114,6 +115,15 @@
     try{await persist(parsedChanges.length+'件の当番変更を保存しました','当番変更を'+parsedChanges.length+'件反映しました',true);changeText.value='';parsedChanges=[];updateChangePreview()}catch(e){changes=previous;render();alert(e.message||'当番変更を保存できませんでした。')}finally{saveChangesBtn.disabled=false;saveChangesBtn.textContent='確認した変更を保存'}
   }
 
+  async function pasteChangeText(){
+    try{
+      if(!navigator.clipboard?.readText)throw new Error('clipboard unavailable');
+      const text=await navigator.clipboard.readText();
+      if(!String(text||'').trim())throw new Error('clipboard empty');
+      changeText.value=text;updateChangePreview(false);changeText.focus();
+    }catch(e){changeText.focus();alert('入力欄を長押しして「ペースト」を選んでください。')}
+  }
+
   async function removeChange(id){
     const target=changes.find(function(item){return item.id===id});if(!target||!confirm(displayDate(target.date)+'「'+target.from+' → '+target.to+'」を取り消しますか？'))return;
     const previous=changes.slice();changes=changes.filter(function(item){return item.id!==id});render();
@@ -133,5 +143,6 @@
   changeYear.value=String(new Date().getFullYear());
   [changeYear,changeText].forEach(function(element){element.addEventListener('input',function(){updateChangePreview(false)});element.addEventListener('change',function(){updateChangePreview(false)})});
   changeGrade.addEventListener('change',function(){updateChangePreview(true)});
+  pasteChangeBtn.addEventListener('click',pasteChangeText);
   saveChangesBtn.addEventListener('click',saveChanges);saveBtn.addEventListener('click',addImages);loadCache();render();load();
 })();
