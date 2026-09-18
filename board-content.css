@@ -141,3 +141,7 @@
 body.document-archive-preview-open{overflow:hidden!important}
 .meeting-day-list-row.history-focus-event{animation:historyEventFlash 2.6s ease}
 @keyframes historyEventFlash{0%,32%{background:#fff4cf;box-shadow:0 0 0 4px rgba(199,154,59,.22)}100%{background:transparent;box-shadow:none}}
+
+/* 当番日とは別に、変更を反映した日時を表示する。 */
+.duty-change-item .duty-change-updated{grid-column:1/-1;margin-top:-3px;text-align:right;color:#69737f;font-size:10px;font-weight:400;line-height:1.35}
+.duty-change-admin-item .duty-change-updated{display:block;margin-top:3px;color:#cbd2db;font-size:10px;font-weight:400;line-height:1.35}
