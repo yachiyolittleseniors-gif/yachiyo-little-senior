@@ -158,29 +158,37 @@
       ['O', 'outs', 2, 'on-o'],
     ];
     groups.forEach(([label, key, max, activeClass]) => {
-      const group = document.createElement('div');
+      const group = document.createElement('button');
+      group.type = 'button';
       group.className = 'live-score-count';
+      group.setAttribute('aria-label', `${label}カウント ${state.current.sbo[key]} / ${max}`);
+      group.disabled = replayMode;
+
       const title = document.createElement('b');
       title.textContent = label;
       const dots = document.createElement('div');
       dots.className = 'live-score-dots';
       for (let i = 0; i < max; i += 1) {
-        const dot = document.createElement('button');
-        dot.type = 'button';
+        const dot = document.createElement('span');
         dot.className = 'live-score-dot' + (i < state.current.sbo[key] ? ` ${activeClass}` : '');
-        dot.setAttribute('aria-label', `${label}${i + 1}`);
-        dot.setAttribute('aria-pressed', String(i < state.current.sbo[key]));
-        dot.disabled = replayMode;
-        dot.addEventListener('click', () => {
-          if (replayMode) return;
-          state.current.sbo[key] = i < state.current.sbo[key] ? i : i + 1;
-          dirty = true;
-          changeVersion += 1;
-          renderSbo();
-          scheduleAutoSave();
-        });
         dots.appendChild(dot);
       }
+
+      group.addEventListener('click', () => {
+        if (replayMode) return;
+        const next = state.current.sbo[key] >= max ? 0 : state.current.sbo[key] + 1;
+        state.current.sbo[key] = next;
+        dirty = true;
+        changeVersion += 1;
+        renderSbo();
+        scheduleAutoSave();
+      });
+
+      group.addEventListener('dblclick', event => {
+        event.preventDefault();
+        event.stopPropagation();
+      });
+
       group.append(title, dots);
       elements.sbo.appendChild(group);
     });
@@ -444,6 +452,11 @@
     changeVersion += 1;
     renderBases();
     scheduleAutoSave();
+  });
+
+  elements.bases.addEventListener('dblclick', event => {
+    event.preventDefault();
+    event.stopPropagation();
   });
 
   elements.order.addEventListener('click', event => {
