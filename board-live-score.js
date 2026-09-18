@@ -356,8 +356,6 @@
     if (!name) return;
     const text = String(name.textContent || '');
     name.classList.remove('live-score-team-long', 'live-score-team-medium');
-    if (text.length >= 5) name.classList.add('live-score-team-long');
-    else if (text.length === 4) name.classList.add('live-score-team-medium');
     name.style.setProperty('white-space', 'nowrap', 'important');
     name.style.setProperty('overflow', 'hidden', 'important');
     name.style.setProperty('text-overflow', 'clip', 'important');
@@ -365,7 +363,8 @@
     name.style.setProperty('width', '100%', 'important');
     name.style.setProperty('box-sizing', 'border-box', 'important');
     // チーム名は大きくしすぎず、長い名前も最初から確実に1行へ。
-    let size = text.length >= 5 ? 16 : (text.length === 4 ? 17 : 18);
+    // 両チームを同じ基準サイズにする。長さによる極端な大小差は付けない。
+    let size = 18;
     name.style.setProperty('font-size', `${size}px`, 'important');
     name.style.setProperty('line-height', '1', 'important');
     requestAnimationFrame(() => {
@@ -468,7 +467,14 @@
     elements.tournament.value = game.tournament;
     elements.startTime.value = game.startTime;
     elements.ground.value = game.ground;
-    elements.grade.value = game.grade || '';
+    // 保存値は 1/2/3、古いデータは 1年生/2年生/3年生 の場合がある。
+    // select の実値と表示文字の両方を見て確実に復元する。
+    const savedGrade = String(game.grade || '');
+    const gradeOptions = Array.from(elements.grade?.options || []);
+    const gradeOption = gradeOptions.find(option =>
+      String(option.value) === savedGrade || String(option.textContent || '').trim() === savedGrade
+    );
+    elements.grade.value = gradeOption ? gradeOption.value : '';
     elements.opponent.value = game.opponent;
     elements.order.querySelectorAll('button').forEach(button => {
       const selected = button.dataset.order === game.battingOrder;
