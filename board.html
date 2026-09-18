@@ -1592,3 +1592,50 @@ body.photo-admin-on #accessPasswordChange{
 </script>
 </body>
 </html>
+<style id="live-score-grade-ground-final-fix">
+@media(max-width:700px){
+  /* 試合開始時間の枠は元の幅を維持。学年だけ同じサイズにする */
+  .live-score-fields{
+    grid-template-columns:112px minmax(0,1fr)!important;
+    column-gap:7px!important;
+  }
+  .live-score-fields .live-score-field:not(.wide){
+    width:112px!important;
+    max-width:112px!important;
+  }
+  /* グラウンド名は2列目いっぱいを使う */
+  .live-score-fields .live-score-field:nth-child(3){
+    width:auto!important;
+    max-width:none!important;
+  }
+  .live-score-team-settings{
+    grid-template-columns:112px minmax(0,1fr)!important;
+    column-gap:7px!important;
+  }
+  .live-score-team-settings .live-score-field:first-child,
+  #liveScoreGrade{
+    width:112px!important;
+    max-width:112px!important;
+    height:38px!important;
+    min-height:38px!important;
+    box-sizing:border-box!important;
+    border-radius:8px!important;
+  }
+  #liveScoreGrade{
+    padding:0 27px 0 11px!important;
+    font-size:12px!important;
+    line-height:38px!important;
+    white-space:nowrap!important;
+  }
+}
+</style>
+<style id="live-score-grade-ground-final-fix">
+@media(max-width:700px){
+  .live-score-fields{grid-template-columns:112px minmax(0,1fr)!important;column-gap:7px!important;}
+  .live-score-fields .live-score-field:not(.wide){width:112px!important;max-width:112px!important;}
+  .live-score-fields .live-score-field:nth-child(3){width:auto!important;max-width:none!important;}
+  .live-score-team-settings{grid-template-columns:112px minmax(0,1fr)!important;column-gap:7px!important;}
+  .live-score-team-settings .live-score-field:first-child,#liveScoreGrade{width:112px!important;max-width:112px!important;height:38px!important;min-height:38px!important;box-sizing:border-box!important;border-radius:8px!important;}
+  #liveScoreGrade{padding:0 27px 0 11px!important;font-size:12px!important;line-height:38px!important;white-space:nowrap!important;}
+}
+</style>
