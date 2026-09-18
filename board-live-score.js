@@ -33,6 +33,8 @@
   let replayMode = false;
   let inputMode = false;
   let pollTimer = 0;
+  // 選択中の得点セルは再描画・自動保存後も維持する。
+  let selectedScoreCell = null;
   // Keep one device id for the entire page lifetime. On some iPhone/Safari
   // privacy modes storage writes can fail; generating a new id on every call
   // would make the server think the lock belongs to another device.
@@ -335,11 +337,15 @@
     // スコア入力中のセルを常に金枠で表示。別セルをタップすると選択を移動する。
     const selectScoreCell = () => {
       if (!inputMode || replayMode) return;
-      elements.rows?.querySelectorAll('.live-score-number.is-selected').forEach(cell => {
+      selectedScoreCell = { side, index, tieBreak };
+      root.querySelectorAll('.live-score-number.is-selected').forEach(cell => {
         cell.classList.remove('is-selected');
       });
       input.classList.add('is-selected');
     };
+    if (selectedScoreCell && selectedScoreCell.side === side && selectedScoreCell.index === index && selectedScoreCell.tieBreak === tieBreak) {
+      input.classList.add('is-selected');
+    }
     input.addEventListener('focus', selectScoreCell);
     input.addEventListener('pointerdown', selectScoreCell);
     input.addEventListener('click', selectScoreCell);
