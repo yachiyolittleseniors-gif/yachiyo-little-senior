@@ -370,8 +370,23 @@ html{scroll-padding-top:var(--compact-header-height)}
 </style>
 <style id="live-score-time-grade-equal-style">
 @media(max-width:700px){
-  .live-score-team-settings{grid-template-columns:112px minmax(0,1fr)!important;}
+  .live-score-fields{grid-template-columns:minmax(0,1fr) minmax(0,1.75fr)!important;}
+  .live-score-team-settings{grid-template-columns:minmax(0,1fr) minmax(0,1.75fr)!important;}
 }
+.live-score-base-controls{display:grid;grid-template-columns:minmax(0,1.35fr) minmax(150px,.65fr);gap:16px;align-items:center;margin:0 0 18px;}
+.live-score-sbo{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:14px 16px;border:2px solid rgba(199,154,59,.9);border-radius:18px;background:#071426;}
+.live-score-count{display:flex;align-items:center;gap:8px;font-weight:900;color:#fff;}
+.live-score-count b{font-size:18px;color:#fff;min-width:20px;text-align:center;}
+.live-score-dots{display:flex;gap:5px;}
+.live-score-dot{width:15px;height:15px;border-radius:50%;background:#31445a;border:0;padding:0;cursor:pointer;}
+.live-score-dot.on-s{background:#e2bd67}.live-score-dot.on-b{background:#4fc36b}.live-score-dot.on-o{background:#ef5350}
+.live-score-diamond-wrap{display:flex;align-items:center;justify-content:center;gap:10px;}
+.live-score-diamond{position:relative;width:92px;height:92px;transform:rotate(45deg);border:2px solid #91a2ba;border-radius:12px;}
+.live-score-base{position:absolute;width:20px;height:20px;background:#fff;border:2px solid #91a2ba;transform:translate(-50%,-50%);cursor:pointer;padding:0;}
+.live-score-base.first{top:0;right:0}.live-score-base.second{top:0;left:0}.live-score-base.third{bottom:0;left:0}.live-score-base.home{bottom:0;right:0}
+.live-score-base.on{background:#e2bd67;border-color:#e2bd67}
+.live-score-base-labels{display:flex;flex-direction:column;gap:4px;font-size:12px;font-weight:900;color:#fff;}
+@media(max-width:700px){.live-score-base-controls{grid-template-columns:1fr;gap:12px}.live-score-diamond-wrap{justify-content:flex-start}}
 </style>
 </head>
 <body id="page-top">
@@ -444,6 +459,19 @@ html{scroll-padding-top:var(--compact-header-height)}
           <div class="live-score-badges">
             <span class="live-score-badge live" id="liveScoreLiveBadge" hidden>試合中</span>
             <span class="live-score-badge" id="liveScoreVisibilityBadge">未公開</span>
+          </div>
+        </div>
+
+        <div class="live-score-base-controls" aria-label="試合状況">
+          <div class="live-score-sbo" id="liveScoreSbo" aria-label="SBOカウント"></div>
+          <div class="live-score-diamond-wrap">
+            <div class="live-score-diamond" id="liveScoreDiamond" aria-label="塁状況">
+              <button class="live-score-base first" type="button" data-base="first" aria-label="1塁"></button>
+              <button class="live-score-base second" type="button" data-base="second" aria-label="2塁"></button>
+              <button class="live-score-base third" type="button" data-base="third" aria-label="3塁"></button>
+              <button class="live-score-base home" type="button" data-base="home" aria-label="ホーム"></button>
+            </div>
+            <div class="live-score-base-labels"><span>1塁</span><span>2塁</span><span>3塁</span></div>
           </div>
         </div>
 

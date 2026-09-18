@@ -18,6 +18,8 @@
       opponent: ['', '', '', '', '', '', ''],
     },
     tieBreaks: [],
+    count: { strike: 0, ball: 0, out: 0 },
+    bases: { first: false, second: false, third: false },
   });
 
   let state = { active: false, visible: false, current: null, lastGame: null, updatedAt: '' };
@@ -73,6 +75,16 @@
       opponent: String(game.opponent || '').slice(0, 40),
       battingOrder: game.battingOrder === 'first' ? 'first' : 'second',
       innings: { ours: seven(innings.ours), opponent: seven(innings.opponent) },
+      count: {
+        strike: Math.max(0, Math.min(3, Number(game.count?.strike) || 0)),
+        ball: Math.max(0, Math.min(4, Number(game.count?.ball) || 0)),
+        out: Math.max(0, Math.min(3, Number(game.count?.out) || 0)),
+      },
+      bases: {
+        first: Boolean(game.bases?.first),
+        second: Boolean(game.bases?.second),
+        third: Boolean(game.bases?.third),
+      },
       tieBreaks: Array.isArray(game.tieBreaks) ? game.tieBreaks.slice(0, 8).map((item, index) => ({
         inning: 8 + index,
         ours: score(item?.ours),
@@ -124,6 +136,8 @@
     opponent: $('#liveScoreOpponent'),
     order: $('#liveScoreOrder'),
     rows: $('#liveScoreRows'),
+    sbo: $('#liveScoreSbo'),
+    diamond: $('#liveScoreDiamond'),
     tieBreaks: $('#liveScoreTieBreaks'),
     addTieBreak: $('#liveScoreAddTieBreak'),
     removeTieBreak: $('#liveScoreRemoveTieBreak'),
@@ -167,6 +181,49 @@
     const ours = { key: 'ours', name: state.current.ourName || '八千代' };
     const opponent = { key: 'opponent', name: state.current.opponent || '相手チーム' };
     return state.current.battingOrder === 'first' ? [ours, opponent] : [opponent, ours];
+  }
+
+  function renderSbo() {
+    if (!elements.sbo || !state.current) return;
+    const groups = [
+      ['S', 'strike', 3, 'on-s'],
+      ['B', 'ball', 4, 'on-b'],
+      ['O', 'out', 3, 'on-o'],
+    ];
+    elements.sbo.innerHTML = '';
+    groups.forEach(([label, key, max, onClass]) => {
+      const wrap = document.createElement('div');
+      wrap.className = 'live-score-count';
+      const title = document.createElement('b');
+      title.textContent = label;
+      const dots = document.createElement('span');
+      dots.className = 'live-score-dots';
+      for (let i = 0; i < max; i += 1) {
+        const dot = document.createElement('button');
+        dot.type = 'button';
+        dot.className = `live-score-dot ${i < state.current.count[key] ? onClass : ''}`;
+        dot.setAttribute('aria-label', `${label} ${i + 1}`);
+        dot.addEventListener('click', () => {
+          state.current.count[key] = i + 1 === state.current.count[key] ? i : i + 1;
+          dirty = true;
+          changeVersion += 1;
+          renderSbo();
+          scheduleAutoSave();
+        });
+        dots.appendChild(dot);
+      }
+      wrap.append(title, dots);
+      elements.sbo.appendChild(wrap);
+    });
+  }
+
+  function renderDiamond() {
+    if (!elements.diamond || !state.current) return;
+    elements.diamond.querySelectorAll('[data-base]').forEach(button => {
+      const key = button.dataset.base;
+      button.classList.toggle('on', Boolean(state.current.bases[key]));
+      button.setAttribute('aria-pressed', String(Boolean(state.current.bases[key])));
+    });
   }
 
   function renderScoreRows() {
@@ -266,6 +323,8 @@
     root.classList.toggle('is-replay', replayMode);
     if (!showingEditor || !state.current) return;
     syncFields();
+    renderSbo();
+    renderDiamond();
     renderScoreRows();
     renderTieBreaks();
     elements.liveBadge.hidden = replayMode || !state.visible;
@@ -277,7 +336,7 @@
     if (replayMode) elements.removeTieBreak.hidden = true;
     elements.status.parentElement.hidden = replayMode;
     elements.back.hidden = !replayMode;
-    root.querySelectorAll('.live-score-editor input,.live-score-segments button').forEach(control => {
+    root.querySelectorAll('.live-score-editor input,.live-score-segments button,.live-score-sbo button,.live-score-diamond button').forEach(control => {
       control.disabled = replayMode;
     });
     updateStatus();
@@ -369,6 +428,18 @@
       renderTieBreaks();
       scheduleAutoSave();
     }));
+
+  elements.diamond.addEventListener('click', event => {
+    const button = event.target.closest('[data-base]');
+    if (!button || !state.current) return;
+    const key = button.dataset.base;
+    if (!(key in state.current.bases)) return;
+    state.current.bases[key] = !state.current.bases[key];
+    dirty = true;
+    changeVersion += 1;
+    renderDiamond();
+    scheduleAutoSave();
+  });
 
   elements.order.addEventListener('click', event => {
     const button = event.target.closest('[data-order]');
