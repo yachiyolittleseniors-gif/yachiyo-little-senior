@@ -32,7 +32,6 @@
   let editorCollapsed = false;
   let replayMode = false;
   let inputMode = false;
-  let selectedInning = null;
   let pollTimer = 0;
   // Keep one device id for the entire page lifetime. On some iPhone/Safari
   // privacy modes storage writes can fail; generating a new id on every call
@@ -333,19 +332,6 @@
     input.className = 'live-score-number';
     input.value = value;
     input.setAttribute('aria-label', label);
-
-    if (!tieBreak) {
-      input.dataset.side = side;
-      input.dataset.inning = String(index);
-      const isTopHalf = side === 'ours'
-        ? state.current.battingOrder === 'first'
-        : state.current.battingOrder === 'second';
-      input.dataset.half = isTopHalf ? '表' : '裏';
-      input.addEventListener('focus', () => selectInningCell(input));
-      input.addEventListener('click', () => selectInningCell(input));
-      input.addEventListener('touchstart', () => selectInningCell(input), { passive: true });
-    }
-
     input.addEventListener('input', () => {
       if (!inputMode || replayMode) return;
       const next = score(input.value);
@@ -357,30 +343,6 @@
       scheduleAutoSave();
     });
     return input;
-  }
-
-  function selectInningCell(input) {
-    if (!input || input.dataset.inning === undefined || !state.current) return;
-    selectedInning = {
-      side: input.dataset.side,
-      index: Number(input.dataset.inning),
-      half: input.dataset.half || '',
-    };
-    elements.rows?.querySelectorAll('.live-score-number.is-selected-inning').forEach(cell => {
-      cell.classList.remove('is-selected-inning');
-    });
-    input.classList.add('is-selected-inning');
-    input.setAttribute('aria-current', `${Number(input.dataset.inning) + 1}回${input.dataset.half || ''}`);
-  }
-
-  function restoreSelectedInningCell() {
-    if (!selectedInning || !elements.rows) return;
-    const selector = `.live-score-number[data-side="${selectedInning.side}"][data-inning="${selectedInning.index}"]`;
-    const input = elements.rows.querySelector(selector);
-    if (input) {
-      input.classList.add('is-selected-inning');
-      input.setAttribute('aria-current', `${selectedInning.index + 1}回${selectedInning.half || input.dataset.half || ''}`);
-    }
   }
 
   function teamOrder() {
@@ -434,7 +396,6 @@
       elements.rows.appendChild(row);
       fitLiveScoreTeamName(name);
     });
-    restoreSelectedInningCell();
   }
 
   function updateDisplayedTotals() {
