@@ -776,6 +776,20 @@ html{scroll-padding-top:var(--compact-header-height)}
           <div class="live-score-restore-wrap" id="liveScoreRestoreWrap" hidden>
             <button class="live-score-button" id="liveScoreRestore" type="button">直前の試合を再表示</button>
           </div>
+          <script>
+          (function(){
+            try{
+              const saved=localStorage.getItem('yachiyoLiveScoreLastGame');
+              if(saved){
+                const game=JSON.parse(saved);
+                if(game&&typeof game==='object'){
+                  const wrap=document.getElementById('liveScoreRestoreWrap');
+                  if(wrap)wrap.hidden=false;
+                }
+              }
+            }catch(e){}
+          })();
+          </script>
         </div>
         <p>試合開始後、得点を入力してチーム内へ速報を共有できます。</p>
         <div class="live-score-idle-actions">
@@ -1124,7 +1138,7 @@ html{scroll-padding-top:var(--compact-header-height)}
   <button id="closeDensukeAdminBtn" type="button">キャンセル</button>
 </div>
 
-<script src="./board-live-score.js?v=20260918-14"></script>
+<script src="./board-live-score.js?v=20260918-15"></script>
 <script src="./board-updates.js?v=20260918-13"></script>
 <script src="./board-referee-documents.js?v=20260918-7"></script>
 <script src="./board-tournaments.js?v=20260914-1"></script>
