@@ -84,7 +84,7 @@
     const current = normalizeGame(data.current);
     return {
       active: Boolean(data.active && current),
-      visible: Boolean(data.visible && data.active && current),
+      visible: Boolean(data.active && current),
       current,
       lastGame: normalizeGame(data.lastGame),
       updatedAt: String(data.updatedAt || ''),
@@ -107,7 +107,6 @@
     tieBreaks: $('#liveScoreTieBreaks'),
     addTieBreak: $('#liveScoreAddTieBreak'),
     removeTieBreak: $('#liveScoreRemoveTieBreak'),
-    visibility: $('#liveScoreVisibility'),
     finish: $('#liveScoreFinish'),
     back: $('#liveScoreBack'),
     liveBadge: $('#liveScoreLiveBadge'),
@@ -253,8 +252,6 @@
     elements.visibilityBadge.hidden = replayMode;
     elements.visibilityBadge.textContent = state.visible ? '公開中' : '未公開';
     elements.visibilityBadge.classList.toggle('is-visible', state.visible);
-    elements.visibility.textContent = state.visible ? '試合速報を非公開' : '試合速報を公開';
-    elements.visibility.hidden = replayMode;
     elements.finish.hidden = replayMode;
     elements.addTieBreak.hidden = replayMode;
     if (replayMode) elements.removeTieBreak.hidden = true;
@@ -273,16 +270,6 @@
     state.current.ground = elements.ground.value.trim();
     state.current.ourName = elements.ourName.value.trim() || '八千代';
     state.current.opponent = elements.opponent.value.trim();
-  }
-
-  function validateForDisplay() {
-    readFields();
-    const game = state.current;
-    if (!game.tournament) return '大会名を入力してください。';
-    if (!game.startTime) return '試合開始時間を入力してください。';
-    if (!game.ground) return 'グラウンド名を入力してください。';
-    if (!game.opponent) return '対戦相手を入力してください。';
-    return '';
   }
 
   function scheduleAutoSave() {
@@ -394,20 +381,6 @@
     renderScoreRows();
     renderTieBreaks();
     scheduleAutoSave();
-  });
-
-  elements.visibility.addEventListener('click', async () => {
-    const nextVisible = !state.visible;
-    if (nextVisible) {
-      const error = validateForDisplay();
-      if (error) { alert(error); return; }
-    } else {
-      readFields();
-    }
-    state.visible = nextVisible;
-    dirty = true;
-    changeVersion += 1;
-    await save(state.visible ? '試合速報を公開しました' : '試合速報を非公開にしました');
   });
 
   elements.finish.addEventListener('click', async () => {
