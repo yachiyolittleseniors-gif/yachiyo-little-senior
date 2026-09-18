@@ -199,7 +199,7 @@ export default async request => {
       credential.lastUsedAt = new Date().toISOString();
       await store.setJSON(CREDENTIALS_KEY, { credentials });
       const token = await createBoardSessionToken();
-      return json({ ok: true, token }, 200, { "set-cookie": boardSessionCookie(token) });
+      return json({ ok: true, token, credentialID: credential.id }, 200, { "set-cookie": boardSessionCookie(token) });
     }
     return json({ error: "unknown action" }, 400);
   } catch (error) {
