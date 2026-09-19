@@ -96,3 +96,50 @@
 @media(max-width:700px){
   .live-score-row .live-score-number{min-height:35px!important;}
 }
+
+
+/* 2026-09-19: live score visual refresh — keep BSO, diamond and selected-cell gold outline */
+.live-score-editor{padding:20px 18px 18px}
+.live-score-head{padding-bottom:12px;border-bottom:1px solid rgba(226,189,103,.28)}
+.live-score-base-controls{
+  display:grid;
+  grid-template-columns:minmax(0,1fr) minmax(150px,.78fr);
+  align-items:center;
+  gap:14px;
+  margin-top:14px;
+  padding:13px 14px;
+  border:1px solid rgba(199,154,59,.58);
+  border-radius:14px;
+  background:linear-gradient(145deg,rgba(255,255,255,.045),rgba(255,255,255,.015));
+}
+.live-score-sbo{display:grid;gap:8px}
+.live-score-count{display:grid;grid-template-columns:24px 1fr;align-items:center;gap:8px;width:100%;padding:0;border:0;background:transparent;color:#fff;text-align:left}
+.live-score-count b{color:#e2bd67;font-size:15px}
+.live-score-dots{display:flex;gap:8px}
+.live-score-dot{width:18px;height:18px;border:2px solid #7f8da0;border-radius:50%;background:#233247;box-shadow:inset 0 0 0 2px rgba(7,20,38,.7)}
+.live-score-dot.on-b{border-color:#57b978;background:#35a95c}
+.live-score-dot.on-s{border-color:#e2bd67;background:#d6a43b}
+.live-score-dot.on-o{border-color:#dc6b6b;background:#c94d4d}
+.live-score-diamond-wrap{display:grid;place-items:center;min-height:92px}
+.live-score-diamond{position:relative;width:86px;height:86px}
+.live-score-base{position:absolute;width:29px;height:29px;border:2px solid #9ba8b9;border-radius:4px;background:#eef1f5;transform:rotate(45deg)}
+.live-score-base.second{left:29px;top:0}.live-score-base.first{right:0;top:29px}.live-score-base.third{left:0;top:29px}.live-score-base.home{left:29px;bottom:0;width:24px;height:24px;background:#c7ced8}
+.live-score-base.on{border-color:#f0ca72;background:#d6a43b;box-shadow:0 0 0 3px rgba(214,164,59,.14)}
+.live-score-fields{margin-top:16px}
+.live-score-board{box-shadow:0 8px 24px rgba(0,0,0,.14)}
+.live-score-publish{padding-top:2px}
+.live-score-finish-note{margin:0;padding:9px 11px;border-left:3px solid #d6a43b;border-radius:6px;background:rgba(214,164,59,.08);color:#d6dce5;font-size:11px;font-weight:800;line-height:1.55}
+.live-score-lock-panel{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-top:10px;padding:10px 12px;border:1px solid #596b81;border-radius:11px;background:rgba(255,255,255,.035)}
+.live-score-lock-panel>span{min-width:0;color:#eef1f5;font-size:12px;font-weight:800;line-height:1.45}
+.live-score-lock-panel .live-score-button{flex:0 0 auto;min-height:38px;padding:7px 11px}
+@media(max-width:700px){
+  .live-score-editor{padding:14px 10px 16px}
+  .live-score-base-controls{grid-template-columns:minmax(0,1fr) 120px;gap:10px;margin-top:11px;padding:11px 12px}
+  .live-score-diamond-wrap{min-height:82px}
+  .live-score-diamond{transform:scale(.88)}
+  .live-score-dot{width:16px;height:16px}
+  .live-score-finish-note{font-size:10px}
+  .live-score-lock-panel{padding:9px 10px}
+  .live-score-lock-panel>span{font-size:11px}
+  .live-score-lock-panel .live-score-button{font-size:11px}
+}
