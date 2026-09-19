@@ -240,3 +240,19 @@
   opacity:1!important;
   filter:none!important;
 }
+
+/* 2026-09-19 definitive viewing mode */
+#liveScoreCard.live-score-view-mode .live-score-editor input:disabled,
+#liveScoreCard.live-score-view-mode .live-score-editor select:disabled,
+#liveScoreCard.live-score-view-mode .live-score-segments button:disabled,
+#liveScoreCard.live-score-view-mode .live-score-number:disabled,
+#liveScoreCard.live-score-view-mode .live-score-count:disabled,
+#liveScoreCard.live-score-view-mode .live-score-base:disabled,
+#liveScoreCard.live-score-view-mode .live-score-tb-actions button:disabled{
+ opacity:.38!important;
+ filter:grayscale(1)!important;
+ pointer-events:none!important;
+}
+#liveScoreCard.live-score-view-mode #liveScoreLockButton{
+ opacity:1!important;filter:none!important;pointer-events:auto!important;
+}
