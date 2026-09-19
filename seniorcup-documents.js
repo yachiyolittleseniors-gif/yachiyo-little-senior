@@ -54,12 +54,11 @@
   save.addEventListener('click',async()=>{
     if(busy)return;
     const file=input.files&&input.files[0];
-    if(!title.value.trim()){alert('資料名を入力してください。');return;}
     if(!file||! /\.(pdf|jpe?g|png|webp)$/i.test(file.name)){alert('PDF・JPEG・PNG・WebPを選択してください。');return;}
     if(file.size>4*1024*1024){alert('ファイルは4MB以下にしてください。');return;}
     busy=true;render();
     try{
-      await request({action:'uploadResultDocument',tournament:title.value.trim(),fileName:file.name,dataUrl:await dataUrl(file)});
+      await request({action:'uploadResultDocument',tournament:title.value.trim()||file.name,fileName:file.name,dataUrl:await dataUrl(file)});
       title.value='';input.value='';
       if(typeof showSaveNotice==='function')showSaveNotice('大会資料を保存しました');
     }catch(error){alert(error.message);}finally{busy=false;render();}

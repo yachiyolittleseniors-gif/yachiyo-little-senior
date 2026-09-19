@@ -534,14 +534,15 @@ html{scroll-padding-top:var(--fixed-header-height)}
 </div>
 <div class="admin-box">
 <label for="cupDocumentTitle">大会資料を追加</label>
-<input id="cupDocumentTitle" type="text" maxlength="160" placeholder="資料名（例：開催要項・トーナメント結果）" style="width:100%;box-sizing:border-box;padding:10px;margin:8px 0;font:inherit"/>
+<input id="cupDocumentTitle" type="text" maxlength="160" placeholder="表示名（任意・空欄ならファイル名を表示）" style="width:100%;box-sizing:border-box;padding:10px;margin:8px 0;font:inherit"/>
 <input id="cupDocumentUpload" type="file" accept=".pdf,.jpg,.jpeg,.png,.webp,application/pdf,image/jpeg,image/png,image/webp"/>
-<p class="admin-note">開催要項・トーナメント結果などをPDF・画像（JPEG／PNG／WebP）で保存できます。1ファイル最大4MB。保存した資料は一般公開されます。</p>
+<p class="admin-note">表示名は任意です。空欄の場合は元のファイル名を表示します。開催要項・トーナメント結果などをPDF・画像（JPEG／PNG／WebP）で保存できます。1ファイル最大4MB。保存した資料は一般公開されます。</p>
 <button id="cupDocumentSave" type="button">大会資料を保存</button>
 <div id="cupDocumentAdminList"></div>
 </div>
 <div class="admin-box">
-<label for="rosterUpload">申込書・選手名簿を更新（PDF / Excel）</label>
+<label for="rosterDisplayName">申込書・選手名簿を更新（PDF / Excel）</label>
+<input id="rosterDisplayName" type="text" maxlength="160" placeholder="表示名（任意・空欄ならファイル名を表示）" style="width:100%;box-sizing:border-box;padding:10px;margin:8px 0;font:inherit"/>
 <input accept=".pdf,.xls,.xlsx,application/pdf,application/vnd.ms-excel,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" id="rosterUpload" type="file"/>
 <p class="attachment-info" id="rosterAttachmentInfo">現在の添付ファイル：読み込み中...</p>
 <button data-slot="roster" type="button">申込書・選手名簿を保存</button>
@@ -569,7 +570,7 @@ html{scroll-padding-top:var(--fixed-header-height)}
 (function(){
   const API='/.netlify/functions/site-data';
   const slots={
-    roster:{label:'申込書・選手名簿',section:'downloads-roster',input:'rosterUpload',name:'rosterFileName',link:'rosterDownload',info:'rosterAttachmentInfo'}
+    roster:{label:'申込書・選手名簿',section:'downloads-roster',input:'rosterUpload',displayName:'rosterDisplayName',name:'rosterFileName',link:'rosterDownload',info:'rosterAttachmentInfo'}
   };
 
   const replyAddress=document.getElementById('cupReplyAddress');
@@ -769,11 +770,11 @@ function renderReplyMode(){
   function render(slot,data){
     const c=slots[slot], n=document.getElementById(c.name), a=document.getElementById(c.link),info=document.getElementById(c.info),del=document.querySelector('[data-delete-slot="'+slot+'"]');
     if(data&&data.fileName&&data.dataUrl){
-      n.textContent=data.fileName;
+      n.textContent=data.displayName||data.fileName;
       a.href=API+'?section='+encodeURIComponent(c.section)+'&'+(c.openMode||'download')+'=1';
       a.removeAttribute('download');
       a.classList.remove('is-empty','is-loading');
-      info.textContent='現在の添付ファイル：'+data.fileName+'（'+fileType(data)+'／'+formatBytes(storedFileSize(data))+'）';
+      info.textContent='現在の添付ファイル：'+(data.displayName||data.fileName)+'（元ファイル：'+data.fileName+'／'+fileType(data)+'／'+formatBytes(storedFileSize(data))+'）';
       del.hidden=false;
     }else{
       n.textContent=c.emptyText||'現在ダウンロードできるファイルはありません。';a.href='#';a.removeAttribute('download');a.classList.remove('is-loading');a.classList.add('is-empty');
@@ -848,10 +849,11 @@ function renderReplyMode(){
     if(!pw){alert('管理者パスワードを入力し直してください。');return}
     const btn=document.querySelector('[data-slot="'+slot+'"]'),old=btn.textContent;btn.disabled=true;btn.textContent='保存中...';
     try{
-      const payload={fileName:f.name,mimeType:f.type||'application/octet-stream',fileSize:f.size,dataUrl:await asDataURL(f),updatedAt:new Date().toISOString()};
+      const displayInput=c.displayName?document.getElementById(c.displayName):null;
+      const payload={fileName:f.name,displayName:displayInput&&displayInput.value.trim()?displayInput.value.trim():f.name,mimeType:f.type||'application/octet-stream',fileSize:f.size,dataUrl:await asDataURL(f),updatedAt:new Date().toISOString()};
       const r=await fetch(API+'?section='+encodeURIComponent(c.section),{method:'POST',headers:{'content-type':'application/json','x-admin-password':pw},body:JSON.stringify({data:payload})});
       if(r.status===429)throw new Error('LIMITED');if(r.status===401)throw new Error('PASSWORD');if(!r.ok)throw new Error('SAVE');
-      render(slot,payload);inp.value='';showSaveNotice('保存しました');
+      render(slot,payload);inp.value='';if(c.displayName)document.getElementById(c.displayName).value='';showSaveNotice('保存しました');
     }catch(e){if(e.message==='LIMITED')alert('試行回数の上限です。15分後に再度お試しください。');else if(e.message==='PASSWORD')alert('管理者パスワードが違います。');else alert('保存できませんでした。')}
     finally{btn.disabled=false;btn.textContent=old}
   }
