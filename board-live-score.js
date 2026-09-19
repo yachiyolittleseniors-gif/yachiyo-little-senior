@@ -539,6 +539,9 @@
       else control.removeAttribute('tabindex');
     });
     renderLock();
+    // モード表示は最終段で確定。閲覧中はカード全体を明示的に read-only 表示にする。
+    root.classList.toggle('live-score-view-mode', !inputMode || replayMode);
+    root.classList.toggle('live-score-input-mode', inputMode && !replayMode);
     updateStatus(inputMode && !replayMode
       ? '入力中モード・入力内容は自動保存されます。'
       : (!replayMode ? '閲覧中モード・現在の試合状況を表示しています。' : ''));
