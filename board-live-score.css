@@ -111,3 +111,9 @@
 .live-score-start-note{border-left-color:#d9534f!important;background:rgba(217,83,79,.10)!important;color:#ff7b76!important;font-weight:900!important}
 
 .live-score-finish-warning{margin:0!important;padding:8px 10px;border-left:3px solid #d9534f;border-radius:6px;background:rgba(217,83,79,.10);color:#ff7b76!important;font-size:11px;font-weight:900;line-height:1.55}
+
+/* 2026-09-19: remove decorative left-side bars from live-score notices */
+.live-score-start-note,
+.live-score-finish-warning{
+  border-left:0!important;
+}
