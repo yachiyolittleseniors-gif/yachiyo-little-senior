@@ -724,7 +724,9 @@
     state.visible = false;
     editorCollapsed = false;
     replayMode = false;
-    dirty = true;
+    // 終了保存は dirty の再自動保存と競合させず、終了状態を確実に送る。
+    dirty = false;
+    clearTimeout(autoSaveTimer);
     changeVersion += 1;
     if (await save('試合速報を終了しました')) {
       leaveInputMode();
