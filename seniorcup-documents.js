@@ -32,7 +32,7 @@
       name.textContent=item.tournament||item.fileName;
       const link=document.createElement('a');
       link.className='download-btn';link.textContent='資料を開く';
-      link.href=API+'&file='+encodeURIComponent(item.id);link.target='_blank';link.rel='noopener';
+      link.href='#';link.addEventListener('click',event=>{event.preventDefault();openDocument(item);});
       row.append(name,link);list.append(row);
       const adminRow=document.createElement('div');
       adminRow.style.cssText='padding-top:12px;overflow-wrap:anywhere';
@@ -43,6 +43,22 @@
     });
     save.disabled=busy;save.textContent=busy?'処理中...':'大会資料を保存';
   }
+
+  function openDocument(item){
+    const dataUrl=String(item&&item.dataUrl||'');
+    if(dataUrl){
+      const w=window.open('','_blank');
+      if(w){
+        w.document.write('<!doctype html><title>資料</title><style>html,body{margin:0;height:100%;background:#111}iframe,img{display:block;width:100%;height:100%;border:0;object-fit:contain}</style>');
+        if(/^data:image\//i.test(dataUrl)) w.document.write('<img src="'+dataUrl.replace(/"/g,'&quot;')+'" alt="資料">');
+        else w.document.write('<iframe src="'+dataUrl.replace(/"/g,'&quot;')+'"></iframe>');
+        w.document.close();
+      }else location.href=dataUrl;
+      return;
+    }
+    window.open(API+'&file='+encodeURIComponent(item.id),'_blank','noopener');
+  }
+
   async function request(body){
     const password=sessionStorage.getItem('yachiyoAdminPassword')||'';
     if(!password)throw new Error('管理画面を開き直してください。');
