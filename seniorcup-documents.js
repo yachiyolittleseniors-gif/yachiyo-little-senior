@@ -36,7 +36,7 @@
       const adminRow=document.createElement('div');
       adminRow.style.cssText='padding-top:12px;overflow-wrap:anywhere';
       const label=document.createElement('span');label.textContent=(item.tournament||item.fileName)+'　';
-      const remove=document.createElement('button');remove.type='button';remove.textContent='削除';remove.disabled=busy;
+      const remove=document.createElement('button');remove.type='button';remove.className='attachment-delete';remove.textContent='添付ファイルを削除';remove.disabled=busy;
       remove.addEventListener('click',()=>removeDocument(item));
       adminRow.append(label,remove);adminList.append(adminRow);
     });
