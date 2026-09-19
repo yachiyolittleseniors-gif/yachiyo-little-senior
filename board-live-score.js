@@ -260,9 +260,6 @@
       : '閲覧中モード：現在の試合状況を表示しています。';
     elements.lockButton.textContent = inputMode ? '閲覧モードに戻る' : 'この端末で入力する';
     elements.lockButton.disabled = false;
-    // render() の一括 disabled 処理後でも、モード切替ボタンだけは常に操作可能にする。
-    elements.lockButton.removeAttribute('disabled');
-    elements.lockButton.setAttribute('aria-disabled', 'false');
   }
 
   function renderSbo() {
@@ -515,8 +512,9 @@
     renderScoreRows();
     renderTieBreaks();
     elements.liveBadge.hidden = replayMode || !state.visible;
-    // 試合速報は開始と同時に公開されるため、「公開中」は重複表示しない。
-    elements.visibilityBadge.hidden = true;
+    elements.visibilityBadge.hidden = replayMode;
+    elements.visibilityBadge.textContent = state.visible ? '公開中' : '未公開';
+    elements.visibilityBadge.classList.toggle('is-visible', state.visible);
     elements.finish.hidden = replayMode;
     elements.addTieBreak.hidden = replayMode;
     if (replayMode) elements.removeTieBreak.hidden = true;
@@ -524,12 +522,8 @@
     elements.back.hidden = !replayMode;
     const viewOnly = !inputMode || replayMode;
     root.classList.toggle('live-score-view-mode', viewOnly);
-    // 閲覧モードでは試合入力系をすべて操作不可にする。
     root.querySelectorAll('.live-score-editor input,.live-score-editor select,.live-score-segments button,.live-score-tb-actions button,.live-score-number').forEach(control => {
       control.disabled = viewOnly;
-      control.setAttribute('aria-disabled', String(viewOnly));
-      if (viewOnly) control.tabIndex = -1;
-      else control.removeAttribute('tabindex');
     });
     // BSO / ダイヤモンドも閲覧モードでは必ず操作不可。ただし見た目は変えない。
     root.querySelectorAll('.live-score-count,.live-score-base').forEach(control => {
@@ -539,9 +533,6 @@
       else control.removeAttribute('tabindex');
     });
     renderLock();
-    // モード表示は最終段で確定。閲覧中はカード全体を明示的に read-only 表示にする。
-    root.classList.toggle('live-score-view-mode', !inputMode || replayMode);
-    root.classList.toggle('live-score-input-mode', inputMode && !replayMode);
     updateStatus(inputMode && !replayMode
       ? '入力中モード・入力内容は自動保存されます。'
       : (!replayMode ? '閲覧中モード・現在の試合状況を表示しています。' : ''));
