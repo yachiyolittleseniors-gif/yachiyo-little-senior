@@ -25,6 +25,7 @@ const allowed = new Set([
   "result-squad-settings",
   "result-documents",
   "seniorcup-documents",
+  "seniorcup-registration",
   "players",
   "hero",
   "photos",
@@ -1733,6 +1734,13 @@ export default async (request, context) => {
     }
 
     if (!adminAuth.ok) return adminAuthError(json, adminAuth);
+
+    if (section === "seniorcup-registration") {
+      if (typeof body?.data?.closed !== "boolean") return json({ error: "受付状態を確認してください。" }, 400);
+      const data = { closed: body.data.closed, updatedAt: new Date().toISOString() };
+      await store.setJSON(key, data);
+      return json({ ok: true, data });
+    }
 
     if (
       section === "document-archive" &&
