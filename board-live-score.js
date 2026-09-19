@@ -524,8 +524,12 @@
     elements.back.hidden = !replayMode;
     const viewOnly = !inputMode || replayMode;
     root.classList.toggle('live-score-view-mode', viewOnly);
+    // 閲覧モードでは試合入力系をすべて操作不可にする。
     root.querySelectorAll('.live-score-editor input,.live-score-editor select,.live-score-segments button,.live-score-tb-actions button,.live-score-number').forEach(control => {
       control.disabled = viewOnly;
+      control.setAttribute('aria-disabled', String(viewOnly));
+      if (viewOnly) control.tabIndex = -1;
+      else control.removeAttribute('tabindex');
     });
     // BSO / ダイヤモンドも閲覧モードでは必ず操作不可。ただし見た目は変えない。
     root.querySelectorAll('.live-score-count,.live-score-base').forEach(control => {
