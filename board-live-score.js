@@ -31,6 +31,7 @@
   let autoSaveTimer = 0;
   let editorCollapsed = false;
   let replayMode = false;
+  let beforeReplay = null;
   let inputMode = false;
   let pollTimer = 0;
   // 選択中の得点セルは再描画・自動保存後も維持する。
@@ -498,8 +499,16 @@
   }
 
   function render() {
-    document.body.classList.toggle('live-score-replay-only', replayMode);
     const showingEditor = state.active || replayMode;
+    document.body.classList.toggle('live-score-focused', Boolean(showingEditor && !editorCollapsed));
+    const returnBlocked = Boolean(state.active && inputMode && !replayMode);
+    [elements.back, document.getElementById('liveScoreTeamReturn')].forEach(button => {
+      if (!button) return;
+      button.disabled = returnBlocked;
+      button.setAttribute('aria-disabled', String(returnBlocked));
+      button.title = returnBlocked ? '閲覧モードに戻すか、試合終了後に戻れます。' : '';
+      button.textContent = 'チーム専用ページへ戻る';
+    });
     elements.idle.hidden = showingEditor && !editorCollapsed;
     elements.editor.hidden = !showingEditor || editorCollapsed;
     elements.start.textContent = state.active ? '試合速報に戻る' : '試合速報を開始';
@@ -519,7 +528,7 @@
     elements.addTieBreak.hidden = replayMode;
     if (replayMode) elements.removeTieBreak.hidden = true;
     elements.status.parentElement.hidden = replayMode;
-    elements.back.hidden = !replayMode;
+    elements.back.hidden = false;
     const viewOnly = !inputMode || replayMode;
     root.classList.toggle('live-score-view-mode', viewOnly);
     root.querySelectorAll('.live-score-editor input,.live-score-editor select,.live-score-segments button,.live-score-tb-actions button,.live-score-number').forEach(control => {
@@ -609,17 +618,15 @@
     dirty = true;
     changeVersion += 1;
     render();
+    window.scrollTo({ top: 0, behavior: 'smooth' });
     await save(visible ? '試合速報を開始・公開しました' : '試合速報を開始しました');
   }
 
   elements.start.addEventListener('click', async () => {
-    if (state.active && !inputMode) {
-      enterInputMode();
-      return;
-    }
-    if (state.active && editorCollapsed) {
+    if (state.active) {
       editorCollapsed = false;
       render();
+      window.scrollTo({ top: 0, behavior: 'smooth' });
       return;
     }
     const modal = document.getElementById('liveScoreStartModal');
@@ -651,18 +658,28 @@
 
   elements.restore.addEventListener('click', () => {
     if (!state.lastGame) return;
+    beforeReplay = { ...state, current: normalizeGame(state.current) };
+    inputMode = false;
     replayMode = true;
     editorCollapsed = false;
     state.current = normalizeGame(state.lastGame);
     render();
-  });
-  elements.back.addEventListener('click', () => {
-    replayMode = false;
-    editorCollapsed = false;
-    state.current = null;
-    render();
     window.scrollTo({ top: 0, behavior: 'smooth' });
   });
+  function returnToTeam() {
+    if (state.active && inputMode && !replayMode) return;
+    const wasReplay = replayMode;
+    if (wasReplay && beforeReplay) state = beforeReplay;
+    beforeReplay = null;
+    replayMode = false;
+    editorCollapsed = true;
+    render();
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+    // Refresh any shared changes made while the previous match was displayed.
+    if (wasReplay) load({ silent: true, force: true });
+  }
+  elements.back.addEventListener('click', returnToTeam);
+  document.getElementById('liveScoreTeamReturn')?.addEventListener('click', returnToTeam);
 
   [elements.tournament, elements.startTime, elements.ground, elements.grade, elements.opponent]
     .forEach(input => input.addEventListener('input', () => {
