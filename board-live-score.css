@@ -128,3 +128,9 @@
 .live-score-publish + .live-score-lock-panel{
   margin-top:28px!important;
 }
+
+/* 2026-09-19: popup warning copy is red; heading remains gold */
+.live-score-start-dialog p{
+  color:#ff6f6f!important;
+  font-weight:900!important;
+}
