@@ -16,14 +16,14 @@
 .live-score-button.primary{background:linear-gradient(135deg,#c6922f,#e2bd67);color:#071426}
 .live-score-button.subdued{border-color:#7f8997;background:#26384c;color:#fff}
 .live-score-card:not(.live-score-view-mode) #liveScoreFinish{
-  border:2px solid #f1cf78!important;
-  background:linear-gradient(135deg,#bd892b,#e2bd67)!important;
-  color:#071426!important;
-  box-shadow:0 8px 20px rgba(199,154,59,.24),inset 0 1px 0 rgba(255,255,255,.34)!important;
+  border:1px solid #c79a3b!important;
+  background:transparent!important;
+  color:#f2cd76!important;
+  box-shadow:none!important;
 }
 .live-score-card:not(.live-score-view-mode) #liveScoreFinish:active{
   transform:translateY(1px);
-  filter:brightness(.94);
+  background:rgba(199,154,59,.10)!important;
 }
 .live-score-button.danger{border-color:#b76464;color:#ffc4c4}
 .live-score-button.back{border-color:#66758a;background:transparent;color:#d4dae3}
