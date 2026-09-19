@@ -98,3 +98,12 @@
 }
 
 .live-score-start-note{margin:10px 2px 0!important;padding:9px 11px;border-left:3px solid #d6a43b;border-radius:6px;background:rgba(214,164,59,.08);color:#d4dae3!important;font-size:11px!important;font-weight:800!important;line-height:1.55!important}
+
+.live-score-start-modal{position:fixed;inset:0;z-index:20000;display:grid;place-items:center;padding:20px;background:rgba(3,10,20,.72);backdrop-filter:blur(3px)}
+.live-score-start-modal[hidden]{display:none!important}
+.live-score-start-dialog{box-sizing:border-box;width:min(420px,100%);padding:20px;border:1px solid #c79a3b;border-radius:16px;background:#071426;color:#fff;box-shadow:0 22px 70px rgba(0,0,0,.45)}
+.live-score-start-dialog strong{display:block;color:#e2bd67;font-size:18px}
+.live-score-start-dialog p{margin:12px 0 18px!important;color:#e7ebf0!important;font-size:13px!important;font-weight:700!important;line-height:1.7!important}
+.live-score-start-dialog-actions{display:grid;grid-template-columns:1fr 1.35fr;gap:8px}
+.live-score-start-dialog-actions button{min-height:44px;border:1px solid #c79a3b;border-radius:10px;background:transparent;color:#e2bd67;font:inherit;font-weight:900}
+#liveScoreStartConfirm{background:linear-gradient(135deg,#c6922f,#e2bd67);color:#071426}
