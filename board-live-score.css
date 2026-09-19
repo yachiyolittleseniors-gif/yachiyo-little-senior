@@ -186,3 +186,27 @@
  .live-score-field input,.live-score-field select,.live-score-segments{height:40px}
  .live-score-finish-note{font-size:10px}
 }
+
+/* 2026-09-19 approved compact mockup: BSO | diamond | status */
+.live-score-head{margin-bottom:0}
+.live-score-base-controls{grid-template-columns:minmax(0,1.05fr) minmax(0,.9fr) 118px!important;align-items:stretch!important}
+.live-score-sbo{display:grid!important;grid-template-columns:1fr!important;align-content:center!important;justify-content:stretch!important;gap:7px!important;padding:10px 12px!important;border:1px solid #8797ab!important;border-radius:11px!important}
+.live-score-count{display:grid!important;grid-template-columns:24px 1fr!important;gap:7px!important}
+.live-score-count b{font-size:17px!important}
+.live-score-dots{display:flex!important;gap:7px!important}
+.live-score-dot{width:19px!important;height:19px!important}
+.live-score-diamond-wrap{min-height:0!important;border:1px solid #8797ab;border-radius:11px}
+.live-score-diamond{align-self:center}
+.live-score-badges{grid-column:3;grid-row:1;display:flex!important;flex-direction:column;justify-content:center!important;align-items:stretch!important;gap:10px!important}
+.live-score-badge{display:flex;align-items:center;justify-content:center;min-height:45px;box-sizing:border-box;font-size:12px!important}
+@media(max-width:700px){
+ .live-score-base-controls{grid-template-columns:minmax(0,1.08fr) minmax(90px,.86fr) 92px!important;gap:7px!important;padding:9px!important}
+ .live-score-sbo{padding:8px 7px!important;gap:5px!important}
+ .live-score-count{grid-template-columns:20px 1fr!important;gap:4px!important}
+ .live-score-count b{font-size:14px!important}
+ .live-score-dots{gap:4px!important}
+ .live-score-dot{width:14px!important;height:14px!important}
+ .live-score-diamond-wrap{min-height:84px!important}
+ .live-score-badges{gap:7px!important}
+ .live-score-badge{min-height:38px;padding:6px 5px!important;font-size:10px!important}
+}
