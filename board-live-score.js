@@ -613,9 +613,6 @@
   }
 
   elements.start.addEventListener('click', async () => {
-    // 「試合速報を開始」を押した時は、状態に関係なく最初に注意確認を表示する。
-    const proceed = window.confirm('⚠ 試合速報を開く前に\n\n試合当日の入力担当者のみ操作してください。\n試合終了後は必ず「試合終了」を押してください。\n\n試合速報を開きますか？');
-    if (!proceed) return;
     if (state.active && !inputMode) {
       enterInputMode();
       return;
@@ -623,6 +620,11 @@
     if (state.active && editorCollapsed) {
       editorCollapsed = false;
       render();
+      return;
+    }
+    const modal = document.getElementById('liveScoreStartModal');
+    if (modal) {
+      modal.hidden = false;
       return;
     }
     startGame();
