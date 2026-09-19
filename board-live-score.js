@@ -512,9 +512,8 @@
     renderScoreRows();
     renderTieBreaks();
     elements.liveBadge.hidden = replayMode || !state.visible;
-    elements.visibilityBadge.hidden = replayMode;
-    elements.visibilityBadge.textContent = state.visible ? '公開中' : '未公開';
-    elements.visibilityBadge.classList.toggle('is-visible', state.visible);
+    // 試合速報は開始と同時に公開されるため、「公開中」は重複表示しない。
+    elements.visibilityBadge.hidden = true;
     elements.finish.hidden = replayMode;
     elements.addTieBreak.hidden = replayMode;
     if (replayMode) elements.removeTieBreak.hidden = true;
