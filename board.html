@@ -1176,7 +1176,7 @@ body.live-score-replay-only #liveScoreCard{
         <div class="live-score-idle-actions">
           <button class="live-score-button primary" id="liveScoreStart" type="button" >試合速報を開始</button>
         </div>
-        <p class="live-score-start-note">⚠ 試合当日の入力担当者のみ操作してください。<br>試合終了後は必ず「試合終了」を押してください。</p>
+        <p class="live-score-start-note">※試合当日の入力担当者のみ操作してください。開始すると試合速報がチーム内に公開されます。試合終了後は必ず「試合終了」を押してください。</p>
         <div class="live-score-start-modal" id="liveScoreStartModal" hidden>
           <div class="live-score-start-dialog" role="dialog" aria-modal="true" aria-labelledby="liveScoreStartDialogTitle">
             <strong id="liveScoreStartDialogTitle">⚠ 試合速報を開始する前に</strong>
@@ -1261,6 +1261,7 @@ body.live-score-replay-only #liveScoreCard{
 
         <div class="live-score-publish">
           <button class="live-score-button subdued" id="liveScoreFinish" type="button">試合終了</button>
+          <p class="live-score-finish-warning">⚠ 試合終了後は、入力者が必ず「試合終了」を押してください。<br>押さない場合、試合速報が公開されたままになります。</p>
           <div class="live-score-status">
             <span id="liveScoreStatus">まだ他の端末には公開されていません。</span>
             <time id="liveScoreUpdated"></time>
