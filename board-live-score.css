@@ -96,3 +96,5 @@
 @media(max-width:700px){
   .live-score-row .live-score-number{min-height:35px!important;}
 }
+
+.live-score-start-note{margin:10px 2px 0!important;padding:9px 11px;border-left:3px solid #d6a43b;border-radius:6px;background:rgba(214,164,59,.08);color:#d4dae3!important;font-size:11px!important;font-weight:800!important;line-height:1.55!important}
