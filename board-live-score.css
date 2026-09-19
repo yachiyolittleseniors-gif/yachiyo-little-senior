@@ -134,3 +134,11 @@
   color:#ff6f6f!important;
   font-weight:900!important;
 }
+
+/* 2026-09-19: force popup warning body red */
+#liveScoreStartModal .live-score-start-dialog p,
+#liveScoreStartModal .live-score-start-dialog p *{
+  color:#ff6f6f!important;
+  -webkit-text-fill-color:#ff6f6f!important;
+  font-weight:900!important;
+}
