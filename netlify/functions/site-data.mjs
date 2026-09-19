@@ -379,7 +379,7 @@ function normalizeScheduleEntries(value) {
     if (!item || typeof item !== "object") return item;
 
     const storedGrades = Array.isArray(item.grades)
-      ? [...new Set(item.grades.map(String).filter(grade => ["1", "2", "3"].includes(grade)))].sort()
+      ? [...new Set(item.grades.map(String).filter(grade => ["1", "2", "3", "other"].includes(grade)))].sort((a,b) => ["1","2","3","other"].indexOf(a)-["1","2","3","other"].indexOf(b))
       : [];
     const legacyGrade = String(item.grade || "");
     const grades = storedGrades.length
@@ -1658,7 +1658,7 @@ export default async (request, context) => {
         const date = String(event.date || "");
         const title = String(event.title || "").trim();
         const grades = Array.isArray(event.grades)
-          ? [...new Set(event.grades.map(String).filter(grade => ["1", "2", "3"].includes(grade)))].sort()
+          ? [...new Set(event.grades.map(String).filter(grade => ["1", "2", "3", "other"].includes(grade)))].sort((a,b) => ["1","2","3","other"].indexOf(a)-["1","2","3","other"].indexOf(b))
           : [];
         const time = String(event.time || "").trim();
         const place = String(event.place || "").trim();
@@ -2146,7 +2146,7 @@ export default async (request, context) => {
 
       const hasMissingGrades = body.data.some(item => {
         const grades = Array.isArray(item?.grades)
-          ? item.grades.map(String).filter(grade => ["1", "2", "3"].includes(grade))
+          ? item.grades.map(String).filter(grade => ["1", "2", "3", "other"].includes(grade))
           : [];
         return !grades.length;
       });
