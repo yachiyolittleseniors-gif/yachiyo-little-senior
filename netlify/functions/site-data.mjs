@@ -24,6 +24,7 @@ const allowed = new Set([
   "results",
   "result-squad-settings",
   "result-documents",
+  "seniorcup-documents",
   "players",
   "hero",
   "photos",
@@ -928,7 +929,7 @@ export default async (request, context) => {
         return json({ data: Array.isArray(documents) ? documents : [] });
       }
 
-      if (section === "result-documents") {
+      if (section === "result-documents" || section === "seniorcup-documents") {
         const documents = await store.get(key, {
           type: "json",
           consistency: "strong"
@@ -944,7 +945,7 @@ export default async (request, context) => {
             return new Response("File not found", { status: 404 });
           }
 
-          const storageKey = String(item.storageKey || `result-documents/${id}.pdf`);
+          const storageKey = String(item.storageKey || `${section}/${id}.pdf`);
           const file = await store.get(storageKey, {
             type: "blob",
             consistency: "strong"
@@ -1878,7 +1879,7 @@ export default async (request, context) => {
     }
 
     if (
-      section === "result-documents" &&
+      (section === "result-documents" || section === "seniorcup-documents") &&
       body?.action === "uploadResultDocument"
     ) {
       const tournament = String(body.tournament || "").trim();
@@ -1901,7 +1902,7 @@ export default async (request, context) => {
       });
       const documents = Array.isArray(current) ? current : [];
       const id = crypto.randomUUID();
-      const storageKey = `result-documents/${id}.bin`;
+      const storageKey = `${section}/${id}.bin`;
       const item = {
         id,
         tournament,
@@ -1921,7 +1922,7 @@ export default async (request, context) => {
     }
 
     if (
-      section === "result-documents" &&
+      (section === "result-documents" || section === "seniorcup-documents") &&
       body?.action === "deleteResultDocument"
     ) {
       const id = String(body.id || "");
@@ -1935,7 +1936,7 @@ export default async (request, context) => {
         return json({ error: "資料が見つかりません。" }, 404);
       }
 
-      await store.delete(String(item.storageKey || `result-documents/${id}.pdf`));
+      await store.delete(String(item.storageKey || `${section}/${id}.pdf`));
       const updated = documents.filter(entry => String(entry?.id || "") !== id);
       await store.setJSON(key, updated);
       return json({ ok: true, data: updated });
