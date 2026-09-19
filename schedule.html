@@ -1880,6 +1880,7 @@ html{scroll-padding-top:var(--fixed-header-height)}
     <label class="calendar-grade-option" data-calendar-grade="1"><input type="checkbox" name="calendarGrade" value="1"><span>🔴1年生</span></label>
     <label class="calendar-grade-option" data-calendar-grade="2"><input type="checkbox" name="calendarGrade" value="2"><span>🟢2年生</span></label>
     <label class="calendar-grade-option" data-calendar-grade="3"><input type="checkbox" name="calendarGrade" value="3"><span>🔵3年生</span></label>
+    <label class="calendar-grade-option" data-calendar-grade="all"><input type="checkbox" id="calendarGradeAll"><span>🟡全学年</span></label>
     <label class="calendar-grade-option" data-calendar-grade="other"><input type="checkbox" name="calendarGrade" value="other"><span>⚫️その他</span></label>
   </div>
 </fieldset>
@@ -2049,6 +2050,14 @@ function gradeColorFor(date,grade){
 function updateCalendarGradeOptions(date){
   document.querySelectorAll('[data-calendar-grade]').forEach(label=>{
     const grade=label.dataset.calendarGrade;
+    if(grade==='all'){
+      const text=label.querySelector('span');
+      if(text)text.textContent='🟡全学年';
+      label.style.setProperty('--grade-accent','#c99a00');
+      label.style.setProperty('--grade-bg','#fff8d8');
+      label.style.setProperty('--grade-text','#705500');
+      return;
+    }
     if(grade==='other'){
       const text=label.querySelector('span');
       if(text)text.textContent='⚫️その他';
@@ -2065,6 +2074,22 @@ function updateCalendarGradeOptions(date){
     label.style.setProperty('--grade-text',color.text);
   });
 }
+function syncCalendarAllGrade(){
+  const all=document.getElementById('calendarGradeAll');
+  const schoolGrades=Array.from(document.querySelectorAll('input[name="calendarGrade"]')).filter(input=>['1','2','3'].includes(input.value));
+  const checkedCount=schoolGrades.filter(input=>input.checked).length;
+  all.checked=checkedCount===schoolGrades.length;
+  all.indeterminate=checkedCount>0&&checkedCount<schoolGrades.length;
+}
+document.getElementById('calendarGradeAll').addEventListener('change',event=>{
+  document.querySelectorAll('input[name="calendarGrade"]').forEach(input=>{
+    if(['1','2','3'].includes(input.value))input.checked=event.target.checked;
+  });
+  syncCalendarAllGrade();
+});
+document.querySelectorAll('input[name="calendarGrade"]').forEach(input=>{
+  if(['1','2','3'].includes(input.value))input.addEventListener('change',syncCalendarAllGrade);
+});
 function gradeText(ev){
   const grades=gradesFor(ev);
   const schoolGrades=grades.filter(grade=>['1','2','3'].includes(grade));
@@ -2147,6 +2172,7 @@ function openEditor(date){
   document.getElementById('calendarEventCategory').value=ev.category||'practice';
   const selectedGrades=gradesFor(ev);
   document.querySelectorAll('input[name="calendarGrade"]').forEach(input=>{input.checked=selectedGrades.includes(input.value)});
+  syncCalendarAllGrade();
   document.getElementById('calendarEventTime').value=ev.time||'';
   document.getElementById('calendarEventPlace').value=ev.place||'';
   document.getElementById('calendarEventMemo').value=ev.memo||'';

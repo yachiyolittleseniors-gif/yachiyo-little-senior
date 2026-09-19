@@ -204,6 +204,14 @@
   function updateMeetingGradeOptions(date){
     form.querySelectorAll('[data-meeting-grade]').forEach(function(label){
       const grade=label.dataset.meetingGrade;
+      if(grade==='all'){
+        const text=label.querySelector('span');
+        if(text)text.textContent='🟡全学年';
+        label.style.setProperty('--grade-accent','#c99a00');
+        label.style.setProperty('--grade-bg','#fff8d8');
+        label.style.setProperty('--grade-text','#705500');
+        return;
+      }
       if(grade==='other'){
         const text=label.querySelector('span');
         if(text)text.textContent='⚫️その他';
@@ -220,6 +228,24 @@
       label.style.setProperty('--grade-text',color.text);
     });
   }
+
+  function syncMeetingAllGrade(){
+    const all=document.getElementById('meetingGradeAll');
+    const schoolGrades=Array.from(form.querySelectorAll('input[name="meetingGrade"]')).filter(function(input){return ['1','2','3'].includes(input.value)});
+    const checkedCount=schoolGrades.filter(function(input){return input.checked}).length;
+    all.checked=checkedCount===schoolGrades.length;
+    all.indeterminate=checkedCount>0&&checkedCount<schoolGrades.length;
+  }
+
+  document.getElementById('meetingGradeAll').addEventListener('change',function(event){
+    form.querySelectorAll('input[name="meetingGrade"]').forEach(function(input){
+      if(['1','2','3'].includes(input.value))input.checked=event.target.checked;
+    });
+    syncMeetingAllGrade();
+  });
+  form.querySelectorAll('input[name="meetingGrade"]').forEach(function(input){
+    if(['1','2','3'].includes(input.value))input.addEventListener('change',syncMeetingAllGrade);
+  });
 
   function gradeText(item){
     const grades=gradesFor(item);
@@ -323,6 +349,7 @@
     editingEventId='';
     if(clearPassword)activeCoachPassword='';
     form.reset();
+    syncMeetingAllGrade();
     form.hidden=true;
     addEvent.hidden=false;
     formSave.textContent='予定を保存';
@@ -338,6 +365,7 @@
     eventTitle.value=item.title||'';
     const selectedGrades=gradesFor(item);
     form.querySelectorAll('input[name="meetingGrade"]').forEach(function(input){input.checked=selectedGrades.includes(input.value)});
+    syncMeetingAllGrade();
     eventTime.value=item.time||'';
     eventPlace.value=item.place||'';
     eventMemo.value=item.memo||'';
