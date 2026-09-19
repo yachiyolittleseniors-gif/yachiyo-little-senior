@@ -30,7 +30,7 @@
 <meta name="theme-color" content="#071426">
 <title>チーム専用ページ｜八千代リトルシニア</title>
 <link rel="stylesheet" href="./board-base.css?v=20260918-1">
-<link rel="stylesheet" href="./board-live-score.css?v=20260919-popupred2">
+<link rel="stylesheet" href="./board-live-score.css?v=20260919-stadium1">
 <script src="./board-passkey.js?v=20260918-1"></script>
 <script src="./coach-passkey.js?v=20260918-2"></script>
 <script>
@@ -205,6 +205,205 @@ html{scroll-padding-top:var(--compact-header-height)}
   .site-nav{padding:8px 12px}
   .site-brand-logo{width:min(300px,72vw);height:50px}
   .site-menu-button{width:46px;height:46px;border-radius:11px;font-size:23px}
+}
+</style>
+
+<style id="live-score-stadium-redesign">
+/* 2026-09-19: stadium-themed live score UI. Existing save/sync logic is unchanged. */
+.live-score-card{
+  position:relative!important;
+  isolation:isolate!important;
+  border:1px solid rgba(226,189,103,.88)!important;
+  background:#061222!important;
+  box-shadow:0 18px 48px rgba(1,8,18,.24),inset 0 1px 0 rgba(255,255,255,.06)!important;
+}
+.live-score-editor{
+  position:relative!important;
+  isolation:isolate!important;
+  overflow:hidden!important;
+  background:
+    linear-gradient(180deg,rgba(3,12,25,.48) 0,rgba(3,12,25,.78) 250px,#061222 560px)!important;
+}
+.live-score-editor::before{
+  content:"";
+  position:absolute;
+  z-index:-2;
+  inset:0 0 auto;
+  height:590px;
+  background:url('./live-score-stadium-bg.webp') center top/cover no-repeat;
+  opacity:.72;
+  pointer-events:none;
+}
+.live-score-editor::after{
+  content:"";
+  position:absolute;
+  z-index:-1;
+  inset:0 0 auto;
+  height:590px;
+  background:linear-gradient(180deg,rgba(4,14,29,.18),rgba(4,14,29,.78) 54%,#061222 100%);
+  pointer-events:none;
+}
+.live-score-head{
+  align-items:center!important;
+  padding-bottom:4px!important;
+}
+.live-score-kicker{
+  color:#f0ca70!important;
+  text-shadow:0 2px 12px rgba(0,0,0,.7)!important;
+}
+.live-score-card h2{
+  text-shadow:0 3px 18px rgba(0,0,0,.8)!important;
+}
+.live-score-badge{
+  border-color:rgba(226,189,103,.58)!important;
+  background:rgba(4,15,30,.72)!important;
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.08)!important;
+  backdrop-filter:blur(8px)!important;
+}
+.live-score-badge.is-visible{
+  border-color:#e2bd67!important;
+  background:linear-gradient(135deg,#c89532,#e2b84f)!important;
+  box-shadow:0 5px 16px rgba(199,154,59,.24)!important;
+}
+.live-score-base-controls{
+  grid-template-columns:minmax(0,1fr) 112px!important;
+  gap:10px!important;
+  margin:10px 0 19px!important;
+}
+.live-score-sbo{
+  min-height:72px!important;
+  height:auto!important;
+  padding:7px!important;
+  border:1px solid rgba(226,189,103,.78)!important;
+  border-radius:18px!important;
+  background:linear-gradient(180deg,rgba(8,27,50,.90),rgba(4,15,30,.94))!important;
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.08),0 10px 28px rgba(0,0,0,.22)!important;
+  backdrop-filter:blur(9px)!important;
+}
+.live-score-sbo .live-score-count{
+  min-height:56px!important;
+  padding:8px 5px!important;
+  border-radius:12px!important;
+  transition:transform .12s ease,background-color .12s ease!important;
+}
+.live-score-sbo .live-score-count:not(:disabled):active{
+  transform:scale(.94)!important;
+  background:rgba(255,255,255,.08)!important;
+}
+.live-score-count b{
+  font-size:20px!important;
+  text-shadow:0 2px 8px rgba(0,0,0,.72)!important;
+}
+.live-score-dot{
+  width:13px!important;
+  height:13px!important;
+  min-width:13px!important;
+  border:1px solid rgba(255,255,255,.14)!important;
+  background:#253b55!important;
+  box-shadow:inset 0 2px 4px rgba(0,0,0,.34)!important;
+}
+.live-score-dot.on-b{background:#4fd36d!important;box-shadow:0 0 12px rgba(79,211,109,.68),inset 0 1px 2px rgba(255,255,255,.5)!important}
+.live-score-dot.on-s{background:#f1c84e!important;box-shadow:0 0 12px rgba(241,200,78,.68),inset 0 1px 2px rgba(255,255,255,.5)!important}
+.live-score-dot.on-o{background:#f25b57!important;box-shadow:0 0 12px rgba(242,91,87,.68),inset 0 1px 2px rgba(255,255,255,.5)!important}
+.live-score-diamond-wrap{
+  width:112px!important;
+  height:80px!important;
+  justify-content:center!important;
+  border:1px solid rgba(145,162,186,.38)!important;
+  border-radius:18px!important;
+  background:linear-gradient(180deg,rgba(8,27,50,.88),rgba(4,15,30,.94))!important;
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.07),0 10px 28px rgba(0,0,0,.2)!important;
+  backdrop-filter:blur(9px)!important;
+}
+.live-score-diamond{
+  width:72px!important;
+  height:72px!important;
+  flex-basis:72px!important;
+  margin:0!important;
+}
+.live-score-diamond::before{
+  inset:16px!important;
+  border:3px solid #8da0ba!important;
+  border-radius:5px!important;
+  box-shadow:0 0 15px rgba(125,151,184,.24),inset 0 0 10px rgba(125,151,184,.12)!important;
+}
+.live-score-base{
+  width:38px!important;
+  height:38px!important;
+  min-width:38px!important;
+  border:0!important;
+  border-radius:50%!important;
+  background:transparent!important;
+  display:grid!important;
+  place-items:center!important;
+  z-index:4!important;
+  -webkit-tap-highlight-color:transparent!important;
+}
+.live-score-base::before{
+  content:"";
+  width:17px;
+  height:17px;
+  border:3px solid #91a2ba;
+  border-radius:5px;
+  background:#f9fbff;
+  box-sizing:border-box;
+  box-shadow:0 3px 8px rgba(0,0,0,.46);
+  transition:transform .12s ease,background-color .12s ease,box-shadow .12s ease;
+}
+.live-score-base:not(:disabled):active::before{transform:scale(.78)}
+.live-score-sbo .live-score-count:focus-visible,
+.live-score-base:focus-visible{outline:3px solid #fff!important;outline-offset:2px!important}
+.live-score-base.on::before{
+  border-color:#f3ca62!important;
+  background:#f3ca62!important;
+  box-shadow:0 0 16px rgba(243,202,98,.9),0 3px 8px rgba(0,0,0,.42)!important;
+}
+.live-score-base.second{top:-2px!important;left:17px!important}
+.live-score-base.first{top:17px!important;right:-2px!important}
+.live-score-base.home{bottom:-2px!important;left:17px!important}
+.live-score-base.third{top:17px!important;left:-2px!important}
+.live-score-field{color:#fff!important;text-shadow:0 2px 8px rgba(0,0,0,.7)!important}
+.live-score-field input,.live-score-field select{
+  border-color:rgba(206,216,229,.88)!important;
+  box-shadow:0 6px 16px rgba(0,0,0,.14)!important;
+}
+.live-score-segments,.live-score-board,.live-score-tb-block,.live-score-lock-panel{
+  background:rgba(5,18,36,.86)!important;
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.05),0 9px 24px rgba(0,0,0,.16)!important;
+  backdrop-filter:blur(7px)!important;
+}
+.live-score-board{border-color:#8fa1b8!important}
+.live-score-board-head{background:rgba(4,15,31,.94)!important}
+.live-score-team{background:rgba(4,15,31,.9)!important}
+.live-score-tb-total,.live-score-total{background:rgba(183,137,48,.24)!important}
+
+@media(max-width:600px){
+  .live-score-editor{padding:15px 12px!important}
+  .live-score-editor::before,.live-score-editor::after{height:520px}
+  .live-score-head{gap:8px!important}
+  .live-score-badges{gap:5px!important}
+  .live-score-badge{padding:6px 8px!important;font-size:10px!important}
+  .live-score-base-controls{grid-template-columns:minmax(0,1fr) 94px!important;gap:7px!important;margin:7px 0 14px!important}
+  .live-score-sbo{min-height:66px!important;padding:5px!important;border-radius:16px!important}
+  .live-score-sbo .live-score-count{min-height:54px!important;padding:7px 3px!important;gap:4px!important}
+  .live-score-count b{font-size:18px!important}
+  .live-score-dots{gap:4px!important}
+  .live-score-dot{width:12px!important;height:12px!important;min-width:12px!important}
+  .live-score-diamond-wrap{width:94px!important;height:72px!important;border-radius:16px!important}
+  .live-score-diamond{width:66px!important;height:66px!important;flex-basis:66px!important}
+  .live-score-diamond::before{inset:15px!important}
+  .live-score-base{width:38px!important;height:38px!important;min-width:38px!important}
+  .live-score-base::before{width:16px;height:16px}
+  .live-score-base.second{top:-4px!important;left:14px!important}
+  .live-score-base.first{top:14px!important;right:-4px!important}
+  .live-score-base.home{bottom:-4px!important;left:14px!important}
+  .live-score-base.third{top:14px!important;left:-4px!important}
+}
+@media(max-width:390px){
+  .live-score-base-controls{grid-template-columns:minmax(0,1fr) 88px!important;gap:6px!important}
+  .live-score-count b{font-size:17px!important}
+  .live-score-dot{width:11px!important;height:11px!important;min-width:11px!important}
+  .live-score-diamond-wrap{width:88px!important}
 }
 </style>
 <style id="home-header-position-unified">
@@ -1981,6 +2180,43 @@ body.photo-admin-on #accessPasswordChange{
     line-height:38px!important;
     white-space:nowrap!important;
   }
+}
+</style>
+<style id="live-score-stadium-cascade-lock">
+/* Keep the stadium controls above older compatibility overrides. */
+.live-score-base-controls{grid-template-columns:minmax(0,1fr) 112px!important;gap:10px!important;margin:10px 0 19px!important}
+.live-score-sbo{min-height:72px!important;height:auto!important;padding:7px!important;border-radius:18px!important}
+.live-score-sbo .live-score-count{min-height:56px!important;padding:8px 5px!important}
+.live-score-count b{font-size:20px!important}
+.live-score-dot{width:13px!important;height:13px!important;min-width:13px!important}
+.live-score-diamond-wrap{width:112px!important;height:80px!important}
+.live-score-diamond{width:72px!important;height:72px!important;flex-basis:72px!important;margin:0!important}
+.live-score-diamond::before{inset:16px!important;border-width:3px!important}
+.live-score-base{width:38px!important;height:38px!important;min-width:38px!important;border:0!important;background:transparent!important}
+.live-score-base.second{top:-2px!important;left:17px!important}
+.live-score-base.first{top:17px!important;right:-2px!important}
+.live-score-base.home{bottom:-2px!important;left:17px!important}
+.live-score-base.third{top:17px!important;left:-2px!important}
+@media(max-width:600px){
+  .live-score-base-controls{grid-template-columns:minmax(0,1fr) 94px!important;gap:7px!important;margin:7px 0 14px!important}
+  .live-score-sbo{min-height:66px!important;height:auto!important;padding:5px!important;border-radius:16px!important}
+  .live-score-sbo .live-score-count{min-height:54px!important;padding:7px 3px!important}
+  .live-score-count b{font-size:18px!important}
+  .live-score-dot{width:12px!important;height:12px!important;min-width:12px!important}
+  .live-score-diamond-wrap{width:94px!important;height:72px!important}
+  .live-score-diamond{width:66px!important;height:66px!important;flex-basis:66px!important}
+  .live-score-diamond::before{inset:15px!important}
+  .live-score-base{width:38px!important;height:38px!important;min-width:38px!important}
+  .live-score-base.second{top:-4px!important;left:14px!important}
+  .live-score-base.first{top:14px!important;right:-4px!important}
+  .live-score-base.home{bottom:-4px!important;left:14px!important}
+  .live-score-base.third{top:14px!important;left:-4px!important}
+}
+@media(max-width:390px){
+  .live-score-base-controls{grid-template-columns:minmax(0,1fr) 88px!important;gap:6px!important}
+  .live-score-count b{font-size:17px!important}
+  .live-score-dot{width:11px!important;height:11px!important;min-width:11px!important}
+  .live-score-diamond-wrap{width:88px!important}
 }
 </style>
 <style id="live-score-grade-ground-final-fix">
