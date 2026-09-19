@@ -3949,15 +3949,23 @@ function openProtectedArea(type){
     const now=new Date(); now.setHours(0,0,0,0);
 
     const dateKey=v=>String(v??'').trim().replace(/[./]/g,'-').replace(/年|月/g,'-').replace(/日/g,'').split('T')[0];
-    const todayKey=[now.getFullYear(),String(now.getMonth()+1).padStart(2,'0'),String(now.getDate()).padStart(2,'0')].join('-');
+    // HOMEは編集日時ではなく、日本時間の今日以降で最も近い予定を表示する。
+    const japanDate=new Intl.DateTimeFormat('en-CA',{timeZone:'Asia/Tokyo',year:'numeric',month:'2-digit',day:'2-digit'}).formatToParts(new Date());
+    const todayKey=['year','month','day'].map(type=>japanDate.find(part=>part.type===type).value).join('-');
+    const scheduleDateKey=value=>{
+      const match=dateKey(value).match(/^(\d{4})-(\d{1,2})-(\d{1,2})$/);
+      if(!match)return '';
+      const year=Number(match[1]),month=Number(match[2]),day=Number(match[3]);
+      const date=new Date(Date.UTC(year,month-1,day));
+      if(date.getUTCFullYear()!==year||date.getUTCMonth()!==month-1||date.getUTCDate()!==day)return '';
+      return [match[1],String(month).padStart(2,'0'),String(day).padStart(2,'0')].join('-');
+    };
     const upcoming=schedule
-      .map((item,index)=>({item,index}))
-      .filter(entry=>entry.item && entry.item.date && dateKey(entry.item.date)>=todayKey)
+      .map((item,index)=>({item,index,key:scheduleDateKey(item&&item.date)}))
+      .filter(entry=>entry.key && entry.key>=todayKey)
       .sort((a,b)=>{
-        const updatedA=Date.parse(a.item.updatedAt||'')||0;
-        const updatedB=Date.parse(b.item.updatedAt||'')||0;
-        if(updatedA!==updatedB)return updatedB-updatedA;
-        return b.index-a.index;
+        const byDate=a.key.localeCompare(b.key);
+        return byDate||a.index-b.index;
       })[0]?.item;
     const sc=document.querySelector('#latestScheduleCard .latest-meta');
     const scheduleGradeIcon=(date,grade)=>{
