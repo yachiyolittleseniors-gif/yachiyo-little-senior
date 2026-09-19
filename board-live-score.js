@@ -260,6 +260,9 @@
       : '閲覧中モード：現在の試合状況を表示しています。';
     elements.lockButton.textContent = inputMode ? '閲覧モードに戻る' : 'この端末で入力する';
     elements.lockButton.disabled = false;
+    // render() の一括 disabled 処理後でも、モード切替ボタンだけは常に操作可能にする。
+    elements.lockButton.removeAttribute('disabled');
+    elements.lockButton.setAttribute('aria-disabled', 'false');
   }
 
   function renderSbo() {
