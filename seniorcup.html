@@ -498,6 +498,11 @@ html{scroll-padding-top:var(--fixed-header-height)}
 <p class="file-name" id="guidelineFileName">読み込み中...</p>
 <a class="download-btn is-loading" href="#" id="guidelineView" target="_blank" rel="noopener">資料を開く</a>
 </section>
+<section class="download-card" aria-labelledby="cupDocumentsHeading">
+<h3 id="cupDocumentsHeading">資料</h3>
+<p class="file-name">トーナメント表・試合結果などの資料を掲載しています。</p>
+<div id="cupDocumentsList" aria-live="polite">読み込み中...</div>
+</section>
 <section class="download-card">
 <h3>申込書・選手名簿</h3>
 <p class="file-name" id="rosterFileName">読み込み中...</p>
@@ -522,6 +527,14 @@ html{scroll-padding-top:var(--fixed-header-height)}
 
 
 <div class="admin-grid">
+<div class="admin-box">
+<label for="cupDocumentTitle">資料を追加</label>
+<input id="cupDocumentTitle" type="text" maxlength="160" placeholder="資料名（例：トーナメント表）" style="width:100%;box-sizing:border-box;padding:10px;margin:8px 0;font:inherit"/>
+<input id="cupDocumentUpload" type="file" accept=".pdf,.jpg,.jpeg,.png,.webp,application/pdf,image/jpeg,image/png,image/webp"/>
+<p class="admin-note">PDF・画像（JPEG／PNG／WebP）、1ファイル最大4MB。保存した資料は一般公開されます。</p>
+<button id="cupDocumentSave" type="button">資料を保存</button>
+<div id="cupDocumentAdminList"></div>
+</div>
 <div class="admin-box">
 <label for="guidelineUpload">開催要項を更新（PDF・画像）</label>
 <input accept=".pdf,.jpg,.jpeg,.png,.webp,application/pdf,image/jpeg,image/png,image/webp" id="guidelineUpload" type="file"/>
@@ -553,6 +566,7 @@ html{scroll-padding-top:var(--fixed-header-height)}
 </div>
 </footer>
 <button id="cupAdminBtn" type="button">管理</button>
+<script src="./seniorcup-documents.js?v=20260919"></script>
 <script>
 (function(){
   const API='/.netlify/functions/site-data';
