@@ -10,15 +10,18 @@
   function render(){
     list.replaceChildren();adminList.replaceChildren();
     if(!documents.length){
+      const notice=document.createElement('p');
+      notice.textContent='現在掲載中の資料はありません。';
+      notice.style.cssText='margin:0 0 12px;color:#697481;font-size:13px;line-height:1.65';
       const empty=document.createElement('span');
       empty.className='download-btn';
       empty.textContent='資料を開く';
       empty.setAttribute('role','link');
       empty.setAttribute('aria-disabled','true');
-      empty.setAttribute('aria-label','資料を開く（現在公開されている資料はありません）');
-      empty.title='現在公開されている資料はありません。';
+      empty.setAttribute('aria-label','資料を開く（現在掲載中の資料はありません）');
+      empty.title='現在掲載中の資料はありません。';
       empty.style.cursor='not-allowed';
-      list.append(empty);
+      list.append(notice,empty);
     }
     documents.forEach((item,index)=>{
       const row=document.createElement('div');
