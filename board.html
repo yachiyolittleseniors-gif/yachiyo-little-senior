@@ -1174,7 +1174,7 @@ body.live-score-replay-only #liveScoreCard{
         </div>
         <p>試合開始後、得点を入力してチーム内へ速報を共有できます。</p>
         <div class="live-score-idle-actions">
-          <button class="live-score-button primary" id="liveScoreStart" type="button">試合速報を開始</button>
+          <button class="live-score-button primary" id="liveScoreStart" type="button" onclick="if(!window.confirm('⚠ 試合速報を開く前に\\n\\n試合当日の入力担当者のみ操作してください。\\n試合終了後は必ず「試合終了」を押してください。\\n\\n試合速報を開きますか？')){event.preventDefault();event.stopImmediatePropagation();return false;}">試合速報を開始</button>
         </div>
         <p class="live-score-start-note">※試合当日の入力担当者のみ操作してください。開始すると試合速報がチーム内に公開されます。試合終了後は必ず「試合終了」を押してください。</p>
         <div class="live-score-start-modal" id="liveScoreStartModal" hidden>
