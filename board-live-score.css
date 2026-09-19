@@ -210,3 +210,33 @@
  .live-score-badges{gap:7px!important}
  .live-score-badge{min-height:38px;padding:6px 5px!important;font-size:10px!important}
 }
+
+/* 2026-09-19 restore clear view/input mode visuals */
+.live-score-card.live-score-view-mode .live-score-field input,
+.live-score-card.live-score-view-mode .live-score-field select,
+.live-score-card.live-score-view-mode .live-score-segments button,
+.live-score-card.live-score-view-mode .live-score-number,
+.live-score-card.live-score-view-mode .live-score-count,
+.live-score-card.live-score-view-mode .live-score-base{
+  opacity:.52!important;
+  filter:grayscale(.35);
+  cursor:default!important;
+}
+.live-score-card.live-score-view-mode .live-score-number.is-selected{
+  outline-color:#8b7441!important;
+}
+.live-score-card.live-score-view-mode #liveScoreLockButton{
+  opacity:1!important;
+  filter:none!important;
+  pointer-events:auto!important;
+  cursor:pointer!important;
+}
+.live-score-card:not(.live-score-view-mode) .live-score-field input,
+.live-score-card:not(.live-score-view-mode) .live-score-field select,
+.live-score-card:not(.live-score-view-mode) .live-score-segments button,
+.live-score-card:not(.live-score-view-mode) .live-score-number,
+.live-score-card:not(.live-score-view-mode) .live-score-count,
+.live-score-card:not(.live-score-view-mode) .live-score-base{
+  opacity:1!important;
+  filter:none!important;
+}
