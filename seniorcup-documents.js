@@ -27,7 +27,8 @@
       const row=document.createElement('div');
       row.style.cssText='overflow-wrap:anywhere'+(index?';margin-top:14px;padding-top:14px;border-top:1px solid #e5e1d8':'');
       const name=document.createElement('p');
-      name.style.cssText='font-weight:700;margin:0 0 10px';
+      name.className='file-name';
+      name.style.cssText='min-height:0;margin:0 0 15px';
       name.textContent=item.tournament||item.fileName;
       const link=document.createElement('a');
       link.className='download-btn';link.textContent='資料を開く';
