@@ -68,6 +68,9 @@ h1{font-family:serif;font-weight:600;font-size:clamp(34px,6vw,58px);letter-spaci
 .download-btn{display:flex;align-items:center;justify-content:center;min-height:48px;background:var(--gold);border:1px solid var(--gold);color:#fff!important;border-radius:7px;font-weight:900}
 .download-btn.is-loading{pointer-events:none;background:var(--gold);opacity:1;color:#fff!important}
 .download-btn.is-empty{pointer-events:none;opacity:.42;background:#ece7dc}
+.download-card.registration-closed{background:#ececec;border-color:#b9b9b9;filter:grayscale(1)}
+.download-card.registration-closed h3,.download-card.registration-closed .file-name{color:#777}
+.download-card.registration-closed .download-btn{background:#aaa;border-color:#aaa;opacity:1;cursor:not-allowed}
 .admin-area{display:none;margin-top:22px;padding-top:20px;border-top:1px solid #ddd9cf}.admin-area.show{display:block}
 .guideline-admin-box{display:none;margin-top:14px;background:#fff;border:1px solid #d8d4cb;padding:15px}
 .guideline-admin-box.show{display:block}
@@ -505,6 +508,7 @@ html{scroll-padding-top:var(--fixed-header-height)}
 </section>
 <section class="download-card">
 <h3>申込書・選手名簿</h3>
+<p id="registrationClosedNotice" hidden style="color:#666;font-weight:700;margin:0 0 12px" role="status">申込受付は終了しました。</p>
 <p class="file-name" id="rosterFileName">読み込み中...</p>
 <a class="download-btn is-loading" href="#" id="rosterDownload">ダウンロード</a>
 </section>
@@ -527,6 +531,12 @@ html{scroll-padding-top:var(--fixed-header-height)}
 
 
 <div class="admin-grid">
+<div class="admin-box">
+<label style="display:flex;align-items:center;gap:8px"><input id="registrationClosed" type="checkbox" disabled style="width:20px;height:20px;margin:0"/>申込受付終了</label>
+<p class="admin-note">チェックして保存すると、申込書・選手名簿のカードをグレーアウトします。チェックを外して保存すると受付中に戻ります。</p>
+<button id="registrationSave" type="button" disabled>受付状態を保存</button>
+<p id="registrationStatus" class="admin-note" role="status">受付状態を確認中...</p>
+</div>
 <div class="admin-box">
 <label for="cupDocumentTitle">資料を追加</label>
 <input id="cupDocumentTitle" type="text" maxlength="160" placeholder="資料名（例：トーナメント表）" style="width:100%;box-sizing:border-box;padding:10px;margin:8px 0;font:inherit"/>
@@ -566,7 +576,7 @@ html{scroll-padding-top:var(--fixed-header-height)}
 </div>
 </footer>
 <button id="cupAdminBtn" type="button">管理</button>
-<script src="./seniorcup-documents.js?v=20260919"></script>
+<script src="./seniorcup-documents.js?v=20260919-buttons2"></script>
 <script>
 (function(){
   const API='/.netlify/functions/site-data';
@@ -783,7 +793,52 @@ function renderReplyMode(){
       info.textContent='現在の添付ファイル：なし';
       del.hidden=true;
     }
+    if(slot==='roster')applyRegistrationState();
   }
+  let registrationClosed=false,registrationReady=false,registrationBusy=false;
+  const registrationCheck=document.getElementById('registrationClosed');
+  const registrationSave=document.getElementById('registrationSave');
+  const registrationStatus=document.getElementById('registrationStatus');
+  const rosterLink=document.getElementById('rosterDownload');
+  function applyRegistrationState(){
+    const blocked=!registrationReady||registrationClosed;
+    rosterLink.closest('.download-card').classList.toggle('registration-closed',registrationReady&&registrationClosed);
+    document.getElementById('registrationClosedNotice').hidden=!(registrationReady&&registrationClosed);
+    rosterLink.textContent=registrationReady?(registrationClosed?'申込受付終了':'ダウンロード'):'確認中...';
+    if(blocked){
+      if(rosterLink.hasAttribute('href'))rosterLink.dataset.registrationHref=rosterLink.getAttribute('href');
+      rosterLink.removeAttribute('href');rosterLink.setAttribute('aria-disabled','true');rosterLink.setAttribute('tabindex','-1');
+    }else{
+      if(rosterLink.dataset.registrationHref){rosterLink.setAttribute('href',rosterLink.dataset.registrationHref);delete rosterLink.dataset.registrationHref;}
+      rosterLink.removeAttribute('aria-disabled');rosterLink.removeAttribute('tabindex');
+    }
+  }
+  rosterLink.addEventListener('click',event=>{if(!registrationReady||registrationClosed){event.preventDefault();event.stopImmediatePropagation();}},true);
+  applyRegistrationState();
+  async function loadRegistration(){
+    try{
+      const response=await fetch(API+'?section=seniorcup-registration',{cache:'no-store'});
+      if(!response.ok)throw new Error();
+      const result=await response.json();registrationClosed=result.data?.closed===true;registrationReady=true;
+      registrationCheck.checked=registrationClosed;registrationCheck.disabled=false;registrationSave.disabled=false;
+      registrationStatus.textContent=registrationClosed?'現在：申込受付終了':'現在：受付中';applyRegistrationState();
+    }catch(error){registrationStatus.textContent='受付状態を取得できませんでした。ページを再読み込みしてください。';}
+  }
+  registrationSave.addEventListener('click',async()=>{
+    if(!registrationReady||registrationBusy)return;
+    const password=sessionStorage.getItem('yachiyoAdminPassword')||'';
+    if(!password){alert('管理画面を開き直してください。');return;}
+    registrationBusy=true;registrationCheck.disabled=true;registrationSave.disabled=true;registrationSave.textContent='保存中...';
+    try{
+      const response=await fetch(API+'?section=seniorcup-registration',{method:'POST',headers:{'content-type':'application/json','x-admin-password':password},body:JSON.stringify({data:{closed:registrationCheck.checked}})});
+      if(!response.ok)throw new Error(response.status===401?'管理者パスワードを確認してください。':'受付状態を保存できませんでした。');
+      const result=await response.json();registrationClosed=result.data.closed===true;
+      registrationCheck.checked=registrationClosed;registrationStatus.textContent=registrationClosed?'現在：申込受付終了':'現在：受付中';
+      applyRegistrationState();showSaveNotice('受付状態を保存しました');
+    }catch(error){registrationCheck.checked=registrationClosed;alert(error.message);}
+    finally{registrationBusy=false;registrationCheck.disabled=false;registrationSave.disabled=false;registrationSave.textContent='受付状態を保存';}
+  });
+  loadRegistration();
   async function load(slot){
     const c=slots[slot];
     try{const r=await fetch(API+'?section='+encodeURIComponent(c.section),{cache:'no-store'});if(!r.ok)throw 0;const j=await r.json();render(slot,j.data)}

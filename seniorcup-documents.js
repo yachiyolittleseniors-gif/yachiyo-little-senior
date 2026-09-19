@@ -9,10 +9,20 @@
   let documents=[],busy=false;
   function render(){
     list.replaceChildren();adminList.replaceChildren();
-    if(!documents.length)list.textContent='現在公開されている資料はありません。';
-    documents.forEach(item=>{
+    if(!documents.length){
+      const empty=document.createElement('span');
+      empty.className='download-btn';
+      empty.textContent='資料を開く';
+      empty.setAttribute('role','link');
+      empty.setAttribute('aria-disabled','true');
+      empty.setAttribute('aria-label','資料を開く（現在公開されている資料はありません）');
+      empty.title='現在公開されている資料はありません。';
+      empty.style.cursor='not-allowed';
+      list.append(empty);
+    }
+    documents.forEach((item,index)=>{
       const row=document.createElement('div');
-      row.style.cssText='padding:14px 0;border-top:1px solid #e5e1d8;overflow-wrap:anywhere';
+      row.style.cssText='overflow-wrap:anywhere'+(index?';margin-top:14px;padding-top:14px;border-top:1px solid #e5e1d8':'');
       const name=document.createElement('p');
       name.style.cssText='font-weight:700;margin:0 0 10px';
       name.textContent=item.tournament||item.fileName;
