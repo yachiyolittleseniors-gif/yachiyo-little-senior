@@ -496,14 +496,9 @@ html{scroll-padding-top:var(--fixed-header-height)}
 </div>
 <h2 class="section-title">大会資料</h2>
 <div class="download-grid">
-<section class="download-card">
-<h3>開催要項</h3>
-<p class="file-name" id="guidelineFileName">読み込み中...</p>
-<a class="download-btn is-loading" href="#" id="guidelineView" target="_blank" rel="noopener">資料を開く</a>
-</section>
 <section class="download-card" aria-labelledby="cupDocumentsHeading">
-<h3 id="cupDocumentsHeading">資料</h3>
-<p class="file-name">トーナメント表・試合結果などの資料を掲載しています。</p>
+<h3 id="cupDocumentsHeading">大会資料</h3>
+<p class="file-name">開催要項・トーナメント結果などの資料を掲載しています。</p>
 <div id="cupDocumentsList" aria-live="polite">読み込み中...</div>
 </section>
 <section class="download-card">
@@ -538,19 +533,12 @@ html{scroll-padding-top:var(--fixed-header-height)}
 <p id="registrationStatus" class="admin-note" role="status">受付状態を確認中...</p>
 </div>
 <div class="admin-box">
-<label for="cupDocumentTitle">資料を追加</label>
-<input id="cupDocumentTitle" type="text" maxlength="160" placeholder="資料名（例：トーナメント表）" style="width:100%;box-sizing:border-box;padding:10px;margin:8px 0;font:inherit"/>
+<label for="cupDocumentTitle">大会資料を追加</label>
+<input id="cupDocumentTitle" type="text" maxlength="160" placeholder="資料名（例：開催要項・トーナメント結果）" style="width:100%;box-sizing:border-box;padding:10px;margin:8px 0;font:inherit"/>
 <input id="cupDocumentUpload" type="file" accept=".pdf,.jpg,.jpeg,.png,.webp,application/pdf,image/jpeg,image/png,image/webp"/>
-<p class="admin-note">PDF・画像（JPEG／PNG／WebP）、1ファイル最大4MB。保存した資料は一般公開されます。</p>
-<button id="cupDocumentSave" type="button">資料を保存</button>
+<p class="admin-note">開催要項・トーナメント結果などをPDF・画像（JPEG／PNG／WebP）で保存できます。1ファイル最大4MB。保存した資料は一般公開されます。</p>
+<button id="cupDocumentSave" type="button">大会資料を保存</button>
 <div id="cupDocumentAdminList"></div>
-</div>
-<div class="admin-box">
-<label for="guidelineUpload">開催要項を更新（PDF・画像）</label>
-<input accept=".pdf,.jpg,.jpeg,.png,.webp,application/pdf,image/jpeg,image/png,image/webp" id="guidelineUpload" type="file"/>
-<p class="attachment-info" id="guidelineAttachmentInfo">現在の添付ファイル：読み込み中...</p>
-<button data-slot="guideline" type="button">開催要項を保存</button>
-<button class="attachment-delete" data-delete-slot="guideline" hidden type="button">添付ファイルを削除</button>
 </div>
 <div class="admin-box">
 <label for="rosterUpload">申込書・選手名簿を更新（PDF / Excel）</label>
@@ -559,7 +547,7 @@ html{scroll-padding-top:var(--fixed-header-height)}
 <button data-slot="roster" type="button">申込書・選手名簿を保存</button>
 <button class="attachment-delete" data-delete-slot="roster" hidden type="button">添付ファイルを削除</button>
 </div>
-</div><p class="admin-note">開催要項はPDF・画像（JPEG / PNG / WebP）、申込書・選手名簿はPDF・Excel（.pdf / .xls / .xlsx）に対応。1ファイル最大5MBです。</p><div class="admin-box" style="margin-bottom:14px">
+</div><p class="admin-note">大会資料はPDF・画像（JPEG / PNG / WebP）、申込書・選手名簿はPDF・Excel（.pdf / .xls / .xlsx）に対応しています。</p><div class="admin-box" style="margin-bottom:14px">
 <label>申込み返信先の表示</label>
 <p class="admin-note" id="replyModeStatus">現在：大会専用メールアドレス</p>
 <button id="replyModeBtn" type="button">お問い合わせに変更</button>
@@ -576,12 +564,11 @@ html{scroll-padding-top:var(--fixed-header-height)}
 </div>
 </footer>
 <button id="cupAdminBtn" type="button">管理</button>
-<script src="./seniorcup-documents.js?v=20260919-empty3"></script>
+<script src="./seniorcup-documents.js?v=20260920-documents-unified"></script>
 <script>
 (function(){
   const API='/.netlify/functions/site-data';
   const slots={
-    guideline:{label:'開催要項',section:'downloads-guideline',input:'guidelineUpload',name:'guidelineFileName',link:'guidelineView',openMode:'view',info:'guidelineAttachmentInfo',guideline:true,emptyText:'現在公開されている資料はありません。'},
     roster:{label:'申込書・選手名簿',section:'downloads-roster',input:'rosterUpload',name:'rosterFileName',link:'rosterDownload',info:'rosterAttachmentInfo'}
   };
 
@@ -928,7 +915,7 @@ function renderReplyMode(){
     },{passive:true});
   }
 
-  load('guideline');load('roster');loadGuideline();loadPartners();loadReplyMode();
+  load('roster');loadGuideline();loadPartners();loadReplyMode();
 })();
 </script>
 <script>

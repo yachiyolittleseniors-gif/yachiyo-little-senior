@@ -40,7 +40,7 @@
       remove.addEventListener('click',()=>removeDocument(item));
       adminRow.append(label,remove);adminList.append(adminRow);
     });
-    save.disabled=busy;save.textContent=busy?'処理中...':'資料を保存';
+    save.disabled=busy;save.textContent=busy?'処理中...':'大会資料を保存';
   }
   async function request(body){
     const password=sessionStorage.getItem('yachiyoAdminPassword')||'';
@@ -61,7 +61,7 @@
     try{
       await request({action:'uploadResultDocument',tournament:title.value.trim(),fileName:file.name,dataUrl:await dataUrl(file)});
       title.value='';input.value='';
-      if(typeof showSaveNotice==='function')showSaveNotice('資料を保存しました');
+      if(typeof showSaveNotice==='function')showSaveNotice('大会資料を保存しました');
     }catch(error){alert(error.message);}finally{busy=false;render();}
   });
   async function removeDocument(item){
