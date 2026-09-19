@@ -622,6 +622,7 @@
       render();
       return;
     }
+    if (!confirm('試合速報を開始しますか？\n\n※試合当日の入力担当者のみ押してください。\n開始すると試合速報がチーム内に公開されます。\n試合終了後は必ず「試合終了」を押してください。')) return;
     startGame();
   });
   elements.lockButton?.addEventListener('click', () => {
