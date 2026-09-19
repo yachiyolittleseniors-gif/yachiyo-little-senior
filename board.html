@@ -742,8 +742,7 @@ body.live-score-focused footer,
 body.live-score-focused .wrap > .grid > :not(#liveScoreCard){display:none!important}
 body.live-score-focused .wrap > .grid{display:block!important}
 body.live-score-focused #liveScoreCard{width:100%;box-sizing:border-box}
-#liveScoreTeamReturn{display:block;width:100%;margin:0 0 16px}
-#liveScoreTeamReturn:disabled,#liveScoreBack:disabled{background:#333d49!important;border-color:#647080!important;color:#9ca4ae!important;opacity:.65;cursor:not-allowed}
+#liveScoreBack:disabled{background:#333d49!important;border-color:#647080!important;color:#9ca4ae!important;opacity:.65;cursor:not-allowed}
 </style>
 
 <style id="live-score-input-lock-style">
@@ -1166,7 +1165,6 @@ body.live-score-focused #liveScoreCard{width:100%;box-sizing:border-box}
       </div>
 
       <div class="live-score-editor" id="liveScoreEditor" hidden>
-        <button class="live-score-button back live-score-team-return" id="liveScoreTeamReturn" type="button">チーム専用ページへ戻る</button>
         <div class="live-score-head">
           <div>
             <div class="live-score-kicker">GAME速報</div>
@@ -1522,7 +1520,7 @@ body.live-score-focused #liveScoreCard{width:100%;box-sizing:border-box}
   <button id="closeDensukeAdminBtn" type="button">キャンセル</button>
 </div>
 
-<script src="./board-live-score.js?v=20260919-focus1"></script>
+<script src="./board-live-score.js?v=20260919-focus2"></script>
 <script src="./board-updates.js?v=20260918-13"></script>
 <script src="./board-referee-documents.js?v=20260918-7"></script>
 <script src="./board-tournaments.js?v=20260914-1"></script>

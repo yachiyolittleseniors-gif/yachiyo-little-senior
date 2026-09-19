@@ -502,7 +502,7 @@
     const showingEditor = state.active || replayMode;
     document.body.classList.toggle('live-score-focused', Boolean(showingEditor && !editorCollapsed));
     const returnBlocked = Boolean(state.active && inputMode && !replayMode);
-    [elements.back, document.getElementById('liveScoreTeamReturn')].forEach(button => {
+    [elements.back].forEach(button => {
       if (!button) return;
       button.disabled = returnBlocked;
       button.setAttribute('aria-disabled', String(returnBlocked));
@@ -679,7 +679,6 @@
     if (wasReplay) load({ silent: true, force: true });
   }
   elements.back.addEventListener('click', returnToTeam);
-  document.getElementById('liveScoreTeamReturn')?.addEventListener('click', returnToTeam);
 
   [elements.tournament, elements.startTime, elements.ground, elements.grade, elements.opponent]
     .forEach(input => input.addEventListener('input', () => {
