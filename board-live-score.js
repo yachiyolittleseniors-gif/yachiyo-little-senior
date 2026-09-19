@@ -622,9 +622,20 @@
       render();
       return;
     }
-    if (!confirm('試合速報を開始しますか？\n\n※試合当日の入力担当者のみ押してください。\n開始すると試合速報がチーム内に公開されます。\n試合終了後は必ず「試合終了」を押してください。')) return;
+    const modal = document.getElementById('liveScoreStartModal');
+    if (modal) { modal.hidden = false; return; }
     startGame();
   });
+  document.getElementById('liveScoreStartCancel')?.addEventListener('click', () => {
+    const modal = document.getElementById('liveScoreStartModal');
+    if (modal) modal.hidden = true;
+  });
+  document.getElementById('liveScoreStartConfirm')?.addEventListener('click', () => {
+    const modal = document.getElementById('liveScoreStartModal');
+    if (modal) modal.hidden = true;
+    startGame();
+  });
+
   elements.lockButton?.addEventListener('click', () => {
     if (!state.active || replayMode) return;
     if (inputMode) {
