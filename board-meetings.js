@@ -174,7 +174,7 @@
 
   function gradesFor(item){
     if(Array.isArray(item&&item.grades)){
-      const grades=['1','2','3'].filter(function(grade){return item.grades.map(String).includes(grade)});
+      const grades=['1','2','3','other'].filter(function(grade){return item.grades.map(String).includes(grade)});
       return grades.length?grades:['1','2','3'];
     }
     const legacy=String(item&&item.grade||'');
@@ -204,6 +204,14 @@
   function updateMeetingGradeOptions(date){
     form.querySelectorAll('[data-meeting-grade]').forEach(function(label){
       const grade=label.dataset.meetingGrade;
+      if(grade==='other'){
+        const text=label.querySelector('span');
+        if(text)text.textContent='⚫️その他';
+        label.style.setProperty('--grade-accent','#252b33');
+        label.style.setProperty('--grade-bg','#f0f1f2');
+        label.style.setProperty('--grade-text','#161a1f');
+        return;
+      }
       const color=gradeColorFor(date,grade);
       const text=label.querySelector('span');
       if(text)text.textContent=color.icon+grade+'年生';
@@ -215,14 +223,20 @@
 
   function gradeText(item){
     const grades=gradesFor(item);
-    if(grades.length===3)return '🟡全学年';
-    return grades.map(function(grade){return gradeColorFor(item&&item.date,grade).icon+grade+'年生'}).join('、');
+    const schoolGrades=grades.filter(function(grade){return ['1','2','3'].includes(grade)});
+    const labels=[];
+    if(schoolGrades.length===3)labels.push('🟡全学年');
+    else labels.push.apply(labels,schoolGrades.map(function(grade){return gradeColorFor(item&&item.date,grade).icon+grade+'年生'}));
+    if(grades.includes('other'))labels.push('⚫️その他');
+    return labels.join('、');
   }
 
   function gradeIcons(item){
     const grades=gradesFor(item);
-    if(grades.length===3)return '🟡';
-    return grades.map(function(grade){return gradeColorFor(item&&item.date,grade).icon}).join('');
+    const schoolGrades=grades.filter(function(grade){return ['1','2','3'].includes(grade)});
+    let icons=schoolGrades.length===3?'🟡':schoolGrades.map(function(grade){return gradeColorFor(item&&item.date,grade).icon}).join('');
+    if(grades.includes('other'))icons+='⚫️';
+    return icons;
   }
 
   function renderCalendar(){

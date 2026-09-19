@@ -3954,9 +3954,10 @@ function openProtectedArea(type){
       .map((item,index)=>({item,index}))
       .filter(entry=>entry.item && entry.item.date && dateKey(entry.item.date)>=todayKey)
       .sort((a,b)=>{
-        const byDate=dateKey(a.item.date).localeCompare(dateKey(b.item.date));
-        if(byDate)return byDate;
-        return a.index-b.index;
+        const updatedA=Date.parse(a.item.updatedAt||'')||0;
+        const updatedB=Date.parse(b.item.updatedAt||'')||0;
+        if(updatedA!==updatedB)return updatedB-updatedA;
+        return b.index-a.index;
       })[0]?.item;
     const sc=document.querySelector('#latestScheduleCard .latest-meta');
     const scheduleGradeIcon=(date,grade)=>{
@@ -3969,9 +3970,13 @@ function openProtectedArea(type){
       return ['🔴','🟢','🔵'][index];
     };
     const scheduleGradeText=x=>{
-      const grades=Array.isArray(x&&x.grades)?x.grades.map(String).filter(v=>['1','2','3'].includes(v)):[];
-      if(grades.length===3)return '🟡全学年';
-      return grades.map(v=>scheduleGradeIcon(x&&x.date,v)+v+'年生').join('・');
+      const grades=Array.isArray(x&&x.grades)?[...new Set(x.grades.map(String).filter(v=>['1','2','3','other'].includes(v)))]:[];
+      const schoolGrades=grades.filter(v=>['1','2','3'].includes(v));
+      const labels=[];
+      if(schoolGrades.length===3)labels.push('🟡全学年');
+      else labels.push(...schoolGrades.map(v=>scheduleGradeIcon(x&&x.date,v)+v+'年生'));
+      if(grades.includes('other'))labels.push('⚫️その他');
+      return labels.join('・');
     };
     const upcomingGrades=scheduleGradeText(upcoming);
     sc.innerHTML=upcoming

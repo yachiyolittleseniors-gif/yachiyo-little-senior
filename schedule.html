@@ -1880,6 +1880,7 @@ html{scroll-padding-top:var(--fixed-header-height)}
     <label class="calendar-grade-option" data-calendar-grade="1"><input type="checkbox" name="calendarGrade" value="1"><span>🔴1年生</span></label>
     <label class="calendar-grade-option" data-calendar-grade="2"><input type="checkbox" name="calendarGrade" value="2"><span>🟢2年生</span></label>
     <label class="calendar-grade-option" data-calendar-grade="3"><input type="checkbox" name="calendarGrade" value="3"><span>🔵3年生</span></label>
+    <label class="calendar-grade-option" data-calendar-grade="other"><input type="checkbox" name="calendarGrade" value="other"><span>⚫️その他</span></label>
   </div>
 </fieldset>
 <label>時間
@@ -2023,7 +2024,7 @@ function isJapaneseHoliday(date){
 function eventFor(date){return scheduleData.find(x=>x.date===date)}
 function gradesFor(ev){
   if(Array.isArray(ev&&ev.grades)){
-    return ev.grades.map(String).filter(x=>['1','2','3'].includes(x));
+    return [...new Set(ev.grades.map(String).filter(x=>['1','2','3','other'].includes(x)))];
   }
   const legacy=String(ev&&ev.grade||'');
   const grades=['1','2','3'].filter(x=>legacy.includes(x));
@@ -2048,6 +2049,14 @@ function gradeColorFor(date,grade){
 function updateCalendarGradeOptions(date){
   document.querySelectorAll('[data-calendar-grade]').forEach(label=>{
     const grade=label.dataset.calendarGrade;
+    if(grade==='other'){
+      const text=label.querySelector('span');
+      if(text)text.textContent='⚫️その他';
+      label.style.setProperty('--grade-accent','#252b33');
+      label.style.setProperty('--grade-bg','#f0f1f2');
+      label.style.setProperty('--grade-text','#161a1f');
+      return;
+    }
     const color=gradeColorFor(date,grade);
     const text=label.querySelector('span');
     if(text)text.textContent=color.icon+grade+'年生';
@@ -2058,8 +2067,12 @@ function updateCalendarGradeOptions(date){
 }
 function gradeText(ev){
   const grades=gradesFor(ev);
-  if(grades.length===3)return '🟡全学年';
-  return grades.map(grade=>gradeColorFor(ev&&ev.date,grade).icon+grade+'年生').join('・');
+  const schoolGrades=grades.filter(grade=>['1','2','3'].includes(grade));
+  const labels=[];
+  if(schoolGrades.length===3)labels.push('🟡全学年');
+  else labels.push(...schoolGrades.map(grade=>gradeColorFor(ev&&ev.date,grade).icon+grade+'年生'));
+  if(grades.includes('other'))labels.push('⚫️その他');
+  return labels.join('・');
 }
 function renderCalendar(){
   const y=currentMonth.getFullYear(), m=currentMonth.getMonth();
