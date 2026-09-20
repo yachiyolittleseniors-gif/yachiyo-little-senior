@@ -1477,26 +1477,7 @@ html{scroll-padding-top:var(--fixed-header-height)}
   padding:13px 18px;border-radius:12px;background:#cfa038;color:#fff!important;
   font-weight:900;text-decoration:none;text-align:center;font-size:clamp(17px,4.6vw,21px)
 }
-.phone-icon-circle{
-  width:46px;height:46px;border-radius:50%;display:inline-block;position:relative;
-  background:#fff;flex:0 0 46px
-}
-.phone-handset-icon{
-  position:absolute;left:13px;top:13px;width:18px;height:21px;
-  border-left:7px solid #c9962e;border-bottom:7px solid #c9962e;
-  border-radius:4px 3px 9px 9px;transform:rotate(-42deg)
-}
-.phone-handset-icon:before,.phone-handset-icon:after{
-  content:"";position:absolute;background:#c9962e;border-radius:4px
-}
-.phone-handset-icon:before{width:11px;height:7px;left:-8px;top:-4px}
-.phone-handset-icon:after{width:11px;height:7px;right:-4px;bottom:-8px}
-.phone-wave{
-  position:absolute;border:3px solid #c9962e;border-left-color:transparent;border-bottom-color:transparent;
-  border-radius:50%;transform:rotate(-18deg)
-}
-.phone-wave-1{width:10px;height:10px;right:8px;top:9px}
-.phone-wave-2{width:17px;height:17px;right:4px;top:5px}
+.phone-handset-svg{width:32px;height:32px;display:block;flex:0 0 32px;color:#fff}
 .phone-admin-panel{margin-top:22px;padding-top:18px;border-top:1px solid #ddd9cf;text-align:left}
 .phone-admin-panel[hidden]{display:none!important}
 .phone-admin-panel h3{margin:0 0 14px;color:#07162b;font-size:18px}
@@ -1577,7 +1558,9 @@ html{scroll-padding-top:var(--fixed-header-height)}
 <section aria-labelledby="phoneContactTitle" class="phone-contact-box" id="phoneContactBox">
 <h2 id="phoneContactTitle">電話でのお問い合わせ</h2>
 <p>お電話でのお問い合わせも受け付けております。<br/>お気軽にご連絡ください。</p>
-<a class="phone-call-button" id="phoneCallButton" href="tel:09046670983" aria-label="事務局長 櫻井へ電話する"><span class="phone-icon-circle" aria-hidden="true"><span class="phone-handset-icon"></span><span class="phone-wave phone-wave-1"></span><span class="phone-wave phone-wave-2"></span></span><span>お電話はこちらから</span></a>
+<a class="phone-call-button" id="phoneCallButton" href="tel:09046670983" aria-label="事務局長 櫻井へ電話する"><svg class="phone-handset-svg" aria-hidden="true" viewBox="0 0 24 24" focusable="false">
+      <path fill="currentColor" d="M6.62 10.79a15.46 15.46 0 0 0 6.59 6.59l2.2-2.2a1 1 0 0 1 1.02-.24c1.12.37 2.33.57 3.57.57a1 1 0 0 1 1 1V20a1 1 0 0 1-1 1C10.61 21 3 13.39 3 4a1 1 0 0 1 1-1h3.5a1 1 0 0 1 1 1c0 1.25.2 2.45.57 3.57a1 1 0 0 1-.25 1.02l-2.2 2.2Z"/>
+    </svg><span>お電話はこちらから</span></a>
 <p class="phone-contact-person" id="phoneContactPerson">【事務局長・櫻井】</p>
 
 <div class="phone-admin-panel" id="phoneAdminPanel" hidden>
