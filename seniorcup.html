@@ -1144,8 +1144,10 @@ body.photo-admin-on #accessPasswordChange{
 .winners-head{display:flex;align-items:flex-end;justify-content:space-between;gap:16px;margin-bottom:10px}
 .winners-title{margin:0;color:var(--navy);font-family:serif;font-size:26px}
 .winners-lead{margin:0 0 18px;color:#697481;font-size:13px;line-height:1.8}
-.winners-toggle{width:100%;min-height:48px;border:1px solid var(--gold);background:var(--gold);color:#fff;border-radius:8px;font-size:17px;font-weight:900;cursor:pointer}
-.winners-toggle[aria-expanded="true"]{background:var(--gold);color:#fff}
+.winners-toggle{width:100%;min-height:48px;border:2px solid var(--gold);background:transparent;color:var(--gold);border-radius:8px;font-size:17px;font-weight:900;cursor:pointer}
+.winners-toggle::after{content:"  ＞";font-weight:900}
+.winners-toggle[aria-expanded="true"]{background:transparent;color:var(--gold)}
+.winners-toggle[aria-expanded="true"]::after{content:"  ∧"}
 .winners-list{display:none;margin-top:16px;border-top:1px solid #e4dfd4}
 .winners-list.show{display:block}
 .winner-row{display:grid;grid-template-columns:92px 78px 1fr;align-items:center;gap:12px;padding:13px 4px;border-bottom:1px solid #eee9df}
