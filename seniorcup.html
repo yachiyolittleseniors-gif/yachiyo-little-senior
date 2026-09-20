@@ -471,6 +471,18 @@ html{scroll-padding-top:var(--fixed-header-height)}
   margin-top:8px !important;
 }
 </style>
+
+<style id="meibo-filename-spacing-final">
+/* 申込書・選手名簿：ファイル名直下の余計な空白を削除 */
+.file-card:has(.file-name) .file-name{
+  margin-bottom:6px !important;
+  min-height:0 !important;
+}
+.file-card:has(.file-name) .file-name + .download-btn,
+.file-card:has(.file-name) .file-name + a.download-btn{
+  margin-top:6px !important;
+}
+</style>
 </head>
 <body id="page-top">
 <header class="header">
