@@ -1548,9 +1548,11 @@ export default async (request, context) => {
       }
       if (action !== "saveLiveScore") return json({ error: "不正な試合速報操作です。" }, 400);
 
-      // Live-score input/view mode is intentionally manual. Saving does not require
-      // the old server-side editor lock, so switching to input mode on one device
-      // cannot unexpectedly kick that device back to viewing mode.
+      const currentLock = await getLiveScoreLock(store);
+      const token = String(body?.lockToken || "");
+      if (!currentLock || currentLock.deviceId !== deviceId || currentLock.token !== token) {
+        return json({ error: "現在、別の端末で入力中です。入力モードを取得し直してください。", lock: publicLiveScoreLock(currentLock, deviceId) }, 409);
+      }
       const serialized = JSON.stringify(body?.data ?? null);
       if (serialized.length > 20000) return json({ error: "試合速報のデータが大きすぎます。" }, 413);
       const normalized = normalizeLiveScoreData(body?.data);
@@ -1558,7 +1560,7 @@ export default async (request, context) => {
       const existing = await store.get(key, { type: "json", consistency: "strong" });
       if (!normalized.lastGame) normalized.lastGame = normalizeLiveScoreGame(existing?.lastGame);
       await store.setJSON(key, normalized);
-      return json({ ok: true, data: normalized, lock: { active: false, owner: false, expiresAt: 0 } });
+      return json({ ok: true, data: normalized, lock: publicLiveScoreLock(currentLock, deviceId) });
     }
 
     const boardDirectSection =
