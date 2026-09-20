@@ -3513,6 +3513,37 @@ body.photo-admin-on .recruit-mode-admin{display:block}
 }
 </style>
 
+
+<style id="seniorcup-premium-shimmer">
+/* 八千代リトルシニア杯：上品な金属光沢アニメーション */
+.seniorcup-home-link{position:relative;isolation:isolate}
+.seniorcup-home-link .seniorcup-premium-shine{
+  position:absolute;z-index:4;top:-45%;bottom:-45%;left:-38%;width:13%;
+  pointer-events:none;opacity:0;transform:skewX(-19deg);
+  background:linear-gradient(90deg,transparent,rgba(255,232,166,.08),rgba(255,244,202,.58),rgba(226,189,103,.16),transparent);
+  filter:blur(.4px);animation:seniorcupPremiumShine 5.8s ease-in-out infinite;
+}
+.seniorcup-home-link{animation:seniorcupBorderGlow 5.8s ease-in-out infinite}
+.seniorcup-home-cta{position:relative;overflow:hidden}
+.seniorcup-home-cta:after{
+  content:"";position:absolute;inset:0;pointer-events:none;opacity:0;
+  background:linear-gradient(110deg,transparent 25%,rgba(255,242,196,.42) 48%,transparent 70%);
+  transform:translateX(-130%);animation:seniorcupCtaGleam 5.8s ease-in-out infinite;
+}
+@keyframes seniorcupPremiumShine{
+  0%,66%{left:-38%;opacity:0}70%{opacity:.9}84%{left:118%;opacity:.78}88%,100%{left:118%;opacity:0}
+}
+@keyframes seniorcupBorderGlow{
+  0%,64%,92%,100%{box-shadow:0 15px 34px rgba(7,20,38,.24),inset 0 0 0 1px rgba(255,255,255,.08)}
+  74%,84%{box-shadow:0 15px 34px rgba(7,20,38,.24),0 0 20px rgba(226,189,103,.22),inset 0 0 0 1px rgba(255,244,202,.18)}
+}
+@keyframes seniorcupCtaGleam{
+  0%,69%{transform:translateX(-130%);opacity:0}72%{opacity:.75}84%{transform:translateX(130%);opacity:.45}88%,100%{transform:translateX(130%);opacity:0}
+}
+@media(prefers-reduced-motion:reduce){
+  .seniorcup-home-link,.seniorcup-home-link .seniorcup-premium-shine,.seniorcup-home-cta:after{animation:none!important}
+}
+</style>
 </head>
 <body id="page-top">
 <header class="header">
@@ -3612,6 +3643,7 @@ body.photo-admin-on .recruit-mode-admin{display:block}
 </section>
 <section aria-label="八千代リトルシニア杯" class="seniorcup-home-banner">
 <a class="seniorcup-home-link" href="/seniorcup">
+<span aria-hidden="true" class="seniorcup-premium-shine"></span>
 <span aria-hidden="true" class="seniorcup-home-ball">
 <svg viewbox="0 0 200 200" xmlns="http://www.w3.org/2000/svg">
 <circle cx="100" cy="100" fill="none" r="92" stroke="#fff" stroke-width="4"></circle>
