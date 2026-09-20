@@ -7,39 +7,56 @@
   const input=document.getElementById('cupDocumentUpload');
   const save=document.getElementById('cupDocumentSave');
   let documents=[],busy=false;
+  function ensurePicker(){
+    let modal=document.getElementById('cupDocumentPicker');
+    if(modal)return modal;
+    modal=document.createElement('div');
+    modal.id='cupDocumentPicker';
+    modal.setAttribute('role','dialog');
+    modal.setAttribute('aria-modal','true');
+    modal.setAttribute('aria-labelledby','cupDocumentPickerTitle');
+    modal.style.cssText='display:none;position:fixed;inset:0;z-index:30000;background:rgba(7,20,38,.58);padding:20px;align-items:center;justify-content:center';
+    modal.innerHTML='<div style="width:min(520px,100%);max-height:78dvh;overflow:auto;background:#fff;border-radius:14px;padding:22px;box-shadow:0 20px 60px rgba(0,0,0,.32)"><h3 id="cupDocumentPickerTitle" style="margin:0 0 8px;color:#071426;font-family:serif;font-size:22px">ダウンロードする資料を選択</h3><p style="margin:0 0 16px;color:#697481;font-size:13px">保存したい資料をタップしてください。</p><div id="cupDocumentPickerList"></div><button type="button" id="cupDocumentPickerClose" style="width:100%;min-height:48px;margin-top:16px;border:1px solid #cfd3d8;background:#fff;color:#071426;border-radius:8px;font-weight:800">キャンセル</button></div>';
+    document.body.appendChild(modal);
+    const close=()=>{modal.style.display='none';document.body.style.overflow='';};
+    modal.querySelector('#cupDocumentPickerClose').addEventListener('click',close);
+    modal.addEventListener('click',e=>{if(e.target===modal)close();});
+    return modal;
+  }
+  function openPicker(){
+    if(!documents.length)return;
+    const modal=ensurePicker();
+    const pickerList=modal.querySelector('#cupDocumentPickerList');
+    pickerList.replaceChildren();
+    documents.forEach((item,index)=>{
+      const a=document.createElement('a');
+      a.href=API+'&file='+encodeURIComponent(String(item.id||''))+'&download=1&v='+encodeURIComponent(String(item.uploadedAt||Date.now()));
+      a.setAttribute('download',item.fileName||'document');
+      a.style.cssText='display:block;padding:14px 12px;border:1px solid #ddd9cf;border-radius:9px;background:#fff;color:#071426;text-decoration:none;font-weight:800;overflow-wrap:anywhere'+(index?';margin-top:10px':'');
+      const label=document.createElement('span');label.textContent=item.tournament||item.fileName||'資料';
+      a.appendChild(label);
+      if(item.tournament&&item.fileName&&item.tournament!==item.fileName){
+        const actual=document.createElement('small');actual.style.cssText='display:block;margin-top:5px;color:#697481;font-size:11px;font-weight:500';actual.textContent='元ファイル：'+item.fileName;a.appendChild(actual);
+      }
+      a.addEventListener('click',()=>{setTimeout(()=>{modal.style.display='none';document.body.style.overflow='';},120);});
+      pickerList.appendChild(a);
+    });
+    modal.style.display='flex';document.body.style.overflow='hidden';
+  }
   function render(){
     list.replaceChildren();adminList.replaceChildren();
-    if(!documents.length){
-      const notice=document.createElement('p');
-      notice.textContent='現在掲載中の資料はありません。';
-      notice.style.cssText='margin:0 0 12px;color:#697481;font-size:13px;line-height:1.65';
-      const empty=document.createElement('span');
-      empty.className='download-btn';
-      empty.textContent='ダウンロード';
-      empty.setAttribute('role','link');
-      empty.setAttribute('aria-disabled','true');
-      empty.setAttribute('aria-label','ダウンロード（現在掲載中の資料はありません）');
-      empty.title='現在掲載中の資料はありません。';
-      empty.style.cursor='not-allowed';
-      list.append(notice,empty);
+    const summary=document.createElement('p');
+    summary.className='file-name';summary.style.cssText='min-height:0;margin:0 0 15px';
+    summary.textContent=documents.length ? '掲載中の資料：'+documents.length+'件' : '現在掲載中の資料はありません。';
+    const download=document.createElement(documents.length?'button':'span');
+    download.className='download-btn';download.textContent='ダウンロード';
+    if(documents.length){
+      download.type='button';download.style.width='100%';download.style.cursor='pointer';download.addEventListener('click',openPicker);
+    }else{
+      download.setAttribute('role','link');download.setAttribute('aria-disabled','true');download.classList.add('is-empty');download.style.cursor='not-allowed';
     }
-    documents.forEach((item,index)=>{
-      const row=document.createElement('div');
-      row.style.cssText='overflow-wrap:anywhere'+(index?';margin-top:14px;padding-top:14px;border-top:1px solid #e5e1d8':'');
-      const name=document.createElement('p');
-      name.className='file-name';
-      name.style.cssText='min-height:0;margin:0 0 15px';
-      name.textContent=item.tournament||item.fileName;
-      if(item.tournament&&item.fileName&&item.tournament!==item.fileName){
-        const actual=document.createElement('span');
-        actual.style.cssText='display:block;margin-top:4px;font-size:11px;color:#8a939e;font-weight:500';
-        actual.textContent='元ファイル：'+item.fileName;
-        name.appendChild(actual);
-      }
-      const link=document.createElement('a');
-      link.className='download-btn';link.textContent='ダウンロード';
-      link.href=API+'&file='+encodeURIComponent(String(item.id||''))+'&download=1&v='+encodeURIComponent(String(item.uploadedAt||Date.now()));link.setAttribute('download',item.fileName||'document');link.dataset.documentId=String(item.id||'');
-      row.append(name,link);list.append(row);
+    list.append(summary,download);
+    documents.forEach(item=>{
       const adminRow=document.createElement('div');
       adminRow.style.cssText='padding-top:12px;overflow-wrap:anywhere';
       const label=document.createElement('span');label.textContent=(item.tournament||item.fileName)+'　';
