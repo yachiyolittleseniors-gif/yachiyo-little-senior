@@ -1463,7 +1463,24 @@ html{scroll-padding-top:var(--fixed-header-height)}
 <meta content="786" property="og:image:height"/>
 <meta content="八千代リトルシニアの選手たち" property="og:image:alt"/>
 <meta content="https://yachiyo-little-senior.netlify.app/team-hero.jpg" name="twitter:image"/>
-</meta></meta></head>
+</meta></meta>
+<style id="phone-contact-card-style">
+.phone-contact-box{
+  box-sizing:border-box;width:100%;max-width:none;margin:22px 0 0;padding:24px 20px;
+  background:#fff;border:1px solid rgba(184,143,47,.45);border-radius:20px;
+  text-align:center;box-shadow:0 10px 28px rgba(0,0,0,.08)
+}
+.phone-contact-box h2{margin:0 0 10px;color:#07162b;font-size:clamp(22px,5.5vw,30px)}
+.phone-contact-box p{margin:0 0 18px;color:#4c5665;line-height:1.8}
+.phone-call-button{
+  display:block;max-width:360px;margin:0 auto;padding:15px 18px;border-radius:12px;
+  background:#cfa038;color:#fff!important;font-weight:900;text-decoration:none;text-align:center;
+  font-size:clamp(17px,4.6vw,21px)
+}
+.phone-contact-person{margin:12px 0 0!important;color:#07162b!important;font-weight:800}
+@media(max-width:600px){.phone-contact-box{padding:22px 16px}}
+</style>
+</head>
 <body id="page-top">
 <header class="header">
 <nav class="nav">
@@ -1524,6 +1541,12 @@ html{scroll-padding-top:var(--fixed-header-height)}
 <h2 id="lineContactTitle">公式LINEでのお問い合わせ</h2>
 <img alt="八千代リトルシニア LINE公式アカウント 友だち追加QRコード" class="line-contact-qr" src="./line-qr.png"/>
 <a class="line-add-button" href="https://line.me/R/ti/p/@394lxtaf" rel="noopener noreferrer" target="_blank">友だち追加はこちら →</a>
+</section>
+<section aria-labelledby="phoneContactTitle" class="phone-contact-box">
+<h2 id="phoneContactTitle">電話でのお問い合わせ</h2>
+<p>お電話でのお問い合わせも受け付けております。<br/>お気軽にご連絡ください。</p>
+<a class="phone-call-button" href="tel:09046670983" aria-label="事務局長 櫻井へ電話する">📞 お電話はこちらから</a>
+<p class="phone-contact-person">【事務局長・櫻井】</p>
 </section></div></section>
 <div aria-hidden="true" aria-labelledby="contactSuccessTitle" aria-modal="true" class="contact-success-overlay" id="contactSuccessOverlay" role="dialog">
 <div class="contact-success-box">
