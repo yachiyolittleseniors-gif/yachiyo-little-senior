@@ -35,6 +35,8 @@
   let beforeReplay = null;
   let inputMode = false;
   let pollTimer = 0;
+  let lockToken = '';
+  let lockHeartbeatTimer = 0;
   // 選択中の得点セルは再描画・自動保存後も維持する。
   let selectedScoreCell = null;
   // Keep one device id for the entire page lifetime. On some iPhone/Safari
@@ -72,7 +74,7 @@
     if (access) headers['x-access-password'] = access;
     if (method === 'GET') headers['x-live-score-device-id'] = deviceId();
     if (method === 'POST') headers['content-type'] = 'application/json';
-    const payload = method === 'POST' ? { data, ...extra } : undefined;
+    const payload = method === 'POST' ? { data, deviceId: deviceId(), ...extra } : undefined;
     const response = await fetch(API, {
       method,
       headers,
@@ -111,6 +113,58 @@
       try { sessionStorage.setItem(DEVICE_KEY, clientDeviceId); } catch (_) {}
     }
     return clientDeviceId;
+  }
+
+
+  function stopLockHeartbeat() {
+    clearInterval(lockHeartbeatTimer);
+    lockHeartbeatTimer = 0;
+  }
+
+  function startLockHeartbeat() {
+    stopLockHeartbeat();
+    lockHeartbeatTimer = setInterval(async () => {
+      if (!inputMode || !lockToken || !state.active || replayMode) return;
+      try {
+        const result = await request('POST', null, { action: 'heartbeatEditorLock', lockToken });
+        lockToken = result.lockToken || lockToken;
+      } catch (_) {
+        lockToken = '';
+        inputMode = false;
+        rememberInputMode(false);
+        stopLockHeartbeat();
+        render();
+      }
+    }, 15000);
+  }
+
+  async function claimInputLock({ quiet = false } = {}) {
+    try {
+      const result = await request('POST', null, { action: 'claimEditorLock' });
+      lockToken = result.lockToken || '';
+      if (!lockToken) throw new Error('入力権限を取得できませんでした。');
+      inputMode = true;
+      rememberInputMode(true);
+      startLockHeartbeat();
+      render();
+      return true;
+    } catch (error) {
+      lockToken = '';
+      inputMode = false;
+      rememberInputMode(false);
+      stopLockHeartbeat();
+      render();
+      if (!quiet) alert(error.message || '現在、別の端末で入力中です。');
+      return false;
+    }
+  }
+
+  async function releaseInputLock() {
+    const token = lockToken;
+    lockToken = '';
+    stopLockHeartbeat();
+    if (!token) return;
+    try { await request('POST', null, { action: 'releaseEditorLock', lockToken: token }); } catch (_) {}
   }
 
   function score(value) {
@@ -588,7 +642,7 @@
     root.classList.add('is-saving');
     try {
       state.updatedAt = new Date().toISOString();
-      const result = await request('POST', state, { action: 'saveLiveScore' });
+      const result = await request('POST', state, { action: 'saveLiveScore', lockToken });
       const saved = normalize(result.data || state);
       if (renderAfter) state = saved;
       if (saved.current) rememberDraft(saved.current);
@@ -608,22 +662,20 @@
     }
   }
 
-  function enterInputMode() {
-    if (!state.active || replayMode) return;
-    inputMode = true;
-    rememberInputMode(true);
-    render();
+  async function enterInputMode() {
+    if (!state.active || replayMode) return false;
+    return claimInputLock();
   }
 
-  function leaveInputMode() {
+  async function leaveInputMode() {
     inputMode = false;
     rememberInputMode(false);
     render();
+    await releaseInputLock();
   }
 
   async function startGame(game = null, visible = true) {
-    inputMode = true;
-    rememberInputMode(true);
+    if (!await claimInputLock()) return;
     editorCollapsed = false;
     replayMode = false;
     state.active = true;
@@ -665,13 +717,13 @@
     startGame();
   });
 
-  elements.lockButton?.addEventListener('click', () => {
+  elements.lockButton?.addEventListener('click', async () => {
     if (!state.active || replayMode) return;
     if (inputMode) {
       if (!confirm('閲覧モードに戻りますか？')) return;
-      leaveInputMode();
+      await leaveInputMode();
     } else {
-      enterInputMode();
+      await enterInputMode();
     }
   });
 
@@ -779,7 +831,7 @@
     clearTimeout(autoSaveTimer);
     changeVersion += 1;
     if (await save('試合速報を終了しました')) {
-      leaveInputMode();
+      await leaveInputMode();
       render();
     }
   });
@@ -791,10 +843,16 @@
       const previousActive = state.active;
       state = normalize(result.data);
       selectedScoreCell = state.current?.selectedScoreCell || null;
-      // The device that started/claimed input keeps input mode across refreshes.
-      // Other devices have no session flag and remain in viewing mode.
-      inputMode = Boolean(state.active && rememberedInputMode());
-      if (!state.active) rememberInputMode(false);
+      // Restore input mode only after reclaiming the server-side editor lock.
+      const wantsInput = Boolean(state.active && rememberedInputMode());
+      inputMode = false;
+      if (!state.active) {
+        rememberInputMode(false);
+        lockToken = '';
+        stopLockHeartbeat();
+      } else if (wantsInput) {
+        await claimInputLock({ quiet: true });
+      }
       if (state.current) {
         rememberDraft(state.current);
       }
