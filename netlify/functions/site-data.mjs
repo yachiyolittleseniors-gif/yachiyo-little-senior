@@ -970,10 +970,9 @@ export default async (request, context) => {
                 ? "tournament-image.webp"
                 : "tournament-image.jpg";
 
-          const disposition =
-            section === "seniorcup-documents" && url.searchParams.get("download") === "1"
-              ? "attachment"
-              : "inline";
+          const disposition = section === "seniorcup-documents" && url.searchParams.get("download") === "1"
+            ? "attachment"
+            : "inline";
 
           return new Response(file, {
             status: 200,
