@@ -1729,7 +1729,12 @@ html{scroll-padding-top:var(--fixed-header-height)}
 <meta content="786" property="og:image:height"/>
 <meta content="八千代リトルシニアの選手たち" property="og:image:alt"/>
 <meta content="https://yachiyo-little-senior.netlify.app/team-hero.jpg" name="twitter:image"/>
-</meta></meta></head>
+</meta></meta>
+<style id="annual-seo-link-style">
+.annual-seo-link{color:inherit;text-decoration:underline;text-decoration-color:rgba(190,145,42,.65);text-underline-offset:3px;text-decoration-thickness:1px}
+.annual-seo-link:hover{color:#9a7119}
+</style>
+</head>
 <body id="page-top">
 <header class="header">
 <nav class="nav">
@@ -1803,7 +1808,7 @@ html{scroll-padding-top:var(--fixed-header-height)}
 <div class="annual-month"><div class="annual-month-label">7月</div><div class="annual-month-events"><div>サマーフレンドリーカップ（1年生）\n一泊二日合宿</div><div>サマーフレンドリー交流大会（2年生）\n一泊二日合宿</div><div>千葉ロッテマリーンズカップ（3年生）</div></div></div>
 <div class="annual-month"><div class="annual-month-label">9月</div><div class="annual-month-events"><div>東関東連盟秋季大会（2年生）</div></div></div>
 <div class="annual-month"><div class="annual-month-label">10月</div><div class="annual-month-events"><div>浦安市長杯（3年生）</div></div></div>
-<div class="annual-month"><div class="annual-month-label">11月</div><div class="annual-month-events"><div>フレッシュマン大会（1年生）</div><div>八千代リトルシニア杯（小学生大会）</div></div></div>
+<div class="annual-month"><div class="annual-month-label">11月</div><div class="annual-month-events"><div>フレッシュマン大会（1年生）</div><div><a href="/seniorcup" class="annual-seo-link">八千代リトルシニア杯（小学生大会）</a></div></div></div>
 <div class="annual-month"><div class="annual-month-label">12月</div><div class="annual-month-events"><div>グランド納め</div></div></div>
 <div class="annual-month"><div class="annual-month-label">1月</div><div class="annual-month-events"><div>グランド開き</div><div>鹿島市長杯（2年生）</div></div></div>
 <div class="annual-month"><div class="annual-month-label">2月</div><div class="annual-month-events"><div>東関東連盟春季大会（2年生）</div></div></div>
@@ -2384,7 +2389,10 @@ renderCalendar();
       if(!g){g={month,items:[]};groups.push(g)}
       g.items.push(text);
     });
-    list.innerHTML=groups.map(g=>`<div class="annual-month"><div class="annual-month-label">${esc(g.month)}</div><div class="annual-month-events">${g.items.map(t=>`<div>${esc(t)}</div>`).join("")}</div></div>`).join("");
+    list.innerHTML=groups.map(g=>`<div class="annual-month"><div class="annual-month-label">${esc(g.month)}</div><div class="annual-month-events">${g.items.map(t=>{
+      const safe=esc(t);
+      return `<div>${String(t).includes("八千代リトルシニア杯")?`<a href="/seniorcup" class="annual-seo-link">${safe}</a>`:safe}</div>`;
+    }).join("")}</div></div>`).join("");
     document.getElementById("annualOther").innerHTML='<h3>その他</h3>'+annualData.other.map(t=>`<p>${esc(t)}</p>`).join("");
     document.getElementById("annualNote").textContent=annualData.note;
   }
