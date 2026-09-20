@@ -31,8 +31,9 @@
       name.style.cssText='min-height:0;margin:0 0 15px';
       name.textContent=item.tournament||item.fileName;
       const link=document.createElement('a');
-      link.className='download-btn';link.textContent='ダウンロード';link.href='#';
-      link.addEventListener('click',event=>{event.preventDefault();downloadDocument(item,link);});
+      link.className='download-btn';link.textContent='ダウンロード';
+      link.href=API+'&file='+encodeURIComponent(item.id)+'&download=1';
+      link.setAttribute('download',item.fileName||'大会資料');
       row.append(name,link);list.append(row);
       const adminRow=document.createElement('div');
       adminRow.style.cssText='padding-top:12px;overflow-wrap:anywhere';
@@ -42,39 +43,6 @@
       adminRow.append(label,remove);adminList.append(adminRow);
     });
     save.disabled=busy;save.textContent=busy?'処理中...':'大会資料を保存';
-  }
-
-  function dataUrlToBlob(dataUrl){
-    const parts=String(dataUrl||'').split(',');
-    if(parts.length<2)throw new Error('ファイルデータを取得できませんでした。');
-    const mime=(parts[0].match(/^data:([^;,]+)/i)||[])[1]||'application/octet-stream';
-    const binary=parts[0].includes(';base64')?atob(parts.slice(1).join(',')):decodeURIComponent(parts.slice(1).join(','));
-    const bytes=new Uint8Array(binary.length);
-    for(let i=0;i<binary.length;i++)bytes[i]=binary.charCodeAt(i);
-    return new Blob([bytes],{type:mime});
-  }
-  async function downloadDocument(item,button){
-    if(button.dataset.busy==='1')return;
-    const old=button.textContent;button.dataset.busy='1';button.textContent='準備中...';
-    try{
-      let blob;
-      if(item&&item.dataUrl){
-        blob=dataUrlToBlob(item.dataUrl);
-      }else{
-        const response=await fetch(API+'&file='+encodeURIComponent(item.id),{cache:'no-store'});
-        if(!response.ok)throw new Error('資料を取得できませんでした。');
-        blob=await response.blob();
-      }
-      const url=URL.createObjectURL(blob);
-      const a=document.createElement('a');
-      a.href=url;a.download=item.fileName||item.tournament||'大会資料';
-      a.style.display='none';document.body.appendChild(a);a.click();a.remove();
-      setTimeout(()=>URL.revokeObjectURL(url),60000);
-    }catch(error){
-      alert(error.message||'ダウンロードできませんでした。');
-    }finally{
-      button.dataset.busy='0';button.textContent=old;
-    }
   }
 
   async function request(body){
