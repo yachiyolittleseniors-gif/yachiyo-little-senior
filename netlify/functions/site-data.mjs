@@ -44,6 +44,7 @@ const allowed = new Set([
   "seniorcup-guideline",
   "seniorcup-partners",
   "seniorcup-reply-mode",
+  "seniorcup-winners",
   "graduate-paths",
   "links",
   "board-tournaments",
