@@ -970,12 +970,17 @@ export default async (request, context) => {
                 ? "tournament-image.webp"
                 : "tournament-image.jpg";
 
-          return new Response(file, {
+          // Match the working downloads-roster response path exactly: return concrete bytes
+          // with Content-Length and attachment disposition for download=1.
+          const bytes = new Uint8Array(await file.arrayBuffer());
+          const disposition = url.searchParams.get("download") === "1" ? "attachment" : "inline";
+          return new Response(bytes, {
             status: 200,
             headers: {
               "content-type": contentType,
               "content-disposition":
-                `${url.searchParams.get("download") === "1" ? "attachment" : "inline"}; filename="${fallbackName}"; filename*=UTF-8''${encodedName}`,
+                `${disposition}; filename="${fallbackName}"; filename*=UTF-8''${encodedName}`,
+              "content-length": String(bytes.byteLength),
               "cache-control": "no-store",
               "x-content-type-options": "nosniff"
             }
