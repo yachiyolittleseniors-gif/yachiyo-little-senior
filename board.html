@@ -31,7 +31,7 @@
 <title>チーム専用ページ｜八千代リトルシニア</title>
 <link rel="stylesheet" href="./board-base.css?v=20260918-1">
 <link rel="stylesheet" href="./board-live-score.css?v=20260919-finishoutline1">
-<script src="./board-passkey.js?v=20260918-1"></script>
+<script src="./board-passkey.js?v=20260920-crossbrowser1"></script>
 <script src="./coach-passkey.js?v=20260918-2"></script>
 <script>
 document.documentElement.style.visibility='hidden';
@@ -75,17 +75,23 @@ window.boardAccessReady=(async function requireBoardPassword(){
     return true;
   }
   async function verifyPasskey(){
-    let registered=false;
-    try{registered=localStorage.getItem(passkeyKey)==='1'}catch(e){}
-    if(!registered||!window.YLSPasskeys?.supported())return false;
+    // Do not gate WebAuthn behind browser-local storage. A passkey registered
+    // in iCloud Keychain can be available to Safari and Chrome on the same
+    // iPhone even though each browser has separate localStorage.
+    if(!window.YLSPasskeys?.supported())return false;
     try{
       const result=await window.YLSPasskeys.authenticate();
       if(!result?.token)return false;
       saveAccess(result.token);
+      // Keep this only as a UI hint for the current browser; it is no longer
+      // required in order to attempt passkey authentication.
+      try{localStorage.setItem(passkeyKey,'1')}catch(_){}
       document.documentElement.style.visibility='';
       return true;
     }catch(e){
-      if(e?.status===401||e?.status===404){
+      // 404 means no passkeys exist on the server. 401 means authentication
+      // failed; neither should prevent another browser from trying next time.
+      if(e?.status===404){
         try{localStorage.removeItem(passkeyKey)}catch(_){}
       }
       return false;
