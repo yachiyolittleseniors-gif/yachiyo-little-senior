@@ -970,13 +970,19 @@ export default async (request, context) => {
                 ? "tournament-image.webp"
                 : "tournament-image.jpg";
 
+          const disposition =
+            section === "seniorcup-documents" && url.searchParams.get("download") === "1"
+              ? "attachment"
+              : "inline";
+
           return new Response(file, {
             status: 200,
             headers: {
               "content-type": contentType,
               "content-disposition":
-                `inline; filename="${fallbackName}"; filename*=UTF-8''${encodedName}`,
-              "cache-control": "public, max-age=300",
+                `${disposition}; filename="${fallbackName}"; filename*=UTF-8''${encodedName}`,
+              "content-length": String(file.size || item.size || 0),
+              "cache-control": disposition === "attachment" ? "no-store" : "public, max-age=300",
               "x-content-type-options": "nosniff"
             }
           });
