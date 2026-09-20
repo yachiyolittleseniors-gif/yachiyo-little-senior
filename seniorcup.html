@@ -894,6 +894,7 @@ function renderReplyMode(){
   btn.addEventListener('click',async()=>{
     if(area.classList.contains('show')){
       area.classList.remove('show');guidelineBox.classList.remove('show');btn.textContent='管理';btn.classList.remove('is-visible');
+      btn.style.setProperty('display','none','important');
       sessionStorage.removeItem('yachiyoAdminMode');sessionStorage.removeItem('yachiyoAdminPassword');return;
     }
     const pw=prompt('管理者パスワードを入力してください');if(!pw)return;
@@ -906,7 +907,7 @@ function renderReplyMode(){
       alert(auth.status===429?'試行回数の上限です。15分後に再度お試しください。':'管理者パスワードが違います。');return;
     }
     sessionStorage.setItem('yachiyoAdminPassword',pw);sessionStorage.setItem('yachiyoAdminMode','1');
-    area.classList.add('show');guidelineBox.classList.add('show');btn.textContent='管理終了';btn.classList.add('is-visible');
+    area.classList.add('show');guidelineBox.classList.add('show');btn.textContent='管理終了';btn.style.setProperty('display','block','important');btn.classList.add('is-visible');
   });
 
   if(footer){
