@@ -1,14 +1,39 @@
 export default function contactCountryGuard(request, context) {
-  if (request.method !== "POST") return context.next();
+  // 通常のページ表示・GET/HEAD は一切ブロックしない
+  // お問い合わせ送信（POST）のときだけ国判定を行う
+  if (request.method !== "POST") {
+    return context.next();
+  }
 
-  const countryCode = context.geo?.country?.code;
-  if (!countryCode || countryCode === "JP") return context.next();
+  const countryCode = String(context.geo?.country?.code || "").toUpperCase();
+
+  // 国情報を取得できない場合は誤判定を避けるため通す
+  if (!countryCode || countryCode === "JP") {
+    return context.next();
+  }
 
   const html = `<!doctype html>
-<html lang="ja"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
 <title>送信できません｜八千代リトルシニア</title>
-<style>body{margin:0;background:#f5f3ee;color:#071426;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif}.box{max-width:560px;margin:12vh auto;padding:32px 22px;text-align:center;background:#fff;border:1px solid #d7b457;border-radius:16px}.en{color:#b58b28;font-weight:800;letter-spacing:.15em}.btn{display:block;margin-top:24px;padding:14px;border-radius:10px;background:#071426;color:#fff;text-decoration:none;font-weight:800}</style>
-</head><body><main class="box"><p class="en">CONTACT FORM</p><h1>送信できませんでした</h1><p>お問い合わせフォームは日本国内からのみ送信できます。</p><a class="btn" href="/contact.html">お問い合わせページへ戻る</a></main></body></html>`;
+<style>
+body{margin:0;background:#f5f3ee;color:#071426;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif}
+.box{max-width:560px;margin:12vh auto;padding:32px 22px;text-align:center;background:#fff;border:1px solid #d7b457;border-radius:16px}
+.en{color:#b58b28;font-weight:800;letter-spacing:.15em}
+.btn{display:block;margin-top:24px;padding:14px;border-radius:10px;background:#071426;color:#fff;text-decoration:none;font-weight:800}
+</style>
+</head>
+<body>
+<main class="box">
+<p class="en">CONTACT FORM</p>
+<h1>送信できませんでした</h1>
+<p>お問い合わせフォームは日本国内からのみ送信できます。</p>
+<a class="btn" href="/contact.html">お問い合わせページへ戻る</a>
+</main>
+</body>
+</html>`;
 
   return new Response(html, {
     status: 403,
@@ -21,5 +46,6 @@ export default function contactCountryGuard(request, context) {
 }
 
 export const config = {
-  path: "/",
+  // サイト全体 "/" ではなく、お問い合わせページだけに限定
+  path: "/contact.html",
 };
