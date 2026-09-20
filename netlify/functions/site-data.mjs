@@ -973,11 +973,16 @@ export default async (request, context) => {
           // Match the working downloads-roster response path exactly: return concrete bytes
           // with Content-Length and attachment disposition for download=1.
           const bytes = new Uint8Array(await file.arrayBuffer());
-          const disposition = url.searchParams.get("download") === "1" ? "attachment" : "inline";
+          const forceDownload = url.searchParams.get("download") === "1";
+          const disposition = forceDownload ? "attachment" : "inline";
+          // iPhone Safari previews application/pdf even when Content-Disposition is attachment
+          // during a normal navigation. For the explicit download route, return an opaque
+          // binary MIME type so Safari treats it as a file instead of opening PDF Quick Look.
+          const responseContentType = forceDownload ? "application/octet-stream" : contentType;
           return new Response(bytes, {
             status: 200,
             headers: {
-              "content-type": contentType,
+              "content-type": responseContentType,
               "content-disposition":
                 `${disposition}; filename="${fallbackName}"; filename*=UTF-8''${encodedName}`,
               "content-length": String(bytes.byteLength),
