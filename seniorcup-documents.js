@@ -30,9 +30,15 @@
       name.className='file-name';
       name.style.cssText='min-height:0;margin:0 0 15px';
       name.textContent=item.tournament||item.fileName;
+      if(item.tournament&&item.fileName&&item.tournament!==item.fileName){
+        const actual=document.createElement('span');
+        actual.style.cssText='display:block;margin-top:4px;font-size:11px;color:#8a939e;font-weight:500';
+        actual.textContent='元ファイル：'+item.fileName;
+        name.appendChild(actual);
+      }
       const link=document.createElement('a');
       link.className='download-btn';link.textContent='ダウンロード';
-      link.href=API+'&file='+encodeURIComponent(item.id)+'&download=1';link.setAttribute('download',item.fileName||'document');
+      link.href=API+'&file='+encodeURIComponent(String(item.id||''))+'&download=1&v='+encodeURIComponent(String(item.uploadedAt||Date.now()));link.setAttribute('download',item.fileName||'document');link.dataset.documentId=String(item.id||'');
       row.append(name,link);list.append(row);
       const adminRow=document.createElement('div');
       adminRow.style.cssText='padding-top:12px;overflow-wrap:anywhere';
