@@ -605,7 +605,7 @@ html{scroll-padding-top:var(--fixed-header-height)}
 
 
 <main class="wrap">
-<p class="count" id="playerCount">読み込み中…</p>
+<p class="count" id="playerCount">八千代リトルシニア所属選手を学年別に紹介しています。</p>
 <div class="player-admin admin-only block"><button class="admin-btn" type="button" onclick="startNewPlayer()">＋ 選手を追加</button><button class="admin-btn" type="button" onclick="promoteGrades()">学年繰り上げ</button></div><div class="player-editor admin-only" id="playerEditor" hidden><div class="player-form-grid"><div><label for="playerGrade">学年</label><select id="playerGrade"><option value="1年">1年生</option><option value="2年">2年生</option><option value="3年">3年生</option></select></div><div><label for="playerName">選手名</label><input id="playerName" type="text"></div><div><label for="playerKana">ふりがな</label><input id="playerKana" type="text" maxlength="60" placeholder="同じ苗字は名前まで入力"></div><div><label for="playerBirth">生年度</label><input id="playerBirth" type="text" placeholder="例：2013年度"></div><div><label for="playerTeam">出身チーム</label><input id="playerTeam" type="text"></div></div><div class="player-form-actions"><button class="admin-btn" id="playerSaveBtn" type="button" onclick="savePlayer()">登録する</button><button class="admin-btn" type="button" onclick="togglePlayerPanel(false)">閉じる</button></div></div><div class="tabs">
 <button class="active" onclick="filterGrade('all',this)">全選手</button>
 <button onclick="filterGrade('3年',this)" id="tabGrade3" class="grade-3"><span class="tab-cohort">44期</span><span class="tab-grade">3年生</span></button>
