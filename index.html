@@ -1809,53 +1809,6 @@ body.photo-admin-on .seniorcup-admin-control{display:block}
   .seniorcup-home-cta{padding:8px 11px;border-radius:7px;font-size:10px}
 }
 
-
-/* ===== Senior Cup premium navy/gold card 2026-09-20 ===== */
-.seniorcup-home-link{
-  min-height:330px;padding:34px 42px 32px;
-  background:
-    radial-gradient(circle at 83% 38%,rgba(19,64,111,.62) 0 10%,rgba(9,31,55,.12) 30%,transparent 46%),
-    radial-gradient(circle at 16% 90%,rgba(205,157,55,.12),transparent 28%),
-    linear-gradient(118deg,#030c18 0%,#071a2e 48%,#03101e 100%);
-  border:2px solid #d7aa4c;border-radius:24px;
-  box-shadow:0 18px 40px rgba(1,10,22,.28),inset 0 0 34px rgba(24,74,119,.12);
-}
-.seniorcup-home-link:before{inset:8px;border:1px solid rgba(248,213,132,.7);border-radius:17px}
-.seniorcup-home-link:after{
-  right:-6%;top:auto;bottom:-35%;width:72%;height:70%;border:0;border-radius:50%;
-  background:linear-gradient(165deg,transparent 35%,rgba(11,74,133,.78) 36% 42%,rgba(232,187,82,.95) 43% 48%,rgba(8,52,96,.82) 49% 56%,rgba(222,169,59,.82) 57% 61%,transparent 62%);
-  transform:rotate(-8deg);filter:drop-shadow(0 0 8px rgba(222,169,59,.18));opacity:.95;
-}
-.seniorcup-home-ball{right:5%;top:43%;width:235px;opacity:.12;transform:translateY(-50%) rotate(-18deg)}
-.seniorcup-home-head{align-items:flex-start;margin-bottom:30px}
-.seniorcup-home-kicker{font-family:Georgia,"Times New Roman",serif;font-size:13px;font-weight:500;letter-spacing:.30em;color:#f0cf80}
-.seniorcup-home-kicker:after{content:"";display:block;width:72px;height:1px;margin-top:15px;background:linear-gradient(90deg,#f2d27f,#a87825)}
-.seniorcup-home-badge{text-align:right;border:0;padding:0;color:#e5c16b;font-family:Georgia,"Times New Roman",serif;font-size:9px;line-height:1.8;letter-spacing:.22em}
-.seniorcup-home-year{font-family:Georgia,"Times New Roman",serif;font-size:clamp(34px,4.2vw,50px);font-weight:400;letter-spacing:.03em;color:#e8bd5d;text-shadow:0 0 18px rgba(226,177,67,.12)}
-.seniorcup-home-title{max-width:78%;margin-top:8px;font-size:clamp(30px,3.5vw,43px);letter-spacing:.035em;line-height:1.35;color:#f0cf80!important}
-.seniorcup-home-subtitle{position:relative;z-index:2;display:flex;align-items:center;gap:14px;width:max-content;margin-top:14px;color:#d9b661;font-family:Georgia,"Times New Roman",serif;font-size:10px;letter-spacing:.34em}
-.seniorcup-home-subtitle:before,.seniorcup-home-subtitle:after{content:"";width:58px;height:1px;background:rgba(226,189,103,.68)}
-.seniorcup-home-copy{justify-content:flex-start;margin-top:27px;padding-top:0;border:0}
-.seniorcup-home-cta{display:inline-flex;align-items:center;gap:14px;min-width:220px;justify-content:center;padding:13px 22px;border:1px solid #d9ad50;border-radius:12px;background:linear-gradient(180deg,rgba(8,31,55,.96),rgba(3,16,30,.98));color:#f0cf80;box-shadow:inset 0 0 0 1px rgba(255,230,166,.13),0 8px 22px rgba(0,0,0,.3);font-size:14px;letter-spacing:.08em}
-.seniorcup-doc-icon{padding-right:14px;border-right:1px solid rgba(232,193,103,.55);font-size:18px;line-height:1}
-@media(max-width:600px){
- .seniorcup-home-link{min-height:255px;padding:23px 20px 22px;border-radius:18px}
- .seniorcup-home-link:before{inset:6px;border-radius:12px}
- .seniorcup-home-link:after{right:-18%;bottom:-31%;width:92%;height:66%}
- .seniorcup-home-ball{right:-12%;top:43%;width:170px;opacity:.09}
- .seniorcup-home-head{margin-bottom:20px;gap:8px}
- .seniorcup-home-kicker{font-size:8px;letter-spacing:.22em}
- .seniorcup-home-kicker:after{width:44px;margin-top:10px}
- .seniorcup-home-badge{font-size:6px;line-height:1.65;letter-spacing:.12em}
- .seniorcup-home-year{font-size:28px}
- .seniorcup-home-title{max-width:96%;margin-top:7px;font-size:clamp(23px,6.7vw,28px);white-space:nowrap;letter-spacing:.015em}
- .seniorcup-home-subtitle{margin-top:11px;gap:8px;font-size:6px;letter-spacing:.22em}
- .seniorcup-home-subtitle:before,.seniorcup-home-subtitle:after{width:30px}
- .seniorcup-home-copy{margin-top:19px}
- .seniorcup-home-cta{min-width:168px;padding:10px 14px;gap:10px;border-radius:10px;font-size:11px}
- .seniorcup-doc-icon{padding-right:10px;font-size:15px}
-}
-
 /* ===== HOME latest result: scoreboard layout ===== */
 #homeLatestResult .score,
 .home-latest-result .score{
@@ -3539,7 +3492,28 @@ body.photo-admin-on .recruit-mode-admin{display:block}
   opacity:.65;
 }
 </style>
-</meta></meta></meta></head>
+</meta></meta></meta>
+<style id="seniorcup-two-stripes-fix">
+/* Senior Cup: keep original card sizing/layout; add exactly two decorative bands */
+.seniorcup-home-link{
+  background:
+    linear-gradient(158deg, transparent 0 72%, rgba(15,72,128,.98) 72.2% 77.2%, transparent 77.4%),
+    linear-gradient(158deg, transparent 0 79%, #d7aa45 79.2% 84.2%, transparent 84.4%),
+    radial-gradient(circle at 88% 18%,rgba(226,189,103,.12),transparent 31%),
+    linear-gradient(135deg,#071426 0%,#0a2038 60%,#071426 100%) !important;
+}
+@media(max-width:600px){
+  .seniorcup-home-link{
+    background:
+      linear-gradient(158deg, transparent 0 73%, rgba(15,72,128,.98) 73.2% 78.2%, transparent 78.4%),
+      linear-gradient(158deg, transparent 0 80%, #d7aa45 80.2% 85.2%, transparent 85.4%),
+      radial-gradient(circle at 88% 18%,rgba(226,189,103,.12),transparent 31%),
+      linear-gradient(135deg,#071426 0%,#0a2038 60%,#071426 100%) !important;
+  }
+}
+</style>
+
+</head>
 <body id="page-top">
 <header class="header">
 <nav class="nav">
@@ -3648,12 +3622,11 @@ body.photo-admin-on .recruit-mode-admin{display:block}
 </span>
 <div class="seniorcup-home-head">
 <div class="seniorcup-home-kicker">YACHIYO SENIOR CUP</div>
-<div class="seniorcup-home-badge">BASEBALL<br>COMMUNITY<br>NEXT GENERATION</div>
+<div class="seniorcup-home-badge">OFFICIAL TOURNAMENT</div>
 </div>
-<div class="seniorcup-home-year"><span class="current-year"></span></div>
+<div class="seniorcup-home-year"><span class="current-year"></span><small>年</small></div>
 <div class="seniorcup-home-title">八千代リトルシニア杯</div>
-<div class="seniorcup-home-subtitle">OFFICIAL TOURNAMENT</div>
-<div class="seniorcup-home-copy"><b class="seniorcup-home-cta"><span class="seniorcup-doc-icon" aria-hidden="true">▤</span><span>詳しく見る</span><span aria-hidden="true">›</span></b></div>
+<div class="seniorcup-home-copy"><span>大会要項・参加申し込み</span><b class="seniorcup-home-cta">詳しく見る <span aria-hidden="true">›</span></b></div>
 </a>
 </section>
 <div class="seniorcup-admin-control" id="seniorcupAdminControl">
