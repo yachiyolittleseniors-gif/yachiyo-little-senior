@@ -5173,5 +5173,48 @@ body.photo-admin-on #accessPasswordChange{
   load();
 })();
 </script>
+
+<style id="seniorcup-star-stream">
+/* Senior Cup: subtle gold star stream; distinct from recruitment sweep */
+.seniorcup-home-link{position:relative}
+.seniorcup-star-layer{position:absolute;inset:0;z-index:1;overflow:hidden;pointer-events:none;border-radius:inherit}
+.seniorcup-star{position:absolute;right:-24px;color:#f2d782;font-family:Georgia,"Times New Roman",serif;line-height:1;text-shadow:0 0 7px rgba(242,215,130,.85),0 0 14px rgba(199,154,59,.35);opacity:0;will-change:transform,opacity}
+.seniorcup-star.s1{top:18%;font-size:14px;animation:seniorCupStarFlow 6.8s ease-in-out infinite .4s}
+.seniorcup-star.s2{top:35%;font-size:9px;animation:seniorCupStarFlow 6.8s ease-in-out infinite 1.0s}
+.seniorcup-star.s3{top:12%;font-size:7px;animation:seniorCupStarFlow 6.8s ease-in-out infinite 1.45s}
+@keyframes seniorCupStarFlow{
+  0%,60%{transform:translate3d(0,0,0) scale(.65) rotate(0deg);opacity:0}
+  64%{opacity:.95}
+  70%{opacity:1;transform:translate3d(-76px,12px,0) scale(1.12) rotate(55deg)}
+  79%{opacity:.72;transform:translate3d(-175px,30px,0) scale(.88) rotate(125deg)}
+  88%{opacity:0;transform:translate3d(-285px,48px,0) scale(.55) rotate(190deg)}
+  100%{opacity:0;transform:translate3d(-285px,48px,0) scale(.55) rotate(190deg)}
+}
+@media(max-width:600px){
+  .seniorcup-star.s1{font-size:12px}.seniorcup-star.s2{font-size:8px}.seniorcup-star.s3{font-size:6px}
+  @keyframes seniorCupStarFlow{
+    0%,60%{transform:translate3d(0,0,0) scale(.65) rotate(0deg);opacity:0}
+    64%{opacity:.95}
+    70%{opacity:1;transform:translate3d(-58px,10px,0) scale(1.08) rotate(55deg)}
+    79%{opacity:.68;transform:translate3d(-125px,24px,0) scale(.86) rotate(125deg)}
+    88%{opacity:0;transform:translate3d(-205px,38px,0) scale(.55) rotate(190deg)}
+    100%{opacity:0;transform:translate3d(-205px,38px,0) scale(.55) rotate(190deg)}
+  }
+}
+@media(prefers-reduced-motion:reduce){.seniorcup-star{animation:none!important;display:none!important}}
+</style>
+<script id="seniorcup-star-stream-script">
+document.addEventListener('DOMContentLoaded',function(){
+  document.querySelectorAll('.seniorcup-home-link').forEach(function(card){
+    if(card.querySelector('.seniorcup-star-layer'))return;
+    var layer=document.createElement('span');
+    layer.className='seniorcup-star-layer';
+    layer.setAttribute('aria-hidden','true');
+    layer.innerHTML='<i class="seniorcup-star s1">✦</i><i class="seniorcup-star s2">✧</i><i class="seniorcup-star s3">✦</i>';
+    card.appendChild(layer);
+  });
+});
+</script>
+
 </body>
 </html>
