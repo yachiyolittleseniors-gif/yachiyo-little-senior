@@ -32,7 +32,7 @@
       name.textContent=item.tournament||item.fileName;
       const link=document.createElement('a');
       link.className='download-btn';link.textContent='ダウンロード';
-      link.href=API+'&file='+encodeURIComponent(item.id)+'&download=1';
+      link.href=API+'&file='+encodeURIComponent(item.id)+'&download=1';link.setAttribute('download',item.fileName||'document');
       row.append(name,link);list.append(row);
       const adminRow=document.createElement('div');
       adminRow.style.cssText='padding-top:12px;overflow-wrap:anywhere';
