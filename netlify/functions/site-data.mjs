@@ -54,7 +54,8 @@ const allowed = new Set([
   "board-latest-update",
   "document-archive",
   "live-score",
-  "access-settings"
+  "access-settings",
+  "contact-phone-settings"
 ]);
 
 function bytesToHex(bytes) {
