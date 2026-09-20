@@ -32,7 +32,7 @@
       name.textContent=item.tournament||item.fileName;
       const link=document.createElement('a');
       link.className='download-btn';link.textContent='ダウンロード';
-      link.href='#';link.addEventListener('click',event=>{event.preventDefault();openDocument(item);});
+      link.href=API+'&file='+encodeURIComponent(item.id)+'&download=1';
       row.append(name,link);list.append(row);
       const adminRow=document.createElement('div');
       adminRow.style.cssText='padding-top:12px;overflow-wrap:anywhere';
@@ -44,12 +44,6 @@
     save.disabled=busy;save.textContent=busy?'処理中...':'大会資料を保存';
   }
 
-  function openDocument(item){
-    const id=String(item&&item.id||'');
-    if(!id){alert('資料を取得できませんでした。');return;}
-    const url=API+'&file='+encodeURIComponent(id)+'&download=1';
-    window.location.href=url;
-  }
 
   async function request(body){
     const password=sessionStorage.getItem('yachiyoAdminPassword')||'';
