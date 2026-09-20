@@ -29,19 +29,19 @@ gtag('config','G-L8BMMSXDP9',{allow_google_signals:false,allow_ad_personalizatio
 <!-- Created by tatsuki.saitoh -->
 <meta charset="utf-8"/>
 <meta content="width=device-width,initial-scale=1,viewport-fit=cover" name="viewport"/>
-<title>八千代リトルシニア杯｜八千代リトルシニア（八千代シニア）公式</title>
-<meta name="description" content="八千代リトルシニア（八千代シニア）が開催する八千代リトルシニア杯の公式ページ。開催要項、参加チーム向け資料、申込情報をご案内します。">
+<title>八千代リトルシニア杯｜八千代リトルシニア</title>
+<meta name="description" content="八千代リトルシニア杯の開催要項、参加チーム向け資料、お問い合わせ情報をご案内します。">
 <link rel="canonical" href="https://yachiyo-little-senior.netlify.app/seniorcup">
 <link rel="icon" href="./favicon.svg" type="image/svg+xml">
 <meta property="og:type" content="website">
 <meta property="og:site_name" content="八千代リトルシニア">
-<meta property="og:title" content="八千代リトルシニア杯｜八千代リトルシニア公式">
-<meta property="og:description" content="八千代リトルシニア（八千代シニア）が開催する八千代リトルシニア杯の公式ページ。開催要項、参加チーム向け資料、申込情報をご案内します。">
+<meta property="og:title" content="八千代リトルシニア杯｜八千代リトルシニア">
+<meta property="og:description" content="八千代リトルシニア杯の開催要項、参加チーム向け資料、お問い合わせ情報をご案内します。">
 <meta property="og:url" content="https://yachiyo-little-senior.netlify.app/seniorcup">
 <meta property="og:locale" content="ja_JP">
 <meta name="twitter:card" content="summary_large_image">
-<meta name="twitter:title" content="八千代リトルシニア杯｜八千代リトルシニア公式">
-<meta name="twitter:description" content="八千代リトルシニア（八千代シニア）が開催する八千代リトルシニア杯の公式ページ。開催要項、参加チーム向け資料、申込情報をご案内します。">
+<meta name="twitter:title" content="八千代リトルシニア杯｜八千代リトルシニア">
+<meta name="twitter:description" content="八千代リトルシニア杯の開催要項、参加チーム向け資料、お問い合わせ情報をご案内します。">
 <style>
 :root{--navy:#071426;--navy2:#102942;--gold:#c79a3b;--gold2:#e2bd67;--bg:#f4f3ef;--ink:#17202b}
 *{box-sizing:border-box}
@@ -443,29 +443,6 @@ html{scroll-padding-top:var(--fixed-header-height)}
 <meta property="og:image:height" content="786">
 <meta property="og:image:alt" content="八千代リトルシニアの選手たち">
 <meta name="twitter:image" content="https://yachiyo-little-senior.netlify.app/team-hero.jpg">
-<script type="application/ld+json">
-{
-  "@context":"https://schema.org",
-  "@graph":[
-    {
-      "@type":"WebPage",
-      "@id":"https://yachiyo-little-senior.netlify.app/seniorcup#webpage",
-      "url":"https://yachiyo-little-senior.netlify.app/seniorcup",
-      "name":"八千代リトルシニア杯",
-      "isPartOf":{"@id":"https://yachiyo-little-senior.netlify.app/#website"},
-      "about":{"@id":"https://yachiyo-little-senior.netlify.app/#organization"},
-      "inLanguage":"ja"
-    },
-    {
-      "@type":"BreadcrumbList",
-      "itemListElement":[
-        {"@type":"ListItem","position":1,"name":"HOME","item":"https://yachiyo-little-senior.netlify.app/"},
-        {"@type":"ListItem","position":2,"name":"八千代リトルシニア杯","item":"https://yachiyo-little-senior.netlify.app/seniorcup"}
-      ]
-    }
-  ]
-}
-</script>
 </head>
 <body id="page-top">
 <header class="header">
@@ -506,8 +483,26 @@ html{scroll-padding-top:var(--fixed-header-height)}
 </section>
 <main class="main">
 <div class="intro">
-    八千代リトルシニア杯は、千葉県八千代市で活動する八千代リトルシニア（八千代シニア）が開催する小学生野球大会です。参加希望チームは下記要項をご確認の上、申込書・選手名簿をダウンロードし、指定のアドレスへご返信ください。
+    八千代リトルシニア杯は、1996年（平成8年）に第1回大会が開催され、長年にわたり続いている少年野球大会です。<br>
+    千葉県八千代市で活動する八千代リトルシニア（八千代シニア）が開催し、地域の少年野球チームが参加しています。<br>
+    参加希望チームは下記要項をご確認の上、申込書・選手名簿をダウンロードし、指定のアドレスへご返信ください。
   </div>
+
+<section class="winners-section" aria-labelledby="winnersTitle">
+  <div class="winners-head"><h2 class="winners-title" id="winnersTitle">🏆 歴代優勝チーム</h2></div>
+  <p class="winners-lead">第1回（1996年）から第30回（2025年）までの八千代リトルシニア杯（八千代シニア杯）歴代優勝チームを掲載しています。</p>
+  <button class="winners-toggle" id="winnersToggle" type="button" aria-expanded="false" aria-controls="winnersList">歴代優勝チームを見る</button>
+  <div class="winners-list" id="winnersList" aria-live="polite"></div>
+  <div class="winners-admin" id="winnersAdmin">
+    <div id="winnersEditor"></div>
+    <div class="winners-admin-actions">
+      <button class="winner-add-btn" id="winnerAddBtn" type="button">最新の大会を追加</button>
+      <button class="winner-save-btn" id="winnerSaveBtn" type="button">歴代優勝を保存</button>
+    </div>
+    <p class="admin-note">今年度以降の優勝チームは「最新の大会を追加」から登録できます。回数・年度・優勝チームは必要に応じて編集できます。</p>
+  </div>
+</section>
+
 <h2 class="section-title">大会概要</h2>
 <div class="guideline">
 <strong><span class="current-year"></span>年 八千代リトルシニア杯</strong>
@@ -532,6 +527,9 @@ html{scroll-padding-top:var(--fixed-header-height)}
 <a class="download-btn is-loading" href="#" id="rosterDownload">ダウンロード</a>
 </section>
 </div>
+
+
+
 <section aria-label="返信用アドレス" class="reply-address" id="cupReplyAddress">
 <p class="reply-address-title" id="cupReplyTitle">【八千代リトルシニア杯 申込み返信用アドレス】</p>
 <a href="mailto:team.yachiyo.8740@gmail.com" id="cupReplyLink">team.yachiyo.8740@gmail.com</a>
@@ -590,6 +588,7 @@ html{scroll-padding-top:var(--fixed-header-height)}
 </footer>
 <button id="cupAdminBtn" type="button">管理</button>
 <script src="./seniorcup-documents.js?v=20260920-picker1"></script>
+<script src="./seniorcup-winners.js?v=20260920-1"></script>
 <script>
 (function(){
   const API='/.netlify/functions/site-data';
@@ -1139,6 +1138,26 @@ body.photo-admin-on #accessPasswordChange{
     font-size:11px!important;
   }
 }
+
+/* ===== 歴代優勝チーム ===== */
+.winners-section{margin-top:36px;background:#fff;border:1px solid #ddd9cf;border-top:4px solid var(--gold);padding:24px;box-shadow:0 10px 28px rgba(7,20,38,.06)}
+.winners-head{display:flex;align-items:flex-end;justify-content:space-between;gap:16px;margin-bottom:10px}
+.winners-title{margin:0;color:var(--navy);font-family:serif;font-size:26px}
+.winners-lead{margin:0 0 18px;color:#697481;font-size:13px;line-height:1.8}
+.winners-toggle{width:100%;min-height:48px;border:1px solid var(--gold);background:#fff;color:var(--navy);border-radius:8px;font-weight:900;cursor:pointer}
+.winners-toggle[aria-expanded="true"]{background:var(--navy);color:var(--gold2)}
+.winners-list{display:none;margin-top:16px;border-top:1px solid #e4dfd4}
+.winners-list.show{display:block}
+.winner-row{display:grid;grid-template-columns:92px 78px 1fr;align-items:center;gap:12px;padding:13px 4px;border-bottom:1px solid #eee9df}
+.winner-edition{color:var(--navy);font-weight:900}.winner-year{color:#7a8490;font-size:13px}.winner-team{font-weight:800;line-height:1.5}
+.winner-team.pending{color:#9a7a34;font-weight:700}
+.winners-admin{display:none;margin-top:18px;padding-top:18px;border-top:1px solid #ddd9cf}.winners-admin.show{display:block}
+.winner-edit-row{display:grid;grid-template-columns:90px 100px 1fr auto;gap:8px;align-items:center;margin-bottom:9px}
+.winner-edit-row input{width:100%;min-height:42px;padding:9px;border:1px solid #cfd5dc;border-radius:6px;font:inherit}
+.winner-edit-row button{min-height:42px;border:1px solid #b3262e;background:#fff;color:#b3262e;border-radius:6px;font-weight:800;padding:0 12px}
+.winners-admin-actions{display:flex;gap:10px;margin-top:12px}.winners-admin-actions button{flex:1;min-height:44px;border:0;border-radius:6px;font-weight:900}.winner-add-btn{background:#fff!important;color:var(--navy)!important;border:1px solid var(--navy)!important}.winner-save-btn{background:var(--navy);color:#fff}
+@media(max-width:600px){.winners-section{padding:20px 16px}.winner-row{grid-template-columns:72px 64px 1fr;gap:8px;font-size:13px}.winner-edit-row{grid-template-columns:70px 82px 1fr}.winner-edit-row button{grid-column:1/-1}.winners-admin-actions{flex-direction:column}}
+
 </style>
 <script id="admin-start-position-unified">
 (()=>{
