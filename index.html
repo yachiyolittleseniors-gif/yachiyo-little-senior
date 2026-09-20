@@ -2205,7 +2205,7 @@ body.photo-admin-on .news-delete{display:block}
 .news-modal-card{width:min(520px,100%);background:#fff;border-radius:18px;padding:24px;position:relative}
 .news-modal-card h3{margin:0 0 18px}
 .news-modal-card label{display:block;font-size:13px;font-weight:700;margin:12px 0}
-.news-modal-card input,.news-modal-card textarea{box-sizing:border-box;width:100%;margin-top:6px;border:1px solid #ccd1d8;border-radius:10px;padding:11px;font:inherit}
+.news-modal-card input,.news-modal-card textarea,.news-modal-card select{box-sizing:border-box;width:100%;margin-top:6px;border:1px solid #ccd1d8;border-radius:10px;padding:11px;font:inherit}
 .news-close{position:absolute;right:14px;top:10px;border:0;background:none;font-size:28px}
 .news-save{width:100%;border:0;border-radius:12px;background:#071426;color:#fff;padding:13px;font-weight:800}
 @media(max-width:600px){.home-news{padding-left:12px;padding-right:12px;margin:26px auto}.home-news h2{font-size:29px}.home-news-list{padding:2px 18px}.news-title{font-size:17px}}
@@ -3636,7 +3636,8 @@ body.photo-admin-on .recruit-mode-admin{display:block}
 <div class="news-modal-card">
 <button class="news-close" id="newsClose" type="button">×</button>
 <h3 id="newsModalTitle">新着NEWSを追加</h3>
-<label>日付<input id="newsDate" type="date"/></label>
+<label>表示する日付<input id="newsDate" type="date"/></label>
+<label>日付の扱い<select id="newsDateMode"><option value="published">投稿日を維持</option><option value="updated">更新日に変更</option></select></label>
 <label>タイトル<input id="newsTitle" maxlength="80" placeholder="例：体験練習会のお知らせ" type="text"/></label>
 <label>本文<textarea id="newsBody" maxlength="500" placeholder="お知らせ内容を入力" rows="5"></textarea></label>
 <button class="news-save" id="newsSave" type="button">保存する</button>
@@ -4429,9 +4430,10 @@ function openProtectedArea(type){
  const api='/.netlify/functions/site-data';
  const list=document.getElementById('newsList'), modal=document.getElementById('newsModal');
  const add=document.getElementById('newsAddBtn'), close=document.getElementById('newsClose'), save=document.getElementById('newsSave');
- const date=document.getElementById('newsDate'), title=document.getElementById('newsTitle'), body=document.getElementById('newsBody');
+ const date=document.getElementById('newsDate'), dateMode=document.getElementById('newsDateMode'), title=document.getElementById('newsTitle'), body=document.getElementById('newsBody');
  const modalTitle=document.getElementById('newsModalTitle');
  let data=[],editingIndex=-1;
+ const todayJst=()=>new Intl.DateTimeFormat('en-CA',{timeZone:'Asia/Tokyo',year:'numeric',month:'2-digit',day:'2-digit'}).format(new Date());
  const esc=s=>String(s||'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
  function render(){
    data.sort((a,b)=>String(b.date||'').localeCompare(String(a.date||'')));
@@ -4449,18 +4451,21 @@ function openProtectedArea(type){
    if(r.status===429)throw new Error('LIMITED');
    if(!r.ok)throw new Error();
  }
- add.onclick=()=>{editingIndex=-1;modalTitle.textContent='新着NEWSを追加';save.textContent='保存する';date.value=new Date().toISOString().slice(0,10);title.value='';body.value='';modal.hidden=false};
+ add.onclick=()=>{editingIndex=-1;modalTitle.textContent='新着NEWSを追加';save.textContent='保存する';date.value=todayJst();dateMode.value='published';dateMode.disabled=true;title.value='';body.value='';modal.hidden=false};
  function edit(i){
    const item=data[i];if(!item)return;
    editingIndex=i;modalTitle.textContent='新着NEWSを編集';save.textContent='変更を保存';
-   date.value=item.date||'';title.value=item.title||'';body.value=item.body||'';modal.hidden=false;
+   date.value=item.date||item.publishedDate||'';dateMode.value='published';dateMode.disabled=false;title.value=item.title||'';body.value=item.body||'';modal.hidden=false;
  }
  close.onclick=()=>modal.hidden=true;
  modal.onclick=e=>{if(e.target===modal)modal.hidden=true};
  save.onclick=async()=>{
    if(!title.value.trim()){alert('タイトルを入力してください。');return}
    const old=data.slice();
-   const item={id:editingIndex>=0?(data[editingIndex].id||Date.now()):Date.now(),date:date.value,title:title.value.trim(),body:body.value.trim()};
+   const previous=editingIndex>=0?data[editingIndex]:null;
+    const publishedDate=previous?(previous.publishedDate||previous.date||date.value):date.value;
+    const displayDate=(editingIndex>=0&&dateMode.value==='updated')?todayJst():date.value;
+    const item={id:previous?(previous.id||Date.now()):Date.now(),date:displayDate,publishedDate:publishedDate,updatedAt:editingIndex>=0?new Date().toISOString():(previous&&previous.updatedAt)||'',title:title.value.trim(),body:body.value.trim()};
    if(editingIndex>=0)data[editingIndex]=item;else data.push(item);
    try{await persist();modal.hidden=true;editingIndex=-1;render();showSaveNotice('保存しました')}catch(e){data=old;alert(e.message==='LIMITED'?'試行回数の上限です。15分後に再度お試しください。':'保存できませんでした。')}
  };
