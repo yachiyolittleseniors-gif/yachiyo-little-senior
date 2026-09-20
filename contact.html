@@ -1473,10 +1473,26 @@ html{scroll-padding-top:var(--fixed-header-height)}
 .phone-contact-box h2{margin:0 0 10px;color:#07162b;font-size:clamp(22px,5.5vw,30px)}
 .phone-contact-box p{margin:0 0 18px;color:#4c5665;line-height:1.8}
 .phone-call-button{
-  display:block;max-width:360px;margin:0 auto;padding:15px 18px;border-radius:12px;
-  background:#cfa038;color:#fff!important;font-weight:900;text-decoration:none;text-align:center;
-  font-size:clamp(17px,4.6vw,21px)
+  display:flex;align-items:center;justify-content:center;gap:12px;max-width:360px;margin:0 auto;
+  padding:13px 18px;border-radius:12px;background:#cfa038;color:#fff!important;
+  font-weight:900;text-decoration:none;text-align:center;font-size:clamp(17px,4.6vw,21px)
 }
+.phone-icon-circle{
+  width:42px;height:42px;border-radius:50%;display:inline-flex;align-items:center;justify-content:center;
+  background:#fff;color:#c9962e;font-size:25px;font-weight:900;line-height:1;flex:0 0 42px
+}
+.phone-admin-panel{margin-top:22px;padding-top:18px;border-top:1px solid #ddd9cf;text-align:left}
+.phone-admin-panel[hidden]{display:none!important}
+.phone-admin-panel h3{margin:0 0 14px;color:#07162b;font-size:18px}
+.phone-admin-panel label{display:block;margin:12px 0 6px;color:#07162b;font-weight:800}
+.phone-admin-panel input[type="tel"],.phone-admin-panel input[type="text"]{
+  box-sizing:border-box;width:100%;margin-top:7px;padding:12px;border:1px solid #cfd3d8;border-radius:8px;font:inherit
+}
+.phone-admin-check{display:flex!important;align-items:center;gap:9px}
+.phone-admin-check input{width:20px;height:20px}
+#phoneSettingsSave{width:100%;margin-top:14px;padding:13px;border:0;border-radius:9px;background:#07162b;color:#fff;font-weight:900;font-size:16px}
+.phone-admin-status{min-height:1.5em;margin:9px 0 0!important;font-size:13px}
+
 .phone-contact-person{margin:12px 0 0!important;color:#07162b!important;font-weight:800}
 @media(max-width:600px){.phone-contact-box{padding:22px 16px}}
 </style>
@@ -1542,11 +1558,24 @@ html{scroll-padding-top:var(--fixed-header-height)}
 <img alt="八千代リトルシニア LINE公式アカウント 友だち追加QRコード" class="line-contact-qr" src="./line-qr.png"/>
 <a class="line-add-button" href="https://line.me/R/ti/p/@394lxtaf" rel="noopener noreferrer" target="_blank">友だち追加はこちら →</a>
 </section>
-<section aria-labelledby="phoneContactTitle" class="phone-contact-box">
+<section aria-labelledby="phoneContactTitle" class="phone-contact-box" id="phoneContactBox">
 <h2 id="phoneContactTitle">電話でのお問い合わせ</h2>
 <p>お電話でのお問い合わせも受け付けております。<br/>お気軽にご連絡ください。</p>
-<a class="phone-call-button" href="tel:09046670983" aria-label="事務局長 櫻井へ電話する">📞 お電話はこちらから</a>
-<p class="phone-contact-person">【事務局長・櫻井】</p>
+<a class="phone-call-button" id="phoneCallButton" href="tel:09046670983" aria-label="事務局長 櫻井へ電話する"><span class="phone-icon-circle" aria-hidden="true">☎</span><span>お電話はこちらから</span></a>
+<p class="phone-contact-person" id="phoneContactPerson">【事務局長・櫻井】</p>
+
+<div class="phone-admin-panel" id="phoneAdminPanel" hidden>
+  <h3>電話お問い合わせ設定</h3>
+  <label class="phone-admin-check"><input type="checkbox" id="phoneVisibleCheck" checked> 電話でのお問い合わせを表示</label>
+  <label>電話番号
+    <input type="tel" id="phoneNumberInput" inputmode="tel" autocomplete="tel" value="090-4667-0983">
+  </label>
+  <label>担当者名
+    <input type="text" id="phonePersonInput" value="事務局長・櫻井" maxlength="60">
+  </label>
+  <button type="button" id="phoneSettingsSave">変更を保存</button>
+  <p class="phone-admin-status" id="phoneAdminStatus" role="status"></p>
+</div>
 </section></div></section>
 <div aria-hidden="true" aria-labelledby="contactSuccessTitle" aria-modal="true" class="contact-success-overlay" id="contactSuccessOverlay" role="dialog">
 <div class="contact-success-box">
@@ -1878,5 +1907,115 @@ function openProtectedArea(type){
   }).observe(document.documentElement,{attributes:true,attributeFilter:['class']});
 })();
 </script>
+
+<script id="phone-contact-settings-script">
+(()=>{
+  const API='/.netlify/functions/site-data';
+  const box=document.getElementById('phoneContactBox');
+  const button=document.getElementById('phoneCallButton');
+  const person=document.getElementById('phoneContactPerson');
+  const panel=document.getElementById('phoneAdminPanel');
+  const visibleCheck=document.getElementById('phoneVisibleCheck');
+  const phoneInput=document.getElementById('phoneNumberInput');
+  const personInput=document.getElementById('phonePersonInput');
+  const saveBtn=document.getElementById('phoneSettingsSave');
+  const status=document.getElementById('phoneAdminStatus');
+  const footer=document.querySelector('.restored-footer-copy');
+  if(!box||!button||!person)return;
+
+  const defaults={visible:true,phone:'090-4667-0983',person:'事務局長・櫻井'};
+  let settings={...defaults};
+
+  function digits(value){return String(value||'').replace(/[^\d+]/g,'')}
+  function apply(){
+    box.style.display=settings.visible===false?'none':'';
+    button.href='tel:'+digits(settings.phone||defaults.phone);
+    button.setAttribute('aria-label',(settings.person||defaults.person)+'へ電話する');
+    person.textContent='【'+(settings.person||defaults.person)+'】';
+    if(visibleCheck)visibleCheck.checked=settings.visible!==false;
+    if(phoneInput)phoneInput.value=settings.phone||defaults.phone;
+    if(personInput)personInput.value=settings.person||defaults.person;
+  }
+
+  async function load(){
+    try{
+      const r=await fetch(API+'?section=contact-phone-settings',{cache:'no-store'});
+      if(!r.ok)return apply();
+      const j=await r.json();
+      if(j&&j.data&&typeof j.data==='object'&&!Array.isArray(j.data))settings={...defaults,...j.data};
+    }catch(e){}
+    apply();
+  }
+
+  async function verifyAdmin(password){
+    const r=await fetch(API+'?section=access-settings',{
+      method:'POST',
+      headers:{'content-type':'application/json','x-admin-password':password},
+      body:JSON.stringify({action:'verifyAdminPassword'})
+    });
+    if(r.status===429)throw new Error('試行回数の上限です。15分後に再度お試しください。');
+    return r.ok;
+  }
+
+  async function enterAdmin(){
+    let pw=sessionStorage.getItem('yachiyoAdminPassword')||'';
+    if(!pw)pw=prompt('管理者パスワードを入力してください')||'';
+    if(!pw)return;
+    try{
+      if(!(await verifyAdmin(pw))){
+        sessionStorage.removeItem('yachiyoAdminPassword');
+        alert('管理者パスワードが違います。');
+        return;
+      }
+      sessionStorage.setItem('yachiyoAdminPassword',pw);
+      box.style.display='';
+      panel.hidden=false;
+      apply();
+      panel.scrollIntoView({behavior:'smooth',block:'center'});
+    }catch(e){alert(e.message||'管理画面を開けませんでした。')}
+  }
+
+  if(footer){
+    footer.setAttribute('aria-label','3回タップで電話設定を開く');
+    let taps=0,timer=null,lastTouch=0;
+    const count=()=>{
+      taps++;
+      clearTimeout(timer);
+      timer=setTimeout(()=>{taps=0},1800);
+      if(taps>=3){taps=0;clearTimeout(timer);enterAdmin()}
+    };
+    footer.addEventListener('touchend',e=>{lastTouch=Date.now();e.preventDefault();count()},{passive:false});
+    footer.addEventListener('click',e=>{if(Date.now()-lastTouch<700)return;count()});
+  }
+
+  if(saveBtn){
+    saveBtn.addEventListener('click',async()=>{
+      const pw=sessionStorage.getItem('yachiyoAdminPassword')||'';
+      if(!pw)return enterAdmin();
+      const phone=(phoneInput.value||'').trim();
+      const who=(personInput.value||'').trim();
+      if(!digits(phone)){status.textContent='電話番号を入力してください。';return}
+      if(!who){status.textContent='担当者名を入力してください。';return}
+      const next={visible:visibleCheck.checked,phone,person:who,updatedAt:new Date().toISOString()};
+      status.textContent='保存中…';
+      try{
+        const r=await fetch(API+'?section=contact-phone-settings',{
+          method:'POST',
+          headers:{'content-type':'application/json','x-admin-password':pw},
+          body:JSON.stringify({data:next})
+        });
+        const j=await r.json().catch(()=>({}));
+        if(r.status===401){sessionStorage.removeItem('yachiyoAdminPassword');throw new Error('管理者パスワードが違います。')}
+        if(r.status===429)throw new Error('試行回数の上限です。15分後に再度お試しください。');
+        if(!r.ok)throw new Error(j.error||'保存できませんでした。');
+        settings=next; apply(); panel.hidden=false; status.textContent='保存しました。';
+      }catch(e){status.textContent=e.message||'保存できませんでした。'}
+    });
+  }
+
+  load();
+})();
+</script>
+
 </body>
 </html>
