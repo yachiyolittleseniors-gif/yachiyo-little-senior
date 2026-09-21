@@ -143,7 +143,7 @@ body{padding-top:var(--fixed-header-height)!important}
 
 <style id="attendance-report-styles">
 .report-launch{margin:16px 0;padding:18px;background:#fff;border:1px solid #d8dde4;border-radius:16px;box-shadow:0 8px 24px rgba(7,20,38,.06)}
-.report-launch h2{margin:0;font-size:20px;color:#071426}.report-launch-head{display:flex;align-items:center;justify-content:space-between;gap:12px;margin:0 0 12px}.report-launch-head .sync{flex:0 0 auto;white-space:nowrap;text-align:right}@media(max-width:480px){.report-launch-head h2{font-size:19px}.report-launch-head .sync{font-size:10px}}
+.report-launch-head{display:flex;align-items:center;justify-content:space-between;gap:12px;margin:0 0 12px}.report-launch-head h2{margin:0;font-size:20px;color:#071426}.report-launch-head .sync{margin-left:auto;white-space:nowrap;font-size:11px;color:#6f7884}
 .report-launch-grid{display:grid;grid-template-columns:minmax(180px,1fr) minmax(220px,1.35fr);gap:12px;align-items:end}
 .report-launch label,.comment-date-field{display:grid;gap:6px;font-size:13px;font-weight:800;color:#536072}
 .report-launch select,.comment-date-field select{width:100%;min-height:46px;border:1px solid #cbd2dc;border-radius:10px;background:#fff;color:#071426;padding:0 12px;font:inherit}
@@ -354,9 +354,9 @@ window.coachAccessReady=(async function(){
 
   <div id="attendanceView">
     <div class="notice"><b>回答方法：</b>左の自分の名前をタップしてから、○×を編集してください。選択した本人の行だけ編集できます。<br><b>コメント入力：</b>名前を選択すると回答表の下に入力欄が表示されます。対象日と内容を入力し、「コメントを追加」を押してください。<br><span style="color:#6f7884">※名前はチーム紹介ページの指導者一覧から自動反映されます。</span></div>
-    <div class="toolbar"><div class="legend"><span>○ 参加</span><span>× 不参加</span><span>・ 未入力</span></div><span class="sync" id="syncText"></span></div>
+    
     <section class="report-launch" id="reportLaunch">
-      <h2>出席一覧の出力</h2>
+      <div class="report-launch-head"><h2>出席一覧の出力</h2><span class="sync" id="syncText"></span></div>
       <div class="report-launch-grid">
         <label>日程を選択<select id="reportEventSelect" aria-label="出力する日程"></select></label>
         <button id="openReportBtn" type="button">指導者出席一覧を出力</button>
