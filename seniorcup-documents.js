@@ -29,16 +29,28 @@
     const pickerList=modal.querySelector('#cupDocumentPickerList');
     pickerList.replaceChildren();
     documents.forEach((item,index)=>{
-      const a=document.createElement('a');
-      a.href=API+'&file='+encodeURIComponent(String(item.id||''))+'&open=1&v='+encodeURIComponent(String(item.uploadedAt||Date.now()));
-      a.style.cssText='display:block;padding:14px 12px;border:1px solid #ddd9cf;border-radius:9px;background:#fff;color:#071426;text-decoration:none;font-weight:800;overflow-wrap:anywhere'+(index?';margin-top:10px':'');
-      const label=document.createElement('span');label.textContent=item.tournament||item.fileName||'資料';
-      a.appendChild(label);
-      if(item.tournament&&item.fileName&&item.tournament!==item.fileName){
-        const actual=document.createElement('small');actual.style.cssText='display:block;margin-top:5px;color:#697481;font-size:11px;font-weight:500';actual.textContent='元ファイル：'+item.fileName;a.appendChild(actual);
+      const fileName=String(item.fileName||'');
+      const isPdf=/\.pdf$/i.test(fileName);
+      const isImage=/\.(jpe?g|png|webp)$/i.test(fileName);
+      const openUrl=API+'&file='+encodeURIComponent(String(item.id||''))+'&open=1&v='+encodeURIComponent(String(item.uploadedAt||Date.now()));
+      const downloadUrl=API+'&file='+encodeURIComponent(String(item.id||''))+'&download=1&v='+encodeURIComponent(String(item.uploadedAt||Date.now()));
+      const card=document.createElement('div');
+      card.style.cssText='padding:14px 12px;border:1px solid #ddd9cf;border-radius:9px;background:#fff;color:#071426;overflow-wrap:anywhere'+(index?';margin-top:10px':'');
+      const label=document.createElement('div');label.style.cssText='font-weight:800';label.textContent=item.tournament||fileName||'資料';
+      card.appendChild(label);
+      if(item.tournament&&fileName&&item.tournament!==fileName){
+        const actual=document.createElement('small');actual.style.cssText='display:block;margin-top:5px;color:#697481;font-size:11px;font-weight:500';actual.textContent='元ファイル：'+fileName;card.appendChild(actual);
       }
-      a.addEventListener('click',()=>{setTimeout(()=>{modal.style.display='none';document.body.style.overflow='';},120);});
-      pickerList.appendChild(a);
+      const actions=document.createElement('div');actions.style.cssText='display:grid;grid-template-columns:'+(isPdf?'1fr 1fr':'1fr')+';gap:8px;margin-top:11px';
+      const open=document.createElement('a');open.href=openUrl;open.textContent=isImage?'画像を開く':'資料を開く';open.style.cssText='display:flex;align-items:center;justify-content:center;min-height:44px;padding:9px 10px;border-radius:8px;background:#071426;color:#f2d27a;text-decoration:none;font-weight:800;font-size:14px;text-align:center';
+      open.addEventListener('click',()=>{setTimeout(()=>{modal.style.display='none';document.body.style.overflow='';},120);});
+      actions.appendChild(open);
+      if(isPdf){
+        const save=document.createElement('a');save.href=downloadUrl;save.textContent='PDFを保存';save.style.cssText='display:flex;align-items:center;justify-content:center;min-height:44px;padding:9px 10px;border:1px solid #071426;border-radius:8px;background:#fff;color:#071426;text-decoration:none;font-weight:800;font-size:14px;text-align:center';actions.appendChild(save);
+      }
+      card.appendChild(actions);
+      if(isImage){const note=document.createElement('small');note.style.cssText='display:block;margin-top:8px;color:#697481;font-size:11px;line-height:1.5';note.textContent='画像を開いた後、長押しすると「写真に保存」できます。';card.appendChild(note);}
+      pickerList.appendChild(card);
     });
     modal.style.display='flex';document.body.style.overflow='hidden';
   }
