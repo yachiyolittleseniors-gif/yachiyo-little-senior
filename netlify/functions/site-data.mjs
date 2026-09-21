@@ -791,8 +791,6 @@ function normalizeLiveScoreGame(value) {
       third: Boolean(value.bases?.third),
     },
     tieBreaks,
-    startedAt: value.startedAt ? String(value.startedAt).slice(0, 40) : "",
-    autoEndAt: value.autoEndAt ? String(value.autoEndAt).slice(0, 40) : "",
     completedAt: value.completedAt ? String(value.completedAt).slice(0, 40) : "",
   };
 }
@@ -868,9 +866,11 @@ export default async (request, context) => {
         section === "live-score"
       ) {
         const accessPassword = request.headers.get("x-access-password") || "";
+        const coachPassword = request.headers.get("x-coach-password") || "";
         const accessGranted =
           await boardSessionIsValid(request) ||
-          await accessPasswordIsValid(store, accessPassword);
+          await accessPasswordIsValid(store, accessPassword) ||
+          (section === "board-meeting-schedule" && coachPassword && await coachAccessPasswordIsValid(store, coachPassword));
 
         if (!accessGranted) {
           return json({ error: "unauthorized" }, 401);
@@ -1394,23 +1394,8 @@ export default async (request, context) => {
 
       if (section === "live-score") {
         const deviceId = String(request.headers.get("x-live-score-device-id") || "");
-        let liveData = normalizeLiveScoreData(data) || data || [];
-        const autoEndAt = Date.parse(liveData?.current?.autoEndAt || "");
-        if (liveData?.active && Number.isFinite(autoEndAt) && Date.now() >= autoEndAt) {
-          const completed = normalizeLiveScoreGame(liveData.current);
-          if (completed) completed.completedAt = new Date().toISOString();
-          liveData = {
-            active: false,
-            visible: false,
-            current: null,
-            lastGame: completed || normalizeLiveScoreGame(liveData.lastGame),
-            updatedAt: new Date().toISOString(),
-          };
-          await store.setJSON(key, liveData);
-          await store.delete(LIVE_SCORE_LOCK_KEY);
-        }
         const lock = await getLiveScoreLock(store);
-        return json({ data: liveData, lock: publicLiveScoreLock(lock, deviceId) });
+        return json({ data: data ?? [], lock: publicLiveScoreLock(lock, deviceId) });
       }
 
       return json({
