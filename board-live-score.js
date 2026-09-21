@@ -771,9 +771,15 @@
     modal.hidden=true; modal.setAttribute('aria-hidden','true'); document.body.style.overflow='';
   }
   elements.restore.addEventListener('click', openLastGameModal);
-  document.getElementById('lastGameBack')?.addEventListener('click', closeLastGameModal);
-  document.getElementById('lastGameCloseX')?.addEventListener('click', closeLastGameModal);
-  document.querySelector('[data-last-game-close]')?.addEventListener('click', closeLastGameModal);
+  // The modal markup is placed later in board.html, so bind close controls by delegation.
+  // This also keeps × / 戻る reliable on iOS Safari.
+  document.addEventListener('click', (event) => {
+    const target = event.target.closest('#lastGameBack, #lastGameCloseX, [data-last-game-close]');
+    if (!target) return;
+    event.preventDefault();
+    event.stopPropagation();
+    closeLastGameModal();
+  });
   function returnToTeam() {
     if (state.active && inputMode && !replayMode) return;
     const wasReplay = replayMode;
