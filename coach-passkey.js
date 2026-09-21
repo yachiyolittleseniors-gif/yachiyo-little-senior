@@ -68,6 +68,15 @@
       },
     };
   }
+
+  function friendlyError(error, fallback = "生体認証を完了できませんでした。") {
+    const name = String(error?.name || "");
+    if (name === "InvalidStateError") {
+      return new Error("この端末にはすでに生体認証が登録されています。登録済みの生体認証を利用するか、いったん削除してから再登録してください。");
+    }
+    if (name === "NotAllowedError") return error;
+    return error instanceof Error ? error : new Error(fallback);
+  }
   async function register(accessValue, label = "") {
     if (!supported()) throw new Error("この端末は生体認証に対応していません。");
     const start = await request({ action: "registration-options" }, accessValue);
@@ -75,13 +84,7 @@
     try {
       credential = await navigator.credentials.create({ publicKey: creationOptions(start.options) });
     } catch (error) {
-      // Safari/iPhone returns InvalidStateError when this credential is already
-      // registered on the device. Treat it as already registered instead of
-      // showing the browser's raw error.
-      if (error?.name === "InvalidStateError" || /invalid state/i.test(error?.message || "")) {
-        return { ok: true, existing: true };
-      }
-      throw error;
+      throw friendlyError(error, "生体認証を登録できませんでした。");
     }
     if (!credential) throw new Error("生体認証の登録がキャンセルされました。");
     return request({
@@ -92,7 +95,12 @@
   async function authenticate() {
     if (!supported()) throw new Error("この端末は生体認証に対応していません。");
     const start = await request({ action: "authentication-options" });
-    const credential = await navigator.credentials.get({ publicKey: requestOptions(start.options) });
+    let credential;
+    try {
+      credential = await navigator.credentials.get({ publicKey: requestOptions(start.options) });
+    } catch (error) {
+      throw friendlyError(error, "生体認証を利用できませんでした。");
+    }
     if (!credential) throw new Error("生体認証がキャンセルされました。");
     return request({
       action: "authentication-verify", ceremonyID: start.ceremonyID,
