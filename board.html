@@ -1131,9 +1131,7 @@ body.live-score-focused #liveScoreCard{width:100%;box-sizing:border-box}
             <div class="live-score-kicker">GAME速報</div>
             <h2 id="liveScoreTitle">試合速報</h2>
           </div>
-          <div class="live-score-restore-wrap" id="liveScoreRestoreWrap" hidden>
-            <button class="live-score-button" id="liveScoreRestore" type="button">直前の試合を再表示</button>
-          </div>
+          <div class="live-score-restore-wrap" id="liveScoreRestoreWrap" hidden></div>
           <script>
           (function(){
             try{
@@ -1152,6 +1150,7 @@ body.live-score-focused #liveScoreCard{width:100%;box-sizing:border-box}
         <p>試合開始後、得点を入力してチーム内へ速報を共有できます。</p>
         <div class="live-score-idle-actions">
           <button class="live-score-button primary" id="liveScoreStart" type="button" >試合速報を開始</button>
+          <button class="live-score-last-link" id="liveScoreRestore" type="button" hidden>直前の試合を見る ＞</button>
         </div>
         
         <div class="live-score-start-modal" id="liveScoreStartModal" hidden>
@@ -1522,7 +1521,17 @@ body.live-score-focused #liveScoreCard{width:100%;box-sizing:border-box}
   <button id="closeDensukeAdminBtn" type="button">キャンセル</button>
 </div>
 
-<script src="./board-live-score.js?v=20260920-lock1"></script>
+<style>
+/* 直前の試合：一時表示ポップアップ */
+.live-score-last-link{display:block;margin:10px auto 0;padding:4px 8px;border:0;background:transparent;color:#b59643;font:inherit;font-size:.9rem;font-weight:700;cursor:pointer;text-decoration:none}
+.live-score-last-link:hover{text-decoration:underline}
+.live-score-last-link[hidden]{display:none!important}
+#liveScoreCard.is-replay::before{content:"";position:fixed;inset:0;background:rgba(4,14,35,.68);z-index:9998}
+#liveScoreCard.is-replay .live-score-editor{position:fixed;z-index:9999;left:50%;top:50%;transform:translate(-50%,-50%);width:min(94vw,760px);max-height:88vh;overflow:auto;background:#fff;border:2px solid #b59643;border-radius:18px;padding:18px;box-shadow:0 20px 60px rgba(0,0,0,.35)}
+#liveScoreCard.is-replay #liveScoreBack{position:sticky;top:0;margin-left:auto;z-index:2}
+@media(max-width:600px){#liveScoreCard.is-replay .live-score-editor{width:94vw;max-height:86vh;padding:12px;border-radius:14px}.live-score-last-link{font-size:.86rem}}
+</style>
+<script src="./board-live-score.js?v=20260921-lastgamepopup1"></script>
 <script src="./board-updates.js?v=20260918-13"></script>
 <script src="./board-referee-documents.js?v=20260918-7"></script>
 <script src="./board-tournaments.js?v=20260914-1"></script>

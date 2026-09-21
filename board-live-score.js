@@ -590,7 +590,8 @@
     elements.idle.hidden = showingEditor && !editorCollapsed;
     elements.editor.hidden = !showingEditor || editorCollapsed;
     elements.start.textContent = state.active ? '試合速報に戻る' : '試合速報を開始';
-    elements.restoreWrap.hidden = showingEditor || !state.lastGame;
+    if (elements.restoreWrap) elements.restoreWrap.hidden = true;
+    if (elements.restore) elements.restore.hidden = showingEditor || !state.lastGame;
     root.classList.toggle('is-replay', replayMode);
     if (!showingEditor || !state.current) return;
     syncFields();
@@ -771,7 +772,7 @@
     editorCollapsed = false;
     state.current = normalizeGame(state.lastGame);
     render();
-    window.scrollTo({ top: 0, behavior: 'smooth' });
+    // 直前の試合はこの端末だけの一時ポップアップ。表示状態は共有しない。
   });
   function returnToTeam() {
     if (state.active && inputMode && !replayMode) return;
@@ -786,6 +787,13 @@
     if (wasReplay) load({ silent: true, force: true });
   }
   elements.back.addEventListener('click', returnToTeam);
+  root.addEventListener('click', (event) => {
+    if (!replayMode) return;
+    if (event.target === root) returnToTeam();
+  });
+  document.addEventListener('keydown', (event) => {
+    if (event.key === 'Escape' && replayMode) returnToTeam();
+  });
 
   [elements.tournament, elements.startTime, elements.ground, elements.grade, elements.opponent]
     .forEach(input => input.addEventListener('input', () => {
