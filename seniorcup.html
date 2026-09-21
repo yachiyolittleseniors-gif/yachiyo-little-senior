@@ -567,7 +567,7 @@ html{scroll-padding-top:var(--fixed-header-height)}
 <h3>申込書・選手名簿</h3>
 <p id="registrationClosedNotice" hidden style="color:#666;font-weight:700;margin:0 0 12px" role="status">申込受付は終了しました。</p>
 <p class="file-name" id="rosterFileName">選手名簿</p>
-<a class="download-btn is-loading" href="#" id="rosterDownload">ダウンロード</a>
+<a class="download-btn is-loading" href="#" id="rosterDownload">資料を開く</a>
 </section>
 </div>
 
@@ -858,7 +858,7 @@ function renderReplyMode(){
     const blocked=!registrationReady||registrationClosed;
     rosterLink.closest('.download-card').classList.toggle('registration-closed',registrationReady&&registrationClosed);
     document.getElementById('registrationClosedNotice').hidden=!(registrationReady&&registrationClosed);
-    rosterLink.textContent=registrationReady?(registrationClosed?'申込受付終了':'ダウンロード'):'確認中...';
+    rosterLink.textContent=registrationReady?(registrationClosed?'申込受付終了':'資料を開く'):'確認中...';
     if(blocked){
       if(rosterLink.hasAttribute('href'))rosterLink.dataset.registrationHref=rosterLink.getAttribute('href');
       rosterLink.removeAttribute('href');rosterLink.setAttribute('aria-disabled','true');rosterLink.setAttribute('tabindex','-1');

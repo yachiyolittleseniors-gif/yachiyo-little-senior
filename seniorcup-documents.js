@@ -16,7 +16,7 @@
     modal.setAttribute('aria-modal','true');
     modal.setAttribute('aria-labelledby','cupDocumentPickerTitle');
     modal.style.cssText='display:none;position:fixed;inset:0;z-index:30000;background:rgba(7,20,38,.58);padding:20px;align-items:center;justify-content:center';
-    modal.innerHTML='<div style="width:min(520px,100%);max-height:78dvh;overflow:auto;background:#fff;border-radius:14px;padding:22px;box-shadow:0 20px 60px rgba(0,0,0,.32)"><h3 id="cupDocumentPickerTitle" style="margin:0 0 8px;color:#071426;font-family:serif;font-size:22px">ダウンロードする資料を選択</h3><p style="margin:0 0 16px;color:#697481;font-size:13px">保存したい資料をタップしてください。</p><div id="cupDocumentPickerList"></div><button type="button" id="cupDocumentPickerClose" style="width:100%;min-height:48px;margin-top:16px;border:1px solid #cfd3d8;background:#fff;color:#071426;border-radius:8px;font-weight:800">キャンセル</button></div>';
+    modal.innerHTML='<div style="width:min(520px,100%);max-height:78dvh;overflow:auto;background:#fff;border-radius:14px;padding:22px;box-shadow:0 20px 60px rgba(0,0,0,.32)"><h3 id="cupDocumentPickerTitle" style="margin:0 0 8px;color:#071426;font-family:serif;font-size:22px">開く資料を選択</h3><p style="margin:0 0 16px;color:#697481;font-size:13px">表示したい資料をタップしてください。</p><div id="cupDocumentPickerList"></div><button type="button" id="cupDocumentPickerClose" style="width:100%;min-height:48px;margin-top:16px;border:1px solid #cfd3d8;background:#fff;color:#071426;border-radius:8px;font-weight:800">キャンセル</button></div>';
     document.body.appendChild(modal);
     const close=()=>{modal.style.display='none';document.body.style.overflow='';};
     modal.querySelector('#cupDocumentPickerClose').addEventListener('click',close);
@@ -30,8 +30,7 @@
     pickerList.replaceChildren();
     documents.forEach((item,index)=>{
       const a=document.createElement('a');
-      a.href=API+'&file='+encodeURIComponent(String(item.id||''))+'&download=1&v='+encodeURIComponent(String(item.uploadedAt||Date.now()));
-      a.setAttribute('download',item.fileName||'document');
+      a.href=API+'&file='+encodeURIComponent(String(item.id||''))+'&open=1&v='+encodeURIComponent(String(item.uploadedAt||Date.now()));
       a.style.cssText='display:block;padding:14px 12px;border:1px solid #ddd9cf;border-radius:9px;background:#fff;color:#071426;text-decoration:none;font-weight:800;overflow-wrap:anywhere'+(index?';margin-top:10px':'');
       const label=document.createElement('span');label.textContent=item.tournament||item.fileName||'資料';
       a.appendChild(label);
@@ -49,7 +48,7 @@
     summary.className='file-name';summary.style.cssText='min-height:0;margin:0 0 15px';
     summary.textContent=documents.length ? '掲載中の資料：'+documents.length+'件' : '現在掲載中の資料はありません。';
     const download=document.createElement(documents.length?'button':'span');
-    download.className='download-btn';download.textContent='ダウンロード';
+    download.className='download-btn';download.textContent='資料を開く';
     if(documents.length){
       download.type='button';download.style.width='100%';download.style.cursor='pointer';download.addEventListener('click',openPicker);
     }else{
