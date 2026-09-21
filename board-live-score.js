@@ -4,6 +4,10 @@
   const DRAFT_KEY = 'yachiyoLiveScoreDraft';
   const DEVICE_KEY = 'yachiyoLiveScoreEditorDeviceId';
   const INPUT_MODE_KEY = 'yachiyoLiveScoreInputMode';
+  const AUTO_END_MS = 4 * 60 * 60 * 1000;
+  const AUTO_END_WARNING_MS = 30 * 60 * 1000;
+  const EXTEND_MS = 60 * 60 * 1000;
+  const AUTO_END_WARNING_KEY = 'yachiyoLiveScoreAutoEndWarning';
   const $ = selector => document.querySelector(selector);
   const root = $('#liveScoreCard');
   if (!root) return;
@@ -37,6 +41,7 @@
   let pollTimer = 0;
   let lockToken = '';
   let lockHeartbeatTimer = 0;
+  let autoEndTimer = 0;
   // 選択中の得点セルは再描画・自動保存後も維持する。
   let selectedScoreCell = null;
   // Keep one device id for the entire page lifetime. On some iPhone/Safari
@@ -147,6 +152,7 @@
       rememberInputMode(true);
       startLockHeartbeat();
       render();
+      scheduleAutoEndWarning();
       return true;
     } catch (error) {
       lockToken = '';
@@ -206,6 +212,8 @@
         ours: score(item?.ours),
         opponent: score(item?.opponent),
       })) : [],
+      startedAt: game.startedAt ? String(game.startedAt) : '',
+      autoEndAt: game.autoEndAt ? String(game.autoEndAt) : '',
       completedAt: game.completedAt ? String(game.completedAt) : '',
     };
   }
@@ -674,6 +682,31 @@
     await releaseInputLock();
   }
 
+  function scheduleAutoEndWarning() {
+    clearTimeout(autoEndTimer);
+    autoEndTimer = 0;
+    if (!state.active || !state.current || replayMode || !inputMode) return;
+    const endAt = Date.parse(state.current.autoEndAt || '');
+    if (!Number.isFinite(endAt)) return;
+    const warningAt = endAt - AUTO_END_WARNING_MS;
+    const delay = Math.max(0, warningAt - Date.now());
+    autoEndTimer = setTimeout(async () => {
+      if (!state.active || !state.current || replayMode || !inputMode) return;
+      const currentEndAt = state.current.autoEndAt || '';
+      try {
+        if (sessionStorage.getItem(AUTO_END_WARNING_KEY) === currentEndAt) return;
+        sessionStorage.setItem(AUTO_END_WARNING_KEY, currentEndAt);
+      } catch (_) {}
+      const extend = confirm('試合速報は30分後に自動終了します。\n試合が続いている場合は「OK」を押すと1時間延長します。');
+      if (!extend) return;
+      state.current.autoEndAt = new Date(Date.parse(currentEndAt) + EXTEND_MS).toISOString();
+      dirty = true;
+      changeVersion += 1;
+      await save('自動終了を1時間延長しました', { quiet: true });
+      scheduleAutoEndWarning();
+    }, delay);
+  }
+
   async function startGame(game = null, visible = true) {
     if (!await claimInputLock()) return;
     editorCollapsed = false;
@@ -681,6 +714,8 @@
     state.active = true;
     state.visible = visible;
     state.current = normalizeGame(game) || blankGame();
+    if (!state.current.startedAt) state.current.startedAt = new Date().toISOString();
+    if (!state.current.autoEndAt) state.current.autoEndAt = new Date(Date.now() + AUTO_END_MS).toISOString();
     try {
       const draft = rememberedDraft();
       if (draft && draft.identity !== draftIdentity(state.current)) localStorage.removeItem(DRAFT_KEY);
@@ -691,6 +726,7 @@
     render();
     window.scrollTo({ top: 0, behavior: 'smooth' });
     await save(visible ? '試合速報を開始・公開しました' : '試合速報を開始しました');
+    scheduleAutoEndWarning();
   }
 
   elements.start.addEventListener('click', async () => {
@@ -857,6 +893,7 @@
         rememberDraft(state.current);
       }
       render();
+      scheduleAutoEndWarning();
     } catch (error) {
       if (!silent) {
         elements.idle.querySelector('p').textContent = '試合速報を読み込めませんでした。ページを更新してください。';
