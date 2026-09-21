@@ -142,15 +142,9 @@ body{padding-top:var(--fixed-header-height)!important}
 }
 </style>
 
-<style id="secretariat-calendar-link-styles">
-.secretariat-calendar-link{display:flex;align-items:center;justify-content:center;gap:9px;width:100%;min-height:50px;margin:14px 0;border:1.5px solid #c79a3b;border-radius:999px;background:#071426;color:#fff;font-weight:900;font-size:14px;text-decoration:none;box-shadow:0 3px 10px rgba(7,20,38,.10)}
-.secretariat-calendar-link .calendar-icon{font-size:18px;line-height:1}.report-meta-row{display:flex;align-items:flex-start;justify-content:space-between;gap:12px;margin-top:9px}.report-meta-row p{margin:0!important;flex:1}.report-meta-row .sync{flex:0 0 auto;padding-top:1px;white-space:nowrap}
-@media(max-width:600px){.secretariat-calendar-link{min-height:48px;font-size:13px}.report-meta-row{display:block}.report-meta-row .sync{display:block;margin-top:6px;text-align:right}}
-</style>
-
 <style id="attendance-report-styles">
 .report-launch{margin:16px 0;padding:18px;background:#fff;border:1px solid #d8dde4;border-radius:16px;box-shadow:0 8px 24px rgba(7,20,38,.06)}
-.report-launch h2{margin:0 0 12px;font-size:20px;color:#071426}
+.report-launch h2{margin:0;font-size:20px;color:#071426}.report-launch-head{display:flex;align-items:center;justify-content:space-between;gap:12px;margin:0 0 12px}.report-launch-head .sync{flex:0 0 auto;white-space:nowrap;text-align:right}@media(max-width:480px){.report-launch-head h2{font-size:19px}.report-launch-head .sync{font-size:10px}}
 .report-launch-grid{display:grid;grid-template-columns:minmax(180px,1fr) minmax(220px,1.35fr);gap:12px;align-items:end}
 .report-launch label,.comment-date-field{display:grid;gap:6px;font-size:13px;font-weight:800;color:#536072}
 .report-launch select,.comment-date-field select{width:100%;min-height:46px;border:1px solid #cbd2dc;border-radius:10px;background:#fff;color:#071426;padding:0 12px;font:inherit}
@@ -259,14 +253,14 @@ body{padding-top:var(--fixed-header-height)!important}
 
   <div id="attendanceView">
     <div class="notice"><b>回答方法：</b>左の自分の名前をタップしてから、○×を編集してください。選択した本人の行だけ編集できます。<br><b>コメント入力：</b>名前を選択すると回答表の下に入力欄が表示されます。対象日と内容を入力し、「コメントを追加」を押してください。<br><span style="color:#6f7884">※選手名・学年は選手紹介から、日程はスケジュールページから自動反映します。</span></div>
-    <a class="secretariat-calendar-link" href="./secretariat-calendar.html?from=player" aria-label="事務局カレンダーを見る"><span class="calendar-icon" aria-hidden="true">📅</span><span>事務局カレンダーを見る</span></a>
+    <div class="toolbar"><div class="legend"><span>○ 参加</span><span>× 不参加</span><span>・ 未入力</span></div><span class="sync" id="syncText"></span></div>
     <section class="report-launch" id="reportLaunch">
       <h2>出席一覧の出力</h2>
       <div class="report-launch-grid">
         <label>日程を選択<select id="reportEventSelect" aria-label="出力する日程"></select></label>
         <button id="openReportBtn" type="button">学年別出席一覧を出力</button>
       </div>
-      <div class="report-meta-row"><p>学年別の○・×・未入力と、選択した日のコメントを表示します。</p><span class="sync" id="syncText"></span></div>
+      <p>学年別の○・×・未入力と、選択した日のコメントを表示します。</p>
     </section>
     <dialog class="summary-dialog" id="summaryDialog" aria-labelledby="summaryTitle"><div class="summary-dialog-head"><h2 id="summaryTitle">出欠内訳</h2><button class="summary-close" id="summaryClose" type="button" aria-label="閉じる">×</button></div><div class="breakdown-list" id="summaryBody"></div><p class="breakdown-unset" id="summaryUnset"></p></dialog>
     <div class="board-shell" id="board"><div class="empty">読み込み中...</div></div>
