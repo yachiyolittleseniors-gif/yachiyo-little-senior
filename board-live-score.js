@@ -4,17 +4,9 @@
   const DRAFT_KEY = 'yachiyoLiveScoreDraft';
   const DEVICE_KEY = 'yachiyoLiveScoreEditorDeviceId';
   const INPUT_MODE_KEY = 'yachiyoLiveScoreInputMode';
-  const AUTO_END_MS = 4 * 60 * 60 * 1000;
-  const AUTO_END_WARNING_MS = 30 * 60 * 1000;
-  const EXTEND_MS = 60 * 60 * 1000;
-  const AUTO_END_WARNING_KEY = 'yachiyoLiveScoreAutoEndWarning';
   const $ = selector => document.querySelector(selector);
   const root = $('#liveScoreCard');
   if (!root) return;
-
-  function escapeHtml(value) {
-    return String(value ?? '').replace(/[&<>"']/g, char => ({ '&':'&amp;', '<':'&lt;', '>':'&gt;', '"':'&quot;', "'":'&#39;' }[char]));
-  }
 
   const blankGame = () => ({
     tournament: '',
@@ -45,7 +37,6 @@
   let pollTimer = 0;
   let lockToken = '';
   let lockHeartbeatTimer = 0;
-  let autoEndTimer = 0;
   // 選択中の得点セルは再描画・自動保存後も維持する。
   let selectedScoreCell = null;
   // Keep one device id for the entire page lifetime. On some iPhone/Safari
@@ -156,7 +147,6 @@
       rememberInputMode(true);
       startLockHeartbeat();
       render();
-      scheduleAutoEndWarning();
       return true;
     } catch (error) {
       lockToken = '';
@@ -216,8 +206,6 @@
         ours: score(item?.ours),
         opponent: score(item?.opponent),
       })) : [],
-      startedAt: game.startedAt ? String(game.startedAt) : '',
-      autoEndAt: game.autoEndAt ? String(game.autoEndAt) : '',
       completedAt: game.completedAt ? String(game.completedAt) : '',
     };
   }
@@ -307,9 +295,7 @@
     editor: $('#liveScoreEditor'),
     start: $('#liveScoreStart'),
     restore: $('#liveScoreRestore'),
-    lastModal: $('#liveScoreLastModal'),
-    lastClose: $('#liveScoreLastClose'),
-    lastBack: $('#liveScoreLastBack'),
+    restoreWrap: $('#liveScoreRestoreWrap'),
     tournament: $('#liveScoreTournament'),
     startTime: $('#liveScoreStartTime'),
     ground: $('#liveScoreGround'),
@@ -596,7 +582,7 @@
     elements.idle.hidden = showingEditor && !editorCollapsed;
     elements.editor.hidden = !showingEditor || editorCollapsed;
     elements.start.textContent = state.active ? '試合速報に戻る' : '試合速報を開始';
-    elements.restore.hidden = showingEditor || !state.lastGame;
+    elements.restoreWrap.hidden = showingEditor || !state.lastGame;
     root.classList.toggle('is-replay', replayMode);
     if (!showingEditor || !state.current) return;
     syncFields();
@@ -688,31 +674,6 @@
     await releaseInputLock();
   }
 
-  function scheduleAutoEndWarning() {
-    clearTimeout(autoEndTimer);
-    autoEndTimer = 0;
-    if (!state.active || !state.current || replayMode || !inputMode) return;
-    const endAt = Date.parse(state.current.autoEndAt || '');
-    if (!Number.isFinite(endAt)) return;
-    const warningAt = endAt - AUTO_END_WARNING_MS;
-    const delay = Math.max(0, warningAt - Date.now());
-    autoEndTimer = setTimeout(async () => {
-      if (!state.active || !state.current || replayMode || !inputMode) return;
-      const currentEndAt = state.current.autoEndAt || '';
-      try {
-        if (sessionStorage.getItem(AUTO_END_WARNING_KEY) === currentEndAt) return;
-        sessionStorage.setItem(AUTO_END_WARNING_KEY, currentEndAt);
-      } catch (_) {}
-      const extend = confirm('試合速報は30分後に自動終了します。\n試合が続いている場合は「OK」を押すと1時間延長します。');
-      if (!extend) return;
-      state.current.autoEndAt = new Date(Date.parse(currentEndAt) + EXTEND_MS).toISOString();
-      dirty = true;
-      changeVersion += 1;
-      await save('自動終了を1時間延長しました', { quiet: true });
-      scheduleAutoEndWarning();
-    }, delay);
-  }
-
   async function startGame(game = null, visible = true) {
     if (!await claimInputLock()) return;
     editorCollapsed = false;
@@ -720,8 +681,6 @@
     state.active = true;
     state.visible = visible;
     state.current = normalizeGame(game) || blankGame();
-    if (!state.current.startedAt) state.current.startedAt = new Date().toISOString();
-    if (!state.current.autoEndAt) state.current.autoEndAt = new Date(Date.now() + AUTO_END_MS).toISOString();
     try {
       const draft = rememberedDraft();
       if (draft && draft.identity !== draftIdentity(state.current)) localStorage.removeItem(DRAFT_KEY);
@@ -732,7 +691,6 @@
     render();
     window.scrollTo({ top: 0, behavior: 'smooth' });
     await save(visible ? '試合速報を開始・公開しました' : '試合速報を開始しました');
-    scheduleAutoEndWarning();
   }
 
   elements.start.addEventListener('click', async () => {
@@ -769,58 +727,53 @@
     }
   });
 
-  function lastGameTotal(values = [], tieBreaks = [], side = 'ours') {
-    return values.reduce((sum, value) => sum + (Number(value) || 0), 0) +
-      tieBreaks.reduce((sum, item) => sum + (Number(item?.[side]) || 0), 0);
-  }
-
-  function formatLastGameDate(game) {
-    const source = game?.completedAt || game?.startedAt || '';
-    if (!source) return '—';
-    const date = new Date(source);
-    if (Number.isNaN(date.getTime())) return '—';
-    return new Intl.DateTimeFormat('ja-JP', { year: 'numeric', month: 'numeric', day: 'numeric', weekday: 'short' }).format(date);
+  function formatLastGameDate(value) {
+    if (!value) return '—';
+    const d = new Date(value);
+    if (Number.isNaN(d.getTime())) return '—';
+    const days = ['日','月','火','水','木','金','土'];
+    return `${d.getFullYear()}/${d.getMonth()+1}/${d.getDate()}(${days[d.getDay()]})`;
   }
 
   function openLastGameModal() {
     const game = normalizeGame(state.lastGame);
-    if (!game || !elements.lastModal) return;
-    $('#liveScoreLastTournament').textContent = game.tournament || '—';
-    $('#liveScoreLastDate').textContent = formatLastGameDate(game);
-    $('#liveScoreLastGround').textContent = game.ground || '—';
-    $('#liveScoreLastStartTime').textContent = game.startTime || '—';
-    const lastGrade = String(game.grade || '').trim();
-    const gradeText = ({'1':'1年生','2':'2年生','3':'3年生','1年':'1年生','2年':'2年生','3年':'3年生','1年生':'1年生','2年生':'2年生','3年生':'3年生'})[lastGrade] || lastGrade || '—';
-    const lastGradeEl = $('#liveScoreLastGrade');
-    if (lastGradeEl) lastGradeEl.textContent = gradeText;
-
-    const extra = game.tieBreaks || [];
-    const innings = ['1','2','3','4','5','6','7', ...extra.map(() => 'TB')];
-    $('#liveScoreLastScoreHead').innerHTML = `<tr><th>チーム名</th>${innings.map(label => `<th>${label}</th>`).join('')}<th>計</th></tr>`;
-    const rows = [
-      { name: game.ourName || '八千代', scores: [...game.innings.ours, ...extra.map(x => x.ours)], total: lastGameTotal(game.innings.ours, extra, 'ours'), ours: true },
-      { name: game.opponent || '相手チーム', scores: [...game.innings.opponent, ...extra.map(x => x.opponent)], total: lastGameTotal(game.innings.opponent, extra, 'opponent'), ours: false },
-    ];
-    $('#liveScoreLastScoreBody').innerHTML = rows.map(row => `<tr class="${row.ours ? 'is-yachiyo' : ''}"><td>${escapeHtml(row.name)}</td>${row.scores.map(v => `<td>${v === '' ? '—' : escapeHtml(String(v))}</td>`).join('')}<td>${row.total}</td></tr>`).join('');
-    elements.lastModal.hidden = false;
-    document.body.style.overflow = 'hidden';
+    if (!game) return;
+    const modal = document.getElementById('lastGameModal');
+    if (!modal) return;
+    const put = (id, value) => { const el = document.getElementById(id); if (el) el.textContent = value || '—'; };
+    put('lastGameTournament', game.tournament);
+    put('lastGameDate', formatLastGameDate(game.completedAt));
+    put('lastGameGround', game.ground);
+    put('lastGameTime', game.startTime);
+    put('lastGameGrade', game.grade ? `${game.grade}年生` : '—');
+    const score = document.getElementById('lastGameScore');
+    if (score) {
+      score.innerHTML = '';
+      const cell = (text, cls='') => { const el=document.createElement('div'); el.className=`last-game-cell ${cls}`; el.textContent=text; score.appendChild(el); };
+      cell('チーム名','head team');
+      for(let i=1;i<=7;i++) cell(String(i),'head');
+      cell('計','head');
+      const total = side => game.innings[side].reduce((s,v)=>s+(Number(v)||0),0) + game.tieBreaks.reduce((s,v)=>s+(Number(v[side])||0),0);
+      const rows = game.battingOrder === 'first' ? [['ours',game.ourName],['opponent',game.opponent]] : [['opponent',game.opponent],['ours',game.ourName]];
+      rows.forEach(([side,name])=>{
+        cell(name || (side==='ours'?'八千代':'相手チーム'), `team ${side==='ours'?'ours':''}`);
+        game.innings[side].forEach(v=>cell(v===''?'—':String(v)));
+        cell(String(total(side)),'total');
+      });
+    }
+    modal.hidden = false;
+    modal.setAttribute('aria-hidden','false');
+    document.body.style.overflow='hidden';
   }
-
   function closeLastGameModal() {
-    if (!elements.lastModal) return;
-    elements.lastModal.hidden = true;
-    document.body.style.overflow = '';
+    const modal=document.getElementById('lastGameModal');
+    if (!modal) return;
+    modal.hidden=true; modal.setAttribute('aria-hidden','true'); document.body.style.overflow='';
   }
-
   elements.restore.addEventListener('click', openLastGameModal);
-  elements.lastClose?.addEventListener('click', closeLastGameModal);
-  elements.lastBack?.addEventListener('click', closeLastGameModal);
-  elements.lastModal?.addEventListener('click', event => {
-    if (event.target === elements.lastModal) closeLastGameModal();
-  });
-  document.addEventListener('keydown', event => {
-    if (event.key === 'Escape' && elements.lastModal && !elements.lastModal.hidden) closeLastGameModal();
-  });
+  document.getElementById('lastGameBack')?.addEventListener('click', closeLastGameModal);
+  document.getElementById('lastGameCloseX')?.addEventListener('click', closeLastGameModal);
+  document.querySelector('[data-last-game-close]')?.addEventListener('click', closeLastGameModal);
   function returnToTeam() {
     if (state.active && inputMode && !replayMode) return;
     const wasReplay = replayMode;
@@ -834,6 +787,11 @@
     if (wasReplay) load({ silent: true, force: true });
   }
   elements.back.addEventListener('click', returnToTeam);
+  window.addEventListener('pageshow', () => {
+    const modal=document.getElementById('lastGameModal');
+    if (modal) { modal.hidden=true; modal.setAttribute('aria-hidden','true'); document.body.style.overflow=''; }
+  });
+
 
   [elements.tournament, elements.startTime, elements.ground, elements.grade, elements.opponent]
     .forEach(input => input.addEventListener('input', () => {
@@ -941,7 +899,6 @@
         rememberDraft(state.current);
       }
       render();
-      scheduleAutoEndWarning();
     } catch (error) {
       if (!silent) {
         elements.idle.querySelector('p').textContent = '試合速報を読み込めませんでした。ページを更新してください。';

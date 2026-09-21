@@ -21,40 +21,7 @@
 })();
 </script>
 
-<style id="initial-paint-style">html{background:#071426}
-.live-score-idle{position:relative}
-.live-score-idle-head{display:flex;align-items:flex-start;justify-content:space-between;gap:12px;padding-right:170px}
-.live-score-idle-actions{display:block}
-.live-score-idle-actions .live-score-button.primary{width:100%}
-.live-score-last-link{appearance:none;position:absolute;top:34px;right:28px;border:1.5px solid #b98b2f;border-radius:999px;background:transparent;color:#d1a542;font-weight:800;font-size:13px;letter-spacing:.02em;padding:10px 14px;min-height:42px;cursor:pointer;white-space:nowrap}
-.live-score-last-link::before{content:"↶";display:inline-block;margin-right:7px;font-size:18px;line-height:1;vertical-align:-1px}
-.live-score-last-link[hidden]{display:none!important}
-@media(max-width:520px){.live-score-idle-head{padding-right:148px}.live-score-last-link{top:34px;right:14px;font-size:12px;padding:9px 11px}.live-score-last-link::before{font-size:16px;margin-right:5px}}
-.live-score-last-link[hidden]{display:none!important}
-.live-score-last-modal{position:fixed;inset:0;z-index:9999;background:rgba(2,12,28,.62);padding:18px;display:flex;align-items:center;justify-content:center}
-.live-score-last-modal[hidden]{display:none!important}
-.live-score-last-dialog{width:min(620px,100%);max-height:calc(100dvh - 36px);overflow:auto;background:#06172d;border:2px solid #c89b3c;border-radius:22px;color:#fff;padding:20px;box-shadow:0 18px 50px rgba(0,0,0,.28)}
-.live-score-last-head{display:flex;align-items:flex-start;justify-content:space-between;gap:14px;padding-bottom:14px;border-bottom:1px solid rgba(255,255,255,.18)}
-.live-score-last-head h3{margin:0;color:#e4b94f;font-size:clamp(23px,6vw,32px);line-height:1.15}
-.live-score-last-head p{margin:6px 0 0;color:#d7dde7;font-size:12px}
-.live-score-last-close{appearance:none;border:0;background:transparent;color:#fff;font-size:36px;line-height:1;width:44px;height:44px;padding:0;cursor:pointer;flex:0 0 44px}
-.live-score-last-meta{display:grid;grid-template-columns:1fr 1fr;gap:14px 18px;padding:16px 2px}
-.live-score-last-meta div{min-width:0}
-.live-score-last-meta span{display:block;color:#e4b94f;font-size:12px;font-weight:800;margin-bottom:4px}
-.live-score-last-meta strong{display:block;font-size:15px;line-height:1.35;overflow-wrap:anywhere}
-.live-score-last-time-grade{display:grid!important;grid-template-columns:1fr 1fr;gap:12px;align-items:start}.live-score-last-grade{display:inline-flex!important;width:auto!important;min-width:72px;justify-content:center;align-items:center;border:1px solid #7fb6ff;border-radius:999px;background:rgba(48,116,203,.45);padding:4px 12px;color:#fff}
-.live-score-last-score-wrap{overflow-x:auto;-webkit-overflow-scrolling:touch}
-.live-score-last-score{width:100%;min-width:500px;border-collapse:separate;border-spacing:0;border:1px solid rgba(255,255,255,.38);border-radius:12px;overflow:hidden;font-size:13px}
-.live-score-last-score th,.live-score-last-score td{padding:10px 8px;text-align:center;border-right:1px solid rgba(255,255,255,.28);border-bottom:1px solid rgba(255,255,255,.28)}
-.live-score-last-score th:last-child,.live-score-last-score td:last-child{border-right:0}.live-score-last-score tbody tr:last-child td{border-bottom:0}
-.live-score-last-score th{color:#f0d084;font-weight:800;background:rgba(255,255,255,.05)}
-.live-score-last-score th:first-child,.live-score-last-score td:first-child{min-width:104px;text-align:left;font-weight:800}
-.live-score-last-score td:last-child{color:#f0c95f;font-size:18px;font-weight:900}
-.live-score-last-score .is-yachiyo td:first-child{background:#c99b39;color:#fff}
-.live-score-last-back{display:block;width:min(360px,100%);min-height:48px;margin:18px auto 0;border:0;border-radius:14px;background:#e0ac38;color:#07172c;font-weight:900;font-size:16px;cursor:pointer}
-@media(max-width:520px){.live-score-last-dialog{padding:16px 14px;border-radius:18px}.live-score-last-meta{grid-template-columns:1fr 1fr;gap:12px}.live-score-last-score{min-width:470px}.live-score-last-score th,.live-score-last-score td{padding:9px 7px}}
-
-</style>
+<style id="initial-paint-style">html{background:#071426}</style>
 <link rel="preload" as="image" href="./official-logo-crisp-final.png" fetchpriority="high">
 <meta charset="utf-8">
 <meta name="author" content="tatsuki.saitoh">
@@ -775,12 +742,16 @@ html{scroll-padding-top:var(--compact-header-height)}
 }
 </style>
 <style id="live-score-focus-style">
-/* 試合速報の入力・閲覧中も、チーム専用ページ内の他カードを表示したままにする */
+body.live-score-focused .hero,
+body.live-score-focused .passkey-setup,
+body.live-score-focused footer,
+body.live-score-focused .wrap > .grid > :not(#liveScoreCard){display:none!important}
+body.live-score-focused .wrap > .grid{display:block!important}
 body.live-score-focused #liveScoreCard{width:100%;box-sizing:border-box}
+#liveScoreBack:disabled{background:#333d49!important;border-color:#647080!important;color:#9ca4ae!important;opacity:.65;cursor:not-allowed}
 </style>
 
 <style id="live-score-input-lock-style">
-.live-score-lock-panel[hidden]{display:none!important}
 .live-score-lock-panel{
   display:flex!important;
   align-items:center!important;
@@ -1164,37 +1135,27 @@ body.live-score-focused #liveScoreCard{width:100%;box-sizing:border-box}
             <div class="live-score-kicker">GAME速報</div>
             <h2 id="liveScoreTitle">試合速報</h2>
           </div>
-
+          <div class="live-score-restore-wrap" id="liveScoreRestoreWrap" hidden>
+            <button class="live-score-button live-score-history-button" id="liveScoreRestore" type="button"><span class="live-score-history-icon" aria-hidden="true">↶</span><span>直前の試合を見る</span><span aria-hidden="true">›</span></button>
+          </div>
+          <script>
+          (function(){
+            try{
+              const saved=localStorage.getItem('yachiyoLiveScoreLastGame');
+              if(saved){
+                const game=JSON.parse(saved);
+                if(game&&typeof game==='object'){
+                  const wrap=document.getElementById('liveScoreRestoreWrap');
+                  if(wrap)wrap.hidden=false;
+                }
+              }
+            }catch(e){}
+          })();
+          </script>
         </div>
         <p>試合開始後、得点を入力してチーム内へ速報を共有できます。</p>
         <div class="live-score-idle-actions">
-          <button class="live-score-button primary" id="liveScoreStart" type="button">試合速報を開始</button>
-          <button class="live-score-last-link" id="liveScoreRestore" type="button" hidden>直前の試合を見る ＞</button>
-        </div>
-
-        <div class="live-score-last-modal" id="liveScoreLastModal" hidden>
-          <div class="live-score-last-dialog" role="dialog" aria-modal="true" aria-labelledby="liveScoreLastTitle">
-            <div class="live-score-last-head">
-              <div>
-                <h3 id="liveScoreLastTitle">直前の試合結果</h3>
-                <p>最新の1試合を表示しています。</p>
-              </div>
-              <button class="live-score-last-close" id="liveScoreLastClose" type="button" aria-label="閉じる">×</button>
-            </div>
-            <div class="live-score-last-meta">
-              <div><span>大会名</span><strong id="liveScoreLastTournament">—</strong></div>
-              <div><span>試合日</span><strong id="liveScoreLastDate">—</strong></div>
-              <div><span>グラウンド名</span><strong id="liveScoreLastGround">—</strong></div>
-              <div class="live-score-last-time-grade"><div><span>開始時間</span><strong id="liveScoreLastStartTime">—</strong></div><div><span>学年</span><strong id="liveScoreLastGrade" class="live-score-last-grade">—</strong></div></div>
-            </div>
-            <div class="live-score-last-score-wrap">
-              <table class="live-score-last-score" aria-label="直前の試合スコア">
-                <thead id="liveScoreLastScoreHead"></thead>
-                <tbody id="liveScoreLastScoreBody"></tbody>
-              </table>
-            </div>
-            <button class="live-score-last-back" id="liveScoreLastBack" type="button">戻る</button>
-          </div>
+          <button class="live-score-button primary" id="liveScoreStart" type="button" >試合速報を開始</button>
         </div>
         
         <div class="live-score-start-modal" id="liveScoreStartModal" hidden>
@@ -1989,6 +1950,27 @@ body.photo-admin-on #accessPasswordChange{
   });
 })();
 </script>
+
+<div class="last-game-modal" id="lastGameModal" hidden aria-hidden="true">
+  <div class="last-game-backdrop" data-last-game-close></div>
+  <section class="last-game-dialog" role="dialog" aria-modal="true" aria-labelledby="lastGameTitle">
+    <button class="last-game-x" id="lastGameCloseX" type="button" aria-label="閉じる">×</button>
+    <h2 id="lastGameTitle">直前の試合結果</h2>
+    <p class="last-game-note">最新の1試合を表示しています。</p>
+    <div class="last-game-info">
+      <div><b>大会名</b><span id="lastGameTournament"></span></div>
+      <div><b>試合日</b><span id="lastGameDate"></span></div>
+      <div><b>グラウンド名</b><span id="lastGameGround"></span></div>
+      <div class="last-game-timegrade"><div><b>開始時間</b><span id="lastGameTime"></span></div><div><b>学年</b><span class="last-game-grade" id="lastGameGrade"></span></div></div>
+    </div>
+    <div class="last-game-score-scroll"><div class="last-game-score" id="lastGameScore"></div></div>
+    <button class="last-game-back" id="lastGameBack" type="button">戻る</button>
+  </section>
+</div>
+<style id="last-game-modal-style">
+.live-score-history-button{display:inline-flex!important;align-items:center!important;gap:7px!important;white-space:nowrap!important}.live-score-history-icon{font-size:20px;line-height:1}.last-game-modal[hidden]{display:none!important}.last-game-modal{position:fixed;inset:0;z-index:99999;display:flex;align-items:center;justify-content:center;padding:18px}.last-game-backdrop{position:absolute;inset:0;background:rgba(3,14,30,.66)}.last-game-dialog{position:relative;width:min(620px,100%);max-height:88vh;overflow:auto;background:#07182d;color:#fff;border:2px solid #c89b38;border-radius:22px;padding:24px;box-shadow:0 18px 55px rgba(0,0,0,.35)}.last-game-dialog h2{margin:0 48px 2px 0;color:#e0b54f;font-size:clamp(26px,6vw,38px)}.last-game-note{margin:0 0 16px;color:#d7dce6;font-weight:700}.last-game-x{position:absolute;right:17px;top:12px;border:0;background:none;color:#fff;font-size:42px;line-height:1;cursor:pointer}.last-game-info{display:grid;grid-template-columns:1fr 1fr;gap:13px 28px;border-top:1px solid #516074;padding-top:16px}.last-game-info>div,.last-game-timegrade>div{min-width:0}.last-game-info b{display:block;color:#e0b54f;font-size:14px;margin-bottom:3px}.last-game-info span{display:block;font-size:19px;font-weight:800;overflow-wrap:anywhere}.last-game-timegrade{display:grid!important;grid-template-columns:1fr 1fr;gap:15px}.last-game-grade{border:1.5px solid #71a9ff;border-radius:999px;background:#204f88;text-align:center;padding:3px 10px;width:max-content;min-width:72px}.last-game-score-scroll{overflow-x:auto;margin-top:18px}.last-game-score{display:grid;min-width:0;grid-template-columns:minmax(86px,1.7fr) repeat(7,minmax(27px,.55fr)) minmax(38px,.7fr);border:1px solid #75849a;border-radius:12px;overflow:hidden}.last-game-cell{min-height:48px;font-size:13px;display:flex;align-items:center;justify-content:center;border-right:1px solid #75849a;border-bottom:1px solid #75849a;font-weight:800}.last-game-cell:nth-child(9n){border-right:0}.last-game-cell.head{color:#f0cc75;background:#11283f}.last-game-cell.team{justify-content:flex-start;padding:0 14px}.last-game-cell.ours{background:#c89b38;color:#fff}.last-game-cell.total{color:#f0c95f;font-size:22px}.last-game-back{display:block;width:min(430px,100%);margin:20px auto 0;border:0;border-radius:14px;background:linear-gradient(90deg,#d9a62f,#f1cb69);color:#07182d;font-weight:900;font-size:18px;padding:14px;cursor:pointer}@media(max-width:560px){.last-game-dialog{padding:20px 14px 16px;border-radius:18px}.last-game-info{grid-template-columns:1fr 1fr;gap:12px 14px}.last-game-info span{font-size:15px}.last-game-timegrade{gap:8px}.last-game-score{min-width:0}.last-game-cell{font-size:11px}.last-game-cell.team{padding:0 7px}.last-game-cell.total{font-size:18px}.live-score-history-button{font-size:12px!important;padding:9px 11px!important}}
+</style>
+
 </body>
 </html>
 <style id="live-score-grade-ground-final-fix">
