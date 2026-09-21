@@ -71,7 +71,18 @@
   async function register(accessValue, label = "") {
     if (!supported()) throw new Error("この端末は生体認証に対応していません。");
     const start = await request({ action: "registration-options" }, accessValue);
-    const credential = await navigator.credentials.create({ publicKey: creationOptions(start.options) });
+    let credential;
+    try {
+      credential = await navigator.credentials.create({ publicKey: creationOptions(start.options) });
+    } catch (error) {
+      // Safari/iPhone returns InvalidStateError when this credential is already
+      // registered on the device. Treat it as already registered instead of
+      // showing the browser's raw error.
+      if (error?.name === "InvalidStateError" || /invalid state/i.test(error?.message || "")) {
+        return { ok: true, existing: true };
+      }
+      throw error;
+    }
     if (!credential) throw new Error("生体認証の登録がキャンセルされました。");
     return request({
       action: "registration-verify", ceremonyID: start.ceremonyID,
