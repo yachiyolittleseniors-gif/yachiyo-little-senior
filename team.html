@@ -1162,6 +1162,41 @@ body.staff-editing .graduate-admin{display:block}
 }
 </style>
 
+<style id="major-achievements-style">
+/* Major tournament achievements: hidden publicly until at least one record exists */
+.major-achievements{display:none;margin-top:24px}
+.major-achievements.is-visible{display:block}
+.major-achievements-head{padding:24px 26px 18px;border-bottom:1px solid #e3e0d8}
+.major-achievements-head .eyebrow{color:#9a7628;font-size:12px;font-weight:900;letter-spacing:.16em}
+.major-achievements-head h2{margin:5px 0 0;color:#0b1b31;font-size:24px}
+.major-achievements-list{padding:6px 26px 18px}
+.major-achievement-row{display:grid;grid-template-columns:90px 1fr auto;gap:14px;align-items:center;padding:16px 0;border-bottom:1px solid #ece8df}
+.major-achievement-row:last-child{border-bottom:0}
+.major-achievement-year{color:#9a7628;font-size:18px;font-weight:900}
+.major-achievement-name{color:#172233;font-weight:800;line-height:1.5}
+.major-achievement-result{color:#56616e;font-size:14px;font-weight:700;text-align:right}
+.major-achievements-admin{display:none;padding:18px 26px 24px;border-top:1px solid #ddd5c5}
+body.staff-editing .major-achievements{display:block}
+body.staff-editing .major-achievements-admin{display:block}
+.major-achievements-empty{display:none;padding:22px 0;color:#6d7783;text-align:center;font-size:14px}
+body.staff-editing .major-achievements:not(.is-visible) .major-achievements-empty{display:block}
+.major-achievement-edit-row{display:grid;grid-template-columns:100px 1.4fr 1fr auto;gap:8px;margin-bottom:10px}
+.major-achievement-edit-row input{min-width:0;padding:11px 10px;border:1px solid #cfd5dc;border-radius:6px;background:#fff;color:#172233;font:inherit}
+.major-achievement-delete{border:1px solid #d9b7bb;border-radius:6px;background:#fff;color:#9d2633;font-weight:800;padding:0 12px}
+.major-achievements-admin-actions{display:flex;justify-content:flex-end;gap:9px;flex-wrap:wrap;margin-top:14px}
+.major-achievements-admin-actions button{min-height:44px;padding:0 18px;border-radius:6px;font-weight:900;cursor:pointer}
+.major-achievement-add,.major-achievement-save{border:1px solid #071426;background:#071426;color:#fff}
+.major-achievement-cancel{border:1px solid #bdc4cc;background:#fff;color:#4b5662}
+@media(max-width:650px){
+ .major-achievements-head{padding:20px 18px 15px}.major-achievements-head h2{font-size:21px}
+ .major-achievements-list{padding:4px 18px 14px}
+ .major-achievement-row{grid-template-columns:70px 1fr;gap:6px 10px;padding:14px 0}
+ .major-achievement-result{grid-column:2;text-align:left;font-size:13px}
+ .major-achievements-admin{padding:16px 18px 20px}
+ .major-achievement-edit-row{grid-template-columns:82px 1fr}.major-achievement-edit-row input:nth-child(3){grid-column:1 / -1}.major-achievement-delete{min-height:40px}
+ .major-achievements-admin-actions{display:grid;grid-template-columns:1fr 1fr}.major-achievements-admin-actions .major-achievement-add{grid-column:1 / -1}.major-achievements-admin-actions button{width:100%}
+}
+</style>
 <style id="graduate-heading-unified">
 #graduatePaths.graduate-paths{
   padding:0 !important;
@@ -1504,6 +1539,24 @@ html{scroll-padding-top:var(--fixed-header-height)}
 </div>
 </div>
 </div>
+
+<div class="card major-achievements" id="majorAchievements">
+  <header class="major-achievements-head">
+    <div class="eyebrow">MAJOR ACHIEVEMENTS</div>
+    <h2>主な大会実績</h2>
+  </header>
+  <div class="major-achievements-list" id="majorAchievementsList"></div>
+  <div class="major-achievements-empty" id="majorAchievementsEmpty">現在、掲載中の大会実績はありません。</div>
+  <div class="major-achievements-admin" id="majorAchievementsAdmin">
+    <div id="majorAchievementsEditor"></div>
+    <div class="major-achievements-admin-actions">
+      <button class="major-achievement-add" id="majorAchievementAdd" type="button">＋ 実績を追加</button>
+      <button class="major-achievement-cancel" id="majorAchievementCancel" type="button">キャンセル</button>
+      <button class="major-achievement-save" id="majorAchievementSave" type="button">大会実績を保存</button>
+    </div>
+  </div>
+</div>
+
 <div class="card graduate-paths" id="graduatePaths">
 <header class="graduate-paths-head">
 <div class="eyebrow">AFTER GRADUATION</div>
@@ -1856,6 +1909,56 @@ function openProtectedArea(type){
 </script>
 
 
+\n<script>
+(function(){
+  const API='/.netlify/functions/site-data?section=major-achievements';
+  const card=document.getElementById('majorAchievements');
+  const list=document.getElementById('majorAchievementsList');
+  const editor=document.getElementById('majorAchievementsEditor');
+  if(!card||!list||!editor) return;
+  let items=[];
+  const esc=value=>String(value??'').replace(/[&<>\"']/g,ch=>({'&':'&amp;','<':'&lt;','>':'&gt;','\"':'&quot;',"'":'&#39;'}[ch]));
+  const cleanItem=x=>({year:String(x?.year||'').trim().slice(0,12),name:String(x?.name||'').trim().slice(0,120),result:String(x?.result||'').trim().slice(0,80)});
+  const sortItems=arr=>arr.slice().sort((a,b)=>{
+    const ay=parseInt(String(a.year).match(/\\d{4}/)?.[0]||'0',10), by=parseInt(String(b.year).match(/\\d{4}/)?.[0]||'0',10);
+    return by-ay || String(b.year).localeCompare(String(a.year),'ja');
+  });
+  function render(){
+    const visible=sortItems(items.filter(x=>x.year&&x.name));
+    card.classList.toggle('is-visible',visible.length>0);
+    list.innerHTML=visible.map(x=>`<div class="major-achievement-row"><div class="major-achievement-year">${esc(x.year)}</div><div class="major-achievement-name">${esc(x.name)}</div><div class="major-achievement-result">${esc(x.result)}</div></div>`).join('');
+  }
+  function renderEditor(){
+    editor.innerHTML=items.map((x,i)=>`<div class="major-achievement-edit-row"><input data-i="${i}" data-k="year" value="${esc(x.year)}" maxlength="12" inputmode="numeric" placeholder="年度"><input data-i="${i}" data-k="name" value="${esc(x.name)}" maxlength="120" placeholder="大会名"><input data-i="${i}" data-k="result" value="${esc(x.result)}" maxlength="80" placeholder="結果（出場・優勝など）"><button class="major-achievement-delete" type="button" data-del="${i}">削除</button></div>`).join('');
+  }
+  async function load(){
+    try{
+      const r=await fetch(API,{cache:'no-store'});
+      if(r.ok){const j=await r.json();items=Array.isArray(j.data)?j.data.map(cleanItem).filter(x=>x.year||x.name||x.result):[];}
+    }catch(e){}
+    render(); renderEditor();
+  }
+  document.getElementById('majorAchievementAdd').addEventListener('click',()=>{items.unshift({year:'',name:'',result:''});renderEditor();const first=editor.querySelector('input');if(first)first.focus();});
+  editor.addEventListener('input',e=>{const k=e.target.dataset.k;if(!k)return;items[Number(e.target.dataset.i)][k]=e.target.value;});
+  editor.addEventListener('click',e=>{const b=e.target.closest('[data-del]');if(!b)return;items.splice(Number(b.dataset.del),1);renderEditor();});
+  document.getElementById('majorAchievementCancel').addEventListener('click',()=>{load();document.body.classList.remove('staff-editing');});
+  document.getElementById('majorAchievementSave').addEventListener('click',async()=>{
+    const p=sessionStorage.getItem('yachiyoAdminPassword')||'';
+    if(!p){alert('管理者認証をやり直してください。');return;}
+    const clean=sortItems(items.map(cleanItem).filter(x=>x.year&&x.name));
+    try{
+      const r=await fetch(API,{method:'POST',headers:{'content-type':'application/json','x-admin-password':p},body:JSON.stringify({data:clean})});
+      if(r.status===429){alert('試行回数の上限です。15分後に再度お試しください。');return;}
+      if(r.status===401){alert('管理者パスワードが違います。');return;}
+      if(!r.ok){alert('大会実績を保存できませんでした。');return;}
+      items=clean;render();renderEditor();showSaveNotice('保存しました');
+    }catch(e){alert('大会実績を保存できませんでした。');}
+  });
+  const observer=new MutationObserver(()=>{if(document.body.classList.contains('staff-editing'))renderEditor();});
+  observer.observe(document.body,{attributes:true,attributeFilter:['class']});
+  load();
+})();
+</script>\n
 <script>
 (function(){
   const API='/.netlify/functions/site-data?section=graduate-paths';
