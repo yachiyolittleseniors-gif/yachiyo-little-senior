@@ -3635,7 +3635,7 @@ body.photo-admin-on .recruit-mode-admin{display:block}
 </div>
 <div class="recruit-open-kicker">JOIN OUR TEAM</div>
 <h2>選手募集中</h2>
-<p class="recruit-open-year">2027年度の新入部員の募集を開始しました。</p>
+<p class="recruit-open-year" id="recruitOpenYear">2027年度の新入部員の募集を開始しました。</p>
 <div class="recruit-open-grid">
 <div><b>対象</b><span>中学生・卒業前の小学6年生</span></div>
 <div><b>経験</b><span>経験・体格・性別不問</span></div>
@@ -5204,6 +5204,20 @@ body.photo-admin-on #accessPasswordChange{
 }
 @media(prefers-reduced-motion:reduce){.seniorcup-star{animation:none!important;display:none!important}}
 </style>
+<script id="recruit-year-auto-update">
+(function(){
+  function updateRecruitYear(){
+    var el=document.getElementById('recruitOpenYear');
+    if(!el)return;
+    var now=new Date();
+    var recruitYear=now.getFullYear()+(now.getMonth()>=8?1:0);
+    el.textContent=recruitYear+'年度の新入部員の募集を開始しました。';
+  }
+  if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',updateRecruitYear);
+  else updateRecruitYear();
+})();
+</script>
+
 <script id="seniorcup-star-stream-script">
 document.addEventListener('DOMContentLoaded',function(){
   document.querySelectorAll('.seniorcup-home-link').forEach(function(card){
