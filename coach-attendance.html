@@ -204,35 +204,19 @@ body{padding-top:var(--fixed-header-height)!important}
 }
 </style>
 <style id="coach-attendance-polish">.name-col{min-width:148px}@media(max-width:700px){.name-col{min-width:136px}}</style>
-<script src="./coach-passkey.js?v=20260921-2148"></script>
+<script src="./coach-passkey.js?v=20260921-2205"></script>
 <script>
 document.documentElement.style.visibility='hidden';
 window.coachAccessReady=(async function(){
   const API='/.netlify/functions/coach-attendance-data';
   const storageKey='yachiyoCoachAttendancePass';
-  const reloadKey='yachiyoCoachAttendanceReloadPass';
-  const reloadExpiryKey='yachiyoCoachAttendanceReloadPassExpires';
   const passkeyKey='yachiyoCoachPasskeyRegistered';
-  const reloadLifetime=12*60*60*1000;
 
   function remember(value){
     try{sessionStorage.setItem(storageKey,value)}catch(e){}
-    try{localStorage.setItem(reloadKey,value);localStorage.setItem(reloadExpiryKey,String(Date.now()+reloadLifetime))}catch(e){}
-  }
-  function readSaved(){
-    try{const current=sessionStorage.getItem(storageKey)||'';if(current)return current}catch(e){}
-    const entry=performance.getEntriesByType&&performance.getEntriesByType('navigation')[0];
-    if(!entry||entry.type!=='reload')return '';
-    try{
-      const expires=Number(localStorage.getItem(reloadExpiryKey)||0);
-      if(expires>Date.now())return localStorage.getItem(reloadKey)||'';
-      localStorage.removeItem(reloadKey);localStorage.removeItem(reloadExpiryKey);
-    }catch(e){}
-    return '';
   }
   function forget(){
     try{sessionStorage.removeItem(storageKey)}catch(e){}
-    try{localStorage.removeItem(reloadKey);localStorage.removeItem(reloadExpiryKey)}catch(e){}
   }
   async function verify(value){
     if(!value)return false;
@@ -265,11 +249,8 @@ window.coachAccessReady=(async function(){
       return false;
     }
   }
-  const saved=readSaved();
-  if(saved&&await verify(saved)){
-    document.documentElement.style.visibility='';
-    return true;
-  }
+  // 指導者出欠確認はページを開くたびに必ず再認証する。
+  // 前回の認証トークンは引き継がず、生体認証またはパスワードで認証する。
   forget();
   if(await verifyPasskey()){
     document.documentElement.style.visibility='';
@@ -291,6 +272,14 @@ window.coachAccessReady=(async function(){
   return false;
 })();
 </script>
+<script id="coach-auth-exit-clear">
+document.addEventListener('DOMContentLoaded',()=>{
+  const back=document.querySelector('.team-board-return');
+  if(back) back.addEventListener('click',()=>{
+    try{sessionStorage.removeItem('yachiyoCoachAttendancePass')}catch(e){}
+  });
+});
+</script>
 <style id="team-board-return-style">
 .event-form[hidden]{display:none!important}.team-board-return-row{display:flex;justify-content:flex-start;margin:0 0 14px}.team-board-return{display:inline-flex;align-items:center;min-height:40px;padding:9px 14px;border:1px solid var(--gold);border-radius:999px;background:#fff;color:#765718;font-size:12px;font-weight:800}@media(max-width:600px){.team-board-return{min-height:38px;padding:8px 12px;font-size:11px}}
 </style>
@@ -307,6 +296,13 @@ window.coachAccessReady=(async function(){
 .coach-passkey-button{flex:0 0 auto;min-height:42px;padding:0 15px;border:1px solid #b58a31;border-radius:9px;background:#071426;color:#fff;font-weight:900;cursor:pointer}
 .coach-passkey-button:disabled{cursor:wait;opacity:.6}
 @media(max-width:640px){.coach-passkey-setup.is-registered.is-collapsed{margin-top:-8px}.coach-passkey-summary{padding:8px 2px 10px;font-size:15px}.coach-passkey-details{align-items:stretch;flex-direction:column}.coach-passkey-button{width:100%}}
+</style>
+
+<style id="compact-report-title-fix">
+.report-launch-title{display:flex;align-items:center;justify-content:space-between;gap:12px}
+.report-launch-title h2{margin:0}
+.report-launch-title .sync{margin-left:auto;white-space:nowrap;font-size:12px;color:#7b8491;font-weight:700}
+@media(max-width:520px){.report-launch-title .sync{font-size:11px}}
 </style>
 </head><body id="page-top">
 <header class="header">
@@ -354,9 +350,8 @@ window.coachAccessReady=(async function(){
 
   <div id="attendanceView">
     <div class="notice"><b>回答方法：</b>左の自分の名前をタップしてから、○×を編集してください。選択した本人の行だけ編集できます。<br><b>コメント入力：</b>名前を選択すると回答表の下に入力欄が表示されます。対象日と内容を入力し、「コメントを追加」を押してください。<br><span style="color:#6f7884">※名前はチーム紹介ページの指導者一覧から自動反映されます。</span></div>
-    <div class="toolbar"><div class="legend"><span>○ 参加</span><span>× 不参加</span><span>・ 未入力</span></div><span class="sync" id="syncText"></span></div>
     <section class="report-launch" id="reportLaunch">
-      <h2>出席一覧の出力</h2>
+      <div class="report-launch-title"><h2>出席一覧の出力</h2><span class="sync" id="syncText"></span></div>
       <div class="report-launch-grid">
         <label>日程を選択<select id="reportEventSelect" aria-label="出力する日程"></select></label>
         <button id="openReportBtn" type="button">指導者出席一覧を出力</button>
