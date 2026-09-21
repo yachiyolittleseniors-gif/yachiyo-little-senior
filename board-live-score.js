@@ -12,6 +12,10 @@
   const root = $('#liveScoreCard');
   if (!root) return;
 
+  function escapeHtml(value) {
+    return String(value ?? '').replace(/[&<>"']/g, char => ({ '&':'&amp;', '<':'&lt;', '>':'&gt;', '"':'&quot;', "'":'&#39;' }[char]));
+  }
+
   const blankGame = () => ({
     tournament: '',
     startTime: '',
@@ -303,7 +307,9 @@
     editor: $('#liveScoreEditor'),
     start: $('#liveScoreStart'),
     restore: $('#liveScoreRestore'),
-    restoreWrap: $('#liveScoreRestoreWrap'),
+    lastModal: $('#liveScoreLastModal'),
+    lastClose: $('#liveScoreLastClose'),
+    lastBack: $('#liveScoreLastBack'),
     tournament: $('#liveScoreTournament'),
     startTime: $('#liveScoreStartTime'),
     ground: $('#liveScoreGround'),
@@ -590,8 +596,7 @@
     elements.idle.hidden = showingEditor && !editorCollapsed;
     elements.editor.hidden = !showingEditor || editorCollapsed;
     elements.start.textContent = state.active ? '試合速報に戻る' : '試合速報を開始';
-    if (elements.restoreWrap) elements.restoreWrap.hidden = true;
-    if (elements.restore) elements.restore.hidden = showingEditor || !state.lastGame;
+    elements.restore.hidden = showingEditor || !state.lastGame;
     root.classList.toggle('is-replay', replayMode);
     if (!showingEditor || !state.current) return;
     syncFields();
@@ -764,15 +769,57 @@
     }
   });
 
-  elements.restore.addEventListener('click', () => {
-    if (!state.lastGame) return;
-    beforeReplay = { ...state, current: normalizeGame(state.current) };
-    inputMode = false;
-    replayMode = true;
-    editorCollapsed = false;
-    state.current = normalizeGame(state.lastGame);
-    render();
-    // 直前の試合はこの端末だけの一時ポップアップ。表示状態は共有しない。
+  function lastGameTotal(values = [], tieBreaks = [], side = 'ours') {
+    return values.reduce((sum, value) => sum + (Number(value) || 0), 0) +
+      tieBreaks.reduce((sum, item) => sum + (Number(item?.[side]) || 0), 0);
+  }
+
+  function formatLastGameDate(game) {
+    const source = game?.completedAt || game?.startedAt || '';
+    if (!source) return '—';
+    const date = new Date(source);
+    if (Number.isNaN(date.getTime())) return '—';
+    return new Intl.DateTimeFormat('ja-JP', { year: 'numeric', month: 'numeric', day: 'numeric', weekday: 'short' }).format(date);
+  }
+
+  function openLastGameModal() {
+    const game = normalizeGame(state.lastGame);
+    if (!game || !elements.lastModal) return;
+    $('#liveScoreLastTournament').textContent = game.tournament || '—';
+    $('#liveScoreLastDate').textContent = formatLastGameDate(game);
+    $('#liveScoreLastGround').textContent = game.ground || '—';
+    $('#liveScoreLastStartTime').textContent = game.startTime || '—';
+    const lastGrade = String(game.grade || '').trim();
+    const gradeText = ({'1':'1年生','2':'2年生','3':'3年生','1年':'1年生','2年':'2年生','3年':'3年生','1年生':'1年生','2年生':'2年生','3年生':'3年生'})[lastGrade] || lastGrade || '—';
+    const lastGradeEl = $('#liveScoreLastGrade');
+    if (lastGradeEl) lastGradeEl.textContent = gradeText;
+
+    const extra = game.tieBreaks || [];
+    const innings = ['1','2','3','4','5','6','7', ...extra.map(() => 'TB')];
+    $('#liveScoreLastScoreHead').innerHTML = `<tr><th>チーム名</th>${innings.map(label => `<th>${label}</th>`).join('')}<th>計</th></tr>`;
+    const rows = [
+      { name: game.ourName || '八千代', scores: [...game.innings.ours, ...extra.map(x => x.ours)], total: lastGameTotal(game.innings.ours, extra, 'ours'), ours: true },
+      { name: game.opponent || '相手チーム', scores: [...game.innings.opponent, ...extra.map(x => x.opponent)], total: lastGameTotal(game.innings.opponent, extra, 'opponent'), ours: false },
+    ];
+    $('#liveScoreLastScoreBody').innerHTML = rows.map(row => `<tr class="${row.ours ? 'is-yachiyo' : ''}"><td>${escapeHtml(row.name)}</td>${row.scores.map(v => `<td>${v === '' ? '—' : escapeHtml(String(v))}</td>`).join('')}<td>${row.total}</td></tr>`).join('');
+    elements.lastModal.hidden = false;
+    document.body.style.overflow = 'hidden';
+  }
+
+  function closeLastGameModal() {
+    if (!elements.lastModal) return;
+    elements.lastModal.hidden = true;
+    document.body.style.overflow = '';
+  }
+
+  elements.restore.addEventListener('click', openLastGameModal);
+  elements.lastClose?.addEventListener('click', closeLastGameModal);
+  elements.lastBack?.addEventListener('click', closeLastGameModal);
+  elements.lastModal?.addEventListener('click', event => {
+    if (event.target === elements.lastModal) closeLastGameModal();
+  });
+  document.addEventListener('keydown', event => {
+    if (event.key === 'Escape' && elements.lastModal && !elements.lastModal.hidden) closeLastGameModal();
   });
   function returnToTeam() {
     if (state.active && inputMode && !replayMode) return;
@@ -787,13 +834,6 @@
     if (wasReplay) load({ silent: true, force: true });
   }
   elements.back.addEventListener('click', returnToTeam);
-  root.addEventListener('click', (event) => {
-    if (!replayMode) return;
-    if (event.target === root) returnToTeam();
-  });
-  document.addEventListener('keydown', (event) => {
-    if (event.key === 'Escape' && replayMode) returnToTeam();
-  });
 
   [elements.tournament, elements.startTime, elements.ground, elements.grade, elements.opponent]
     .forEach(input => input.addEventListener('input', () => {
