@@ -1200,15 +1200,15 @@ function gradeLifecycle(game){
   const normalized=original.replace(/[１２３]/g,ch=>String('１２３'.indexOf(ch)+1));
   const match=normalized.match(/[1-3]/);
   if(!match)return {visible:true,label:original,period:''};
-  const baseGrade=Number(match[0]);
-  const baseYear=Number(game.gradeYear)||LEGACY_GRADE_BASE_YEAR;
-  const effectiveGrade=baseGrade+Math.max(0,currentJapanYear()-baseYear);
-  // 2026年度の3年生=44期を基準に、同じ選手の期は学年が上がっても固定する。
-  const graduationYear=baseYear+(3-baseGrade);
+  const grade=Number(match[0]);
+  // 試合結果は当時の記録として保存するため、年度が変わっても学年を繰り上げたり非表示にしない。
+  const playedYear=Number(game.gradeYear)||Number(gameYear(game))||LEGACY_GRADE_BASE_YEAR;
+  // 2026年度の3年生=44期を基準に、試合当時の年度・学年から期を算出する。
+  const graduationYear=playedYear+(3-grade);
   const period=graduationYear-1982;
   return {
-    visible:effectiveGrade<=3,
-    label:effectiveGrade<=3?effectiveGrade+'年生':'',
+    visible:true,
+    label:grade+'年生',
     period:period>0?period+'期':''
   };
 }
