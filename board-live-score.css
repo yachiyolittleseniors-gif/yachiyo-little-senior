@@ -154,3 +154,13 @@
 }
 
 .live-score-viewers{width:100%;text-align:right;color:#d7dee9;font-size:11px;font-weight:800;white-space:nowrap;margin-top:2px}.live-score-viewers strong{color:#e4b341;font-size:12px}
+
+/* 2026-09-22 mobile: keep the live score title on one line */
+@media(max-width:700px){
+  .live-score-head > div:first-child,
+  .live-score-idle-head > div:first-child{flex:0 0 auto;min-width:max-content;}
+  .live-score-card h2,
+  .live-score-head h2{white-space:nowrap!important;word-break:keep-all!important;overflow-wrap:normal!important;font-size:26px!important;line-height:1.08!important;}
+  .live-score-head{gap:8px!important;}
+  .live-score-badges{min-width:0!important;}
+}
