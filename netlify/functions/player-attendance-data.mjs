@@ -742,12 +742,36 @@ export default async (request, context) => {
       return json({ ok: true, data });
     }
 
+    if (action === "escort") {
+      const memberId = String(body.memberId || "");
+      const eventDate = /^\d{4}-\d{2}-\d{2}$/.test(String(body.eventDate || "")) ? String(body.eventDate) : "";
+      const escortGrade = ["2","3"].includes(String(body.escortGrade || "")) ? String(body.escortGrade) : "";
+      if (!memberId || !eventDate) return json({ error: "Missing escort setting" }, 400);
+      const member = data.members.find(m => String(m.id) === memberId);
+      if (!member) return json({ error: "Member not found" }, 404);
+      const memberGrade = String(member.grades?.[0] || "");
+      const allowed = memberGrade === "1" ? ["2","3"] : memberGrade === "2" ? ["3"] : [];
+      if (escortGrade && !allowed.includes(escortGrade)) return json({ error: "Invalid escort grade" }, 400);
+      const state = await loadMemberState(store, data, memberId);
+      state.comments = state.comments.filter(c => !(c.escortSetting === true && String(c.eventDate || "") === eventDate));
+      if (escortGrade) state.comments.push({
+        id: `escort_${Date.now().toString(36)}_${Math.random().toString(36).slice(2,8)}`,
+        memberId, text: "", eventDate, upperGrade: true, escortGrade, escortSetting: true,
+        updatedAt: new Date().toISOString(), source: "site",
+      });
+      state.updatedAt = new Date().toISOString();
+      await store.setJSON(memberStateKey(memberId), state);
+      applyMemberState(data, memberId, state);
+      return json({ ok: true, data });
+    }
+
     if (action === "comment") {
       const memberId = String(body.memberId || "");
       const text = String(body.text || "").trim();
       const eventDate = /^\d{4}-\d{2}-\d{2}$/.test(String(body.eventDate || "")) ? String(body.eventDate) : "";
-      const upperGrade = false;
-      if (!memberId || !text || !eventDate) return json({ error: "Missing comment" }, 400);
+      const escortGrade = ['2','3'].includes(String(body.escortGrade || '')) ? String(body.escortGrade) : '';
+      const upperGrade = !!escortGrade;
+      if (!memberId || (!text && !escortGrade) || !eventDate) return json({ error: "Missing comment" }, 400);
       if (text.length > 500) return json({ error: "Comment too long" }, 400);
       const memberExists = data.members.some(m => String(m.id) === memberId);
       if (!memberExists) return json({ error: "Member not found" }, 404);
@@ -757,6 +781,7 @@ export default async (request, context) => {
         text,
         eventDate,
         upperGrade,
+        escortGrade,
         updatedAt: new Date().toISOString(),
         source: "site",
       };
