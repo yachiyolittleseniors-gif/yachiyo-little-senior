@@ -3548,8 +3548,15 @@ body.photo-admin-on .recruit-mode-admin{display:block}
 }
 </style>
 <style id="ios-logo-save-style">
-/* iPhone / iPad: allow long-press context menu on the header logo */
-.header .official-brand-wrap,
+/* iOS: keep surrounding header text unselectable, but preserve the native image long-press callout. */
+.header .brand{
+  -webkit-user-select:none!important;
+  user-select:none!important;
+}
+.header .official-brand-wrap{
+  -webkit-user-select:none!important;
+  user-select:none!important;
+}
 .header .official-brand-img{
   -webkit-touch-callout:default!important;
   -webkit-user-select:auto!important;
@@ -3558,42 +3565,12 @@ body.photo-admin-on .recruit-mode-admin{display:block}
 }
 </style>
 <meta name="robots" content="index,follow,max-image-preview:large,max-snippet:-1,max-video-preview:-1">
-
-<style id="ios-logo-longpress-fix">
-/* Keep the long-press target exactly on the visible header logo. */
-.header .brand{
-  -webkit-user-select:none!important;
-  user-select:none!important;
-  -webkit-touch-callout:none!important;
-}
-.header .official-brand-wrap{
-  width:fit-content!important;
-  max-width:72vw!important;
-  flex:0 0 auto!important;
-  -webkit-user-select:none!important;
-  user-select:none!important;
-  -webkit-touch-callout:none!important;
-}
-.header .official-brand-img{
-  width:auto!important;
-  max-width:72vw!important;
-  height:62px!important;
-  max-height:62px!important;
-  object-fit:contain!important;
-  -webkit-user-select:none!important;
-  user-select:none!important;
-  -webkit-touch-callout:default!important;
-  pointer-events:auto!important;
-}
-@media(max-width:900px){.header .official-brand-img{height:52px!important;max-height:52px!important}}
-@media(max-width:600px){.header .official-brand-img{height:50px!important;max-height:50px!important}}
-</style>
 </head>
 <body id="page-top">
 <header class="header">
 <nav class="nav">
 <div class="brand"><div class="official-brand-wrap">
-<img alt="八千代リトルシニア 公式ロゴ" class="official-brand-img" decoding="sync" draggable="false" fetchpriority="high" height="374" loading="eager" onerror="this.classList.remove('is-ready')" onload="this.classList.add('is-ready')" onclick="window.scrollTo({top:0,behavior:'smooth'})" src="./official-logo-crisp-final.png" style="-webkit-touch-callout:default!important;-webkit-user-select:none!important;user-select:none!important;pointer-events:auto!important" width="2062"/>
+<img alt="八千代リトルシニア 公式ロゴ" class="official-brand-img" decoding="sync" draggable="false" fetchpriority="high" height="374" loading="eager" onerror="this.classList.remove('is-ready')" onload="this.classList.add('is-ready')" onclick="window.scrollTo({top:0,behavior:'smooth'})" src="./official-logo-crisp-final.png" style="-webkit-touch-callout:default!important;pointer-events:auto!important" width="2062"/>
 </div></div>
 <div class="links">
 <a class="active" href="/">HOME</a>
