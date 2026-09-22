@@ -1028,7 +1028,8 @@ body.live-score-focused #liveScoreCard{width:100%;box-sizing:border-box}
 
 /* 閲覧モードの入力欄は明確にグレーアウト。操作はJSでもdisabled固定。 */
 .live-score-card.live-score-view-mode .live-score-field input:disabled,
-.live-score-card.live-score-view-mode .live-score-field select:disabled{
+.live-score-card.live-score-view-mode .live-score-field select:disabled,
+.live-score-card.live-score-view-mode .live-score-field textarea:disabled{
   background:#6f7885!important;
   color:#142033!important;
   border-color:#566476!important;
@@ -1984,10 +1985,16 @@ body.photo-admin-on #accessPasswordChange{
   line-height:1.35!important;
   padding-top:9px!important;
   padding-bottom:9px!important;
+  text-align:center!important;
+  text-align-last:center!important;
 }
 .live-score-view-mode #liveScoreTournament:disabled{
+  background:#6f7885!important;
+  color:#142033!important;
+  border-color:#566476!important;
   opacity:1!important;
-  -webkit-text-fill-color:currentColor!important;
+  cursor:default!important;
+  -webkit-text-fill-color:#142033!important;
 }
 </style>
 <script>

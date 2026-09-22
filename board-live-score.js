@@ -601,7 +601,7 @@
     elements.back.hidden = false;
     const viewOnly = !inputMode || replayMode;
     root.classList.toggle('live-score-view-mode', viewOnly);
-    root.querySelectorAll('.live-score-editor input,.live-score-editor select,.live-score-segments button,.live-score-tb-actions button,.live-score-number').forEach(control => {
+    root.querySelectorAll('.live-score-editor input,.live-score-editor select,.live-score-editor textarea,.live-score-segments button,.live-score-tb-actions button,.live-score-number').forEach(control => {
       control.disabled = viewOnly;
     });
     // BSO / ダイヤモンドも閲覧モードでは必ず操作不可。ただし見た目は変えない。
