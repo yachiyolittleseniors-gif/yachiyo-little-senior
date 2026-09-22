@@ -37,6 +37,8 @@
   let pollTimer = 0;
   let lockToken = '';
   let lockHeartbeatTimer = 0;
+  let viewerHeartbeatTimer = 0;
+  let viewerStats = { count: 0, max: 0 };
   // 選択中の得点セルは再描画・自動保存後も維持する。
   let selectedScoreCell = null;
   // Keep one device id for the entire page lifetime. On some iPhone/Safari
@@ -317,7 +319,27 @@
     lockPanel: $('#liveScoreLockPanel'),
     lockText: $('#liveScoreLockText'),
     lockButton: $('#liveScoreLockButton'),
+    viewers: $('#liveScoreViewers'),
+    viewerCount: $('#liveScoreViewerCount'),
+    viewerMax: $('#liveScoreViewerMax'),
   };
+
+  function renderViewers() {
+    if (!elements.viewers) return;
+    const show = Boolean(state.active && inputMode && !replayMode);
+    elements.viewers.hidden = !show;
+    if (elements.viewerCount) elements.viewerCount.textContent = String(viewerStats.count || 0);
+    if (elements.viewerMax) elements.viewerMax.textContent = String(viewerStats.max || 0);
+  }
+
+  async function heartbeatViewer() {
+    if (!state.active || replayMode || document.hidden) return;
+    try {
+      const result = await request('POST', null, { action: 'heartbeatViewer' });
+      if (result.viewers) viewerStats = { count: Number(result.viewers.count || 0), max: Number(result.viewers.max || 0) };
+      renderViewers();
+    } catch (_) {}
+  }
 
   function renderLock() {
     if (!elements.lockPanel || !state.active || replayMode) {
@@ -601,7 +623,7 @@
     elements.back.hidden = false;
     const viewOnly = !inputMode || replayMode;
     root.classList.toggle('live-score-view-mode', viewOnly);
-    root.querySelectorAll('.live-score-editor input,.live-score-editor select,.live-score-editor textarea,.live-score-segments button,.live-score-tb-actions button,.live-score-number').forEach(control => {
+    root.querySelectorAll('.live-score-editor input,.live-score-editor select,.live-score-segments button,.live-score-tb-actions button,.live-score-number').forEach(control => {
       control.disabled = viewOnly;
     });
     // BSO / ダイヤモンドも閲覧モードでは必ず操作不可。ただし見た目は変えない。
@@ -612,6 +634,7 @@
       else control.removeAttribute('tabindex');
     });
     renderLock();
+    renderViewers();
     updateStatus(inputMode && !replayMode
       ? '入力中モード・入力内容は自動保存されます。'
       : (!replayMode ? '閲覧中モード・現在の試合状況を表示しています。' : ''));
@@ -890,6 +913,7 @@
       const result = await request();
       const previousActive = state.active;
       state = normalize(result.data);
+      if (result.viewers) viewerStats = { count: Number(result.viewers.count || 0), max: Number(result.viewers.max || 0) };
       selectedScoreCell = state.current?.selectedScoreCell || null;
       // Restore input mode only after reclaiming the server-side editor lock.
       const wantsInput = Boolean(state.active && rememberedInputMode());
@@ -920,7 +944,10 @@
     await load();
     render();
     pollTimer = setInterval(() => load({ silent: true }), 5000);
+    await heartbeatViewer();
+    viewerHeartbeatTimer = setInterval(heartbeatViewer, 10000);
   })();
   window.addEventListener('resize', () => { fitAllLiveScoreTeamNames(); });
+  document.addEventListener('visibilitychange', () => { if (!document.hidden) heartbeatViewer(); });
 
 })();
