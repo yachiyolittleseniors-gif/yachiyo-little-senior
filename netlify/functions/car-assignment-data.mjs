@@ -166,7 +166,8 @@ function normalizeCar(car = {}, index = 0) {
 }
 
 function normalizeAssignment(value = {}) {
-  const grade = ["1", "2", "3"].includes(String(value.grade)) ? String(value.grade) : "2";
+  const gradeParts = String(value.grade || "").split("+").filter(item => ["1", "2", "3"].includes(item));
+  const grade = [...new Set(gradeParts)].sort((a, b) => Number(b) - Number(a)).join("+") || "2";
   const date = /^\d{4}-\d{2}-\d{2}$/.test(String(value.date || "")) ? String(value.date) : "";
   const allowedGameTypes = new Set(["official", "practice", "opening", "closing"]);
   return {
@@ -250,7 +251,8 @@ export default async (request, context) => {
     }
     if (body.action === "delete") {
       const date = /^\d{4}-\d{2}-\d{2}$/.test(String(body.date || "")) ? String(body.date) : "";
-      const grade = ["1", "2", "3"].includes(String(body.grade)) ? String(body.grade) : "";
+      const gradeParts = String(body.grade || "").split("+").filter(item => ["1", "2", "3"].includes(item));
+      const grade = [...new Set(gradeParts)].sort((a, b) => Number(b) - Number(a)).join("+");
       if (!date || !grade) return json({ error: "削除する日付と学年を選択してください。" }, 400);
       delete assignments[`${date}_${grade}`];
       await store.setJSON(KEY, assignments);
