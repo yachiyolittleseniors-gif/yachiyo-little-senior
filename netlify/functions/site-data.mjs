@@ -797,6 +797,36 @@ function normalizeLiveScoreGame(value) {
 
 const LIVE_SCORE_LOCK_KEY = "content/live-score-lock.json";
 const LIVE_SCORE_LOCK_TTL_MS = 30000;
+const LIVE_SCORE_VIEWERS_KEY = "content/live-score-viewers.json";
+const LIVE_SCORE_VIEWER_TTL_MS = 30000;
+
+async function getLiveScoreViewers(store) {
+  const raw = await safeStoreJson(store, LIVE_SCORE_VIEWERS_KEY);
+  const now = Date.now();
+  const clients = raw?.clients && typeof raw.clients === "object" ? raw.clients : {};
+  const activeClients = Object.fromEntries(Object.entries(clients).filter(([, seenAt]) => now - Number(seenAt || 0) <= LIVE_SCORE_VIEWER_TTL_MS));
+  const count = Object.keys(activeClients).length;
+  return { clients: activeClients, count, max: Math.max(count, Number(raw?.max || 0)) };
+}
+
+async function heartbeatLiveScoreViewer(store, deviceId) {
+  const id = String(deviceId || "").trim().slice(0, 160);
+  if (!id) return { count: 0, max: 0 };
+  const current = await getLiveScoreViewers(store);
+  current.clients[id] = Date.now();
+  current.count = Object.keys(current.clients).length;
+  current.max = Math.max(current.max, current.count);
+  await store.setJSON(LIVE_SCORE_VIEWERS_KEY, { clients: current.clients, max: current.max });
+  return { count: current.count, max: current.max };
+}
+
+async function publicLiveScoreViewers(store, editorDeviceId = "") {
+  const current = await getLiveScoreViewers(store);
+  const editorPresent = Boolean(editorDeviceId && current.clients[editorDeviceId]);
+  const count = Math.max(0, current.count - (editorPresent ? 1 : 0));
+  const max = Math.max(count, current.max - (editorPresent ? 1 : 0));
+  return { count, max };
+}
 
 async function getLiveScoreLock(store) {
   const lock = await safeStoreJson(store, LIVE_SCORE_LOCK_KEY);
@@ -1395,7 +1425,7 @@ export default async (request, context) => {
       if (section === "live-score") {
         const deviceId = String(request.headers.get("x-live-score-device-id") || "");
         const lock = await getLiveScoreLock(store);
-        return json({ data: data ?? [], lock: publicLiveScoreLock(lock, deviceId) });
+        return json({ data: data ?? [], lock: publicLiveScoreLock(lock, deviceId), viewers: await publicLiveScoreViewers(store, lock?.deviceId || "") });
       }
 
       return json({
@@ -1529,6 +1559,13 @@ export default async (request, context) => {
 
       const action = String(body?.action || "");
       const deviceId = String(body?.deviceId || "").trim().slice(0, 160);
+      if (action === "heartbeatViewer") {
+        const currentData = await store.get(key, { type: "json", consistency: "strong" });
+        if (!currentData?.active) return json({ ok: true, viewers: { count: 0, max: 0 } });
+        const viewers = await heartbeatLiveScoreViewer(store, deviceId);
+        const currentLock = await getLiveScoreLock(store);
+        return json({ ok: true, viewers: await publicLiveScoreViewers(store, currentLock?.deviceId || "") });
+      }
       if (action === "claimEditorLock") {
         const claimed = await claimLiveScoreLock(store, deviceId);
         if (claimed.error) return json({ error: "入力端末を確認してください。" }, 400);
@@ -1561,6 +1598,11 @@ export default async (request, context) => {
       const normalized = normalizeLiveScoreData(body?.data);
       if (!normalized) return json({ error: "試合速報の内容を確認してください。" }, 400);
       const existing = await store.get(key, { type: "json", consistency: "strong" });
+      if (normalized.active && !existing?.active) {
+        await store.setJSON(LIVE_SCORE_VIEWERS_KEY, { clients: {}, max: 0 });
+      } else if (!normalized.active && existing?.active) {
+        await store.delete(LIVE_SCORE_VIEWERS_KEY);
+      }
       if (!normalized.lastGame) normalized.lastGame = normalizeLiveScoreGame(existing?.lastGame);
       await store.setJSON(key, normalized);
       return json({ ok: true, data: normalized, lock: publicLiveScoreLock(currentLock, deviceId) });
