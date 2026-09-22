@@ -3560,18 +3560,33 @@ body.photo-admin-on .recruit-mode-admin{display:block}
 <meta name="robots" content="index,follow,max-image-preview:large,max-snippet:-1,max-video-preview:-1">
 
 <style id="ios-logo-longpress-fix">
-.header .brand,
+/* Keep the long-press target exactly on the visible header logo. */
+.header .brand{
+  -webkit-user-select:none!important;
+  user-select:none!important;
+  -webkit-touch-callout:none!important;
+}
 .header .official-brand-wrap{
+  width:fit-content!important;
+  max-width:72vw!important;
+  flex:0 0 auto!important;
   -webkit-user-select:none!important;
   user-select:none!important;
   -webkit-touch-callout:none!important;
 }
 .header .official-brand-img{
+  width:auto!important;
+  max-width:72vw!important;
+  height:62px!important;
+  max-height:62px!important;
+  object-fit:contain!important;
   -webkit-user-select:none!important;
   user-select:none!important;
   -webkit-touch-callout:default!important;
   pointer-events:auto!important;
 }
+@media(max-width:900px){.header .official-brand-img{height:52px!important;max-height:52px!important}}
+@media(max-width:600px){.header .official-brand-img{height:50px!important;max-height:50px!important}}
 </style>
 </head>
 <body id="page-top">
