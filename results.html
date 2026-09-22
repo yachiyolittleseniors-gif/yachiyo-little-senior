@@ -905,6 +905,11 @@ body.admin-mode .game-admin-actions{display:flex!important}
 <meta property="og:image:alt" content="八千代リトルシニアの選手たち">
 <meta name="twitter:image" content="https://yachiyo-little-senior.netlify.app/team-hero.jpg">
 <meta name="robots" content="index,follow,max-image-preview:large,max-snippet:-1,max-video-preview:-1">
+
+<style id="past-results-toggle-style">
+.past-results-toggle{display:block;width:100%;margin:18px 0 6px;padding:12px 16px;border:1px solid rgba(199,154,59,.65);border-radius:10px;background:#07162d;color:#e2bd67;font-weight:900;font-size:14px;text-align:center;cursor:pointer}
+.past-results-note{margin:7px 0 16px;color:#6b7280;font-size:12px;text-align:center}
+</style>
 </head>
 <body id="page-top">
 <header class="header">
@@ -1152,6 +1157,16 @@ function escHtml(s){
 }
 
 let resultsData=[];
+const LEGACY_RESULTS=[{"id":"legacy-2024-04-14-0","date":"2024-04-14","tournament":"【千葉】2024第17回読売新聞社杯 兼 第46回千葉県大会","round":"2回戦","opponent":"船橋中央","ourScore":7,"oppScore":8,"grade":"","gradeYear":"","teamName":"八千代","squad":"","venue":"","battingOrder":"unknown","note":"","legacy":true},{"id":"legacy-2024-03-31-1","date":"2024-03-31","tournament":"【千葉】2024第17回読売新聞社杯 兼 第46回千葉県大会","round":"1回戦","opponent":"八千代中央","ourScore":7,"oppScore":1,"grade":"","gradeYear":"","teamName":"八千代","squad":"","venue":"","battingOrder":"unknown","note":"","legacy":true},{"id":"legacy-2024-03-03-2","date":"2024-03-03","tournament":"【東関】2024小林喜一メモリアル東関東支部春季大会","round":"敗者復活1回戦","opponent":"常総","ourScore":2,"oppScore":3,"grade":"","gradeYear":"","teamName":"八千代","squad":"","venue":"","battingOrder":"unknown","note":"","legacy":true},{"id":"legacy-2024-03-02-3","date":"2024-03-02","tournament":"【東関】2024小林喜一メモリアル東関東支部春季大会","round":"2回戦","opponent":"香取","ourScore":2,"oppScore":5,"grade":"","gradeYear":"","teamName":"八千代","squad":"","venue":"","battingOrder":"unknown","note":"","legacy":true},{"id":"legacy-2023-11-05-4","date":"2023-11-05","tournament":"【千葉】2023成田国際空港杯フレッシュマン大会/千葉3ブロック","round":"その他","opponent":"松戸","ourScore":10,"oppScore":0,"grade":"","gradeYear":"","teamName":"八千代","squad":"","venue":"","battingOrder":"unknown","note":"","legacy":true},{"id":"legacy-2023-10-29-5","date":"2023-10-29","tournament":"【千葉】2023成田国際空港杯フレッシュマン大会/千葉3ブロック","round":"2回戦","opponent":"船橋","ourScore":1,"oppScore":12,"grade":"","gradeYear":"","teamName":"八千代","squad":"","venue":"","battingOrder":"unknown","note":"","legacy":true},{"id":"legacy-2023-10-22-6","date":"2023-10-22","tournament":"【千葉】2023成田国際空港杯フレッシュマン大会/千葉3ブロック","round":"1回戦","opponent":"袖ヶ浦","ourScore":7,"oppScore":0,"grade":"","gradeYear":"","teamName":"八千代","squad":"","venue":"","battingOrder":"unknown","note":"","legacy":true},{"id":"legacy-2023-09-17-7","date":"2023-09-17","tournament":"【東関】2023王道家杯東関東支部秋季大会","round":"敗者復活3回戦","opponent":"なめがた","ourScore":6,"oppScore":8,"grade":"","gradeYear":"","teamName":"八千代","squad":"","venue":"","battingOrder":"unknown","note":"","legacy":true},{"id":"legacy-2023-09-10-8","date":"2023-09-10","tournament":"【東関】2023王道家杯東関東支部秋季大会","round":"敗者復活2回戦","opponent":"八千代中央","ourScore":3,"oppScore":2,"grade":"","gradeYear":"","teamName":"八千代","squad":"","venue":"","battingOrder":"unknown","note":"","legacy":true},{"id":"legacy-2023-09-03-9","date":"2023-09-03","tournament":"【東関】2023王道家杯東関東支部秋季大会","round":"3回戦","opponent":"千葉市","ourScore":0,"oppScore":2,"grade":"","gradeYear":"","teamName":"八千代","squad":"","venue":"","battingOrder":"unknown","note":"","legacy":true},{"id":"legacy-2023-08-27-10","date":"2023-08-27","tournament":"【東関】2023王道家杯東関東支部秋季大会","round":"2回戦","opponent":"市原","ourScore":8,"oppScore":1,"grade":"","gradeYear":"","teamName":"八千代","squad":"","venue":"","battingOrder":"unknown","note":"","legacy":true},{"id":"legacy-2023-08-06-11","date":"2023-08-06","tournament":"CHIBA LOTTE MARINES CUP","round":"1回戦","opponent":"松戸リトルシニア","ourScore":1,"oppScore":6,"grade":"","gradeYear":"","teamName":"八千代","squad":"","venue":"","battingOrder":"unknown","note":"","legacy":true},{"id":"legacy-2023-07-09-12","date":"2023-07-09","tournament":"2023千葉日報杯新人大会","round":"敗者復活1回戦","opponent":"市川","ourScore":2,"oppScore":13,"grade":"","gradeYear":"","teamName":"八千代","squad":"","venue":"","battingOrder":"unknown","note":"","legacy":true},{"id":"legacy-2023-07-02-13","date":"2023-07-02","tournament":"2023千葉日報杯新人大会","round":"準々決勝","opponent":"成田","ourScore":0,"oppScore":7,"grade":"","gradeYear":"","teamName":"八千代","squad":"","venue":"","battingOrder":"unknown","note":"","legacy":true},{"id":"legacy-2023-06-25-14","date":"2023-06-25","tournament":"2023千葉日報杯新人大会","round":"2回戦","opponent":"浦安","ourScore":3,"oppScore":1,"grade":"","gradeYear":"","teamName":"八千代","squad":"","venue":"","battingOrder":"unknown","note":"","legacy":true},{"id":"legacy-2023-06-18-15","date":"2023-06-18","tournament":"2023千葉日報杯新人大会","round":"1回戦","opponent":"袖ヶ浦","ourScore":8,"oppScore":6,"grade":"","gradeYear":"","teamName":"八千代","squad":"","venue":"","battingOrder":"unknown","note":"","legacy":true},{"id":"legacy-2023-04-23-16","date":"2023-04-23","tournament":"【東関/千葉】2023第16回読売新聞社杯 兼 第45回千葉県大会","round":"2回戦","opponent":"船橋中央","ourScore":2,"oppScore":4,"grade":"","gradeYear":"","teamName":"八千代","squad":"","venue":"","battingOrder":"unknown","note":"","legacy":true},{"id":"legacy-2023-04-16-17","date":"2023-04-16","tournament":"【東関/千葉】2023第16回読売新聞社杯 兼 第45回千葉県大会","round":"1回戦","opponent":"千葉緑","ourScore":9,"oppScore":2,"grade":"","gradeYear":"","teamName":"八千代","squad":"","venue":"","battingOrder":"unknown","note":"","legacy":true},{"id":"legacy-2023-02-26-18","date":"2023-02-26","tournament":"【東関】2023東関東支部春季大会","round":"敗者復活1回戦","opponent":"袖ヶ浦","ourScore":2,"oppScore":9,"grade":"","gradeYear":"","teamName":"八千代","squad":"","venue":"","battingOrder":"unknown","note":"","legacy":true},{"id":"legacy-2023-02-23-19","date":"2023-02-23","tournament":"【東関】2023東関東支部春季大会","round":"2回戦","opponent":"香取","ourScore":4,"oppScore":6,"grade":"","gradeYear":"","teamName":"八千代","squad":"","venue":"","battingOrder":"unknown","note":"","legacy":true},{"id":"legacy-2022-11-06-20","date":"2022-11-06","tournament":"【東関/千葉】2022成田国際空港杯フレッシュマン大会/千葉3ブロック","round":"3回戦","opponent":"八千代中央","ourScore":1,"oppScore":2,"grade":"","gradeYear":"","teamName":"八千代","squad":"","venue":"","battingOrder":"unknown","note":"","legacy":true},{"id":"legacy-2022-11-03-21","date":"2022-11-03","tournament":"【東関/千葉】2022成田国際空港杯フレッシュマン大会/千葉3ブロック","round":"2回戦","opponent":"市川京葉","ourScore":10,"oppScore":3,"grade":"","gradeYear":"","teamName":"八千代","squad":"","venue":"","battingOrder":"unknown","note":"","legacy":true},{"id":"legacy-2022-10-30-22","date":"2022-10-30","tournament":"【東関/千葉】2022成田国際空港杯フレッシュマン大会/千葉3ブロック","round":"1回戦","opponent":"茂原・君津・千葉東","ourScore":8,"oppScore":1,"grade":"","gradeYear":"","teamName":"八千代","squad":"","venue":"","battingOrder":"unknown","note":"","legacy":true},{"id":"legacy-2022-09-11-23","date":"2022-09-11","tournament":"【東関】2022王道家杯東関東支部秋季大会","round":"敗者復活1回戦","opponent":"船橋","ourScore":7,"oppScore":8,"grade":"","gradeYear":"","teamName":"八千代","squad":"","venue":"","battingOrder":"unknown","note":"","legacy":true},{"id":"legacy-2022-09-04-24","date":"2022-09-04","tournament":"【東関】2022王道家杯東関東支部秋季大会","round":"2回戦","opponent":"佐倉城南","ourScore":1,"oppScore":8,"grade":"","gradeYear":"","teamName":"八千代","squad":"","venue":"","battingOrder":"unknown","note":"","legacy":true},{"id":"legacy-2022-08-11-25","date":"2022-08-11","tournament":"CHIBA LOTTE MARINES CUP 2022 千葉県中学硬式野球大会","round":"3回戦","opponent":"白井中央ボーイズ","ourScore":0,"oppScore":11,"grade":"","gradeYear":"","teamName":"八千代","squad":"","venue":"","battingOrder":"unknown","note":"","legacy":true},{"id":"legacy-2022-08-06-26","date":"2022-08-06","tournament":"CHIBA LOTTE MARINES CUP 2022 千葉県中学硬式野球大会","round":"2回戦","opponent":"流山ボーイズ","ourScore":8,"oppScore":7,"grade":"","gradeYear":"","teamName":"八千代","squad":"","venue":"","battingOrder":"unknown","note":"","legacy":true},{"id":"legacy-2022-07-31-27","date":"2022-07-31","tournament":"CHIBA LOTTE MARINES CUP 2022 千葉県中学硬式野球大会","round":"1回戦","opponent":"千葉市winners","ourScore":8,"oppScore":2,"grade":"","gradeYear":"","teamName":"八千代","squad":"","venue":"","battingOrder":"unknown","note":"","legacy":true},{"id":"legacy-2022-06-12-28","date":"2022-06-12","tournament":"2022千葉日報杯新人大会","round":"1回戦","opponent":"千葉市","ourScore":0,"oppScore":7,"grade":"","gradeYear":"","teamName":"八千代","squad":"","venue":"","battingOrder":"unknown","note":"","legacy":true},{"id":"legacy-2022-05-22-29","date":"2022-05-22","tournament":"2022関東連盟夏季大会 -林和男メモリアル-","round":"3回戦","opponent":"横浜北","ourScore":4,"oppScore":11,"grade":"","gradeYear":"","teamName":"八千代","squad":"","venue":"","battingOrder":"unknown","note":"","legacy":true},{"id":"legacy-2022-05-15-30","date":"2022-05-15","tournament":"2022関東連盟夏季大会 -林和男メモリアル-","round":"2回戦","opponent":"静岡中央","ourScore":6,"oppScore":2,"grade":"","gradeYear":"","teamName":"八千代","squad":"","venue":"","battingOrder":"unknown","note":"","legacy":true},{"id":"legacy-2022-04-29-31","date":"2022-04-29","tournament":"【東関/千葉】2022第15回読売新聞社杯 兼 第44回千葉県大会","round":"3回戦","opponent":"市原","ourScore":1,"oppScore":2,"grade":"","gradeYear":"","teamName":"八千代","squad":"","venue":"","battingOrder":"unknown","note":"","legacy":true},{"id":"legacy-2022-04-24-32","date":"2022-04-24","tournament":"【東関/千葉】2022第15回読売新聞社杯 兼 第44回千葉県大会","round":"2回戦","opponent":"千葉緑","ourScore":7,"oppScore":0,"grade":"","gradeYear":"","teamName":"八千代","squad":"","venue":"","battingOrder":"unknown","note":"","legacy":true},{"id":"legacy-2022-03-13-33","date":"2022-03-13","tournament":"【東関】2022東関東支部春季大会","round":"敗者復活2回戦","opponent":"常陸太田","ourScore":3,"oppScore":4,"grade":"","gradeYear":"","teamName":"八千代","squad":"","venue":"","battingOrder":"unknown","note":"","legacy":true},{"id":"legacy-2022-02-27-34","date":"2022-02-27","tournament":"【東関】2022東関東支部春季大会","round":"敗者復活1回戦","opponent":"四街道","ourScore":10,"oppScore":4,"grade":"","gradeYear":"","teamName":"八千代","squad":"","venue":"","battingOrder":"unknown","note":"","legacy":true},{"id":"legacy-2022-02-23-35","date":"2022-02-23","tournament":"【東関】2022東関東支部春季大会","round":"1回戦","opponent":"竜ヶ崎","ourScore":1,"oppScore":6,"grade":"","gradeYear":"","teamName":"八千代","squad":"","venue":"","battingOrder":"unknown","note":"","legacy":true}];
+let showPastResults=false;
+function mergeLegacyResults(current){
+  const list=Array.isArray(current)?current.slice():[];
+  const key=g=>[g.date,tournamentParts(g.tournament).name,g.round||tournamentParts(g.tournament).round,displayTeamName(g.opponent),Number(g.ourScore),Number(g.oppScore)].join("|");
+  const seen=new Set(list.map(key));
+  LEGACY_RESULTS.forEach(g=>{if(!seen.has(key(g))){list.push(g);seen.add(key(g));}});
+  return list;
+}
+
 let resultDocuments=[];
 let pendingPdfTournament='';
 let editingGameId='';
@@ -1184,13 +1199,17 @@ function gradeLifecycle(game){
   const original=String(game.grade||'').trim();
   const normalized=original.replace(/[１２３]/g,ch=>String('１２３'.indexOf(ch)+1));
   const match=normalized.match(/[1-3]/);
-  if(!match)return {visible:true,label:original};
+  if(!match)return {visible:true,label:original,period:''};
   const baseGrade=Number(match[0]);
   const baseYear=Number(game.gradeYear)||LEGACY_GRADE_BASE_YEAR;
   const effectiveGrade=baseGrade+Math.max(0,currentJapanYear()-baseYear);
+  // 2026年度の3年生=44期を基準に、同じ選手の期は学年が上がっても固定する。
+  const graduationYear=baseYear+(3-baseGrade);
+  const period=graduationYear-1982;
   return {
     visible:effectiveGrade<=3,
-    label:effectiveGrade<=3?effectiveGrade+'年生':''
+    label:effectiveGrade<=3?effectiveGrade+'年生':'',
+    period:period>0?period+'期':''
   };
 }
 function normalizeSquadSettings(value){
@@ -1267,9 +1286,12 @@ function renderResults(){
   const box=document.getElementById('results');
   const yf=document.getElementById('yearFilter')?.value||'';
   const tf=document.getElementById('tournamentFilter')?.value||'';
-  const data=[...resultsData]
-    .filter(g=>gradeLifecycle(g).visible)
+  const allVisible=[...resultsData].filter(g=>gradeLifecycle(g).visible);
+  const newestYears=[...new Set(allVisible.map(gameYear).filter(Boolean))].sort().reverse().slice(0,3);
+  const hasExplicitFilter=Boolean(yf||tf);
+  const data=allVisible
     .filter(g=>(!yf || gameYear(g)===yf) && (!tf || tournamentParts(g.tournament).name===tf))
+    .filter(g=>hasExplicitFilter || showPastResults || newestYears.includes(gameYear(g)))
     .sort((a,b)=>String(b.date||b.year||'').localeCompare(String(a.date||a.year||'')));
   if(!data.length){box.innerHTML='<div class="empty">まだ試合結果が登録されていません。</div>';return}
 
@@ -1351,11 +1373,13 @@ function renderResults(){
       const opponent=displayTeamName(g.opponent);
       const opponentHtml=displayTeamNameHtml(g.opponent);
       const dateVenue=[g.date?escHtml(formatGameDate(g.date)):'',g.venue?escHtml(g.venue):''].filter(Boolean).join(' ／ ');
-      const gradeLabel=gradeLifecycle(g).label;
+      const gradeInfo=gradeLifecycle(g);
+      const gradeLabel=gradeInfo.label;
+      const gradePeriodLabel=[gradeLabel,gradeInfo.period].filter(Boolean).join('｜');
       const ourTeam=squadName(g);
       return '<article class="game">'+
         '<div class="game-head">'+
-          '<div><div class="tournament">'+(gradeLabel?'<span class="grade-badge">'+escHtml(gradeLabel)+'</span>':'')+round+'</div>'+
+          '<div><div class="tournament">'+(gradePeriodLabel?'<span class="grade-badge">'+escHtml(gradePeriodLabel)+'</span>':'')+round+'</div>'+
           (dateVenue?'<div class="meta">'+dateVenue+'</div>':'')+'</div>'+
           '<span class="badge '+cls+'">'+label+'</span>'+
         '</div>'+
@@ -1383,6 +1407,13 @@ function renderResults(){
       '<div class="tournament-games">'+gamesHtml+'</div>'+
     '</section>';
   }).join('');
+  if(!hasExplicitFilter){
+    const olderCount=allVisible.filter(g=>!newestYears.includes(gameYear(g))).length;
+    if(olderCount){
+      box.insertAdjacentHTML('beforeend','<button class="past-results-toggle" type="button" id="pastResultsToggle">'+(showPastResults?'過去の試合結果を閉じる':'過去の試合結果を見る')+'</button><div class="past-results-note">試合結果は削除せず保存しています。</div>');
+      document.getElementById('pastResultsToggle')?.addEventListener('click',()=>{showPastResults=!showPastResults;renderResults();});
+    }
+  }
   fitResultLines(box);
 }
 let resultFitObserver;
@@ -1668,7 +1699,7 @@ tournamentPdfInput.addEventListener('change',async()=>{
       sharedLoad('result-documents'),
       sharedLoad('result-squad-settings').catch(()=>({}))
     ]);
-    resultsData=loaded[0];
+    resultsData=mergeLegacyResults(loaded[0]);
     resultDocuments=loaded[1];
     squadSettings=normalizeSquadSettings(loaded[2]);
     syncSquadSettingsForm();
