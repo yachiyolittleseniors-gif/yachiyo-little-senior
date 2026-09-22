@@ -3558,12 +3558,27 @@ body.photo-admin-on .recruit-mode-admin{display:block}
 }
 </style>
 <meta name="robots" content="index,follow,max-image-preview:large,max-snippet:-1,max-video-preview:-1">
+
+<style id="ios-logo-longpress-fix">
+.header .brand,
+.header .official-brand-wrap{
+  -webkit-user-select:none!important;
+  user-select:none!important;
+  -webkit-touch-callout:none!important;
+}
+.header .official-brand-img{
+  -webkit-user-select:none!important;
+  user-select:none!important;
+  -webkit-touch-callout:default!important;
+  pointer-events:auto!important;
+}
+</style>
 </head>
 <body id="page-top">
 <header class="header">
 <nav class="nav">
 <div class="brand"><div class="official-brand-wrap">
-<img alt="八千代リトルシニア 公式ロゴ" class="official-brand-img" decoding="sync" draggable="true" fetchpriority="high" height="374" loading="eager" onerror="this.classList.remove('is-ready')" onload="this.classList.add('is-ready')" onclick="window.scrollTo({top:0,behavior:'smooth'})" src="./official-logo-crisp-final.png" style="-webkit-touch-callout:default!important;-webkit-user-select:auto!important;user-select:auto!important;pointer-events:auto!important" width="2062"/>
+<img alt="八千代リトルシニア 公式ロゴ" class="official-brand-img" decoding="sync" draggable="false" fetchpriority="high" height="374" loading="eager" onerror="this.classList.remove('is-ready')" onload="this.classList.add('is-ready')" onclick="window.scrollTo({top:0,behavior:'smooth'})" src="./official-logo-crisp-final.png" style="-webkit-touch-callout:default!important;-webkit-user-select:none!important;user-select:none!important;pointer-events:auto!important" width="2062"/>
 </div></div>
 <div class="links">
 <a class="active" href="/">HOME</a>
