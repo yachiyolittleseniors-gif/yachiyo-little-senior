@@ -58,7 +58,7 @@
   function imageSource(item){return item.data||item.src||''}
   function adminImageLabel(item,index){const table=item&&item.table;const title=table&&Number(table.year)&&Number(table.month)?table.year+'年'+table.month+'月 当番表':String(item&&item.name||('当番表 '+(index+1)));return(index+1)+'番目　'+title}
   function imageSourceKey(item){const source=imageSource(item);return String(item.id)+'-'+source.length+'-'+source.slice(-24)}
-  function sortChanges(items){return items.slice().sort(function(a,b){return a.date.localeCompare(b.date)||Number(b.grade)-Number(a.grade)||a.from.localeCompare(b.from,'ja')})}
+  function sortChanges(items){return items.slice().sort(function(a,b){const at=new Date(a.createdAt||'').getTime(),bt=new Date(b.createdAt||'').getTime();if(Number.isFinite(at)&&Number.isFinite(bt)&&at!==bt)return bt-at;if(Number.isFinite(at)!==Number.isFinite(bt))return Number.isFinite(bt)?1:-1;return b.date.localeCompare(a.date)||Number(b.grade)-Number(a.grade)||a.from.localeCompare(b.from,'ja')})}
   function displayDate(value){const parts=String(value||'').split('-').map(Number);if(parts.length!==3)return value;const date=new Date(parts[0],parts[1]-1,parts[2]);return parts[1]+'/'+parts[2]+'（'+'日月火水木金土'[date.getDay()]+'）'}
 
   function changeUpdatedMarkup(item){
@@ -93,7 +93,7 @@
   function renderChanges(){
     const ordered=sortChanges(changes);changeSection.hidden=!ordered.length;
     changeList.innerHTML=ordered.map(function(item){return'<div class="duty-change-item">'+changeMarkup(item)+changeUpdatedMarkup(item)+'</div>'}).join('');
-    const adminOrdered=ordered.slice().reverse();
+    const adminOrdered=ordered;
     changeAdminList.innerHTML=adminOrdered.length?adminOrdered.map(function(item){return'<div class="duty-change-admin-item"><span>'+displayDate(item.date)+'・'+item.grade+'年生　'+escapeHtml(displayName(item.from,item.grade))+' → <b>'+escapeHtml(displayName(item.to,item.grade))+'</b>'+changeUpdatedMarkup(item)+'</span><button type="button" data-remove-duty-change="'+escapeHtml(item.id)+'">取消</button></div>'}).join(''):'<div class="duty-change-preview">登録済みの当番変更はありません。</div>';
     changeAdminList.querySelectorAll('[data-remove-duty-change]').forEach(function(button){button.addEventListener('click',function(){removeChange(button.dataset.removeDutyChange)})});
   }
