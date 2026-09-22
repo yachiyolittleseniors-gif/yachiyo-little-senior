@@ -155,6 +155,7 @@ body{padding-top:var(--fixed-header-height)!important}
 .upper-grade-check input{width:22px;height:22px;margin:0;accent-color:#071426}
 .upper-grade-badge{display:inline-flex;align-items:center;padding:3px 9px;border-radius:999px;background:#c79a3b;color:#fff;font-size:11px;font-weight:900;line-height:1.3;vertical-align:middle}
 .report-member-accompany{color:#176fa6;font-weight:900;white-space:nowrap}
+.escort-label{font-weight:900;color:#071426}.escort-grade-buttons{display:flex;gap:10px;flex-wrap:wrap}.escort-grade-btn{min-height:48px;padding:10px 18px;border:1px solid #cfd5dd;border-radius:12px;background:#fff;color:#071426;font-weight:900;font-size:16px}.escort-grade-btn.active{background:#071426;color:#fff;border-color:#071426}.escort-grade-btn:disabled{opacity:.55}
 .comment-date-field{margin:10px 0}
 .report-dialog{width:min(1120px,100%);max-width:none;height:100dvh;max-height:none;margin:0 auto;padding:0;border:0;background:#f3f3f0;color:#071426}
 .report-dialog::backdrop{background:rgba(7,20,38,.72)}
@@ -274,13 +275,13 @@ body{padding-top:var(--fixed-header-height)!important}
       <div class="report-launch-head"><h2>出席一覧の出力</h2><span class="sync" id="syncText"></span></div>
       <div class="report-launch-grid">
         <label class="report-date-field"><span class="report-date-label">📅 日程を選択</span><select id="reportEventSelect" aria-label="出力する日程"></select></label>
-        <button id="openReportBtn" type="button">学年別出席一覧を出力</button>
+        <button id="openReportBtn" type="button">保護者出席一覧を出力</button>
       </div>
-      <p>学年・父母別の○・×・未入力と、選択した日のコメントを表示します。</p>
+      <p>学年ごとの○・×・未入力と、選択した日のコメントを表示します。帯同者は名前の横に「帯同」と表示します。</p>
     </section>
     <dialog class="summary-dialog" id="summaryDialog" aria-labelledby="summaryTitle"><div class="summary-dialog-head"><h2 id="summaryTitle">出欠内訳</h2><button class="summary-close" id="summaryClose" type="button" aria-label="閉じる">×</button></div><div class="breakdown-list" id="summaryBody"></div><p class="breakdown-unset" id="summaryUnset"></p></dialog>
     <div class="board-shell" id="board"><div class="empty">読み込み中...</div></div>
-    <section class="editor" id="editor"><h3 id="editorName"></h3><p>この名前で回答を編集しています。</p><label class="comment-date-field">対象日<select id="commentEventDate" aria-label="コメントの対象日"></select></label><textarea id="commentText" maxlength="500" placeholder="コメントを入力（例：車出しできます／途中参加です）"></textarea><label class="upper-grade-check" id="upperGradeField"><input id="upperGradeCheck" type="checkbox"><span>上級生帯同</span></label><div style="margin-top:8px;display:flex;gap:8px;flex-wrap:wrap"><button class="small-btn" id="commentSave">コメントを追加</button><button class="secondary" id="editCancel">選択解除</button></div></section>
+    <section class="editor" id="editor"><h3 id="editorName"></h3><p>この名前で回答を編集しています。</p><label class="comment-date-field">対象日<select id="commentEventDate" aria-label="コメントの対象日"></select></label><textarea id="commentText" maxlength="500" placeholder="コメントを入力（例：車出しできます／途中参加です）"></textarea><div class="upper-grade-check" id="upperGradeField" hidden><span class="escort-label">帯同先</span><div id="escortGradeButtons" class="escort-grade-buttons"></div></div><div style="margin-top:8px;display:flex;gap:8px;flex-wrap:wrap"><button class="small-btn" id="commentSave">コメントを追加</button><button class="secondary" id="editCancel">選択解除</button></div></section>
     <section class="comment-section"><h2>最新コメント一覧</h2><div class="comment-list" id="commentList"><div class="empty">コメントはまだありません。</div></div></section>
     <dialog class="report-dialog" id="reportDialog" aria-labelledby="reportTitle">
       <div class="report-dialog-frame">
@@ -290,7 +291,7 @@ body{padding-top:var(--fixed-header-height)!important}
           <button id="printReportBtn" type="button">印刷・PDF保存</button>
         </div>
         <article class="report-sheet" id="reportSheet">
-          <header class="report-head"><div><h2 id="reportTitle">学年別出席一覧</h2><p class="report-summary" id="reportSummary"></p></div></header>
+          <header class="report-head"><div><h2 id="reportTitle">保護者出席一覧</h2><p class="report-summary" id="reportSummary"></p></div></header>
           <div id="reportGrades"></div>
           <section class="report-comments"><h3 id="reportCommentsTitle">コメント一覧</h3><div id="reportComments"></div></section>
         </article>
@@ -314,7 +315,7 @@ function isReloadNavigation(){const entry=performance.getEntriesByType&&performa
 function readAccessPass(){try{const current=sessionStorage.getItem(ACCESS_KEY)||'';if(current)return current}catch(e){}if(!isReloadNavigation())return'';try{const expires=Number(localStorage.getItem(RELOAD_EXPIRY_KEY)||0);if(expires>Date.now()){const saved=localStorage.getItem(RELOAD_KEY)||'';if(saved){sessionStorage.setItem(ACCESS_KEY,saved);return saved}}localStorage.removeItem(RELOAD_KEY);localStorage.removeItem(RELOAD_EXPIRY_KEY)}catch(e){}return''}
 function rememberAccessPass(password){if(!password)return;try{sessionStorage.setItem(ACCESS_KEY,password)}catch(e){}try{localStorage.setItem(RELOAD_KEY,password);localStorage.setItem(RELOAD_EXPIRY_KEY,String(Date.now()+RELOAD_LIFETIME))}catch(e){}}
 function forgetAccessPass(){try{sessionStorage.removeItem(ACCESS_KEY)}catch(e){}try{localStorage.removeItem(RELOAD_KEY);localStorage.removeItem(RELOAD_EXPIRY_KEY)}catch(e){}}
-let adminPass='',draftAdminPass=sessionStorage.getItem(DRAFT_ADMIN_KEY)||'',accessPass=readAccessPass(),selectedMember='',currentReportEventId='',data={events:[],members:[],answers:{},comments:[],gradeOrder:['2','1','3'],densukeImportVersion:0},scheduleEvents=[],appConfig={migrationEnded:false,endedAt:''},memberChangesDirty=false,lastDeletedComment=null,showPastComments=false,savingMembers=new Set();
+let adminPass='',draftAdminPass=sessionStorage.getItem(DRAFT_ADMIN_KEY)||'',accessPass=readAccessPass(),selectedMember='',selectedEscortGrade='',currentReportEventId='',data={events:[],members:[],answers:{},comments:[],gradeOrder:['2','1','3'],densukeImportVersion:0},scheduleEvents=[],appConfig={migrationEnded:false,endedAt:''},memberChangesDirty=false,lastDeletedComment=null,showPastComments=false,savingMembers=new Set();
 sessionStorage.removeItem('yachiyoAdminPassword');
 const $=s=>document.querySelector(s);
 const esc=s=>String(s??'').replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));
@@ -390,8 +391,9 @@ function reportSnapshot(eventId){
     member:byId.get(String(comment.memberId))
   }));
   const totals=statuses.map(status=>ordered.filter(member=>(data.answers?.[member.id]?.[event.id]||'')===status).length);
-  const upperGradeMemberIds=new Set(comments.filter(comment=>comment.upperGrade).map(comment=>String(comment.memberId)));
-  return{event,grades,comments,totals,upperGradeMemberIds};
+  const escortGradeByMember=new Map();
+  comments.filter(comment=>comment.escortGrade||comment.upperGrade).forEach(comment=>escortGradeByMember.set(String(comment.memberId),String(comment.escortGrade||'upper')));
+  return{event,grades,comments,totals,escortGradeByMember};
 }
 function reportStatusClass(status){return status==='○'?'o':status==='×'?'x':'u'}
 function reportStatusLabel(status){return status==='○'?'参加':status==='×'?'不参加':'未入力'}
@@ -399,11 +401,11 @@ function renderReport(eventId){
   const info=reportSnapshot(eventId);
   if(!info)return false;
   currentReportEventId=String(eventId);
-  $('#reportTitle').textContent=formatDate(info.event.date)+' 学年別出席一覧';
+  $('#reportTitle').textContent=formatDate(info.event.date)+' 保護者出席一覧';
   $('#reportSummary').textContent='参加 '+info.totals[0]+'名　不参加 '+info.totals[1]+'名　未入力 '+info.totals[2]+'名';
   $('#reportGrades').innerHTML=info.grades.map(group=>{
     const cards=group.groups.map(item=>{
-      const names=item.members.length?item.members.map(member=>esc(member.name)+(info.upperGradeMemberIds.has(String(member.id))?'<span class="report-member-accompany">（帯同）</span>':'')).join('、'):'該当者なし';
+      const names=item.members.length?item.members.map(member=>esc(member.name)+(info.escortGradeByMember.has(String(member.id))?'<span class="report-member-accompany">（'+esc(info.escortGradeByMember.get(String(member.id))==='upper'?'上級生帯同':info.escortGradeByMember.get(String(member.id))+'年生帯同')+'）</span>':'')).join('、'):'該当者なし';
       const kind=reportStatusClass(item.status);
       return '<section class="report-status report-status-'+kind+'"><h4>'+(item.status?item.status+' ':'')+reportStatusLabel(item.status)+'（'+item.members.length+'名）</h4><p>'+names+'</p></section>';
     }).join('');
@@ -412,8 +414,8 @@ function renderReport(eventId){
   $('#reportCommentsTitle').textContent=formatDate(info.event.date)+'のコメント一覧';
   $('#reportComments').innerHTML=info.comments.length?info.comments.map(comment=>{
     const member=comment.member||{name:'回答者',grades:[]};
-    const badge=comment.upperGrade?'<span class="upper-grade-badge">上級生帯同</span>':'';
-    const body=comment.text?esc(comment.text):'コメントなし';
+    const escortLabel=comment.escortGrade?comment.escortGrade+'年生帯同':(comment.upperGrade?'上級生帯同':'');const badge=escortLabel?'<span class="upper-grade-badge">'+esc(escortLabel)+'</span>':'';
+    const body=comment.text?esc(comment.text):'';
     return '<article class="report-comment"><span class="report-comment-grade">'+esc(member.grades?.[0]||'-')+'年</span><span class="report-comment-name">'+esc(member.name)+' '+badge+'</span><span class="report-comment-text">'+body+'</span></article>';
   }).join(''):'<p class="report-empty">この日のコメントはありません。</p>';
   return true;
@@ -436,15 +438,15 @@ function createReportCanvas(info){
   let ctx=canvas.getContext('2d');ctx.font='28px "Yu Gothic","Hiragino Kaku Gothic ProN",sans-serif';
   const layouts=info.grades.map(group=>{
     const cards=group.groups.map(item=>{
-      const names=item.members.length?item.members.map(member=>member.name+(info.upperGradeMemberIds.has(String(member.id))?'（帯同）':'')).join('、'):'該当者なし';
+      const names=item.members.length?item.members.map(member=>member.name+(info.escortGradeByMember.has(String(member.id))?'（'+(info.escortGradeByMember.get(String(member.id))==='upper'?'上級生帯同':info.escortGradeByMember.get(String(member.id))+'年生帯同')+'）':'')).join('、'):'該当者なし';
       return{...item,lines:wrapCanvasText(ctx,names,colWidth-40)};
     });
     return{...group,cards,height:82+Math.max(...cards.map(card=>card.lines.length))*40+102};
   });
   const commentLayouts=info.comments.map(comment=>{
     const member=comment.member||{name:'回答者',grades:[]};
-    const prefix=(member.grades?.[0]||'-')+'年 '+member.name+(comment.upperGrade?' 【上級生帯同】 ':'　');
-    const text=prefix+(comment.text||'コメントなし');
+    const prefix=(member.grades?.[0]||'-')+'年 '+member.name+((comment.escortGrade||comment.upperGrade)?' 【'+(comment.escortGrade?comment.escortGrade+'年生帯同':'上級生帯同')+'】 ':'　');
+    const text=prefix+(comment.text||'');
     const lines=wrapCanvasText(ctx,text,width-margin*2-36);
     return{lines,height:lines.length*38+28};
   });
@@ -453,7 +455,7 @@ function createReportCanvas(info){
   ctx=canvas.getContext('2d');
   ctx.fillStyle='#f4f3ef';ctx.fillRect(0,0,width,canvas.height);
   roundCanvasRect(ctx,28,28,width-56,canvas.height-56,22,'#ffffff','#dfe4e9');
-  ctx.fillStyle='#071426';ctx.font='bold 48px "Yu Gothic","Hiragino Kaku Gothic ProN",sans-serif';ctx.fillText(formatDate(info.event.date)+' 学年別出席一覧',margin,105);
+  ctx.fillStyle='#071426';ctx.font='bold 48px "Yu Gothic","Hiragino Kaku Gothic ProN",sans-serif';ctx.fillText(formatDate(info.event.date)+' 保護者出席一覧',margin,105);
   ctx.font='bold 29px "Yu Gothic","Hiragino Kaku Gothic ProN",sans-serif';ctx.fillText('参加 '+info.totals[0]+'名　不参加 '+info.totals[1]+'名　未入力 '+info.totals[2]+'名',margin,160);
   let y=210;
   const colors={o:{bg:'#f1fbf5',head:'#12823a'},x:{bg:'#fff3f5',head:'#a72e3c'},u:{bg:'#f4f5f7',head:'#66707c'}};
@@ -497,7 +499,7 @@ async function saveReportImage(){
     const fileName='出席一覧_'+String(info.event.date).replaceAll('-','')+'.png';
     const file=new File([blob],fileName,{type:'image/png'});
     if(navigator.share&&navigator.canShare?.({files:[file]})){
-      try{await navigator.share({files:[file],title:formatDate(info.event.date)+' 学年別出席一覧'});return}catch(error){if(error?.name==='AbortError')return}
+      try{await navigator.share({files:[file],title:formatDate(info.event.date)+' 保護者出席一覧'});return}catch(error){if(error?.name==='AbortError')return}
     }
     const url=URL.createObjectURL(blob),link=document.createElement('a');link.href=url;link.download=fileName;document.body.appendChild(link);link.click();link.remove();setTimeout(()=>URL.revokeObjectURL(url),5000);
   }catch(error){alert('画像を保存できませんでした。もう一度お試しください。')}
@@ -536,24 +538,26 @@ function render(){
 }
 function showSummary(eventId){const event=visibleEvents().find(item=>String(item.id)===String(eventId));if(!event)return;$('#summaryTitle').textContent=formatDate(event.date)+(event.title?' '+event.title:'');const grades=['1','2','3'];$('#summaryBody').innerHTML=grades.map(grade=>{const rows=['father','mother'].map(parent=>{const counts=countStatuses(eventId,data.members.filter(member=>member.grades.includes(grade)&&member.parent===parent));return `<div class="breakdown-row"><span class="breakdown-parent">${parent==='father'?'父':'母'}</span>${countMarkup(counts)}</div>`}).join('');return `<section class="breakdown-grade"><h3>${grade}年生</h3>${rows}</section>`}).join('');const unset=data.members.filter(member=>!member.grades.length||!member.parent).length;$('#summaryUnset').textContent=unset?`学年または父・母が未設定の回答者：${unset}名`:'※人数は回答者に設定した学年と父・母で集計しています。';$('#summaryDialog').showModal()}
 $('#summaryClose').onclick=()=>$('#summaryDialog').close();$('#summaryDialog').onclick=e=>{if(e.target===$('#summaryDialog'))$('#summaryDialog').close()};
-function selectMember(id){const next=selectedMember===id?'':id;if(next!==selectedMember){$('#commentText').value='';$('#upperGradeCheck').checked=false}selectedMember=next;render()}
+function selectMember(id){const next=selectedMember===id?'':id;if(next!==selectedMember){$('#commentText').value='';selectedEscortGrade=''}selectedMember=next;render()}
 function renderEditor(){
   const m=data.members.find(x=>x.id===selectedMember),select=$('#commentEventDate'),events=visibleEvents(),previous=select.value;
-  $('#editor').classList.toggle('show',!!m);$('#editorName').textContent=m?m.name+' を編集中':'';
-  const showUpperGrade=!!m&&!m.grades.includes(3);$('#upperGradeField').hidden=!showUpperGrade;if(!showUpperGrade)$('#upperGradeCheck').checked=false;
-  select.innerHTML=events.map(event=>'<option value="'+esc(event.date)+'">'+esc(eventLabel(event))+'</option>').join('');
-  const reportEvent=events.find(event=>String(event.id)===$('#reportEventSelect').value),fallback=preferredEvent(events);
-  const value=events.some(event=>event.date===previous)?previous:String(reportEvent?.date||fallback?.date||'');
-  if(value)select.value=value;
+  $('#editor').classList.toggle('show',!!m);if(!m)return;$('#editorName').textContent=memberDisplayName(m);
+  select.innerHTML=events.map(e=>`<option value="${esc(e.date)}">${esc(formatDate(e.date))} ${esc(e.title||'')}</option>`).join('');if(previous&&events.some(e=>e.date===previous))select.value=previous;select.onchange=()=>{selectedEscortGrade='';renderEditor()};
+  const savedEscort=[...data.comments].reverse().find(c=>String(c.memberId)===String(m.id)&&String(c.eventDate||'')===String(select.value||'')&&c.escortSetting===true);if(savedEscort)selectedEscortGrade=String(savedEscort.escortGrade||'');const grade=String(m.grades?.[0]||'');const targets=grade==='1'?['2','3']:grade==='2'?['3']:[];
+  const field=$('#upperGradeField'),buttons=$('#escortGradeButtons');field.hidden=!targets.length;
+  if(!targets.includes(selectedEscortGrade))selectedEscortGrade='';
+  buttons.innerHTML=targets.map(target=>`<button type="button" class="escort-grade-btn ${selectedEscortGrade===target?'active':''}" data-escort-grade="${target}">${target}年生帯同</button>`).join('');
+  buttons.querySelectorAll('[data-escort-grade]').forEach(button=>button.onclick=async()=>{const next=selectedEscortGrade===button.dataset.escortGrade?'':button.dataset.escortGrade;await saveEscortGrade(next)});
 }
+async function saveEscortGrade(escortGrade){const memberId=selectedMember,eventDate=$('#commentEventDate').value;if(!memberId||!eventDate||savingMembers.has(memberId))return;savingMembers.add(memberId);$('#syncText').textContent='帯同設定を保存中…';try{const j=await api('POST',{action:'escort',memberId,eventDate,escortGrade});data=normalize(j.data);selectedEscortGrade=escortGrade;$('#syncText').textContent=escortGrade?escortGrade+'年生帯同を保存しました':'帯同設定を解除しました'}catch{showError('帯同設定を保存できませんでした。')}finally{savingMembers.delete(memberId);render()}}
 async function saveAnswer(ev){const b=ev.currentTarget,m=b.dataset.member,e=b.dataset.event;if(m!==selectedMember||savingMembers.has(m))return;const old=data.answers?.[m]?.[e]||'',s=nextStatus(old);savingMembers.add(m);data.answers[m]??={};if(s)data.answers[m][e]=s;else delete data.answers[m][e];$('#syncText').textContent='保存中…';render();try{await api('POST',{action:'answer',memberId:m,eventId:e,status:s});$('#syncText').textContent='保存済み '+new Date().toLocaleTimeString('ja-JP',{hour:'2-digit',minute:'2-digit'})}catch{if(old)data.answers[m][e]=old;else delete data.answers[m][e];showError('保存できませんでした。')}finally{savingMembers.delete(m);render()}}
-$('#commentSave').onclick=async()=>{const text=$('#commentText').value.trim(),memberId=selectedMember,eventDate=$('#commentEventDate').value,upperGrade=$('#upperGradeCheck').checked;if(!memberId||(!text&&!upperGrade)||!eventDate||savingMembers.has(memberId))return;savingMembers.add(memberId);$('#syncText').textContent='保存中…';render();try{const j=await api('POST',{action:'comment',memberId,text,eventDate,upperGrade});data=normalize(j.data);$('#commentText').value='';$('#upperGradeCheck').checked=false;$('#syncText').textContent='コメント保存済み'}catch{showError('コメントを保存できませんでした。')}finally{savingMembers.delete(memberId);render()}};
+$('#commentSave').onclick=async()=>{const text=$('#commentText').value.trim(),memberId=selectedMember,eventDate=$('#commentEventDate').value;if(!memberId||!text||!eventDate||savingMembers.has(memberId))return;savingMembers.add(memberId);$('#syncText').textContent='保存中…';render();try{const j=await api('POST',{action:'comment',memberId,text,eventDate});data=normalize(j.data);$('#commentText').value='';$('#syncText').textContent='コメント保存済み'}catch{showError('コメントを保存できませんでした。')}finally{savingMembers.delete(memberId);render()}};
 $('#editCancel').onclick=()=>{selectedMember='';render()};
 function commentDateValue(comment){if(comment.eventDate){const value=new Date(comment.eventDate+'T00:00:00').getTime();if(Number.isFinite(value))return value}const match=String(comment.text||'').match(/(\d{1,2})\s*(?:\/|月)\s*(\d{1,2})(?:日)?/);if(match){const now=new Date(),dates=[-1,0,1].map(offset=>new Date(now.getFullYear()+offset,Number(match[1])-1,Number(match[2])).getTime());return dates.sort((a,b)=>Math.abs(a-now)-Math.abs(b-now))[0]}return new Date(comment.updatedAt||0).getTime()||0}
 function sortedComments(){return [...data.comments].filter(comment=>comment&&(comment.text||comment.upperGrade)).sort((a,b)=>commentDateValue(b)-commentDateValue(a)||new Date(b.updatedAt||0)-new Date(a.updatedAt||0))}
 function todayDateKey(){const now=new Date(),year=now.getFullYear(),month=String(now.getMonth()+1).padStart(2,'0'),day=String(now.getDate()).padStart(2,'0');return `${year}-${month}-${day}`}
 function isPastComment(comment){const eventDate=String(comment?.eventDate||'');return /^\d{4}-\d{2}-\d{2}$/.test(eventDate)&&eventDate<todayDateKey()}
-function renderComments(){const byId=new Map(data.members.map(m=>[m.id,memberDisplayName(m)]));const list=sortedComments().filter(comment=>!isPastComment(comment)).slice(0,50);$('#commentList').innerHTML=list.length?list.map(c=>`<article class="comment-item"><div class="comment-meta"><span class="comment-name">${esc(byId.get(c.memberId)||'回答者')}</span> ${c.upperGrade?'<span class="upper-grade-badge">上級生帯同</span>':''}　${c.eventDate?esc(formatDate(c.eventDate))+'　':''}${esc(new Date(c.updatedAt).toLocaleString('ja-JP'))}</div><div class="comment-text">${esc(c.text||'コメントなし')}</div></article>`).join(''):'<div class="empty">コメントはまだありません。</div>'}
+function renderComments(){const byId=new Map(data.members.map(m=>[m.id,memberDisplayName(m)]));const list=sortedComments().filter(comment=>!isPastComment(comment)).slice(0,50);$('#commentList').innerHTML=list.length?list.map(c=>`<article class="comment-item"><div class="comment-meta"><span class="comment-name">${esc(byId.get(c.memberId)||'回答者')}</span> ${(c.escortGrade||c.upperGrade)?'<span class="upper-grade-badge">'+esc(c.escortGrade?c.escortGrade+'年生帯同':'上級生帯同')+'</span>':''}　${c.eventDate?esc(formatDate(c.eventDate))+'　':''}${esc(new Date(c.updatedAt).toLocaleString('ja-JP'))}</div><div class="comment-text">${esc(c.text||'')}</div></article>`).join(''):'<div class="empty">コメントはまだありません。</div>'}
 $('#openReportBtn').onclick=()=>{const eventId=$('#reportEventSelect').value;if(!eventId||!renderReport(eventId)){alert('出力する日程を選択してください。');return}$('#reportDialog').showModal();document.body.style.overflow='hidden'};
 $('#closeReportBtn').onclick=()=>{$('#reportDialog').close();document.body.style.overflow=''};
 $('#saveReportImageBtn').onclick=saveReportImage;
