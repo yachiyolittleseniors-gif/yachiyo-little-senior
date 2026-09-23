@@ -264,7 +264,7 @@ body{padding-top:var(--fixed-header-height)!important}
   <section class="locked-card hidden" id="lockedView"></section>
 
   <div id="attendanceView">
-    <div class="notice"><b>回答方法：</b>左の自分の名前をタップしてから、○×を編集してください。選択した本人の行だけ編集できます。<br><b>コメント入力：</b>名前を選択すると回答表の下に入力欄が表示されます。対象日と内容を入力し、「コメントを追加」を押してください。<br><span style="color:#6f7884">※選手名・学年は選手紹介から、日程はスケジュールページから自動反映します。</span></div>
+    <div class="notice"><b>回答方法：</b>左の自分の名前をタップしてから、○×を編集してください。選択した本人の行だけ編集できます。<br><b>コメント入力：</b>名前を選択すると回答表の下に入力欄が表示されます。対象日と内容を入力し、「コメントを追加」を押してください。上級生に帯同する場合は、コメント欄の「帯同」にチェックを入れてください。<br><span style="color:#6f7884">※選手名・学年は選手紹介から、日程はスケジュールページから自動反映します。</span></div>
     
     <details class="report-launch" id="reportLaunch">
       <summary class="report-launch-head report-launch-summary"><h2>選手出席一覧の出力</h2><span class="report-launch-summary-meta"><span class="sync" id="syncText"></span><span class="report-launch-chevron" aria-hidden="true"></span></span></summary>
@@ -273,7 +273,7 @@ body{padding-top:var(--fixed-header-height)!important}
         <label>日程を選択<select id="reportEventSelect" aria-label="出力する日程"></select></label>
         <button id="openReportBtn" type="button">選手出席一覧を出力</button>
       </div>
-      <p>学年ごとの○・×・未入力と、選択した日のコメントを表示します。上級生に帯同する場合は、コメント欄の「帯同」にチェックを入れてください。</p>
+      <p>学年ごとの○・×・未入力と、選択した日のコメントを表示します。</p>
       </div>
     </details>
     <dialog class="summary-dialog" id="summaryDialog" aria-labelledby="summaryTitle"><div class="summary-dialog-head"><h2 id="summaryTitle">出欠内訳</h2><button class="summary-close" id="summaryClose" type="button" aria-label="閉じる">×</button></div><div class="breakdown-list" id="summaryBody"></div><p class="breakdown-unset" id="summaryUnset"></p></dialog>
