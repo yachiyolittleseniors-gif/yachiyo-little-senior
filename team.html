@@ -1187,6 +1187,14 @@ body.staff-editing .major-achievements:not(.is-visible) .major-achievements-empt
 .major-achievements-admin-actions button{min-height:44px;padding:0 18px;border-radius:6px;font-weight:900;cursor:pointer}
 .major-achievement-add,.major-achievement-save{border:1px solid #071426;background:#071426;color:#fff}
 .major-achievement-cancel{border:1px solid #bdc4cc;background:#fff;color:#4b5662}
+
+.past-achievements-admin{margin-top:20px;border-top:1px solid #e5e1d8;padding-top:18px}
+.past-achievements-toggle{width:100%;display:flex;align-items:center;gap:10px;border:0;background:#fff;padding:12px 0;color:#0b1b31;font:inherit;font-weight:900;text-align:left;cursor:pointer}
+.past-achievements-toggle .past-icon{color:#b48620;font-size:20px}.past-achievements-toggle .past-arrow{margin-left:auto;color:#b48620;font-size:20px}.past-achievements-toggle[aria-expanded="true"] .past-arrow{transform:rotate(180deg)}
+.past-achievements-status{margin-left:6px;padding:5px 10px;border-radius:999px;background:#ead6a1;color:#74520c;font-size:11px;font-weight:900}
+.past-achievements-note{margin:0 0 12px;color:#6d7783;font-size:13px;line-height:1.7}.past-achievements-panel[hidden]{display:none}
+.past-achievement-edit-row{display:grid;grid-template-columns:76px 1fr 1fr auto;gap:8px;align-items:center;margin-bottom:10px}.past-achievement-edit-row input{min-width:0;padding:10px;border:1px solid #cfd5dc;border-radius:6px;font:inherit}.past-achievement-visible{display:flex;align-items:center;gap:5px;white-space:nowrap;font-size:12px;font-weight:800}.past-achievement-visible input{width:18px;height:18px}
+@media(max-width:680px){.past-achievement-edit-row{grid-template-columns:76px 1fr}.past-achievement-edit-row input[data-k="result"]{grid-column:1 / -1}.past-achievement-visible{grid-column:1 / -1}}
 @media(max-width:650px){
  .major-achievements-head{padding:20px 18px 15px}.major-achievements-head h2{font-size:21px}
  .major-achievements-list{padding:4px 18px 14px}
@@ -1594,6 +1602,15 @@ html{scroll-padding-top:var(--fixed-header-height)}
       <button class="major-achievement-cancel" id="majorAchievementCancel" type="button">キャンセル</button>
       <button class="major-achievement-save" id="majorAchievementSave" type="button">大会実績を保存</button>
     </div>
+    <div class="past-achievements-admin" id="pastAchievementsAdmin">
+      <button class="past-achievements-toggle" id="pastAchievementsToggle" type="button" aria-expanded="false">
+        <span class="past-icon">◷</span><span>過去の大会実績</span><span class="past-achievements-status" id="pastAchievementsStatus">非表示中</span><span class="past-arrow">⌄</span>
+      </button>
+      <div class="past-achievements-panel" id="pastAchievementsPanel" hidden>
+        <p class="past-achievements-note">旧サイトから移行した過去の大会実績です。表示する実績だけ「サイトに表示」にチェックしてください。</p>
+        <div id="pastAchievementsEditor"></div>
+      </div>
+    </div>
   </div>
 </div>
 
@@ -1952,50 +1969,49 @@ function openProtectedArea(type){
 \n<script>
 (function(){
   const API='/.netlify/functions/site-data?section=major-achievements';
-  const card=document.getElementById('majorAchievements');
-  const list=document.getElementById('majorAchievementsList');
-  const editor=document.getElementById('majorAchievementsEditor');
+  const card=document.getElementById('majorAchievements'), list=document.getElementById('majorAchievementsList'), editor=document.getElementById('majorAchievementsEditor');
+  const pastEditor=document.getElementById('pastAchievementsEditor'), pastToggle=document.getElementById('pastAchievementsToggle'), pastPanel=document.getElementById('pastAchievementsPanel'), pastStatus=document.getElementById('pastAchievementsStatus');
   if(!card||!list||!editor) return;
+  const legacyPast=[
+    {year:'1991年',name:'秋季関東大会',result:'出場',archived:true,visible:false},
+    {year:'1996年',name:'日本選手権大会',result:'出場',archived:true,visible:false},
+    {year:'1999年',name:'春季関東大会',result:'出場',archived:true,visible:false},
+    {year:'2007年',name:'日本選手権大会',result:'出場',archived:true,visible:false},
+    {year:'2013年',name:'東日本選抜大会',result:'出場',archived:true,visible:false},
+    {year:'2017年',name:'秋季関東大会',result:'出場',archived:true,visible:false},
+    {year:'2018年',name:'U-15東アジア宮崎大会',result:'出場',archived:true,visible:false}
+  ];
   let items=[];
   const esc=value=>String(value??'').replace(/[&<>\"']/g,ch=>({'&':'&amp;','<':'&lt;','>':'&gt;','\"':'&quot;',"'":'&#39;'}[ch]));
-  const cleanItem=x=>({year:String(x?.year||'').trim().slice(0,12),name:String(x?.name||'').trim().slice(0,120),result:String(x?.result||'').trim().slice(0,80)});
-  const sortItems=arr=>arr.slice().sort((a,b)=>{
-    const ay=parseInt(String(a.year).match(/\\d{4}/)?.[0]||'0',10), by=parseInt(String(b.year).match(/\\d{4}/)?.[0]||'0',10);
-    return by-ay || String(b.year).localeCompare(String(a.year),'ja');
-  });
+  const cleanItem=x=>({year:String(x?.year||'').trim().slice(0,12),name:String(x?.name||'').trim().slice(0,120),result:String(x?.result||'').trim().slice(0,80),archived:!!x?.archived,visible:x?.visible!==false});
+  const sortItems=arr=>arr.slice().sort((a,b)=>{const ay=parseInt(String(a.year).match(/\d{4}/)?.[0]||'0',10),by=parseInt(String(b.year).match(/\d{4}/)?.[0]||'0',10);return by-ay||String(b.year).localeCompare(String(a.year),'ja');});
   function render(){
-    const visible=sortItems(items.filter(x=>x.year&&x.name));
+    const visible=sortItems(items.filter(x=>x.year&&x.name&&(!x.archived||x.visible)));
     card.classList.toggle('is-visible',visible.length>0);
     list.innerHTML=visible.map(x=>`<div class="major-achievement-row"><div class="major-achievement-year">${esc(x.year)}</div><div class="major-achievement-name">${esc(x.name)}</div><div class="major-achievement-result">${esc(x.result)}</div></div>`).join('');
   }
   function renderEditor(){
-    editor.innerHTML=items.map((x,i)=>`<div class="major-achievement-edit-row"><input data-i="${i}" data-k="year" value="${esc(x.year)}" maxlength="12" inputmode="numeric" placeholder="年度"><input data-i="${i}" data-k="name" value="${esc(x.name)}" maxlength="120" placeholder="大会名"><input data-i="${i}" data-k="result" value="${esc(x.result)}" maxlength="80" placeholder="結果（出場・優勝など）"><button class="major-achievement-delete" type="button" data-del="${i}">削除</button></div>`).join('');
+    const current=items.filter(x=>!x.archived);
+    editor.innerHTML=current.map(x=>{const i=items.indexOf(x);return `<div class="major-achievement-edit-row"><input data-i="${i}" data-k="year" value="${esc(x.year)}" maxlength="12" inputmode="numeric" placeholder="年度"><input data-i="${i}" data-k="name" value="${esc(x.name)}" maxlength="120" placeholder="大会名"><input data-i="${i}" data-k="result" value="${esc(x.result)}" maxlength="80" placeholder="結果（出場・優勝など）"><button class="major-achievement-delete" type="button" data-del="${i}">削除</button></div>`}).join('');
+    if(pastEditor){const past=items.filter(x=>x.archived);pastEditor.innerHTML=past.map(x=>{const i=items.indexOf(x);return `<div class="past-achievement-edit-row"><input data-i="${i}" data-k="year" value="${esc(x.year)}" maxlength="12"><input data-i="${i}" data-k="name" value="${esc(x.name)}" maxlength="120"><input data-i="${i}" data-k="result" value="${esc(x.result)}" maxlength="80"><label class="past-achievement-visible"><input type="checkbox" data-i="${i}" data-visible ${x.visible?'checked':''}>サイトに表示</label></div>`}).join('');pastStatus.textContent=past.some(x=>x.visible)?'一部表示中':'非表示中';}
   }
   async function load(){
-    try{
-      const r=await fetch(API,{cache:'no-store'});
-      if(r.ok){const j=await r.json();items=Array.isArray(j.data)?j.data.map(cleanItem).filter(x=>x.year||x.name||x.result):[];}
-    }catch(e){}
-    render(); renderEditor();
+    try{const r=await fetch(API,{cache:'no-store'});if(r.ok){const j=await r.json();items=Array.isArray(j.data)?j.data.map(cleanItem).filter(x=>x.year||x.name||x.result):[];}}catch(e){}
+    if(!items.some(x=>x.archived)){items=items.concat(legacyPast.map(cleanItem));}
+    render();renderEditor();
   }
-  document.getElementById('majorAchievementAdd').addEventListener('click',()=>{items.unshift({year:'',name:'',result:''});renderEditor();const first=editor.querySelector('input');if(first)first.focus();});
-  editor.addEventListener('input',e=>{const k=e.target.dataset.k;if(!k)return;items[Number(e.target.dataset.i)][k]=e.target.value;});
+  document.getElementById('majorAchievementAdd').addEventListener('click',()=>{items.unshift({year:'',name:'',result:'',archived:false,visible:true});renderEditor();const first=editor.querySelector('input');if(first)first.focus();});
+  function onInput(e){const k=e.target.dataset.k;if(!k)return;items[Number(e.target.dataset.i)][k]=e.target.value;}
+  editor.addEventListener('input',onInput); if(pastEditor){pastEditor.addEventListener('input',onInput);pastEditor.addEventListener('change',e=>{if(e.target.matches('[data-visible]')){items[Number(e.target.dataset.i)].visible=e.target.checked;render();renderEditor();}});}
   editor.addEventListener('click',e=>{const b=e.target.closest('[data-del]');if(!b)return;items.splice(Number(b.dataset.del),1);renderEditor();});
+  if(pastToggle)pastToggle.addEventListener('click',()=>{const open=pastToggle.getAttribute('aria-expanded')!=='true';pastToggle.setAttribute('aria-expanded',String(open));pastPanel.hidden=!open;});
   document.getElementById('majorAchievementCancel').addEventListener('click',()=>{load();document.body.classList.remove('staff-editing');});
   document.getElementById('majorAchievementSave').addEventListener('click',async()=>{
-    const p=sessionStorage.getItem('yachiyoAdminPassword')||'';
-    if(!p){alert('管理者認証をやり直してください。');return;}
+    const p=sessionStorage.getItem('yachiyoAdminPassword')||'';if(!p){alert('管理者認証をやり直してください。');return;}
     const clean=sortItems(items.map(cleanItem).filter(x=>x.year&&x.name));
-    try{
-      const r=await fetch(API,{method:'POST',headers:{'content-type':'application/json','x-admin-password':p},body:JSON.stringify({data:clean})});
-      if(r.status===429){alert('試行回数の上限です。15分後に再度お試しください。');return;}
-      if(r.status===401){alert('管理者パスワードが違います。');return;}
-      if(!r.ok){alert('大会実績を保存できませんでした。');return;}
-      items=clean;render();renderEditor();showSaveNotice('保存しました');
-    }catch(e){alert('大会実績を保存できませんでした。');}
+    try{const r=await fetch(API,{method:'POST',headers:{'content-type':'application/json','x-admin-password':p},body:JSON.stringify({data:clean})});if(r.status===429){alert('試行回数の上限です。15分後に再度お試しください。');return;}if(r.status===401){alert('管理者パスワードが違います。');return;}if(!r.ok){alert('大会実績を保存できませんでした。');return;}items=clean;render();renderEditor();showSaveNotice('保存しました');}catch(e){alert('大会実績を保存できませんでした。');}
   });
-  const observer=new MutationObserver(()=>{if(document.body.classList.contains('staff-editing'))renderEditor();});
-  observer.observe(document.body,{attributes:true,attributeFilter:['class']});
+  new MutationObserver(()=>{if(document.body.classList.contains('staff-editing'))renderEditor();}).observe(document.body,{attributes:true,attributeFilter:['class']});
   load();
 })();
 </script>\n
