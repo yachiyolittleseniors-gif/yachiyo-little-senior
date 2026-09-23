@@ -22,7 +22,12 @@ gtag('js',new Date());
 gtag('config','G-L8BMMSXDP9',{allow_google_signals:false,allow_ad_personalization_signals:false});
 </script>
 <meta name="theme-color" content="#071426">
-<style id="initial-paint-style">html,body{background:#f4f3ef}</style>
+<style id="initial-paint-style">html,body{background:#f4f3ef}
+.past-achievements-summary{margin-top:14px;padding:16px 18px;border:1px solid #d8dde5;border-radius:12px;background:#fff;color:#172238;font-weight:700;line-height:1.9;}
+.past-achievements-public{margin-top:18px;padding:20px 22px;border-top:1px solid #e1e1dc;text-align:left;}
+.past-achievements-public strong{display:block;color:#a87913;font-size:1.05rem;margin-bottom:10px;}
+.past-achievements-public p{margin:0;color:#4e596b;line-height:1.9;}
+</style>
 <link rel="preload" as="image" href="./official-logo-crisp-final.png" fetchpriority="high">
 <meta name="author" content="tatsuki.saitoh">
 <meta charset="utf-8"/>
@@ -1193,7 +1198,7 @@ body.staff-editing .major-achievements:not(.is-visible) .major-achievements-empt
 .past-achievements-toggle .past-icon{color:#b48620;font-size:20px}.past-achievements-toggle .past-arrow{margin-left:auto;color:#b48620;font-size:20px}.past-achievements-toggle[aria-expanded="true"] .past-arrow{transform:rotate(180deg)}
 .past-achievements-status{margin-left:6px;padding:5px 10px;border-radius:999px;background:#ead6a1;color:#74520c;font-size:11px;font-weight:900}
 .past-achievements-note{margin:0 0 12px;color:#6d7783;font-size:13px;line-height:1.7}.past-achievements-panel[hidden]{display:none}
-.past-achievement-edit-row{display:grid;grid-template-columns:76px 1fr 1fr auto;gap:8px;align-items:center;margin-bottom:10px}.past-achievement-edit-row input{min-width:0;padding:10px;border:1px solid #cfd5dc;border-radius:6px;font:inherit}.past-achievement-visible{display:flex;align-items:center;gap:5px;white-space:nowrap;font-size:12px;font-weight:800}.past-achievement-visible input{width:18px;height:18px}
+.past-achievement-edit-row{display:grid;grid-template-columns:76px 1fr 1fr auto;gap:8px;align-items:center;margin-bottom:10px}.past-achievement-edit-row input{min-width:0;padding:10px;border:1px solid #cfd5dc;border-radius:6px;font:inherit}.past-achievements-master{display:flex;align-items:center;gap:10px;margin:0 0 14px;padding:12px 14px;border:1px solid #d7dce2;border-radius:8px;background:#fafafa;font-size:13px;font-weight:900;color:#0b1b31}.past-achievements-master input{width:20px;height:20px;accent-color:#b48620}.past-achievement-visible{display:none}
 @media(max-width:680px){.past-achievement-edit-row{grid-template-columns:76px 1fr}.past-achievement-edit-row input[data-k="result"]{grid-column:1 / -1}.past-achievement-visible{grid-column:1 / -1}}
 @media(max-width:650px){
  .major-achievements-head{padding:20px 18px 15px}.major-achievements-head h2{font-size:21px}
@@ -1607,8 +1612,9 @@ html{scroll-padding-top:var(--fixed-header-height)}
         <span class="past-icon">◷</span><span>過去の大会実績</span><span class="past-achievements-status" id="pastAchievementsStatus">非表示中</span><span class="past-arrow">⌄</span>
       </button>
       <div class="past-achievements-panel" id="pastAchievementsPanel" hidden>
-        <p class="past-achievements-note">旧サイトから移行した過去の大会実績です。表示する実績だけ「サイトに表示」にチェックしてください。</p>
-        <div id="pastAchievementsEditor"></div>
+        <p class="past-achievements-note">旧サイトから移行した過去の大会実績です。まとめてサイトへの表示／非表示を切り替えられます。</p>
+        <label class="past-achievements-master"><input type="checkbox" id="pastAchievementsMasterVisible">過去の大会実績をサイトに表示</label>
+        <div class="past-achievements-summary">1991年 秋季関東大会 出場<br>1996年 日本選手権大会 出場<br>1999年 春季関東大会 出場<br>2007年 日本選手権大会 出場<br>2013年 東日本選抜大会 出場<br>2017年 秋季関東大会 出場<br>2018年 U-15東アジア宮崎大会 出場</div>
       </div>
     </div>
   </div>
@@ -1970,7 +1976,7 @@ function openProtectedArea(type){
 (function(){
   const API='/.netlify/functions/site-data?section=major-achievements';
   const card=document.getElementById('majorAchievements'), list=document.getElementById('majorAchievementsList'), editor=document.getElementById('majorAchievementsEditor');
-  const pastEditor=document.getElementById('pastAchievementsEditor'), pastToggle=document.getElementById('pastAchievementsToggle'), pastPanel=document.getElementById('pastAchievementsPanel'), pastStatus=document.getElementById('pastAchievementsStatus');
+  const pastToggle=document.getElementById('pastAchievementsToggle'), pastPanel=document.getElementById('pastAchievementsPanel'), pastStatus=document.getElementById('pastAchievementsStatus'), pastMaster=document.getElementById('pastAchievementsMasterVisible');
   if(!card||!list||!editor) return;
   const legacyPast=[
     {year:'1991年',name:'秋季関東大会',result:'出場',archived:true,visible:false},
@@ -1986,14 +1992,16 @@ function openProtectedArea(type){
   const cleanItem=x=>({year:String(x?.year||'').trim().slice(0,12),name:String(x?.name||'').trim().slice(0,120),result:String(x?.result||'').trim().slice(0,80),archived:!!x?.archived,visible:x?.visible!==false});
   const sortItems=arr=>arr.slice().sort((a,b)=>{const ay=parseInt(String(a.year).match(/\d{4}/)?.[0]||'0',10),by=parseInt(String(b.year).match(/\d{4}/)?.[0]||'0',10);return by-ay||String(b.year).localeCompare(String(a.year),'ja');});
   function render(){
-    const visible=sortItems(items.filter(x=>x.year&&x.name&&(!x.archived||x.visible)));
-    card.classList.toggle('is-visible',visible.length>0);
-    list.innerHTML=visible.map(x=>`<div class="major-achievement-row"><div class="major-achievement-year">${esc(x.year)}</div><div class="major-achievement-name">${esc(x.name)}</div><div class="major-achievement-result">${esc(x.result)}</div></div>`).join('');
+    const current=sortItems(items.filter(x=>x.year&&x.name&&!x.archived));
+    const past=sortItems(items.filter(x=>x.archived));
+    const showPast=past.length>0&&past.every(x=>x.visible);
+    card.classList.toggle('is-visible',current.length>0||showPast);
+    list.innerHTML=current.map(x=>`<div class="major-achievement-row"><div class="major-achievement-year">${esc(x.year)}</div><div class="major-achievement-name">${esc(x.name)}</div><div class="major-achievement-result">${esc(x.result)}</div></div>`).join('')+(showPast?`<div class="past-achievements-public"><strong>過去の大会実績</strong><p>${past.slice().reverse().map(x=>`${esc(x.year)} ${esc(x.name)} ${esc(x.result)}`).join('<br>')}</p></div>`:'');
   }
   function renderEditor(){
     const current=items.filter(x=>!x.archived);
     editor.innerHTML=current.map(x=>{const i=items.indexOf(x);return `<div class="major-achievement-edit-row"><input data-i="${i}" data-k="year" value="${esc(x.year)}" maxlength="12" inputmode="numeric" placeholder="年度"><input data-i="${i}" data-k="name" value="${esc(x.name)}" maxlength="120" placeholder="大会名"><input data-i="${i}" data-k="result" value="${esc(x.result)}" maxlength="80" placeholder="結果（出場・優勝など）"><button class="major-achievement-delete" type="button" data-del="${i}">削除</button></div>`}).join('');
-    if(pastEditor){const past=items.filter(x=>x.archived);pastEditor.innerHTML=past.map(x=>{const i=items.indexOf(x);return `<div class="past-achievement-edit-row"><input data-i="${i}" data-k="year" value="${esc(x.year)}" maxlength="12"><input data-i="${i}" data-k="name" value="${esc(x.name)}" maxlength="120"><input data-i="${i}" data-k="result" value="${esc(x.result)}" maxlength="80"><label class="past-achievement-visible"><input type="checkbox" data-i="${i}" data-visible ${x.visible?'checked':''}>サイトに表示</label></div>`}).join('');pastStatus.textContent=past.some(x=>x.visible)?'一部表示中':'非表示中';}
+    {const past=items.filter(x=>x.archived);const allVisible=past.length>0&&past.every(x=>x.visible);if(pastMaster)pastMaster.checked=allVisible;if(pastStatus)pastStatus.textContent=allVisible?'表示中':'非表示中';}
   }
   async function load(){
     try{const r=await fetch(API,{cache:'no-store'});if(r.ok){const j=await r.json();items=Array.isArray(j.data)?j.data.map(cleanItem).filter(x=>x.year||x.name||x.result):[];}}catch(e){}
@@ -2002,7 +2010,7 @@ function openProtectedArea(type){
   }
   document.getElementById('majorAchievementAdd').addEventListener('click',()=>{items.unshift({year:'',name:'',result:'',archived:false,visible:true});renderEditor();const first=editor.querySelector('input');if(first)first.focus();});
   function onInput(e){const k=e.target.dataset.k;if(!k)return;items[Number(e.target.dataset.i)][k]=e.target.value;}
-  editor.addEventListener('input',onInput); if(pastEditor){pastEditor.addEventListener('input',onInput);pastEditor.addEventListener('change',e=>{if(e.target.matches('[data-visible]')){items[Number(e.target.dataset.i)].visible=e.target.checked;render();const past=items.filter(x=>x.archived);if(pastStatus)pastStatus.textContent=past.some(x=>x.visible)?'一部表示中':'非表示中';}});}
+  editor.addEventListener('input',onInput); if(pastMaster)pastMaster.addEventListener('change',()=>{const y=window.scrollY;const open=pastToggle&&pastToggle.getAttribute('aria-expanded')==='true';items.forEach(x=>{if(x.archived)x.visible=pastMaster.checked;});render();if(pastStatus)pastStatus.textContent=pastMaster.checked?'表示中':'非表示中';if(open&&pastPanel){pastToggle.setAttribute('aria-expanded','true');pastPanel.hidden=false;}requestAnimationFrame(()=>window.scrollTo(0,y));});
   editor.addEventListener('click',e=>{const b=e.target.closest('[data-del]');if(!b)return;items.splice(Number(b.dataset.del),1);renderEditor();});
   if(pastToggle)pastToggle.addEventListener('click',()=>{const open=pastToggle.getAttribute('aria-expanded')!=='true';pastToggle.setAttribute('aria-expanded',String(open));pastPanel.hidden=!open;});
   document.getElementById('majorAchievementCancel').addEventListener('click',()=>{load();document.body.classList.remove('staff-editing');});
