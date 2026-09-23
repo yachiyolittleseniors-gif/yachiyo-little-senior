@@ -2002,7 +2002,7 @@ function openProtectedArea(type){
   }
   document.getElementById('majorAchievementAdd').addEventListener('click',()=>{items.unshift({year:'',name:'',result:'',archived:false,visible:true});renderEditor();const first=editor.querySelector('input');if(first)first.focus();});
   function onInput(e){const k=e.target.dataset.k;if(!k)return;items[Number(e.target.dataset.i)][k]=e.target.value;}
-  editor.addEventListener('input',onInput); if(pastEditor){pastEditor.addEventListener('input',onInput);pastEditor.addEventListener('change',e=>{if(e.target.matches('[data-visible]')){items[Number(e.target.dataset.i)].visible=e.target.checked;render();renderEditor();}});}
+  editor.addEventListener('input',onInput); if(pastEditor){pastEditor.addEventListener('input',onInput);pastEditor.addEventListener('change',e=>{if(e.target.matches('[data-visible]')){items[Number(e.target.dataset.i)].visible=e.target.checked;render();const past=items.filter(x=>x.archived);if(pastStatus)pastStatus.textContent=past.some(x=>x.visible)?'一部表示中':'非表示中';}});}
   editor.addEventListener('click',e=>{const b=e.target.closest('[data-del]');if(!b)return;items.splice(Number(b.dataset.del),1);renderEditor();});
   if(pastToggle)pastToggle.addEventListener('click',()=>{const open=pastToggle.getAttribute('aria-expanded')!=='true';pastToggle.setAttribute('aria-expanded',String(open));pastPanel.hidden=!open;});
   document.getElementById('majorAchievementCancel').addEventListener('click',()=>{load();document.body.classList.remove('staff-editing');});
