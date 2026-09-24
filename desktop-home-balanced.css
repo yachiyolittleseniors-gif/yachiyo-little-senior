@@ -502,3 +502,39 @@
   #home>.hero h1{font-size:46px!important}
   #home .quick b{font-size:17px!important}
 }
+
+/* 2026-09-24 PC refinement: preserve the original navy + gold identity on the four primary cards. */
+@media (min-width:901px) {
+  #home > .quick a[href="/team"],
+  #home > .quick a[href="/results"],
+  #home > .quick a[href="/schedule"],
+  #home > .quick a[href="/join"] {
+    background:#071426 !important;
+    background-image:none !important;
+    border:1px solid rgba(199,154,59,.72) !important;
+    box-shadow:0 8px 22px rgba(7,20,38,.10) !important;
+  }
+  #home > .quick a[href="/team"] b,
+  #home > .quick a[href="/results"] b,
+  #home > .quick a[href="/schedule"] b,
+  #home > .quick a[href="/join"] b,
+  #home > .quick a[href="/team"] small,
+  #home > .quick a[href="/results"] small,
+  #home > .quick a[href="/schedule"] small,
+  #home > .quick a[href="/join"] small,
+  #home > .quick a[href="/team"] .ico,
+  #home > .quick a[href="/results"] .ico,
+  #home > .quick a[href="/schedule"] .ico,
+  #home > .quick a[href="/join"] .ico {
+    color:#d9b45b !important;
+  }
+  #home > .quick a[href="/team"]:hover,
+  #home > .quick a[href="/results"]:hover,
+  #home > .quick a[href="/schedule"]:hover,
+  #home > .quick a[href="/join"]:hover {
+    background:#0d223d !important;
+    border-color:#e0ba61 !important;
+    transform:translateY(-3px) !important;
+    box-shadow:0 14px 30px rgba(7,20,38,.18) !important;
+  }
+}
