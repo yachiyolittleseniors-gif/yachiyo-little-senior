@@ -1494,6 +1494,12 @@ html{scroll-padding-top:var(--fixed-header-height)}
 @media(max-width:600px){.phone-contact-box{padding:22px 16px}}
 </style>
 <meta name="robots" content="index,follow,max-image-preview:large,max-snippet:-1,max-video-preview:-1">
+
+<style id="contact-admin-button-unified">
+.unified-admin-reveal{min-height:44px;display:flex!important;align-items:center;justify-content:center;touch-action:manipulation!important;-webkit-user-select:none!important;user-select:none!important;-webkit-touch-callout:none!important;-webkit-tap-highlight-color:transparent!important}
+#contactAdminBtn{position:fixed!important;right:max(12px,env(safe-area-inset-right))!important;bottom:calc(12px + env(safe-area-inset-bottom))!important;left:auto!important;top:auto!important;width:auto!important;min-width:52px!important;max-width:calc(100vw - 24px)!important;height:auto!important;min-height:44px!important;margin:0!important;padding:12px 14px!important;transform:none!important;z-index:20001!important;border:0!important;border-radius:0!important;outline:0!important;background:transparent!important;background-image:none!important;color:rgba(199,154,59,.46)!important;box-shadow:none!important;text-shadow:none!important;font-size:11px!important;font-weight:700!important;line-height:1.25!important;text-align:center!important;white-space:nowrap!important;touch-action:manipulation!important;-webkit-tap-highlight-color:transparent!important}
+#contactAdminBtn:hover,#contactAdminBtn:focus-visible{color:rgba(199,154,59,.72)!important;background:transparent!important}
+</style>
 </head>
 <body id="page-top">
 <header class="header">
@@ -1908,12 +1914,7 @@ function openProtectedArea(type){
 })();
 </script>
 
-<style id="contact-admin-reveal-style">
-.unified-admin-reveal{min-height:44px;display:flex!important;align-items:center;justify-content:center;touch-action:manipulation!important;-webkit-user-select:none!important;user-select:none!important;-webkit-touch-callout:none!important;-webkit-tap-highlight-color:transparent!important}
-#contactAdminToggle.unified-admin-toggle{position:fixed!important;right:16px!important;bottom:calc(16px + env(safe-area-inset-bottom))!important;left:auto!important;width:auto!important;min-width:0!important;height:auto!important;margin:0!important;padding:9px 12px!important;z-index:9998!important;border:1px solid rgba(199,154,59,.72)!important;border-radius:999px!important;background:#071426!important;color:#e2bd67!important;box-shadow:0 8px 22px rgba(0,0,0,.24)!important;font-size:12px!important;font-weight:800!important;line-height:1.3!important;touch-action:manipulation!important;-webkit-tap-highlight-color:transparent!important}
-@media(max-width:600px){#contactAdminToggle.unified-admin-toggle{right:12px!important;bottom:calc(12px + env(safe-area-inset-bottom))!important;padding:8px 10px!important;font-size:11px!important}}
-</style>
-<button type="button" id="contactAdminToggle" class="unified-admin-toggle" style="display:none" aria-label="お問い合わせ管理を開く">管理</button>
+<button id="contactAdminBtn" type="button" aria-label="お問い合わせ管理">管理</button>
 <script id="phone-contact-settings-script">
 (()=>{
   const API='/.netlify/functions/site-data';
@@ -1927,7 +1928,6 @@ function openProtectedArea(type){
   const saveBtn=document.getElementById('phoneSettingsSave');
   const status=document.getElementById('phoneAdminStatus');
   const footer=document.querySelector('.restored-footer-copy');
-  const adminButton=document.getElementById('contactAdminToggle');
   if(!box||!button||!person)return;
 
   const defaults={visible:true,phone:'090-4667-0983',person:'事務局長・櫻井'};
@@ -1982,11 +1982,12 @@ function openProtectedArea(type){
     }catch(e){alert(e.message||'管理画面を開けませんでした。')}
   }
 
-  if(adminButton){
-    adminButton.addEventListener('click',enterAdmin);
+  const adminBtn=document.getElementById('contactAdminBtn');
+  if(adminBtn){
+    adminBtn.style.display='none';
+    adminBtn.addEventListener('click',enterAdmin);
   }
-
-  if(footer&&adminButton){
+  if(footer&&adminBtn){
     footer.classList.add('unified-admin-reveal');
     footer.setAttribute('aria-label','管理ボタンを表示');
     let taps=0,timer=null,lastTouch=0;
@@ -1995,21 +1996,10 @@ function openProtectedArea(type){
       taps++;
       clearTimeout(timer);
       timer=setTimeout(reset,2200);
-      if(taps>=5){
-        reset();
-        adminButton.style.setProperty('display','block','important');
-      }
+      if(taps>=5){reset();adminBtn.style.setProperty('display','block','important')}
     };
-    footer.addEventListener('pointerup',e=>{
-      if(e.pointerType==='touch'){e.stopImmediatePropagation();return}
-      e.stopImmediatePropagation();count();
-    },{capture:true,passive:true});
-    footer.addEventListener('touchend',e=>{lastTouch=Date.now();e.preventDefault();e.stopImmediatePropagation();count()},{capture:true,passive:false});
-    footer.addEventListener('click',e=>{
-      if(Date.now()-lastTouch<800){e.preventDefault();e.stopImmediatePropagation();return}
-      e.stopImmediatePropagation();count();
-    },{capture:true,passive:false});
-    footer.addEventListener('dblclick',e=>{e.preventDefault();e.stopImmediatePropagation()},{capture:true,passive:false});
+    footer.addEventListener('touchend',e=>{lastTouch=Date.now();e.preventDefault();count()},{passive:false});
+    footer.addEventListener('click',()=>{if(Date.now()-lastTouch<700)return;count()});
   }
 
   if(saveBtn){
