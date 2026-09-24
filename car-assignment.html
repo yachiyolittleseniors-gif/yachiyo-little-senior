@@ -64,7 +64,7 @@ body{background:#f5f5f2}.page{width:min(860px,100%);padding:24px 18px 64px}.topl
 
 /* 2026-09-24: 配車を3ステップで案内（既存の自動配車ロジックは変更しない） */
 .wizard-progress{position:sticky;top:8px;z-index:30;margin:0 0 14px;padding:10px;border:1px solid #d8dde3;border-radius:14px;background:rgba(255,255,255,.96);box-shadow:0 5px 18px rgba(7,20,38,.08);backdrop-filter:blur(8px)}
-.wizard-steps{display:grid;grid-template-columns:repeat(3,1fr);gap:6px}.wizard-step{min-width:0;padding:9px 5px;border:1px solid #d9dde2;border-radius:10px;background:#f5f7f9;color:#737c86;text-align:center;font-size:11px;font-weight:900;line-height:1.3}.wizard-step b{display:block;margin-bottom:2px;font-size:14px}.wizard-step.active{border-color:var(--gold);background:var(--navy);color:#fff}.wizard-step.done{border-color:#d2b765;background:#fff8e6;color:var(--navy)}
+.wizard-steps{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px;width:100%;align-items:stretch}.wizard-step{box-sizing:border-box;width:100%;min-width:0;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:9px 5px;border:1px solid #d9dde2;border-radius:10px;background:#f5f7f9;color:#737c86;text-align:center;font-size:11px;font-weight:900;line-height:1.3}.wizard-step b{display:block;margin-bottom:2px;font-size:14px}.wizard-step.active{border-color:var(--gold);background:var(--navy);color:#fff}.wizard-step.done{border-color:#d2b765;background:#fff8e6;color:var(--navy)}
 #editView .flow-stack .step-number{display:none}.wizard-guide{margin:8px 2px 0;color:#66717d;font-size:11px;font-weight:800;text-align:center}.wizard-hidden{display:none!important}.wizard-actions{position:sticky;bottom:8px;z-index:28;display:flex;gap:8px;margin:14px 0 4px;padding:9px;border:1px solid #d8dde3;border-radius:14px;background:rgba(255,255,255,.97);box-shadow:0 -4px 18px rgba(7,20,38,.08);backdrop-filter:blur(8px)}.wizard-actions button{min-height:46px;border-radius:11px;font-weight:900}.wizard-back{flex:0 0 34%;border:1px solid #cbd1d8;background:#fff;color:var(--navy)}.wizard-next{flex:1;border:1px solid var(--gold);background:var(--navy);color:#fff}.wizard-next.finish{background:linear-gradient(135deg,#9a741e,var(--gold));color:#071426}.wizard-back:disabled{opacity:.35}.wizard-step-note{display:none}@media(max-width:430px){.wizard-step{font-size:10px;padding:8px 3px}.wizard-step b{font-size:13px}.wizard-progress{top:5px}.wizard-actions{bottom:5px}}
 </style>
 <style>
@@ -852,10 +852,10 @@ $('#syncAttendance').onclick=syncAttendanceData;
   const $w=s=>document.querySelector(s);
   const $$w=s=>Array.from(document.querySelectorAll(s));
   const step1=['.flow-card[aria-label="日程と対象学年"]'];
-  const step2=['.flow-card[aria-label="人数と車両条件"]','#coachDetails'];
-  const step3=['.create-panel.quick-create','.cars-section','.flow-card[aria-label="連絡事項と当番"]','.candidates','.all-comments'];
+  const step2=['.flow-card[aria-label="人数と車両条件"]','#coachDetails','.candidates'];
+  const step3=['.create-panel.quick-create','.cars-section','.flow-card[aria-label="連絡事項と当番"]','.all-comments'];
   const all=[...step1,...step2,...step3];
-  const guides={1:'まず、日付・対象学年・試合情報を入力してください。',2:'出欠人数を確認し、必要な車両を設定してください。',3:'配車案を自動作成し、不足・人数を確認して必要な箇所だけ手修正します。'};
+  const guides={1:'まず、日付・対象学年・試合情報を入力してください。',2:'出欠人数・配車候補・必要台数の予測を見ながら、必要な車両を設定してください。',3:'配車案を自動作成し、不足・人数を確認して必要な箇所だけ手修正します。'};
   function visibleFor(selector,step){return (step===1&&step1.includes(selector))||(step===2&&step2.includes(selector))||(step===3&&step3.includes(selector))}
   function applyWizard(scroll=true){
     all.forEach(selector=>$$w(selector).forEach(el=>el.classList.toggle('wizard-hidden',!visibleFor(selector,wizardStep))));
