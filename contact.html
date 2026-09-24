@@ -1965,6 +1965,13 @@ function openProtectedArea(type){
   }
 
   async function enterAdmin(){
+    const adminBtn=document.getElementById('contactAdminBtn');
+    if(panel && !panel.hidden){
+      panel.hidden=true;
+      if(adminBtn) adminBtn.textContent='管理';
+      sessionStorage.removeItem('yachiyoAdminPassword');
+      return;
+    }
     let pw=sessionStorage.getItem('yachiyoAdminPassword')||'';
     if(!pw)pw=prompt('管理者パスワードを入力してください')||'';
     if(!pw)return;
@@ -1977,6 +1984,7 @@ function openProtectedArea(type){
       sessionStorage.setItem('yachiyoAdminPassword',pw);
       box.style.display='';
       panel.hidden=false;
+      if(adminBtn) adminBtn.textContent='管理終了';
       apply();
       panel.scrollIntoView({behavior:'smooth',block:'center'});
     }catch(e){alert(e.message||'管理画面を開けませんでした。')}
