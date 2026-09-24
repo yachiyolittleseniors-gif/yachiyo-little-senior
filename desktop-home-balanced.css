@@ -449,74 +449,28 @@
   #home .recruit .recruit-open-cta span{font-size:18px!important}
 }
 
-/* ======================================================================
-   2026-09-24 PC HOME premium refresh
-   IMPORTANT: desktop only. Nothing below applies at 900px or narrower.
-   ====================================================================== */
+/* 2026-09-24 PC alignment correction — desktop only */
 @media (min-width:901px){
-  :root{--home-pc-width:1320px;--home-pc-gap:18px}
-  body:has(#home){background:#f5f6f8}
-  body:has(#home) .header{border-bottom:1px solid rgba(199,154,59,.72);box-shadow:0 8px 28px rgba(3,13,25,.14)}
-  body:has(#home) .header .nav{width:min(calc(100% - 64px),var(--home-pc-width))!important;max-width:var(--home-pc-width)!important;min-height:78px!important}
-  body:has(#home) .header .links{margin-left:auto!important;gap:clamp(13px,1.35vw,24px)!important}
-  body:has(#home) .header .links a{position:relative;padding:29px 0 25px!important;font-weight:700!important;letter-spacing:.035em!important}
-  body:has(#home) .header .links a:after{content:"";position:absolute;left:50%;right:50%;bottom:16px;height:2px;background:#d8ad54;transition:.2s ease}
-  body:has(#home) .header .links a:hover:after{left:0;right:0}
-
-  #home{grid-template-columns:minmax(32px,1fr) minmax(0,651px) minmax(0,651px) minmax(32px,1fr)!important;background:#f5f6f8!important}
-  #home>.hero{min-height:540px!important;padding:0 32px!important;background-position:center 44%!important;border-bottom:1px solid rgba(199,154,59,.65)!important}
-  #home>.hero:before{background:linear-gradient(90deg,rgba(3,13,25,.92) 0%,rgba(3,13,25,.72) 35%,rgba(3,13,25,.20) 68%,rgba(3,13,25,.08) 100%)!important}
-  #home>.hero .hero-inner{min-height:540px!important}
-  #home>.hero .hero-main{width:min(650px,53%)!important;max-width:650px!important;padding:46px 0!important}
-  #home>.hero h1{font-size:clamp(50px,4.2vw,66px)!important;line-height:1.08!important;letter-spacing:.045em!important;text-shadow:0 4px 24px rgba(0,0,0,.38)!important}
-  #home>.hero .hero-sub{font-size:23px!important;letter-spacing:.08em!important}
-  #home>.hero .hero-copy{max-width:610px!important;font-size:14px!important;line-height:1.9!important;color:#eef1f5!important}
-  #home>.hero .btn{border-radius:2px!important}
-
-  #home>.home-news{grid-row:2!important;grid-column:2/4!important;min-height:150px!important;padding:30px 30px 28px!important;margin:28px 0 18px!important;grid-template-columns:205px minmax(0,1fr)!important;gap:32px!important;background:#fff!important;border:1px solid #e1e4e8!important;box-shadow:0 8px 26px rgba(7,20,38,.06)!important}
-  #home .home-news-head h2{font-size:31px!important;color:#071426!important}
-  #home .home-news-list .news-item,#home .news-empty{padding-top:10px!important;padding-bottom:10px!important}
-
-  #home>.quick{grid-row:3!important;margin:0 0 20px!important;grid-template-columns:repeat(6,minmax(0,1fr))!important;gap:12px!important}
-  #home .quick a,#home .quick a:nth-child(n){min-height:122px!important;padding:18px 12px!important;background:linear-gradient(145deg,#0a1d34,#06111f)!important;border:1px solid rgba(199,154,59,.46)!important;box-shadow:0 8px 22px rgba(7,20,38,.10)!important;transition:transform .2s ease,box-shadow .2s ease,border-color .2s ease!important}
-  #home .quick a:hover{transform:translateY(-3px)!important;border-color:#d7ae57!important;box-shadow:0 13px 28px rgba(7,20,38,.16)!important}
-  #home .quick .ico{font-size:28px!important}
-  #home .quick b{font-size:15px!important;letter-spacing:.05em!important}
-
-  #home>.seniorcup-home-banner{grid-row:4!important;grid-column:2!important;margin:0 0 20px!important;padding:0 9px 0 0!important;align-self:stretch!important}
-  #home .seniorcup-home-link{height:100%!important;min-height:190px!important;padding:30px 34px!important;display:flex!important;flex-direction:column!important;justify-content:center!important;box-shadow:0 9px 24px rgba(7,20,38,.10)!important}
-  #home .seniorcup-home-title{font-size:29px!important}
-
-  #home>.recruit-open-home{grid-row:4!important;grid-column:3!important;width:auto!important;max-width:none!important;margin:0 0 20px 9px!important;min-height:190px!important;box-shadow:0 9px 24px rgba(7,20,38,.10)!important}
-  #home>.recruit-open-home .recruit-open-card{height:100%!important;min-height:190px!important}
-
-  #home>.container:has(.activity-grid){grid-row:5!important;grid-column:2/4!important;padding:0 0 20px!important}
-  #home>.container:has(.activity-grid)>.section-label{top:34px!important;left:36px!important}
-  #home .activity-grid{grid-template-columns:minmax(0,1.55fr) minmax(0,.45fr)!important;height:365px!important;gap:12px!important;box-shadow:0 10px 28px rgba(7,20,38,.10)!important}
-  #home .activity-stack{height:365px!important;gap:12px!important}
-  #home .activity-main .photo-caption,#home .activity-side .photo-caption{font-size:13px!important;letter-spacing:.08em!important}
-
-  #home>.container:has(.recruit){grid-row:6!important;grid-column:2/4!important;padding:0 0 28px!important}
-  #home .recruit{height:300px!important;box-shadow:0 10px 28px rgba(7,20,38,.10)!important}
-  #home .recruit .card{padding:38px 42px!important;display:flex!important;flex-direction:column!important;justify-content:center!important}
-  #home .recruit .card h2{font-size:34px!important}
-  #home .recruit .photo::after{background:linear-gradient(90deg,rgba(3,13,25,.94) 0%,rgba(3,13,25,.73) 42%,rgba(3,13,25,.14) 76%)!important}
-
-  .six-principles-home{padding:38px 0 42px!important}
-  .six-principles-home .six-principles-visual-wrap{width:min(calc(100% - 64px),var(--home-pc-width))!important;max-width:var(--home-pc-width)!important}
-  .pc-six-grid{gap:12px 14px!important}
-  .pc-six-item{min-height:64px!important;box-shadow:0 6px 18px rgba(0,0,0,.08)!important}
-
-  body:has(#home) footer,body:has(#home) .footer{border-top:1px solid rgba(199,154,59,.6)!important}
+  :root{--home-pc-width:1200px;--home-pc-gap:20px}
+  #home{grid-template-columns:minmax(24px,1fr) minmax(0,590px) minmax(0,590px) minmax(24px,1fr)!important;column-gap:20px!important}
+  body:has(#home) .header .nav,
+  #home>.hero .hero-inner,
+  .six-principles-home .six-principles-visual-wrap{width:min(calc(100% - 48px),1200px)!important;max-width:1200px!important}
+  #home>.home-news,#home>.quick,#home>.container:has(.activity-grid),#home>.container:has(.recruit){grid-column:2/4!important;width:100%!important;max-width:none!important;box-sizing:border-box!important}
+  #home>.home-news{margin:24px 0 18px!important;padding:28px 30px!important}
+  #home>.quick{margin:0 0 20px!important;gap:12px!important}
+  #home>.seniorcup-home-banner{grid-column:2!important;width:100%!important;margin:0 0 20px!important;padding:0!important;box-sizing:border-box!important}
+  #home>.recruit-open-home{grid-column:3!important;width:100%!important;max-width:none!important;margin:0 0 20px!important;box-sizing:border-box!important}
+  #home>.seniorcup-home-banner .seniorcup-home-link,
+  #home>.recruit-open-home .recruit-open-card{width:100%!important;height:100%!important;box-sizing:border-box!important}
+  #home>.container:has(.activity-grid){padding:0 0 20px!important;margin:0!important}
+  #home .activity-grid{width:100%!important;box-sizing:border-box!important}
+  #home>.container:has(.recruit){padding:0 0 28px!important;margin:0!important}
+  #home .recruit{width:100%!important;box-sizing:border-box!important}
 }
-
-@media (min-width:901px) and (max-width:1180px){
-  :root{--home-pc-width:1080px}
-  body:has(#home) .header .nav{width:calc(100% - 36px)!important}
-  #home{grid-template-columns:18px minmax(0,1fr) minmax(0,1fr) 18px!important;column-gap:14px!important}
-  #home>.hero{min-height:500px!important;padding-left:24px!important;padding-right:24px!important}
-  #home>.hero .hero-inner{min-height:500px!important}
-  #home>.hero h1{font-size:46px!important}
-  #home>.recruit-open-home{margin-left:7px!important}
-  #home>.seniorcup-home-banner{padding-right:7px!important}
+@media (min-width:901px) and (max-width:1248px){
+  #home{grid-template-columns:24px minmax(0,1fr) minmax(0,1fr) 24px!important;column-gap:16px!important}
+  body:has(#home) .header .nav,
+  #home>.hero .hero-inner,
+  .six-principles-home .six-principles-visual-wrap{width:calc(100% - 48px)!important;max-width:none!important}
 }
