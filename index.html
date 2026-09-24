@@ -5191,29 +5191,28 @@ document.addEventListener('DOMContentLoaded',function(){
 </script>
 
 <style id="home-admin-end-right-fix">
-/* 管理中も「管理終了」は他ページと同じ右下固定 */
+/* 管理終了は編集ボタンの下段・右側に独立配置（重なり防止） */
 @media(max-width:600px){
   body.photo-admin-on #heroAdminToggle.unified-admin-toggle{
-    position:fixed!important;
-    right:max(12px,env(safe-area-inset-right))!important;
-    bottom:calc(12px + env(safe-area-inset-bottom))!important;
-    left:auto!important;
-    top:auto!important;
+    position:static!important;
+    inset:auto!important;
+    grid-column:2!important;
+    justify-self:end!important;
     width:auto!important;
     min-width:52px!important;
     height:auto!important;
-    min-height:44px!important;
+    min-height:32px!important;
     margin:0!important;
-    padding:12px 14px!important;
+    padding:6px 4px!important;
     display:block!important;
-    z-index:20001!important;
+    z-index:auto!important;
     border:0!important;
     border-radius:0!important;
     background:transparent!important;
     color:rgba(199,154,59,.46)!important;
     font-size:11px!important;
     line-height:1.25!important;
-    text-align:center!important;
+    text-align:right!important;
   }
 }
 </style>
