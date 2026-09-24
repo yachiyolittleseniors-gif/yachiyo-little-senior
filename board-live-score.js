@@ -316,6 +316,7 @@
     updated: $('#liveScoreUpdated'),
     sbo: $('#liveScoreSbo'),
     bases: $('#liveScoreDiamond'),
+    resetStatus: $('#liveScoreResetStatus'),
     lockPanel: $('#liveScoreLockPanel'),
     lockText: $('#liveScoreLockText'),
     lockButton: $('#liveScoreLockButton'),
@@ -627,7 +628,7 @@
       control.disabled = viewOnly;
     });
     // BSO / ダイヤモンドも閲覧モードでは必ず操作不可。ただし見た目は変えない。
-    root.querySelectorAll('.live-score-count,.live-score-base').forEach(control => {
+    root.querySelectorAll('.live-score-count,.live-score-base,.live-score-reset-status').forEach(control => {
       control.disabled = viewOnly;
       control.setAttribute('aria-disabled', String(viewOnly));
       if (viewOnly) control.tabIndex = -1;
@@ -850,6 +851,21 @@
     event.preventDefault();
     event.stopPropagation();
   });
+
+  if (elements.resetStatus) {
+    elements.resetStatus.addEventListener('click', () => {
+      if (!state.current || replayMode || !inputMode) return;
+      state.current.sbo = { strikes: 0, balls: 0, outs: 0 };
+      state.current.bases = { first: false, second: false, third: false };
+      dirty = true;
+      changeVersion += 1;
+      renderSbo();
+      renderBases();
+      // Reset is live shared state: save immediately and keep the normal retry/autosave path.
+      save('', { quiet: true, renderAfter: false });
+      scheduleAutoSave();
+    });
+  }
 
   elements.order.addEventListener('click', event => {
     const button = event.target.closest('[data-order]');

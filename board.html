@@ -1191,6 +1191,7 @@ body.live-score-focused #liveScoreCard{width:100%;box-sizing:border-box}
             
           </div>
         </div>
+        <button class="live-score-reset-status" id="liveScoreResetStatus" type="button">↻ BSO・ランナーをリセット</button>
 
         <div class="live-score-fields">
           <label class="live-score-field wide">大会名
@@ -1442,7 +1443,7 @@ body.live-score-focused #liveScoreCard{width:100%;box-sizing:border-box}
 
 <footer class="footer">© YACHIYO LITTLE SENIOR. All Rights Reserved.</footer>
 
-<link rel="stylesheet" href="./board-content.css?v=20260924-archive-layout1">
+<link rel="stylesheet" href="./board-content.css?v=20260918-9">
 
 <button id="densukeToggleBtn" type="button">管理</button>
 <div id="densukeAdminPanel">
@@ -1533,7 +1534,18 @@ body.live-score-focused #liveScoreCard{width:100%;box-sizing:border-box}
   <button id="closeDensukeAdminBtn" type="button">キャンセル</button>
 </div>
 
-<script src="./board-live-score.js?v=20260920-lock1"></script>
+
+<style id="live-score-reset-status-style">
+.live-score-reset-status{
+  width:100%;margin:0 0 14px;padding:11px 14px;border:1.5px solid #c7a24b;border-radius:14px;
+  background:#0b1a2e;color:#d9b45b;font-weight:800;font-size:14px;line-height:1.2;cursor:pointer;
+  box-sizing:border-box;touch-action:manipulation;-webkit-tap-highlight-color:transparent;
+}
+.live-score-reset-status:active:not(:disabled){transform:translateY(1px);background:#122640}
+.live-score-reset-status:disabled{opacity:.38;cursor:default}
+@media(max-width:640px){.live-score-reset-status{margin-top:-2px;margin-bottom:12px;padding:10px 12px;font-size:13px;border-radius:13px}}
+</style>
+<script src="./board-live-score.js?v=20260924-reset1"></script>
 <script src="./board-updates.js?v=20260918-13"></script>
 <script src="./board-referee-documents.js?v=20260918-7"></script>
 <script src="./board-tournaments.js?v=20260914-1"></script>
@@ -1542,7 +1554,7 @@ body.live-score-focused #liveScoreCard{width:100%;box-sizing:border-box}
 <script src="./duty-roster-data.js?v=20260918-1"></script>
 <script src="./board-duty-roster.js?v=20260918-11"></script>
 <script src="./board-rules.js?v=20260914-4"></script>
-<script src="./board-archive.js?v=20260924-pdfopen1"></script>
+<script src="./board-archive.js?v=20260914-3"></script>
 <style id="nonblocking-save-notice-style">
 .save-notice{
   position:fixed;
