@@ -1968,8 +1968,12 @@ function openProtectedArea(type){
     const adminBtn=document.getElementById('contactAdminBtn');
     if(panel && !panel.hidden){
       panel.hidden=true;
-      if(adminBtn) adminBtn.textContent='管理';
       sessionStorage.removeItem('yachiyoAdminPassword');
+      sessionStorage.removeItem('yachiyoAdminMode');
+      if(adminBtn){
+        adminBtn.textContent='管理';
+        adminBtn.style.setProperty('display','none','important');
+      }
       return;
     }
     let pw=sessionStorage.getItem('yachiyoAdminPassword')||'';
