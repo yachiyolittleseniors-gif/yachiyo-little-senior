@@ -1,0 +1,19 @@
+/* Unified management popup — Yachiyo Little Senior */
+:root{--admin-navy:#0b1a2e;--admin-gold:#cfa23b;--admin-line:rgba(207,162,59,.62)}
+#yachiyoUnifiedAdminModal{display:none;position:fixed;inset:0;z-index:29990;background:rgba(3,12,24,.72);padding:calc(var(--fixed-header-height,66px) + 12px) 12px 18px;align-items:flex-start;justify-content:center;overscroll-behavior:contain}
+#yachiyoUnifiedAdminModal.is-open{display:flex}
+#yachiyoUnifiedAdminCard{position:relative;width:min(650px,100%);max-height:calc(100dvh - var(--fixed-header-height,66px) - 34px);overflow:auto;-webkit-overflow-scrolling:touch;background:rgba(9,24,43,.985);color:#fff;border:1px solid var(--admin-line);border-radius:22px;padding:26px 28px 30px;box-shadow:0 20px 60px rgba(0,0,0,.38)}
+#yachiyoUnifiedAdminCard h2{margin:0 52px 22px 0;color:#fff;font-size:24px;line-height:1.4;font-weight:800}
+#yachiyoUnifiedAdminClose{position:absolute;right:16px;top:14px;width:42px;height:42px;border:1px solid var(--admin-line);border-radius:50%;background:#101f34;color:#fff;font-size:25px;line-height:1;display:grid;place-items:center;z-index:3}
+#yachiyoUnifiedAdminBody>*{max-width:100%!important}
+#yachiyoUnifiedAdminBody input:not([type=checkbox]):not([type=radio]),#yachiyoUnifiedAdminBody select,#yachiyoUnifiedAdminBody textarea{max-width:100%;box-sizing:border-box}
+#yachiyoUnifiedAdminBody button{max-width:100%}
+body.yachiyo-admin-popup-open{overflow:hidden!important}
+/* Existing modal editors: same navy/gold language */
+#adminModal.show .modal-card,#densukeAdminPanel.show,.calendar-editor.is-open .calendar-editor-box,.annual-editor.is-open .annual-editor-box{background:rgba(9,24,43,.985)!important;color:#fff!important;border:1px solid var(--admin-line)!important;border-radius:22px!important;box-shadow:0 20px 60px rgba(0,0,0,.38)!important}
+#adminModal.show{background:rgba(3,12,24,.72)!important;padding-left:12px!important;padding-right:12px!important}
+#adminModal .modal-card{width:min(650px,100%)!important;max-height:calc(100dvh - var(--fixed-header-height,66px) - 34px)!important;padding:26px 28px 30px!important}
+#adminModal .modal-card h2,#adminModal .modal-card h3,#densukeAdminPanel h2,#densukeAdminPanel h3{color:#fff!important}
+#adminModal .modal-card p,#adminModal .modal-card label,#densukeAdminPanel p,#densukeAdminPanel label{color:#eef2f7}
+#adminModal .admin-panel{border-color:rgba(255,255,255,.16)!important;background:rgba(3,12,24,.18)!important;border-radius:14px}
+@media(max-width:600px){#yachiyoUnifiedAdminModal{padding-left:10px;padding-right:10px}#yachiyoUnifiedAdminCard{padding:24px 20px 26px;border-radius:20px}#yachiyoUnifiedAdminCard h2{font-size:22px}#adminModal .modal-card{padding:24px 20px 26px!important;border-radius:20px!important}}
