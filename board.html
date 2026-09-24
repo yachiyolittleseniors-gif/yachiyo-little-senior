@@ -1454,6 +1454,15 @@ body.live-score-focused #liveScoreCard{width:100%;box-sizing:border-box}
     <button id="endDensukeBtn" class="danger" type="button">伝助を終了</button>
   </div>
   <button id="resumeDensukeBtn" class="restore" type="button" style="display:none">伝助移行を再開</button>
+  <div id="accessPasswordAdminFields">
+    <strong>チーム専用ページ</strong>
+    <label for="accessPasswordInput">新しいパスワード</label>
+    <input id="accessPasswordInput" type="password" minlength="8" maxlength="64" autocomplete="new-password" placeholder="8文字以上">
+    <label for="accessPasswordConfirmInput">新しいパスワード（確認）</label>
+    <input id="accessPasswordConfirmInput" type="password" minlength="8" maxlength="64" autocomplete="new-password" placeholder="もう一度入力">
+    <button id="saveAccessPasswordBtn" type="button">パスワードを変更</button>
+    <p id="accessPasswordStatus">8文字以上で設定してください。</p>
+  </div>
   <div id="coachPasswordAdminFields">
     <strong>指導者出欠確認</strong>
     <label for="coachPasswordInput">新しいパスワード</label>

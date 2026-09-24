@@ -2018,7 +2018,6 @@ img,video,iframe{max-width:100%}
       "@id":"https://yachiyo-little-senior.netlify.app/#organization",
       "name":"八千代リトルシニア",
       "alternateName":["八千代シニア","八千代リトルシニア野球協会"],
-      "description":"千葉県八千代市で活動する中学硬式野球チーム、八千代リトルシニア（八千代シニア）。日本リトルシニア中学硬式野球協会 関東連盟 東関東支部所属。",
       "url":"https://yachiyo-little-senior.netlify.app/",
       "logo":"https://yachiyo-little-senior.netlify.app/official-logo-crisp-final.png",
       "image":"https://yachiyo-little-senior.netlify.app/team-hero.jpg",
@@ -2045,8 +2044,6 @@ img,video,iframe{max-width:100%}
       "@id":"https://yachiyo-little-senior.netlify.app/#website",
       "url":"https://yachiyo-little-senior.netlify.app/",
       "name":"八千代リトルシニア公式サイト",
-      "alternateName":"八千代シニア公式サイト",
-      "description":"八千代リトルシニア（八千代シニア）の公式サイト。チーム情報、選手紹介、試合結果、スケジュール、入団・体験案内を掲載。",
       "inLanguage":"ja-JP",
       "publisher":{"@id":"https://yachiyo-little-senior.netlify.app/#organization"}
     }
@@ -2058,7 +2055,6 @@ img,video,iframe{max-width:100%}
 #heroPhotoAdmin{position:fixed;right:16px;bottom:16px;z-index:9998;display:none;gap:8px;align-items:center;justify-content:flex-end;flex-wrap:wrap;max-width:calc(100vw - 32px)}
 #heroPhotoAdmin button,#heroPhotoAdmin label{border:1px solid rgba(212,175,55,.75);background:#071426;color:#e2bd67;border-radius:999px;padding:10px 14px;font-size:12px;font-weight:700;box-shadow:0 5px 18px rgba(0,0,0,.22);cursor:pointer}
 #heroPhotoAdmin label{display:none;background:#b48a32;color:#fff}
-#accessPasswordChange{display:none;background:#071426;color:#e2bd67}
 #heroPhotoInput{display:none}
 @media(max-width:600px){
   #heroPhotoAdmin{
@@ -2097,7 +2093,6 @@ img,video,iframe{max-width:100%}
     display:flex!important;
   }
   body.photo-admin-on #heroAnnouncementEdit{order:2}
-  body.photo-admin-on #accessPasswordChange{order:3}
   body.photo-admin-on #heroAdminToggle.unified-admin-toggle{
     order:4;
     position:static!important;
@@ -3629,7 +3624,7 @@ body.photo-admin-on .recruit-mode-admin{display:block}
 <section class="news"><div class="news-inner">
 <div class="section-label">TEAM GUIDE<small>チーム案内</small></div>
 <div class="news-list">
-<div class="news-item"><span class="date">公式情報</span><span>八千代リトルシニア（八千代シニア）のチーム情報・活動方針を掲載しています。</span><span class="tag">INFO</span></div>
+<div class="news-item"><span class="date">公式情報</span><span>八千代リトルシニアのチーム情報・活動方針を掲載しています。</span><span class="tag">INFO</span></div>
 <div class="news-item"><span class="date">募集中</span><span>硬式野球に打ち込みたい中学生・卒業前の小学6年生を募集中。</span><span class="tag">JOIN</span></div>
 <div class="news-item"><span class="date">活動中</span><span>土曜日・日曜日・祝日を基本に練習。<br/>また、春休み、夏休み、冬休み期間中は適宜平日練習を行います。</span></div>
 </div>
@@ -3994,7 +3989,6 @@ function openProtectedArea(type){
 <button id="heroAdminToggle" type="button">管理</button>
 <label for="heroPhotoInput" id="heroPhotoChange">トップの写真を変更</label>
 <button class="hero-announcement-admin" id="heroAnnouncementEdit" type="button">トップお知らせ編集</button>
-<button id="accessPasswordChange" type="button">チーム専用ページのパスワード変更</button>
 <input accept="image/*" id="heroPhotoInput" type="file"/>
 </div>
 <script>
@@ -4003,10 +3997,9 @@ function openProtectedArea(type){
   const hero=document.querySelector('.hero');
   const toggle=document.getElementById('heroAdminToggle');
   const change=document.getElementById('heroPhotoChange');
-  const accessPasswordChange=document.getElementById('accessPasswordChange');
   const input=document.getElementById('heroPhotoInput');
   const adminPanel=document.getElementById('heroPhotoAdmin');
-  if(!hero||!toggle||!change||!accessPasswordChange||!input||!adminPanel)return;
+  if(!hero||!toggle||!change||!input||!adminPanel)return;
 
   async function loadHero(){
     try{
@@ -4029,14 +4022,12 @@ function openProtectedArea(type){
     if(on){
       sessionStorage.setItem('yachiyoAdminMode','1');
       change.style.display='inline-block';
-      accessPasswordChange.style.display='inline-block';
       adminPanel.style.setProperty('display',window.matchMedia('(max-width:600px)').matches?'grid':'flex','important');
       toggle.textContent='管理終了';
     }else{
       sessionStorage.removeItem('yachiyoAdminMode');
       sessionStorage.removeItem('yachiyoAdminPassword');
       change.style.display='none';
-      accessPasswordChange.style.display='none';
       toggle.textContent='管理';
       toggle.style.setProperty('display','none','important');
     }
@@ -4048,7 +4039,6 @@ function openProtectedArea(type){
   document.body.classList.remove('photo-admin-on');
   document.getElementById('heroPhotoAdmin').style.display='none';
   change.style.display='none';
-  accessPasswordChange.style.display='none';
   toggle.textContent='管理';
 
   // Hidden admin entrance: コピーライトを2秒以内に5回タップ
@@ -4089,59 +4079,6 @@ function openProtectedArea(type){
     finally{toggle.disabled=false}
   });
 
-  accessPasswordChange.addEventListener('click',async function(){
-    const adminPassword=sessionStorage.getItem('yachiyoAdminPassword')||'';
-    if(!adminPassword){
-      alert('管理者パスワードを入力し直してください。');
-      return;
-    }
-    const next=prompt('チーム専用ページの新しいパスワードを入力してください。\n（8文字以上64文字以内）');
-    if(next===null)return;
-    if(next.length<8||next.length>64){
-      alert('新しいパスワードは8文字以上64文字以内で入力してください。');
-      return;
-    }
-    const confirmation=prompt('確認のため、新しいパスワードをもう一度入力してください。');
-    if(confirmation===null)return;
-    if(next!==confirmation){
-      alert('新しいパスワードが一致しません。');
-      return;
-    }
-    if(!confirm('チーム専用ページの閲覧パスワードを変更しますか？'))return;
-
-    accessPasswordChange.disabled=true;
-    const originalText=accessPasswordChange.textContent;
-    accessPasswordChange.textContent='変更中…';
-    try{
-      const r=await fetch(api+'?section=access-settings',{
-        method:'POST',
-        headers:{'content-type':'application/json','x-admin-password':adminPassword},
-        body:JSON.stringify({action:'setAccessPassword',password:next})
-      });
-      if(r.status===429){
-        alert('試行回数の上限です。15分後に再度お試しください。');
-        return;
-      }
-      if(r.status===401){
-        alert('管理者パスワードが違います。');
-        return;
-      }
-      if(!r.ok){
-        alert('閲覧パスワードを変更できませんでした。');
-        return;
-      }
-      sessionStorage.removeItem('yachiyoAttendancePass');
-      localStorage.removeItem('yachiyoAttendanceReloadPass');
-      localStorage.removeItem('yachiyoAttendanceReloadPassExpires');
-      localStorage.removeItem('yachiyoBoardPasskeyRegistered');
-      showSaveNotice('保存しました');
-    }catch(e){
-      alert('通信エラーのため、閲覧パスワードを変更できませんでした。');
-    }finally{
-      accessPasswordChange.disabled=false;
-      accessPasswordChange.textContent=originalText;
-    }
-  });
 
   function compress(file){
     return new Promise((resolve,reject)=>{
@@ -4969,11 +4906,6 @@ body.photo-admin-on #heroPhotoChange{
   align-items:center!important;
   justify-content:center!important;
   text-align:center!important;
-}
-body.photo-admin-on #accessPasswordChange{
-  white-space:normal!important;
-  font-size:10px!important;
-  line-height:1.15!important;
 }
 @media(max-width:600px){
   .unified-admin-toggle{

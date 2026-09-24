@@ -190,6 +190,10 @@
   const closeAdminBtn=document.getElementById('closeDensukeAdminBtn');
   const warning=document.getElementById('densukeWarning');
   const adminStatus=document.getElementById('densukeAdminStatus');
+  const accessPasswordInput=document.getElementById('accessPasswordInput');
+  const accessPasswordConfirmInput=document.getElementById('accessPasswordConfirmInput');
+  const saveAccessPasswordBtn=document.getElementById('saveAccessPasswordBtn');
+  const accessPasswordStatus=document.getElementById('accessPasswordStatus');
   const coachPasswordInput=document.getElementById('coachPasswordInput');
   const coachPasswordConfirmInput=document.getElementById('coachPasswordConfirmInput');
   const saveCoachPasswordBtn=document.getElementById('saveCoachPasswordBtn');
@@ -365,6 +369,43 @@
       adminBtn.textContent='管理終了';
     }catch(e){
       alert('管理者認証を確認できませんでした。');
+    }
+  });
+
+  saveAccessPasswordBtn.addEventListener('click',async()=>{
+    const adminPassword=panel.dataset.adminPassword||'';
+    const password=accessPasswordInput.value;
+    const confirmation=accessPasswordConfirmInput.value;
+    if(!adminPassword){alert('管理画面を開き直してください。');return}
+    if(password.length<8||password.length>64){alert('パスワードは8文字以上64文字以内で入力してください。');return}
+    if(password!==confirmation){alert('確認用パスワードが一致しません。');return}
+    if(!confirm('チーム専用ページの閲覧パスワードを変更しますか？'))return;
+
+    saveAccessPasswordBtn.disabled=true;
+    saveAccessPasswordBtn.textContent='変更中...';
+    accessPasswordStatus.textContent='';
+    try{
+      const response=await fetch(API+'?section=access-settings',{
+        method:'POST',
+        headers:{'content-type':'application/json','x-admin-password':adminPassword},
+        body:JSON.stringify({action:'setAccessPassword',password:password})
+      });
+      const body=await response.json().catch(()=>({}));
+      if(!response.ok)throw new Error(body.error||'パスワードを変更できませんでした。');
+      accessPasswordInput.value='';
+      accessPasswordConfirmInput.value='';
+      sessionStorage.removeItem('yachiyoAttendancePass');
+      localStorage.removeItem('yachiyoAttendanceReloadPass');
+      localStorage.removeItem('yachiyoAttendanceReloadPassExpires');
+      localStorage.removeItem('yachiyoBoardPasskeyRegistered');
+      accessPasswordStatus.textContent='パスワードを変更しました。次回から新しいパスワードで入室してください。';
+      showSaveNotice('チーム専用ページのパスワードを変更しました');
+    }catch(e){
+      accessPasswordStatus.textContent=e.message||'パスワードを変更できませんでした。';
+      alert(accessPasswordStatus.textContent);
+    }finally{
+      saveAccessPasswordBtn.disabled=false;
+      saveAccessPasswordBtn.textContent='パスワードを変更';
     }
   });
 

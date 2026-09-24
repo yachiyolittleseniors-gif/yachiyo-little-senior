@@ -48,10 +48,10 @@
 #densukeAdminPanel .restore{background:#173e24}
 #densukeWarning{display:none;margin:12px 6px;color:#ff5b5b;font-weight:800;line-height:1.6}
 #densukeAdminStatus{font-size:12px;line-height:1.7;color:#d5dbe3}
-#coachPasswordAdminFields{margin-top:16px;padding-top:16px;border-top:1px solid rgba(255,255,255,.18)}
+#accessPasswordAdminFields,#coachPasswordAdminFields{margin-top:16px;padding-top:16px;border-top:1px solid rgba(255,255,255,.18)}
 #coachPasswordAdminFields label{display:block;margin:10px 6px 5px;font-size:12px;font-weight:700;color:#d5dbe3}
 #coachPasswordAdminFields input{width:100%;padding:11px 12px;border:1px solid rgba(199,154,59,.55);border-radius:9px;background:#fff;color:#17202b;font:inherit}
-#saveCoachPasswordBtn{width:100%;margin:12px 0 4px!important;background:#c79a3b!important;color:#fff!important}
+#saveAccessPasswordBtn,#saveCoachPasswordBtn{width:100%;margin:12px 0 4px!important;background:#c79a3b!important;color:#fff!important}
 #coachPasswordStatus{min-height:0!important;margin:7px 6px 0!important;color:#d5dbe3!important;font-size:11px!important;line-height:1.6!important}
 #tournamentAdminFields{margin-top:16px;padding-top:16px;border-top:1px solid rgba(255,255,255,.18)}
 #tournamentAdminFields label{display:block;margin:10px 6px 5px;font-size:12px;font-weight:700;color:#d5dbe3}
