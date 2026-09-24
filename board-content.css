@@ -150,3 +150,42 @@ body.document-archive-preview-open{overflow:hidden!important}
 #accessPasswordAdminFields label{display:block;margin:10px 6px 5px;font-size:12px;font-weight:700;color:#d5dbe3}
 #accessPasswordAdminFields input{display:block;box-sizing:border-box;width:100%;margin:0;padding:11px 12px;border:1px solid rgba(199,154,59,.55);border-radius:9px;background:#fff;color:#17202b;font:inherit}
 #accessPasswordStatus{min-height:0!important;margin:7px 6px 0!important;color:#d5dbe3!important;font-size:11px!important;line-height:1.6!important}
+
+/* 資料格納庫: スマホではファイル名・メタ情報・操作ボタンを3段表示 */
+@media(max-width:650px){
+  .document-archive-item{
+    display:flex;
+    flex-direction:column;
+    align-items:stretch;
+    gap:10px;
+    padding:12px;
+  }
+  .document-archive-name{
+    width:100%;
+    min-width:0;
+    font-size:13px;
+    line-height:1.55;
+    overflow-wrap:anywhere;
+    word-break:normal;
+  }
+  .document-archive-meta{
+    display:block;
+    margin-top:3px;
+    font-size:10px;
+    line-height:1.4;
+  }
+  .document-archive-actions{
+    width:100%;
+    display:grid;
+    grid-template-columns:repeat(2,minmax(0,1fr));
+    gap:7px;
+    justify-content:stretch;
+  }
+  .document-archive-actions button{
+    width:100%;
+    min-width:0;
+    margin:0!important;
+    padding:9px 6px!important;
+    white-space:nowrap;
+  }
+}
