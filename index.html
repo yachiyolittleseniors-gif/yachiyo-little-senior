@@ -2191,13 +2191,16 @@ body.photo-admin-on .groundPhotoAdminActions{display:flex}
 .news-title{font-size:19px;color:#101827;font-weight:800;margin-bottom:7px}
 .news-body{font-size:14px;line-height:1.8;color:#596273;white-space:pre-wrap}
 .news-empty{padding:22px 0;color:#727b89}
-.news-admin-btn,.news-edit,.news-delete{display:none}
+.news-admin-btn,.news-actions{display:none}
 body.photo-admin-on .news-admin-btn{display:block}
-body.photo-admin-on .news-edit{display:block}
-body.photo-admin-on .news-delete{display:block}
+body.photo-admin-on .news-actions{display:flex}
 .news-admin-btn{border:1px solid #c9a548;background:#071426;color:#fff;border-radius:999px;padding:9px 14px;font-size:12px;font-weight:800}
-.news-delete{position:absolute;right:0;top:18px;border:1px solid #c9a548;background:#071426;color:#fff;border-radius:999px;padding:6px 10px;font-size:10px;font-weight:800}
-.news-edit{position:absolute;right:0;top:54px;border:1px solid #c9a548;background:#fff;color:#071426;border-radius:999px;padding:6px 10px;font-size:10px;font-weight:800}
+.news-meta{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:6px}
+.news-meta .news-date{margin-bottom:0}
+.news-actions{align-items:center;gap:8px;flex:0 0 auto}
+.news-delete,.news-edit{position:static;border:1px solid #c9a548;border-radius:999px;padding:7px 13px;font-size:10px;font-weight:800;line-height:1.2;white-space:nowrap}
+.news-delete{background:#071426;color:#fff}
+.news-edit{background:#fff;color:#071426}
 .news-modal{position:fixed;inset:0;z-index:9999;background:rgba(0,0,0,.58);padding:20px;display:grid;place-items:center}
 .news-modal[hidden]{display:none}
 .news-modal-card{width:min(520px,100%);background:#fff;border-radius:18px;padding:24px;position:relative}
@@ -2260,16 +2263,17 @@ body.photo-admin-on .news-delete{display:block}
 .home-news-list .news-body{
   line-height:1.8 !important;
 }
-.home-news-list .news-delete{right:20px !important;top:18px !important;}
-.home-news-list .news-edit{right:20px !important;top:54px !important;}
+.home-news-list .news-actions{position:static !important;display:none;align-items:center;gap:8px;}
+body.photo-admin-on .home-news-list .news-actions{display:flex !important;}
 @media(max-width:600px){
   .home-news-list{padding:0 !important;gap:12px !important;}
   .home-news-list .news-item{padding:20px 18px !important;border-radius:15px !important;}
   .home-news-list > .news-empty{padding:20px 18px !important;border-radius:15px !important;}
   .home-news-list .news-date{margin-bottom:8px !important;}
   .home-news-list .news-title{font-size:17px !important;margin-bottom:8px !important;}
-  .home-news-list .news-delete{position:absolute !important;right:16px !important;top:14px !important;}
-  .home-news-list .news-edit{position:absolute !important;right:16px !important;top:50px !important;}
+  .home-news-list .news-meta{display:flex !important;align-items:center !important;justify-content:space-between !important;gap:10px !important;margin-bottom:8px !important;}
+  .home-news-list .news-actions{position:static !important;gap:6px !important;}
+  .home-news-list .news-delete,.home-news-list .news-edit{position:static !important;padding:7px 11px !important;}
 }
 </style>
 <style id="home-footer-unified-final">
@@ -4434,7 +4438,7 @@ function openProtectedArea(type){
  function render(){
    data.sort((a,b)=>String(b.date||'').localeCompare(String(a.date||'')));
    if(!data.length){list.innerHTML='<p class="news-empty">現在、新着NEWSはありません。</p>';return}
-   list.innerHTML=data.map((x,i)=>'<article class="news-item"><div class="news-date">'+esc(x.date||'')+'</div><div class="news-title">'+esc(x.title)+'</div><div class="news-body">'+esc(x.body)+'</div><button class="news-edit" data-i="'+i+'">編集</button><button class="news-delete" data-i="'+i+'">削除</button></article>').join('');
+   list.innerHTML=data.map((x,i)=>'<article class="news-item"><div class="news-meta"><div class="news-date">'+esc(x.date||'')+'</div><div class="news-actions"><button class="news-edit" data-i="'+i+'">編集</button><button class="news-delete" data-i="'+i+'">削除</button></div></div><div class="news-title">'+esc(x.title)+'</div><div class="news-body">'+esc(x.body)+'</div></article>').join('');
    list.querySelectorAll('.news-edit').forEach(b=>b.onclick=()=>edit(Number(b.dataset.i)));
    list.querySelectorAll('.news-delete').forEach(b=>b.onclick=()=>remove(Number(b.dataset.i)));
  }
