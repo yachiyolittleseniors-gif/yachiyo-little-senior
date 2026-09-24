@@ -214,6 +214,16 @@ body{background:#f5f5f2}.page{width:min(860px,100%);padding:24px 18px 64px}.topl
 }
 .notice-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}.notice-grid .field.full{grid-column:1/-1}.notice-checks{display:grid;grid-template-columns:1fr 1fr;gap:9px}.notice-check{display:flex;align-items:center;gap:9px;min-height:48px;padding:10px 12px;border:1px solid #d5dae0;border-radius:10px;background:#fafbfc;color:var(--ink);font-size:13px;font-weight:800}.notice-check input{width:20px;height:20px;margin:0;accent-color:var(--navy)}.duty-field{grid-column:1/-1}.duty-guidance{margin:0 0 8px;padding:8px 10px;border-left:4px solid var(--gold);border-radius:0 7px 7px 0;background:#fff8e6;color:#665831;font-size:11px;font-weight:700;line-height:1.55}.duty-options{display:flex;flex-wrap:wrap;gap:7px}.duty-option{display:flex;align-items:center;gap:6px;min-height:36px;padding:6px 9px;border:1px solid #d7dde3;border-radius:999px;background:#fff;color:var(--ink);font-size:12px;font-weight:800}.duty-option.mother{border-color:#d78ba5;background:#fff3f7}.duty-option.father-fallback{border-style:dashed;color:#5f6975;background:#f5f7f9}.duty-option small{font-size:9px;font-weight:700;color:#8a6470}.duty-option.father-fallback small{color:#747d87}.duty-option input{width:17px!important;height:17px!important;min-height:0!important;margin:0;accent-color:var(--gold)}.preview-car-label small{display:block;margin-top:3px;font-size:9px;font-weight:700}.preview-notices{display:grid;gap:7px;padding:12px 14px;border-top:1px solid #d8dde3;background:#fffaf0}.preview-notice{padding:7px 9px;border-left:4px solid var(--gold);background:#fff;color:#4f4635;font-size:11px;font-weight:800;line-height:1.55}.preview-notice.safety{border-left-color:#b54a51;background:#fff5f5;color:#852c33}.duty-mark{display:inline-block;margin-left:4px;padding:1px 5px;border-radius:4px;background:#e3b94f;color:#071426;font-size:9px;font-weight:900;line-height:1.35;vertical-align:middle}.escort-count{color:#9b6c12;font-weight:900}@media(max-width:600px){.notice-grid,.notice-checks{grid-template-columns:1fr}.notice-grid .field.full{grid-column:auto}}
 </style>
+
+<style id="mobile-page-width-fix">
+html,body{width:100%;max-width:100%;overflow-x:hidden}
+@media(max-width:700px){
+  .page{width:100%!important;max-width:none!important;margin:0!important;padding-left:8px!important;padding-right:8px!important;overflow-x:clip}
+  #editView,#previewView,.wizard-progress,.create-panel,.cars-section,.flow-card,.all-comments,.wizard-actions{width:100%!important;max-width:100%!important;min-width:0!important;margin-left:0!important;margin-right:0!important}
+  .wizard-steps{display:grid!important;grid-template-columns:repeat(3,minmax(0,1fr))!important;width:100%!important;max-width:none!important;gap:8px!important}
+  .wizard-step{width:100%!important;min-width:0!important;max-width:none!important;margin:0!important}
+}
+</style>
 </head>
 <body>
 <main class="page" id="carPage" hidden>
