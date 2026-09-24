@@ -1080,6 +1080,56 @@ body.live-score-focused #liveScoreCard{width:100%;box-sizing:border-box}
 #liveScoreStartTime{text-align:left!important;-webkit-appearance:none!important;appearance:none!important;}
 #liveScoreStartTime::-webkit-date-and-time-value{text-align:left!important;}
 </style>
+
+<style id="live-score-order-compact-20260924">
+/* 試合速報：八千代の攻撃順を1行・小型化。入力/閲覧モードで同じ寸法を維持。 */
+@media (max-width:700px){
+  #liveScoreCard .live-score-order{
+    display:flex!important;
+    align-items:center!important;
+    justify-content:space-between!important;
+    gap:10px!important;
+    margin:5px 0 0!important;
+    min-height:36px!important;
+  }
+  #liveScoreCard .live-score-order>span{
+    flex:0 0 auto!important;
+    margin:0!important;
+    font-size:13px!important;
+    line-height:1.2!important;
+    font-weight:900!important;
+    white-space:nowrap!important;
+  }
+  #liveScoreCard .live-score-order .live-score-segments{
+    display:grid!important;
+    grid-template-columns:repeat(2,64px)!important;
+    width:auto!important;
+    height:34px!important;
+    min-height:34px!important;
+    flex:0 0 auto!important;
+    margin:0!important;
+    gap:0!important;
+  }
+  #liveScoreCard .live-score-order .live-score-segments button{
+    width:64px!important;
+    min-width:64px!important;
+    height:34px!important;
+    min-height:34px!important;
+    padding:0 8px!important;
+    margin:0!important;
+    font-size:13px!important;
+    line-height:32px!important;
+    box-sizing:border-box!important;
+  }
+}
+@media (max-width:390px){
+  #liveScoreCard .live-score-order{gap:7px!important;}
+  #liveScoreCard .live-score-order>span{font-size:12px!important;}
+  #liveScoreCard .live-score-order .live-score-segments{grid-template-columns:repeat(2,58px)!important;}
+  #liveScoreCard .live-score-order .live-score-segments button{width:58px!important;min-width:58px!important;font-size:12px!important;}
+}
+</style>
+
 </head>
 <body id="page-top">
 <header class="site-header">
