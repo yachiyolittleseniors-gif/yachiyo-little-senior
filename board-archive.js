@@ -57,9 +57,6 @@
       name.appendChild(meta);
       const actions=document.createElement('div');
       actions.className='document-archive-actions';
-      const open=document.createElement('button');
-      open.type='button';open.textContent='開く';
-      open.addEventListener('click',function(){openDocument(item,open)});
       const download=document.createElement('button');
       download.type='button';download.textContent='ダウンロード';
       download.addEventListener('click',function(){downloadDocument(item,download)});
@@ -69,7 +66,14 @@
       const remove=document.createElement('button');
       remove.type='button';remove.className='document-archive-delete';remove.textContent='削除';
       remove.addEventListener('click',function(){deleteDocument(item)});
-      actions.append(open,download,rename,remove);row.append(name,actions);list.appendChild(row);
+      const isPdf=/application\/pdf/i.test(String(item.contentType||''))||/\.pdf$/i.test(String(item.fileName||''));
+      if(isPdf){
+        const open=document.createElement('button');
+        open.type='button';open.textContent='PDFを開く';
+        open.addEventListener('click',function(){openPdfDocument(item,open)});
+        actions.appendChild(open);
+      }
+      actions.append(download,rename,remove);row.append(name,actions);list.appendChild(row);
     });
   }
 
@@ -119,29 +123,34 @@
     return response.blob();
   }
 
-  async function openDocument(item,button){
+  async function openPdfDocument(item,button){
+    // iPhone/Safariでは非同期処理後の window.open がブロックされるため、
+    // タップ直後に空タブを確保してからPDFを取得し、そのタブへ表示する。
+    const pdfWindow=window.open('','_blank');
+    if(pdfWindow){
+      try{
+        pdfWindow.document.write('<!doctype html><meta name=\"viewport\" content=\"width=device-width,initial-scale=1\"><title>PDFを開いています…</title><body style=\"font-family:-apple-system,BlinkMacSystemFont,sans-serif;padding:24px\">PDFを開いています…</body>');
+        pdfWindow.document.close();
+      }catch(_e){}
+    }
     button.disabled=true;button.textContent='準備中...';
     try{
       const blob=await fetchDocument(item);
-      const preview=ensurePreview();
-      const previewBody=preview.querySelector('#documentArchivePreviewBody');
-      preview.querySelector('#documentArchivePreviewName').textContent=item.fileName||'資料';
-      if(previewUrl)URL.revokeObjectURL(previewUrl);
-      previewUrl=URL.createObjectURL(blob);
-      if(String(item.contentType||blob.type).startsWith('image/')){
-        const image=document.createElement('img');
-        image.src=previewUrl;image.alt=item.fileName||'保管画像';
-        previewBody.appendChild(image);
+      const pdfBlob=blob.type==='application/pdf'?blob:new Blob([blob],{type:'application/pdf'});
+      const url=URL.createObjectURL(pdfBlob);
+      if(pdfWindow){
+        pdfWindow.location.replace(url);
+        setTimeout(function(){URL.revokeObjectURL(url)},5*60*1000);
       }else{
-        const frame=document.createElement('iframe');
-        frame.src=previewUrl;frame.title=item.fileName||'保管資料';
-        previewBody.appendChild(frame);
+        // ポップアップが許可されなかった場合は同一タブでPDFを開く。
+        window.location.href=url;
       }
-      preview.hidden=false;
-      document.body.classList.add('document-archive-preview-open');
-      if(!previewHistoryActive){history.pushState({documentArchivePreview:true},'',location.href);previewHistoryActive=true}
-    }catch(e){alert(e.message||'資料を開けませんでした。')}
-    finally{button.disabled=false;button.textContent='開く'}
+    }catch(e){
+      if(pdfWindow)pdfWindow.close();
+      alert(e.message||'PDFを開けませんでした。');
+    }finally{
+      button.disabled=false;button.textContent='PDFを開く';
+    }
   }
 
   async function downloadDocument(item,button){
