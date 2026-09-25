@@ -264,7 +264,7 @@
   async function openProtectedAttendance(button,api,storageKey){
     const hidden=button.classList.contains('admin-gated');
     const saved=hidden?(sessionStorage.getItem(storageKey)||''):'';
-    const adminPassword=saved||prompt(hidden?'現在工事中\nパスワードは入力できません':'管理者パスワードを入力してください。');
+    const adminPassword=saved||prompt(hidden?'現在工事中\nパスワードを入力してください。':'管理者パスワードを入力してください。');
     if(!adminPassword)return;
     try{
       const response=await fetch(api,{
