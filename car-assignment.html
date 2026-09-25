@@ -67,38 +67,6 @@ body{background:#f5f5f2}.page{width:min(860px,100%);padding:24px 18px 64px}.topl
 .wizard-progress{position:sticky;top:8px;z-index:30;margin:0 0 14px;padding:10px;border:1px solid #d8dde3;border-radius:14px;background:rgba(255,255,255,.96);box-shadow:0 5px 18px rgba(7,20,38,.08);backdrop-filter:blur(8px)}
 .wizard-steps{display:flex;align-items:stretch;justify-content:center;gap:10px;width:100%;max-width:100%;margin:0 auto;padding:0}.wizard-step{flex:1 1 0;max-width:none}.wizard-step{box-sizing:border-box;width:100%;min-width:0;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:9px 5px;border:1px solid #d9dde2;border-radius:10px;background:#f5f7f9;color:#737c86;text-align:center;font-size:11px;font-weight:900;line-height:1.3}.wizard-step b{display:block;margin-bottom:2px;font-size:14px}.wizard-step.active{border-color:var(--gold);background:var(--navy);color:#fff}.wizard-step.done{border-color:#d2b765;background:#fff8e6;color:var(--navy)}
 #editView .flow-stack .step-number{display:none}.wizard-guide{margin:8px 2px 0;color:#66717d;font-size:11px;font-weight:800;text-align:center}.wizard-hidden{display:none!important}.wizard-actions{position:sticky;bottom:8px;z-index:28;display:flex;gap:8px;margin:14px 0 4px;padding:9px;border:1px solid #d8dde3;border-radius:14px;background:rgba(255,255,255,.97);box-shadow:0 -4px 18px rgba(7,20,38,.08);backdrop-filter:blur(8px)}.wizard-actions button{min-height:46px;border-radius:11px;font-weight:900}.wizard-back{flex:0 0 34%;border:1px solid #cbd1d8;background:#fff;color:var(--navy)}.wizard-next{flex:1;border:1px solid var(--gold);background:var(--navy);color:#fff}.wizard-next.finish{background:linear-gradient(135deg,#9a741e,var(--gold));color:#071426}.wizard-back:disabled{opacity:.35}.wizard-step-note{display:none}@media(max-width:430px){.wizard-steps{gap:8px;margin-left:auto;margin-right:auto}.wizard-step{flex:1 1 0;width:0;font-size:10px;padding:8px 3px}.wizard-step b{font-size:13px}.wizard-progress{top:5px}.wizard-actions{bottom:5px}}
-
-/* 2026-09-25: mobile compact vehicle cards */
-.car-duty-note{grid-column:1/-1;margin:0}
-@media(max-width:700px){
-  .car-list{gap:10px}
-  .car-edit{border-radius:12px}
-  .car-card-head{grid-template-columns:116px minmax(0,1fr) 62px;gap:8px;padding:8px 10px;align-items:end}
-  .car-card-head .car-no,.car-card-head .car-type select,.car-card-head .remove-car{height:42px;min-height:42px}
-  .car-card-head .car-no{min-width:0;padding:6px 8px;font-size:12px}
-  .car-card-head .car-type{font-size:10px}
-  .car-card-head .car-type select{padding:6px 8px;font-size:13px}
-  .car-card-head .remove-car{padding:5px 6px;font-size:10px}
-  .car-main-grid{grid-template-columns:repeat(3,minmax(0,1fr));gap:7px;padding:9px 10px}
-  .car-main-grid .car-field{padding:6px 7px;border-radius:8px;font-size:10px;gap:2px}
-  .car-main-grid .car-field input{min-height:30px;padding:3px 1px;font-size:13px}
-  .car-main-grid .parents{grid-column:1/span 2}
-  .car-main-grid .parents textarea{min-height:40px;padding:4px 1px;font-size:13px;line-height:1.35}
-  .car-main-grid .coaches{grid-column:auto}
-  .car-main-grid .duty-field{grid-column:3;padding:6px 7px}
-  .duty-options{gap:4px}
-  .duty-option{min-height:30px;padding:4px 6px;font-size:10px}
-  .duty-option input{width:14px!important;height:14px!important}
-  .car-duty-note{grid-column:1/-1;margin:0;padding:6px 8px;font-size:9px;line-height:1.4}
-}
-@media(max-width:390px){
-  .car-card-head{grid-template-columns:105px minmax(0,1fr) 56px}
-  .car-main-grid{grid-template-columns:repeat(3,minmax(0,1fr));gap:6px;padding:8px}
-  .car-main-grid .parents{grid-column:1/span 2}
-  .car-main-grid .coaches{grid-column:auto}
-  .car-main-grid .duty-field{grid-column:3}
-}
-
 </style>
 <style>
 .bottom-actions.single-action{grid-template-columns:1fr}
@@ -255,6 +223,37 @@ html,body{width:100%;max-width:100%;overflow-x:hidden}
   #editView,#previewView,.wizard-progress,.create-panel,.cars-section,.flow-card,.all-comments,.wizard-actions{width:100%!important;max-width:100%!important;min-width:0!important;margin-left:0!important;margin-right:0!important}
   .wizard-steps{display:grid!important;grid-template-columns:repeat(3,minmax(0,1fr))!important;width:100%!important;max-width:none!important;gap:8px!important}
   .wizard-step{width:100%!important;min-width:0!important;max-width:none!important;margin:0!important}
+}
+</style>
+
+<style id="compact-car-cards-safe">
+/* Safe CSS-only compact layout. No JavaScript/assignment logic changed. */
+@media (max-width:700px){
+  .car-list{gap:10px!important}
+  .car-edit{border-radius:12px!important}
+  .car-card-head{grid-template-columns:104px minmax(0,1fr) 58px!important;gap:6px!important;padding:7px 8px!important;align-items:end!important}
+  .car-card-head .car-no,.car-card-head .car-type select,.car-card-head .remove-car{height:40px!important;min-height:40px!important}
+  .car-card-head .car-no{min-width:0!important;padding:5px 6px!important;font-size:12px!important}
+  .car-card-head .car-type{font-size:9px!important}
+  .car-card-head .car-type select{padding:4px 6px!important;font-size:12px!important}
+  .car-card-head .remove-car{grid-column:auto!important;padding:4px!important;font-size:10px!important}
+  .car-main-grid{grid-template-columns:repeat(3,minmax(0,1fr))!important;gap:6px!important;padding:7px 8px!important}
+  .car-main-grid .car-field{grid-column:auto!important;padding:5px 6px!important;border-radius:8px!important;font-size:9px!important;line-height:1.25!important}
+  .car-main-grid .car-field input{min-height:28px!important;padding:2px 1px!important;font-size:12px!important}
+  .car-main-grid .parents{grid-column:1 / span 2!important}
+  .car-main-grid .parents textarea{min-height:36px!important;height:36px;padding:3px 1px!important;font-size:12px!important;line-height:1.3!important}
+  .car-main-grid .coaches{grid-column:auto!important}
+  .car-main-grid .duty-field{grid-column:3!important;grid-row:auto!important;padding:5px 6px!important}
+  .duty-guidance{margin:3px 0 4px!important;padding:4px 5px!important;border-left-width:2px!important;font-size:7.5px!important;line-height:1.25!important}
+  .duty-options{gap:3px!important}
+  .duty-option{min-height:25px!important;padding:2px 4px!important;gap:3px!important;font-size:9px!important}
+  .duty-option input{width:13px!important;height:13px!important}
+  .duty-option small{font-size:7px!important}
+}
+@media (max-width:370px){
+  .car-card-head{grid-template-columns:92px minmax(0,1fr) 52px!important}
+  .car-main-grid{gap:4px!important;padding:6px!important}
+  .car-main-grid .car-field{padding:4px!important;font-size:8px!important}
 }
 </style>
 </head>
@@ -791,9 +790,9 @@ function renderCars(){
   sortCars();
   if(!cars.length){$('#carList').innerHTML='<div class="empty car-empty">「配車案を自動作成」を押してください。</div>';refreshNoticeCarOptions();return}
   cars.forEach(cleanDutyMembers);
-  $('#carList').innerHTML=cars.map((car,index)=>`<article class="car-edit" data-kind="${esc(car.type)}" data-car-id="${esc(car.id)}"><div class="car-card-head"><div class="car-no">${esc(numberedCarName(car,index))}</div><label class="car-field car-type">車両区分<select data-key="type">${typeOptions(car.type)}</select></label><button class="remove-car" data-remove-id="${esc(car.id)}" type="button">削除</button></div><div class="car-main-grid"><label class="car-field">運転手<input data-key="driver" value="${esc(car.driver)}" placeholder="手入力"></label><label class="car-field">ナビ<input data-key="navigator" value="${esc(car.navigator)}" placeholder="なし"></label><label class="car-field">車種<input data-key="vehicle" value="${esc(car.vehicle)}" placeholder="必要なら入力"></label><label class="car-field">乗車可能人数<input data-key="capacity" type="number" min="1" max="100" value="${car.capacity}"></label><label class="car-field players">選手人数<input data-key="players" type="number" min="0" max="100" value="${car.players}"></label><label class="car-field coaches">監督・コーチ<input data-key="coaches" value="${esc(car.coaches.join('、'))}" placeholder="例：監督、コーチ1名"></label><label class="car-field parents">保護者名（読点区切り）<textarea data-key="parents" rows="1" placeholder="例：山田父、山田母">${esc(car.parents.join('、'))}</textarea></label><div class="car-field duty-field"><span>当番（該当者にチェック）</span><div class="duty-options">${dutyOptionMarkup(car)}</div></div><p class="duty-guidance car-duty-note">基本は母にチェック。当番表と異なる場合は当日の担当者に変更し、母がいない場合のみ父を選択してください。</p></div></article>`).join('');
+  $('#carList').innerHTML=cars.map((car,index)=>`<article class="car-edit" data-kind="${esc(car.type)}" data-car-id="${esc(car.id)}"><div class="car-card-head"><div class="car-no">${esc(numberedCarName(car,index))}</div><label class="car-field car-type">車両区分<select data-key="type">${typeOptions(car.type)}</select></label><button class="remove-car" data-remove-id="${esc(car.id)}" type="button">削除</button></div><div class="car-main-grid"><label class="car-field">運転手<input data-key="driver" value="${esc(car.driver)}" placeholder="手入力"></label><label class="car-field">ナビ<input data-key="navigator" value="${esc(car.navigator)}" placeholder="なし"></label><label class="car-field">車種<input data-key="vehicle" value="${esc(car.vehicle)}" placeholder="必要なら入力"></label><label class="car-field">乗車可能人数<input data-key="capacity" type="number" min="1" max="100" value="${car.capacity}"></label><label class="car-field players">選手人数<input data-key="players" type="number" min="0" max="100" value="${car.players}"></label><label class="car-field coaches">監督・コーチ<input data-key="coaches" value="${esc(car.coaches.join('、'))}" placeholder="例：監督、コーチ1名"></label><label class="car-field parents">保護者名（読点区切り）<textarea data-key="parents" rows="2" placeholder="例：山田父、山田母">${esc(car.parents.join('、'))}</textarea></label><div class="car-field duty-field"><span>当番（該当者にチェック）</span><p class="duty-guidance">基本は母にチェック。当番表と異なる場合は当日の担当者に変更し、母がいない場合のみ父を選択してください。</p><div class="duty-options">${dutyOptionMarkup(car)}</div></div></div></article>`).join('');
   $$('[data-car-id]').forEach(card=>{card.querySelectorAll('[data-key]').forEach(input=>{input.addEventListener('input',()=>{const car=cars.find(item=>item.id===card.dataset.carId),key=input.dataset.key,previousType=car?.type;updateCarField(car,key,input.value,true);if(key==='parents'){input.style.height='auto';input.style.height=Math.max(56,input.scrollHeight)+'px'}if(key==='type'){adjustVehicleCount(previousType,-1);adjustVehicleCount(car.type,1);renderCars()}else if(key==='driver'){const index=cars.indexOf(car);card.querySelector('.car-no').textContent=numberedCarName(car,index);refreshNoticeCarOptions()}updateCounts();renderPreview();saveDraft()});if(['driver','navigator','parents'].includes(input.dataset.key))input.addEventListener('change',renderCars)});card.querySelectorAll('[data-duty-name]').forEach(input=>input.addEventListener('change',()=>{const car=cars.find(item=>item.id===card.dataset.carId),name=input.dataset.dutyName;setDutyOverride(name,input.checked);renderCars();renderPreview();saveDraft()}))});
-  $$('#carList textarea[data-key="parents"]').forEach(area=>{area.style.height='auto';area.style.height=Math.max(40,area.scrollHeight)+'px'});
+  $$('#carList textarea[data-key="parents"]').forEach(area=>{area.style.height='auto';area.style.height=Math.max(56,area.scrollHeight)+'px'});
   $$('[data-remove-id]').forEach(button=>button.onclick=()=>{const index=cars.findIndex(car=>car.id===button.dataset.removeId);if(index>=0){adjustVehicleCount(cars[index].type,-1);cars.splice(index,1)}renderCars();updateCounts();renderPreview();saveDraft()});refreshNoticeCarOptions();
 }
 function currentAssignment(){sortCars();return{date:currentDate(),grade:selectedGrade,gameType:$('#gameType').value,route:$('#route').value,opponent:$('#opponent').value.trim(),venue:$('#venue').value.trim(),playerCount:$('#playerCountInput').value===''?null:numberValue('#playerCountInput'),firstGradeEscort:$('#firstGradeEscort').value===''?null:numberValue('#firstGradeEscort'),manualEscortFathers:[...manualEscortFathers],dutyOverrides:normalizeDutyOverrides(dutyOverrides),playerCarCount:numberValue('#playerCarCount'),equipmentCount:numberValue('#equipmentCount'),cargoCount:numberValue('#cargoCount'),supportCar:numberValue('#supportCar')>0,supportCarCount:numberValue('#supportCar'),bus:numberValue('#bus')>0,busCount:numberValue('#bus'),busPassengers:$('#busPassengers').value===''?null:numberValue('#busPassengers'),umpireCar:numberValue('#umpireCar')>0,umpireCarCount:numberValue('#umpireCar'),coachCar:numberValue('#coachCar')>0,coachCarCount:numberValue('#coachCar'),coachDriver:$('#coachDriver').value.trim(),coachVehicle:$('#coachVehicle').value.trim(),coachManager:$('#coachManager').checked,coachManagerDriver:$('#coachManagerDriver').checked,coachCount:$('#coachCount').value===''?null:numberValue('#coachCount'),scorerName:currentScorerName(),teamEquipmentCarId:$('#teamEquipmentCar').value,playerEquipmentCarId:$('#playerEquipmentCar').value,playerBelongings:$('#playerBelongings').value.trim(),infectionPrecaution:$('#infectionPrecaution').checked,heatPrecaution:$('#heatPrecaution').checked,carCount:syncVehicleTotal(),cars}}
