@@ -1,5 +1,7 @@
 (()=>{
- const page=(location.pathname.split('/').pop()||'index.html').toLowerCase();
+ let page=(location.pathname.split('/').pop()||'index.html').toLowerCase();
+ // Netlify Pretty URLs serve /team, /schedule, etc. Normalize them to the saved *.html keys.
+ if(page && !page.includes('.')) page += '.html';
  const TARGETS=new Set(['index.html','team.html','schedule.html','results.html','players.html','links.html','seniorcup.html','contact.html']);
  if(page==='board.html'||!TARGETS.has(page))return;
  const KEY=page;
