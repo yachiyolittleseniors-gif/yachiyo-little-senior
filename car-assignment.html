@@ -68,37 +68,43 @@ body{background:#f5f5f2}.page{width:min(860px,100%);padding:24px 18px 64px}.topl
 .wizard-steps{display:flex;align-items:stretch;justify-content:center;gap:10px;width:100%;max-width:100%;margin:0 auto;padding:0}.wizard-step{flex:1 1 0;max-width:none}.wizard-step{box-sizing:border-box;width:100%;min-width:0;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:9px 5px;border:1px solid #d9dde2;border-radius:10px;background:#f5f7f9;color:#737c86;text-align:center;font-size:11px;font-weight:900;line-height:1.3}.wizard-step b{display:block;margin-bottom:2px;font-size:14px}.wizard-step.active{border-color:var(--gold);background:var(--navy);color:#fff}.wizard-step.done{border-color:#d2b765;background:#fff8e6;color:var(--navy)}
 #editView .flow-stack .step-number{display:none}.wizard-guide{margin:8px 2px 0;color:#66717d;font-size:11px;font-weight:800;text-align:center}.wizard-hidden{display:none!important}.wizard-actions{position:sticky;bottom:8px;z-index:28;display:flex;gap:8px;margin:14px 0 4px;padding:9px;border:1px solid #d8dde3;border-radius:14px;background:rgba(255,255,255,.97);box-shadow:0 -4px 18px rgba(7,20,38,.08);backdrop-filter:blur(8px)}.wizard-actions button{min-height:46px;border-radius:11px;font-weight:900}.wizard-back{flex:0 0 34%;border:1px solid #cbd1d8;background:#fff;color:var(--navy)}.wizard-next{flex:1;border:1px solid var(--gold);background:var(--navy);color:#fff}.wizard-next.finish{background:linear-gradient(135deg,#9a741e,var(--gold));color:#071426}.wizard-back:disabled{opacity:.35}.wizard-step-note{display:none}@media(max-width:430px){.wizard-steps{gap:8px;margin-left:auto;margin-right:auto}.wizard-step{flex:1 1 0;width:0;font-size:10px;padding:8px 3px}.wizard-step b{font-size:13px}.wizard-progress{top:5px}.wizard-actions{bottom:5px}}
 
-/* 2026-09-25 compact vehicle cards: presentation only */
-@media(max-width:700px){
-  .car-list{gap:12px!important}
-  .car-edit{border-radius:14px!important;box-shadow:0 3px 12px rgba(7,20,38,.055)!important}
-  .car-card-head{grid-template-columns:92px minmax(0,1fr) 64px!important;gap:8px!important;align-items:end!important;padding:9px 10px!important}
-  .car-card-head .car-no{min-width:0!important;width:92px!important;height:44px!important;min-height:44px!important;padding:0 8px!important;display:flex!important;align-items:center!important;justify-content:center!important;font-size:13px!important;white-space:nowrap!important;border-radius:10px!important}
+/* Compact vehicle cards - 2026-09-25 */
+@media (max-width:700px){
+  #carList{display:grid;gap:12px}
+  .car-edit{border-radius:14px}
+  .car-card-head{grid-template-columns:92px minmax(0,1fr) 62px!important;gap:8px!important;padding:9px 10px!important;align-items:end!important}
+  .car-card-head .car-no{min-width:0!important;width:92px!important;height:44px!important;min-height:44px!important;padding:6px 7px!important;font-size:13px!important;border-radius:10px!important;white-space:nowrap}
   .car-card-head .car-type{min-width:0!important;font-size:11px!important}
-  .car-card-head .car-type select{width:100%!important;height:44px!important;min-height:44px!important;padding:7px 28px 7px 10px!important;font-size:13px!important}
-  .car-card-head .remove-car{width:64px!important;height:44px!important;min-height:44px!important;padding:6px!important;font-size:11px!important;white-space:nowrap!important}
+  .car-card-head .car-type select{height:44px!important;min-height:44px!important;padding:6px 28px 6px 10px!important;font-size:13px!important}
+  .car-card-head .remove-car{width:62px!important;height:44px!important;min-height:44px!important;padding:5px!important;font-size:11px!important}
   .car-main-grid{display:grid!important;grid-template-columns:repeat(6,minmax(0,1fr))!important;gap:7px!important;padding:9px 10px 10px!important}
-  .car-main-grid .car-field{min-width:0!important;padding:6px 7px!important;border-radius:8px!important;font-size:10px!important;line-height:1.25!important}
+  .car-main-grid .car-field{min-width:0!important;padding:7px 8px!important;border-radius:9px!important;font-size:10px!important;line-height:1.25!important}
+  .car-main-grid .car-field>span,.car-main-grid .car-field{font-weight:800}
+  .car-main-grid .car-field input,.car-main-grid .car-field textarea{width:100%!important;min-height:32px!important;height:32px!important;padding:4px 1px!important;font-size:12px!important;line-height:1.2!important;overflow:hidden!important;resize:none!important}
   .car-main-grid .car-field:nth-child(1),.car-main-grid .car-field:nth-child(2),.car-main-grid .car-field:nth-child(3){grid-column:span 2!important}
   .car-main-grid .car-field:nth-child(4),.car-main-grid .car-field:nth-child(5),.car-main-grid .car-field:nth-child(6){grid-column:span 2!important}
-  .car-main-grid .parents{grid-column:span 4!important}
-  .car-main-grid .duty-field{grid-column:span 2!important}
-  .car-main-grid .car-field input,.car-main-grid .car-field textarea{min-height:31px!important;height:31px!important;padding:4px 2px!important;font-size:12px!important;line-height:1.2!important}
-  .car-main-grid .parents textarea{resize:none!important;overflow:hidden!important}
-  .duty-field{display:flex!important;flex-direction:column!important;justify-content:flex-start!important}
-  .duty-guidance{order:3!important;margin:5px 0 0!important;padding:5px 6px!important;font-size:8px!important;line-height:1.35!important;border-radius:6px!important}
-  .duty-options{display:flex!important;gap:5px!important;flex-wrap:nowrap!important;margin-top:4px!important}
-  .duty-options label{flex:1 1 0!important;min-width:0!important;padding:4px!important;font-size:10px!important;white-space:nowrap!important}
-  .duty-options input{width:16px!important;height:16px!important;min-height:16px!important}
+  .car-main-grid .parents{grid-column:1 / span 4!important;min-height:64px!important}
+  .car-main-grid .parents textarea{height:34px!important;min-height:34px!important}
+  .car-main-grid .duty-field{grid-column:5 / span 2!important;min-height:64px!important;padding:7px 8px!important}
+  .duty-field>span{display:block;white-space:nowrap;font-size:10px!important}
+  .duty-options{display:grid!important;grid-template-columns:1fr 1fr!important;gap:5px!important;margin-top:5px!important}
+  .duty-option{justify-content:center!important;min-width:0!important;min-height:32px!important;padding:4px 5px!important;border-radius:8px!important;font-size:11px!important;white-space:nowrap!important}
+  .duty-option input{width:15px!important;height:15px!important}
+  .duty-option small{display:none!important}
+  .duty-guidance{grid-column:1/-1!important;margin:0!important;padding:6px 8px!important;border-left-width:3px!important;border-radius:6px!important;font-size:9px!important;line-height:1.35!important}
+  .duty-field .duty-guidance{position:absolute!important;left:10px!important;right:10px!important;bottom:9px!important}
+  .car-main-grid{padding-bottom:56px!important;position:relative!important}
+  .car-main-grid .duty-field .empty{display:block;margin-top:8px;font-size:9px!important;line-height:1.35!important}
 }
-@media(max-width:390px){
-  .car-card-head{grid-template-columns:84px minmax(0,1fr) 58px!important}
+@media (max-width:390px){
+  .car-card-head{grid-template-columns:84px minmax(0,1fr) 56px!important}
   .car-card-head .car-no{width:84px!important;font-size:12px!important}
-  .car-card-head .remove-car{width:58px!important;font-size:10px!important}
-  .car-main-grid{gap:6px!important;padding:8px!important}
-  .car-main-grid .car-field{padding:5px 6px!important}
-  .car-main-grid .car-field input,.car-main-grid .car-field textarea{font-size:11px!important}
+  .car-card-head .remove-car{grid-column:auto!important;width:56px!important}
+  .car-main-grid{grid-template-columns:repeat(6,minmax(0,1fr))!important}
+  .car-main-grid .parents{grid-column:1 / span 4!important}
+  .car-main-grid .duty-field{grid-column:5 / span 2!important}
 }
+
 </style>
 <style>
 .bottom-actions.single-action{grid-template-columns:1fr}
