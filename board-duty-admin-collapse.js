@@ -1,0 +1,1 @@
+(()=>{const b=document.getElementById('toggleDutyAdminHistory'),body=document.getElementById('dutyChangeAdminHistoryBody');if(!b||!body)return;b.addEventListener('click',()=>{const open=body.hidden;body.hidden=!open;b.setAttribute('aria-expanded',String(open));b.textContent=open?'登録済み変更履歴を非表示 ▲':'登録済み変更履歴を表示 ▼'});})();

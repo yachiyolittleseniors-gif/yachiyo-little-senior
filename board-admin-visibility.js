@@ -1,5 +1,5 @@
 (()=>{
- const pages=[['index.html','HOME'],['team.html','チーム紹介'],['schedule.html','スケジュール'],['results.html','試合結果'],['players.html','選手紹介'],['links.html','リンク集'],['seniorcup.html','シニア杯'],['contact.html','お問い合わせ'],['rules.html','チーム規約']];
+ const pages=[['index.html','HOME'],['team.html','チーム紹介'],['schedule.html','スケジュール'],['results.html','試合結果'],['players.html','選手紹介'],['links.html','リンク集'],['seniorcup.html','シニア杯'],['contact.html','お問い合わせ']];
  const TTL=30*60*1000;
  const list=document.getElementById('adminVisibilityList'),save=document.getElementById('adminVisibilitySave'),status=document.getElementById('adminVisibilityStatus'),auto=document.getElementById('adminAutoOffEnabled'),toggle=document.getElementById('adminVisibilityToggle'),body=document.getElementById('adminVisibilityBody'),toggleLabel=document.getElementById('adminVisibilityToggleLabel'),summary=document.getElementById('adminVisibilitySummary'); if(!list||!save||!auto)return;
  let state={pages:{},autoOffEnabled:true,expiresAt:{}};

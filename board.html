@@ -1555,7 +1555,10 @@ body.live-score-focused #liveScoreCard{width:100%;box-sizing:border-box}
       <div class="duty-change-example"><b>入力例（「10/3」「10月3日」どちらも可）</b><span>10月3日(土) 山田→佐藤さん</span><span>10月11日(日) 佐藤さん→山田</span></div>
       <div id="dutyChangePreview" class="duty-change-preview">変更内容を貼り付けると、ここに確認結果が表示されます。</div>
       <button id="saveDutyChangesBtn" type="button">確認した変更を保存</button>
-      <div id="dutyChangeAdminList" class="duty-change-admin-list"></div>
+      <div class="duty-admin-history-wrap">
+      <button id="toggleDutyAdminHistory" class="duty-admin-history-toggle" type="button" aria-expanded="false" aria-controls="dutyChangeAdminHistoryBody">登録済み変更履歴を表示 ▼</button>
+      <div id="dutyChangeAdminHistoryBody" hidden><div id="dutyChangeAdminList" class="duty-change-admin-list"></div></div>
+    </div>
     </div>
     <div class="duty-image-admin">
       <b>当番表画像</b>
@@ -1656,11 +1659,16 @@ body.live-score-focused #liveScoreCard{width:100%;box-sizing:border-box}
 <script src="./board-rules.js?v=20260914-4"></script>
 <script src="./board-archive.js?v=20260914-3"></script>
 
+
+<style id="duty-admin-history-collapse-style">
+.duty-admin-history-wrap{margin-top:12px}.duty-admin-history-toggle{width:100%;padding:11px 14px;border:1px solid rgba(205,164,72,.55);border-radius:12px;background:#0b1a2e;color:#e5bf66;font-weight:800;text-align:left}.duty-admin-history-toggle[aria-expanded="true"]{background:#112640}.duty-admin-history-wrap [hidden]{display:none!important}
+</style>
 <style id="admin-visibility-settings-style">
 .admin-visibility-fields{margin:16px 0 18px;padding:15px;border:1px solid rgba(210,170,80,.28);border-radius:14px;background:rgba(255,255,255,.025)}.admin-visibility-toggle{width:100%;display:flex;align-items:center;justify-content:space-between;gap:12px;padding:0;border:0!important;background:transparent!important;box-shadow:none!important;text-align:left}.admin-visibility-toggle span{display:flex;flex-direction:column;gap:4px}.admin-visibility-toggle strong{color:#e4bd62;font-size:15px}.admin-visibility-toggle small{color:#aeb7c4;font-size:10.5px;line-height:1.35}.admin-visibility-toggle>b{color:#d8b65e;font-size:11px;white-space:nowrap}.admin-visibility-body{padding-top:10px}.admin-visibility-body[hidden]{display:none!important}
 .admin-visibility-fields>strong{display:block;color:#e4bd62;margin-bottom:7px}.admin-visibility-list{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;margin:12px 0}.admin-visibility-item{display:flex;align-items:center;gap:8px;padding:9px 10px;border:1px solid rgba(210,170,80,.22);border-radius:9px;background:rgba(255,255,255,.035);font-size:12px}.admin-visibility-item input{width:18px;height:18px;accent-color:#cda448}.admin-visibility-actions{display:flex;gap:8px;margin-top:10px}.admin-visibility-actions button{flex:1}.admin-visibility-fields #adminVisibilitySave{width:100%;margin-top:2px}.admin-autooff-row{display:flex;align-items:flex-start;gap:10px;margin:12px 0;padding:11px;border:1px solid rgba(210,170,80,.32);border-radius:10px;background:rgba(181,138,42,.08)}.admin-autooff-row input{width:19px;height:19px;margin-top:2px;accent-color:#cda448}.admin-autooff-row span{display:flex;flex-direction:column;gap:3px}.admin-autooff-row b{color:#f0cf7b;font-size:13px}.admin-autooff-row small{color:#b9c0ca;font-size:11px;line-height:1.45}.admin-visibility-remaining{margin-left:auto;color:#d8b65e;font-size:10px;white-space:nowrap}@media(max-width:520px){.admin-visibility-list{grid-template-columns:1fr}}
 </style>
 <script src="./board-admin-visibility.js?v=20260926-4"></script>
+<script src="./board-duty-admin-collapse.js?v=20260926-1"></script>
 <script src="./board-backup.js?v=20260926-1"></script>
 <style id="nonblocking-save-notice-style">
 .save-notice{
