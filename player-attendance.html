@@ -232,6 +232,12 @@ body{padding-top:var(--fixed-header-height)!important}
 .team-board-return{display:inline-flex;align-items:center;min-height:40px;padding:9px 14px;border:1px solid var(--gold);border-radius:999px;background:#fff;color:#765718;font-size:12px;font-weight:800}
 @media(max-width:600px){.head-name-label{margin-right:8px}.team-board-return{min-height:38px;padding:8px 12px;font-size:11px}}
 </style>
+<style>
+/* 保護者・選手・指導者で一覧表示高を統一（スマホ：約10人目安） */
+@media (max-width:700px){
+  .board-shell{max-height:70vh;max-height:70dvh}
+}
+</style>
 </head><body id="page-top">
 <header class="header">
 <nav class="nav">
