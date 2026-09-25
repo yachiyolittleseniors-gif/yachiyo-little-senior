@@ -2,6 +2,7 @@
 
 <html lang="ja">
 <head>
+<script src="./csp-event-handlers.js?v=20260925-a-plus"></script>
 <script id="page-reload-scroll-reset">
 (function(){
   if('scrollRestoration' in history)history.scrollRestoration='manual';
@@ -214,7 +215,7 @@ html{scroll-padding-top:var(--compact-header-height)}
 <body id="page-top">
 <header class="site-header">
 <nav aria-label="メインナビゲーション" class="site-nav">
-<a aria-label="ページ先頭へ戻る・ロゴ画像を保存" class="site-brand" href="./official-logo-crisp-final.png" onclick="event.preventDefault();window.scrollTo({top:0,behavior:'smooth'})">
+<a aria-label="ページ先頭へ戻る・ロゴ画像を保存" class="site-brand" href="./official-logo-crisp-final.png" data-csp-onclick="event.preventDefault();window.scrollTo({top:0,behavior:'smooth'})">
 <img alt="八千代リトルシニア 公式ロゴ" class="site-brand-logo" decoding="sync" fetchpriority="high" height="374" loading="eager" src="./official-logo-crisp-final.png" width="2062"/>
 </a>
 <button aria-controls="siteMenu" aria-expanded="false" aria-label="メニューを開く" class="site-menu-button" id="siteMenuButton" type="button">☰</button>
@@ -243,14 +244,14 @@ html{scroll-padding-top:var(--compact-header-height)}
 <textarea id="rulesInput" placeholder="チーム規約を入力してください"></textarea>
 <input accept="application/pdf" id="pdfInput" multiple="" type="file"/>
 <div>
-<button class="save" onclick="saveRules()" type="button">保存・PDFを追加</button>
+<button class="save" data-csp-onclick="saveRules()" type="button">保存・PDFを追加</button>
 </div>
 <div class="status" id="status"></div>
 </div>
 </div>
 </main>
 <div id="rulesAdminBottom" style="min-height:130px;position:relative;">
-<button class="adminToggle" data-nosnippet="" id="adminBtn" onclick="toggleAdmin()" type="button">管理</button>
+<button class="adminToggle" data-nosnippet="" id="adminBtn" data-csp-onclick="toggleAdmin()" type="button">管理</button>
 </div>
 <footer>
 <div class="footer-copy">© YACHIYO LITTLE SENIOR. All Rights Reserved.</div>

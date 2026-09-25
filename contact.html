@@ -2,6 +2,7 @@
 
 <html lang="ja">
 <head>
+<script src="./csp-event-handlers.js?v=20260925-a-plus"></script>
 <script id="page-reload-scroll-reset">
 (function(){
   if('scrollRestoration' in history)history.scrollRestoration='manual';
@@ -1503,7 +1504,7 @@ html{scroll-padding-top:var(--fixed-header-height)}
 <body id="page-top">
 <header class="header">
 <nav class="nav">
-<div class="brand"><a aria-label="ページ先頭へ戻る・ロゴ画像を保存" class="official-brand-wrap" href="./official-logo-crisp-final.png" onclick="event.preventDefault();window.scrollTo({top:0,behavior:'smooth'})">
+<div class="brand"><a aria-label="ページ先頭へ戻る・ロゴ画像を保存" class="official-brand-wrap" href="./official-logo-crisp-final.png" data-csp-onclick="event.preventDefault();window.scrollTo({top:0,behavior:'smooth'})">
 <img alt="八千代リトルシニア 公式ロゴ" class="official-brand-img" decoding="sync" fetchpriority="high" height="374" loading="eager" src="./official-logo-crisp-final.png" width="2062"/>
 </a></div>
 <div class="links">
@@ -1513,19 +1514,19 @@ html{scroll-padding-top:var(--fixed-header-height)}
 <a href="./join">選手募集</a>
 <a class="active" href="./contact">お問い合わせ</a>
 </div>
-<button aria-controls="mobileLinks" aria-expanded="false" aria-label="メニューを開く" class="menu" onclick="toggleMenu()" type="button">☰</button>
+<button aria-controls="mobileLinks" aria-expanded="false" aria-label="メニューを開く" class="menu" data-csp-onclick="toggleMenu()" type="button">☰</button>
 </nav>
 <div class="mobile-links" id="mobileLinks">
-<a href="./" onclick="toggleMenu()">HOME</a>
-<a href="./team" onclick="toggleMenu()">チーム紹介</a>
-<a href="./players" onclick="toggleMenu()">選手紹介</a>
-<a href="./results" onclick="toggleMenu()">試合結果</a>
-<a href="./schedule" onclick="toggleMenu()">スケジュール</a>
-<a href="./join" onclick="toggleMenu()">入団案内</a>
-<a href="./contact" onclick="toggleMenu()">お問い合わせ</a>
-<a href="./links" onclick="toggleMenu()">リンク集</a>
-<a href="./terms" onclick="toggleMenu()">サイト利用について</a>
-<a href="./board.html" onclick="toggleMenu()">チーム専用ページ 🔒</a>
+<a href="./" data-csp-onclick="toggleMenu()">HOME</a>
+<a href="./team" data-csp-onclick="toggleMenu()">チーム紹介</a>
+<a href="./players" data-csp-onclick="toggleMenu()">選手紹介</a>
+<a href="./results" data-csp-onclick="toggleMenu()">試合結果</a>
+<a href="./schedule" data-csp-onclick="toggleMenu()">スケジュール</a>
+<a href="./join" data-csp-onclick="toggleMenu()">入団案内</a>
+<a href="./contact" data-csp-onclick="toggleMenu()">お問い合わせ</a>
+<a href="./links" data-csp-onclick="toggleMenu()">リンク集</a>
+<a href="./terms" data-csp-onclick="toggleMenu()">サイト利用について</a>
+<a href="./board.html" data-csp-onclick="toggleMenu()">チーム専用ページ 🔒</a>
 </div>
 </header>
 <section class="page show" id="contact"><div class="pagehero"><div class="pagehero-inner"><div class="eyebrow">CONTACT</div><h1>お問い合わせ</h1><div class="crumb">HOME / お問い合わせ</div></div></div><div class="container"><div class="card"><h2>お問い合わせフォーム</h2><div class="en">CONTACT FORM</div><p></p><form action="/" class="form" data-netlify="true" data-netlify-recaptcha="true" id="contactSecureForm" method="POST" name="contact" netlify-honeypot="bot-field">

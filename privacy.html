@@ -2,6 +2,7 @@
 
 <html lang="ja">
 <head>
+<script src="./csp-event-handlers.js?v=20260925-a-plus"></script>
 <script id="page-reload-scroll-reset">
 (function(){
   if('scrollRestoration' in history)history.scrollRestoration='manual';
@@ -196,7 +197,7 @@ html{scroll-padding-top:var(--fixed-header-height)}
 <body id="page-top">
 <header class="header">
 <nav class="nav">
-<div class="brand"><a class="official-brand-wrap" href="./official-logo-crisp-final.png" aria-label="ページ先頭へ戻る・ロゴ画像を保存" onclick="event.preventDefault();window.scrollTo({top:0,behavior:'smooth'})">
+<div class="brand"><a class="official-brand-wrap" href="./official-logo-crisp-final.png" aria-label="ページ先頭へ戻る・ロゴ画像を保存" data-csp-onclick="event.preventDefault();window.scrollTo({top:0,behavior:'smooth'})">
 <img alt="八千代リトルシニア 公式ロゴ" class="official-brand-img" src="./official-logo-crisp-final.png" width="2062" height="374" loading="eager" decoding="sync" fetchpriority="high">
 </a></div>
 <div class="links">
@@ -206,19 +207,19 @@ html{scroll-padding-top:var(--fixed-header-height)}
 <a href="./join">選手募集</a>
 <a href="./contact">お問い合わせ</a>
 </div>
-<button class="menu" type="button" aria-label="メニューを開く" aria-controls="mobileLinks" aria-expanded="false" onclick="toggleMenu()">☰</button>
+<button class="menu" type="button" aria-label="メニューを開く" aria-controls="mobileLinks" aria-expanded="false" data-csp-onclick="toggleMenu()">☰</button>
 </nav>
 <div class="mobile-links" id="mobileLinks">
-<a href="./" onclick="toggleMenu()">HOME</a>
-<a href="./team" onclick="toggleMenu()">チーム紹介</a>
-<a href="./players" onclick="toggleMenu()">選手紹介</a>
-<a href="./results" onclick="toggleMenu()">試合結果</a>
-<a href="./schedule" onclick="toggleMenu()">スケジュール</a>
-<a href="./join" onclick="toggleMenu()">入団案内</a>
-<a href="./contact" onclick="toggleMenu()">お問い合わせ</a>
-<a href="./links" onclick="toggleMenu()">リンク集</a>
-<a href="./terms" onclick="toggleMenu()">サイト利用について</a>
-<a href="./board.html" onclick="toggleMenu()">チーム専用ページ 🔒</a>
+<a href="./" data-csp-onclick="toggleMenu()">HOME</a>
+<a href="./team" data-csp-onclick="toggleMenu()">チーム紹介</a>
+<a href="./players" data-csp-onclick="toggleMenu()">選手紹介</a>
+<a href="./results" data-csp-onclick="toggleMenu()">試合結果</a>
+<a href="./schedule" data-csp-onclick="toggleMenu()">スケジュール</a>
+<a href="./join" data-csp-onclick="toggleMenu()">入団案内</a>
+<a href="./contact" data-csp-onclick="toggleMenu()">お問い合わせ</a>
+<a href="./links" data-csp-onclick="toggleMenu()">リンク集</a>
+<a href="./terms" data-csp-onclick="toggleMenu()">サイト利用について</a>
+<a href="./board.html" data-csp-onclick="toggleMenu()">チーム専用ページ 🔒</a>
 
 </div>
 </header>

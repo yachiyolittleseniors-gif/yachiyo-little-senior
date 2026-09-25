@@ -2,6 +2,7 @@
 
 <html lang="ja">
 <head>
+<script src="./csp-event-handlers.js?v=20260925-a-plus"></script>
 <script id="page-reload-scroll-reset">
 (function(){
   if('scrollRestoration' in history)history.scrollRestoration='manual';
@@ -1739,7 +1740,7 @@ html{scroll-padding-top:var(--fixed-header-height)}
 <body id="page-top">
 <header class="header">
 <nav class="nav">
-<div class="brand"><a aria-label="ページ先頭へ戻る・ロゴ画像を保存" class="official-brand-wrap" href="./official-logo-crisp-final.png" onclick="event.preventDefault();window.scrollTo({top:0,behavior:'smooth'})">
+<div class="brand"><a aria-label="ページ先頭へ戻る・ロゴ画像を保存" class="official-brand-wrap" href="./official-logo-crisp-final.png" data-csp-onclick="event.preventDefault();window.scrollTo({top:0,behavior:'smooth'})">
 <img alt="八千代リトルシニア 公式ロゴ" class="official-brand-img" decoding="sync" fetchpriority="high" height="374" loading="eager" src="./official-logo-crisp-final.png" width="2062"/>
 </a></div>
 <div class="links">
@@ -1749,19 +1750,19 @@ html{scroll-padding-top:var(--fixed-header-height)}
 <a href="./join">選手募集</a>
 <a href="./contact">お問い合わせ</a>
 </div>
-<button class="menu" onclick="toggleMenu()">☰</button>
+<button class="menu" data-csp-onclick="toggleMenu()">☰</button>
 </nav>
 <div class="mobile-links" id="mobileLinks">
-<a href="./" onclick="toggleMenu()">HOME</a>
-<a href="./team" onclick="toggleMenu()">チーム紹介</a>
-<a href="./players" onclick="toggleMenu()">選手紹介</a>
-<a href="./results" onclick="toggleMenu()">試合結果</a>
-<a href="./schedule" onclick="toggleMenu()">スケジュール</a>
-<a href="./join" onclick="toggleMenu()">入団案内</a>
-<a href="./contact" onclick="toggleMenu()">お問い合わせ</a>
-<a href="./links" onclick="toggleMenu()">リンク集</a>
-<a href="./terms" onclick="toggleMenu()">サイト利用について</a>
-<a href="./board.html" onclick="toggleMenu()">チーム専用ページ 🔒</a>
+<a href="./" data-csp-onclick="toggleMenu()">HOME</a>
+<a href="./team" data-csp-onclick="toggleMenu()">チーム紹介</a>
+<a href="./players" data-csp-onclick="toggleMenu()">選手紹介</a>
+<a href="./results" data-csp-onclick="toggleMenu()">試合結果</a>
+<a href="./schedule" data-csp-onclick="toggleMenu()">スケジュール</a>
+<a href="./join" data-csp-onclick="toggleMenu()">入団案内</a>
+<a href="./contact" data-csp-onclick="toggleMenu()">お問い合わせ</a>
+<a href="./links" data-csp-onclick="toggleMenu()">リンク集</a>
+<a href="./terms" data-csp-onclick="toggleMenu()">サイト利用について</a>
+<a href="./board.html" data-csp-onclick="toggleMenu()">チーム専用ページ 🔒</a>
 </div>
 </header>
 <section class="page show" id="schedule">
@@ -2230,7 +2231,7 @@ renderCalendar();
 <a href="./terms">サイト利用について</a>
 <a href="./board.html">チーム専用ページ 🔒</a>
 </nav>
-<button class="admin-toggle" data-nosnippet="" id="adminModeToggle" onclick="enableAdminMode()" type="button">管理</button>
+<button class="admin-toggle" data-nosnippet="" id="adminModeToggle" data-csp-onclick="enableAdminMode()" type="button">管理</button>
 <div class="ground-address"><div class="ground-access-address">アクセス：千葉県八千代市島田台775</div><a class="ground-map-link" href="https://www.google.com/maps/search/?api=1&amp;query=%E5%8D%83%E8%91%89%E7%9C%8C%E5%85%AB%E5%8D%83%E4%BB%A3%E5%B8%82%E5%B3%B6%E7%94%B0%E5%8F%B0%EF%BC%97%EF%BC%97%EF%BC%95" rel="noopener noreferrer" target="_blank">Googleマップで見る <span aria-hidden="true">↗</span></a></div>
 <div class="footer-privacy-link" style="text-align:center;margin-top:10px;font-size:11px;"><a href="./privacy" style="color:#8f9aa7;text-decoration:none;">プライバシーポリシー</a></div>
 <div class="restored-footer-copy">© YACHIYO LITTLE SENIOR. All Rights Reserved.</div>
