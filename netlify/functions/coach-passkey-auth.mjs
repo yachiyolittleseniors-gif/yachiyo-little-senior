@@ -16,9 +16,6 @@ const STORE = "yachiyo-public-site";
 const CREDENTIALS_KEY = "auth/coach-passkeys.json";
 const CHALLENGE_PREFIX = "auth/coach-passkey-challenge/";
 const ACCESS_CONFIG_KEY = "content/coach-attendance-access.json";
-const DEFAULT_COACH_ACCESS_SALT = "yachiyo-coach-access-v1";
-const DEFAULT_COACH_ACCESS_HASH =
-  "937e76fe820379b5e095356a7dae5cbd223b5c9af6dd444e48a3f3b34bd4f8eb";
 const CHALLENGE_LIFETIME = 5 * 60 * 1000;
 const MAX_CREDENTIALS = 40;
 
@@ -56,7 +53,7 @@ async function coachAccessIsValid(store, request) {
     return safeEqual(await hashAccessPassword(entered, saved.salt), saved.hash);
   }
   if (process.env.COACH_ACCESS_PASSWORD) return safeEqual(entered, process.env.COACH_ACCESS_PASSWORD);
-  return safeEqual(await hashAccessPassword(entered, DEFAULT_COACH_ACCESS_SALT), DEFAULT_COACH_ACCESS_HASH);
+  return false;
 }
 function base64Url(bytes) {
   return Buffer.from(bytes).toString("base64url");

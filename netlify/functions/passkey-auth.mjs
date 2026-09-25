@@ -16,9 +16,6 @@ const STORE = "yachiyo-public-site";
 const CREDENTIALS_KEY = "auth/board-passkeys.json";
 const CHALLENGE_PREFIX = "auth/board-passkey-challenge/";
 const ACCESS_CONFIG_KEY = "content/access-settings.json";
-const DEFAULT_ACCESS_SALT = "yachiyo-access-v1";
-const DEFAULT_ACCESS_HASH =
-  "19eb403934ae615b2961d9f6b5ddd86aab32a0fdf4e96adeb8aa2fcb351276ba";
 const CHALLENGE_LIFETIME = 5 * 60 * 1000;
 const MAX_CREDENTIALS = 40;
 
@@ -56,7 +53,7 @@ async function accessIsValid(store, request) {
     return safeEqual(await hashAccessPassword(entered, saved.salt), saved.hash);
   }
   if (process.env.ACCESS_PASSWORD) return safeEqual(entered, process.env.ACCESS_PASSWORD);
-  return safeEqual(await hashAccessPassword(entered, DEFAULT_ACCESS_SALT), DEFAULT_ACCESS_HASH);
+  return false;
 }
 function base64Url(bytes) {
   return Buffer.from(bytes).toString("base64url");

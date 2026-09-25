@@ -11,13 +11,7 @@ import {
   verifyAdminPassword,
 } from "./admin-rate-limit.mjs";
 
-const DEFAULT_ACCESS_SALT = "yachiyo-access-v1";
-const DEFAULT_ACCESS_HASH =
-  "19eb403934ae615b2961d9f6b5ddd86aab32a0fdf4e96adeb8aa2fcb351276ba";
 const COACH_ACCESS_CONFIG_KEY = "content/coach-attendance-access.json";
-const DEFAULT_COACH_ACCESS_SALT = "yachiyo-coach-access-v1";
-const DEFAULT_COACH_ACCESS_HASH =
-  "937e76fe820379b5e095356a7dae5cbd223b5c9af6dd444e48a3f3b34bd4f8eb";
 
 const allowed = new Set([
   "schedule",
@@ -110,11 +104,7 @@ async function accessPasswordIsValid(store, enteredPassword) {
     return safeEqual(entered, process.env.ACCESS_PASSWORD);
   }
 
-  const enteredHash = await hashAccessPassword(
-    entered,
-    DEFAULT_ACCESS_SALT
-  );
-  return safeEqual(enteredHash, DEFAULT_ACCESS_HASH);
+  return false;
 }
 
 async function coachAccessPasswordIsValid(store, enteredPassword) {
@@ -127,9 +117,13 @@ async function coachAccessPasswordIsValid(store, enteredPassword) {
   } catch {
     saved = null;
   }
-  const salt = saved?.salt || DEFAULT_COACH_ACCESS_SALT;
-  const expectedHash = saved?.hash || DEFAULT_COACH_ACCESS_HASH;
-  return safeEqual(await hashAccessPassword(entered, salt), expectedHash);
+  if (saved?.salt && saved?.hash) {
+    return safeEqual(await hashAccessPassword(entered, saved.salt), saved.hash);
+  }
+  if (process.env.COACH_ACCESS_PASSWORD) {
+    return safeEqual(entered, process.env.COACH_ACCESS_PASSWORD);
+  }
+  return false;
 }
 
 function json(data, status = 200, extraHeaders = {}) {

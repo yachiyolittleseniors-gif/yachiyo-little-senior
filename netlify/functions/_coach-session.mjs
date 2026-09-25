@@ -1,8 +1,5 @@
-const COACH_SESSION_COOKIE = "yls_coach_session";
+const COACH_SESSION_COOKIE = "__Host-yls_coach_session";
 const COACH_SESSION_SECONDS = 60 * 60 * 4;
-const DEFAULT_ACCESS_HASH =
-  "937e76fe820379b5e095356a7dae5cbd223b5c9af6dd444e48a3f3b34bd4f8eb";
-
 function safeEqual(a, b) {
   const left = String(a || "");
   const right = String(b || "");
@@ -22,11 +19,10 @@ function base64Url(bytes) {
 }
 
 async function signCoachSession(value) {
-  const secret =
-    process.env.COACH_SESSION_SECRET ||
-    process.env.ADMIN_PASSWORD ||
-    process.env.COACH_ACCESS_PASSWORD ||
-    DEFAULT_ACCESS_HASH;
+  const secret = String(process.env.COACH_SESSION_SECRET || "");
+  if (secret.length < 32) {
+    throw new Error("COACH_SESSION_SECRET must be configured with at least 32 characters");
+  }
   const key = await crypto.subtle.importKey(
     "raw",
     new TextEncoder().encode(secret),

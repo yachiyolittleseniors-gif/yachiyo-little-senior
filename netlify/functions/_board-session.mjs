@@ -1,8 +1,5 @@
-const BOARD_SESSION_COOKIE = "yls_board_session";
+const BOARD_SESSION_COOKIE = "__Host-yls_board_session";
 const BOARD_SESSION_SECONDS = 60 * 60 * 4;
-const DEFAULT_ACCESS_HASH =
-  "19eb403934ae615b2961d9f6b5ddd86aab32a0fdf4e96adeb8aa2fcb351276ba";
-
 function safeEqual(a, b) {
   const left = String(a || "");
   const right = String(b || "");
@@ -22,11 +19,10 @@ function base64Url(bytes) {
 }
 
 async function signBoardSession(value) {
-  const secret =
-    process.env.BOARD_SESSION_SECRET ||
-    process.env.ADMIN_PASSWORD ||
-    process.env.ACCESS_PASSWORD ||
-    DEFAULT_ACCESS_HASH;
+  const secret = String(process.env.BOARD_SESSION_SECRET || "");
+  if (secret.length < 32) {
+    throw new Error("BOARD_SESSION_SECRET must be configured with at least 32 characters");
+  }
   const key = await crypto.subtle.importKey(
     "raw",
     new TextEncoder().encode(secret),
