@@ -3213,9 +3213,11 @@ html{scroll-padding-top:var(--fixed-header-height)}
   :root{--fixed-header-height:66px}
 }
 </style>
-<style id="mobile-header-logo-position">
+<style id="home-header-position-unified">
 @media(max-width:900px){
-  .header .brand{transform:translateX(10px)}
+  .header .nav,.site-header .site-nav{padding-left:0!important}
+  .header .brand,.site-header .site-brand{transform:none!important;margin-left:10px!important}
+  .header .official-brand-wrap{padding-left:0!important}
 }
 </style>
 <style id="ios26-status-area-navy">
