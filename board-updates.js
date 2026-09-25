@@ -263,8 +263,9 @@
 
   async function openProtectedAttendance(button,api,storageKey){
     const hidden=button.classList.contains('admin-gated');
-    const saved=hidden?(sessionStorage.getItem(storageKey)||''):'';
-    const adminPassword=saved||prompt(hidden?'現在工事中\nパスワードを入力してください。':'管理者パスワードを入力してください。');
+    // 工事中の保護者・選手出欠は、毎回隠しパスワード入力を要求する。
+    // sessionStorage に前回の認証が残っていても自動通過させない。
+    const adminPassword=prompt(hidden?'現在工事中\nパスワードを入力してください。':'管理者パスワードを入力してください。');
     if(!adminPassword)return;
     try{
       const response=await fetch(api,{
