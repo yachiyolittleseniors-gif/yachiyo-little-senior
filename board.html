@@ -1593,6 +1593,15 @@ body.live-score-focused #liveScoreCard{width:100%;box-sizing:border-box}
       </div>
       <span class="system-admin-chevron" aria-hidden="true">›</span>
     </div>
+    <div id="adminVisibilityFields" class="admin-visibility-fields">
+      <strong>管理ボタン表示設定</strong>
+      <p class="backup-note">OFFのページでは5回タップしても管理ボタン・パスワード入力画面を表示しません。チーム専用ページのシステム管理は常時利用できます。</p>
+      <label class="admin-autooff-row"><input id="adminAutoOffEnabled" type="checkbox" checked><span><b>30分後に自動OFF</b><small>ONにした管理ボタンを30分後に自動で非表示にします（チーム専用ページは対象外）。</small></span></label>
+      <div class="admin-visibility-actions"><button id="adminVisibilityAllOn" type="button">すべてON</button><button id="adminVisibilityAllOff" type="button">すべてOFF</button></div>
+      <div id="adminVisibilityList" class="admin-visibility-list"></div>
+      <button id="adminVisibilitySave" type="button">表示設定を保存</button>
+      <p id="adminVisibilityStatus" class="backup-note"></p>
+    </div>
     <div id="backupAdminFields" class="backup-admin-fields">
       <strong>バックアップ管理</strong>
       <p id="backupStatus">バックアップ状況を確認しています…</p>
@@ -1641,6 +1650,29 @@ body.live-score-focused #liveScoreCard{width:100%;box-sizing:border-box}
 <script src="./board-duty-roster.js?v=20260918-11"></script>
 <script src="./board-rules.js?v=20260914-4"></script>
 <script src="./board-archive.js?v=20260914-3"></script>
+
+<style id="admin-visibility-settings-style">
+.admin-visibility-fields{margin:16px 0 18px;padding:15px;border:1px solid rgba(210,170,80,.28);border-radius:14px;background:rgba(255,255,255,.025)}
+.admin-visibility-fields>strong{display:block;color:#e4bd62;margin-bottom:7px}.admin-visibility-list{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;margin:12px 0}.admin-visibility-item{display:flex;align-items:center;gap:8px;padding:9px 10px;border:1px solid rgba(210,170,80,.22);border-radius:9px;background:rgba(255,255,255,.035);font-size:12px}.admin-visibility-item input{width:18px;height:18px;accent-color:#cda448}.admin-visibility-actions{display:flex;gap:8px;margin-top:10px}.admin-visibility-actions button{flex:1}.admin-visibility-fields #adminVisibilitySave{width:100%;margin-top:2px}.admin-autooff-row{display:flex;align-items:flex-start;gap:10px;margin:12px 0;padding:11px;border:1px solid rgba(210,170,80,.32);border-radius:10px;background:rgba(181,138,42,.08)}.admin-autooff-row input{width:19px;height:19px;margin-top:2px;accent-color:#cda448}.admin-autooff-row span{display:flex;flex-direction:column;gap:3px}.admin-autooff-row b{color:#f0cf7b;font-size:13px}.admin-autooff-row small{color:#b9c0ca;font-size:11px;line-height:1.45}.admin-visibility-remaining{margin-left:auto;color:#d8b65e;font-size:10px;white-space:nowrap}@media(max-width:520px){.admin-visibility-list{grid-template-columns:1fr}}
+</style>
+<script id="admin-visibility-settings-script">
+(()=>{
+ const pages=[['index.html','HOME'],['team.html','チーム紹介'],['schedule.html','スケジュール'],['results.html','試合結果'],['players.html','選手紹介'],['links.html','リンク集'],['seniorcup.html','シニア杯'],['contact.html','お問い合わせ'],['attendance.html','保護者出欠'],['player-attendance.html','選手出欠'],['coach-attendance.html','指導者出欠'],['rules.html','チーム規約']];
+ const TTL=30*60*1000;
+ const list=document.getElementById('adminVisibilityList'),save=document.getElementById('adminVisibilitySave'),status=document.getElementById('adminVisibilityStatus'),auto=document.getElementById('adminAutoOffEnabled'); if(!list||!save||!auto)return;
+ let state={pages:{},autoOffEnabled:true,expiresAt:{}};
+ const normalize=d=>d&&d.pages&&typeof d.pages==='object'?{pages:d.pages,autoOffEnabled:d.autoOffEnabled!==false,expiresAt:d.expiresAt&&typeof d.expiresAt==='object'?d.expiresAt:{}}:{pages:(d&&typeof d==='object'?d:{}),autoOffEnabled:true,expiresAt:{}};
+ const effective=k=>state.pages[k]!==false&&(!state.autoOffEnabled||!state.expiresAt[k]||Number(state.expiresAt[k])>Date.now());
+ const remain=k=>{if(!state.autoOffEnabled||!state.expiresAt[k]||!effective(k))return '';return `残り${Math.max(0,Math.ceil((Number(state.expiresAt[k])-Date.now())/60000))}分`};
+ function render(){auto.checked=state.autoOffEnabled;list.innerHTML=pages.map(([k,n])=>`<label class="admin-visibility-item"><input type="checkbox" data-page="${k}" ${effective(k)?'checked':''}><span>${n}</span><small class="admin-visibility-remaining" data-remain="${k}">${remain(k)}</small></label>`).join('')}
+ function tick(){list.querySelectorAll('[data-remain]').forEach(el=>{const k=el.dataset.remain,cb=list.querySelector(`input[data-page="${k}"]`);el.textContent=remain(k);if(cb&&state.autoOffEnabled&&state.expiresAt[k]&&Number(state.expiresAt[k])<=Date.now()){cb.checked=false;el.textContent='自動OFF'}})}
+ async function load(){try{const r=await fetch('/.netlify/functions/site-data?section=admin-visibility-settings',{cache:'no-store'}),j=await r.json();state=normalize(j&&j.data);render();tick()}catch(e){render();status.textContent='表示設定を読み込めませんでした。'}}
+ document.getElementById('adminVisibilityAllOn')?.addEventListener('click',()=>list.querySelectorAll('input[data-page]').forEach(x=>x.checked=true));
+ document.getElementById('adminVisibilityAllOff')?.addEventListener('click',()=>{if(confirm('管理ボタンを一括で非表示にします。\nチーム専用ページのシステム管理は引き続き利用できます。'))list.querySelectorAll('input[data-page]').forEach(x=>x.checked=false)});
+ save.addEventListener('click',async()=>{const pw=document.getElementById('densukeAdminPanel')?.dataset.adminPassword||'';if(!pw){status.textContent='管理認証後に保存してください。';return}const now=Date.now(),nextPages={},nextExp={},nextAuto=auto.checked;list.querySelectorAll('input[data-page]').forEach(x=>{const k=x.dataset.page;nextPages[k]=x.checked;if(nextAuto&&x.checked)nextExp[k]=effective(k)&&Number(state.expiresAt[k])>now?Number(state.expiresAt[k]):now+TTL});const data={pages:nextPages,autoOffEnabled:nextAuto,expiresAt:nextAuto?nextExp:{}};save.disabled=true;status.textContent='保存中…';try{const r=await fetch('/.netlify/functions/site-data?section=admin-visibility-settings',{method:'POST',headers:{'content-type':'application/json','x-admin-password':pw},body:JSON.stringify({data})});if(!r.ok)throw new Error();state=data;render();status.textContent=nextAuto?'表示設定を保存しました。ONのページは30分後に自動OFFになります。':'表示設定を保存しました。自動OFFは無効です。'}catch(e){status.textContent='保存できませんでした。'}finally{save.disabled=false}});
+ load();setInterval(tick,15000);
+})();
+</script>
 <script src="./board-backup.js?v=20260926-1"></script>
 <style id="nonblocking-save-notice-style">
 .save-notice{
