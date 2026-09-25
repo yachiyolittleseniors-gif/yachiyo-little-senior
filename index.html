@@ -2042,7 +2042,7 @@ img,video,iframe{max-width:100%}
 }
 </script>
 <style>
-:root{--hero-photo:linear-gradient(135deg,#0b1b2d 0%,#071426 100%)}
+:root{--hero-photo:url("./team-hero.jpg")}
 #heroPhotoAdmin{position:fixed;right:16px;bottom:16px;z-index:9998;display:none;gap:8px;align-items:center;justify-content:flex-end;flex-wrap:wrap;max-width:calc(100vw - 32px)}
 #heroPhotoAdmin button,#heroPhotoAdmin label{border:1px solid rgba(212,175,55,.75);background:#071426;color:#e2bd67;border-radius:999px;padding:10px 14px;font-size:12px;font-weight:700;box-shadow:0 5px 18px rgba(0,0,0,.22);cursor:pointer}
 #heroPhotoAdmin label{display:none;background:#b48a32;color:#fff}
@@ -2765,6 +2765,14 @@ html.seniorcup-hidden .seniorcup-home-banner{display:none}
   height:auto;
 }
 </style>
+
+<script id="hero-load-speed-fix">
+/* TOP画像は端末保存画像を先出しせず、現在のサーバー画像を最優先で先行取得 */
+window.__yachiyoHeroDataPromise = fetch('/.netlify/functions/site-data?section=hero&manifest=1',{cache:'no-store'})
+  .then(r=>r.ok?r.json():{data:[]})
+  .then(j=>Array.isArray(j.data)?j.data:[])
+  .catch(()=>[]);
+</script>
 <script id="photo-load-speed-fix">
 /* 写真読み込み高速化：同じ photos API を複数回呼ばず、1回の取得結果を共有 */
 window.__yachiyoPhotoDataPromise = null;
@@ -2777,6 +2785,8 @@ window.__loadYachiyoPhotos = function(){
   }
   return window.__yachiyoPhotoDataPromise;
 };
+/* ホーム写真のマニフェストはHTML解析中から先行取得 */
+window.__loadYachiyoPhotos();
 </script>
 <script id="instant-photo-cache">
 (function(){
@@ -3704,7 +3714,7 @@ body.photo-admin-on .recruit-mode-admin{display:block}
 </div>
 </div>
 </div>
-<section class="container"><div class="section-label" style="color:#071426">ACTIVITY<small style="color:#a67d27">活動風景</small></div><div class="activity-grid"><div class="activity-main"><img alt="八千代リトルシニア 試合風景" class="photo-loading" data-edit-photo="photo2" decoding="async" loading="lazy" src="./activity-game.jpg"/><div class="photo-caption">最後まで、全力で</div></div><div class="activity-stack"><div class="activity-side"><img alt="八千代リトルシニア 整列" class="photo-loading" data-edit-photo="photo3" decoding="async" loading="lazy" src="./activity-lineup.jpg"/><div class="photo-caption">礼儀を大切に</div></div><div class="activity-side"><img alt="八千代リトルシニア ミーティング" class="photo-loading" data-edit-photo="photo4" decoding="async" loading="lazy" src="./activity-meeting.jpg"/><div class="photo-caption">仲間と考え、成長する</div></div></div></div></section><div class="banner kokoro-waza-karada">
+<section class="container"><div class="section-label" style="color:#071426">ACTIVITY<small style="color:#a67d27">活動風景</small></div><div class="activity-grid"><div class="activity-main"><img alt="八千代リトルシニア 試合風景" class="photo-loading" data-edit-photo="photo2" decoding="async" fetchpriority="low" loading="eager" src="./activity-game.jpg"/><div class="photo-caption">最後まで、全力で</div></div><div class="activity-stack"><div class="activity-side"><img alt="八千代リトルシニア 整列" class="photo-loading" data-edit-photo="photo3" decoding="async" fetchpriority="low" loading="eager" src="./activity-lineup.jpg"/><div class="photo-caption">礼儀を大切に</div></div><div class="activity-side"><img alt="八千代リトルシニア ミーティング" class="photo-loading" data-edit-photo="photo4" decoding="async" fetchpriority="low" loading="eager" src="./activity-meeting.jpg"/><div class="photo-caption">仲間と考え、成長する</div></div></div></div></section><div class="banner kokoro-waza-karada">
 <h2>心・技・体</h2>
 <div aria-label="心・技・体" class="kwt-grid">
 <div class="kwt-item">
@@ -3990,14 +4000,10 @@ function openProtectedArea(type){
 
   async function loadHero(){
     try{
-      const r=await fetch(api+'?section=hero&manifest=1',{cache:'no-store'});
-      if(r.ok){
-        const j=await r.json();
-        const d=Array.isArray(j.data)?j.data:[];
-        if(d[0]&&d[0].image){
-          window.__yachiyoPhotoCache&&window.__yachiyoPhotoCache.set('hero',d[0].image);
-          hero.style.setProperty('--hero-photo',`url("${d[0].image}")`);
-        }
+      const d=window.__yachiyoHeroDataPromise ? await window.__yachiyoHeroDataPromise : [];
+      if(d[0]&&d[0].image){
+        window.__yachiyoPhotoCache&&window.__yachiyoPhotoCache.set('hero',d[0].image);
+        hero.style.setProperty('--hero-photo',`url("${d[0].image}")`);
       }
     }catch(e){}
 
