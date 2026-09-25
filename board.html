@@ -1584,8 +1584,14 @@ body.live-score-focused #liveScoreCard{width:100%;box-sizing:border-box}
   </div>
   <div id="systemAdminFields" class="system-admin-fields">
     <div class="system-admin-heading">
-      <span class="system-admin-icon">⚙</span>
-      <div><strong>システム管理</strong><small>TEAM MANAGEMENT SYSTEM</small></div>
+      <span class="system-admin-icon" aria-hidden="true">⚙</span>
+      <span class="system-admin-divider" aria-hidden="true"></span>
+      <div class="system-admin-copy">
+        <small class="system-admin-kicker">SYSTEM ADMINISTRATION</small>
+        <strong>システム管理</strong>
+        <small class="system-admin-sub"><i></i>TEAM MANAGEMENT SYSTEM<i></i></small>
+      </div>
+      <span class="system-admin-chevron" aria-hidden="true">›</span>
     </div>
     <div id="backupAdminFields" class="backup-admin-fields">
       <strong>バックアップ管理</strong>
@@ -1600,12 +1606,19 @@ body.live-score-focused #liveScoreCard{width:100%;box-sizing:border-box}
 
 
 <style id="system-admin-style">
-#systemAdminFields{margin-top:24px;padding-top:20px;border-top:2px solid rgba(199,162,75,.45)}
-.system-admin-heading{display:flex;align-items:center;gap:10px;margin:0 0 12px;padding:12px 14px;border:1px solid rgba(199,162,75,.5);border-radius:14px;background:rgba(8,25,48,.06)}
-.system-admin-icon{font-size:20px;line-height:1}
-.system-admin-heading strong{display:block;color:#0b1a2e;font-size:16px}
-.system-admin-heading small{display:block;margin-top:2px;color:#9b792c;font-size:10px;font-weight:800;letter-spacing:.14em}
+#systemAdminFields{margin-top:28px;padding-top:22px;border-top:1px solid rgba(199,162,75,.42)}
+.system-admin-heading{position:relative;display:grid;grid-template-columns:58px 1px minmax(0,1fr) 18px;align-items:center;gap:14px;margin:0 0 14px;padding:17px 18px;border:1.5px solid rgba(211,170,72,.72);border-radius:22px;background:linear-gradient(135deg,#07172d 0%,#0c2038 62%,#07172d 100%);box-shadow:inset 0 1px 0 rgba(255,224,145,.12),0 8px 24px rgba(2,12,25,.18);overflow:hidden}
+.system-admin-heading:after{content:"";position:absolute;right:-28px;top:-45px;width:125px;height:145px;transform:rotate(35deg);background:linear-gradient(90deg,transparent,rgba(255,255,255,.045),transparent);pointer-events:none}
+.system-admin-icon{width:52px;height:52px;display:grid;place-items:center;border:1.5px solid #cda448;border-radius:50%;color:#e0b85c;font-family:Arial,sans-serif;font-size:31px;line-height:1;text-shadow:0 0 12px rgba(224,184,92,.28);box-shadow:inset 0 0 0 4px rgba(205,164,72,.06)}
+.system-admin-divider{width:1px;height:52px;background:linear-gradient(transparent,#cda448,transparent)}
+.system-admin-copy{min-width:0}
+.system-admin-kicker{display:block;margin:0 0 3px;color:#d5ad52;font-size:9px;font-weight:800;letter-spacing:.20em;white-space:nowrap}
+.system-admin-heading strong{display:block;color:#fff;font-family:serif;font-size:22px;line-height:1.25;font-weight:700;letter-spacing:.06em}
+.system-admin-sub{display:flex;align-items:center;gap:8px;margin-top:5px;color:#d5ad52;font-size:8.5px;font-weight:800;letter-spacing:.15em;white-space:nowrap}
+.system-admin-sub i{display:block;width:24px;height:1px;background:#cda448}
+.system-admin-chevron{color:#d5ad52;font-size:30px;line-height:1;font-family:Arial,sans-serif}
 #systemAdminFields .backup-admin-fields{margin-top:0}
+@media(max-width:560px){.system-admin-heading{grid-template-columns:50px 1px minmax(0,1fr) 12px;gap:10px;padding:14px 13px;border-radius:18px}.system-admin-icon{width:44px;height:44px;font-size:26px}.system-admin-divider{height:44px}.system-admin-kicker{font-size:7.5px;letter-spacing:.14em}.system-admin-heading strong{font-size:19px}.system-admin-sub{font-size:7.2px;letter-spacing:.10em;gap:5px}.system-admin-sub i{width:13px}.system-admin-chevron{font-size:25px}}
 </style>
 
 <style id="live-score-reset-status-style">
