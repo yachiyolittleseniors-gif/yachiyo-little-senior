@@ -3,7 +3,7 @@
  if(page==='board.html')return;
  const KEY=page;
  let enabled=true,ready=false,timer=null;
- const selectors=['.unified-admin-toggle','.manage-btn','#manageBtn','#adminBtn','#adminToggle','#staffToggle','#heroAdminToggle','#cupAdminBtn','#densukeToggleBtn'];
+ const selectors=['.unified-admin-toggle','.manage-btn','#manageBtn','#adminBtn','#adminToggle','#staffToggle','#heroAdminToggle','#cupAdminBtn','#densukeToggleBtn','#adminModeToggle','#contactAdminBtn','#staffEditBtn'];
  const HIDE_CLASS='admin-visibility-disabled';
  const style=document.createElement('style');
  style.id='admin-visibility-runtime-style';
@@ -36,7 +36,7 @@
  ['pointerup','touchend','click','dblclick'].forEach(type=>document.addEventListener(type,e=>{
    if(!blocked())return;
    const t=e.target;
-   if(t&&((t.closest&&t.closest('footer'))||(t.closest&&t.closest('.unified-admin-reveal'))||(t.closest&&t.closest('.manage-btn,.unified-admin-toggle,#manageBtn,#adminBtn,#adminToggle,#staffToggle,#heroAdminToggle,#cupAdminBtn')))){
+   if(t&&((t.closest&&t.closest('footer'))||(t.closest&&t.closest('.unified-admin-reveal'))||(t.closest&&t.closest('.manage-btn,.unified-admin-toggle,#manageBtn,#adminBtn,#adminToggle,#staffToggle,#heroAdminToggle,#cupAdminBtn,#adminModeToggle,#contactAdminBtn,#staffEditBtn')))){
      e.preventDefault();e.stopImmediatePropagation();closeAdminUi();
    }
  },true));
