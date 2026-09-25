@@ -35,25 +35,7 @@ html{min-height:100%;background:#f4f3ef}
   });
 })();
 </script>
-<script id="hero-current-preload">
-/* TOP画像は古いローカルキャッシュを先に描画せず、現在のサーバー画像を最優先で取得 */
-window.__yachiyoHeroPromise=fetch('/.netlify/functions/site-data?section=hero&manifest=1',{cache:'no-store'})
-  .then(function(r){return r.ok?r.json():{data:[]}})
-  .then(function(j){
-    var d=Array.isArray(j.data)?j.data:[];
-    return d[0]&&d[0].image?d[0].image:'';
-  })
-  .catch(function(){return ''});
-window.__yachiyoHeroPromise.then(function(src){
-  if(!src)return;
-  var img=new Image();
-  img.fetchPriority='high';
-  img.onload=function(){
-    document.documentElement.style.setProperty('--hero-photo','url("'+src.replace(/"/g,'%22')+'")');
-  };
-  img.src=src;
-});
-</script>
+
 <script id="seniorcup-visibility-prepaint">
 (function(){
   try{
@@ -2823,14 +2805,6 @@ window.__loadYachiyoPhotos = function(){
     if(preload.complete&&preload.naturalWidth)preload.onload();
   };
 
-  const hero=window.__yachiyoPhotoCache.get('hero');
-  if(hero){
-    const s=document.createElement('style');
-    s.id='hero-cache-style';
-    s.textContent='.hero{--hero-photo:url("'+hero.replace(/"/g,'\\22 ')+'")!important}';
-    document.head.appendChild(s);
-  }
-
   document.addEventListener('DOMContentLoaded',function(){
     ['photo2','photo3','photo4'].forEach(function(key){
       const src=window.__yachiyoPhotoCache.get(key);
@@ -4016,23 +3990,30 @@ function openProtectedArea(type){
 
   async function loadHero(){
     try{
-      let image='';
-      if(window.__yachiyoHeroPromise){
-        image=await window.__yachiyoHeroPromise;
-      }else{
-        const r=await fetch(api+'?section=hero&manifest=1',{cache:'no-store'});
-        if(r.ok){
-          const j=await r.json();
-          const d=Array.isArray(j.data)?j.data:[];
-          image=d[0]&&d[0].image?d[0].image:'';
-        }
-      }
-      if(image){
-        window.__yachiyoPhotoCache&&window.__yachiyoPhotoCache.set('hero',image);
-        hero.style.setProperty('--hero-photo',`url("${image}")`);
-      }
-    }catch(e){}
+      const r=await fetch(api+'?section=hero&manifest=1',{cache:'no-store'});
+      if(!r.ok)return;
+      const j=await r.json();
+      const d=Array.isArray(j.data)?j.data:[];
+      const image=d[0]&&d[0].image?d[0].image:'';
+      if(!image)return;
 
+      // 古い保存画像は先に描画せず、現在のTOP画像が読めた時点で表示する
+      const preload=new Image();
+      preload.fetchPriority='high';
+      const apply=function(){
+        hero.style.setProperty('--hero-photo',`url("${image}")`);
+        window.__yachiyoPhotoCache&&window.__yachiyoPhotoCache.set('hero',image);
+      };
+      preload.onload=function(){
+        if(preload.decode)preload.decode().then(apply,apply);
+        else apply();
+      };
+      preload.onerror=function(){
+        // 読み込みに失敗しても次回アクセス用に古い画像へ戻さない
+      };
+      preload.src=image;
+      if(preload.complete&&preload.naturalWidth)apply();
+    }catch(e){}
   }
   loadHero();
 
