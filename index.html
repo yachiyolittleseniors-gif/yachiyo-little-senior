@@ -35,7 +35,14 @@ html{min-height:100%;background:#f4f3ef}
   });
 })();
 </script>
-
+<script id="hero-cache-prepaint">
+(function(){
+  try{
+    const cachedHero=localStorage.getItem('yachiyoPhotoCache:hero');
+    if(cachedHero)document.documentElement.style.setProperty('--hero-photo','url("'+cachedHero.replace(/"/g,'%22')+'")');
+  }catch(error){}
+})();
+</script>
 <script id="seniorcup-visibility-prepaint">
 (function(){
   try{
@@ -2042,7 +2049,7 @@ img,video,iframe{max-width:100%}
 }
 </script>
 <style>
-:root{--hero-photo:linear-gradient(135deg,#1b324a 0%,#081321 60%,#17130c 100%)}
+:root{--hero-photo:url("./team-hero.jpg")}
 #heroPhotoAdmin{position:fixed;right:16px;bottom:16px;z-index:9998;display:none;gap:8px;align-items:center;justify-content:flex-end;flex-wrap:wrap;max-width:calc(100vw - 32px)}
 #heroPhotoAdmin button,#heroPhotoAdmin label{border:1px solid rgba(212,175,55,.75);background:#071426;color:#e2bd67;border-radius:999px;padding:10px 14px;font-size:12px;font-weight:700;box-shadow:0 5px 18px rgba(0,0,0,.22);cursor:pointer}
 #heroPhotoAdmin label{display:none;background:#b48a32;color:#fff}
@@ -2804,6 +2811,14 @@ window.__loadYachiyoPhotos = function(){
     preload.src=src;
     if(preload.complete&&preload.naturalWidth)preload.onload();
   };
+
+  const hero=window.__yachiyoPhotoCache.get('hero');
+  if(hero){
+    const s=document.createElement('style');
+    s.id='hero-cache-style';
+    s.textContent='.hero{--hero-photo:url("'+hero.replace(/"/g,'\\22 ')+'")!important}';
+    document.head.appendChild(s);
+  }
 
   document.addEventListener('DOMContentLoaded',function(){
     ['photo2','photo3','photo4'].forEach(function(key){
@@ -3991,29 +4006,16 @@ function openProtectedArea(type){
   async function loadHero(){
     try{
       const r=await fetch(api+'?section=hero&manifest=1',{cache:'no-store'});
-      if(!r.ok)return;
-      const j=await r.json();
-      const d=Array.isArray(j.data)?j.data:[];
-      const image=d[0]&&d[0].image?d[0].image:'';
-      if(!image)return;
-
-      // 古い保存画像は先に描画せず、現在のTOP画像が読めた時点で表示する
-      const preload=new Image();
-      preload.fetchPriority='high';
-      const apply=function(){
-        hero.style.setProperty('--hero-photo',`url("${image}")`);
-        window.__yachiyoPhotoCache&&window.__yachiyoPhotoCache.set('hero',image);
-      };
-      preload.onload=function(){
-        if(preload.decode)preload.decode().then(apply,apply);
-        else apply();
-      };
-      preload.onerror=function(){
-        // 読み込みに失敗しても次回アクセス用に古い画像へ戻さない
-      };
-      preload.src=image;
-      if(preload.complete&&preload.naturalWidth)apply();
+      if(r.ok){
+        const j=await r.json();
+        const d=Array.isArray(j.data)?j.data:[];
+        if(d[0]&&d[0].image){
+          window.__yachiyoPhotoCache&&window.__yachiyoPhotoCache.set('hero',d[0].image);
+          hero.style.setProperty('--hero-photo',`url("${d[0].image}")`);
+        }
+      }
     }catch(e){}
+
   }
   loadHero();
 
