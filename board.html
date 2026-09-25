@@ -1131,21 +1131,6 @@ body.live-score-focused #liveScoreCard{width:100%;box-sizing:border-box}
 }
 </style>
 
-
-<style id="team-management-system-brand-style">
-.team-system-hero .team-system-brand{margin:0 0 18px;text-align:left}
-.team-system-hero .team-system-name{color:#e8c56f;font-family:Georgia,"Times New Roman",serif;font-size:clamp(16px,4.8vw,24px);font-weight:700;letter-spacing:.14em;line-height:1.2;text-shadow:0 0 14px rgba(199,154,59,.16)}
-.team-system-hero .team-system-sub{display:flex;align-items:center;gap:10px;margin-top:8px;color:#d9ad4f;font-size:10px;font-weight:800;letter-spacing:.27em;white-space:nowrap}
-.team-system-hero .team-system-sub span{display:block;width:34px;height:1px;background:linear-gradient(90deg,transparent,#c79a3b)}
-.team-system-hero .team-system-sub span:last-child{background:linear-gradient(90deg,#c79a3b,transparent)}
-@media (max-width:520px){
-  .team-system-hero>div{padding-top:30px;padding-bottom:30px}
-  .team-system-hero .team-system-brand{margin-bottom:16px}
-  .team-system-hero .team-system-name{font-size:16px;letter-spacing:.12em}
-  .team-system-hero .team-system-sub{gap:7px;font-size:8px;letter-spacing:.19em}
-  .team-system-hero .team-system-sub span{width:20px}
-}
-</style>
 </head>
 <body id="page-top">
 <header class="site-header">
@@ -1169,12 +1154,9 @@ body.live-score-focused #liveScoreCard{width:100%;box-sizing:border-box}
   </nav>
 </header>
 
-<section class="hero team-system-hero">
+<section class="hero">
   <div>
-    <div class="team-system-brand" aria-label="Yachiyo Little Senior Team Management System">
-      <div class="team-system-name">YACHIYO LITTLE SENIOR</div>
-      <div class="team-system-sub"><span></span>TEAM MANAGEMENT SYSTEM<span></span></div>
-    </div>
+    <div class="eyebrow">TEAM MEMBERS</div>
     <h1>チーム専用ページ</h1>
     <div class="crumb">HOME / チーム専用ページ</div>
   </div>
@@ -1600,9 +1582,31 @@ body.live-score-focused #liveScoreCard{width:100%;box-sizing:border-box}
     <button id="saveDocumentArchiveBtn" type="button">格納庫に保存</button>
     <div id="documentArchiveList"></div>
   </div>
+  <div id="systemAdminFields" class="system-admin-fields">
+    <div class="system-admin-heading">
+      <span class="system-admin-icon">⚙</span>
+      <div><strong>システム管理</strong><small>TEAM MANAGEMENT SYSTEM</small></div>
+    </div>
+    <div id="backupAdminFields" class="backup-admin-fields">
+      <strong>バックアップ管理</strong>
+      <p id="backupStatus">バックアップ状況を確認しています…</p>
+      <p class="backup-note">毎月1日に自動保存し、直近12か月分を保持します。生体認証・パスワード・一時ロック情報は対象外です。</p>
+      <button id="backupCreateBtn" type="button">今すぐバックアップ</button>
+      <div id="backupList" class="backup-list"></div>
+    </div>
+  </div>
   <button id="closeDensukeAdminBtn" type="button">キャンセル</button>
 </div>
 
+
+<style id="system-admin-style">
+#systemAdminFields{margin-top:24px;padding-top:20px;border-top:2px solid rgba(199,162,75,.45)}
+.system-admin-heading{display:flex;align-items:center;gap:10px;margin:0 0 12px;padding:12px 14px;border:1px solid rgba(199,162,75,.5);border-radius:14px;background:rgba(8,25,48,.06)}
+.system-admin-icon{font-size:20px;line-height:1}
+.system-admin-heading strong{display:block;color:#0b1a2e;font-size:16px}
+.system-admin-heading small{display:block;margin-top:2px;color:#9b792c;font-size:10px;font-weight:800;letter-spacing:.14em}
+#systemAdminFields .backup-admin-fields{margin-top:0}
+</style>
 
 <style id="live-score-reset-status-style">
 .live-score-reset-status{
@@ -1624,6 +1628,7 @@ body.live-score-focused #liveScoreCard{width:100%;box-sizing:border-box}
 <script src="./board-duty-roster.js?v=20260918-11"></script>
 <script src="./board-rules.js?v=20260914-4"></script>
 <script src="./board-archive.js?v=20260914-3"></script>
+<script src="./board-backup.js?v=20260926-1"></script>
 <style id="nonblocking-save-notice-style">
 .save-notice{
   position:fixed;
@@ -2059,7 +2064,11 @@ body.photo-admin-on #accessPasswordChange{
 .live-score-history-button{display:inline-flex!important;align-items:center!important;gap:7px!important;white-space:nowrap!important}.live-score-history-icon{font-size:20px;line-height:1}.last-game-modal[hidden]{display:none!important}.last-game-modal{position:fixed;inset:0;z-index:99999;display:flex;align-items:center;justify-content:center;padding:18px}.last-game-backdrop{position:absolute;inset:0;background:rgba(3,14,30,.66)}.last-game-dialog{position:relative;width:min(620px,100%);max-height:88vh;overflow:auto;background:#07182d;color:#fff;border:2px solid #c89b38;border-radius:22px;padding:24px;box-shadow:0 18px 55px rgba(0,0,0,.35)}.last-game-dialog h2{margin:0 48px 2px 0;color:#e0b54f;font-size:clamp(26px,6vw,38px)}.last-game-note{margin:0 0 16px;color:#d7dce6;font-weight:700}.last-game-x{position:absolute;right:17px;top:12px;border:0;background:none;color:#fff;font-size:42px;line-height:1;cursor:pointer}.last-game-info{display:grid;grid-template-columns:1fr 1fr;gap:13px 28px;border-top:1px solid #516074;padding-top:16px}.last-game-info>div,.last-game-timegrade>div{min-width:0}.last-game-info b{display:block;color:#e0b54f;font-size:14px;margin-bottom:3px}.last-game-info span{display:block;font-size:19px;font-weight:800;overflow-wrap:anywhere}.last-game-timegrade{display:grid!important;grid-template-columns:1fr 1fr;gap:15px}.last-game-grade{border:1.5px solid #71a9ff;border-radius:999px;background:#204f88;text-align:center;padding:3px 10px;width:max-content;min-width:72px}.last-game-score-scroll{overflow-x:auto;margin-top:18px}.last-game-score{display:grid;min-width:0;grid-template-columns:minmax(86px,1.7fr) repeat(7,minmax(27px,.55fr)) minmax(38px,.7fr);border:1px solid #75849a;border-radius:12px;overflow:hidden}.last-game-cell{min-height:48px;font-size:13px;display:flex;align-items:center;justify-content:center;border-right:1px solid #75849a;border-bottom:1px solid #75849a;font-weight:800}.last-game-cell:nth-child(9n){border-right:0}.last-game-cell.head{color:#f0cc75;background:#11283f}.last-game-cell.team{justify-content:flex-start;padding:0 14px}.last-game-cell.ours{background:#c89b38;color:#fff}.last-game-cell.total{color:#f0c95f;font-size:22px}.last-game-back{display:block;width:min(430px,100%);margin:20px auto 0;border:0;border-radius:14px;background:linear-gradient(90deg,#d9a62f,#f1cb69);color:#07182d;font-weight:900;font-size:18px;padding:14px;cursor:pointer}@media(max-width:560px){.last-game-dialog{padding:20px 14px 16px;border-radius:18px}.last-game-info{grid-template-columns:1fr 1fr;gap:12px 14px}.last-game-info span{font-size:15px}.last-game-timegrade{gap:8px}.last-game-score{min-width:0}.last-game-cell{font-size:11px}.last-game-cell.team{padding:0 7px}.last-game-cell.total{font-size:18px}.live-score-history-button{font-size:12px!important;padding:9px 11px!important}}
 </style>
 
-<style id="live-score-history-position-fix">.live-score-idle{position:relative!important}.live-score-restore-wrap{position:absolute!important;right:0!important;top:4px!important;z-index:4!important}.last-game-x,.last-game-back{pointer-events:auto!important;touch-action:manipulation!important;z-index:3}.last-game-x{position:absolute!important}@media(max-width:560px){.live-score-restore-wrap{top:2px!important;right:0!important}}</style></body>
+<style id="live-score-history-position-fix">.live-score-idle{position:relative!important}.live-score-restore-wrap{position:absolute!important;right:0!important;top:4px!important;z-index:4!important}.last-game-x,.last-game-back{pointer-events:auto!important;touch-action:manipulation!important;z-index:3}.last-game-x{position:absolute!important}@media(max-width:560px){.live-score-restore-wrap{top:2px!important;right:0!important}}</style>
+<style id="backup-admin-style">
+.backup-admin-fields{margin-top:18px;padding-top:18px;border-top:1px solid rgba(210,170,80,.32)}.backup-admin-fields>strong{display:block;color:#e4bd62;margin-bottom:8px}.backup-admin-fields p{margin:6px 0;font-size:13px;line-height:1.6}.backup-note{color:#aeb9c9}#backupCreateBtn{width:100%;margin:8px 0 10px}.backup-list{display:grid;gap:7px}.backup-row{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:9px 10px;border:1px solid rgba(210,170,80,.25);border-radius:10px;background:rgba(255,255,255,.035)}.backup-row div{min-width:0}.backup-row b{display:block;font-size:13px}.backup-row small{display:block;color:#aeb9c9;font-size:11px;margin-top:2px}.backup-row button{flex:0 0 auto;padding:7px 10px}.backup-empty{color:#aeb9c9}
+</style>
+</body>
 </html>
 <style id="live-score-grade-ground-final-fix">
 @media(max-width:700px){
