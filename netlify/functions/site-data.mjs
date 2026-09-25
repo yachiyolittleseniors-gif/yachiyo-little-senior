@@ -56,7 +56,8 @@ const allowed = new Set([
   "document-archive",
   "live-score",
   "access-settings",
-  "contact-phone-settings"
+  "contact-phone-settings",
+  "admin-visibility-settings"
 ]);
 
 function bytesToHex(bytes) {
