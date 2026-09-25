@@ -35,14 +35,7 @@ html{min-height:100%;background:#f4f3ef}
   });
 })();
 </script>
-<script id="hero-cache-prepaint">
-(function(){
-  try{
-    const cachedHero=localStorage.getItem('yachiyoPhotoCache:hero');
-    if(cachedHero)document.documentElement.style.setProperty('--hero-photo','url("'+cachedHero.replace(/"/g,'%22')+'")');
-  }catch(error){}
-})();
-</script>
+
 <script id="seniorcup-visibility-prepaint">
 (function(){
   try{
@@ -2049,7 +2042,7 @@ img,video,iframe{max-width:100%}
 }
 </script>
 <style>
-:root{--hero-photo:url("./team-hero.jpg")}
+:root{--hero-photo:linear-gradient(135deg,#0b1b2d 0%,#071426 100%)}
 #heroPhotoAdmin{position:fixed;right:16px;bottom:16px;z-index:9998;display:none;gap:8px;align-items:center;justify-content:flex-end;flex-wrap:wrap;max-width:calc(100vw - 32px)}
 #heroPhotoAdmin button,#heroPhotoAdmin label{border:1px solid rgba(212,175,55,.75);background:#071426;color:#e2bd67;border-radius:999px;padding:10px 14px;font-size:12px;font-weight:700;box-shadow:0 5px 18px rgba(0,0,0,.22);cursor:pointer}
 #heroPhotoAdmin label{display:none;background:#b48a32;color:#fff}
@@ -2811,14 +2804,6 @@ window.__loadYachiyoPhotos = function(){
     preload.src=src;
     if(preload.complete&&preload.naturalWidth)preload.onload();
   };
-
-  const hero=window.__yachiyoPhotoCache.get('hero');
-  if(hero){
-    const s=document.createElement('style');
-    s.id='hero-cache-style';
-    s.textContent='.hero{--hero-photo:url("'+hero.replace(/"/g,'\\22 ')+'")!important}';
-    document.head.appendChild(s);
-  }
 
   document.addEventListener('DOMContentLoaded',function(){
     ['photo2','photo3','photo4'].forEach(function(key){
