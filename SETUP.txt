@@ -1,0 +1,21 @@
+八千代リトルシニア セキュリティ強化版
+
+【重要】このZIPをデプロイする前に、Netlify の Environment variables に次の2つを登録してください。
+
+BOARD_SESSION_SECRET=yJT0brziSzw/MNEFOUECh8yuWdiccEZdSA+vJ0pGNezYMLRZ/rItZzs5j7L59b4Q
+COACH_SESSION_SECRET=qr4gCVvv6rHgMYTd5Fzrfeb0h+zgSs6zaqeTI8sacpzOqgAi0xD2yqi4eTfceFXx
+
+どちらもサイト上のパスワードとは別物です。公開HTML/JSには書かないでください。
+登録後にこのZIP内の netlify/functions/ の5ファイルを同じ場所へ上書きしてデプロイしてください。
+
+変更内容:
+- セッション署名鍵の固定値/パスワード流用フォールバックを廃止
+- BOARD_SESSION_SECRET / COACH_SESSION_SECRET を32文字以上で必須化
+- セッションCookieを __Host- prefix に変更
+- 公開ソース内の固定アクセスsalt/hashフォールバックを廃止
+- 保存済みアクセス設定、またはNetlify環境変数のみを認証元として使用
+- CSP/HTMLには変更なし（SecurityHeaders A+設定に影響なし）
+
+注意:
+- Secret未登録のまま先にデプロイすると専用ページの新規セッション発行が失敗します。
+- Cookie名変更のため、既にログイン中の端末は一度だけ再ログインが必要です。
