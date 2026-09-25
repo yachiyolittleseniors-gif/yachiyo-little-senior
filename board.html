@@ -1131,6 +1131,21 @@ body.live-score-focused #liveScoreCard{width:100%;box-sizing:border-box}
 }
 </style>
 
+
+<style id="team-management-system-brand-style">
+.team-system-hero .team-system-brand{margin:0 0 18px;text-align:left}
+.team-system-hero .team-system-name{color:#e8c56f;font-family:Georgia,"Times New Roman",serif;font-size:clamp(16px,4.8vw,24px);font-weight:700;letter-spacing:.14em;line-height:1.2;text-shadow:0 0 14px rgba(199,154,59,.16)}
+.team-system-hero .team-system-sub{display:flex;align-items:center;gap:10px;margin-top:8px;color:#d9ad4f;font-size:10px;font-weight:800;letter-spacing:.27em;white-space:nowrap}
+.team-system-hero .team-system-sub span{display:block;width:34px;height:1px;background:linear-gradient(90deg,transparent,#c79a3b)}
+.team-system-hero .team-system-sub span:last-child{background:linear-gradient(90deg,#c79a3b,transparent)}
+@media (max-width:520px){
+  .team-system-hero>div{padding-top:30px;padding-bottom:30px}
+  .team-system-hero .team-system-brand{margin-bottom:16px}
+  .team-system-hero .team-system-name{font-size:16px;letter-spacing:.12em}
+  .team-system-hero .team-system-sub{gap:7px;font-size:8px;letter-spacing:.19em}
+  .team-system-hero .team-system-sub span{width:20px}
+}
+</style>
 </head>
 <body id="page-top">
 <header class="site-header">
@@ -1154,9 +1169,12 @@ body.live-score-focused #liveScoreCard{width:100%;box-sizing:border-box}
   </nav>
 </header>
 
-<section class="hero">
+<section class="hero team-system-hero">
   <div>
-    <div class="eyebrow">TEAM MEMBERS</div>
+    <div class="team-system-brand" aria-label="Yachiyo Little Senior Team Management System">
+      <div class="team-system-name">YACHIYO LITTLE SENIOR</div>
+      <div class="team-system-sub"><span></span>TEAM MANAGEMENT SYSTEM<span></span></div>
+    </div>
     <h1>チーム専用ページ</h1>
     <div class="crumb">HOME / チーム専用ページ</div>
   </div>
