@@ -1156,7 +1156,7 @@ body.live-score-focused #liveScoreCard{width:100%;box-sizing:border-box}
 
 <section class="hero">
   <div>
-    <div class="eyebrow">TEAM MEMBERS</div>
+    <div class="eyebrow system-brand" aria-label="Yachiyo Little Senior Team Management System"><span class="system-brand-main">YACHIYO LITTLE SENIOR</span><span class="system-brand-sub"><i></i>TEAM MANAGEMENT SYSTEM<i></i></span></div>
     <h1>チーム専用ページ</h1>
     <div class="crumb">HOME / チーム専用ページ</div>
   </div>
@@ -2106,4 +2106,12 @@ body.photo-admin-on #accessPasswordChange{
     white-space:nowrap!important;
   }
 }
+
+/* Team Management System brand */
+.hero .system-brand{display:flex;flex-direction:column;align-items:flex-start;gap:8px;margin-bottom:26px;color:#d7ad50;}
+.hero .system-brand-main{font-family:Georgia,"Times New Roman",serif;font-size:clamp(17px,4.5vw,23px);font-weight:700;letter-spacing:.14em;line-height:1.15;white-space:nowrap;}
+.hero .system-brand-sub{display:flex;align-items:center;gap:11px;font-size:10px;font-weight:800;letter-spacing:.19em;line-height:1;color:#d7ad50;white-space:nowrap;}
+.hero .system-brand-sub i{display:block;width:36px;height:1px;background:linear-gradient(90deg,transparent,#d7ad50);opacity:.9;}
+.hero .system-brand-sub i:last-child{background:linear-gradient(90deg,#d7ad50,transparent);}
+@media(max-width:420px){.hero .system-brand-main{font-size:16px;letter-spacing:.12em}.hero .system-brand-sub{font-size:9px;letter-spacing:.15em;gap:8px}.hero .system-brand-sub i{width:28px}}
 </style>
