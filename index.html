@@ -35,13 +35,24 @@ html{min-height:100%;background:#f4f3ef}
   });
 })();
 </script>
-<script id="hero-cache-prepaint">
-(function(){
-  try{
-    const cachedHero=localStorage.getItem('yachiyoPhotoCache:hero');
-    if(cachedHero)document.documentElement.style.setProperty('--hero-photo','url("'+cachedHero.replace(/"/g,'%22')+'")');
-  }catch(error){}
-})();
+<script id="hero-current-preload">
+/* TOP画像は古いローカルキャッシュを先に描画せず、現在のサーバー画像を最優先で取得 */
+window.__yachiyoHeroPromise=fetch('/.netlify/functions/site-data?section=hero&manifest=1',{cache:'no-store'})
+  .then(function(r){return r.ok?r.json():{data:[]}})
+  .then(function(j){
+    var d=Array.isArray(j.data)?j.data:[];
+    return d[0]&&d[0].image?d[0].image:'';
+  })
+  .catch(function(){return ''});
+window.__yachiyoHeroPromise.then(function(src){
+  if(!src)return;
+  var img=new Image();
+  img.fetchPriority='high';
+  img.onload=function(){
+    document.documentElement.style.setProperty('--hero-photo','url("'+src.replace(/"/g,'%22')+'")');
+  };
+  img.src=src;
+});
 </script>
 <script id="seniorcup-visibility-prepaint">
 (function(){
@@ -53,7 +64,6 @@ html{min-height:100%;background:#f4f3ef}
 })();
 </script>
 <link as="image" fetchpriority="high" href="./official-logo-crisp-final.png" rel="preload"/>
-<link as="image" fetchpriority="high" href="./team-hero.jpg" rel="preload"/>
 <meta charset="utf-8"/>
 <!-- Created by tatsuki.saitoh -->
 <meta content="tatsuki.saitoh" name="author">
@@ -2050,7 +2060,7 @@ img,video,iframe{max-width:100%}
 }
 </script>
 <style>
-:root{--hero-photo:url("./team-hero.jpg")}
+:root{--hero-photo:linear-gradient(135deg,#1b324a 0%,#081321 60%,#17130c 100%)}
 #heroPhotoAdmin{position:fixed;right:16px;bottom:16px;z-index:9998;display:none;gap:8px;align-items:center;justify-content:flex-end;flex-wrap:wrap;max-width:calc(100vw - 32px)}
 #heroPhotoAdmin button,#heroPhotoAdmin label{border:1px solid rgba(212,175,55,.75);background:#071426;color:#e2bd67;border-radius:999px;padding:10px 14px;font-size:12px;font-weight:700;box-shadow:0 5px 18px rgba(0,0,0,.22);cursor:pointer}
 #heroPhotoAdmin label{display:none;background:#b48a32;color:#fff}
@@ -4006,14 +4016,20 @@ function openProtectedArea(type){
 
   async function loadHero(){
     try{
-      const r=await fetch(api+'?section=hero&manifest=1',{cache:'no-store'});
-      if(r.ok){
-        const j=await r.json();
-        const d=Array.isArray(j.data)?j.data:[];
-        if(d[0]&&d[0].image){
-          window.__yachiyoPhotoCache&&window.__yachiyoPhotoCache.set('hero',d[0].image);
-          hero.style.setProperty('--hero-photo',`url("${d[0].image}")`);
+      let image='';
+      if(window.__yachiyoHeroPromise){
+        image=await window.__yachiyoHeroPromise;
+      }else{
+        const r=await fetch(api+'?section=hero&manifest=1',{cache:'no-store'});
+        if(r.ok){
+          const j=await r.json();
+          const d=Array.isArray(j.data)?j.data:[];
+          image=d[0]&&d[0].image?d[0].image:'';
         }
+      }
+      if(image){
+        window.__yachiyoPhotoCache&&window.__yachiyoPhotoCache.set('hero',image);
+        hero.style.setProperty('--hero-photo',`url("${image}")`);
       }
     }catch(e){}
 
