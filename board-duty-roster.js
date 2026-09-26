@@ -19,6 +19,7 @@
   let images=[];
   let changes=[];
   let parsedChanges=[];
+  let requests=[];
 
 
   if(!list||!tableList||!adminList||!fileInput||!saveBtn||!panel||!changeSection||!changeList||!changeYear||!changeGrade||!changeText||!pasteChangeBtn||!changePreview||!saveChangesBtn||!changeAdminList)return;
@@ -51,7 +52,8 @@
     const changeItems=raw&&raw.initialized===true&&Array.isArray(raw.changes)?raw.changes:[];
     return{
       images:imageList.filter(function(item){return item&&typeof item==='object'&&(item.data||item.src)}).slice(0,8).map(function(item,index){return{id:String(item.id||('duty-'+index)),name:String(item.name||('当番表 '+(index+1))),data:item.data?String(item.data):'',src:item.src?String(item.src):'',table:window.DutyRosterData.tableForImage(item)}}),
-      changes:changeItems.filter(function(item){return item&&/^\d{4}-\d{2}-\d{2}$/.test(String(item.date||''))&&['1','2','3'].includes(String(item.grade||''))&&cleanName(item.from)&&cleanName(item.to)}).slice(0,300).map(function(item,index){return{id:String(item.id||('change-'+index)),date:String(item.date),grade:String(item.grade),from:cleanName(item.from),to:cleanName(item.to),createdAt:String(item.createdAt||'')}})
+      changes:changeItems.filter(function(item){return item&&/^\d{4}-\d{2}-\d{2}$/.test(String(item.date||''))&&['1','2','3'].includes(String(item.grade||''))&&cleanName(item.from)&&cleanName(item.to)}).slice(0,300).map(function(item,index){return{id:String(item.id||('change-'+index)),date:String(item.date),grade:String(item.grade),from:cleanName(item.from),to:cleanName(item.to),createdAt:String(item.createdAt||'')}}),
+      requests:Array.isArray(raw&&raw.requests)?raw.requests.filter(function(item){return item&&/^\d{4}-\d{2}-\d{2}$/.test(String(item.date||''))&&['1','2','3'].includes(String(item.grade||''))&&cleanName(item.from)&&cleanName(item.to)}).slice(0,200).map(function(item,index){return{id:String(item.id||('request-'+index)),date:String(item.date),grade:String(item.grade),from:cleanName(item.from),to:cleanName(item.to),note:String(item.note||'').slice(0,200),status:['pending','approved','rejected'].includes(String(item.status))?String(item.status):'pending',createdAt:String(item.createdAt||''),updatedAt:String(item.updatedAt||'')}}):[]
     };
   }
 
@@ -87,8 +89,8 @@
     }).join('');
   }
 
-  function saveCache(){try{const value=JSON.stringify({initialized:true,images:images,changes:changes});if(value.length<=4*1024*1024)sessionStorage.setItem(CACHE_KEY,value);else sessionStorage.removeItem(CACHE_KEY)}catch(e){}}
-  function loadCache(){try{const cached=normalize(JSON.parse(sessionStorage.getItem(CACHE_KEY)||'null'));if(cached.images.length||cached.changes.length){images=cached.images;changes=cached.changes;render()}}catch(e){sessionStorage.removeItem(CACHE_KEY)}}
+  function saveCache(){try{const value=JSON.stringify({initialized:true,images:images,changes:changes,requests:requests});if(value.length<=4*1024*1024)sessionStorage.setItem(CACHE_KEY,value);else sessionStorage.removeItem(CACHE_KEY)}catch(e){}}
+  function loadCache(){try{const cached=normalize(JSON.parse(sessionStorage.getItem(CACHE_KEY)||'null'));if(cached.images.length||cached.changes.length){images=cached.images;changes=cached.changes;requests=cached.requests;render()}}catch(e){sessionStorage.removeItem(CACHE_KEY)}}
 
   function renderChanges(){
     const ordered=sortChanges(changes);changeSection.hidden=!ordered.length;
@@ -113,18 +115,18 @@
       const remove=document.createElement('button');remove.type='button';remove.textContent='削除';remove.className='duty-roster-delete';remove.addEventListener('click',function(){removeImage(index)});
       actions.append(up,down,remove);row.append(name,actions);adminList.appendChild(row);
     });
-    if(images.length)list.replaceChildren(imageFragment);renderTables();renderChanges();
+    if(images.length)list.replaceChildren(imageFragment);renderTables();renderChanges();renderRequests();
   }
 
   async function load(){
-    try{await window.boardAccessReady;const accessPassword=sessionStorage.getItem('yachiyoAttendancePass')||'';const response=await fetch(API,{cache:'no-store',headers:{'x-access-password':accessPassword}});if(!response.ok)throw new Error('load failed');const body=await response.json();const normalized=normalize(body.data);images=normalized.images;changes=normalized.changes;saveCache();render()}catch(e){render()}
+    try{await window.boardAccessReady;const accessPassword=sessionStorage.getItem('yachiyoAttendancePass')||'';const response=await fetch(API,{cache:'no-store',headers:{'x-access-password':accessPassword}});if(!response.ok)throw new Error('load failed');const body=await response.json();const normalized=normalize(body.data);images=normalized.images;changes=normalized.changes;requests=normalized.requests;saveCache();render()}catch(e){render()}
   }
 
   function readAsDataUrl(file){return new Promise(function(resolve,reject){const reader=new FileReader();reader.onload=function(){resolve(String(reader.result||''))};reader.onerror=reject;reader.readAsDataURL(file)})}
 
   async function persist(successMessage,updateMessage,announceLatest){
     const adminPassword=panel.dataset.adminPassword||'';if(!adminPassword)throw new Error('管理画面を開き直してください。')
-    const payload={initialized:true,images:images,changes:changes};if(JSON.stringify(payload).length>7500000){throw new Error('画像の合計容量が大きすぎます。画像を減らしてください。')}
+    const payload={initialized:true,images:images,changes:changes,requests:requests};if(JSON.stringify(payload).length>7500000){throw new Error('画像の合計容量が大きすぎます。画像を減らしてください。')}
     const response=await fetch(API,{method:'POST',headers:{'content-type':'application/json','x-admin-password':adminPassword},body:JSON.stringify({data:payload,updateMessage:updateMessage||'当番表を更新しました',announceLatest:announceLatest===true})});
     const body=await response.json().catch(function(){return{}});if(!response.ok)throw new Error(body.error||'保存できませんでした。');saveCache();render();showSaveNotice(successMessage||'保存しました');if(announceLatest)window.refreshBoardLatestUpdate?.();return true;
   }
@@ -195,6 +197,36 @@
   }
 
   async function move(index,direction){const next=index+direction;if(next<0||next>=images.length)return;const previous=images.slice();[images[index],images[next]]=[images[next],images[index]];render();try{await persist('並び順を保存しました','当番表の並び順を変更しました')}catch(e){images=previous;render();alert(e.message||'並び順を保存できませんでした。')}}
+
+  function allRosterNames(){
+    const map=new Map();
+    images.forEach(function(image){const table=image.table;if(!table)return;const grades=table.grades||[2,1];table.rows.forEach(function(row){row.slice(2,6).forEach(function(name,index){const clean=cleanName(name);if(!clean)return;const grade=String(grades[Math.floor(index/2)]);map.set(grade+'|'+clean,{grade:grade,name:clean})})})});
+    return Array.from(map.values()).sort(function(a,b){return Number(b.grade)-Number(a.grade)||a.name.localeCompare(b.name,'ja')});
+  }
+  function rosterDates(){const out=[];images.forEach(function(image){const table=image.table;if(!table)return;table.rows.forEach(function(row){out.push({date:tableDate(table,row[0]),label:table.year+'年'+table.month+'月'+row[0]+'日（'+row[1]+'）',table:table,row:row})})});return out.sort(function(a,b){return a.date.localeCompare(b.date)})}
+  function rosterHasMonth(date){return images.some(function(image){return image.table&&date.startsWith(image.table.year+'-'+String(image.table.month).padStart(2,'0')+'-')})}
+  function requestStatusLabel(status,date){if(status==='approved')return'反映済み';if(status==='rejected')return'却下';return rosterHasMonth(date)?'確認待ち':'当番表登録待ち'}
+  function renderRequests(){
+    const statusWrap=document.getElementById('dutyRequestStatus'),statusList=document.getElementById('dutyRequestStatusList'),admin=document.getElementById('dutyRequestAdminList');
+    const ordered=requests.slice().sort(function(a,b){return String(b.createdAt).localeCompare(String(a.createdAt))});
+    if(statusWrap&&statusList){statusWrap.hidden=!ordered.length;statusList.innerHTML=ordered.map(function(item){const label=requestStatusLabel(item.status,item.date);return'<div class="duty-request-status-item">'+displayDate(item.date)+'・'+item.grade+'年生　'+escapeHtml(item.from)+' → <b>'+escapeHtml(item.to)+'</b><br><b data-status="'+item.status+'">'+label+'</b>'+(item.note?'<br>備考：'+escapeHtml(item.note):'')+'</div>'}).join('')}
+    if(admin){const pending=ordered.filter(function(x){return x.status==='pending'});admin.innerHTML=pending.length?pending.map(function(item){const canApply=rosterHasMonth(item.date);return'<div class="duty-request-admin-item"><b>'+displayDate(item.date)+'・'+item.grade+'年生</b><br>'+escapeHtml(item.from)+' → <b>'+escapeHtml(item.to)+'</b>'+(item.note?'<br>備考：'+escapeHtml(item.note):'')+(!canApply?'<br><span class="duty-request-wait">当番表登録待ち</span>':'')+'<div class="duty-request-admin-actions"><button type="button" data-approve-duty-request="'+escapeHtml(item.id)+'" '+(canApply?'':'disabled')+'>当番表に反映</button><button class="reject" type="button" data-reject-duty-request="'+escapeHtml(item.id)+'">却下</button></div></div>'}).join(''):'<div class="duty-change-preview">未確認の当番変更申請はありません。</div>';admin.querySelectorAll('[data-approve-duty-request]').forEach(function(b){b.addEventListener('click',function(){decideRequest(b.dataset.approveDutyRequest,true)})});admin.querySelectorAll('[data-reject-duty-request]').forEach(function(b){b.addEventListener('click',function(){decideRequest(b.dataset.rejectDutyRequest,false)})})}
+    populateRequestForm();
+  }
+  function populateRequestForm(){
+    const dateSel=document.getElementById('dutyRequestRosterDate'),gradeSel=document.getElementById('dutyRequestGrade'),fromSel=document.getElementById('dutyRequestFrom'),toSel=document.getElementById('dutyRequestTo');if(!dateSel||!gradeSel||!fromSel||!toSel)return;
+    const current=dateSel.value;dateSel.innerHTML='<option value="">日付を選択してください</option>'+rosterDates().map(function(x){return'<option value="'+x.date+'">'+x.label+'</option>'}).join('');if(Array.from(dateSel.options).some(function(o){return o.value===current}))dateSel.value=current;
+    const names=allRosterNames(),grade=gradeSel.value;const filtered=grade?names.filter(function(x){return x.grade===grade}):names;const opts='<option value="">選択してください</option>'+filtered.map(function(x){return'<option value="'+escapeHtml(x.name)+'">'+x.grade+'年・'+escapeHtml(displayName(x.name,x.grade))+'</option>'}).join('');const fv=fromSel.value,tv=toSel.value;fromSel.innerHTML=opts;toSel.innerHTML=opts;if(Array.from(fromSel.options).some(o=>o.value===fv))fromSel.value=fv;if(Array.from(toSel.options).some(o=>o.value===tv))toSel.value=tv;
+    const selected=rosterDates().find(function(x){return x.date===dateSel.value});if(selected&&grade){const gi=(selected.table.grades||[2,1]).indexOf(Number(grade));if(gi>=0){const namesOnDay=selected.row.slice(2+gi*2,4+gi*2).map(cleanName);if(namesOnDay[0]&&Array.from(fromSel.options).some(o=>o.value===namesOnDay[0]))fromSel.value=namesOnDay[0]}}
+  }
+  async function submitRequest(){
+    const mode=document.querySelector('input[name="dutyRequestMode"]:checked')?.value||'roster',date=mode==='direct'?document.getElementById('dutyRequestDirectDate').value:document.getElementById('dutyRequestRosterDate').value,grade=document.getElementById('dutyRequestGrade').value,from=cleanName(document.getElementById('dutyRequestFrom').value),to=cleanName(document.getElementById('dutyRequestTo').value),note=String(document.getElementById('dutyRequestNote').value||'').trim().slice(0,200),btn=document.getElementById('submitDutyRequest'),result=document.getElementById('dutyRequestResult');
+    if(!/^\d{4}-\d{2}-\d{2}$/.test(date)||!['1','2','3'].includes(grade)||!from||!to)return alert('変更日・学年・変更前・変更後を選択してください。');if(from===to)return alert('変更前と変更後は別の方を選択してください。');
+    btn.disabled=true;btn.textContent='送信中…';try{const accessPassword=sessionStorage.getItem('yachiyoAttendancePass')||'';const response=await fetch(API,{method:'POST',headers:{'content-type':'application/json','x-access-password':accessPassword},body:JSON.stringify({action:'submitDutyChangeRequest',request:{date:date,grade:grade,from:from,to:to,note:note}})});const body=await response.json().catch(function(){return{}});if(!response.ok)throw new Error(body.error||'申請できませんでした。');requests=normalize(body.data).requests;renderRequests();const text='【当番変更連絡】\n'+displayDate(date)+'\n'+grade+'年生\n変更前：'+displayName(from,grade)+'\n変更後：'+displayName(to,grade)+(note?'\n備考：'+note:'')+'\n当番変更を申請しました。';result.hidden=false;result.innerHTML='申請を受け付けました。管理者の確認後に当番表へ反映されます。<a class="line-share" target="_blank" rel="noopener noreferrer" href="https://line.me/R/share?text='+encodeURIComponent(text)+'">LINEで変更内容を共有</a>';document.getElementById('dutyRequestNote').value='';}catch(e){alert(e.message||'申請できませんでした。')}finally{btn.disabled=false;btn.textContent='変更申請を送信'}
+  }
+  async function decideRequest(id,approve){
+    const item=requests.find(function(x){return x.id===id});if(!item)return;if(!confirm(approve?'この申請を当番表に反映しますか？':'この申請を却下しますか？'))return;const previousReq=requests.slice(),previousChanges=changes.slice();item.status=approve?'approved':'rejected';item.updatedAt=new Date().toISOString();if(approve){const idx=changes.findIndex(function(x){return x.date===item.date&&x.grade===item.grade&&x.from===item.from});const change={id:idx>=0?changes[idx].id:'change-'+Date.now().toString(36),date:item.date,grade:item.grade,from:item.from,to:item.to,createdAt:new Date().toISOString()};if(idx>=0)changes[idx]=change;else changes.push(change)}render();try{await persist(approve?'申請を当番表に反映しました':'申請を却下しました',approve?'当番変更を反映しました':'当番変更申請を却下しました',approve)}catch(e){requests=previousReq;changes=previousChanges;render();alert(e.message||'処理できませんでした。')}
+  }
   async function removeImage(index){
     const target=images[index];if(!target)return;
     const key=target.table?target.table.year+'-'+String(target.table.month).padStart(2,'0'):null;
@@ -224,6 +256,11 @@
   });
   [changeYear,changeText].forEach(function(element){element.addEventListener('input',function(){updateChangePreview(false)});element.addEventListener('change',function(){updateChangePreview(false)})});
   changeGrade.addEventListener('change',function(){updateChangePreview(true)});
+  const requestToggle=document.getElementById('toggleDutyRequest'),requestContent=document.getElementById('dutyRequestContent'),requestStatusToggle=document.getElementById('toggleDutyRequestStatus'),requestStatusList=document.getElementById('dutyRequestStatusList');
+  if(requestToggle&&requestContent)requestToggle.addEventListener('click',function(){const open=requestContent.hidden;requestContent.hidden=!open;requestToggle.setAttribute('aria-expanded',String(open));requestToggle.textContent=open?'閉じる':'申請する';populateRequestForm()});
+  if(requestStatusToggle&&requestStatusList)requestStatusToggle.addEventListener('click',function(){const open=requestStatusList.hidden;requestStatusList.hidden=!open;requestStatusToggle.setAttribute('aria-expanded',String(open));requestStatusToggle.textContent=open?'申請状況を閉じる':'申請状況を見る'});
+  document.querySelectorAll('input[name="dutyRequestMode"]').forEach(function(r){r.addEventListener('change',function(){const direct=r.value==='direct'&&r.checked;document.getElementById('dutyRequestRosterDate').hidden=direct;document.getElementById('dutyRequestDirectDate').hidden=!direct})});
+  document.getElementById('dutyRequestGrade')?.addEventListener('change',populateRequestForm);document.getElementById('dutyRequestRosterDate')?.addEventListener('change',populateRequestForm);document.getElementById('submitDutyRequest')?.addEventListener('click',submitRequest);
   pasteChangeBtn.addEventListener('click',pasteChangeText);
   saveChangesBtn.addEventListener('click',saveChanges);saveBtn.addEventListener('click',addImages);loadCache();render();load();
 })();
