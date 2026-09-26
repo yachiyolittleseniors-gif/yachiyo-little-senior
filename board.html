@@ -1377,9 +1377,8 @@ body.live-score-focused #liveScoreCard{width:100%;box-sizing:border-box}
       <div class="duty-request-box" id="dutyRequestBox" hidden>
         <div class="duty-request-head"><div><span class="duty-request-kicker">CHANGE REQUEST</span><h3>当番変更を申請</h3><span id="dutyRequestPendingBadge" class="duty-request-pending-badge" hidden></span></div><button id="toggleDutyRequest" type="button" aria-expanded="false" aria-controls="dutyRequestContent">申請する</button></div>
         <div id="dutyRequestContent" hidden>
-          <p class="duty-request-help">当番表がある日は登録内容から、まだ当番表がない未来の日は日付を選んで申請できます。申請後はLINE共有ボタンから連絡してください。</p>
-          <div class="duty-request-mode"><label><input type="radio" name="dutyRequestMode" value="roster" checked> お当番表から選ぶ</label><label><input type="radio" name="dutyRequestMode" value="direct"> まだ当番表がない日を選ぶ</label></div>
-          <label>変更日<select id="dutyRequestRosterDate"></select><input id="dutyRequestDirectDate" type="date" hidden></label>
+          <p class="duty-request-help">サイトに登録されているお当番表の日付から変更日を選んで申請できます。申請後はLINEで共有してください。</p>
+          <label>変更日<select id="dutyRequestRosterDate"></select></label>
           <label>変更前<select id="dutyRequestFrom"><option value="">選択してください</option></select></label>
           <label>変更後<select id="dutyRequestTo"><option value="">選択してください</option></select></label>
           <button id="submitDutyRequest" class="duty-request-submit" type="button">変更申請を送信</button>
@@ -1574,7 +1573,7 @@ body.live-score-focused #liveScoreCard{width:100%;box-sizing:border-box}
     </div>
     <div class="duty-request-admin-block">
       <b>当番変更申請</b>
-      <p>一般画面から届いた申請です。当番表が未登録の月は「当番表登録待ち」として保持されます。</p>
+      <p>届いた当番変更申請を確認し、「当番表に反映」または「却下」を選んでください。</p>
       <div id="dutyRequestAdminList" class="duty-change-admin-list"></div>
     </div>
     <div class="duty-admin-history-head"><b>登録済み変更履歴</b><button id="toggleDutyAdminHistory" type="button" aria-expanded="false" aria-controls="dutyChangeAdminList">表示 ▼</button></div>

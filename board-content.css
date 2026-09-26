@@ -225,3 +225,78 @@ body.document-archive-preview-open{overflow:hidden!important}
 .feature-visibility-fields{margin-top:14px;padding-top:14px;border-top:1px solid rgba(205,164,72,.22)}
 .feature-visibility-fields>strong{display:block;color:#e4bd62;margin-bottom:7px}
 .feature-visibility-fields #featureVisibilitySave{width:100%;margin-top:2px}
+
+/* 2026-09-26: force legacy LINE toggle into a stable mobile row */
+#dutyRosterAdminFields .duty-legacy-line-setting{
+  display:block!important;
+  width:100%!important;
+  max-width:100%!important;
+  box-sizing:border-box!important;
+  overflow:hidden!important;
+}
+#dutyRosterAdminFields .duty-legacy-line-setting > label{
+  display:grid!important;
+  grid-template-columns:24px minmax(0,1fr)!important;
+  align-items:center!important;
+  column-gap:10px!important;
+  width:100%!important;
+  max-width:100%!important;
+  min-width:0!important;
+  box-sizing:border-box!important;
+  margin:0!important;
+  padding:0!important;
+  writing-mode:horizontal-tb!important;
+}
+#dutyRosterAdminFields .duty-legacy-line-setting > label > input#toggleLegacyDutyLine{
+  display:block!important;
+  position:static!important;
+  float:none!important;
+  width:20px!important;
+  height:20px!important;
+  min-width:20px!important;
+  max-width:20px!important;
+  margin:0!important;
+}
+#dutyRosterAdminFields .duty-legacy-line-setting > label > span{
+  display:block!important;
+  position:static!important;
+  float:none!important;
+  width:auto!important;
+  max-width:none!important;
+  min-width:0!important;
+  margin:0!important;
+  padding:0!important;
+  white-space:normal!important;
+  word-break:normal!important;
+  overflow-wrap:anywhere!important;
+  writing-mode:horizontal-tb!important;
+  text-orientation:mixed!important;
+  line-height:1.45!important;
+}
+#dutyRosterAdminFields .duty-legacy-line-setting > small{
+  display:block!important;
+  width:100%!important;
+  box-sizing:border-box!important;
+  margin:8px 0 0!important;
+  padding:0!important;
+  writing-mode:horizontal-tb!important;
+}
+
+/* 2026-09-26 consolidated duty admin fixes */
+#dutyChangeAdminList[hidden]{display:none!important;visibility:hidden!important;}
+#dutyRosterAdminFields .duty-legacy-line-setting > label{
+  display:flex!important;align-items:center!important;gap:10px!important;
+  width:100%!important;min-width:0!important;max-width:100%!important;
+  overflow:hidden!important;writing-mode:horizontal-tb!important;
+}
+#dutyRosterAdminFields .duty-legacy-line-setting > label > input#toggleLegacyDutyLine{
+  flex:0 0 20px!important;width:20px!important;height:20px!important;
+  position:static!important;inset:auto!important;transform:none!important;
+}
+#dutyRosterAdminFields .duty-legacy-line-setting > label > span{
+  flex:1 1 auto!important;display:block!important;min-width:0!important;
+  position:static!important;inset:auto!important;transform:none!important;
+  writing-mode:horizontal-tb!important;text-orientation:mixed!important;
+  white-space:normal!important;word-break:normal!important;overflow-wrap:break-word!important;
+  color:#f0cf7b!important;text-align:left!important;
+}

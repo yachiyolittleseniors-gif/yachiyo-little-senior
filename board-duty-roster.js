@@ -215,7 +215,7 @@
   function todayYmd(){const d=new Date();return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0')}
   function rosterDates(){const today=todayYmd(),out=[];images.forEach(function(image){const table=image.table;if(!table)return;table.rows.forEach(function(row){const date=tableDate(table,row[0]);if(date>=today)out.push({date:date,label:table.year+'年'+table.month+'月'+row[0]+'日（'+row[1]+'）',table:table,row:row})})});return out.sort(function(a,b){return a.date.localeCompare(b.date)})}
   function rosterHasMonth(date){return images.some(function(image){return image.table&&date.startsWith(image.table.year+'-'+String(image.table.month).padStart(2,'0')+'-')})}
-  function requestStatusLabel(status,date){if(status==='approved')return'反映済み';if(status==='rejected')return'却下';return rosterHasMonth(date)?'確認待ち':'当番表登録待ち'}
+  function requestStatusLabel(status,date){if(status==='approved')return'反映済み';if(status==='rejected')return'却下';return'確認待ち'}
   function requestPersonLabel(item, side){
     const grade=String(item[side+'Grade']||item.grade||'');
     const name=String(item[side]||'');
@@ -227,7 +227,7 @@
     const pendingCount=ordered.filter(function(item){return item.status==='pending'}).length;
     const requestBadge=document.getElementById('dutyRequestPendingBadge');
     if(requestBadge){requestBadge.hidden=pendingCount===0;requestBadge.textContent='確認待ち '+pendingCount+'件'}
-    if(admin){const pending=ordered.filter(function(x){return x.status==='pending'});admin.innerHTML=pending.length?pending.map(function(item){const canApply=rosterHasMonth(item.date);return'<div class="duty-request-admin-item"><b>'+displayDate(item.date)+'</b><br>'+escapeHtml(requestPersonLabel(item,'from'))+' → <b>'+escapeHtml(requestPersonLabel(item,'to'))+'</b>'+(!canApply?'<br><span class="duty-request-wait">当番表登録待ち</span>':'')+'<div class="duty-request-admin-actions"><button type="button" data-approve-duty-request="'+escapeHtml(item.id)+'" '+(canApply?'':'disabled')+'>当番表に反映</button><button class="reject" type="button" data-reject-duty-request="'+escapeHtml(item.id)+'">却下</button></div></div>'}).join(''):'<div class="duty-change-preview">未確認の当番変更申請はありません。</div>';admin.querySelectorAll('[data-approve-duty-request]').forEach(function(b){b.addEventListener('click',function(){decideRequest(b.dataset.approveDutyRequest,true)})});admin.querySelectorAll('[data-reject-duty-request]').forEach(function(b){b.addEventListener('click',function(){decideRequest(b.dataset.rejectDutyRequest,false)})})}
+    if(admin){const pending=ordered.filter(function(x){return x.status==='pending'});admin.innerHTML=pending.length?pending.map(function(item){return'<div class="duty-request-admin-item"><b>'+displayDate(item.date)+'</b><br>'+escapeHtml(requestPersonLabel(item,'from'))+' → <b>'+escapeHtml(requestPersonLabel(item,'to'))+'</b><div class="duty-request-admin-actions"><button type="button" data-approve-duty-request="'+escapeHtml(item.id)+'">当番表に反映</button><button class="reject" type="button" data-reject-duty-request="'+escapeHtml(item.id)+'">却下</button></div></div>'}).join(''):'<div class="duty-change-preview">未確認の当番変更申請はありません。</div>';admin.querySelectorAll('[data-approve-duty-request]').forEach(function(b){b.addEventListener('click',function(){decideRequest(b.dataset.approveDutyRequest,true)})});admin.querySelectorAll('[data-reject-duty-request]').forEach(function(b){b.addEventListener('click',function(){decideRequest(b.dataset.rejectDutyRequest,false)})})}
     populateRequestForm();
   }
   function personOptionValue(x){return x.grade+'|'+x.name}
@@ -239,8 +239,8 @@
     const fv=fromSel.value,tv=toSel.value;fromSel.innerHTML=opts;toSel.innerHTML=opts;if(Array.from(fromSel.options).some(o=>o.value===fv))fromSel.value=fv;if(Array.from(toSel.options).some(o=>o.value===tv))toSel.value=tv;
   }
   async function submitRequest(){
-    const mode=document.querySelector('input[name="dutyRequestMode"]:checked')?.value||'roster',date=mode==='direct'?document.getElementById('dutyRequestDirectDate').value:document.getElementById('dutyRequestRosterDate').value,fromPerson=parsePersonOption(document.getElementById('dutyRequestFrom').value),toPerson=parsePersonOption(document.getElementById('dutyRequestTo').value),btn=document.getElementById('submitDutyRequest'),result=document.getElementById('dutyRequestResult');
-    if(!/^\d{4}-\d{2}-\d{2}$/.test(date)||!fromPerson||!toPerson)return alert('変更日・変更前・変更後を選択してください。');if(fromPerson.grade===toPerson.grade&&fromPerson.name===toPerson.name)return alert('変更前と変更後は別の方を選択してください。');
+    const date=document.getElementById('dutyRequestRosterDate').value,fromPerson=parsePersonOption(document.getElementById('dutyRequestFrom').value),toPerson=parsePersonOption(document.getElementById('dutyRequestTo').value),btn=document.getElementById('submitDutyRequest'),result=document.getElementById('dutyRequestResult');
+    if(!/^\d{4}-\d{2}-\d{2}$/.test(date)||!rosterDates().some(function(x){return x.date===date})||!fromPerson||!toPerson)return alert('登録済みのお当番表から変更日・変更前・変更後を選択してください。');if(fromPerson.grade===toPerson.grade&&fromPerson.name===toPerson.name)return alert('変更前と変更後は別の方を選択してください。');
     btn.disabled=true;btn.textContent='送信中…';try{const accessPassword=sessionStorage.getItem('yachiyoAttendancePass')||'';const response=await fetch(API,{method:'POST',headers:{'content-type':'application/json','x-access-password':accessPassword},body:JSON.stringify({action:'submitDutyChangeRequest',request:{date:date,fromGrade:fromPerson.grade,from:fromPerson.name,toGrade:toPerson.grade,to:toPerson.name}})});const body=await response.json().catch(function(){return{}});if(!response.ok)throw new Error(body.error||'申請できませんでした。');requests=normalize(body.data).requests;renderRequests();const text='【当番変更連絡】\n'+displayDate(date)+'\n変更前：'+fromPerson.grade+'年・'+displayName(fromPerson.name,fromPerson.grade)+'\n変更後：'+toPerson.grade+'年・'+displayName(toPerson.name,toPerson.grade)+'\n当番変更を申請しました。';result.hidden=false;result.innerHTML='<div class="duty-request-complete"><b>変更申請を受け付けました</b><p>続けて、チームへの連絡のためLINEで変更内容を共有してください。</p><a class="line-share" target="_blank" rel="noopener noreferrer" href="https://line.me/R/share?text='+encodeURIComponent(text)+'">LINEで共有する</a><small>※当番表への正式な反映は管理者確認後となります。</small></div>';}catch(e){alert(e.message||'申請できませんでした。')}finally{btn.disabled=false;btn.textContent='変更申請を送信'}
   }
   async function decideRequest(id,approve){
@@ -264,11 +264,13 @@
   const adminHistoryToggle=document.getElementById('toggleDutyAdminHistory');
   if(adminHistoryToggle&&changeAdminList){
     changeAdminList.hidden=true;
+    changeAdminList.style.display='none';
     adminHistoryToggle.setAttribute('aria-expanded','false');
     adminHistoryToggle.textContent='表示 ▼';
     adminHistoryToggle.addEventListener('click',function(){
       const open=changeAdminList.hidden;
       changeAdminList.hidden=!open;
+      changeAdminList.style.display=open?'':'none';
       adminHistoryToggle.setAttribute('aria-expanded',String(open));
       adminHistoryToggle.textContent=open?'非表示 ▲':'表示 ▼';
     });
@@ -293,7 +295,6 @@
   changeGrade.addEventListener('change',function(){updateChangePreview(true)});
   const requestToggle=document.getElementById('toggleDutyRequest'),requestContent=document.getElementById('dutyRequestContent');
   if(requestToggle&&requestContent)requestToggle.addEventListener('click',function(){const open=requestContent.hidden;requestContent.hidden=!open;requestToggle.setAttribute('aria-expanded',String(open));requestToggle.textContent=open?'閉じる':'申請する';populateRequestForm()});
-  const directDate=document.getElementById('dutyRequestDirectDate'),rosterDate=document.getElementById('dutyRequestRosterDate');if(directDate){directDate.min=todayYmd();if(!directDate.value||directDate.value<directDate.min)directDate.value=directDate.min}function syncDutyRequestDateMode(){const mode=document.querySelector('input[name="dutyRequestMode"]:checked')?.value||'roster',direct=mode==='direct';if(rosterDate){rosterDate.hidden=direct;rosterDate.disabled=direct}if(directDate){directDate.hidden=!direct;directDate.disabled=!direct}}document.querySelectorAll('input[name="dutyRequestMode"]').forEach(function(r){r.addEventListener('change',syncDutyRequestDateMode)});syncDutyRequestDateMode();
   document.getElementById('dutyRequestRosterDate')?.addEventListener('change',populateRequestForm);document.getElementById('submitDutyRequest')?.addEventListener('click',submitRequest);
   pasteChangeBtn.addEventListener('click',pasteChangeText);
   saveChangesBtn.addEventListener('click',saveChanges);saveBtn.addEventListener('click',addImages);loadCache();render();load();
