@@ -1,7 +1,6 @@
 (()=>{
   const ready=fn=>document.readyState==='loading'?document.addEventListener('DOMContentLoaded',fn,{once:true}):fn();
   ready(async()=>{
-    const allowed=await window.coachAccessReady;if(!allowed)return;
     const panel=document.getElementById('coachPasskeySetupPanel');
     const button=document.getElementById('coachPasskeySetupButton');
     const title=document.getElementById('coachPasskeySetupTitle');
@@ -22,6 +21,8 @@
     }
     button.addEventListener('click',async()=>{
       if(button.disabled)return;
+      const allowed=await window.coachAccessReady;
+      if(!allowed)return;
       let access='';try{access=sessionStorage.getItem('yachiyoCoachAttendancePass')||''}catch(e){}
       if(!access){alert('運営用パスワードで入り直してください。');return}
       button.disabled=true;button.textContent='登録しています…';
