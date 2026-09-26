@@ -878,5 +878,31 @@ body.photo-admin-on #accessPasswordChange{
   }).observe(document.documentElement,{attributes:true,attributeFilter:['class']});
 })();
 </script>
-<script src="./operator-passkey-setup.js?v=20260927-fix2"></script>
+<script id="operator-register-direct">
+(function(){
+  var button=document.getElementById('coachPasskeySetupButton');
+  if(!button)return;
+  button.addEventListener('click',async function(){
+    if(button.disabled)return;
+    var allowed=await window.coachAccessReady;
+    if(!allowed)return;
+    var access='';
+    try{access=sessionStorage.getItem('yachiyoCoachAttendancePass')||''}catch(e){}
+    if(!access){alert('運営用パスワードで入り直してください。');return}
+    if(!window.YLSOperatorPasskeys?.register){alert('生体認証の準備ができていません。');return}
+    button.disabled=true;
+    button.textContent='登録しています…';
+    try{
+      await window.YLSOperatorPasskeys.register(access,navigator.platform||'登録端末');
+      document.getElementById('coachPasskeySetupTitle').textContent='運営用の生体認証を登録済み';
+      document.getElementById('coachPasskeySetupText').textContent='指導者出欠・事務局・審判部で共通して利用できます。';
+      button.hidden=true;
+      alert('運営用の生体認証を登録しました。');
+    }catch(e){
+      if(e?.name!=='NotAllowedError')alert(e?.message||'生体認証を登録できませんでした。');
+      button.textContent='この端末に登録';
+    }finally{button.disabled=false}
+  });
+})();
+</script>
 </body></html>
