@@ -92,7 +92,8 @@
       credential: registrationJSON(credential), label,
     }, accessValue);
   }
-  async function authenticate() {
+  let authenticationInFlight = null;
+  async function authenticateOnce() {
     if (!supported()) throw new Error("この端末は生体認証に対応していません。");
     const start = await request({ action: "authentication-options" });
     let credential;
@@ -106,6 +107,15 @@
       action: "authentication-verify", ceremonyID: start.ceremonyID,
       credential: authenticationJSON(credential),
     });
+  }
+  async function authenticate() {
+    if (authenticationInFlight) return authenticationInFlight;
+    authenticationInFlight = authenticateOnce();
+    try {
+      return await authenticationInFlight;
+    } finally {
+      authenticationInFlight = null;
+    }
   }
   async function remove() {
     if (!supported()) throw new Error("この端末は生体認証に対応していません。");
