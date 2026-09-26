@@ -77,6 +77,16 @@
     if (name === "NotAllowedError") return error;
     return error instanceof Error ? error : new Error(fallback);
   }
+
+  async function status() {
+    if (!supported()) return { registered: false, supported: false };
+    try {
+      const result = await request({ action: "status" });
+      return { ...result, supported: true };
+    } catch (error) {
+      return { registered: false, supported: true, error };
+    }
+  }
   async function register(accessValue, label = "") {
     if (!supported()) throw new Error("この端末は生体認証に対応していません。");
     const start = await request({ action: "registration-options" }, accessValue);
@@ -115,23 +125,21 @@
     return request({ action: "delete-credential", credentialID });
   }
   async function authorize(promptMessage = "パスワードを入力してください。") {
-    let registered = false;
-    try {
-      registered = localStorage.getItem("yachiyoCoachPasskeyRegistered") === "1";
-    } catch (error) {}
-
-    if (registered && supported()) {
+    if (supported()) {
       try {
-        const result = await authenticate();
-        if (result?.token) {
-          try { sessionStorage.setItem("yachiyoCoachAttendancePass", result.token); } catch (error) {}
-          return result.token;
+        const state = await status();
+        if (state?.registered) {
+          try {
+            const result = await authenticate();
+            if (result?.token) {
+              try { sessionStorage.setItem("yachiyoCoachAttendancePass", result.token); } catch (error) {}
+              return result.token;
+            }
+          } catch (error) {
+            // キャンセル・失敗時は必ずパスワードへフォールバックする。
+          }
         }
-      } catch (error) {
-        if (error?.status === 401 || error?.status === 404) {
-          try { localStorage.removeItem("yachiyoCoachPasskeyRegistered"); } catch (_) {}
-        }
-      }
+      } catch (error) {}
     }
 
     const entered = prompt(promptMessage);
@@ -154,5 +162,5 @@
     return "";
   }
 
-  window.YLSCoachPasskeys = { authenticate, authorize, register, remove, supported };
+  window.YLSCoachPasskeys = { authenticate, authorize, register, remove, status, supported };
 })();
