@@ -117,7 +117,7 @@
   async function authorize(promptMessage = "パスワードを入力してください。") {
     let registered = false;
     try {
-      registered = (await request({ action: "status" })).registered === true;
+      registered = Boolean((await status())?.registered);
     } catch (error) {}
 
     if (registered && supported()) {
