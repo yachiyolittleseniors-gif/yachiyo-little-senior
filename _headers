@@ -55,3 +55,20 @@
 
 /rules.html
   X-Robots-Tag: noindex, nofollow, noarchive
+
+
+# Home hero image is versioned by the function; allow a short browser/CDN cache.
+/activity-game.jpg
+  Cache-Control: public, max-age=604800, stale-while-revalidate=86400
+
+/activity-lineup.jpg
+  Cache-Control: public, max-age=604800, stale-while-revalidate=86400
+
+/activity-meeting.jpg
+  Cache-Control: public, max-age=604800, stale-while-revalidate=86400
+
+/team-photo.jpg
+  Cache-Control: public, max-age=604800, stale-while-revalidate=86400
+
+/kanto-league-policy.webp
+  Cache-Control: public, max-age=604800, stale-while-revalidate=86400
