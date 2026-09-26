@@ -216,44 +216,41 @@ body{padding-top:var(--fixed-header-height)!important}
 }
 </style>
 <style id="coach-attendance-polish">.name-col{min-width:148px}@media(max-width:700px){.name-col{min-width:136px}}</style>
-<script src="./coach-passkey.js?v=20260926-boardflow1"></script>
+<script src="./coach-passkey.js?v=20260926-2115"></script>
 <script>
 document.documentElement.style.visibility='hidden';
-window.coachAccessReady=(async function(){
+window.coachAccessReady=(async function requireCoachPassword(){
   const API='/.netlify/functions/coach-attendance-data';
-  const storageKey='yachiyoCoachAttendancePass';
+  const accessKey='yachiyoCoachAttendancePass';
   const passkeyKey='yachiyoCoachPasskeyRegistered';
-
-  function remember(value){
-    try{sessionStorage.setItem(storageKey,value)}catch(e){}
+  function saveAccess(value){
+    try{sessionStorage.setItem(accessKey,value)}catch(e){}
   }
-  function forget(){
-    try{sessionStorage.removeItem(storageKey)}catch(e){}
+  function clearAccess(){
+    try{sessionStorage.removeItem(accessKey)}catch(e){}
   }
   async function verify(value){
     if(!value)return false;
-    try{
-      const response=await fetch(API,{
-        method:'POST',
-        headers:{'content-type':'application/json'},
-        credentials:'same-origin',
-        body:JSON.stringify({action:'verifyCoachPassword',password:value})
-      });
-      if(!response.ok)return false;
-      const result=await response.json().catch(()=>({}));
-      remember(result.token||value);
-      return true;
-    }catch(e){return false}
+    const response=await fetch(API,{
+      method:'POST',
+      headers:{'content-type':'application/json'},
+      credentials:'same-origin',
+      body:JSON.stringify({action:'verifyCoachPassword',password:value})
+    });
+    if(!response.ok)return false;
+    const result=await response.json().catch(()=>({}));
+    saveAccess(result.token||value);
+    document.documentElement.style.visibility='';
+    return true;
   }
   async function verifyPasskey(){
-    // チーム専用ページと同じ仕様：localStorage の登録フラグに依存せず、
-    // 利用可能なら生体認証を試し、使えない・失敗・キャンセル時はパスワードへ進む。
     if(!window.YLSCoachPasskeys?.supported())return false;
     try{
       const result=await window.YLSCoachPasskeys.authenticate();
       if(!result?.token)return false;
-      remember(result.token);
+      saveAccess(result.token);
       try{localStorage.setItem(passkeyKey,'1')}catch(_){}
+      document.documentElement.style.visibility='';
       return true;
     }catch(e){
       if(e?.status===404){
@@ -262,23 +259,21 @@ window.coachAccessReady=(async function(){
       return false;
     }
   }
-  // 指導者出欠確認はページを開くたびに必ず再認証する。
-  // 前回の認証トークンは引き継がず、生体認証またはパスワードで認証する。
-  forget();
-  if(await verifyPasskey()){
-    document.documentElement.style.visibility='';
-    return true;
-  }
-  const entered=prompt('指導者出欠確認のパスワードを入力してください。');
-  if(entered===null){
-    let cameFromBoard=false;
-    try{cameFromBoard=new URL(document.referrer).pathname.endsWith('/board.html')}catch(e){}
-    if(cameFromBoard&&history.length>1){history.back()}else{location.replace('./board.html?from=coach')}
+  // チーム専用ページと同じ認証順序：保存済み認証は使わず、
+  // 生体認証を試し、使えない・失敗・キャンセル時は必ずパスワードへ。
+  clearAccess();
+  if(await verifyPasskey())return true;
+  const p=prompt('指導者出欠確認のパスワードを入力してください。');
+  if(p===null){
+    if(history.length>1){history.back()}else{location.replace('./board.html?from=coach')}
     return false;
   }
-  if(await verify(entered)){
-    document.documentElement.style.visibility='';
-    return true;
+  try{
+    if(await verify(p))return true;
+  }catch(e){
+    alert('パスワードを確認できませんでした。通信状況を確認してください。');
+    location.replace('./board.html');
+    return false;
   }
   alert('パスワードが違います。');
   location.replace('./board.html');
