@@ -220,29 +220,16 @@ body{padding-top:var(--fixed-header-height)!important}
 <script>
 document.documentElement.style.visibility='hidden';
 window.coachAccessReady=(async function(){
-  const API='/.netlify/functions/coach-attendance-data';
-  let token='';
-  try{token=sessionStorage.getItem('yachiyoCoachAttendancePass')||''}catch(e){}
-  const fromBoard=new URL(location.href).searchParams.get('boardAuth')==='1';
-  if(!fromBoard||!token){
+  let token='',gate='';
+  try{
+    token=sessionStorage.getItem('yachiyoCoachAttendancePass')||'';
+    gate=sessionStorage.getItem('yachiyoCoachBoardGate')||'';
+  }catch(e){}
+  if(gate!=='1'||!token){
     location.replace('./board.html?from=coach');
     return false;
   }
-  try{
-    const response=await fetch(API,{
-      method:'POST',
-      headers:{'content-type':'application/json','x-coach-token':token},
-      credentials:'same-origin',
-      body:JSON.stringify({action:'verifyCoachToken',token})
-    });
-    // If the API does not expose a separate token verifier, the token is still
-    // consumed by the attendance API after a successful board-side auth.
-    if(response.status===401||response.status===403){
-      try{sessionStorage.removeItem('yachiyoCoachAttendancePass')}catch(e){}
-      location.replace('./board.html?from=coach');
-      return false;
-    }
-  }catch(e){}
+  try{sessionStorage.removeItem('yachiyoCoachBoardGate')}catch(e){}
   document.documentElement.style.visibility='';
   return true;
 })()
