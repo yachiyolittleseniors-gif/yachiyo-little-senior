@@ -217,7 +217,6 @@ body{padding-top:var(--fixed-header-height)!important}
 </style>
 <style id="coach-attendance-polish">.name-col{min-width:148px}@media(max-width:700px){.name-col{min-width:136px}}</style>
 <script src="./operator-passkey.js?v=20260926-v2"></script>
-<script src="./coach-passkey.js?v=20260921-2205"></script>
 <script>
 document.documentElement.style.visibility='hidden';
 window.coachAccessReady=(async function(){
@@ -321,11 +320,10 @@ document.addEventListener('DOMContentLoaded',()=>{
     </button>
     <div class="coach-passkey-details" id="coachPasskeySetupDetails">
       <div class="coach-passkey-copy">
-        <p class="coach-passkey-title" id="coachPasskeySetupTitle">生体認証で次回からログイン</p>
-        <p class="coach-passkey-text" id="coachPasskeySetupText">この端末に登録すると、次回から指導者用パスワードの入力を省略できます。</p>
+        <p class="coach-passkey-title" id="coachPasskeySetupTitle">運営用の生体認証を登録</p>
+        <p class="coach-passkey-text" id="coachPasskeySetupText">ここで登録すると、指導者出欠・事務局・審判部で共通して利用できます。</p>
       </div>
       <button class="coach-passkey-button" id="coachPasskeySetupButton" type="button">この端末に登録</button>
-      <button class="coach-passkey-button" id="coachPasskeyResetButton" type="button" style="margin-top:10px;background:#fff;color:#07172d;">登録済みの生体認証を解除</button>
     </div>
   </section>
   <div class="error" id="errorBox"></div>
