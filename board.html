@@ -1378,8 +1378,7 @@ body.live-score-focused #liveScoreCard{width:100%;box-sizing:border-box}
         <div class="duty-request-head"><div><span class="duty-request-kicker">CHANGE REQUEST</span><h3>当番変更を申請</h3></div><button id="toggleDutyRequest" type="button" aria-expanded="false" aria-controls="dutyRequestContent">申請する</button></div>
         <div id="dutyRequestContent" hidden>
           <p class="duty-request-help">当番表が登録されている月のみ変更申請ができます。変更内容を選択して申請してください。</p>
-          <div class="duty-request-mode" hidden><label><input type="radio" name="dutyRequestMode" value="roster" checked> お当番表から選ぶ</label><label><input type="radio" name="dutyRequestMode" value="direct"> 日付を直接選ぶ</label></div>
-          <label>変更日<select id="dutyRequestRosterDate"></select><input id="dutyRequestDirectDate" type="date" hidden></label>
+          <label>変更日<select id="dutyRequestRosterDate"></select><input id="dutyRequestDirectDate" type="date" hidden disabled></label>
           <label>当番枠の学年<select id="dutyRequestGrade"><option value="">選択してください</option><option value="3">3年生</option><option value="2">2年生</option><option value="1">1年生</option></select></label>
           <label>変更前<select id="dutyRequestFrom"><option value="">選択してください</option></select></label>
           <label>変更後<select id="dutyRequestTo"><option value="">選択してください</option></select></label>
