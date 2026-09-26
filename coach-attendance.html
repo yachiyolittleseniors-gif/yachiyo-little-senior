@@ -258,21 +258,45 @@ window.coachAccessReady=(async function(){
       return false;
     }
   }
-  // 指導者出欠確認はページを開くたびに必ず再認証する。
-  // 前回の認証トークンは引き継がず、生体認証またはパスワードで認証する。
+  function createPasswordGate(){
+    return new Promise((resolve)=>{
+      const mount=()=>{
+        const style=document.createElement('style');
+        style.id='coach-password-gate-style';
+        style.textContent=`#coachPasswordGate{position:fixed;inset:0;z-index:2147483000;display:flex;align-items:center;justify-content:center;padding:24px;background:rgba(7,20,38,.48);backdrop-filter:blur(2px)}#coachPasswordGate .gate-card{width:min(92vw,460px);padding:24px;border-radius:20px;background:#fff;color:#071426;box-shadow:0 18px 60px rgba(0,0,0,.28)}#coachPasswordGate h2{margin:0 0 18px;font-size:20px;line-height:1.5}#coachPasswordGate input{box-sizing:border-box;width:100%;height:52px;padding:0 14px;border:1px solid #cfd4dc;border-radius:10px;background:#fff;font-size:18px}#coachPasswordGate .gate-actions{display:flex;justify-content:flex-end;gap:12px;margin-top:18px}#coachPasswordGate button{min-height:44px;padding:0 18px;border:0;border-radius:10px;font-size:16px;font-weight:800}#coachPasswordGate .gate-cancel{background:#eef1f5;color:#56606d}#coachPasswordGate .gate-ok{background:#071426;color:#fff}`;
+        document.head.appendChild(style);
+        const gate=document.createElement('div');
+        gate.id='coachPasswordGate';
+        gate.innerHTML='<form class="gate-card"><h2>指導者出欠確認のパスワードを入力してください。</h2><input type="password" autocomplete="current-password" aria-label="指導者出欠確認のパスワード"><div class="gate-actions"><button class="gate-cancel" type="button">キャンセル</button><button class="gate-ok" type="submit">OK</button></div></form>';
+        document.body.appendChild(gate);
+        const input=gate.querySelector('input');
+        const close=()=>{gate.remove();style.remove()};
+        gate.querySelector('form').addEventListener('submit',(e)=>{e.preventDefault();const value=input.value;close();resolve({cancelled:false,value})});
+        gate.querySelector('.gate-cancel').addEventListener('click',()=>{close();resolve({cancelled:true,value:''})});
+        document.documentElement.style.visibility='';
+      };
+      if(document.body)mount(); else document.addEventListener('DOMContentLoaded',mount,{once:true});
+    });
+  }
+
   forget();
+  const passwordGate=createPasswordGate();
   if(await verifyPasskey()){
+    const gate=document.getElementById('coachPasswordGate');
+    if(gate)gate.remove();
+    const gateStyle=document.getElementById('coach-password-gate-style');
+    if(gateStyle)gateStyle.remove();
     document.documentElement.style.visibility='';
     return true;
   }
-  const entered=prompt('指導者出欠確認のパスワードを入力してください。');
-  if(entered===null){
+  const enteredResult=await passwordGate;
+  if(enteredResult.cancelled){
     let cameFromBoard=false;
     try{cameFromBoard=new URL(document.referrer).pathname.endsWith('/board.html')}catch(e){}
     if(cameFromBoard&&history.length>1){history.back()}else{location.replace('./board.html?from=coach')}
     return false;
   }
-  if(await verify(entered)){
+  if(await verify(enteredResult.value)){
     document.documentElement.style.visibility='';
     return true;
   }
