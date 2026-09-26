@@ -216,7 +216,7 @@ body{padding-top:var(--fixed-header-height)!important}
 }
 </style>
 <style id="coach-attendance-polish">.name-col{min-width:148px}@media(max-width:700px){.name-col{min-width:136px}}</style>
-<script src="./coach-passkey.js?v=20260926-2118"></script>
+<script src="./coach-passkey.js?v=20260926-2122"></script>
 <script>
 document.documentElement.style.visibility='hidden';
 window.coachAccessReady=(async function(){
@@ -246,10 +246,11 @@ window.coachAccessReady=(async function(){
     }catch(e){return false}
   }
   async function verifyPasskey(){
-    // localStorage の登録フラグだけに依存しない。
-    // Safariのサイトデータ整理等でフラグが消えても、サーバーに登録済みの
-    // パスキーがあればFace ID / Touch IDを呼び出せるようにする。
-    if(!window.YLSCoachPasskeys?.supported())return false;
+    // この端末で生体認証を登録済みの場合だけFace ID / Touch IDを試す。
+    // 未登録なら待たずに従来の指導者用パスワードを表示する。
+    let registered=false;
+    try{registered=localStorage.getItem(passkeyKey)==='1'}catch(e){}
+    if(!registered||!window.YLSCoachPasskeys?.supported())return false;
     try{
       const result=await window.YLSCoachPasskeys.authenticate();
       if(!result?.token)return false;
