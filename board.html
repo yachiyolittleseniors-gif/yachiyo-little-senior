@@ -33,7 +33,7 @@
 <link rel="stylesheet" href="./board-base.css?v=20260918-1">
 <link rel="stylesheet" href="./board-live-score.css?v=20260919-finishoutline1">
 <script src="./board-passkey.js?v=20260920-crossbrowser1"></script>
-<script src="./coach-passkey.js?v=20260926-biometric-rebuild1"></script>
+<script src="./coach-passkey.js?v=20260926-board-gate1"></script>
 <script>
 document.documentElement.style.visibility='hidden';
 window.boardAccessReady=(async function requireBoardPassword(){
@@ -1328,7 +1328,7 @@ body.live-score-focused #liveScoreCard{width:100%;box-sizing:border-box}
       <div class="card-kicker">COACH ATTENDANCE</div>
       <h2>指導者出欠確認</h2>
       <p>サイト内で各日程の「○・×」を入力し、指導者の出席状況を確認できます。</p>
-      <a class="btn gold" href="./coach-attendance.html">指導者出欠確認を開く</a>
+      <button class="btn gold" id="openCoachAttendanceSecure" type="button">指導者出欠確認を開く</button>
       <div class="note">※指導者出欠確認にはパスワードがかかっています。</div>
     </section>
 
@@ -2124,6 +2124,58 @@ body.photo-admin-on #accessPasswordChange{
 <style id="backup-admin-style">
 .backup-admin-fields{margin-top:18px;padding-top:18px;border-top:1px solid rgba(210,170,80,.32)}.backup-admin-fields>strong{display:block;color:#e4bd62;margin-bottom:8px}.backup-admin-fields p{margin:6px 0;font-size:13px;line-height:1.6}.backup-note{color:#aeb9c9}#backupCreateBtn{width:100%;margin:8px 0 10px}.backup-list{display:grid;gap:7px}.backup-row{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:9px 10px;border:1px solid rgba(210,170,80,.25);border-radius:10px;background:rgba(255,255,255,.035)}.backup-row div{min-width:0}.backup-row b{display:block;font-size:13px}.backup-row small{display:block;color:#aeb9c9;font-size:11px;margin-top:2px}.backup-row button{flex:0 0 auto;padding:7px 10px}.backup-empty{color:#aeb9c9}
 </style>
+
+<script id="coach-attendance-board-gate">
+(()=>{
+  const btn=document.getElementById('openCoachAttendanceSecure');
+  if(!btn)return;
+  const API='/.netlify/functions/coach-attendance-data';
+
+  async function verifyPassword(password){
+    if(!password)return null;
+    try{
+      const response=await fetch(API,{
+        method:'POST',
+        headers:{'content-type':'application/json'},
+        credentials:'same-origin',
+        body:JSON.stringify({action:'verifyCoachPassword',password})
+      });
+      if(!response.ok)return null;
+      const result=await response.json().catch(()=>({}));
+      return result.token||password;
+    }catch(e){return null}
+  }
+  async function tryBiometric(){
+    if(!window.YLSCoachPasskeys?.supported())return null;
+    try{
+      const state=await window.YLSCoachPasskeys.status();
+      if(!state?.registered)return null;
+      const result=await window.YLSCoachPasskeys.authenticate();
+      return result?.token||null;
+    }catch(e){return null}
+  }
+  function openCoach(token){
+    try{sessionStorage.setItem('yachiyoCoachAttendancePass',token)}catch(e){}
+    location.href='./coach-attendance.html?boardAuth=1';
+  }
+  btn.addEventListener('click',async()=>{
+    if(btn.disabled)return;
+    btn.disabled=true;
+    try{
+      const biometricToken=await tryBiometric();
+      if(biometricToken){openCoach(biometricToken);return}
+      const entered=prompt('指導者出欠確認のパスワードを入力してください。');
+      if(entered===null)return;
+      const token=await verifyPassword(entered);
+      if(!token){alert('パスワードが違います。');return}
+      openCoach(token);
+    }finally{
+      btn.disabled=false;
+    }
+  });
+})();
+</script>
+
 </body>
 </html>
 <style id="live-score-grade-ground-final-fix">
