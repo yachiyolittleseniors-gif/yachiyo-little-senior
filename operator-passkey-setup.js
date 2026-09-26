@@ -11,17 +11,31 @@ window.__operatorSetupLoaded=true;
     let registered=false;
     try{registered=Boolean((await window.YLSOperatorPasskeys.status())?.registered)}catch(e){}
     if(registered){
-      title.textContent='運営用の生体認証を登録済み';
-      text.textContent='指導者出欠・事務局・審判部で共通して利用できます。';
-      button.hidden=true;
+      title.textContent='生体認証を登録済み';
+      text.textContent='次回から生体認証でログインできます。';
+      button.hidden=false; button.textContent='この端末の生体認証を削除';
     }else{
-      title.textContent='運営用の生体認証を登録';
-      text.textContent='ここで登録すると、指導者出欠・事務局・審判部で共通して利用できます。';
+      title.textContent='生体認証で次回からログイン';
+      text.textContent='この端末に登録すると、次回からパスワード入力を省略できます。使えない場合は従来のパスワードで入れます。';
       button.textContent='この端末に登録';
       button.hidden=false;
     }
     button.addEventListener('click',async()=>{
       if(button.disabled)return;
+      if(button.textContent.includes('削除')){
+        if(!confirm('この端末の生体認証を削除しますか？\n削除後はパスワードでログインし直すと再登録できます。'))return;
+        button.disabled=true; button.textContent='端末で認証してください';
+        try{
+          await window.YLSOperatorPasskeys.remove();
+          title.textContent='生体認証で次回からログイン';
+          text.textContent='この端末に登録すると、次回からパスワード入力を省略できます。使えない場合は従来のパスワードで入れます。';
+          button.textContent='この端末に登録';
+        }catch(e){
+          if(e?.name!=='NotAllowedError')alert(e?.message||'生体認証を削除できませんでした。');
+          button.textContent='この端末の生体認証を削除';
+        }finally{button.disabled=false}
+        return;
+      }
       const allowed=await window.coachAccessReady;
       if(!allowed)return;
       let access='';try{access=sessionStorage.getItem('yachiyoCoachAttendancePass')||''}catch(e){}
