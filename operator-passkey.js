@@ -115,12 +115,7 @@
     return request({ action: "delete-credential", credentialID });
   }
   async function authorize(promptMessage = "パスワードを入力してください。") {
-    let registered = false;
-    try {
-      registered = Boolean((await status())?.registered);
-    } catch (error) {}
-
-    if (registered && supported()) {
+    if (supported()) {
       try {
         const result = await authenticate();
         if (result?.token) {
@@ -128,12 +123,9 @@
           return result.token;
         }
       } catch (error) {
-        if (error?.status === 401 || error?.status === 404) {
-          
-        }
+        // No registered passkey / cancelled / failed: fall back to password.
       }
     }
-
     const entered = prompt(promptMessage);
     if (entered === null) return "";
     try {
