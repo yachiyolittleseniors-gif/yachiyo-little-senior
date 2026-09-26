@@ -1551,7 +1551,7 @@ export default async (request, context) => {
       const requests = Array.isArray(current.requests) ? current.requests : [];
       if (requests.length >= 200) return json({ error: "申請の保存上限に達しています。管理者へ連絡してください。" }, 400);
       const now = new Date().toISOString();
-      requests.push({ id: `request-${crypto.randomUUID()}`, date, grade, from, to, note, status:"pending", createdAt:now, updatedAt:now });
+      requests.push({ id: `request-${crypto.randomUUID()}`, date, grade:fromGrade, fromGrade, from, toGrade, to, note:"", status:"pending", createdAt:now, updatedAt:now });
       const updated = { ...current, initialized:true, images:Array.isArray(current.images)?current.images:[], changes:Array.isArray(current.changes)?current.changes:[], requests };
       await store.setJSON(key, updated);
       return json({ ok:true, data:updated });
@@ -2215,7 +2215,7 @@ export default async (request, context) => {
       });
       if (!validRequests) return json({ error: "当番変更申請データを確認してください。" }, 400);
 
-      body.data.requests = requests.map((item,index)=>({id:String(item?.id||`request-${index}`).slice(0,100),date:String(item.date),grade:String(item.grade),from:String(item.from).trim(),to:String(item.to).trim(),note:String(item?.note||"").trim().slice(0,200),status:["pending","approved","rejected"].includes(String(item?.status))?String(item.status):"pending",createdAt:String(item?.createdAt||"").slice(0,60),updatedAt:String(item?.updatedAt||"").slice(0,60)}));
+      body.data.requests = requests.map((item,index)=>({id:String(item?.id||`request-${index}`).slice(0,100),date:String(item.date),grade:String(item.fromGrade||item.grade),fromGrade:String(item.fromGrade||item.grade),from:String(item.from).trim(),toGrade:String(item.toGrade||item.grade),to:String(item.to).trim(),note:"",status:["pending","approved","rejected"].includes(String(item?.status))?String(item.status):"pending",createdAt:String(item?.createdAt||"").slice(0,60),updatedAt:String(item?.updatedAt||"").slice(0,60)}));
 
       body.data.changes = changes.map((item, index) => ({
         id: String(item?.id || `change-${index}`).slice(0, 100),
