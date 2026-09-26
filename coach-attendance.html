@@ -216,21 +216,7 @@ body{padding-top:var(--fixed-header-height)!important}
 }
 </style>
 <style id="coach-attendance-polish">.name-col{min-width:148px}@media(max-width:700px){.name-col{min-width:136px}}</style>
-<script id="coach-auth-bfcache-guard">
-(function(){
-  // iPhone Safari が認証済み画面を BFCache から復元した場合、
-  // JavaScript の入口認証が再実行されないため、必ず通常読み込みに戻す。
-  window.addEventListener('pageshow', function(event){
-    if(event.persisted){
-      location.reload();
-    }
-  });
-  window.addEventListener('pagehide', function(){
-    try{sessionStorage.removeItem('yachiyoCoachAttendancePass')}catch(e){}
-  });
-})();
-</script>
-<script src="./coach-passkey.js?v=20260926-direct-register1"></script>
+<script src="./coach-passkey.js?v=20260926-csp1"></script>
 <script>
 document.documentElement.style.visibility='hidden';
 window.coachAccessReady=(async function(){
@@ -931,53 +917,5 @@ body.photo-admin-on #accessPasswordChange{
   }).observe(document.documentElement,{attributes:true,attributeFilter:['class']});
 })();
 </script>
-
-
-<script id="coach-passkey-direct-register">
-window.addEventListener('load', function(){
-  const button=document.getElementById('coachPasskeySetupButton');
-  const panel=document.getElementById('coachPasskeySetupPanel');
-  const title=document.getElementById('coachPasskeySetupTitle');
-  const text=document.getElementById('coachPasskeySetupText');
-  if(panel)panel.hidden=false;
-  if(!button)return;
-
-  button.onclick=async function(event){
-    event.preventDefault();
-    event.stopPropagation();
-    if(button.disabled)return;
-
-    if(!window.YLSCoachPasskeys || !window.YLSCoachPasskeys.register){
-      alert('生体認証の準備ができていません。ページを再読み込みしてください。');
-      return;
-    }
-
-    let access='';
-    try{access=sessionStorage.getItem('yachiyoCoachAttendancePass')||''}catch(e){}
-    if(!access){
-      alert('一度チーム専用ページへ戻り、指導者用パスワードで入り直してください。');
-      return;
-    }
-
-    button.disabled=true;
-    const original=button.textContent;
-    button.textContent='生体認証を登録しています…';
-    try{
-      const deviceLabel=navigator.userAgentData?.platform||navigator.platform||'登録端末';
-      await window.YLSCoachPasskeys.register(access,deviceLabel);
-      if(title)title.textContent='生体認証を登録済み';
-      if(text)text.textContent='次回から生体認証でログインできます。';
-      button.hidden=true;
-      alert('生体認証を登録しました。');
-    }catch(error){
-      const cancelled=error?.name==='NotAllowedError'||/キャンセル/.test(error?.message||'');
-      if(!cancelled)alert(error?.message||'生体認証を登録できませんでした。');
-      button.textContent=original;
-    }finally{
-      button.disabled=false;
-    }
-  };
-});
-</script>
-
+<script src="./coach-passkey-setup.js?v=20260926-csp1"></script>
 </body></html>
