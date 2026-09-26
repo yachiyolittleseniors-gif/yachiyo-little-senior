@@ -1554,7 +1554,11 @@ body.live-score-focused #liveScoreCard{width:100%;box-sizing:border-box}
   </div>
   <div id="dutyRosterAdminFields">
     <strong>当番表</strong>
-    <div class="duty-change-admin duty-line-legacy" hidden>
+    <div class="duty-legacy-line-setting">
+      <label><input id="toggleLegacyDutyLine" type="checkbox"> <span>LINE貼り付け欄を表示する</span></label>
+      <small>通常はOFF。必要なときだけ旧方式の入力欄を表示します。</small>
+    </div>
+    <div id="legacyDutyLineBlock" class="duty-change-admin" hidden>
       <b>LINEの文章から当番変更を登録</b>
       <p>変更連絡を貼り付け、年を選んでください。学年をまたぐ場合は、確認欄で変更行ごとに当番枠の学年を選べます。</p>
       <div class="duty-change-admin-meta">

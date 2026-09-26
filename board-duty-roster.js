@@ -52,7 +52,7 @@
     const changeItems=raw&&raw.initialized===true&&Array.isArray(raw.changes)?raw.changes:[];
     return{
       images:imageList.filter(function(item){return item&&typeof item==='object'&&(item.data||item.src)}).slice(0,8).map(function(item,index){return{id:String(item.id||('duty-'+index)),name:String(item.name||('当番表 '+(index+1))),data:item.data?String(item.data):'',src:item.src?String(item.src):'',table:window.DutyRosterData.tableForImage(item)}}),
-      changes:changeItems.filter(function(item){return item&&/^\d{4}-\d{2}-\d{2}$/.test(String(item.date||''))&&['1','2','3'].includes(String(item.grade||''))&&cleanName(item.from)&&cleanName(item.to)}).slice(0,300).map(function(item,index){return{id:String(item.id||('change-'+index)),date:String(item.date),grade:String(item.grade),from:cleanName(item.from),to:cleanName(item.to),createdAt:String(item.createdAt||'')}}),
+      changes:changeItems.filter(function(item){return item&&/^\d{4}-\d{2}-\d{2}$/.test(String(item.date||''))&&['1','2','3'].includes(String(item.grade||''))&&cleanName(item.from)&&cleanName(item.to)}).slice(0,300).map(function(item,index){return{id:String(item.id||('change-'+index)),date:String(item.date),grade:String(item.grade),from:cleanName(item.from),to:cleanName(item.to),toGrade:String(item.toGrade||item.grade||''),status:String(item.status||'active')==='cancelled'?'cancelled':'active',createdAt:String(item.createdAt||''),cancelledAt:String(item.cancelledAt||'')}}),
       requests:Array.isArray(raw&&raw.requests)?raw.requests.filter(function(item){return item&&/^\d{4}-\d{2}-\d{2}$/.test(String(item.date||''))&&['1','2','3'].includes(String(item.grade||''))&&cleanName(item.from)&&cleanName(item.to)}).slice(0,200).map(function(item,index){return{id:String(item.id||('request-'+index)),date:String(item.date),grade:String(item.grade),from:cleanName(item.from),to:cleanName(item.to),note:String(item.note||'').slice(0,200),status:['pending','approved','rejected'].includes(String(item.status))?String(item.status):'pending',createdAt:String(item.createdAt||''),updatedAt:String(item.updatedAt||'')}}):[]
     };
   }
@@ -93,11 +93,12 @@
   function loadCache(){try{const cached=normalize(JSON.parse(sessionStorage.getItem(CACHE_KEY)||'null'));if(cached.images.length||cached.changes.length){images=cached.images;changes=cached.changes;requests=cached.requests;render()}}catch(e){sessionStorage.removeItem(CACHE_KEY)}}
 
   function renderChanges(){
-    const ordered=sortChanges(changes);changeSection.hidden=!ordered.length;
-    changeList.innerHTML=ordered.map(function(item){return'<div class="duty-change-item">'+changeMarkup(item)+changeUpdatedMarkup(item)+'</div>'}).join('');
+    const ordered=sortChanges(changes),activeOrdered=ordered.filter(function(item){return item.status!=='cancelled'});changeSection.hidden=!activeOrdered.length;
+    changeList.innerHTML=activeOrdered.map(function(item){return'<div class="duty-change-item">'+changeMarkup(item)+changeUpdatedMarkup(item)+'</div>'}).join('');
     const adminOrdered=ordered;
-    changeAdminList.innerHTML=adminOrdered.length?adminOrdered.map(function(item){return'<div class="duty-change-admin-item"><span>'+displayDate(item.date)+'・'+item.grade+'年生　'+escapeHtml(displayName(item.from,item.grade))+' → <b>'+escapeHtml(displayName(item.to,item.grade))+'</b>'+changeUpdatedMarkup(item)+'</span><button type="button" data-remove-duty-change="'+escapeHtml(item.id)+'">取消</button></div>'}).join(''):'<div class="duty-change-preview">登録済みの当番変更はありません。</div>';
-    changeAdminList.querySelectorAll('[data-remove-duty-change]').forEach(function(button){button.addEventListener('click',function(){removeChange(button.dataset.removeDutyChange)})});
+    changeAdminList.innerHTML=adminOrdered.length?adminOrdered.map(function(item){const cancelled=item.status==='cancelled';return'<div class="duty-change-admin-item'+(cancelled?' is-cancelled':'')+'"><span>'+displayDate(item.date)+'・'+item.grade+'年生　'+escapeHtml(displayName(item.from,item.grade))+' → <b>'+escapeHtml(displayName(item.to,item.grade))+'</b>'+(cancelled?'<em class="duty-change-cancelled">取消済み</em>':'')+changeUpdatedMarkup(item)+'</span><div class="duty-change-admin-buttons">'+(!cancelled?'<button type="button" data-cancel-duty-change="'+escapeHtml(item.id)+'">取消</button>':'')+'<button type="button" class="delete" data-delete-duty-change="'+escapeHtml(item.id)+'">削除</button></div></div>'}).join(''):'<div class="duty-change-preview">登録済みの当番変更はありません。</div>';
+    changeAdminList.querySelectorAll('[data-cancel-duty-change]').forEach(function(button){button.addEventListener('click',function(){cancelChange(button.dataset.cancelDutyChange)})});
+    changeAdminList.querySelectorAll('[data-delete-duty-change]').forEach(function(button){button.addEventListener('click',function(){deleteChange(button.dataset.deleteDutyChange)})});
   }
 
   function render(){
@@ -174,10 +175,16 @@
     }catch(e){changeText.focus();alert('入力欄を長押しして「ペースト」を選んでください。')}
   }
 
-  async function removeChange(id){
-    const target=changes.find(function(item){return item.id===id});if(!target||!confirm(displayDate(target.date)+'「'+target.from+' → '+target.to+'」を取り消しますか？'))return;
-    const previous=changes.slice();changes=changes.filter(function(item){return item.id!==id});render();
+  async function cancelChange(id){
+    const target=changes.find(function(item){return item.id===id});if(!target||target.status==='cancelled'||!confirm(displayDate(target.date)+'「'+target.from+' → '+target.to+'」を取り消しますか？\n当番表は変更前の状態に戻ります。'))return;
+    const previous=changes.map(function(item){return Object.assign({},item)});target.status='cancelled';target.cancelledAt=new Date().toISOString();render();
     try{await persist('当番変更を取り消しました','当番変更を取り消しました',true)}catch(e){changes=previous;render();alert(e.message||'当番変更を取り消せませんでした。')}
+  }
+
+  async function deleteChange(id){
+    const target=changes.find(function(item){return item.id===id});if(!target||!confirm('この変更履歴を完全に削除しますか？\n削除後は元に戻せません。'))return;
+    const previous=changes.slice();changes=changes.filter(function(item){return item.id!==id});render();
+    try{await persist('変更履歴を削除しました','当番変更履歴を削除しました')}catch(e){changes=previous;render();alert(e.message||'変更履歴を削除できませんでした。')}
   }
 
   async function addImages(){
@@ -235,7 +242,7 @@
     btn.disabled=true;btn.textContent='送信中…';try{const accessPassword=sessionStorage.getItem('yachiyoAttendancePass')||'';const response=await fetch(API,{method:'POST',headers:{'content-type':'application/json','x-access-password':accessPassword},body:JSON.stringify({action:'submitDutyChangeRequest',request:{date:date,fromGrade:fromPerson.grade,from:fromPerson.name,toGrade:toPerson.grade,to:toPerson.name}})});const body=await response.json().catch(function(){return{}});if(!response.ok)throw new Error(body.error||'申請できませんでした。');requests=normalize(body.data).requests;renderRequests();const text='【当番変更連絡】\n'+displayDate(date)+'\n変更前：'+fromPerson.grade+'年・'+displayName(fromPerson.name,fromPerson.grade)+'\n変更後：'+toPerson.grade+'年・'+displayName(toPerson.name,toPerson.grade)+'\n当番変更を申請しました。';result.hidden=false;result.innerHTML='<div class="duty-request-complete"><b>変更申請を受け付けました</b><p>続けて、チームへの連絡のためLINEで変更内容を共有してください。</p><a class="line-share" target="_blank" rel="noopener noreferrer" href="https://line.me/R/share?text='+encodeURIComponent(text)+'">LINEで共有する</a><small>※当番表への正式な反映は管理者確認後となります。</small></div>';}catch(e){alert(e.message||'申請できませんでした。')}finally{btn.disabled=false;btn.textContent='変更申請を送信'}
   }
   async function decideRequest(id,approve){
-    const item=requests.find(function(x){return x.id===id});if(!item)return;if(!confirm(approve?'この申請を当番表に反映しますか？':'この申請を却下しますか？'))return;const previousReq=requests.slice(),previousChanges=changes.slice();item.status=approve?'approved':'rejected';item.updatedAt=new Date().toISOString();if(approve){const slotGrade=String(item.fromGrade||item.grade||'');const idx=changes.findIndex(function(x){return x.date===item.date&&x.grade===slotGrade&&x.from===item.from});const change={id:idx>=0?changes[idx].id:'change-'+Date.now().toString(36),date:item.date,grade:slotGrade,from:item.from,to:item.to,toGrade:String(item.toGrade||item.grade||slotGrade),createdAt:new Date().toISOString()};if(idx>=0)changes[idx]=change;else changes.push(change)}render();try{await persist(approve?'申請を当番表に反映しました':'申請を却下しました',approve?'当番変更を反映しました':'当番変更申請を却下しました',approve)}catch(e){requests=previousReq;changes=previousChanges;render();alert(e.message||'処理できませんでした。')}
+    const item=requests.find(function(x){return x.id===id});if(!item)return;if(!confirm(approve?'この申請を当番表に反映しますか？':'この申請を却下しますか？'))return;const previousReq=requests.slice(),previousChanges=changes.slice();item.status=approve?'approved':'rejected';item.updatedAt=new Date().toISOString();if(approve){const slotGrade=String(item.fromGrade||item.grade||'');const idx=changes.findIndex(function(x){return x.date===item.date&&x.grade===slotGrade&&x.from===item.from});const change={id:idx>=0?changes[idx].id:'change-'+Date.now().toString(36),date:item.date,grade:slotGrade,from:item.from,to:item.to,toGrade:String(item.toGrade||item.grade||slotGrade),status:'active',createdAt:new Date().toISOString()};if(idx>=0)changes[idx]=change;else changes.push(change)}render();try{await persist(approve?'申請を当番表に反映しました':'申請を却下しました',approve?'当番変更を反映しました':'当番変更申請を却下しました',approve)}catch(e){requests=previousReq;changes=previousChanges;render();alert(e.message||'処理できませんでした。')}
   }
   async function removeImage(index){
     const target=images[index];if(!target)return;
@@ -246,6 +253,10 @@
     if(deleteHistory)changes=changes.filter(item=>!item.date.startsWith(key+'-'));
     try{await persist('当番表と関連する変更履歴を削除しました','当番表を削除しました')}catch(e){images=previous;changes=previousChanges;render();alert(e.message)}
   }
+
+  const legacyLineToggle=document.getElementById('toggleLegacyDutyLine'),legacyLineBlock=document.getElementById('legacyDutyLineBlock');
+  function syncLegacyLineBlock(){if(!legacyLineBlock)return;legacyLineBlock.hidden=!(legacyLineToggle&&legacyLineToggle.checked)}
+  if(legacyLineToggle){legacyLineToggle.checked=false;legacyLineToggle.addEventListener('change',syncLegacyLineBlock);syncLegacyLineBlock()}
 
   changeYear.value=String(new Date().getFullYear());
   const adminHistoryToggle=document.getElementById('toggleDutyAdminHistory');

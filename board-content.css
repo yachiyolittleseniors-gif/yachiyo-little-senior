@@ -208,3 +208,8 @@ body.document-archive-preview-open{overflow:hidden!important}
 /* Duty change request: mode-specific date fields must respect hidden attribute */
 .duty-request-box #dutyRequestRosterDate[hidden],
 .duty-request-box #dutyRequestDirectDate[hidden]{display:none!important}
+
+/* Duty roster legacy LINE toggle + history controls */
+.duty-legacy-line-setting{margin:12px 0;padding:11px 12px;border:1px solid rgba(199,154,59,.38);border-radius:10px;background:rgba(255,255,255,.045)}
+.duty-legacy-line-setting label{display:flex!important;align-items:center;gap:9px;margin:0!important;color:#f0cf7b!important;font-weight:800}.duty-legacy-line-setting input{width:19px;height:19px;accent-color:#c79a3b}.duty-legacy-line-setting small{display:block;margin-top:5px;color:#bfc7d2;font-size:10.5px;line-height:1.45}
+#legacyDutyLineBlock[hidden]{display:none!important}.duty-change-admin-buttons{display:flex;gap:6px;align-items:center}.duty-change-admin-buttons button{margin:0!important}.duty-change-admin-buttons .delete{background:#7b1010!important}.duty-change-admin-item.is-cancelled{opacity:.72}.duty-change-cancelled{display:inline-block;margin-left:7px;color:#d9b65c;font-style:normal;font-weight:800}

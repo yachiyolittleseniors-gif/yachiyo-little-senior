@@ -25,7 +25,7 @@
     const date=table.year+'-'+String(table.month).padStart(2,'0')+'-'+String(day).padStart(2,'0');
     let value=name,changed=false,original='';
     (Array.isArray(changes)?changes:[]).forEach(item=>{
-      if(item&&item.date===date&&String(item.grade)===String(grade)&&nameKey(value)===nameKey(item.from)&&cleanName(item.to)){
+      if(item&&item.status!=='cancelled'&&item.date===date&&String(item.grade)===String(grade)&&nameKey(value)===nameKey(item.from)&&cleanName(item.to)){
         original=original||value;value=item.to;changed=true;
       }
     });
