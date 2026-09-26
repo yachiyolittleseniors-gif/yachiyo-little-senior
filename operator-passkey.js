@@ -117,7 +117,7 @@
   async function authorize(promptMessage = "パスワードを入力してください。") {
     let registered = false;
     try {
-      registered = localStorage.getItem("yachiyoCoachPasskeyRegistered") === "1";
+      registered = (await request({ action: "status" })).registered === true;
     } catch (error) {}
 
     if (registered && supported()) {
@@ -129,7 +129,7 @@
         }
       } catch (error) {
         if (error?.status === 401 || error?.status === 404) {
-          try { localStorage.removeItem("yachiyoCoachPasskeyRegistered"); } catch (_) {}
+          
         }
       }
     }
@@ -154,5 +154,5 @@
     return "";
   }
 
-  window.YLSCoachPasskeys = { authenticate, authorize, register, remove, supported };
+  window.YLSOperatorPasskeys = { authenticate, authorize, register, remove, supported, status: () => request({ action: "status" }) };
 })();
