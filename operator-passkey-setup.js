@@ -1,3 +1,4 @@
+window.__operatorSetupLoaded=true;
 (()=>{
   const ready=fn=>document.readyState==='loading'?document.addEventListener('DOMContentLoaded',fn,{once:true}):fn();
   ready(async()=>{
