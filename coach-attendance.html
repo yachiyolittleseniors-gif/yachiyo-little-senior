@@ -362,6 +362,7 @@ document.addEventListener('DOMContentLoaded',()=>{
         <p class="coach-passkey-text" id="coachPasskeySetupText">この端末に登録すると、次回から指導者用パスワードの入力を省略できます。</p>
       </div>
       <button class="coach-passkey-button" id="coachPasskeySetupButton" type="button">この端末に登録</button>
+      <button class="coach-passkey-button" id="coachPasskeyResetButton" type="button" style="margin-top:10px;background:#fff;color:#07172d;">登録済みの生体認証を解除</button>
     </div>
   </section>
   <div class="error" id="errorBox"></div>
@@ -926,6 +927,7 @@ body.photo-admin-on #accessPasswordChange{
   const button=document.getElementById('coachPasskeySetupButton');
   const title=document.getElementById('coachPasskeySetupTitle');
   const text=document.getElementById('coachPasskeySetupText');
+  const resetButton=document.getElementById('coachPasskeyResetButton');
   if(!panel||!summary||!button)return;
   panel.hidden=false;
   let registered=false;
@@ -944,6 +946,30 @@ body.photo-admin-on #accessPasswordChange{
   try{registered=localStorage.getItem('yachiyoCoachPasskeyRegistered')==='1'}catch(e){}
   if(registered)showRegisteredState();
   summary.addEventListener('click',()=>setCollapsed(!panel.classList.contains('is-collapsed')));
+  if(resetButton){
+    resetButton.hidden=registered;
+    resetButton.addEventListener('click',async()=>{
+      if(!confirm('登録済みの指導者用生体認証を解除しますか？\n解除後は「この端末に登録」から再登録できます。'))return;
+      resetButton.disabled=true;
+      resetButton.textContent='端末で認証してください';
+      try{
+        await window.YLSCoachPasskeys.remove();
+        try{localStorage.removeItem('yachiyoCoachPasskeyRegistered')}catch(e){}
+        registered=false;
+        panel.classList.remove('is-registered');
+        title.textContent='生体認証で次回からログイン';
+        text.textContent='この端末に登録すると、次回から指導者用パスワードの入力を省略できます。';
+        button.textContent='この端末に登録';
+        resetButton.hidden=true;
+        setCollapsed(false);
+        alert('登録済みの生体認証を解除しました。続けて「この端末に登録」から再登録してください。');
+      }catch(error){
+        const cancelled=error?.name==='NotAllowedError'||/キャンセル/.test(error?.message||'');
+        if(!cancelled)alert(error?.message||'生体認証を解除できませんでした。');
+        resetButton.textContent='登録済みの生体認証を解除';
+      }finally{resetButton.disabled=false}
+    });
+  }
   button.addEventListener('click',async()=>{
     if(registered){
       if(!confirm('この端末の生体認証を削除しますか？\n削除後はパスワードでログインし直すと再登録できます。'))return;
@@ -973,6 +999,7 @@ body.photo-admin-on #accessPasswordChange{
       await window.YLSCoachPasskeys.register(accessValue,deviceLabel);
       try{localStorage.setItem('yachiyoCoachPasskeyRegistered','1')}catch(e){}
       registered=true;
+      if(resetButton)resetButton.hidden=true;
       showRegisteredState();
     }catch(error){
       const cancelled=error?.name==='NotAllowedError'||/キャンセル/.test(error?.message||'');
