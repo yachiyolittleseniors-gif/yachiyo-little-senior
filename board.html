@@ -1168,20 +1168,7 @@ body.live-score-focused #liveScoreCard{width:100%;box-sizing:border-box}
           <div class="live-score-restore-wrap" id="liveScoreRestoreWrap" hidden>
             <button class="live-score-button live-score-history-button" id="liveScoreRestore" type="button"><span class="live-score-history-icon" aria-hidden="true">↶</span><span>直前の試合を見る</span><span aria-hidden="true">›</span></button>
           </div>
-          <script>
-          (function(){
-            try{
-              const saved=localStorage.getItem('yachiyoLiveScoreLastGame');
-              if(saved){
-                const game=JSON.parse(saved);
-                if(game&&typeof game==='object'){
-                  const wrap=document.getElementById('liveScoreRestoreWrap');
-                  if(wrap)wrap.hidden=false;
-                }
-              }
-            }catch(e){}
-          })();
-          </script>
+          <script src="./board-last-game-state.js?v=20260927-clean2"></script>
         </div>
         <p>試合開始後、得点を入力してチーム内へ速報を共有できます。</p>
         <div class="live-score-idle-actions">
@@ -1692,19 +1679,7 @@ body.live-score-focused #liveScoreCard{width:100%;box-sizing:border-box}
 .save-notice.show{opacity:1;transform:translate(-50%,0)}
 </style>
 <div class="save-notice" id="saveNotice" role="status" aria-live="polite"></div>
-<script>
-(function(){
-  let saveNoticeTimer;
-  window.showSaveNotice=function(message){
-    const notice=document.getElementById('saveNotice');
-    if(!notice) return;
-    notice.textContent=message;
-    notice.classList.add('show');
-    clearTimeout(saveNoticeTimer);
-    saveNoticeTimer=setTimeout(function(){notice.classList.remove('show');},1800);
-  };
-})();
-</script>
+<script src="./board-save-notice.js?v=20260927-clean2"></script>
 <script src="./board-header.js?v=20260927-clean1"></script>
 
 <script src="./board-admin-reveal.js?v=20260927-clean1"></script>
