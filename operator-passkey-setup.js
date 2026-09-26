@@ -3,6 +3,8 @@ window.__operatorSetupLoaded=true;
   const ready=fn=>document.readyState==='loading'?document.addEventListener('DOMContentLoaded',fn,{once:true}):fn();
   ready(async()=>{
     const panel=document.getElementById('coachPasskeySetupPanel');
+    const summary=document.getElementById('coachPasskeySetupSummary');
+    const chevron=document.getElementById('coachPasskeySetupChevron');
     const button=document.getElementById('coachPasskeySetupButton');
     const title=document.getElementById('coachPasskeySetupTitle');
     const text=document.getElementById('coachPasskeySetupText');
@@ -14,12 +16,21 @@ window.__operatorSetupLoaded=true;
       title.textContent='生体認証を登録済み';
       text.textContent='次回から生体認証でログインできます。';
       button.hidden=false; button.textContent='この端末の生体認証を削除';
+      panel.classList.add('is-registered','is-collapsed');
+      if(summary)summary.setAttribute('aria-expanded','false');
+      if(chevron)chevron.textContent='▼';
     }else{
       title.textContent='生体認証で次回からログイン';
       text.textContent='この端末に登録すると、次回からパスワード入力を省略できます。使えない場合は従来のパスワードで入れます。';
       button.textContent='この端末に登録';
       button.hidden=false;
     }
+    if(summary)summary.addEventListener('click',()=>{
+      if(!panel.classList.contains('is-registered'))return;
+      const collapsed=panel.classList.toggle('is-collapsed');
+      summary.setAttribute('aria-expanded',collapsed?'false':'true');
+      if(chevron)chevron.textContent=collapsed?'▼':'▲';
+    });
     button.addEventListener('click',async()=>{
       if(button.disabled)return;
       if(button.textContent.includes('削除')){
