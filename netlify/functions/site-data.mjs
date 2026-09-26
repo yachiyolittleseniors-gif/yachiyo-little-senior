@@ -1536,6 +1536,27 @@ export default async (request, context) => {
     if (section === "board-latest-update") {
       return json({ error: "method not allowed" }, 405);
     }
+    if (section === "duty-roster" && body?.action === "submitDutyChangeRequest") {
+      const accessPassword = request.headers.get("x-access-password") || "";
+      const accessGranted = await boardSessionIsValid(request) || await accessPasswordIsValid(store, accessPassword);
+      if (!accessGranted) return json({ error: "unauthorized" }, 401);
+      const req = body?.request || {};
+      const date = String(req.date || "");
+      const grade = String(req.grade || "");
+      const from = String(req.from || "").trim();
+      const to = String(req.to || "").trim();
+      const note = String(req.note || "").trim().slice(0, 200);
+      if (!/^\d{4}-\d{2}-\d{2}$/.test(date) || !["1","2","3"].includes(grade) || !from || from.length > 60 || !to || to.length > 60 || from === to) return json({ error: "申請内容を確認してください。" }, 400);
+      const current = await store.get(key, { type: "json", consistency: "strong" }) || { initialized:true, images:[], changes:[], requests:[] };
+      const requests = Array.isArray(current.requests) ? current.requests : [];
+      if (requests.length >= 200) return json({ error: "申請の保存上限に達しています。管理者へ連絡してください。" }, 400);
+      const now = new Date().toISOString();
+      requests.push({ id: `request-${crypto.randomUUID()}`, date, grade, from, to, note, status:"pending", createdAt:now, updatedAt:now });
+      const updated = { ...current, initialized:true, images:Array.isArray(current.images)?current.images:[], changes:Array.isArray(current.changes)?current.changes:[], requests };
+      await store.setJSON(key, updated);
+      return json({ ok:true, data:updated });
+    }
+
 
     if (
       section === "access-settings" &&
@@ -2130,12 +2151,14 @@ export default async (request, context) => {
       const roster = body?.data;
       const images = roster?.images;
       const changes = Array.isArray(roster?.changes) ? roster.changes : [];
+      const requests = Array.isArray(roster?.requests) ? roster.requests : [];
 
       if (
         roster?.initialized !== true ||
         !Array.isArray(images) ||
         images.length > 8 ||
-        changes.length > 300
+        changes.length > 300 ||
+        requests.length > 200
       ) {
         return json({ error: "当番表データを確認してください。" }, 400);
       }
@@ -2185,6 +2208,14 @@ export default async (request, context) => {
       if (!validChanges) {
         return json({ error: "当番変更データを確認してください。" }, 400);
       }
+
+      const validRequests = requests.every(item => {
+        const date=String(item?.date||""); const grade=String(item?.grade||""); const from=String(item?.from||"").trim(); const to=String(item?.to||"").trim(); const note=String(item?.note||""); const status=String(item?.status||"pending");
+        return /^\d{4}-\d{2}-\d{2}$/.test(date) && ["1","2","3"].includes(grade) && from.length>0 && from.length<=60 && to.length>0 && to.length<=60 && from!==to && note.length<=200 && ["pending","approved","rejected"].includes(status);
+      });
+      if (!validRequests) return json({ error: "当番変更申請データを確認してください。" }, 400);
+
+      body.data.requests = requests.map((item,index)=>({id:String(item?.id||`request-${index}`).slice(0,100),date:String(item.date),grade:String(item.grade),from:String(item.from).trim(),to:String(item.to).trim(),note:String(item?.note||"").trim().slice(0,200),status:["pending","approved","rejected"].includes(String(item?.status))?String(item.status):"pending",createdAt:String(item?.createdAt||"").slice(0,60),updatedAt:String(item?.updatedAt||"").slice(0,60)}));
 
       body.data.changes = changes.map((item, index) => ({
         id: String(item?.id || `change-${index}`).slice(0, 100),
