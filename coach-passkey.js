@@ -120,14 +120,11 @@
       registered = localStorage.getItem("yachiyoCoachPasskeyRegistered") === "1";
     } catch (error) {}
 
-    if (supported()) {
+    if (registered && supported()) {
       try {
         const result = await authenticate();
         if (result?.token) {
-          try {
-            sessionStorage.setItem("yachiyoCoachAttendancePass", result.token);
-            localStorage.setItem("yachiyoCoachPasskeyRegistered", "1");
-          } catch (error) {}
+          try { sessionStorage.setItem("yachiyoCoachAttendancePass", result.token); } catch (error) {}
           return result.token;
         }
       } catch (error) {
