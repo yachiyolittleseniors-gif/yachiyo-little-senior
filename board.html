@@ -1374,7 +1374,7 @@ body.live-score-focused #liveScoreCard{width:100%;box-sizing:border-box}
         <div id="dutyChangeList" class="duty-change-list"></div>
         </div>
       </section>
-      <div class="duty-request-box" id="dutyRequestBox">
+      <div class="duty-request-box" id="dutyRequestBox" hidden>
         <div class="duty-request-head"><div><span class="duty-request-kicker">CHANGE REQUEST</span><h3>当番変更を申請</h3><span id="dutyRequestPendingBadge" class="duty-request-pending-badge" hidden></span></div><button id="toggleDutyRequest" type="button" aria-expanded="false" aria-controls="dutyRequestContent">申請する</button></div>
         <div id="dutyRequestContent" hidden>
           <p class="duty-request-help">当番表がある日は登録内容から、まだ当番表がない未来の日は日付を選んで申請できます。申請後はLINE共有ボタンから連絡してください。</p>
@@ -1386,7 +1386,7 @@ body.live-score-focused #liveScoreCard{width:100%;box-sizing:border-box}
           <div id="dutyRequestResult" class="duty-request-result" hidden></div>
         </div>
       </div>
-      <p class="duty-roster-note">申請後はLINEで共有してください。<br>管理者確認後、お当番表に反映されます。</p>
+      <p id="dutyRequestPublicNote" class="duty-roster-note" hidden>申請後はLINEで共有してください。<br>管理者確認後、お当番表に反映されます。</p>
     </section>
 
     <section class="card board-meeting-card" id="refereeCard">
@@ -1571,14 +1571,14 @@ body.live-score-focused #liveScoreCard{width:100%;box-sizing:border-box}
       <div class="duty-change-example"><b>入力例（「10/3」「10月3日」どちらも可）</b><span>10月3日(土) 山田→佐藤さん</span><span>10月11日(日) 佐藤さん→山田</span></div>
       <div id="dutyChangePreview" class="duty-change-preview">変更内容を貼り付けると、ここに確認結果が表示されます。</div>
       <button id="saveDutyChangesBtn" type="button">確認した変更を保存</button>
-      <div class="duty-admin-history-head"><b>登録済み変更履歴</b><button id="toggleDutyAdminHistory" type="button" aria-expanded="false" aria-controls="dutyChangeAdminList">表示 ▼</button></div>
-      <div id="dutyChangeAdminList" class="duty-change-admin-list" hidden></div>
-      <div class="duty-request-admin-block">
-        <b>当番変更申請</b>
-        <p>一般画面から届いた申請です。当番表が未登録の月は「当番表登録待ち」として保持されます。</p>
-        <div id="dutyRequestAdminList" class="duty-change-admin-list"></div>
-      </div>
     </div>
+    <div class="duty-request-admin-block">
+      <b>当番変更申請</b>
+      <p>一般画面から届いた申請です。当番表が未登録の月は「当番表登録待ち」として保持されます。</p>
+      <div id="dutyRequestAdminList" class="duty-change-admin-list"></div>
+    </div>
+    <div class="duty-admin-history-head"><b>登録済み変更履歴</b><button id="toggleDutyAdminHistory" type="button" aria-expanded="false" aria-controls="dutyChangeAdminList">表示 ▼</button></div>
+    <div id="dutyChangeAdminList" class="duty-change-admin-list" hidden></div>
     <div class="duty-image-admin">
       <b>当番表画像</b>
     <label for="dutyRosterImageInput">画像ファイル（複数選択可）</label>
@@ -1628,6 +1628,12 @@ body.live-score-focused #liveScoreCard{width:100%;box-sizing:border-box}
         <button id="adminVisibilitySave" type="button">表示設定を保存</button>
         <p id="adminVisibilityStatus" class="backup-note"></p>
       </div>
+    </div>
+    <div id="featureVisibilityFields" class="admin-visibility-fields feature-visibility-fields">
+      <strong>機能公開設定</strong>
+      <label class="admin-autooff-row feature-public-row"><input id="dutyRequestPublicEnabled" type="checkbox"><span><b>当番変更申請を公開する</b><small>OFF：一般画面の「当番変更を申請」カードを非表示にします。管理画面の申請・変更履歴は残ります。</small></span></label>
+      <button id="featureVisibilitySave" type="button">機能公開設定を保存</button>
+      <p id="featureVisibilityStatus" class="backup-note"></p>
     </div>
     <div id="backupAdminFields" class="backup-admin-fields">
       <strong>バックアップ管理</strong>

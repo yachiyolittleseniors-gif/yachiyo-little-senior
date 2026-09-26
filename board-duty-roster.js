@@ -1,5 +1,7 @@
 (function(){
   const API='/.netlify/functions/site-data?section=duty-roster';
+  async function applyDutyRequestPublicSetting(){const box=document.getElementById('dutyRequestBox'),note=document.getElementById('dutyRequestPublicNote');try{const r=await fetch('/.netlify/functions/site-data?section=admin-visibility-settings',{cache:'no-store'}),j=await r.json();const enabled=!!(r.ok&&j&&j.data&&j.data.dutyRequestPublic===true);if(box)box.hidden=!enabled;if(note)note.hidden=!enabled}catch(e){if(box)box.hidden=true;if(note)note.hidden=true}}
+  applyDutyRequestPublicSetting();
   const list=document.getElementById('dutyRosterList');
   const tableList=document.getElementById('dutyRosterTableList');
   const adminList=document.getElementById('dutyRosterAdminList');
