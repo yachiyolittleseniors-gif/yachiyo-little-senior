@@ -1,7 +1,7 @@
 (() => {
   const endpoint = "/.netlify/functions/coach-passkey-auth";
   function supported() {
-    return Boolean(window.isSecureContext && window.PublicKeyCredential && navigator.credentials);
+    return Boolean(window.PublicKeyCredential && navigator.credentials && typeof navigator.credentials.create === "function" && typeof navigator.credentials.get === "function");
   }
   function decode(value) {
     const normalized = String(value || "").replace(/-/g, "+").replace(/_/g, "/");
