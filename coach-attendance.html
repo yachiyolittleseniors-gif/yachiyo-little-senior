@@ -216,7 +216,7 @@ body{padding-top:var(--fixed-header-height)!important}
 }
 </style>
 <style id="coach-attendance-polish">.name-col{min-width:148px}@media(max-width:700px){.name-col{min-width:136px}}</style>
-<script src="./coach-passkey.js?v=20260921-2205"></script>
+<script src="./coach-passkey.js?v=20260926-boardmatch1"></script>
 <script>
 document.documentElement.style.visibility='hidden';
 window.coachAccessReady=(async function(){
@@ -246,16 +246,20 @@ window.coachAccessReady=(async function(){
     }catch(e){return false}
   }
   async function verifyPasskey(){
-    let registered=false;
-    try{registered=localStorage.getItem(passkeyKey)==='1'}catch(e){}
-    if(!registered||!window.YLSCoachPasskeys?.supported())return false;
+    // チーム専用ページと同じ方式：localStorage の登録フラグに依存せず、
+    // サーバーに登録済みパスキーがあれば毎回 WebAuthn を試す。
+    if(!window.YLSCoachPasskeys?.supported())return false;
     try{
       const result=await window.YLSCoachPasskeys.authenticate();
       if(!result?.token)return false;
       remember(result.token);
+      // 認証成功時に、このブラウザ側の表示用フラグも復元する。
+      try{localStorage.setItem(passkeyKey,'1')}catch(_){}
       return true;
     }catch(e){
-      if(e?.status===401||e?.status===404){
+      // 404 はサーバー側に登録済みパスキーが無い場合だけ。
+      // 401 やキャンセルではフラグを消さず、次回も生体認証を試せるようにする。
+      if(e?.status===404){
         try{localStorage.removeItem(passkeyKey)}catch(_){}
       }
       return false;
