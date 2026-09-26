@@ -101,6 +101,11 @@ export default async request => {
   const action = String(body?.action || "");
   const store = getStore({ name: STORE, consistency: "strong" });
   try {
+    if (action === "status") {
+      const credentials = await loadCredentials(store);
+      return json({ ok: true, registered: credentials.length > 0, count: credentials.length });
+    }
+
     if (action === "registration-options") {
       if (!(await coachAccessIsValid(store, request))) return json({ error: "unauthorized" }, 401);
       const credentials = await loadCredentials(store);
