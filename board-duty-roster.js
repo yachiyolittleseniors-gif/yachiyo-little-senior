@@ -176,16 +176,8 @@
 
   async function removeChange(id){
     const target=changes.find(function(item){return item.id===id});if(!target||!confirm(displayDate(target.date)+'「'+target.from+' → '+target.to+'」を取り消しますか？'))return;
-    const previous=changes.slice(),previousRequests=requests.map(function(item){return Object.assign({},item)});
-    changes=changes.filter(function(item){return item.id!==id});
-    requests.forEach(function(item){
-      const fromGrade=String(item.fromGrade||item.grade||'');
-      const toGrade=String(item.toGrade||item.grade||fromGrade||'');
-      const targetToGrade=String(target.toGrade||target.grade||'');
-      if(item.status==='approved'&&item.date===target.date&&fromGrade===String(target.grade||'')&&item.from===target.from&&item.to===target.to&&toGrade===targetToGrade){item.status='cancelled';item.updatedAt=new Date().toISOString()}
-    });
-    render();
-    try{await persist('当番変更を取り消しました','当番変更を取り消しました',true)}catch(e){changes=previous;requests=previousRequests;render();alert(e.message||'当番変更を取り消せませんでした.')}
+    const previous=changes.slice();changes=changes.filter(function(item){return item.id!==id});render();
+    try{await persist('当番変更を取り消しました','当番変更を取り消しました',true)}catch(e){changes=previous;render();alert(e.message||'当番変更を取り消せませんでした。')}
   }
 
   async function addImages(){
@@ -214,20 +206,18 @@
   function todayYmd(){const d=new Date();return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0')}
   function rosterDates(){const today=todayYmd(),out=[];images.forEach(function(image){const table=image.table;if(!table)return;table.rows.forEach(function(row){const date=tableDate(table,row[0]);if(date>=today)out.push({date:date,label:table.year+'年'+table.month+'月'+row[0]+'日（'+row[1]+'）',table:table,row:row})})});return out.sort(function(a,b){return a.date.localeCompare(b.date)})}
   function rosterHasMonth(date){return images.some(function(image){return image.table&&date.startsWith(image.table.year+'-'+String(image.table.month).padStart(2,'0')+'-')})}
-  function requestStatusLabel(status,date){if(status==='approved')return'反映済み';if(status==='rejected')return'却下';if(status==='cancelled')return'取消済み';return rosterHasMonth(date)?'確認待ち':'当番表登録待ち'}
+  function requestStatusLabel(status,date){if(status==='approved')return'反映済み';if(status==='rejected')return'却下';return rosterHasMonth(date)?'確認待ち':'当番表登録待ち'}
   function requestPersonLabel(item, side){
     const grade=String(item[side+'Grade']||item.grade||'');
     const name=String(item[side]||'');
     return (grade?grade+'年・':'')+displayName(name,grade);
   }
   function renderRequests(){
-    const statusWrap=document.getElementById('dutyRequestStatus'),statusList=document.getElementById('dutyRequestStatusList'),admin=document.getElementById('dutyRequestAdminList');
+    const admin=document.getElementById('dutyRequestAdminList');
     const ordered=requests.slice().sort(function(a,b){return String(b.createdAt).localeCompare(String(a.createdAt))});
-    const publicOrdered=ordered.filter(function(item){return item.status!=='rejected'&&item.status!=='cancelled'});
     const pendingCount=ordered.filter(function(item){return item.status==='pending'}).length;
     const requestBadge=document.getElementById('dutyRequestPendingBadge');
     if(requestBadge){requestBadge.hidden=pendingCount===0;requestBadge.textContent='確認待ち '+pendingCount+'件'}
-    if(statusWrap&&statusList){statusWrap.hidden=!publicOrdered.length;statusList.innerHTML=publicOrdered.map(function(item){const label=requestStatusLabel(item.status,item.date);return'<div class="duty-request-status-item"><b>'+displayDate(item.date)+'</b><br>'+escapeHtml(requestPersonLabel(item,'from'))+' → <b>'+escapeHtml(requestPersonLabel(item,'to'))+'</b><br><b data-status="'+item.status+'">'+label+'</b></div>'}).join('')}
     if(admin){const pending=ordered.filter(function(x){return x.status==='pending'});admin.innerHTML=pending.length?pending.map(function(item){const canApply=rosterHasMonth(item.date);return'<div class="duty-request-admin-item"><b>'+displayDate(item.date)+'</b><br>'+escapeHtml(requestPersonLabel(item,'from'))+' → <b>'+escapeHtml(requestPersonLabel(item,'to'))+'</b>'+(!canApply?'<br><span class="duty-request-wait">当番表登録待ち</span>':'')+'<div class="duty-request-admin-actions"><button type="button" data-approve-duty-request="'+escapeHtml(item.id)+'" '+(canApply?'':'disabled')+'>当番表に反映</button><button class="reject" type="button" data-reject-duty-request="'+escapeHtml(item.id)+'">却下</button></div></div>'}).join(''):'<div class="duty-change-preview">未確認の当番変更申請はありません。</div>';admin.querySelectorAll('[data-approve-duty-request]').forEach(function(b){b.addEventListener('click',function(){decideRequest(b.dataset.approveDutyRequest,true)})});admin.querySelectorAll('[data-reject-duty-request]').forEach(function(b){b.addEventListener('click',function(){decideRequest(b.dataset.rejectDutyRequest,false)})})}
     populateRequestForm();
   }
@@ -288,9 +278,8 @@
   });
   [changeYear,changeText].forEach(function(element){element.addEventListener('input',function(){updateChangePreview(false)});element.addEventListener('change',function(){updateChangePreview(false)})});
   changeGrade.addEventListener('change',function(){updateChangePreview(true)});
-  const requestToggle=document.getElementById('toggleDutyRequest'),requestContent=document.getElementById('dutyRequestContent'),requestStatusToggle=document.getElementById('toggleDutyRequestStatus'),requestStatusList=document.getElementById('dutyRequestStatusList');
+  const requestToggle=document.getElementById('toggleDutyRequest'),requestContent=document.getElementById('dutyRequestContent');
   if(requestToggle&&requestContent)requestToggle.addEventListener('click',function(){const open=requestContent.hidden;requestContent.hidden=!open;requestToggle.setAttribute('aria-expanded',String(open));requestToggle.textContent=open?'閉じる':'申請する';populateRequestForm()});
-  if(requestStatusToggle&&requestStatusList)requestStatusToggle.addEventListener('click',function(){const open=requestStatusList.hidden;requestStatusList.hidden=!open;requestStatusToggle.setAttribute('aria-expanded',String(open));requestStatusToggle.textContent=open?'申請状況を閉じる':'申請状況を見る'});
   const directDate=document.getElementById('dutyRequestDirectDate'),rosterDate=document.getElementById('dutyRequestRosterDate');if(directDate){directDate.min=todayYmd();if(!directDate.value||directDate.value<directDate.min)directDate.value=directDate.min}function syncDutyRequestDateMode(){const mode=document.querySelector('input[name="dutyRequestMode"]:checked')?.value||'roster',direct=mode==='direct';if(rosterDate){rosterDate.hidden=direct;rosterDate.disabled=direct}if(directDate){directDate.hidden=!direct;directDate.disabled=!direct}}document.querySelectorAll('input[name="dutyRequestMode"]').forEach(function(r){r.addEventListener('change',syncDutyRequestDateMode)});syncDutyRequestDateMode();
   document.getElementById('dutyRequestRosterDate')?.addEventListener('change',populateRequestForm);document.getElementById('submitDutyRequest')?.addEventListener('click',submitRequest);
   pasteChangeBtn.addEventListener('click',pasteChangeText);
