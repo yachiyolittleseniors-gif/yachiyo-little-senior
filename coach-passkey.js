@@ -15,7 +15,7 @@
   }
   async function request(body, accessValue = "") {
     const headers = { "content-type": "application/json" };
-    if (accessValue) headers["x-access-password"] = accessValue;
+    if (accessValue) headers["x-coach-password"] = accessValue;
     const response = await fetch(endpoint, {
       method: "POST", headers, credentials: "same-origin", body: JSON.stringify(body),
     });
