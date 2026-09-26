@@ -1377,8 +1377,8 @@ body.live-score-focused #liveScoreCard{width:100%;box-sizing:border-box}
       <div class="duty-request-box" id="dutyRequestBox">
         <div class="duty-request-head"><div><span class="duty-request-kicker">CHANGE REQUEST</span><h3>当番変更を申請</h3></div><button id="toggleDutyRequest" type="button" aria-expanded="false" aria-controls="dutyRequestContent">申請する</button></div>
         <div id="dutyRequestContent" hidden>
-          <p class="duty-request-help">当番表がある月は登録内容から、まだない月は日付を直接選んで申請できます。申請後はLINE共有ボタンから連絡してください。</p>
-          <div class="duty-request-mode"><label><input type="radio" name="dutyRequestMode" value="roster" checked> お当番表から選ぶ</label><label><input type="radio" name="dutyRequestMode" value="direct"> 日付を直接選ぶ</label></div>
+          <p class="duty-request-help">当番表がある日は登録内容から、まだ当番表がない未来の日は日付を選んで申請できます。申請後はLINE共有ボタンから連絡してください。</p>
+          <div class="duty-request-mode"><label><input type="radio" name="dutyRequestMode" value="roster" checked> お当番表から選ぶ</label><label><input type="radio" name="dutyRequestMode" value="direct"> まだ当番表がない日を選ぶ</label></div>
           <label>変更日<select id="dutyRequestRosterDate"></select><input id="dutyRequestDirectDate" type="date" hidden></label>
           <label>変更前<select id="dutyRequestFrom"><option value="">選択してください</option></select></label>
           <label>変更後<select id="dutyRequestTo"><option value="">選択してください</option></select></label>
@@ -1571,7 +1571,8 @@ body.live-score-focused #liveScoreCard{width:100%;box-sizing:border-box}
       <div class="duty-change-example"><b>入力例（「10/3」「10月3日」どちらも可）</b><span>10月3日(土) 山田→佐藤さん</span><span>10月11日(日) 佐藤さん→山田</span></div>
       <div id="dutyChangePreview" class="duty-change-preview">変更内容を貼り付けると、ここに確認結果が表示されます。</div>
       <button id="saveDutyChangesBtn" type="button">確認した変更を保存</button>
-      <div id="dutyChangeAdminList" class="duty-change-admin-list"></div>
+      <div class="duty-admin-history-head"><b>登録済み変更履歴</b><button id="toggleDutyAdminHistory" type="button" aria-expanded="false" aria-controls="dutyChangeAdminList">表示 ▼</button></div>
+      <div id="dutyChangeAdminList" class="duty-change-admin-list" hidden></div>
       <div class="duty-request-admin-block">
         <b>当番変更申請</b>
         <p>一般画面から届いた申請です。当番表が未登録の月は「当番表登録待ち」として保持されます。</p>

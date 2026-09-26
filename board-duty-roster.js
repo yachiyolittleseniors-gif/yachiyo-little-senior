@@ -203,7 +203,8 @@
     images.forEach(function(image){const table=image.table;if(!table)return;const grades=table.grades||[2,1];table.rows.forEach(function(row){row.slice(2,6).forEach(function(name,index){const clean=cleanName(name);if(!clean)return;const grade=String(grades[Math.floor(index/2)]);map.set(grade+'|'+clean,{grade:grade,name:clean})})})});
     return Array.from(map.values()).sort(function(a,b){return Number(b.grade)-Number(a.grade)||a.name.localeCompare(b.name,'ja')});
   }
-  function rosterDates(){const out=[];images.forEach(function(image){const table=image.table;if(!table)return;table.rows.forEach(function(row){out.push({date:tableDate(table,row[0]),label:table.year+'年'+table.month+'月'+row[0]+'日（'+row[1]+'）',table:table,row:row})})});return out.sort(function(a,b){return a.date.localeCompare(b.date)})}
+  function todayYmd(){const d=new Date();return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0')}
+  function rosterDates(){const today=todayYmd(),out=[];images.forEach(function(image){const table=image.table;if(!table)return;table.rows.forEach(function(row){const date=tableDate(table,row[0]);if(date>=today)out.push({date:date,label:table.year+'年'+table.month+'月'+row[0]+'日（'+row[1]+'）',table:table,row:row})})});return out.sort(function(a,b){return a.date.localeCompare(b.date)})}
   function rosterHasMonth(date){return images.some(function(image){return image.table&&date.startsWith(image.table.year+'-'+String(image.table.month).padStart(2,'0')+'-')})}
   function requestStatusLabel(status,date){if(status==='approved')return'反映済み';if(status==='rejected')return'却下';return rosterHasMonth(date)?'確認待ち':'当番表登録待ち'}
   function requestPersonLabel(item, side){
@@ -245,6 +246,18 @@
   }
 
   changeYear.value=String(new Date().getFullYear());
+  const adminHistoryToggle=document.getElementById('toggleDutyAdminHistory');
+  if(adminHistoryToggle&&changeAdminList){
+    changeAdminList.hidden=true;
+    adminHistoryToggle.setAttribute('aria-expanded','false');
+    adminHistoryToggle.textContent='表示 ▼';
+    adminHistoryToggle.addEventListener('click',function(){
+      const open=changeAdminList.hidden;
+      changeAdminList.hidden=!open;
+      adminHistoryToggle.setAttribute('aria-expanded',String(open));
+      adminHistoryToggle.textContent=open?'非表示 ▲':'表示 ▼';
+    });
+  }
   const historyToggle=document.getElementById('toggleDutyHistory');
   const historyContent=document.getElementById('dutyHistoryContent');
   if(historyToggle&&historyContent)historyToggle.addEventListener('click',function(){
@@ -266,7 +279,7 @@
   const requestToggle=document.getElementById('toggleDutyRequest'),requestContent=document.getElementById('dutyRequestContent'),requestStatusToggle=document.getElementById('toggleDutyRequestStatus'),requestStatusList=document.getElementById('dutyRequestStatusList');
   if(requestToggle&&requestContent)requestToggle.addEventListener('click',function(){const open=requestContent.hidden;requestContent.hidden=!open;requestToggle.setAttribute('aria-expanded',String(open));requestToggle.textContent=open?'閉じる':'申請する';populateRequestForm()});
   if(requestStatusToggle&&requestStatusList)requestStatusToggle.addEventListener('click',function(){const open=requestStatusList.hidden;requestStatusList.hidden=!open;requestStatusToggle.setAttribute('aria-expanded',String(open));requestStatusToggle.textContent=open?'申請状況を閉じる':'申請状況を見る'});
-  document.querySelectorAll('input[name="dutyRequestMode"]').forEach(function(r){r.addEventListener('change',function(){const direct=r.value==='direct'&&r.checked;document.getElementById('dutyRequestRosterDate').hidden=direct;document.getElementById('dutyRequestDirectDate').hidden=!direct})});
+  const directDate=document.getElementById('dutyRequestDirectDate');if(directDate){directDate.min=todayYmd();if(!directDate.value||directDate.value<directDate.min)directDate.value=directDate.min}document.querySelectorAll('input[name="dutyRequestMode"]').forEach(function(r){r.addEventListener('change',function(){const direct=r.value==='direct'&&r.checked;document.getElementById('dutyRequestRosterDate').hidden=direct;document.getElementById('dutyRequestDirectDate').hidden=!direct})});
   document.getElementById('dutyRequestRosterDate')?.addEventListener('change',populateRequestForm);document.getElementById('submitDutyRequest')?.addEventListener('click',submitRequest);
   pasteChangeBtn.addEventListener('click',pasteChangeText);
   saveChangesBtn.addEventListener('click',saveChanges);saveBtn.addEventListener('click',addImages);loadCache();render();load();
