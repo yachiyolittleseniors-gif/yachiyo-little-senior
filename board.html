@@ -33,7 +33,7 @@
 <link rel="stylesheet" href="./board-base.css?v=20260918-1">
 <link rel="stylesheet" href="./board-live-score.css?v=20260919-finishoutline1">
 <script src="./board-passkey.js?v=20260920-crossbrowser1"></script>
-<script src="./coach-passkey.js?v=20260926-fast-gate1"></script>
+<script src="./coach-passkey.js?v=20260918-2"></script>
 <script>
 document.documentElement.style.visibility='hidden';
 window.boardAccessReady=(async function requireBoardPassword(){
@@ -2125,47 +2125,22 @@ body.photo-admin-on #accessPasswordChange{
 .backup-admin-fields{margin-top:18px;padding-top:18px;border-top:1px solid rgba(210,170,80,.32)}.backup-admin-fields>strong{display:block;color:#e4bd62;margin-bottom:8px}.backup-admin-fields p{margin:6px 0;font-size:13px;line-height:1.6}.backup-note{color:#aeb9c9}#backupCreateBtn{width:100%;margin:8px 0 10px}.backup-list{display:grid;gap:7px}.backup-row{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:9px 10px;border:1px solid rgba(210,170,80,.25);border-radius:10px;background:rgba(255,255,255,.035)}.backup-row div{min-width:0}.backup-row b{display:block;font-size:13px}.backup-row small{display:block;color:#aeb9c9;font-size:11px;margin-top:2px}.backup-row button{flex:0 0 auto;padding:7px 10px}.backup-empty{color:#aeb9c9}
 </style>
 
-<script id="coach-attendance-fast-gate">
+<script id="coach-attendance-shared-authorize">
 (()=>{
   const link=document.getElementById('openCoachAttendanceSecure');
   if(!link)return;
-  const API='/.netlify/functions/coach-attendance-data';
-
-  function go(token){
+  link.addEventListener('click',async(event)=>{
+    event.preventDefault();
+    let access='';
+    if(window.YLSCoachPasskeys?.authorize){
+      access=await window.YLSCoachPasskeys.authorize('指導者出欠確認のパスワードを入力してください。');
+    }
+    if(!access)return;
     try{
-      sessionStorage.setItem('yachiyoCoachAttendancePass',token||'board-authenticated');
-      sessionStorage.setItem('yachiyoCoachBoardGate','1');
+      sessionStorage.setItem('yachiyoCoachAttendancePass',access);
+      sessionStorage.setItem('yachiyoCoachAttendanceBoardAuthorized','1');
     }catch(e){}
-    location.href='./coach-attendance.html?boardAuth=1';
-  }
-  async function passwordFallback(){
-    const entered=prompt('指導者出欠確認のパスワードを入力してください。');
-    if(entered===null)return;
-    try{
-      const response=await fetch(API,{
-        method:'POST',
-        headers:{'content-type':'application/json'},
-        credentials:'same-origin',
-        body:JSON.stringify({action:'verifyCoachPassword',password:entered})
-      });
-      if(!response.ok){alert('パスワードが違います。');return}
-      const result=await response.json().catch(()=>({}));
-      go(result.token||entered);
-    }catch(e){
-      alert('パスワードを確認できませんでした。通信状況を確認してください。');
-    }
-  }
-
-  link.addEventListener('click',async(e)=>{
-    e.preventDefault();
-    // 登録状態の事前問い合わせをせず、すぐWebAuthnを呼ぶ。
-    if(window.YLSCoachPasskeys?.supported()){
-      try{
-        const result=await window.YLSCoachPasskeys.authenticate();
-        if(result?.token){go(result.token);return}
-      }catch(e){}
-    }
-    await passwordFallback();
+    location.href='./coach-attendance.html?from=board';
   });
 })();
 </script>

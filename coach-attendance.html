@@ -220,16 +220,15 @@ body{padding-top:var(--fixed-header-height)!important}
 <script>
 document.documentElement.style.visibility='hidden';
 window.coachAccessReady=(async function(){
-  let token='',gate='';
+  let access='',authorized='';
   try{
-    token=sessionStorage.getItem('yachiyoCoachAttendancePass')||'';
-    gate=sessionStorage.getItem('yachiyoCoachBoardGate')||'';
+    access=sessionStorage.getItem('yachiyoCoachAttendancePass')||'';
+    authorized=sessionStorage.getItem('yachiyoCoachAttendanceBoardAuthorized')||'';
   }catch(e){}
-  if(gate!=='1'||!token){
+  if(authorized!=='1'||!access){
     location.replace('./board.html?from=coach');
     return false;
   }
-  try{sessionStorage.removeItem('yachiyoCoachBoardGate')}catch(e){}
   document.documentElement.style.visibility='';
   return true;
 })()
