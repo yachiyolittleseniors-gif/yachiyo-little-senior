@@ -176,8 +176,20 @@
 
   async function removeChange(id){
     const target=changes.find(function(item){return item.id===id});if(!target||!confirm(displayDate(target.date)+'「'+target.from+' → '+target.to+'」を取り消しますか？'))return;
-    const previous=changes.slice();changes=changes.filter(function(item){return item.id!==id});render();
-    try{await persist('当番変更を取り消しました','当番変更を取り消しました',true)}catch(e){changes=previous;render();alert(e.message||'当番変更を取り消せませんでした。')}
+    const previous=changes.slice(),previousRequests=requests.slice();
+    changes=changes.filter(function(item){return item.id!==id});
+    // 管理画面で正式な当番変更を取り消した場合、対応する「反映済み」申請も処理済み表示から外す。
+    // 申請履歴そのものは rejected として保持し、一般画面には表示しない。
+    requests=requests.map(function(req){
+      const reqFromGrade=String(req.fromGrade||req.grade||'');
+      const reqToGrade=String(req.toGrade||req.grade||reqFromGrade||'');
+      const targetGrade=String(target.grade||'');
+      const targetToGrade=String(target.toGrade||targetGrade||'');
+      const matched=req.status==='approved'&&req.date===target.date&&reqFromGrade===targetGrade&&cleanName(req.from)===cleanName(target.from)&&reqToGrade===targetToGrade&&cleanName(req.to)===cleanName(target.to);
+      return matched?{...req,status:'rejected',updatedAt:new Date().toISOString(),cancelledByChangeRemoval:true}:req;
+    });
+    render();
+    try{await persist('当番変更を取り消しました','当番変更を取り消しました',true)}catch(e){changes=previous;requests=previousRequests;render();alert(e.message||'当番変更を取り消せませんでした。')}
   }
 
   async function addImages(){
