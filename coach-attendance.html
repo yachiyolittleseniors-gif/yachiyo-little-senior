@@ -216,25 +216,87 @@ body{padding-top:var(--fixed-header-height)!important}
 }
 </style>
 <style id="coach-attendance-polish">.name-col{min-width:148px}@media(max-width:700px){.name-col{min-width:136px}}</style>
-<script src="./coach-passkey.js?v=20260926-no-special1"></script>
+<script id="coach-auth-bfcache-guard">
+(function(){
+  // iPhone Safari が認証済み画面を BFCache から復元した場合、
+  // JavaScript の入口認証が再実行されないため、必ず通常読み込みに戻す。
+  window.addEventListener('pageshow', function(event){
+    if(event.persisted){
+      location.reload();
+    }
+  });
+  window.addEventListener('pagehide', function(){
+    try{sessionStorage.removeItem('yachiyoCoachAttendancePass')}catch(e){}
+  });
+})();
+</script>
+<script src="./coach-passkey.js?v=20260921-2205"></script>
 <script>
 document.documentElement.style.visibility='hidden';
 window.coachAccessReady=(async function(){
-  // 指導者だけの特殊認証は使わない。
-  // 事務局・審判部と同じ共通認証を、このページ上で1回だけ実行する。
-  document.documentElement.style.visibility='';
-  if(!window.YLSCoachPasskeys?.authorize){
-    location.replace('./board.html?from=coach');
+  const API='/.netlify/functions/coach-attendance-data';
+  const storageKey='yachiyoCoachAttendancePass';
+  const passkeyKey='yachiyoCoachPasskeyRegistered';
+
+  function remember(value){
+    try{sessionStorage.setItem(storageKey,value)}catch(e){}
+  }
+  function forget(){
+    try{sessionStorage.removeItem(storageKey)}catch(e){}
+  }
+  async function verify(value){
+    if(!value)return false;
+    try{
+      const response=await fetch(API,{
+        method:'POST',
+        headers:{'content-type':'application/json'},
+        credentials:'same-origin',
+        body:JSON.stringify({action:'verifyCoachPassword',password:value})
+      });
+      if(!response.ok)return false;
+      const result=await response.json().catch(()=>({}));
+      remember(result.token||value);
+      return true;
+    }catch(e){return false}
+  }
+  async function verifyPasskey(){
+    let registered=false;
+    try{registered=localStorage.getItem(passkeyKey)==='1'}catch(e){}
+    if(!registered||!window.YLSCoachPasskeys?.supported())return false;
+    try{
+      const result=await window.YLSCoachPasskeys.authenticate();
+      if(!result?.token)return false;
+      remember(result.token);
+      return true;
+    }catch(e){
+      if(e?.status===401||e?.status===404){
+        try{localStorage.removeItem(passkeyKey)}catch(_){}
+      }
+      return false;
+    }
+  }
+  // 指導者出欠確認はページを開くたびに必ず再認証する。
+  // 前回の認証トークンは引き継がず、生体認証またはパスワードで認証する。
+  forget();
+  if(await verifyPasskey()){
+    document.documentElement.style.visibility='';
+    return true;
+  }
+  const entered=prompt('指導者出欠確認のパスワードを入力してください。');
+  if(entered===null){
+    let cameFromBoard=false;
+    try{cameFromBoard=new URL(document.referrer).pathname.endsWith('/board.html')}catch(e){}
+    if(cameFromBoard&&history.length>1){history.back()}else{location.replace('./board.html?from=coach')}
     return false;
   }
-  const access=await window.YLSCoachPasskeys.authorize('指導者出欠確認のパスワードを入力してください。');
-  if(!access){
-    location.replace('./board.html?from=coach');
-    return false;
+  if(await verify(entered)){
+    document.documentElement.style.visibility='';
+    return true;
   }
-  try{sessionStorage.setItem('yachiyoCoachAttendancePass',access)}catch(e){}
-  return true;
-})()
+  alert('パスワードが違います。');
+  location.replace('./board.html');
+  return false;
+})();
 </script>
 <script id="coach-auth-exit-clear">
 document.addEventListener('DOMContentLoaded',()=>{
@@ -895,10 +957,7 @@ body.photo-admin-on #accessPasswordChange{
     button.textContent='この端末の生体認証を削除';
     setCollapsed(true);
   }
-  try{
-    const state=await window.YLSCoachPasskeys.status();
-    registered=Boolean(state?.registered);
-  }catch(e){registered=false}
+  try{registered=localStorage.getItem('yachiyoCoachPasskeyRegistered')==='1'}catch(e){}
   if(registered)showRegisteredState();
   summary.addEventListener('click',()=>setCollapsed(!panel.classList.contains('is-collapsed')));
   if(resetButton){
