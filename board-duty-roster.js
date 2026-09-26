@@ -176,20 +176,16 @@
 
   async function removeChange(id){
     const target=changes.find(function(item){return item.id===id});if(!target||!confirm(displayDate(target.date)+'「'+target.from+' → '+target.to+'」を取り消しますか？'))return;
-    const previous=changes.slice(),previousRequests=requests.slice();
+    const previous=changes.slice(),previousRequests=requests.map(function(item){return Object.assign({},item)});
     changes=changes.filter(function(item){return item.id!==id});
-    // 管理画面で正式な当番変更を取り消した場合、対応する「反映済み」申請も処理済み表示から外す。
-    // 申請履歴そのものは rejected として保持し、一般画面には表示しない。
-    requests=requests.map(function(req){
-      const reqFromGrade=String(req.fromGrade||req.grade||'');
-      const reqToGrade=String(req.toGrade||req.grade||reqFromGrade||'');
-      const targetGrade=String(target.grade||'');
-      const targetToGrade=String(target.toGrade||targetGrade||'');
-      const matched=req.status==='approved'&&req.date===target.date&&reqFromGrade===targetGrade&&cleanName(req.from)===cleanName(target.from)&&reqToGrade===targetToGrade&&cleanName(req.to)===cleanName(target.to);
-      return matched?{...req,status:'rejected',updatedAt:new Date().toISOString(),cancelledByChangeRemoval:true}:req;
+    requests.forEach(function(item){
+      const fromGrade=String(item.fromGrade||item.grade||'');
+      const toGrade=String(item.toGrade||item.grade||fromGrade||'');
+      const targetToGrade=String(target.toGrade||target.grade||'');
+      if(item.status==='approved'&&item.date===target.date&&fromGrade===String(target.grade||'')&&item.from===target.from&&item.to===target.to&&toGrade===targetToGrade){item.status='cancelled';item.updatedAt=new Date().toISOString()}
     });
     render();
-    try{await persist('当番変更を取り消しました','当番変更を取り消しました',true)}catch(e){changes=previous;requests=previousRequests;render();alert(e.message||'当番変更を取り消せませんでした。')}
+    try{await persist('当番変更を取り消しました','当番変更を取り消しました',true)}catch(e){changes=previous;requests=previousRequests;render();alert(e.message||'当番変更を取り消せませんでした.')}
   }
 
   async function addImages(){
@@ -218,7 +214,7 @@
   function todayYmd(){const d=new Date();return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0')}
   function rosterDates(){const today=todayYmd(),out=[];images.forEach(function(image){const table=image.table;if(!table)return;table.rows.forEach(function(row){const date=tableDate(table,row[0]);if(date>=today)out.push({date:date,label:table.year+'年'+table.month+'月'+row[0]+'日（'+row[1]+'）',table:table,row:row})})});return out.sort(function(a,b){return a.date.localeCompare(b.date)})}
   function rosterHasMonth(date){return images.some(function(image){return image.table&&date.startsWith(image.table.year+'-'+String(image.table.month).padStart(2,'0')+'-')})}
-  function requestStatusLabel(status,date){if(status==='approved')return'反映済み';if(status==='rejected')return'却下';return rosterHasMonth(date)?'確認待ち':'当番表登録待ち'}
+  function requestStatusLabel(status,date){if(status==='approved')return'反映済み';if(status==='rejected')return'却下';if(status==='cancelled')return'取消済み';return rosterHasMonth(date)?'確認待ち':'当番表登録待ち'}
   function requestPersonLabel(item, side){
     const grade=String(item[side+'Grade']||item.grade||'');
     const name=String(item[side]||'');
@@ -227,7 +223,7 @@
   function renderRequests(){
     const statusWrap=document.getElementById('dutyRequestStatus'),statusList=document.getElementById('dutyRequestStatusList'),admin=document.getElementById('dutyRequestAdminList');
     const ordered=requests.slice().sort(function(a,b){return String(b.createdAt).localeCompare(String(a.createdAt))});
-    const publicOrdered=ordered.filter(function(item){return item.status!=='rejected'});
+    const publicOrdered=ordered.filter(function(item){return item.status!=='rejected'&&item.status!=='cancelled'});
     const pendingCount=ordered.filter(function(item){return item.status==='pending'}).length;
     const requestBadge=document.getElementById('dutyRequestPendingBadge');
     if(requestBadge){requestBadge.hidden=pendingCount===0;requestBadge.textContent='確認待ち '+pendingCount+'件'}
