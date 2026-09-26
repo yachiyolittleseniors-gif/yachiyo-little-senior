@@ -8,10 +8,18 @@
     const text=document.getElementById('coachPasskeySetupText');
     if(!panel||!button||!title||!text)return;
     panel.hidden=false;
-    title.textContent='運営用の生体認証を登録';
-    text.textContent='ここで登録すると、指導者出欠・事務局・審判部で共通して利用できます。';
-    button.textContent='この端末に登録';
-    button.hidden=false;
+    let registered=false;
+    try{registered=Boolean((await window.YLSOperatorPasskeys.status())?.registered)}catch(e){}
+    if(registered){
+      title.textContent='運営用の生体認証を登録済み';
+      text.textContent='指導者出欠・事務局・審判部で共通して利用できます。';
+      button.hidden=true;
+    }else{
+      title.textContent='運営用の生体認証を登録';
+      text.textContent='ここで登録すると、指導者出欠・事務局・審判部で共通して利用できます。';
+      button.textContent='この端末に登録';
+      button.hidden=false;
+    }
     button.addEventListener('click',async()=>{
       if(button.disabled)return;
       let access='';try{access=sessionStorage.getItem('yachiyoCoachAttendancePass')||''}catch(e){}
