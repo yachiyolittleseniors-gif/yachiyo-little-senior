@@ -271,6 +271,10 @@ window.coachAccessReady=(async function(){
     document.documentElement.style.visibility='';
     return true;
   }
+  // iPhone Safariでは documentElement を非表示のままにすると、
+  // 生体認証失敗後の prompt が表示されないことがあるため、
+  // パスワード入力へ切り替える直前に画面を復帰させる。
+  document.documentElement.style.visibility='';
   const entered=prompt('指導者出欠確認のパスワードを入力してください。');
   if(entered===null){
     let cameFromBoard=false;
