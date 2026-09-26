@@ -257,8 +257,17 @@
   }
 
   const legacyLineToggle=document.getElementById('toggleLegacyDutyLine'),legacyLineBlock=document.getElementById('legacyDutyLineBlock');
-  function syncLegacyLineBlock(){if(!legacyLineBlock)return;legacyLineBlock.hidden=!(legacyLineToggle&&legacyLineToggle.checked)}
-  if(legacyLineToggle){legacyLineToggle.checked=false;legacyLineToggle.addEventListener('change',syncLegacyLineBlock);syncLegacyLineBlock()}
+  if(legacyLineToggle&&legacyLineBlock){
+    legacyLineBlock.hidden=true;
+    legacyLineToggle.setAttribute('aria-expanded','false');
+    legacyLineToggle.textContent='表示 ▼';
+    legacyLineToggle.addEventListener('click',function(){
+      const open=legacyLineBlock.hidden;
+      legacyLineBlock.hidden=!open;
+      legacyLineToggle.setAttribute('aria-expanded',String(open));
+      legacyLineToggle.textContent=open?'非表示 ▲':'表示 ▼';
+    });
+  }
 
   changeYear.value=String(new Date().getFullYear());
   const adminHistoryToggle=document.getElementById('toggleDutyAdminHistory');

@@ -1558,8 +1558,8 @@ body.live-score-focused #liveScoreCard{width:100%;box-sizing:border-box}
   <div id="dutyRosterAdminFields">
     <strong>当番表</strong>
     <div class="duty-change-admin">
-      <div id="dutyLinePasteAdmin" hidden>
-        <b>LINEの文章から当番変更を登録</b>
+      <div class="duty-change-heading"><b>LINEの文章から当番変更を登録</b><button id="toggleLegacyDutyLine" type="button" aria-expanded="false">表示 ▼</button></div>
+      <div id="legacyDutyLineBlock" hidden>
         <p>変更連絡を貼り付け、年を選んでください。学年をまたぐ場合は、確認欄で変更行ごとに当番枠の学年を選べます。</p>
         <div class="duty-change-admin-meta">
           <label for="dutyChangeYear">年<input id="dutyChangeYear" type="number" min="2020" max="2100" inputmode="numeric"></label>
@@ -1571,19 +1571,14 @@ body.live-score-focused #liveScoreCard{width:100%;box-sizing:border-box}
         <div class="duty-change-example"><b>入力例（「10/3」「10月3日」どちらも可）</b><span>10月3日(土) 山田→佐藤さん</span><span>10月11日(日) 佐藤さん→山田</span></div>
         <div id="dutyChangePreview" class="duty-change-preview">変更内容を貼り付けると、ここに確認結果が表示されます。</div>
         <button id="saveDutyChangesBtn" type="button">確認した変更を保存</button>
-        <div id="dutyChangeAdminList" class="duty-change-admin-list" hidden></div>
       </div>
+      <div class="duty-change-heading"><b>登録済み変更履歴</b><button id="toggleDutyAdminHistory" type="button" aria-expanded="false">表示 ▼</button></div>
+      <div id="dutyChangeAdminList" class="duty-change-admin-list" hidden></div>
       <div class="duty-request-admin-block">
         <b>当番変更申請</b>
-        <p>一般画面から届いた申請です。申請内容を確認して「当番表に反映」または「却下」を選択してください。</p>
+        <p>一般画面から届いた申請です。当番表が未登録の月は「当番表登録待ち」として保持されます。</p>
         <div id="dutyRequestAdminList" class="duty-change-admin-list"></div>
       </div>
-    </div>
-    <div class="duty-display-settings">
-      <b>表示設定</b>
-      <div class="duty-visibility-row"><span>LINE貼り付けカード</span><div><button id="dutyLinePasteShow" type="button">表示</button><button id="dutyLinePasteHide" type="button">非表示</button></div></div>
-      <div class="duty-visibility-row"><span>変更履歴</span><div><button id="dutyHistoryShow" type="button">表示</button><button id="dutyHistoryHide" type="button">非表示</button></div></div>
-      <p id="dutyVisibilityStatus" class="backup-note"></p>
     </div>
     <div class="duty-image-admin">
       <b>当番表画像</b>
@@ -1680,7 +1675,7 @@ body.live-score-focused #liveScoreCard{width:100%;box-sizing:border-box}
 <script src="./board-meetings.js?v=20260918-8"></script>
 <script src="./duty-image-reader.js?v=20260918-1"></script>
 <script src="./duty-roster-data.js?v=20260918-1"></script>
-<script src="./board-duty-roster.js?v=20260918-11"></script>
+<script src="./board-duty-roster.js?v=20260926-2048"></script>
 <script src="./board-rules.js?v=20260914-4"></script>
 <script src="./board-archive.js?v=20260914-3"></script>
 
@@ -1688,7 +1683,7 @@ body.live-score-focused #liveScoreCard{width:100%;box-sizing:border-box}
 .admin-visibility-fields{margin:16px 0 18px;padding:15px;border:1px solid rgba(210,170,80,.28);border-radius:14px;background:rgba(255,255,255,.025)}.admin-visibility-toggle{width:100%;display:flex;align-items:center;justify-content:space-between;gap:12px;padding:0;border:0!important;background:transparent!important;box-shadow:none!important;text-align:left}.admin-visibility-toggle span{display:flex;flex-direction:column;gap:4px}.admin-visibility-toggle strong{color:#e4bd62;font-size:15px}.admin-visibility-toggle small{color:#aeb7c4;font-size:10.5px;line-height:1.35}.admin-visibility-toggle>b{color:#d8b65e;font-size:11px;white-space:nowrap}.admin-visibility-body{padding-top:10px}.admin-visibility-body[hidden]{display:none!important}
 .admin-visibility-fields>strong{display:block;color:#e4bd62;margin-bottom:7px}.admin-visibility-list{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;margin:12px 0}.admin-visibility-item{display:flex;align-items:center;gap:8px;padding:9px 10px;border:1px solid rgba(210,170,80,.22);border-radius:9px;background:rgba(255,255,255,.035);font-size:12px}.admin-visibility-item input{width:18px;height:18px;accent-color:#cda448}.admin-visibility-actions{display:flex;gap:8px;margin-top:10px}.admin-visibility-actions button{flex:1}.admin-visibility-fields #adminVisibilitySave{width:100%;margin-top:2px}.admin-autooff-row{display:flex;align-items:flex-start;gap:10px;margin:12px 0;padding:11px;border:1px solid rgba(210,170,80,.32);border-radius:10px;background:rgba(181,138,42,.08)}.admin-autooff-row input{width:19px;height:19px;margin-top:2px;accent-color:#cda448}.admin-autooff-row span{display:flex;flex-direction:column;gap:3px}.admin-autooff-row b{color:#f0cf7b;font-size:13px}.admin-autooff-row small{color:#b9c0ca;font-size:11px;line-height:1.45}.admin-visibility-remaining{margin-left:auto;color:#d8b65e;font-size:10px;white-space:nowrap}@media(max-width:520px){.admin-visibility-list{grid-template-columns:1fr}}
 </style>
-<script src="./board-admin-visibility.js?v=20260926-7"></script>
+<script src="./board-admin-visibility.js?v=20260926-4"></script>
 <script src="./board-backup.js?v=20260926-1"></script>
 <style id="nonblocking-save-notice-style">
 .save-notice{
