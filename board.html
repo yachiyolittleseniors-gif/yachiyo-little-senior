@@ -1375,7 +1375,7 @@ body.live-score-focused #liveScoreCard{width:100%;box-sizing:border-box}
         </div>
       </section>
       <div class="duty-request-box" id="dutyRequestBox">
-        <div class="duty-request-head"><div><span class="duty-request-kicker">CHANGE REQUEST</span><h3>当番変更を申請</h3></div><button id="toggleDutyRequest" type="button" aria-expanded="false" aria-controls="dutyRequestContent">申請する</button></div>
+        <div class="duty-request-head"><div><span class="duty-request-kicker">CHANGE REQUEST</span><h3>当番変更を申請</h3><span id="dutyRequestPendingBadge" class="duty-request-pending-badge" hidden></span></div><button id="toggleDutyRequest" type="button" aria-expanded="false" aria-controls="dutyRequestContent">申請する</button></div>
         <div id="dutyRequestContent" hidden>
           <p class="duty-request-help">当番表が登録されている月のみ変更申請ができます。変更内容を選択して申請してください。</p>
           <label>変更日<select id="dutyRequestRosterDate"></select><input id="dutyRequestDirectDate" type="date" hidden disabled></label>
@@ -1509,7 +1509,7 @@ body.live-score-focused #liveScoreCard{width:100%;box-sizing:border-box}
 
 <footer class="footer">© YACHIYO LITTLE SENIOR. All Rights Reserved.</footer>
 
-<link rel="stylesheet" href="./board-content.css?v=20260918-9">
+<link rel="stylesheet" href="./board-content.css?v=20260926-1">
 
 <button id="densukeToggleBtn" type="button">管理</button>
 <div id="densukeAdminPanel">
@@ -1672,7 +1672,7 @@ body.live-score-focused #liveScoreCard{width:100%;box-sizing:border-box}
 <script src="./board-meetings.js?v=20260918-8"></script>
 <script src="./duty-image-reader.js?v=20260918-1"></script>
 <script src="./duty-roster-data.js?v=20260918-1"></script>
-<script src="./board-duty-roster.js?v=20260918-11"></script>
+<script src="./board-duty-roster.js?v=20260926-1"></script>
 <script src="./board-rules.js?v=20260914-4"></script>
 <script src="./board-archive.js?v=20260914-3"></script>
 

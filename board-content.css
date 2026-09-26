@@ -300,3 +300,5 @@ body.document-archive-preview-open{overflow:hidden!important}
   white-space:normal!important;word-break:normal!important;overflow-wrap:break-word!important;
   color:#f0cf7b!important;text-align:left!important;
 }
+
+.duty-request-pending-badge{display:inline-block;margin-top:6px;padding:4px 9px;border-radius:999px;background:#fff4cf;color:#8b6413;font-size:11px;font-weight:900;border:1px solid #d8b35b}.duty-request-pending-badge[hidden]{display:none}

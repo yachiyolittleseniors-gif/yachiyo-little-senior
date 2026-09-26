@@ -224,9 +224,14 @@
   function renderRequests(){
     const admin=document.getElementById('dutyRequestAdminList');
     const ordered=requests.slice().sort(function(a,b){return String(b.createdAt).localeCompare(String(a.createdAt))});
-    const pendingCount=ordered.filter(function(item){return item.status==='pending'}).length;
+    const pending=ordered.filter(function(item){return item.status==='pending'});
+    const pendingCount=pending.length;
     const requestBadge=document.getElementById('dutyRequestPendingBadge');
-    if(requestBadge){requestBadge.hidden=pendingCount===0;requestBadge.textContent='確認待ち '+pendingCount+'件'}
+    if(requestBadge){requestBadge.hidden=pendingCount===0;requestBadge.textContent='申請中 '+pendingCount+'件'}
+    const status=document.getElementById('dutyRequestStatus'),statusList=document.getElementById('dutyRequestStatusList'),statusBtn=document.getElementById('toggleDutyRequestStatus');
+    if(status){status.hidden=pendingCount===0}
+    if(statusBtn){statusBtn.textContent='申請中 '+pendingCount+'件';statusBtn.setAttribute('aria-expanded',pendingCount?'true':'false')}
+    if(statusList){statusList.hidden=pendingCount===0;statusList.innerHTML=pending.map(function(item){return '<div class=\"duty-request-status-item\"><b data-status=\"pending\">申請中</b><br>'+displayDate(item.date)+'<br>'+escapeHtml(requestPersonLabel(item,'from'))+' → <b>'+escapeHtml(requestPersonLabel(item,'to'))+'</b></div>'}).join('')}
     if(admin){const pending=ordered.filter(function(x){return x.status==='pending'});admin.innerHTML=pending.length?pending.map(function(item){return'<div class="duty-request-admin-item"><b>'+displayDate(item.date)+'</b><br>'+escapeHtml(requestPersonLabel(item,'from'))+' → <b>'+escapeHtml(requestPersonLabel(item,'to'))+'</b><div class="duty-request-admin-actions"><button type="button" data-approve-duty-request="'+escapeHtml(item.id)+'">当番表に反映</button><button class="reject" type="button" data-reject-duty-request="'+escapeHtml(item.id)+'">却下</button></div></div>'}).join(''):'<div class="duty-change-preview">未確認の当番変更申請はありません。</div>';admin.querySelectorAll('[data-approve-duty-request]').forEach(function(b){b.addEventListener('click',function(){decideRequest(b.dataset.approveDutyRequest,true)})});admin.querySelectorAll('[data-reject-duty-request]').forEach(function(b){b.addEventListener('click',function(){decideRequest(b.dataset.rejectDutyRequest,false)})})}
     populateRequestForm();
   }
@@ -240,11 +245,7 @@
   }
   async function submitRequest(){
     const date=document.getElementById('dutyRequestRosterDate').value,fromPerson=parsePersonOption(document.getElementById('dutyRequestFrom').value),toPerson=parsePersonOption(document.getElementById('dutyRequestTo').value),btn=document.getElementById('submitDutyRequest'),result=document.getElementById('dutyRequestResult');
-    if(!/^\d{4}-\d{2}-\d{2}$/.test(date)||!rosterDates().some(function(x){return x.date===date})||!fromPerson||!toPerson)return alert('登録済みのお当番表から変更日・変更前・変更後を選択してください。');
-    const selectedRoster=rosterDates().find(function(x){return x.date===date});
-    const fromMatchesRoster=!!(selectedRoster&&selectedRoster.table&&selectedRoster.row&&selectedRoster.row.slice(2,6).some(function(name,index){const grades=selectedRoster.table.grades||[2,1];return String(grades[Math.floor(index/2)])===fromPerson.grade&&cleanName(name)===fromPerson.name}));
-    if(!fromMatchesRoster)return alert('変更前の名前が現在の当番表と一致しません。当番表を確認してもう一度選択してください。');
-    if(fromPerson.grade===toPerson.grade&&fromPerson.name===toPerson.name)return alert('変更前と変更後は別の方を選択してください。');
+    if(!/^\d{4}-\d{2}-\d{2}$/.test(date)||!rosterDates().some(function(x){return x.date===date})||!fromPerson||!toPerson)return alert('登録済みのお当番表から変更日・変更前・変更後を選択してください。');if(fromPerson.grade===toPerson.grade&&fromPerson.name===toPerson.name)return alert('変更前と変更後は別の方を選択してください。');
     btn.disabled=true;btn.textContent='送信中…';try{const accessPassword=sessionStorage.getItem('yachiyoAttendancePass')||'';const response=await fetch(API,{method:'POST',headers:{'content-type':'application/json','x-access-password':accessPassword},body:JSON.stringify({action:'submitDutyChangeRequest',request:{date:date,fromGrade:fromPerson.grade,from:fromPerson.name,toGrade:toPerson.grade,to:toPerson.name}})});const body=await response.json().catch(function(){return{}});if(!response.ok)throw new Error(body.error||'申請できませんでした。');requests=normalize(body.data).requests;renderRequests();const text='【当番変更連絡】\n'+displayDate(date)+'\n変更前：'+fromPerson.grade+'年・'+displayName(fromPerson.name,fromPerson.grade)+'\n変更後：'+toPerson.grade+'年・'+displayName(toPerson.name,toPerson.grade)+'\n当番変更を申請しました。';result.hidden=false;result.innerHTML='<div class="duty-request-complete"><b>変更申請を受け付けました</b><p>続けて、チームへの連絡のためLINEで変更内容を共有してください。</p><a class="line-share" target="_blank" rel="noopener noreferrer" href="https://line.me/R/share?text='+encodeURIComponent(text)+'">LINEで共有する</a><small>※当番表への正式な反映は管理者確認後となります。</small></div>';}catch(e){alert(e.message||'申請できませんでした。')}finally{btn.disabled=false;btn.textContent='変更申請を送信'}
   }
   async function decideRequest(id,approve){
