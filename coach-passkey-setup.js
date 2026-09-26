@@ -41,6 +41,16 @@
     }
     render();
 
+    if(summary){
+      summary.addEventListener('click',()=>{
+        if(!registered)return;
+        const collapsed=panel.classList.toggle('is-collapsed');
+        summary.setAttribute('aria-expanded',collapsed?'false':'true');
+        const chevron=document.getElementById('coachPasskeySetupChevron');
+        if(chevron)chevron.textContent=collapsed?'▼':'▲';
+      });
+    }
+
     button.addEventListener('click',async(event)=>{
       event.preventDefault();
       if(registered||button.disabled)return;
