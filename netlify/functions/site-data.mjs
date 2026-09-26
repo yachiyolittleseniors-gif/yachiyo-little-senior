@@ -1542,11 +1542,12 @@ export default async (request, context) => {
       if (!accessGranted) return json({ error: "unauthorized" }, 401);
       const req = body?.request || {};
       const date = String(req.date || "");
-      const grade = String(req.grade || "");
+      const fromGrade = String(req.fromGrade || req.grade || "");
+      const toGrade = String(req.toGrade || req.grade || fromGrade || "");
       const from = String(req.from || "").trim();
       const to = String(req.to || "").trim();
       const note = String(req.note || "").trim().slice(0, 200);
-      if (!/^\d{4}-\d{2}-\d{2}$/.test(date) || !["1","2","3"].includes(grade) || !from || from.length > 60 || !to || to.length > 60 || from === to) return json({ error: "申請内容を確認してください。" }, 400);
+      if (!/^\d{4}-\d{2}-\d{2}$/.test(date) || !["1","2","3"].includes(fromGrade) || !["1","2","3"].includes(toGrade) || !from || from.length > 60 || !to || to.length > 60 || (fromGrade === toGrade && from === to)) return json({ error: "申請内容を確認してください。" }, 400);
       const current = await store.get(key, { type: "json", consistency: "strong" }) || { initialized:true, images:[], changes:[], requests:[] };
       const requests = Array.isArray(current.requests) ? current.requests : [];
       if (requests.length >= 200) return json({ error: "申請の保存上限に達しています。管理者へ連絡してください。" }, 400);
@@ -2210,8 +2211,8 @@ export default async (request, context) => {
       }
 
       const validRequests = requests.every(item => {
-        const date=String(item?.date||""); const grade=String(item?.grade||""); const from=String(item?.from||"").trim(); const to=String(item?.to||"").trim(); const note=String(item?.note||""); const status=String(item?.status||"pending");
-        return /^\d{4}-\d{2}-\d{2}$/.test(date) && ["1","2","3"].includes(grade) && from.length>0 && from.length<=60 && to.length>0 && to.length<=60 && from!==to && note.length<=200 && ["pending","approved","rejected"].includes(status);
+        const date=String(item?.date||""); const fromGrade=String(item?.fromGrade||item?.grade||""); const toGrade=String(item?.toGrade||item?.grade||fromGrade||""); const from=String(item?.from||"").trim(); const to=String(item?.to||"").trim(); const note=String(item?.note||""); const status=String(item?.status||"pending");
+        return /^\d{4}-\d{2}-\d{2}$/.test(date) && ["1","2","3"].includes(fromGrade) && ["1","2","3"].includes(toGrade) && from.length>0 && from.length<=60 && to.length>0 && to.length<=60 && !(fromGrade===toGrade && from===to) && note.length<=200 && ["pending","approved","rejected"].includes(status);
       });
       if (!validRequests) return json({ error: "当番変更申請データを確認してください。" }, 400);
 
