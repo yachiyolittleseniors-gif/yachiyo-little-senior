@@ -46,7 +46,6 @@ html{min-height:100%;background:#f4f3ef}
 </script>
 <link as="image" fetchpriority="high" href="./official-logo-crisp-final.png" rel="preload"/>
 <link rel="preload" as="image" href="./activity-game.jpg" fetchpriority="low"/>
-<link rel="preload" as="image" href="./activity-lineup.jpg" fetchpriority="low"/>
 <link rel="preload" as="image" href="./activity-meeting.jpg" fetchpriority="low"/>
 <meta charset="utf-8"/>
 <!-- Created by tatsuki.saitoh -->
@@ -2044,7 +2043,7 @@ img,video,iframe{max-width:100%}
 }
 </script>
 <style>
-:root{--hero-photo:url("./team-hero.jpg")}
+:root{--hero-photo:linear-gradient(135deg,#1b324a 0%,#081321 60%,#17130c 100%)}
 #heroPhotoAdmin{position:fixed;right:16px;bottom:16px;z-index:9998;display:none;gap:8px;align-items:center;justify-content:flex-end;flex-wrap:wrap;max-width:calc(100vw - 32px)}
 #heroPhotoAdmin button,#heroPhotoAdmin label{border:1px solid rgba(212,175,55,.75);background:#071426;color:#e2bd67;border-radius:999px;padding:10px 14px;font-size:12px;font-weight:700;box-shadow:0 5px 18px rgba(0,0,0,.22);cursor:pointer}
 #heroPhotoAdmin label{display:none;background:#b48a32;color:#fff}
@@ -2807,13 +2806,8 @@ window.__loadYachiyoPhotos = function(){
     if(preload.complete&&preload.naturalWidth)preload.onload();
   };
 
-  const hero=window.__yachiyoPhotoCache.get('hero');
-  if(hero){
-    const s=document.createElement('style');
-    s.id='hero-cache-style';
-    s.textContent='.hero{--hero-photo:url("'+hero.replace(/"/g,'\\22 ')+'")!important}';
-    document.head.appendChild(s);
-  }
+  // トップ画像は古いlocalStorageキャッシュを初期描画に使わない。
+  // Netlify保存済みの最新画像を取得・decode後に一度だけ適用する。
 
   document.addEventListener('DOMContentLoaded',function(){
     ['photo2','photo3','photo4'].forEach(function(key){
@@ -3225,7 +3219,7 @@ html{scroll-padding-top:var(--fixed-header-height)}
 }
 </style>
 <link href="./desktop-2026.css?v=20260908-pc2" rel="stylesheet"/>
-<link href="./desktop-home-balanced.css?v=20260926-hero-fix1" rel="stylesheet"/>
+<link href="./desktop-home-balanced.css?v=20260926-hero-fix3" rel="stylesheet"/>
 <style id="footer-access-link-style">
 .ground-address{text-align:center;line-height:1.65}
 .ground-access-address{color:#c5cdd6;font-size:13px;font-weight:700}
@@ -4006,8 +4000,17 @@ function openProtectedArea(type){
         const j=await r.json();
         const d=Array.isArray(j.data)?j.data:[];
         if(d[0]&&d[0].image){
-          window.__yachiyoPhotoCache&&window.__yachiyoPhotoCache.set('hero',d[0].image);
-          hero.style.setProperty('--hero-photo',`url("${d[0].image}")`);
+          const latest=d[0].image;
+          const pre=new Image();
+          pre.onload=()=>{
+            const apply=()=>{
+              window.__yachiyoPhotoCache&&window.__yachiyoPhotoCache.set('hero',latest);
+              hero.style.setProperty('--hero-photo',`url("${latest}")`);
+            };
+            if(pre.decode)pre.decode().then(apply,apply); else apply();
+          };
+          pre.src=latest;
+          if(pre.complete&&pre.naturalWidth)pre.onload();
         }
       }
     }catch(e){}
