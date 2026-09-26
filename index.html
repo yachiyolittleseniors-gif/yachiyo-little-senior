@@ -2044,7 +2044,8 @@ img,video,iframe{max-width:100%}
 }
 </script>
 <style>
-:root{--hero-photo:url("./team-hero.jpg")}
+:root{--hero-photo:none}
+.hero:not(.hero-photo-ready){--hero-photo:none!important}
 #heroPhotoAdmin{position:fixed;right:16px;bottom:16px;z-index:9998;display:none;gap:8px;align-items:center;justify-content:flex-end;flex-wrap:wrap;max-width:calc(100vw - 32px)}
 #heroPhotoAdmin button,#heroPhotoAdmin label{border:1px solid rgba(212,175,55,.75);background:#071426;color:#e2bd67;border-radius:999px;padding:10px 14px;font-size:12px;font-weight:700;box-shadow:0 5px 18px rgba(0,0,0,.22);cursor:pointer}
 #heroPhotoAdmin label{display:none;background:#b48a32;color:#fff}
@@ -2813,6 +2814,7 @@ window.__loadYachiyoPhotos = function(){
     s.id='hero-cache-style';
     s.textContent='.hero{--hero-photo:url("'+hero.replace(/"/g,'\\22 ')+'")!important}';
     document.head.appendChild(s);
+    document.documentElement.classList.add('hero-cache-available');
   }
 
   document.addEventListener('DOMContentLoaded',function(){
@@ -4006,8 +4008,19 @@ function openProtectedArea(type){
         const j=await r.json();
         const d=Array.isArray(j.data)?j.data:[];
         if(d[0]&&d[0].image){
-          window.__yachiyoPhotoCache&&window.__yachiyoPhotoCache.set('hero',d[0].image);
-          hero.style.setProperty('--hero-photo',`url("${d[0].image}")`);
+          const image=d[0].image;
+          const preload=new Image();
+          const applyHero=()=>{
+            window.__yachiyoPhotoCache&&window.__yachiyoPhotoCache.set('hero',image);
+            hero.style.setProperty('--hero-photo',`url("${image}")`);
+            hero.classList.add('hero-photo-ready');
+          };
+          preload.onload=()=>{
+            if(preload.decode)preload.decode().then(applyHero,applyHero);
+            else applyHero();
+          };
+          preload.src=image;
+          if(preload.complete&&preload.naturalWidth)preload.onload();
         }
       }
     }catch(e){}
