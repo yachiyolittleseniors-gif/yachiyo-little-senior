@@ -216,7 +216,7 @@ body{padding-top:var(--fixed-header-height)!important}
 }
 </style>
 <style id="coach-attendance-polish">.name-col{min-width:148px}@media(max-width:700px){.name-col{min-width:136px}}</style>
-<script src="./coach-passkey.js?v=20260926-2145"></script>
+<script src="./coach-passkey.js?v=20260921-2205"></script>
 <script>
 document.documentElement.style.visibility='hidden';
 window.coachAccessReady=(async function(){
@@ -246,18 +246,9 @@ window.coachAccessReady=(async function(){
     }catch(e){return false}
   }
   async function verifyPasskey(){
-    if(!window.YLSCoachPasskeys?.supported())return false;
     let registered=false;
     try{registered=localStorage.getItem(passkeyKey)==='1'}catch(e){}
-    // 端末側フラグが消えていても、サーバーに登録済みパスキーがあれば状態を復元する。
-    if(!registered){
-      try{
-        const state=await window.YLSCoachPasskeys.status();
-        registered=Boolean(state?.registered);
-        if(registered){try{localStorage.setItem(passkeyKey,'1')}catch(_){}}
-      }catch(_){return false}
-    }
-    if(!registered)return false;
+    if(!registered||!window.YLSCoachPasskeys?.supported())return false;
     try{
       const result=await window.YLSCoachPasskeys.authenticate();
       if(!result?.token)return false;
@@ -951,13 +942,6 @@ body.photo-admin-on #accessPasswordChange{
     setCollapsed(true);
   }
   try{registered=localStorage.getItem('yachiyoCoachPasskeyRegistered')==='1'}catch(e){}
-  if(!registered){
-    try{
-      const state=await window.YLSCoachPasskeys.status();
-      registered=Boolean(state?.registered);
-      if(registered){try{localStorage.setItem('yachiyoCoachPasskeyRegistered','1')}catch(e){}}
-    }catch(e){}
-  }
   if(registered)showRegisteredState();
   summary.addEventListener('click',()=>setCollapsed(!panel.classList.contains('is-collapsed')));
   button.addEventListener('click',async()=>{
