@@ -204,3 +204,7 @@ body.document-archive-preview-open{overflow:hidden!important}
 /* Duty change request pending badge */
 .duty-request-pending-badge{display:inline-flex;align-items:center;margin-top:8px;padding:4px 9px;border:1px solid rgba(181,138,42,.55);border-radius:999px;background:rgba(181,138,42,.08);color:#9b741f;font-size:12px;font-weight:800;line-height:1;letter-spacing:.03em}
 .duty-request-pending-badge[hidden]{display:none!important}
+
+/* Duty change request: mode-specific date fields must respect hidden attribute */
+.duty-request-box #dutyRequestRosterDate[hidden],
+.duty-request-box #dutyRequestDirectDate[hidden]{display:none!important}
