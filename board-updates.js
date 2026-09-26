@@ -237,8 +237,9 @@
   }
 
   function setEndedUI(ended){
-    // 公開準備中のため、伝助終了後も保護者・選手出欠確認はグレー表示と隠しパスワードを維持する。
-    setAttendanceEnabled(false);
+    // 伝助終了後は保護者・選手出欠確認を通常利用できる状態へ切り替える。
+    // 伝助終了前のみグレー表示＋管理者用の隠しパスワードを維持する。
+    setAttendanceEnabled(ended);
     warning.style.display='none';
     endBtn.dataset.warningShown='0';
     endBtn.textContent='伝助を終了';
@@ -248,7 +249,7 @@
       attendanceCard.style.display='block';
       endBtn.style.display='none';
       resumeBtn.style.display='';
-      adminStatus.textContent='伝助の移行は終了しています。保護者出欠確認・選手出欠確認は公開準備中です。';
+      adminStatus.textContent='伝助の移行は終了しています。保護者出欠確認・選手出欠確認を利用できます。';
     }else{
       legacyCard.style.display='block';
       attendanceCard.style.display='block';
@@ -263,9 +264,8 @@
 
   async function openProtectedAttendance(button,api,storageKey){
     const hidden=button.classList.contains('admin-gated');
-    // 工事中の保護者・選手出欠は、毎回隠しパスワード入力を要求する。
-    // sessionStorage に前回の認証が残っていても自動通過させない。
-    const adminPassword=prompt(hidden?'現在工事中\nパスワードを入力してください。':'管理者パスワードを入力してください。');
+    const saved=hidden?(sessionStorage.getItem(storageKey)||''):'';
+    const adminPassword=saved||prompt(hidden?'現在工事中\nパスワードは入力できません':'管理者パスワードを入力してください。');
     if(!adminPassword)return;
     try{
       const response=await fetch(api,{
@@ -304,7 +304,7 @@
       });
       if(!r.ok) throw new Error('setting');
       const j=await r.json();
-      const ended = j?.config?.migrationEnded === true;
+      const ended = j?.config?.migrationEnded === true || j?.locked === false;
       setEndedUI(ended);
     }catch(e){
       setEndedUI(false);

@@ -1374,18 +1374,25 @@ body.live-score-focused #liveScoreCard{width:100%;box-sizing:border-box}
         <div id="dutyChangeList" class="duty-change-list"></div>
         </div>
       </section>
-      <div class="duty-request-box" id="dutyRequestBox" hidden>
-        <div class="duty-request-head"><div><span class="duty-request-kicker">CHANGE REQUEST</span><h3>当番変更を申請</h3><span id="dutyRequestPendingBadge" class="duty-request-pending-badge" hidden></span></div><button id="toggleDutyRequest" type="button" aria-expanded="false" aria-controls="dutyRequestContent">申請する</button></div>
+      <div class="duty-request-box" id="dutyRequestBox">
+        <div class="duty-request-head"><div><span class="duty-request-kicker">CHANGE REQUEST</span><h3>当番変更を申請</h3></div><button id="toggleDutyRequest" type="button" aria-expanded="false" aria-controls="dutyRequestContent">申請する</button></div>
         <div id="dutyRequestContent" hidden>
-          <p class="duty-request-help">サイトに登録されているお当番表の日付から変更日を選んで申請できます。申請後はLINEで共有してください。</p>
-          <label>変更日<select id="dutyRequestRosterDate"></select></label>
+          <p class="duty-request-help">当番表がある月は登録内容から、まだない月は日付を直接選んで申請できます。申請後はLINE共有ボタンから連絡してください。</p>
+          <div class="duty-request-mode"><label><input type="radio" name="dutyRequestMode" value="roster" checked> お当番表から選ぶ</label><label><input type="radio" name="dutyRequestMode" value="direct"> 日付を直接選ぶ</label></div>
+          <label>変更日<select id="dutyRequestRosterDate"></select><input id="dutyRequestDirectDate" type="date" hidden></label>
+          <label>当番枠の学年<select id="dutyRequestGrade"><option value="">選択してください</option><option value="3">3年生</option><option value="2">2年生</option><option value="1">1年生</option></select></label>
           <label>変更前<select id="dutyRequestFrom"><option value="">選択してください</option></select></label>
           <label>変更後<select id="dutyRequestTo"><option value="">選択してください</option></select></label>
+          <label>備考（任意）<textarea id="dutyRequestNote" rows="3" maxlength="200" placeholder="例：予定変更のため交代をお願いしました"></textarea></label>
           <button id="submitDutyRequest" class="duty-request-submit" type="button">変更申請を送信</button>
           <div id="dutyRequestResult" class="duty-request-result" hidden></div>
         </div>
       </div>
-      <p id="dutyRequestPublicNote" class="duty-roster-note" hidden>申請後はLINEで共有してください。<br>管理者確認後、お当番表に反映されます。</p>
+      <section class="duty-request-status" id="dutyRequestStatus" hidden>
+        <button id="toggleDutyRequestStatus" type="button" aria-expanded="false" aria-controls="dutyRequestStatusList">申請状況を見る</button>
+        <div id="dutyRequestStatusList" hidden></div>
+      </section>
+      <p class="duty-roster-note">※一般画面では変更申請のみ行えます。正式な当番表への反映・却下は管理画面から行います。</p>
     </section>
 
     <section class="card board-meeting-card" id="refereeCard">
@@ -1553,11 +1560,7 @@ body.live-score-focused #liveScoreCard{width:100%;box-sizing:border-box}
   </div>
   <div id="dutyRosterAdminFields">
     <strong>当番表</strong>
-    <div class="duty-legacy-line-setting">
-      <label><input id="toggleLegacyDutyLine" type="checkbox"> <span>LINE貼り付け欄を表示する</span></label>
-      <small>通常はOFF。必要なときだけ旧方式の入力欄を表示します。</small>
-    </div>
-    <div id="legacyDutyLineBlock" class="duty-change-admin" hidden>
+    <div class="duty-change-admin">
       <b>LINEの文章から当番変更を登録</b>
       <p>変更連絡を貼り付け、年を選んでください。学年をまたぐ場合は、確認欄で変更行ごとに当番枠の学年を選べます。</p>
       <div class="duty-change-admin-meta">
@@ -1570,14 +1573,13 @@ body.live-score-focused #liveScoreCard{width:100%;box-sizing:border-box}
       <div class="duty-change-example"><b>入力例（「10/3」「10月3日」どちらも可）</b><span>10月3日(土) 山田→佐藤さん</span><span>10月11日(日) 佐藤さん→山田</span></div>
       <div id="dutyChangePreview" class="duty-change-preview">変更内容を貼り付けると、ここに確認結果が表示されます。</div>
       <button id="saveDutyChangesBtn" type="button">確認した変更を保存</button>
+      <div id="dutyChangeAdminList" class="duty-change-admin-list"></div>
+      <div class="duty-request-admin-block">
+        <b>当番変更申請</b>
+        <p>一般画面から届いた申請です。当番表が未登録の月は「当番表登録待ち」として保持されます。</p>
+        <div id="dutyRequestAdminList" class="duty-change-admin-list"></div>
+      </div>
     </div>
-    <div class="duty-request-admin-block">
-      <b>当番変更申請</b>
-      <p>届いた当番変更申請を確認し、「当番表に反映」または「却下」を選んでください。</p>
-      <div id="dutyRequestAdminList" class="duty-change-admin-list"></div>
-    </div>
-    <div class="duty-admin-history-head"><b>登録済み変更履歴</b><button id="toggleDutyAdminHistory" type="button" aria-expanded="false" aria-controls="dutyChangeAdminList">表示 ▼</button></div>
-    <div id="dutyChangeAdminList" class="duty-change-admin-list" hidden></div>
     <div class="duty-image-admin">
       <b>当番表画像</b>
     <label for="dutyRosterImageInput">画像ファイル（複数選択可）</label>
@@ -1628,12 +1630,6 @@ body.live-score-focused #liveScoreCard{width:100%;box-sizing:border-box}
         <p id="adminVisibilityStatus" class="backup-note"></p>
       </div>
     </div>
-    <div id="featureVisibilityFields" class="admin-visibility-fields feature-visibility-fields">
-      <strong>機能公開設定</strong>
-      <label class="admin-autooff-row feature-public-row"><input id="dutyRequestPublicEnabled" type="checkbox"><span><b>当番変更申請を公開する</b><small>OFF：一般画面の「当番変更を申請」カードを非表示にします。管理画面の申請・変更履歴は残ります。</small></span></label>
-      <button id="featureVisibilitySave" type="button">機能公開設定を保存</button>
-      <p id="featureVisibilityStatus" class="backup-note"></p>
-    </div>
     <div id="backupAdminFields" class="backup-admin-fields">
       <strong>バックアップ管理</strong>
       <p id="backupStatus">バックアップ状況を確認しています…</p>
@@ -1673,7 +1669,7 @@ body.live-score-focused #liveScoreCard{width:100%;box-sizing:border-box}
 @media(max-width:640px){.live-score-reset-status{margin-top:-2px;margin-bottom:12px;padding:10px 12px;font-size:13px;border-radius:13px}}
 </style>
 <script src="./board-live-score.js?v=20260924-reset1"></script>
-<script src="./board-updates.js?v=20260918-13"></script>
+<script src="./board-updates.js?v=20260926-1837"></script>
 <script src="./board-referee-documents.js?v=20260918-7"></script>
 <script src="./board-tournaments.js?v=20260914-1"></script>
 <script src="./board-meetings.js?v=20260918-8"></script>
