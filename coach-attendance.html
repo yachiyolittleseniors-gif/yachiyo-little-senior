@@ -222,45 +222,38 @@ document.documentElement.style.visibility='hidden';
 window.coachAccessReady=(async function(){
   const API='/.netlify/functions/coach-attendance-data';
   const storageKey='yachiyoCoachAttendancePass';
-
-  function remember(value){
-    try{sessionStorage.setItem(storageKey,value)}catch(e){}
-  }
-  function forget(){
-    try{sessionStorage.removeItem(storageKey)}catch(e){}
-  }
+  function remember(value){try{sessionStorage.setItem(storageKey,value)}catch(e){}}
+  function forget(){try{sessionStorage.removeItem(storageKey)}catch(e){}}
   async function verify(value){
     if(!value)return false;
     try{
-      const response=await fetch(API,{
-        method:'POST',
-        headers:{'content-type':'application/json'},
-        credentials:'same-origin',
-        body:JSON.stringify({action:'verifyCoachPassword',password:value})
-      });
+      const response=await fetch(API,{method:'POST',headers:{'content-type':'application/json'},credentials:'same-origin',body:JSON.stringify({action:'verifyCoachPassword',password:value})});
       if(!response.ok)return false;
       const result=await response.json().catch(()=>({}));
-      remember(result.token||value);
-      return true;
+      remember(result.token||value); return true;
     }catch(e){return false}
   }
-
-  // 指導者出欠確認は、ページを開くたびに必ずパスワードを表示する。
-  // 生体認証の自動起動はここでは行わず、パスワード画面を確実に優先する。
-  forget();
-  document.documentElement.style.visibility='';
-  await new Promise(resolve=>requestAnimationFrame(()=>setTimeout(resolve,120)));
-
-  const entered=window.prompt('指導者出欠確認のパスワードを入力してください。');
-  if(entered===null){
-    let cameFromBoard=false;
-    try{cameFromBoard=new URL(document.referrer).pathname.endsWith('/board.html')}catch(e){}
-    if(cameFromBoard&&history.length>1){history.back()}else{location.replace('./board.html?from=coach')}
-    return false;
+  function passwordDialog(){
+    return new Promise(resolve=>{
+      const overlay=document.createElement('div');
+      overlay.id='coachPasswordGate';
+      overlay.style.cssText='position:fixed;inset:0;z-index:2147483647;background:rgba(4,17,35,.72);display:flex;align-items:center;justify-content:center;padding:20px;';
+      overlay.innerHTML=`<div style="width:min(100%,390px);background:#fff;border-radius:16px;padding:22px;box-shadow:0 18px 50px rgba(0,0,0,.28);font-family:-apple-system,BlinkMacSystemFont,'Helvetica Neue',sans-serif"><div style="font-size:20px;font-weight:900;color:#071426;margin-bottom:8px">指導者出欠確認</div><div style="font-size:14px;color:#667085;line-height:1.6;margin-bottom:16px">パスワードを入力してください。</div><input id="coachGatePassword" type="password" autocomplete="current-password" inputmode="text" style="box-sizing:border-box;width:100%;height:48px;border:1px solid #cbd2dc;border-radius:10px;padding:0 12px;font-size:16px;background:#fff;color:#071426"><div id="coachGateError" style="display:none;color:#b42318;font-size:13px;font-weight:700;margin-top:9px">パスワードが違います。</div><div style="display:flex;gap:10px;margin-top:18px"><button id="coachGateCancel" type="button" style="flex:1;height:46px;border:1px solid #cbd2dc;border-radius:10px;background:#fff;color:#344054;font-weight:800">戻る</button><button id="coachGateSubmit" type="button" style="flex:1;height:46px;border:0;border-radius:10px;background:#071426;color:#fff;font-weight:900">確認</button></div></div>`;
+      document.body.appendChild(overlay);
+      const input=overlay.querySelector('#coachGatePassword'), submit=overlay.querySelector('#coachGateSubmit'), cancel=overlay.querySelector('#coachGateCancel'), error=overlay.querySelector('#coachGateError');
+      let busy=false;
+      const finish=v=>{overlay.remove();resolve(v)};
+      const check=async()=>{if(busy)return; const value=input.value; if(!value){input.focus();return} busy=true; submit.disabled=true; error.style.display='none'; if(await verify(value)){finish(true);return} busy=false; submit.disabled=false; error.style.display='block'; input.value=''; input.focus()};
+      submit.addEventListener('click',check); input.addEventListener('keydown',e=>{if(e.key==='Enter'){e.preventDefault();check()}}); cancel.addEventListener('click',()=>finish(false)); setTimeout(()=>input.focus(),50);
+    });
   }
-  if(await verify(entered))return true;
-  window.alert('パスワードが違います。');
-  location.replace('./board.html');
+  forget();
+  await new Promise(resolve=>{if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',resolve,{once:true});else resolve()});
+  document.documentElement.style.visibility='';
+  const ok=await passwordDialog();
+  if(ok)return true;
+  let cameFromBoard=false; try{cameFromBoard=new URL(document.referrer).pathname.endsWith('/board.html')}catch(e){}
+  if(cameFromBoard&&history.length>1){history.back()}else{location.replace('./board.html?from=coach')}
   return false;
 })();
 </script>
