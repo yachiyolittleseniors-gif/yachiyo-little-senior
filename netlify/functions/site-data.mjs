@@ -1549,6 +1549,22 @@ export default async (request, context) => {
       const note = String(req.note || "").trim().slice(0, 200);
       if (!/^\d{4}-\d{2}-\d{2}$/.test(date) || !["1","2","3"].includes(fromGrade) || !["1","2","3"].includes(toGrade) || !from || from.length > 60 || !to || to.length > 60 || (fromGrade === toGrade && from === to)) return json({ error: "申請内容を確認してください。" }, 400);
       const current = await store.get(key, { type: "json", consistency: "strong" }) || { initialized:true, images:[], changes:[], requests:[] };
+      const images = Array.isArray(current.images) ? current.images : [];
+      const cleanDutyName = (value) => String(value || "").trim().replace(/[　\s]+/g, " ");
+      const selectedDate = new Date(`${date}T00:00:00`);
+      const dateMatchesRoster = images.some((image) => {
+        const table = image?.table;
+        if (!table || !Array.isArray(table.rows)) return false;
+        const year = Number(table.year), month = Number(table.month);
+        if (!year || !month || selectedDate.getFullYear() !== year || selectedDate.getMonth() + 1 !== month) return false;
+        const day = selectedDate.getDate();
+        const grades = Array.isArray(table.grades) && table.grades.length ? table.grades : [2,1];
+        return table.rows.some((row) => {
+          if (!Array.isArray(row) || Number(String(row[0] || "").replace(/\D/g, "")) !== day) return false;
+          return row.slice(2,6).some((name, index) => String(grades[Math.floor(index / 2)]) === fromGrade && cleanDutyName(name) === cleanDutyName(from));
+        });
+      });
+      if (!dateMatchesRoster) return json({ error: "変更前の名前が現在の当番表と一致しません。当番表を確認してもう一度選択してください。" }, 400);
       const requests = Array.isArray(current.requests) ? current.requests : [];
       if (requests.length >= 200) return json({ error: "申請の保存上限に達しています。管理者へ連絡してください。" }, 400);
       const now = new Date().toISOString();
