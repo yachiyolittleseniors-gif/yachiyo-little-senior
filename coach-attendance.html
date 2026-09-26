@@ -216,20 +216,23 @@ body{padding-top:var(--fixed-header-height)!important}
 }
 </style>
 <style id="coach-attendance-polish">.name-col{min-width:148px}@media(max-width:700px){.name-col{min-width:136px}}</style>
-<script src="./coach-passkey.js?v=20260921-2205"></script>
+<script src="./coach-passkey.js?v=20260926-no-special1"></script>
 <script>
 document.documentElement.style.visibility='hidden';
 window.coachAccessReady=(async function(){
-  let access='',authorized='';
-  try{
-    access=sessionStorage.getItem('yachiyoCoachAttendancePass')||'';
-    authorized=sessionStorage.getItem('yachiyoCoachAttendanceBoardAuthorized')||'';
-  }catch(e){}
-  if(authorized!=='1'||!access){
+  // 指導者だけの特殊認証は使わない。
+  // 事務局・審判部と同じ共通認証を、このページ上で1回だけ実行する。
+  document.documentElement.style.visibility='';
+  if(!window.YLSCoachPasskeys?.authorize){
     location.replace('./board.html?from=coach');
     return false;
   }
-  document.documentElement.style.visibility='';
+  const access=await window.YLSCoachPasskeys.authorize('指導者出欠確認のパスワードを入力してください。');
+  if(!access){
+    location.replace('./board.html?from=coach');
+    return false;
+  }
+  try{sessionStorage.setItem('yachiyoCoachAttendancePass',access)}catch(e){}
   return true;
 })()
 </script>
@@ -866,5 +869,99 @@ body.photo-admin-on #accessPasswordChange{
   }).observe(document.documentElement,{attributes:true,attributeFilter:['class']});
 })();
 </script>
-
+<script id="coach-passkey-setup">
+(async()=>{
+  const allowed=await window.coachAccessReady;
+  if(!allowed||!window.YLSCoachPasskeys?.supported())return;
+  const panel=document.getElementById('coachPasskeySetupPanel');
+  const summary=document.getElementById('coachPasskeySetupSummary');
+  const chevron=document.getElementById('coachPasskeySetupChevron');
+  const button=document.getElementById('coachPasskeySetupButton');
+  const title=document.getElementById('coachPasskeySetupTitle');
+  const text=document.getElementById('coachPasskeySetupText');
+  const resetButton=document.getElementById('coachPasskeyResetButton');
+  if(!panel||!summary||!button)return;
+  panel.hidden=false;
+  let registered=false;
+  function setCollapsed(collapsed){
+    panel.classList.toggle('is-collapsed',collapsed);
+    summary.setAttribute('aria-expanded',collapsed?'false':'true');
+    if(chevron)chevron.textContent=collapsed?'▼':'▲';
+  }
+  function showRegisteredState(){
+    panel.classList.add('is-registered');
+    title.textContent='指導者用の生体認証を登録済み';
+    text.textContent='次回から生体認証で入れます。認証できない場合は従来の指導者用パスワードを使えます。';
+    button.textContent='この端末の生体認証を削除';
+    setCollapsed(true);
+  }
+  try{
+    const state=await window.YLSCoachPasskeys.status();
+    registered=Boolean(state?.registered);
+  }catch(e){registered=false}
+  if(registered)showRegisteredState();
+  summary.addEventListener('click',()=>setCollapsed(!panel.classList.contains('is-collapsed')));
+  if(resetButton){
+    resetButton.hidden=registered;
+    resetButton.addEventListener('click',async()=>{
+      if(!confirm('登録済みの指導者用生体認証を解除しますか？\n解除後は「この端末に登録」から再登録できます。'))return;
+      resetButton.disabled=true;
+      resetButton.textContent='端末で認証してください';
+      try{
+        await window.YLSCoachPasskeys.remove();
+        try{localStorage.removeItem('yachiyoCoachPasskeyRegistered')}catch(e){}
+        registered=false;
+        panel.classList.remove('is-registered');
+        title.textContent='生体認証で次回からログイン';
+        text.textContent='この端末に登録すると、次回から指導者用パスワードの入力を省略できます。';
+        button.textContent='この端末に登録';
+        resetButton.hidden=true;
+        setCollapsed(false);
+        alert('登録済みの生体認証を解除しました。続けて「この端末に登録」から再登録してください。');
+      }catch(error){
+        const cancelled=error?.name==='NotAllowedError'||/キャンセル/.test(error?.message||'');
+        if(!cancelled)alert(error?.message||'生体認証を解除できませんでした。');
+        resetButton.textContent='登録済みの生体認証を解除';
+      }finally{resetButton.disabled=false}
+    });
+  }
+  button.addEventListener('click',async()=>{
+    if(registered){
+      if(!confirm('この端末の生体認証を削除しますか？\n削除後はパスワードでログインし直すと再登録できます。'))return;
+      button.disabled=true;
+      button.textContent='端末で認証してください';
+      try{
+        await window.YLSCoachPasskeys.remove();
+        try{localStorage.removeItem('yachiyoCoachPasskeyRegistered')}catch(e){}
+        registered=false;
+        panel.classList.remove('is-registered');
+        title.textContent='生体認証を登録';
+        text.textContent='この端末に生体認証を登録すると、次回から生体認証でログインできます。';
+        button.textContent='この端末に登録';
+        setCollapsed(false);
+      }catch(error){
+        const cancelled=error?.name==='NotAllowedError'||/キャンセル/.test(error?.message||'');
+        if(!cancelled)alert(error?.message||'生体認証を削除できませんでした。');
+        button.textContent='この端末の生体認証を削除';
+      }finally{button.disabled=false}
+      return;
+    }
+    button.disabled=true;
+    button.textContent='端末で認証してください';
+    try{
+      const accessValue=sessionStorage.getItem('yachiyoCoachAttendancePass')||localStorage.getItem('yachiyoCoachAttendanceReloadPass')||'';
+      const deviceLabel=navigator.userAgentData?.platform||navigator.platform||'登録端末';
+      await window.YLSCoachPasskeys.register(accessValue,deviceLabel);
+      try{localStorage.setItem('yachiyoCoachPasskeyRegistered','1')}catch(e){}
+      registered=true;
+      if(resetButton)resetButton.hidden=true;
+      showRegisteredState();
+    }catch(error){
+      const cancelled=error?.name==='NotAllowedError'||/キャンセル/.test(error?.message||'');
+      if(!cancelled)alert(error?.message||'生体認証を登録できませんでした。');
+      button.textContent=registered?'この端末の生体認証を削除':'この端末に登録';
+    }finally{button.disabled=false}
+  });
+})();
+</script>
 </body></html>
