@@ -216,7 +216,7 @@ body{padding-top:var(--fixed-header-height)!important}
 }
 </style>
 <style id="coach-attendance-polish">.name-col{min-width:148px}@media(max-width:700px){.name-col{min-width:136px}}</style>
-<script src="./coach-passkey.js?v=20260926-2122"></script>
+<script src="./coach-passkey.js?v=20260926-2120"></script>
 <script>
 document.documentElement.style.visibility='hidden';
 window.coachAccessReady=(async function(){
@@ -246,8 +246,6 @@ window.coachAccessReady=(async function(){
     }catch(e){return false}
   }
   async function verifyPasskey(){
-    // この端末で生体認証を登録済みの場合だけFace ID / Touch IDを試す。
-    // 未登録なら待たずに従来の指導者用パスワードを表示する。
     let registered=false;
     try{registered=localStorage.getItem(passkeyKey)==='1'}catch(e){}
     if(!registered||!window.YLSCoachPasskeys?.supported())return false;
@@ -255,7 +253,6 @@ window.coachAccessReady=(async function(){
       const result=await window.YLSCoachPasskeys.authenticate();
       if(!result?.token)return false;
       remember(result.token);
-      try{localStorage.setItem(passkeyKey,'1')}catch(_){}
       return true;
     }catch(e){
       if(e?.status===401||e?.status===404){
@@ -271,10 +268,10 @@ window.coachAccessReady=(async function(){
     document.documentElement.style.visibility='';
     return true;
   }
-  // iPhone Safariでは documentElement を非表示のままにすると、
-  // 生体認証失敗後の prompt が表示されないことがあるため、
-  // パスワード入力へ切り替える直前に画面を復帰させる。
+  // iPhone/Safariではページを非表示のまま prompt() を呼ぶと表示されない場合があるため、
+  // 先に画面を復帰させ、描画を1回待ってからパスワード入力を表示する。
   document.documentElement.style.visibility='';
+  await new Promise(resolve=>requestAnimationFrame(()=>setTimeout(resolve,80)));
   const entered=prompt('指導者出欠確認のパスワードを入力してください。');
   if(entered===null){
     let cameFromBoard=false;
