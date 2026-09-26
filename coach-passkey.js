@@ -77,6 +77,10 @@
     if (name === "NotAllowedError") return error;
     return error instanceof Error ? error : new Error(fallback);
   }
+  async function status() {
+    if (!supported()) return { registered: false, count: 0 };
+    return request({ action: "status" });
+  }
   async function register(accessValue, label = "") {
     if (!supported()) throw new Error("この端末は生体認証に対応していません。");
     const start = await request({ action: "registration-options" }, accessValue);
@@ -154,5 +158,5 @@
     return "";
   }
 
-  window.YLSCoachPasskeys = { authenticate, authorize, register, remove, supported };
+  window.YLSCoachPasskeys = { authenticate, authorize, register, remove, status, supported };
 })();
