@@ -2212,11 +2212,11 @@ export default async (request, context) => {
 
       const validRequests = requests.every(item => {
         const date=String(item?.date||""); const fromGrade=String(item?.fromGrade||item?.grade||""); const toGrade=String(item?.toGrade||item?.grade||fromGrade||""); const from=String(item?.from||"").trim(); const to=String(item?.to||"").trim(); const note=String(item?.note||""); const status=String(item?.status||"pending");
-        return /^\d{4}-\d{2}-\d{2}$/.test(date) && ["1","2","3"].includes(fromGrade) && ["1","2","3"].includes(toGrade) && from.length>0 && from.length<=60 && to.length>0 && to.length<=60 && !(fromGrade===toGrade && from===to) && note.length<=200 && ["pending","approved","rejected"].includes(status);
+        return /^\d{4}-\d{2}-\d{2}$/.test(date) && ["1","2","3"].includes(fromGrade) && ["1","2","3"].includes(toGrade) && from.length>0 && from.length<=60 && to.length>0 && to.length<=60 && !(fromGrade===toGrade && from===to) && note.length<=200 && ["pending","approved","rejected","cancelled"].includes(status);
       });
       if (!validRequests) return json({ error: "当番変更申請データを確認してください。" }, 400);
 
-      body.data.requests = requests.map((item,index)=>({id:String(item?.id||`request-${index}`).slice(0,100),date:String(item.date),grade:String(item.fromGrade||item.grade),fromGrade:String(item.fromGrade||item.grade),from:String(item.from).trim(),toGrade:String(item.toGrade||item.grade),to:String(item.to).trim(),note:"",status:["pending","approved","rejected"].includes(String(item?.status))?String(item.status):"pending",createdAt:String(item?.createdAt||"").slice(0,60),updatedAt:String(item?.updatedAt||"").slice(0,60)}));
+      body.data.requests = requests.map((item,index)=>({id:String(item?.id||`request-${index}`).slice(0,100),date:String(item.date),grade:String(item.fromGrade||item.grade),fromGrade:String(item.fromGrade||item.grade),from:String(item.from).trim(),toGrade:String(item.toGrade||item.grade),to:String(item.to).trim(),note:"",status:["pending","approved","rejected","cancelled"].includes(String(item?.status))?String(item.status):"pending",createdAt:String(item?.createdAt||"").slice(0,60),updatedAt:String(item?.updatedAt||"").slice(0,60)}));
 
       body.data.changes = changes.map((item, index) => ({
         id: String(item?.id || `change-${index}`).slice(0, 100),
