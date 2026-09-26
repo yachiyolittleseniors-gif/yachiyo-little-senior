@@ -1375,7 +1375,7 @@ body.live-score-focused #liveScoreCard{width:100%;box-sizing:border-box}
         </div>
       </section>
       <div class="duty-request-box" id="dutyRequestBox">
-        <div class="duty-request-head"><div><span class="duty-request-kicker">CHANGE REQUEST</span><h3>当番変更を申請</h3><span id="dutyRequestPendingBadge" class="duty-request-pending-badge" hidden></span></div><button id="toggleDutyRequest" type="button" aria-expanded="false" aria-controls="dutyRequestContent">申請する</button></div>
+        <div class="duty-request-head"><div><span class="duty-request-kicker">CHANGE REQUEST</span><h3>当番変更を申請</h3></div><button id="toggleDutyRequest" type="button" aria-expanded="false" aria-controls="dutyRequestContent">申請する</button></div>
         <div id="dutyRequestContent" hidden>
           <p class="duty-request-help">当番表が登録されている月のみ変更申請ができます。変更内容を選択して申請してください。</p>
           <label>変更日<select id="dutyRequestRosterDate"></select><input id="dutyRequestDirectDate" type="date" hidden disabled></label>
@@ -1509,7 +1509,7 @@ body.live-score-focused #liveScoreCard{width:100%;box-sizing:border-box}
 
 <footer class="footer">© YACHIYO LITTLE SENIOR. All Rights Reserved.</footer>
 
-<link rel="stylesheet" href="./board-content.css?v=20260926-1">
+<link rel="stylesheet" href="./board-content.css?v=20260918-9">
 
 <button id="densukeToggleBtn" type="button">管理</button>
 <div id="densukeAdminPanel">
@@ -1558,22 +1558,24 @@ body.live-score-focused #liveScoreCard{width:100%;box-sizing:border-box}
   <div id="dutyRosterAdminFields">
     <strong>当番表</strong>
     <div class="duty-change-admin">
-      <b>LINEの文章から当番変更を登録</b>
-      <p>変更連絡を貼り付け、年を選んでください。学年をまたぐ場合は、確認欄で変更行ごとに当番枠の学年を選べます。</p>
-      <div class="duty-change-admin-meta">
-        <label for="dutyChangeYear">年<input id="dutyChangeYear" type="number" min="2020" max="2100" inputmode="numeric"></label>
-        <label for="dutyChangeGrade">学年を一括指定（任意）<select id="dutyChangeGrade"><option value="">行ごとに選択</option><option value="3">3年生</option><option value="2">2年生</option><option value="1">1年生</option></select></label>
+      <div id="dutyLinePasteAdmin" hidden>
+        <b>LINEの文章から当番変更を登録</b>
+        <p>変更連絡を貼り付け、年を選んでください。学年をまたぐ場合は、確認欄で変更行ごとに当番枠の学年を選べます。</p>
+        <div class="duty-change-admin-meta">
+          <label for="dutyChangeYear">年<input id="dutyChangeYear" type="number" min="2020" max="2100" inputmode="numeric"></label>
+          <label for="dutyChangeGrade">学年を一括指定（任意）<select id="dutyChangeGrade"><option value="">行ごとに選択</option><option value="3">3年生</option><option value="2">2年生</option><option value="1">1年生</option></select></label>
+        </div>
+        <label for="dutyChangeText">LINEの変更連絡</label>
+        <div class="duty-change-paste-actions"><button id="pasteDutyChangeBtn" type="button">クリップボードから貼り付け</button><span>または入力欄を長押しして「ペースト」</span></div>
+        <textarea id="dutyChangeText" rows="6" placeholder="ここをタップして、LINEの文章を貼り付けてください。"></textarea>
+        <div class="duty-change-example"><b>入力例（「10/3」「10月3日」どちらも可）</b><span>10月3日(土) 山田→佐藤さん</span><span>10月11日(日) 佐藤さん→山田</span></div>
+        <div id="dutyChangePreview" class="duty-change-preview">変更内容を貼り付けると、ここに確認結果が表示されます。</div>
+        <button id="saveDutyChangesBtn" type="button">確認した変更を保存</button>
+        <div id="dutyChangeAdminList" class="duty-change-admin-list" hidden></div>
       </div>
-      <label for="dutyChangeText">LINEの変更連絡</label>
-      <div class="duty-change-paste-actions"><button id="pasteDutyChangeBtn" type="button">クリップボードから貼り付け</button><span>または入力欄を長押しして「ペースト」</span></div>
-      <textarea id="dutyChangeText" rows="6" placeholder="ここをタップして、LINEの文章を貼り付けてください。"></textarea>
-      <div class="duty-change-example"><b>入力例（「10/3」「10月3日」どちらも可）</b><span>10月3日(土) 山田→佐藤さん</span><span>10月11日(日) 佐藤さん→山田</span></div>
-      <div id="dutyChangePreview" class="duty-change-preview">変更内容を貼り付けると、ここに確認結果が表示されます。</div>
-      <button id="saveDutyChangesBtn" type="button">確認した変更を保存</button>
-      <div id="dutyChangeAdminList" class="duty-change-admin-list"></div>
       <div class="duty-request-admin-block">
         <b>当番変更申請</b>
-        <p>一般画面から届いた申請です。当番表が未登録の月は「当番表登録待ち」として保持されます。</p>
+        <p>一般画面から届いた申請です。申請内容を確認して「当番表に反映」または「却下」を選択してください。</p>
         <div id="dutyRequestAdminList" class="duty-change-admin-list"></div>
       </div>
     </div>
@@ -1623,6 +1625,7 @@ body.live-score-focused #liveScoreCard{width:100%;box-sizing:border-box}
         <label class="admin-autooff-row"><input id="adminAutoOffEnabled" type="checkbox" checked><span><b>30分後に自動OFF</b><small>ONにした管理ボタンを30分後に自動で非表示にします（チーム専用ページは対象外）。</small></span></label>
         <div class="admin-visibility-actions"><button id="adminVisibilityAllOn" type="button">すべてON</button><button id="adminVisibilityAllOff" type="button">すべてOFF</button></div>
         <div id="adminVisibilityList" class="admin-visibility-list"></div>
+        <label class="admin-autooff-row"><input id="dutyLinePasteVisible" type="checkbox"><span><b>LINE貼り付けカードを表示</b><small>ONのときだけ「LINEの文章から当番変更を登録」を管理画面に表示します。通常はOFFです。</small></span></label>
         <button id="adminVisibilitySave" type="button">表示設定を保存</button>
         <p id="adminVisibilityStatus" class="backup-note"></p>
       </div>
@@ -1672,7 +1675,7 @@ body.live-score-focused #liveScoreCard{width:100%;box-sizing:border-box}
 <script src="./board-meetings.js?v=20260918-8"></script>
 <script src="./duty-image-reader.js?v=20260918-1"></script>
 <script src="./duty-roster-data.js?v=20260918-1"></script>
-<script src="./board-duty-roster.js?v=20260926-1"></script>
+<script src="./board-duty-roster.js?v=20260918-11"></script>
 <script src="./board-rules.js?v=20260914-4"></script>
 <script src="./board-archive.js?v=20260914-3"></script>
 
@@ -1680,7 +1683,7 @@ body.live-score-focused #liveScoreCard{width:100%;box-sizing:border-box}
 .admin-visibility-fields{margin:16px 0 18px;padding:15px;border:1px solid rgba(210,170,80,.28);border-radius:14px;background:rgba(255,255,255,.025)}.admin-visibility-toggle{width:100%;display:flex;align-items:center;justify-content:space-between;gap:12px;padding:0;border:0!important;background:transparent!important;box-shadow:none!important;text-align:left}.admin-visibility-toggle span{display:flex;flex-direction:column;gap:4px}.admin-visibility-toggle strong{color:#e4bd62;font-size:15px}.admin-visibility-toggle small{color:#aeb7c4;font-size:10.5px;line-height:1.35}.admin-visibility-toggle>b{color:#d8b65e;font-size:11px;white-space:nowrap}.admin-visibility-body{padding-top:10px}.admin-visibility-body[hidden]{display:none!important}
 .admin-visibility-fields>strong{display:block;color:#e4bd62;margin-bottom:7px}.admin-visibility-list{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;margin:12px 0}.admin-visibility-item{display:flex;align-items:center;gap:8px;padding:9px 10px;border:1px solid rgba(210,170,80,.22);border-radius:9px;background:rgba(255,255,255,.035);font-size:12px}.admin-visibility-item input{width:18px;height:18px;accent-color:#cda448}.admin-visibility-actions{display:flex;gap:8px;margin-top:10px}.admin-visibility-actions button{flex:1}.admin-visibility-fields #adminVisibilitySave{width:100%;margin-top:2px}.admin-autooff-row{display:flex;align-items:flex-start;gap:10px;margin:12px 0;padding:11px;border:1px solid rgba(210,170,80,.32);border-radius:10px;background:rgba(181,138,42,.08)}.admin-autooff-row input{width:19px;height:19px;margin-top:2px;accent-color:#cda448}.admin-autooff-row span{display:flex;flex-direction:column;gap:3px}.admin-autooff-row b{color:#f0cf7b;font-size:13px}.admin-autooff-row small{color:#b9c0ca;font-size:11px;line-height:1.45}.admin-visibility-remaining{margin-left:auto;color:#d8b65e;font-size:10px;white-space:nowrap}@media(max-width:520px){.admin-visibility-list{grid-template-columns:1fr}}
 </style>
-<script src="./board-admin-visibility.js?v=20260926-4"></script>
+<script src="./board-admin-visibility.js?v=20260926-5"></script>
 <script src="./board-backup.js?v=20260926-1"></script>
 <style id="nonblocking-save-notice-style">
 .save-notice{
