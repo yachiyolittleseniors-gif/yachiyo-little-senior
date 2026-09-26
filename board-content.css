@@ -200,3 +200,7 @@ body.document-archive-preview-open{overflow:hidden!important}
 .duty-request-box input[type=date]{display:block;box-sizing:border-box!important;width:100%!important;max-width:100%!important;min-width:0!important;-webkit-appearance:none;appearance:none}
 .duty-request-box input[type=date]::-webkit-date-and-time-value{text-align:left}
 @media(max-width:600px){.duty-request-mode{display:grid;grid-template-columns:1fr 1fr}.duty-request-mode label{min-width:0;white-space:normal}.duty-request-box input[type=date]{inline-size:100%!important}}
+
+/* Duty change request pending badge */
+.duty-request-pending-badge{display:inline-flex;align-items:center;margin-top:8px;padding:4px 9px;border:1px solid rgba(181,138,42,.55);border-radius:999px;background:rgba(181,138,42,.08);color:#9b741f;font-size:12px;font-weight:800;line-height:1;letter-spacing:.03em}
+.duty-request-pending-badge[hidden]{display:none!important}

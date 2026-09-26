@@ -1375,7 +1375,7 @@ body.live-score-focused #liveScoreCard{width:100%;box-sizing:border-box}
         </div>
       </section>
       <div class="duty-request-box" id="dutyRequestBox">
-        <div class="duty-request-head"><div><span class="duty-request-kicker">CHANGE REQUEST</span><h3>当番変更を申請</h3></div><button id="toggleDutyRequest" type="button" aria-expanded="false" aria-controls="dutyRequestContent">申請する</button></div>
+        <div class="duty-request-head"><div><span class="duty-request-kicker">CHANGE REQUEST</span><h3>当番変更を申請</h3><span id="dutyRequestPendingBadge" class="duty-request-pending-badge" hidden></span></div><button id="toggleDutyRequest" type="button" aria-expanded="false" aria-controls="dutyRequestContent">申請する</button></div>
         <div id="dutyRequestContent" hidden>
           <p class="duty-request-help">当番表がある日は登録内容から、まだ当番表がない未来の日は日付を選んで申請できます。申請後はLINE共有ボタンから連絡してください。</p>
           <div class="duty-request-mode"><label><input type="radio" name="dutyRequestMode" value="roster" checked> お当番表から選ぶ</label><label><input type="radio" name="dutyRequestMode" value="direct"> まだ当番表がない日を選ぶ</label></div>
@@ -1390,7 +1390,7 @@ body.live-score-focused #liveScoreCard{width:100%;box-sizing:border-box}
         <button id="toggleDutyRequestStatus" type="button" aria-expanded="false" aria-controls="dutyRequestStatusList">申請状況を見る</button>
         <div id="dutyRequestStatusList" hidden></div>
       </section>
-      <p class="duty-roster-note">※一般画面では変更申請のみ行えます。正式な当番表への反映・却下は管理画面から行います。</p>
+      <p class="duty-roster-note">申請後はLINEで共有してください。管理者確認後、お当番表に反映されます。</p>
     </section>
 
     <section class="card board-meeting-card" id="refereeCard">
