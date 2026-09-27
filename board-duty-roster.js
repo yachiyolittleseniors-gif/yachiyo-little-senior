@@ -229,9 +229,10 @@
     if(requestBadge){requestBadge.hidden=false;requestBadge.textContent='申請中 '+pendingCount+'件'}
     const statusBox=document.getElementById('dutyRequestStatus'),statusList=document.getElementById('dutyRequestStatusList'),statusToggle=document.getElementById('toggleDutyRequestStatus');
     if(statusBox&&statusList&&statusToggle){
-      statusBox.hidden=ordered.length===0;
+      const publicItems=ordered.filter(function(item){return item.status!=='rejected'});
+      statusBox.hidden=publicItems.length===0;
       statusToggle.textContent=pendingCount?'申請内容を見る（申請中 '+pendingCount+'件）':'申請内容を見る';
-      statusList.innerHTML=ordered.length?ordered.map(function(item){
+      statusList.innerHTML=publicItems.length?publicItems.map(function(item){
         return '<div class="duty-request-status-item">'+(item.requestNo?'<b>申請番号 #'+escapeHtml(item.requestNo)+'</b><br>':'')+
           '<b>'+displayDate(item.date)+'</b><br>'+
           escapeHtml(requestPersonLabel(item,'from'))+' → <b>'+escapeHtml(requestPersonLabel(item,'to'))+'</b><br>'+
