@@ -322,7 +322,24 @@ function commentReferenceDate(comment, now = new Date()) {
   return reference;
 }
 
+function dedupeSameDayComments(comments = []) {
+  const best = new Map();
+  for (const comment of comments) {
+    if (!comment || typeof comment !== "object") continue;
+    const memberId = String(comment.memberId || "");
+    const eventDate = String(comment.eventDate || "");
+    if (!memberId || !/^\d{4}-\d{2}-\d{2}$/.test(eventDate)) continue;
+    const key = memberId + "|" + eventDate;
+    const current = best.get(key);
+    const nextTime = new Date(comment.updatedAt || 0).getTime() || 0;
+    const currentTime = current ? (new Date(current.updatedAt || 0).getTime() || 0) : -1;
+    if (!current || nextTime >= currentTime) best.set(key, comment);
+  }
+  return Array.from(best.values());
+}
+
 function cleanupOldData(data, now = new Date()) {
+  data.comments = dedupeSameDayComments(data.comments);
   const cutoff = oneMonthAgo(now);
   const removedEventIds = new Set();
 
@@ -800,6 +817,7 @@ export default async (request, context) => {
         source: "site",
       };
       const state = await loadMemberState(store, data, memberId);
+      state.comments = dedupeSameDayComments(state.comments);
       const existingIndex = state.comments.findIndex(item => String(item.eventDate || "") === eventDate);
       if (existingIndex >= 0) {
         comment.id = state.comments[existingIndex].id || comment.id;
