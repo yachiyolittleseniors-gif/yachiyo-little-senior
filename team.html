@@ -1402,17 +1402,16 @@ html{scroll-padding-top:var(--fixed-header-height)}
 <meta content="https://yachiyo-little-senior.netlify.app/team-hero.jpg" name="twitter:image"/>
 <meta content="index,follow,max-image-preview:large,max-snippet:-1,max-video-preview:-1" name="robots"/>
 </link></meta></meta></meta></link></meta></meta><script src="./admin-visibility.js?v=20260926-4" defer></script>
-<style id="team-movie-spacing-fix">.team-movie-card{margin-bottom:34px!important}.team-movie-separator{height:1px;margin:0 8px 34px;background:linear-gradient(90deg,transparent,rgba(199,154,59,.45),transparent)}@media(max-width:600px){.team-movie-card{margin-bottom:26px!important}.team-movie-separator{margin-bottom:26px}}</style><style id="team-movie-card-height-unified">
-#teamMovieCard,#teamInterviewCard{min-height:0}
-@media(min-width:601px){#teamMovieCard,#teamInterviewCard{min-height:430px;display:flex;flex-direction:column;justify-content:flex-start}#teamMovieCard .team-youtube-public,#teamInterviewCard .team-youtube-public{width:100%}}
-@media(max-width:600px){#teamMovieCard,#teamInterviewCard{min-height:0}}
-</style><style id="team-movie-mobile-height-unified">
+<style id="team-movie-spacing-fix">.team-movie-card{margin-bottom:34px!important}.team-movie-separator{height:1px;margin:0 8px 34px;background:linear-gradient(90deg,transparent,rgba(199,154,59,.45),transparent)}@media(max-width:600px){.team-movie-card{margin-bottom:26px!important}.team-movie-separator{margin-bottom:26px}}</style><style id="team-movie-layout-unified">
+#teamMovieCard,#teamInterviewCard{height:auto!important;min-height:0!important}
+#teamMovieCard .team-youtube-public,#teamInterviewCard .team-youtube-public{width:100%}
+#teamMovieCard .team-youtube-head,#teamInterviewCard .team-youtube-head{min-height:52px}
+#teamMovieCard .team-youtube-public>p,#teamInterviewCard .team-youtube-public>p{min-height:50px}
+#teamMovieCard video{display:block;margin-top:18px;width:100%;height:auto;max-height:none;object-fit:contain}
 @media(max-width:600px){
-  #teamMovieCard,#teamInterviewCard{min-height:410px!important;height:410px!important;display:flex!important;flex-direction:column!important}
-  #teamMovieCard .team-youtube-public,#teamInterviewCard .team-youtube-public{display:flex!important;flex-direction:column!important;height:100%!important;width:100%!important}
-  #teamInterviewCard .team-youtube-link{margin-top:auto!important}
-  #teamMovieCard video{max-height:210px;object-fit:contain}
-  body.staff-editing #teamMovieCard,body.staff-editing #teamInterviewCard{height:auto!important;min-height:410px!important}
+ #teamMovieCard,#teamInterviewCard{height:auto!important;min-height:0!important}
+ #teamMovieCard .team-youtube-head,#teamInterviewCard .team-youtube-head{min-height:48px}
+ #teamMovieCard .team-youtube-public>p,#teamInterviewCard .team-youtube-public>p{min-height:48px}
 }
 </style></head>
 <body id="page-top">
