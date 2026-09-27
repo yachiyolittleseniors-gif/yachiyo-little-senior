@@ -576,7 +576,7 @@ export default async (request, context) => {
     }
 
     if (
-      (action === "answer" || action === "comment") &&
+      (action === "answer" || action === "comment" || action === "deleteComment") &&
       config.migrationEnded &&
       !(await accessOK(store, request))
     ) {
@@ -603,7 +603,7 @@ export default async (request, context) => {
     data = await mergeMemberStates(store, data);
     data = cleanupOldData(data);
 
-    if (["answer", "comment"].includes(action)) {
+    if (["answer", "comment", "deleteComment"].includes(action)) {
       if (!config.migrationEnded) {
         if (!adminAuth?.ok) {
           return json({ error: "伝助終了前は保護者出欠確認へ入力できません。", locked: true }, 423);
@@ -700,6 +700,20 @@ export default async (request, context) => {
         memberId, text: "", eventDate, upperGrade: true, escortGrade, escortSetting: true,
         updatedAt: new Date().toISOString(), source: "site",
       });
+      state.updatedAt = new Date().toISOString();
+      await store.setJSON(memberStateKey(memberId), state);
+      applyMemberState(data, memberId, state);
+      return json({ ok: true, data });
+    }
+
+    if (action === "deleteComment") {
+      const memberId = String(body.memberId || "");
+      const eventDate = /^\d{4}-\d{2}-\d{2}$/.test(String(body.eventDate || "")) ? String(body.eventDate) : "";
+      if (!memberId || !eventDate) return json({ error: "Missing comment target" }, 400);
+      const memberExists = data.members.some(m => String(m.id) === memberId);
+      if (!memberExists) return json({ error: "Member not found" }, 404);
+      const state = await loadMemberState(store, data, memberId);
+      state.comments = state.comments.filter(comment => String(comment.eventDate || "") !== eventDate);
       state.updatedAt = new Date().toISOString();
       await store.setJSON(memberStateKey(memberId), state);
       applyMemberState(data, memberId, state);
