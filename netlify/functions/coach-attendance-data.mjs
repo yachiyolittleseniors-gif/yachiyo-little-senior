@@ -675,7 +675,13 @@ export default async (request, context) => {
         source: "site",
       };
       const state = await loadMemberState(store, data, memberId);
-      state.comments.push(comment);
+      const existingIndex = state.comments.findIndex(item => String(item.eventDate || "") === eventDate);
+      if (existingIndex >= 0) {
+        comment.id = state.comments[existingIndex].id || comment.id;
+        state.comments[existingIndex] = comment;
+      } else {
+        state.comments.push(comment);
+      }
       if (state.comments.length > 100) {
         state.comments = state.comments.slice(-100);
       }
