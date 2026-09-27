@@ -890,6 +890,14 @@ export default async (request, context) => {
 
     const key = `content/${section}.json`;
 
+    if (section === "team-movie" && request.method === "GET" && url.searchParams.get("file") === "1") {
+      const meta = await store.get(key, { type:"json", consistency:"strong" });
+      if (!meta?.storageKey) return new Response("Video not found",{status:404});
+      const blob = await store.get(meta.storageKey,{type:"blob",consistency:"strong"});
+      if (!blob) return new Response("Video not found",{status:404});
+      return new Response(blob,{status:200,headers:{"content-type":meta.contentType||"video/mp4","cache-control":"public, max-age=3600","accept-ranges":"bytes","x-content-type-options":"nosniff"}});
+    }
+
     if (request.method === "GET") {
       if (section === "access-settings") {
         return json({ error: "method not allowed" }, 405);
@@ -2167,6 +2175,30 @@ export default async (request, context) => {
       await store.delete("auth/board-passkeys.json").catch(() => {});
 
       return json({ ok: true, passkeysReset: true });
+    }
+
+    if (section === "team-movie" && body?.action === "uploadTeamMovie") {
+      const fileName=String(body.fileName||"").trim(), contentType=String(body.contentType||"");
+      const allowedTypes=new Set(["video/mp4","video/quicktime","video/x-m4v","video/webm"]);
+      const bytes=decodeDataUrl(body.dataUrl);
+      if(!bytes||!allowedTypes.has(contentType)) return json({error:"対応していない動画形式です。"},400);
+      if(bytes.byteLength>50*1024*1024) return json({error:"動画は50MB以下にしてください。"},413);
+      const old=await store.get(key,{type:"json",consistency:"strong"});
+      if(old?.storageKey) await store.delete(old.storageKey).catch(()=>{});
+      const storageKey="team-movie/current-video.bin";
+      await store.set(storageKey,bytes.buffer,{metadata:{fileName,contentType}});
+      const data={...(body.data||{}),storageKey,fileName,contentType,size:bytes.byteLength,updatedAt:new Date().toISOString()};
+      delete data.video;
+      await store.setJSON(key,data);
+      return json({ok:true,data});
+    }
+    if (section === "team-movie" && body?.action === "deleteTeamMovie") {
+      const old=await store.get(key,{type:"json",consistency:"strong"});
+      if(old?.storageKey) await store.delete(old.storageKey).catch(()=>{});
+      const data={...(old||{}),storageKey:"",fileName:"",contentType:"",size:0,visible:false,updatedAt:new Date().toISOString()};
+      delete data.video;
+      await store.setJSON(key,data);
+      return json({ok:true,data});
     }
 
     if (section === "duty-roster") {
