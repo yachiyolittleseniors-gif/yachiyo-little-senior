@@ -1406,6 +1406,14 @@ html{scroll-padding-top:var(--fixed-header-height)}
 #teamMovieCard,#teamInterviewCard{min-height:0}
 @media(min-width:601px){#teamMovieCard,#teamInterviewCard{min-height:430px;display:flex;flex-direction:column;justify-content:flex-start}#teamMovieCard .team-youtube-public,#teamInterviewCard .team-youtube-public{width:100%}}
 @media(max-width:600px){#teamMovieCard,#teamInterviewCard{min-height:0}}
+</style><style id="team-movie-mobile-height-unified">
+@media(max-width:600px){
+  #teamMovieCard,#teamInterviewCard{min-height:410px!important;height:410px!important;display:flex!important;flex-direction:column!important}
+  #teamMovieCard .team-youtube-public,#teamInterviewCard .team-youtube-public{display:flex!important;flex-direction:column!important;height:100%!important;width:100%!important}
+  #teamInterviewCard .team-youtube-link{margin-top:auto!important}
+  #teamMovieCard video{max-height:210px;object-fit:contain}
+  body.staff-editing #teamMovieCard,body.staff-editing #teamInterviewCard{height:auto!important;min-height:410px!important}
+}
 </style></head>
 <body id="page-top">
 <header class="header">
