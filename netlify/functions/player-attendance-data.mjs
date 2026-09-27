@@ -638,13 +638,13 @@ export default async (request, context) => {
     }
 
     if (
-      (action === "answer" || action === "comment") &&
+      (action === "answer" || action === "comment" || action === "deleteComment") &&
       !(await accessOK(store, request))
     ) {
       return json({ error: "Unauthorized" }, 401);
     }
 
-    if (!["adminPing", "adminSave", "previewDensuke", "endDensuke", "answer", "comment"].includes(action)) {
+    if (!["adminPing", "adminSave", "previewDensuke", "endDensuke", "answer", "comment", "deleteComment"].includes(action)) {
       return json({ error: "Unknown action" }, 400);
     }
 
@@ -759,6 +759,20 @@ export default async (request, context) => {
         memberId, text: "", eventDate, upperGrade: true, escortGrade, escortSetting: true,
         updatedAt: new Date().toISOString(), source: "site",
       });
+      state.updatedAt = new Date().toISOString();
+      await store.setJSON(memberStateKey(memberId), state);
+      applyMemberState(data, memberId, state);
+      return json({ ok: true, data });
+    }
+
+    if (action === "deleteComment") {
+      const memberId = String(body.memberId || "");
+      const eventDate = /^\d{4}-\d{2}-\d{2}$/.test(String(body.eventDate || "")) ? String(body.eventDate) : "";
+      if (!memberId || !eventDate) return json({ error: "Missing comment target" }, 400);
+      const memberExists = data.members.some(m => String(m.id) === memberId);
+      if (!memberExists) return json({ error: "Member not found" }, 404);
+      const state = await loadMemberState(store, data, memberId);
+      state.comments = state.comments.filter(comment => String(comment.eventDate || "") !== eventDate);
       state.updatedAt = new Date().toISOString();
       await store.setJSON(memberStateKey(memberId), state);
       applyMemberState(data, memberId, state);
