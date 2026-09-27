@@ -10,8 +10,9 @@ window.__operatorSetupLoaded=true;
     const text=document.getElementById('coachPasskeySetupText');
     if(!panel||!button||!title||!text)return;
     panel.hidden=false;
+    const localKey='yachiyoOperatorPasskeyRegistered';
     let registered=false;
-    try{registered=Boolean((await window.YLSOperatorPasskeys.status())?.registered)}catch(e){}
+    try{registered=localStorage.getItem(localKey)==='1'}catch(e){}
     if(registered){
       title.textContent='生体認証を登録済み';
       text.textContent='次回から生体認証でログインできます。';
@@ -38,9 +39,14 @@ window.__operatorSetupLoaded=true;
         button.disabled=true; button.textContent='端末で認証してください';
         try{
           await window.YLSOperatorPasskeys.remove();
+          try{localStorage.removeItem(localKey)}catch(e){}
+          registered=false;
+          panel.classList.remove('is-registered','is-collapsed');
           title.textContent='生体認証で次回からログイン';
           text.textContent='この端末に登録すると、次回からパスワード入力を省略できます。使えない場合は従来のパスワードで入れます。';
           button.textContent='この端末に登録';
+          if(summary)summary.setAttribute('aria-expanded','true');
+          if(chevron)chevron.textContent='▲';
         }catch(e){
           if(e?.name!=='NotAllowedError')alert(e?.message||'生体認証を削除できませんでした。');
           button.textContent='この端末の生体認証を削除';
@@ -55,10 +61,16 @@ window.__operatorSetupLoaded=true;
       try{
         const label=navigator.userAgentData?.platform||navigator.platform||'登録端末';
         await window.YLSOperatorPasskeys.register(access,label);
+        try{localStorage.setItem(localKey,'1')}catch(e){}
+        registered=true;
         title.textContent='運営用の生体認証を登録済み';
-        text.textContent='指導者出欠・事務局・審判部で共通して利用できます。';
-        button.hidden=true;
-        alert('運営用の生体認証を登録しました。');
+        text.textContent='指導者出欠・事務局・審判部で共通して利用できます。別の端末は、その端末でパスワードログイン後に個別に登録してください。';
+        button.hidden=false;
+        button.textContent='この端末の生体認証を削除';
+        panel.classList.add('is-registered','is-collapsed');
+        if(summary)summary.setAttribute('aria-expanded','false');
+        if(chevron)chevron.textContent='▼';
+        alert('この端末に運営用の生体認証を登録しました。');
       }catch(e){
         const cancelled=e?.name==='NotAllowedError'||/キャンセル/.test(e?.message||'');
         if(!cancelled)alert(e?.message||'生体認証を登録できませんでした。');
