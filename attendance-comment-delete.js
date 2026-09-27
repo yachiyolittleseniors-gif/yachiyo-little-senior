@@ -7,11 +7,11 @@ function boot(){
  var comments=[],memberId='';
  function apiInfo(){var p=location.pathname,coach=p.indexOf('coach-attendance')>=0,player=p.indexOf('player-attendance')>=0;return{url:player?'/.netlify/functions/player-attendance-data':coach?'/.netlify/functions/coach-attendance-data':'/.netlify/functions/attendance-data',coach:coach}}
  function headers(){var x={'content-type':'application/json'},i=apiInfo();if(i.coach)x['x-coach-password']=sessionStorage.getItem('yachiyoCoachAttendancePass')||'';else x['x-access-password']=sessionStorage.getItem('yachiyoAttendancePass')||'';return x}
- function selected(){var el=document.querySelector('[data-member][aria-pressed="true"],[data-member].selected,[data-member].is-selected');return el?String(el.getAttribute('data-member')||''):''}
+ function selected(){var el=document.querySelector('[data-select-member].selected');return el?String(el.getAttribute('data-select-member')||''):''}
  function current(){return comments.find(function(x){return String(x.memberId)===memberId&&String(x.eventDate||'')===String(date.value||'')})||null}
  function show(){memberId=selected()||memberId;var x=current();if(x){box.value=String(x.text||'');btn.disabled=false}else{if(document.activeElement!==box)box.value='';btn.disabled=true}}
  async function load(){try{var r=await fetch(apiInfo().url,{headers:headers(),cache:'no-store'});var j=await r.json();if(r.ok&&j&&j.data&&Array.isArray(j.data.comments))comments=j.data.comments}catch(e){}show()}
- document.addEventListener('click',function(e){if(e.target.closest('[data-member]'))setTimeout(function(){memberId=selected();show()},0)},true);
+ document.addEventListener('click',function(e){if(e.target.closest('[data-select-member]'))setTimeout(function(){memberId=selected();show()},0)},true);
  date.addEventListener('change',show);
  btn.addEventListener('click',async function(){var x=current();if(!x||!memberId||!date.value)return;if(!confirm('このコメントを削除しますか？'))return;btn.disabled=true;try{var r=await fetch(apiInfo().url,{method:'POST',headers:headers(),body:JSON.stringify({action:'deleteComment',memberId:memberId,eventDate:date.value})});var j=await r.json().catch(function(){return{}});if(!r.ok)throw new Error(j.error||'削除できませんでした。');comments=comments.filter(function(y){return !(String(y.memberId)===memberId&&String(y.eventDate||'')===String(date.value))});box.value='';btn.disabled=true;location.reload()}catch(e){alert(e.message||'コメントを削除できませんでした。');show()}});
  load();
