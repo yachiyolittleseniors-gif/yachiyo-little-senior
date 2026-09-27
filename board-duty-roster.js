@@ -215,7 +215,7 @@
   function todayYmd(){const d=new Date();return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0')}
   function rosterDates(){const today=todayYmd(),out=[];images.forEach(function(image){const table=image.table;if(!table)return;table.rows.forEach(function(row){const date=tableDate(table,row[0]);if(date>=today)out.push({date:date,label:table.year+'年'+table.month+'月'+row[0]+'日（'+row[1]+'）',table:table,row:row})})});return out.sort(function(a,b){return a.date.localeCompare(b.date)})}
   function rosterHasMonth(date){return images.some(function(image){return image.table&&date.startsWith(image.table.year+'-'+String(image.table.month).padStart(2,'0')+'-')})}
-  function requestStatusLabel(status,date){if(status==='approved')return'反映済み';if(status==='rejected')return'処理済み';return'確認待ち'}
+  function requestStatusLabel(status,date){if(status==='approved')return'反映済み';return'確認待ち'}
   function requestPersonLabel(item, side){
     const grade=String(item[side+'Grade']||item.grade||'');
     const name=String(item[side]||'');
