@@ -537,6 +537,7 @@ function commentDateValue(comment){if(comment.eventDate){const value=new Date(co
 function sortedComments(){return [...data.comments].filter(comment=>comment&&(comment.text||comment.upperGrade)).sort((a,b)=>commentDateValue(b)-commentDateValue(a)||new Date(b.updatedAt||0)-new Date(a.updatedAt||0))}
 function todayDateKey(){const now=new Date(),year=now.getFullYear(),month=String(now.getMonth()+1).padStart(2,'0'),day=String(now.getDate()).padStart(2,'0');return `${year}-${month}-${day}`}
 function isPastComment(comment){const eventDate=String(comment?.eventDate||'');return /^\d{4}-\d{2}-\d{2}$/.test(eventDate)&&eventDate<todayDateKey()}
+window.__attendanceComments=data.comments;
 function renderComments(){const byId=new Map(data.members.map(m=>[m.id,memberDisplayName(m)]));const list=sortedComments().filter(comment=>!isPastComment(comment)).slice(0,50);$('#commentList').innerHTML=list.length?list.map(c=>`<article class="comment-item"><div class="comment-meta"><span class="comment-name">${esc(byId.get(c.memberId)||'指導者')}</span>　${c.eventDate?esc(formatDate(c.eventDate))+'　':''}${esc(new Date(c.updatedAt).toLocaleString('ja-JP'))}</div><div class="comment-text">${esc(c.text||'コメントなし')}</div></article>`).join(''):'<div class="empty">コメントはまだありません。</div>'}
 $('#openReportBtn').onclick=()=>{const eventId=$('#reportEventSelect').value;if(!eventId||!renderReport(eventId)){alert('出力する日程を選択してください。');return}$('#reportDialog').showModal();document.body.style.overflow='hidden'};
 $('#closeReportBtn').onclick=()=>{$('#reportDialog').close();document.body.style.overflow=''};
@@ -852,5 +853,5 @@ body.photo-admin-on #accessPasswordChange{
 </script>
 <script src="./operator-passkey-setup.js?v=20260927-csp3"></script>
 <script src="./attendance-future-only.js?v=20260927"></script>
-<script src="./attendance-comment-delete.js?v=20260927-1" defer></script>
+<script src="./attendance-comment-delete.js?v=20260927-2" defer></script>
 </body></html>
