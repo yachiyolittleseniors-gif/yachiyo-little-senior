@@ -244,6 +244,7 @@ img,video,iframe{max-width:100%}
   .team-youtube-link{width:100%;padding:0 16px}
 }
 </style>
+<style id="team-movie-save-only-style">.team-movie-save-only{display:block!important}.team-movie-save-only .team-interview-save{width:100%!important}</style>
 <style id="team-interview-admin-style">
 .team-youtube.interview-hidden{display:none}
 body.staff-editing .team-youtube.interview-hidden{display:block}
@@ -1605,11 +1606,11 @@ html{scroll-padding-top:var(--fixed-header-height)}
 </div>
 <div class="team-interview-admin" id="teamMovieAdmin">
 <div class="team-interview-status" id="teamMovieStatus"></div>
-<label>見出し<input id="teamMovieTitleEdit" maxlength="80" type="text"></label>
+<label>タイトル<input id="teamMovieTitleEdit" maxlength="80" type="text"></label>
 <label>説明文<textarea id="teamMovieDescriptionEdit" maxlength="300" rows="4"></textarea></label>
 <label>動画ファイル（MP4）<input id="teamMovieFileEdit" accept="video/mp4,.mp4" type="file"></label>
 <label class="team-interview-visible"><input id="teamMovieVisibleEdit" type="checkbox"><span>このTEAM MOVIEを表示する</span></label>
-<div class="team-interview-admin-actions"><button class="team-interview-cancel" id="teamMovieCancel" type="button">キャンセル</button><button class="team-interview-save" id="teamMovieSave" type="button">TEAM MOVIEを保存</button></div>
+<div class="team-interview-admin-actions team-movie-save-only"><button class="team-interview-save" id="teamMovieSave" type="button">保存</button></div>
 </div></div>
 <div aria-label="早坂監督インタビュー動画" class="team-youtube" id="teamInterviewCard">
 <div class="team-youtube-public">
@@ -2485,7 +2486,7 @@ body.photo-admin-on #accessPasswordChange{
 })();
 </script>
 <script id="team-movie-script">
-(()=>{const API='/.netlify/functions/site-data?section=team-movie',defaults={title:'雨天時の室内練習',description:'雨の日は室内練習場を利用して練習を行っています。選手たちの練習風景をご覧ください。',visible:false,video:''};let data={...defaults};const $=id=>document.getElementById(id),card=$('teamMovieCard'),video=$('teamMovieVideo'),status=$('teamMovieStatus');if(!card)return;function render(){ $('teamMovieTitle').textContent=data.title||defaults.title;$('teamMovieDescription').textContent=data.description||'';card.classList.toggle('interview-hidden',data.visible===false);status.textContent=data.visible===false?'現在は非表示です':'現在は表示中です';if(data.video){video.src=data.video;video.hidden=false}else{video.removeAttribute('src');video.hidden=true}}function fill(){$('teamMovieTitleEdit').value=data.title||'';$('teamMovieDescriptionEdit').value=data.description||'';$('teamMovieVisibleEdit').checked=data.visible!==false}async function load(){try{const r=await fetch(API,{cache:'no-store'});if(r.ok){const j=await r.json();if(j.data&&typeof j.data==='object'&&!Array.isArray(j.data))data={...defaults,...j.data}}}catch(e){}render();fill()}$('teamMovieSave').onclick=async()=>{const p=sessionStorage.getItem('yachiyoAdminPassword')||'';if(!p){alert('管理者認証をやり直してください。');return}let videoData=data.video||'';const file=$('teamMovieFileEdit').files[0];if(file){if(file.size>12*1024*1024){alert('動画は12MB以下にしてください。');return}videoData=await new Promise((ok,no)=>{const r=new FileReader();r.onload=()=>ok(r.result);r.onerror=no;r.readAsDataURL(file)})}const next={title:$('teamMovieTitleEdit').value.trim(),description:$('teamMovieDescriptionEdit').value.trim(),visible:$('teamMovieVisibleEdit').checked,video:videoData};try{const r=await fetch(API,{method:'POST',headers:{'content-type':'application/json','x-admin-password':p},body:JSON.stringify({data:next})});if(!r.ok)throw new Error();data=next;render();fill();showSaveNotice('保存しました')}catch(e){alert('TEAM MOVIEを保存できませんでした。')}};$('teamMovieCancel').onclick=()=>{fill();document.body.classList.remove('staff-editing')};load()})();
+(()=>{const API='/.netlify/functions/site-data?section=team-movie',defaults={title:'雨天時の室内練習',description:'雨の日は室内練習場を利用して練習を行っています。選手たちの練習風景をご覧ください。',visible:false,video:''};let data={...defaults};const $=id=>document.getElementById(id),card=$('teamMovieCard'),video=$('teamMovieVideo'),status=$('teamMovieStatus');if(!card)return;function render(){ $('teamMovieTitle').textContent=data.title||defaults.title;$('teamMovieDescription').textContent=data.description||'';card.classList.toggle('interview-hidden',data.visible===false);status.textContent=data.visible===false?'現在は非表示です':'現在は表示中です';if(data.video){video.src=data.video;video.hidden=false}else{video.removeAttribute('src');video.hidden=true}}function fill(){$('teamMovieTitleEdit').value=data.title||'';$('teamMovieDescriptionEdit').value=data.description||'';$('teamMovieVisibleEdit').checked=data.visible!==false}async function load(){try{const r=await fetch(API,{cache:'no-store'});if(r.ok){const j=await r.json();if(j.data&&typeof j.data==='object'&&!Array.isArray(j.data))data={...defaults,...j.data}}}catch(e){}render();fill()}$('teamMovieSave').onclick=async()=>{const p=sessionStorage.getItem('yachiyoAdminPassword')||'';if(!p){alert('管理者認証をやり直してください。');return}let videoData=data.video||'';const file=$('teamMovieFileEdit').files[0];if(file){if(file.size>12*1024*1024){alert('動画は12MB以下にしてください。');return}videoData=await new Promise((ok,no)=>{const r=new FileReader();r.onload=()=>ok(r.result);r.onerror=no;r.readAsDataURL(file)})}const next={title:$('teamMovieTitleEdit').value.trim(),description:$('teamMovieDescriptionEdit').value.trim(),visible:$('teamMovieVisibleEdit').checked,video:videoData};try{const r=await fetch(API,{method:'POST',headers:{'content-type':'application/json','x-admin-password':p},body:JSON.stringify({data:next})});if(!r.ok)throw new Error();data=next;render();fill();showSaveNotice('保存しました')}catch(e){alert('TEAM MOVIEを保存できませんでした。')}};load()})();
 </script>
 </body>
 </html>
