@@ -2506,12 +2506,53 @@ body.photo-admin-on #accessPasswordChange{
 })();
 </script>
 <script id="team-movie-script">
-(()=>{const API='/.netlify/functions/site-data?section=team-movie',defaults={title:'雨天時の室内練習',description:'雨の日は室内練習場を利用して練習を行っています。選手たちの練習風景をご覧ください。',visible:false,showControls:false,storageKey:''};let data={...defaults};const $=id=>document.getElementById(id),card=$('teamMovieCard'),video=$('teamMovieVideo'),status=$('teamMovieStatus');if(!card)return;
-function render(){$('teamMovieTitle').textContent=data.title||'';$('teamMovieTitle').closest('.team-youtube-head').style.display=data.title?'flex':'none';$('teamMovieDescription').textContent=data.description||'';$('teamMovieDescription').style.display=data.description?'':'none';card.classList.toggle('interview-hidden',data.visible===false);status.textContent=data.visible===false?'現在は非表示です':'現在は表示中です';if(data.storageKey){video.src=API+'&file=1&v='+encodeURIComponent(data.updatedAt||'');video.hidden=false;video.controls=!!data.showControls;video.loop=!data.showControls;video.muted=!data.showControls;video.autoplay=!data.showControls;video.playsInline=true;if(!data.showControls)video.play().catch(()=>{})}else{video.removeAttribute('src');video.hidden=true}}
-function fill(){$('teamMovieTitleEdit').value=data.title||defaults.title;$('teamMovieDescriptionEdit').value=data.description||defaults.description;$('teamMovieVisibleEdit').checked=data.visible!==false;$('teamMovieControlsEdit').checked=!!data.showControls}
-async function load(){try{const r=await fetch(API,{cache:'no-store'});if(r.ok){const j=await r.json();if(j.data&&typeof j.data==='object'&&!Array.isArray(j.data))data={...defaults,...j.data}}}catch(e){}render();fill()}
-$('teamMovieSave').onclick=async()=>{const p=sessionStorage.getItem('yachiyoAdminPassword')||'';if(!p){alert('管理者認証をやり直してください。');return}const btn=$('teamMovieSave');const oldText=btn.textContent;btn.disabled=true;btn.textContent='保存中…';status.textContent='保存処理を開始しています…';const file=$('teamMovieFileEdit').files[0];const base={title:$('teamMovieTitleEdit').value.trim(),description:$('teamMovieDescriptionEdit').value.trim(),visible:$('teamMovieVisibleEdit').checked,showControls:$('teamMovieControlsEdit').checked};try{let body={data:{...data,...base}};if(file){if(file.size>50*1024*1024)throw new Error('動画は50MB以下にしてください。');status.textContent='動画をアップロードしています…';const upload=await fetch('/.netlify/functions/team-movie-upload',{method:'POST',headers:{'content-type':file.type||'video/mp4','x-file-name':encodeURIComponent(file.name),'x-admin-password':p},body:file});const raw=await upload.text();let uj={};try{uj=raw?JSON.parse(raw):{}}catch(_){uj={}}if(!upload.ok)throw new Error((uj.error||raw||('HTTP '+upload.status)).slice(0,180));data={...data,...base,...(uj.data||{})};status.textContent='動画を保存しました。設定を保存しています…';body={data:{...data,...base}}}const r=await fetch(API,{method:'POST',headers:{'content-type':'application/json','x-admin-password':p},body:JSON.stringify(body)});const j=await r.json().catch(()=>({}));if(!r.ok)throw new Error(j.error||('HTTP '+r.status));data={...data,...base,...(j.data||{})};render();fill();$('teamMovieFileEdit').value='';showSaveNotice('保存しました')}catch(e){alert('TEAM MOVIEを保存できませんでした：'+(e.message||'通信エラー'))}finally{btn.disabled=false;btn.textContent='保存'}};
-$('teamMovieDelete').onclick=async()=>{if(!data.storageKey){alert('削除する動画はありません。');return}if(!confirm('登録中の動画を削除しますか？'))return;const p=sessionStorage.getItem('yachiyoAdminPassword')||'';try{const r=await fetch(API,{method:'POST',headers:{'content-type':'application/json','x-admin-password':p},body:JSON.stringify({action:'deleteTeamMovie'})});const j=await r.json().catch(()=>({}));if(!r.ok)throw new Error(j.error||('HTTP '+r.status));data={...data,...j.data};render();fill();showSaveNotice('動画を削除しました')}catch(e){alert('動画を削除できませんでした：'+(e.message||'通信エラー'))}};load()})();
+(function(){
+  var API='/.netlify/functions/site-data?section=team-movie';
+  var UPLOAD='/.netlify/functions/team-movie-upload';
+  var defaults={title:'雨天時の室内練習',description:'雨の日は室内練習場を利用して練習を行っています。選手たちの練習風景をご覧ください。',visible:false,showControls:false,storageKey:''};
+  var data=Object.assign({},defaults);
+  function el(id){return document.getElementById(id)}
+  var card=el('teamMovieCard'),video=el('teamMovieVideo'),status=el('teamMovieStatus'),save=el('teamMovieSave'),del=el('teamMovieDelete');
+  if(!card||!video||!status||!save||!del)return;
+  function draw(){
+    var title=data.title||defaults.title,desc=data.description||defaults.description;
+    el('teamMovieTitle').textContent=title;el('teamMovieDescription').textContent=desc;
+    card.classList.toggle('interview-hidden',data.visible===false);
+    status.textContent=data.visible===false?'現在は非表示です':'現在は表示中です';
+    if(data.storageKey){video.src=API+'&file=1&v='+encodeURIComponent(data.updatedAt||'');video.hidden=false;video.controls=!!data.showControls;video.loop=!data.showControls;video.muted=!data.showControls;video.autoplay=!data.showControls;video.playsInline=true;if(!data.showControls)video.play().catch(function(){})}else{video.pause();video.removeAttribute('src');video.load();video.hidden=true}
+  }
+  function fill(){el('teamMovieTitleEdit').value=data.title||defaults.title;el('teamMovieDescriptionEdit').value=data.description||defaults.description;el('teamMovieVisibleEdit').checked=data.visible!==false;el('teamMovieControlsEdit').checked=!!data.showControls}
+  function adminPassword(){return sessionStorage.getItem('yachiyoAdminPassword')||''}
+  async function load(){try{var r=await fetch(API,{cache:'no-store'});if(r.ok){var j=await r.json();if(j.data&&typeof j.data==='object')data=Object.assign({},defaults,j.data)}}catch(e){}draw();fill()}
+  save.addEventListener('click',async function(e){
+    e.preventDefault();e.stopPropagation();var p=adminPassword();if(!p){alert('管理者認証をやり直してください。');return}
+    save.disabled=true;save.textContent='保存中…';status.textContent='保存処理を開始しています…';
+    try{
+      var base={title:el('teamMovieTitleEdit').value.trim(),description:el('teamMovieDescriptionEdit').value.trim(),visible:el('teamMovieVisibleEdit').checked,showControls:el('teamMovieControlsEdit').checked};
+      var file=el('teamMovieFileEdit').files&&el('teamMovieFileEdit').files[0];
+      if(file){
+        if(file.size>50*1024*1024)throw new Error('動画は50MB以下にしてください。');
+        status.textContent='動画をアップロードしています…';
+        var up=await fetch(UPLOAD,{method:'POST',headers:{'content-type':file.type||'video/mp4','x-file-name':encodeURIComponent(file.name),'x-admin-password':p},body:file});
+        var ut=await up.text(),uj={};try{uj=ut?JSON.parse(ut):{}}catch(_){}
+        if(!up.ok)throw new Error(uj.error||ut||('HTTP '+up.status));
+        data=Object.assign({},data,uj.data||{},base);
+      }
+      status.textContent='設定を保存しています…';
+      var r=await fetch(API,{method:'POST',headers:{'content-type':'application/json','x-admin-password':p},body:JSON.stringify({data:Object.assign({},data,base)})});
+      var j=await r.json().catch(function(){return {}});
+      if(!r.ok)throw new Error(j.error||('HTTP '+r.status));
+      data=Object.assign({},data,base,j.data||{});el('teamMovieFileEdit').value='';draw();fill();status.textContent='保存しました';if(typeof showSaveNotice==='function')showSaveNotice('保存しました');
+    }catch(err){status.textContent='保存エラー：'+(err.message||'通信エラー');alert('TEAM MOVIEを保存できませんでした：'+(err.message||'通信エラー'))}
+    finally{save.disabled=false;save.textContent='保存'}
+  });
+  del.addEventListener('click',async function(e){
+    e.preventDefault();e.stopPropagation();if(!data.storageKey){alert('削除する動画はありません。');return}if(!confirm('登録中の動画を削除しますか？'))return;
+    var p=adminPassword();if(!p){alert('管理者認証をやり直してください。');return}
+    try{var r=await fetch(API,{method:'POST',headers:{'content-type':'application/json','x-admin-password':p},body:JSON.stringify({action:'deleteTeamMovie'})});var j=await r.json().catch(function(){return {}});if(!r.ok)throw new Error(j.error||('HTTP '+r.status));data=Object.assign({},data,j.data||{});draw();fill();status.textContent='動画を削除しました'}catch(err){status.textContent='削除エラー：'+(err.message||'通信エラー');alert('動画を削除できませんでした：'+(err.message||'通信エラー'))}
+  });
+  load();
+})();
 </script>
 </body>
 </html>
