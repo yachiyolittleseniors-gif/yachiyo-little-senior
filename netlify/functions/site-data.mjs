@@ -37,6 +37,7 @@ const allowed = new Set([
   "duty-roster",
   "staff",
   "team-interview",
+  "team-movie",
   "downloads-application",
   "downloads-guideline",
   "downloads-roster",
