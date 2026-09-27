@@ -3,6 +3,7 @@
 function boot(){
  var date=document.getElementById('commentEventDate'),cancel=document.getElementById('editCancel'),box=document.getElementById('commentText');
  if(!date||!cancel||!box||document.getElementById('safeCommentDelete'))return;
+ var editor=document.getElementById('editor');
  var btn=document.createElement('button');btn.type='button';btn.id='safeCommentDelete';btn.className='secondary';btn.textContent='コメントを削除';btn.disabled=true;cancel.parentNode.insertBefore(btn,cancel);
  var comments=[],memberId='';
  function apiInfo(){var p=location.pathname,coach=p.indexOf('coach-attendance')>=0,player=p.indexOf('player-attendance')>=0;return{url:player?'/.netlify/functions/player-attendance-data':coach?'/.netlify/functions/coach-attendance-data':'/.netlify/functions/attendance-data',coach:coach}}
@@ -13,10 +14,10 @@ function boot(){
  async function load(){try{var r=await fetch(apiInfo().url,{headers:headers(),cache:'no-store'});var j=await r.json();if(r.ok&&j&&j.data&&Array.isArray(j.data.comments))comments=j.data.comments}catch(e){}show()}
  document.addEventListener('click',function(e){
    if(e.target.closest('[data-select-member]'))setTimeout(function(){memberId=selected();show()},0);
-   if(e.target.closest('#commentSave'))setTimeout(function(){load()},700);
+   if(e.target.closest('#commentSave')){var y=window.scrollY;setTimeout(function(){load();window.scrollTo(0,y)},700);}
  },true);
  date.addEventListener('change',show);
- btn.addEventListener('click',async function(){var x=current();if(!x||!memberId||!date.value)return;if(!confirm('このコメントを削除しますか？'))return;btn.disabled=true;try{var r=await fetch(apiInfo().url,{method:'POST',headers:headers(),body:JSON.stringify({action:'deleteComment',memberId:memberId,eventDate:date.value})});var j=await r.json().catch(function(){return{}});if(!r.ok)throw new Error(j.error||'削除できませんでした。');comments=comments.filter(function(y){return !(String(y.memberId)===memberId&&String(y.eventDate||'')===String(date.value))});box.value='';btn.disabled=true;location.reload()}catch(e){alert(e.message||'コメントを削除できませんでした。');show()}});
+ btn.addEventListener('click',async function(){var x=current();if(!x||!memberId||!date.value)return;if(!confirm('表示中のコメントを削除しますか？'))return;var y=window.scrollY;btn.disabled=true;try{var r=await fetch(apiInfo().url,{method:'POST',headers:headers(),body:JSON.stringify({action:'deleteComment',memberId:memberId,eventDate:date.value})});var j=await r.json().catch(function(){return{}});if(!r.ok)throw new Error(j.error||'削除できませんでした。');comments=comments.filter(function(item){return !(String(item.memberId)===memberId&&String(item.eventDate||'')===String(date.value))});box.value='';btn.disabled=true;alert('コメントを削除しました。');window.scrollTo(0,y)}catch(e){alert(e.message||'コメントを削除できませんでした。');show()}});
  load();
 }
 if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',boot,{once:true});else boot();
