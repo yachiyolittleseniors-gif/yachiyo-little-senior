@@ -11,7 +11,10 @@ function boot(){
  function current(){return comments.find(function(x){return String(x.memberId)===memberId&&String(x.eventDate||'')===String(date.value||'')})||null}
  function show(){memberId=selected()||memberId;var x=current();if(x){box.value=String(x.text||'');btn.disabled=false}else{if(document.activeElement!==box)box.value='';btn.disabled=true}}
  async function load(){try{var r=await fetch(apiInfo().url,{headers:headers(),cache:'no-store'});var j=await r.json();if(r.ok&&j&&j.data&&Array.isArray(j.data.comments))comments=j.data.comments}catch(e){}show()}
- document.addEventListener('click',function(e){if(e.target.closest('[data-select-member]'))setTimeout(function(){memberId=selected();show()},0)},true);
+ document.addEventListener('click',function(e){
+   if(e.target.closest('[data-select-member]'))setTimeout(function(){memberId=selected();show()},0);
+   if(e.target.closest('#commentSave'))setTimeout(function(){load()},700);
+ },true);
  date.addEventListener('change',show);
  btn.addEventListener('click',async function(){var x=current();if(!x||!memberId||!date.value)return;if(!confirm('このコメントを削除しますか？'))return;btn.disabled=true;try{var r=await fetch(apiInfo().url,{method:'POST',headers:headers(),body:JSON.stringify({action:'deleteComment',memberId:memberId,eventDate:date.value})});var j=await r.json().catch(function(){return{}});if(!r.ok)throw new Error(j.error||'削除できませんでした。');comments=comments.filter(function(y){return !(String(y.memberId)===memberId&&String(y.eventDate||'')===String(date.value))});box.value='';btn.disabled=true;location.reload()}catch(e){alert(e.message||'コメントを削除できませんでした。');show()}});
  load();
