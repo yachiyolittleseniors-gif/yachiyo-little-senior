@@ -257,6 +257,12 @@ document.addEventListener('DOMContentLoaded',()=>{
 }
 </style>
 
+
+<style id="coach-scroll-axis-lock">
+/* iPhone: 出欠表は横スワイプ、ページ本体は縦スクロールを優先 */
+#board.board-shell{touch-action:pan-x pan-y;-webkit-overflow-scrolling:touch;overscroll-behavior-x:contain}
+#board.board-shell table{touch-action:pan-x pan-y}
+</style>
 </head><body id="page-top">
 <header class="header">
 <nav class="nav">
