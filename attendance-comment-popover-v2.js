@@ -11,7 +11,7 @@ function ensure(){
  return panel;
 }
 function close(){if(panel)panel.hidden=true;selected='';anchor=null}
-function position(){if(!panel||panel.hidden||!anchor)return;const r=anchor.getBoundingClientRect(),w=Math.min(620,innerWidth-20),pad=10;let left=Math.max(pad,Math.min(r.left,innerWidth-w-pad)),top=r.bottom+10;panel.style.width=w+'px';panel.style.left=left+'px';panel.style.top=top+'px';requestAnimationFrame(()=>{const p=panel.getBoundingClientRect();if(p.bottom>innerHeight-pad)panel.style.top=Math.max(76,r.top-p.height-10)+'px'})}
+function position(){if(!panel||panel.hidden||!anchor)return;const r=anchor.getBoundingClientRect(),w=Math.min(620,innerWidth-20),pad=10;const left=Math.max(pad,Math.min(r.left,innerWidth-w-pad));const top=r.bottom+10;panel.style.width=w+'px';panel.style.left=left+'px';panel.style.top=top+'px';}
 function openFor(btn){
  selected=btn.dataset.selectMember||'';anchor=btn;const p=ensure();p.querySelector('.scp-title').textContent=btn.textContent.trim();p.hidden=false;position();
  const original=$('#editor');if(original){const sel=original.querySelector('#commentEventDate'),dst=p.querySelector('.scp-date');dst.innerHTML=sel?sel.innerHTML:'';dst.value=sel?.value||'';p.querySelector('.scp-text').value='';}
