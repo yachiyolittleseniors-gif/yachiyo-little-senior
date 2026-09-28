@@ -207,6 +207,19 @@
     try{await persist('変更履歴を削除しました','当番変更履歴を削除しました')}catch(e){changes=previous;render();alert(e.message||'変更履歴を削除できませんでした。')}
   }
 
+  async function confirmGeneratedDutyRoster(detail){
+    if(!detail||!detail.table||!detail.data)throw new Error('確定する当番表データがありません。');
+    const table=detail.table;
+    const sameIndex=images.findIndex(function(item){return item.table&&Number(item.table.year)===Number(table.year)&&Number(item.table.month)===Number(table.month)});
+    if(sameIndex>=0&&!confirm(table.year+'年'+table.month+'月の当番表はすでに登録されています。\nこの案で置き換えますか？'))return false;
+    const previous=images.slice();
+    const item={id:sameIndex>=0?images[sameIndex].id:'duty-'+Date.now().toString(36)+'-'+Math.random().toString(36).slice(2,8),name:detail.name||('当番表_'+table.year+'年'+String(table.month).padStart(2,'0')+'月.png'),data:String(detail.data),src:'',table:table};
+    if(sameIndex>=0)images[sameIndex]=item;else images.push(item);
+    render();
+    try{await persist('当番表を確定・登録しました','当番表を更新しました',true);return true}catch(e){images=previous;render();throw e}
+  }
+  window.confirmGeneratedDutyRoster=confirmGeneratedDutyRoster;
+
   async function addImages(){
     const files=Array.from(fileInput.files||[]);if(!files.length){alert('追加する画像を選択してください。');return}if(images.length+files.length>8){alert('当番表は8枚まで保存できます。');return}
     for(const file of files){if(!/^image\/(jpeg|png|webp)$/i.test(file.type)&&!(/\.(jpe?g|png|webp)$/i.test(file.name))){alert('JPEG・PNG・WebP画像を選択してください。');return}if(file.size>4*1024*1024){alert(file.name+' は4MBを超えています。');return}}
