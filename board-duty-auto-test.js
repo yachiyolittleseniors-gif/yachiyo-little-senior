@@ -65,8 +65,35 @@ function init(){
       });
       var actions=document.createElement('div');actions.className='duty-family-simple-actions';
       var allMatch=active.every(function(g){return (playerCounts[g]||0)===groups[g].size;});
-      var proceed=document.createElement('button');proceed.type='button';proceed.textContent=allMatch?'人数一致・次へ':'人数不一致のため確認が必要';proceed.disabled=!allMatch;
-      proceed.addEventListener('click',function(){alert('人数一致を確認しました。次の段階で当番表（案）の自動配置へ進みます。');});
+      var proceed=document.createElement('button');proceed.type='button';proceed.textContent=allMatch?'人数一致・当番表案を見る':'人数不一致のため確認が必要';proceed.disabled=!allMatch;
+      proceed.addEventListener('click',function(){
+        var old=preview.querySelector('.duty-generated-plan');if(old)old.remove();
+        var plan=document.createElement('section');plan.className='duty-generated-plan';
+        var ph=document.createElement('b');ph.textContent=y+'年'+m+'月 当番表（案）';plan.appendChild(ph);
+        var info=document.createElement('div');info.className='duty-generated-info';info.textContent='10月の続きから、各学年2家庭ずつ配置した試験案です。まだ公開・保存されません。';plan.appendChild(info);
+        var lastTables=(window.DutyRosterData&&Array.isArray(window.DutyRosterData.INITIAL_TABLES))?window.DutyRosterData.INITIAL_TABLES:[];
+        var starts={'2':'竹内','1':'川村'};
+        var startAfter={'2':'筒井','1':'小池'};
+        var gradeLists={};
+        active.forEach(function(g){gradeLists[g]=Array.from(groups[g].values()).sort(function(a,b){return a.kana.localeCompare(b.kana,'ja')});});
+        function key(v){return String(v||'').replace(/[（）()\s　]/g,'');}
+        function startIndex(g){
+          var list=gradeLists[g]||[], targetKey=key(startAfter[g]||'');
+          var idx=list.findIndex(function(x){return key(x.name)===targetKey||key(x.name).startsWith(targetKey)||targetKey.startsWith(key(x.name));});
+          return idx>=0?(idx+1)%list.length:0;
+        }
+        var pos={};active.forEach(function(g){pos[g]=startIndex(g);});
+        var days=[];for(var d=1;d<=new Date(y,m,0).getDate();d++){var dt=new Date(y,m-1,d),wd=dt.getDay();if(wd===0||wd===6)days.push(d);}
+        var table=document.createElement('table');table.className='duty-generated-table';
+        var thead=document.createElement('thead'),trh=document.createElement('tr');['日付','曜日'].concat(active.flatMap(function(g){return[g+'年',g+'年'];})).forEach(function(t){var th=document.createElement('th');th.textContent=t;trh.appendChild(th);});thead.appendChild(trh);table.appendChild(thead);
+        var tbody=document.createElement('tbody'),wdLabel=['日','月','火','水','木','金','土'];
+        days.forEach(function(day){var tr=document.createElement('tr'),dt=new Date(y,m-1,day);var td=document.createElement('td');td.textContent=day;tr.appendChild(td);td=document.createElement('td');td.textContent=wdLabel[dt.getDay()];tr.appendChild(td);
+          active.forEach(function(g){var list=gradeLists[g]||[];for(var k=0;k<2;k++){var cell=document.createElement('td');if(list.length){cell.textContent=list[pos[g]%list.length].name;pos[g]=(pos[g]+1)%list.length;}tr.appendChild(cell);}});
+          tbody.appendChild(tr);
+        });table.appendChild(tbody);plan.appendChild(table);
+        var warn=document.createElement('div');warn.className='duty-generated-warning';warn.textContent='※現在は土日を対象日にした試験案です。次にサイトのスケジュールと連動して祝日・活動日・里山活動日を正確に反映します。';plan.appendChild(warn);
+        preview.appendChild(plan);plan.scrollIntoView({behavior:'smooth',block:'start'});
+      });
       actions.appendChild(proceed);preview.appendChild(actions);
     }catch(err){preview.style.display='block';preview.textContent='作成できませんでした：'+(err&&err.name==='AbortError'?'名簿取得がタイムアウトしました。':String(err&&err.message||err||'エラー'));}
     finally{create.disabled=false;} return false;
