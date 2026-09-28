@@ -1435,20 +1435,6 @@ body:after{display:none!important;content:none!important}
   <div id="dutyRosterAdminFields">
     <strong>当番表</strong>
     <div class="duty-change-admin">
-      <div class="duty-change-heading"><b>LINEの文章から当番変更を登録</b><button id="toggleLegacyDutyLine" type="button" aria-expanded="false">表示 ▼</button></div>
-      <div id="legacyDutyLineBlock" hidden>
-        <p>変更連絡を貼り付け、年を選んでください。学年をまたぐ場合は、確認欄で変更行ごとに当番枠の学年を選べます。</p>
-        <div class="duty-change-admin-meta">
-          <label for="dutyChangeYear">年<input id="dutyChangeYear" type="number" min="2020" max="2100" inputmode="numeric"></label>
-          <label for="dutyChangeGrade">学年を一括指定（任意）<select id="dutyChangeGrade"><option value="">行ごとに選択</option><option value="3">3年生</option><option value="2">2年生</option><option value="1">1年生</option></select></label>
-        </div>
-        <label for="dutyChangeText">LINEの変更連絡</label>
-        <div class="duty-change-paste-actions"><button id="pasteDutyChangeBtn" type="button">クリップボードから貼り付け</button><span>または入力欄を長押しして「ペースト」</span></div>
-        <textarea id="dutyChangeText" rows="6" placeholder="ここをタップして、LINEの文章を貼り付けてください。"></textarea>
-        <div class="duty-change-example"><b>入力例（「10/3」「10月3日」どちらも可）</b><span>10月3日(土) 山田→佐藤さん</span><span>10月11日(日) 佐藤さん→山田</span></div>
-        <div id="dutyChangePreview" class="duty-change-preview">変更内容を貼り付けると、ここに確認結果が表示されます。</div>
-        <button id="saveDutyChangesBtn" type="button">確認した変更を保存</button>
-      </div>
       <div class="duty-change-heading"><b>登録済み変更履歴</b><button id="toggleDutyAdminHistory" type="button" aria-expanded="false">表示 ▼</button></div>
       <div id="dutyChangeAdminList" class="duty-change-admin-list" hidden></div>
       <div class="duty-request-admin-block">
