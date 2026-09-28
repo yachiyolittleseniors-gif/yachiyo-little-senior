@@ -29,6 +29,9 @@ function init(){
       var playerResponse=await fetch('/.netlify/functions/site-data?section=players',{cache:'no-store',credentials:'same-origin'});
       if(!playerResponse.ok)throw new Error('選手紹介の名簿を取得できませんでした。');
       var playerBody=await playerResponse.json(),players=Array.isArray(playerBody&&playerBody.data)?playerBody.data:[],playerCounts={'1':0,'2':0,'3':0},playerFamilies={'1':new Map(),'2':new Map(),'3':new Map()};
+      var scheduleResponse=await fetch('/.netlify/functions/site-data?section=schedule',{cache:'no-store',credentials:'same-origin'});
+      if(!scheduleResponse.ok)throw new Error('スケジュールを取得できませんでした。');
+      var scheduleBody=await scheduleResponse.json(),scheduleEvents=Array.isArray(scheduleBody&&scheduleBody.data)?scheduleBody.data:[];
       function familyKey(value){return String(value||'').normalize('NFKC').trim().split(/[\s　（(]/)[0].replace(/[父母]$/,'');}
       players.forEach(function(p){var gm=String(p&&p.grade||'').match(/^([123])年/);if(!gm)return;var g=gm[1];playerCounts[g]++;var key=familyKey(p&&p.name);if(key){if(!playerFamilies[g].has(key))playerFamilies[g].set(key,[]);playerFamilies[g].get(key).push(String(p&&p.name||''));}});
       members.forEach(function(mem){
@@ -83,15 +86,32 @@ function init(){
           return idx>=0?(idx+1)%list.length:0;
         }
         var pos={};active.forEach(function(g){pos[g]=startIndex(g);});
-        var days=[];for(var d=1;d<=new Date(y,m,0).getDate();d++){var dt=new Date(y,m-1,d),wd=dt.getDay();if(wd===0||wd===6)days.push(d);}
+        function holidaySet(year){
+          var set=new Set(),add=function(mm,dd){set.add(year+'-'+String(mm).padStart(2,'0')+'-'+String(dd).padStart(2,'0'));};
+          function nthMonday(mm,n){var first=new Date(year,mm-1,1).getDay();return 1+((8-first)%7)+(n-1)*7;}
+          add(1,1);add(1,nthMonday(1,2));add(2,11);if(year>=2020)add(2,23);
+          add(3,Math.floor(20.8431+.242194*(year-1980)-Math.floor((year-1980)/4)));add(4,29);add(5,3);add(5,4);add(5,5);
+          add(7,nthMonday(7,3));add(8,11);add(9,nthMonday(9,3));add(9,Math.floor(23.2488+.242194*(year-1980)-Math.floor((year-1980)/4)));add(10,nthMonday(10,2));add(11,3);add(11,23);
+          Array.from(set).forEach(function(k){var p=k.split('-').map(Number),d=new Date(p[0],p[1]-1,p[2]);if(d.getDay()===0){var s=new Date(d);do{s.setDate(s.getDate()+1);}while(set.has(s.getFullYear()+'-'+String(s.getMonth()+1).padStart(2,'0')+'-'+String(s.getDate()).padStart(2,'0')));set.add(s.getFullYear()+'-'+String(s.getMonth()+1).padStart(2,'0')+'-'+String(s.getDate()).padStart(2,'0'));}});
+          return set;
+        }
+        var holidays=holidaySet(y),monthPrefix=y+'-'+String(m).padStart(2,'0')+'-',monthEvents=scheduleEvents.filter(function(ev){return String(ev&&ev.date||'').startsWith(monthPrefix);});
+        var days=[],activityDays=new Set();
+        for(var d=1;d<=new Date(y,m,0).getDate();d++){
+          var dt=new Date(y,m-1,d),wd=dt.getDay(),date=monthPrefix+String(d).padStart(2,'0');
+          var evs=monthEvents.filter(function(ev){return String(ev.date)===date;});
+          var hasActivity=evs.length>0,weekend=wd===0||wd===6,holiday=holidays.has(date);
+          if(hasActivity||weekend||holiday)days.push(d);
+          if(evs.some(function(ev){return /里山/.test(String(ev.title||'')+' '+String(ev.note||'')+' '+String(ev.memo||''));}))activityDays.add(d);
+        }
         var table=document.createElement('table');table.className='duty-generated-table';
         var thead=document.createElement('thead'),trh=document.createElement('tr');['日付','曜日'].concat(active.flatMap(function(g){return[g+'年',g+'年'];})).forEach(function(t){var th=document.createElement('th');th.textContent=t;trh.appendChild(th);});thead.appendChild(trh);table.appendChild(thead);
         var tbody=document.createElement('tbody'),wdLabel=['日','月','火','水','木','金','土'];
-        days.forEach(function(day){var tr=document.createElement('tr'),dt=new Date(y,m-1,day);var td=document.createElement('td');td.textContent=day;tr.appendChild(td);td=document.createElement('td');td.textContent=wdLabel[dt.getDay()];tr.appendChild(td);
+        days.forEach(function(day){var tr=document.createElement('tr'),dt=new Date(y,m-1,day);if(activityDays.has(day))tr.classList.add('is-activity');var td=document.createElement('td');td.textContent=day;tr.appendChild(td);td=document.createElement('td');td.textContent=wdLabel[dt.getDay()];tr.appendChild(td);
           active.forEach(function(g){var list=gradeLists[g]||[];for(var k=0;k<2;k++){var cell=document.createElement('td');if(list.length){cell.textContent=list[pos[g]%list.length].name;pos[g]=(pos[g]+1)%list.length;}tr.appendChild(cell);}});
           tbody.appendChild(tr);
         });table.appendChild(tbody);plan.appendChild(table);
-        var warn=document.createElement('div');warn.className='duty-generated-warning';warn.textContent='※現在は土日を対象日にした試験案です。次にサイトのスケジュールと連動して祝日・活動日・里山活動日を正確に反映します。';plan.appendChild(warn);
+        var warn=document.createElement('div');warn.className='duty-generated-warning';warn.textContent='土日・祝日・サイトのスケジュール登録日を対象にしています。黄色はスケジュールから判定した里山活動日です。';plan.appendChild(warn);
         preview.appendChild(plan);plan.scrollIntoView({behavior:'smooth',block:'start'});
       });
       actions.appendChild(proceed);preview.appendChild(actions);
