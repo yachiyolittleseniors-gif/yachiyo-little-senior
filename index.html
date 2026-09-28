@@ -5107,5 +5107,16 @@ document.addEventListener('DOMContentLoaded',function(){
   }
 }
 </style>
-<script src="./first-visit-splash.js?v=20260929-0035" defer></script></body>
+<script src="./first-visit-splash.js?v=20260929-0035" defer></script><script id="home-admin-password-guard">
+(function(){
+ const b=document.getElementById('heroAdminToggle');
+ if(!b)return;
+ b.addEventListener('pointerup',function(e){
+   if(e.pointerType==='touch') e.stopPropagation();
+ },{passive:true});
+ b.addEventListener('touchend',function(e){
+   e.stopPropagation();
+ },{passive:true});
+})();
+</script></body>
 </html>
