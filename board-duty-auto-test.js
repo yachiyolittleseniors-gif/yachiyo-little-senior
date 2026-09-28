@@ -26,6 +26,10 @@ function init(){
       finally{clearTimeout(timer);}
       if(!response.ok)throw new Error('保護者出欠の名簿を取得できませんでした。');
       var body=await response.json(), members=body&&body.data&&Array.isArray(body.data.members)?body.data.members:[], groups={'1':new Map(),'2':new Map(),'3':new Map()};
+      var playerResponse=await fetch('/.netlify/functions/site-data?section=players',{cache:'no-store',credentials:'same-origin'});
+      if(!playerResponse.ok)throw new Error('選手紹介の名簿を取得できませんでした。');
+      var playerBody=await playerResponse.json(),players=Array.isArray(playerBody&&playerBody.data)?playerBody.data:[],playerCounts={'1':0,'2':0,'3':0};
+      players.forEach(function(p){var gm=String(p&&p.grade||'').match(/^([123])年/);if(gm)playerCounts[gm[1]]++;});
       members.forEach(function(mem){
         var grade=String(mem&&mem.grades&&mem.grades[0]||mem&&mem.grade||''); if(!groups[grade])return;
         var rawName=String(mem&&mem.name||'').replace(/[父母]$/,'').trim(), kana=String(mem&&mem.kana||'').replace(/[父母]$/,'').trim(); if(!rawName)return;
@@ -39,7 +43,8 @@ function init(){
       active.forEach(function(g){
         var vals=Array.from(groups[g].values()).sort(function(a,b){return a.kana.localeCompare(b.kana,'ja')});
         var d=document.createElement('section');d.className='duty-family-grade';
-        var b=document.createElement('b');b.textContent=g+'年生 '+vals.length+'候補';d.appendChild(b);
+        var b=document.createElement('b');var pc=playerCounts[g]||0,diff=vals.length-pc,matched=pc===vals.length;
+        b.textContent=g+'年生　選手'+pc+'名 ／ 家庭候補'+vals.length+'家庭　'+(matched?'✓ 一致':'⚠ '+(diff>0?diff+'家庭多い':Math.abs(diff)+'家庭少ない'));b.className=matched?'duty-family-count-ok':'duty-family-count-warn';d.appendChild(b);
         vals.forEach(function(x,index){
           var row=document.createElement('div');row.className='duty-family-row';
           var num=document.createElement('span');num.className='duty-family-no';num.textContent=String(index+1);
@@ -53,7 +58,9 @@ function init(){
         preview.appendChild(d);
       });
       var actions=document.createElement('div');actions.className='duty-family-simple-actions';
-      var proceed=document.createElement('button');proceed.type='button';proceed.textContent='この名簿で次へ';proceed.addEventListener('click',function(){alert('次の段階で当番表（案）の自動配置へ進みます。現在はまだ公開・保存しません。');});
+      var allMatch=active.every(function(g){return (playerCounts[g]||0)===groups[g].size;});
+      var proceed=document.createElement('button');proceed.type='button';proceed.textContent=allMatch?'人数一致・次へ':'人数不一致のため確認が必要';proceed.disabled=!allMatch;
+      proceed.addEventListener('click',function(){alert('人数一致を確認しました。次の段階で当番表（案）の自動配置へ進みます。');});
       actions.appendChild(proceed);preview.appendChild(actions);
     }catch(err){preview.style.display='block';preview.textContent='作成できませんでした：'+(err&&err.name==='AbortError'?'名簿取得がタイムアウトしました。':String(err&&err.message||err||'エラー'));}
     finally{create.disabled=false;} return false;
