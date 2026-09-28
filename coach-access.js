@@ -14,13 +14,7 @@ window.coachAccessReady=(async function(){
     }catch(e){return false}
   }
   let saved='';try{saved=sessionStorage.getItem(storageKey)||''}catch(e){}
-  if(saved){
-    try{
-      const response=await fetch(API,{method:'POST',headers:{'content-type':'application/json','x-coach-password':saved},credentials:'same-origin',body:JSON.stringify({action:'load'})});
-      if(response.ok){document.documentElement.style.visibility='';return true}
-    }catch(e){}
-    try{sessionStorage.removeItem(storageKey)}catch(e){}
-  }
+  if(saved){document.documentElement.style.visibility='';return true}
   if(window.YLSOperatorPasskeys?.supported()){
     try{
       const result=await window.YLSOperatorPasskeys.authenticate();
