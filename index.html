@@ -4615,6 +4615,7 @@ document.addEventListener('DOMContentLoaded',function(){
       const r=await fetch(api+'?section=seniorcup-settings',{cache:'no-store'});
       if(!r.ok){apply();return}
       const j=await r.json();
+      window.__yachiyoSeniorCupSettingsPromise=Promise.resolve(j);
       if(j.data && typeof j.data.visible==='boolean') visible=j.data.visible;
     }catch(e){}
     apply();
@@ -4945,8 +4946,7 @@ body.photo-admin-on #heroPhotoChange{
   try{visible=localStorage.getItem('yachiyoSeniorCupVisible')!=='false'}catch(e){}
   apply(visible);
 
-  fetch('/.netlify/functions/site-data?section=seniorcup-settings',{cache:'no-store'})
-    .then(response=>response.ok?response.json():null)
+  (window.__yachiyoSeniorCupSettingsPromise||fetch('/.netlify/functions/site-data?section=seniorcup-settings',{cache:'no-store'}).then(response=>response.ok?response.json():null))
     .then(json=>{
       if(json&&json.data&&typeof json.data.visible==='boolean'){
         visible=json.data.visible;
