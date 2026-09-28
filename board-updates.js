@@ -248,13 +248,16 @@
       legacyCard.style.display='none';
       attendanceCard.style.display='block';
       endBtn.style.display='none';
-      resumeBtn.style.display='';
-      adminStatus.textContent='伝助の移行は終了しています。保護者出欠確認・選手出欠確認を利用できます。';
+      resumeBtn.hidden=true;
+      resumeBtn.style.setProperty('display','none','important');
+      adminStatus.style.display='none';
     }else{
       legacyCard.style.display='block';
       attendanceCard.style.display='block';
       endBtn.style.display='';
-      resumeBtn.style.display='none';
+      resumeBtn.hidden=true;
+      resumeBtn.style.setProperty('display','none','important');
+      adminStatus.style.display='';
       adminStatus.textContent='伝助終了前は、保護者・選手出欠確認を通常利用することはできません。';
     }
   }
