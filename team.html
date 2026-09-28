@@ -1398,7 +1398,24 @@ body.staff-editing:after{display:none!important;content:none!important}
  .restored-footer-nav>a,.restored-footer-nav>a:last-child,.restored-footer-nav>a.footer-board-full{display:flex!important;grid-column:auto!important;width:auto!important;min-width:0!important;align-items:center!important;justify-content:center!important;text-align:center!important}
 }
 </style>
-</head>
+<style id="team-admin-soft-visual-final">
+#staffEditBtn.unified-admin-toggle{
+  border:1px solid rgba(199,154,59,.28)!important;
+  border-radius:999px!important;
+  background:rgba(7,20,38,.28)!important;
+  background-image:none!important;
+  color:rgba(226,189,103,.62)!important;
+  box-shadow:none!important;
+  backdrop-filter:blur(2px)!important;
+  -webkit-backdrop-filter:blur(2px)!important;
+}
+#staffEditBtn.unified-admin-toggle:hover,
+#staffEditBtn.unified-admin-toggle:focus-visible{
+  border-color:rgba(199,154,59,.42)!important;
+  background:rgba(7,20,38,.38)!important;
+  color:rgba(226,189,103,.78)!important;
+}
+</style></head>
 <body id="page-top">
 <header class="header">
 <nav class="nav">
@@ -1865,7 +1882,9 @@ function openProtectedArea(type){
   staffToggle.textContent='管理';
   staffToggle.style.display='none';
 
-  staffToggle.addEventListener('click',async function(){
+  staffToggle.addEventListener('click',async function(event){
+    event.preventDefault();
+    event.stopPropagation();
     if(sessionStorage.getItem('yachiyoAdminMode')==='1'){
       sessionStorage.removeItem('yachiyoAdminMode');
       sessionStorage.removeItem('yachiyoAdminPassword');
