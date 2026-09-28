@@ -8,11 +8,12 @@
   function el(id){return document.getElementById(id)}
   var card=el('teamMovieCard'),video=el('teamMovieVideo'),status=el('teamMovieStatus'),save=el('teamMovieSave'),del=el('teamMovieDelete');
   if(!card||!video||!status||!save||!del)return;
+  function applyPlaybackMode(){var auto=!data.showControls;video.controls=!auto;video.loop=auto;video.playsInline=true;video.setAttribute('playsinline','');video.setAttribute('webkit-playsinline','');if(auto){video.muted=true;video.defaultMuted=true;video.volume=0;video.autoplay=true;video.setAttribute('muted','');video.setAttribute('autoplay','');video.setAttribute('loop','')}else{video.muted=false;video.defaultMuted=false;video.autoplay=false;video.removeAttribute('muted');video.removeAttribute('autoplay');video.removeAttribute('loop')}}
+  function startAutoPlayback(){if(data.showControls)return;var tryPlay=function(){video.play().catch(function(){})};tryPlay();requestAnimationFrame(tryPlay);setTimeout(tryPlay,120);setTimeout(tryPlay,500)}
   function setVideoBlob(blob){
     if(objectUrl)URL.revokeObjectURL(objectUrl);
     objectUrl=URL.createObjectURL(blob);
-    video.src=objectUrl;video.hidden=false;video.controls=!!data.showControls;video.loop=!data.showControls;video.muted=!data.showControls;video.autoplay=!data.showControls;video.playsInline=true;
-    if(!data.showControls)video.play().catch(function(){});
+    applyPlaybackMode();video.src=objectUrl;video.hidden=false;video.load();startAutoPlayback();
   }
   async function loadChunkedVideo(){
     if(!Number.isInteger(data.chunkCount)||data.chunkCount<1)return false;
@@ -34,7 +35,7 @@
     status.textContent=data.visible===false?'現在は非表示です':'現在は表示中です';
     if(data.storageKey){
       if(data.storageKey==='chunks'&&data.chunkCount){video.hidden=true;await loadChunkedVideo()}
-      else{video.src=API+'&file=1&v='+encodeURIComponent(data.updatedAt||'');video.hidden=false;video.controls=!!data.showControls;video.loop=!data.showControls;video.muted=!data.showControls;video.autoplay=!data.showControls;video.playsInline=true;if(!data.showControls)video.play().catch(function(){})}
+      else{applyPlaybackMode();video.src=API+'&file=1&v='+encodeURIComponent(data.updatedAt||'');video.hidden=false;video.load();startAutoPlayback()}
     }else{video.pause();video.removeAttribute('src');video.load();video.hidden=true}
   }
   function fill(){el('teamMovieTitleEdit').value=data.title||defaults.title;el('teamMovieDescriptionEdit').value=data.description||defaults.description;el('teamMovieVisibleEdit').checked=data.visible!==false;el('teamMovieControlsEdit').checked=!!data.showControls;var saved=el('teamMovieSavedFile');if(saved)saved.textContent=data.fileName?'保存済み動画：'+data.fileName:'保存済み動画：なし'}
