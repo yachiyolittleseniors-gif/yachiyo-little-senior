@@ -259,8 +259,9 @@
     }
   }
 
-  // 状態を確認できるまでは、保護者・選手出欠確認をグレー表示にする。
-  setAttendanceEnabled(false);
+  // 初期描画は通常表示にして、更新時の一瞬のグレーアウトを防ぐ。
+  // サーバー確認後、伝助移行中だった場合だけグレー表示へ切り替える。
+  setAttendanceEnabled(true);
 
   async function openProtectedAttendance(button,api,storageKey){
     const hidden=button.classList.contains('admin-gated');
