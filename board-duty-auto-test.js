@@ -39,19 +39,22 @@ function init(){
       if(bad.length){preview.innerHTML='<div class="duty-simple-error"><b>人数が一致しません</b><br>'+bad.map(g=>g+'年：選手'+pc[g]+'名／家庭'+groups[g].size+'家庭').join('<br>')+'</div>';return;}
       var lists={};active.forEach(function(g){
         lists[g]=Array.from(groups[g].values()).sort(function(a,b){return a.kana.localeCompare(b.kana,'ja')});
-        // 当番表では同姓を確実に識別する。名簿側が名字のみでも既存運用の識別名を補完する。
-        var knownSuffix={
-          '1':{'山本':['要','諒'],'井上':['遙','竜']},
-          '2':{'石川':['圭','晃']}
-        };
-        var suffixMap=knownSuffix[g]||{},used={};
+        // 同姓は名簿の「ふりがな（同じ苗字は名前まで）」から自動判定し、姓（名）で表示する。
+        var familyCounts=new Map();
         lists[g].forEach(function(item){
-          var raw=String(item.name||'').replace(/[父母]$/,'').trim();
-          var fam=Object.keys(suffixMap).find(function(s){return raw.indexOf(s)===0;})||familyKey(raw);
-          var suffixes=suffixMap[fam];if(!suffixes)return;
-          var m=raw.match(/[（(]([^）)]+)[）)]/);
-          if(m&&m[1]){used[fam]=(used[fam]||0)+1;return;}
-          var idx=used[fam]||0;if(suffixes[idx])item.name=fam+'（'+suffixes[idx]+'）';used[fam]=idx+1;
+          var kana=String(item.kana||'').normalize('NFKC').trim().replace(/[父母]$/,'');
+          var parts=kana.split(/[\s　]+/).filter(Boolean);
+          var fam=parts[0]||familyKey(item.rawName||item.name);
+          item._dutyFamily=fam;item._dutyGiven=parts.length>1?parts.slice(1).join(''):'';
+          familyCounts.set(fam,(familyCounts.get(fam)||0)+1);
+        });
+        lists[g].forEach(function(item){
+          var fam=item._dutyFamily;
+          if((familyCounts.get(fam)||0)<2)return;
+          var raw=String(item.rawName||item.name||'').replace(/[父母]$/,'').trim();
+          var rawGiven=raw.replace(fam,'').replace(/[（）()\s　]/g,'');
+          var given=rawGiven||item._dutyGiven;
+          if(given)item.name=fam+'（'+given+'）';
         });
       });
       var startAfter={'2':'筒井','1':'小池'},pos={};
@@ -61,9 +64,6 @@ function init(){
       for(var d=1;d<=new Date(y,mo,0).getDate();d++){var dt=new Date(y,mo-1,d),date=prefix+String(d).padStart(2,'0'),evs=events.filter(ev=>ev.date===date);if(dt.getDay()===0||dt.getDay()===6||hs.has(date)||evs.length)days.push(d);var saturdayOrdinal=Math.ceil(d/7);
         if((dt.getDay()===6&&(saturdayOrdinal===2||saturdayOrdinal===4))||evs.some(ev=>/里山/.test(String(ev.title||'')+' '+String(ev.note||'')+' '+String(ev.memo||''))))satoyama.add(d);}
       var rows=days.map(function(d){var dt=new Date(y,mo-1,d),r=[d,['日','月','火','水','木','金','土'][dt.getDay()]];active.forEach(function(g){for(var z=0;z<2;z++){r.push(lists[g][pos[g]%lists[g].length].name);pos[g]++;}});return r;});
-      // 最終出力時にも同姓の識別表記を保証する（名簿の空白・括弧表記差を吸収）。
-      var finalNameMap={'石川圭':'石川（圭）','石川（圭）':'石川（圭）','石川晃':'石川（晃）','石川（晃）':'石川（晃）','山本要':'山本（要）','山本（要）':'山本（要）','山本諒':'山本（諒）','山本（諒）':'山本（諒）','井上遙':'井上（遙）','井上（遙）':'井上（遙）','井上竜':'井上（竜）','井上（竜）':'井上（竜）'};
-      rows.forEach(function(r){for(var ni=2;ni<r.length;ni++){var nk=String(r[ni]||'').replace(/[\s　()（）]/g,'');if(finalNameMap[nk])r[ni]=finalNameMap[nk];}});
       var canvas=document.createElement('canvas');canvas.width=1400;canvas.height=Math.max(1050,330+rows.length*82+300);var ctx=canvas.getContext('2d');if(!ctx)throw new Error('画像を生成できませんでした。');
       ctx.fillStyle='#fff';ctx.fillRect(0,0,canvas.width,canvas.height);
       var totalW=1310,left=Math.round((canvas.width-totalW)/2),top=50,monthW=125,dateW=90,dowW=90,dataW=(totalW-monthW-dateW-dowW)/4;
