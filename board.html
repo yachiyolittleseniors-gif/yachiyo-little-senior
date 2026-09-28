@@ -1461,7 +1461,7 @@ body:after{display:none!important;content:none!important}
   <b>当番表 自動作成（試験）</b>
   <p>公開中の当番表には影響しません。まず管理画面内だけで当番表（案）を作成して確認します。</p>
   <div class="duty-auto-test-controls">
-    <label>対象月 <span class="duty-auto-test-month-row"><input id="dutyAutoTestYear" type="number" min="2026" max="2100" inputmode="numeric" aria-label="対象年"><span>年</span><input id="dutyAutoTestMonthSelect" type="number" min="1" max="12" inputmode="numeric" aria-label="対象月"><span>月</span></span></label>
+    <label>対象月 <span class="duty-auto-test-month-row"><button id="dutyAutoPrevMonth" type="button" aria-label="前の月">‹</button><strong id="dutyAutoMonthLabel"></strong><button id="dutyAutoNextMonth" type="button" aria-label="次の月">›</button></span></label>
     <button id="dutyAutoTestCreate" type="button">当番表（案）を作成</button>
   </div>
   <div class="duty-auto-test-note">保護者出欠のふりがな・学年・父母情報を使い、家庭単位・50音順で候補名簿を作成します。確定・公開・原本保存はまだ行いません。</div>
@@ -1721,48 +1721,36 @@ body.photo-admin-on #accessPasswordChange{
 .duty-auto-test-note{display:none}
 .duty-auto-test-controls{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:8px;align-items:end;margin:8px 0 0}
 .duty-auto-test-controls label{display:grid;gap:3px;font-size:11px;font-weight:800;color:#17202b}
-.duty-auto-test-month-row{display:grid;grid-template-columns:minmax(0,1fr) auto minmax(0,.7fr) auto;gap:5px;align-items:center}.duty-auto-test-controls input{width:100%;min-height:38px;padding:6px 8px;border:1px solid #cfd5dc;border-radius:7px;background:#fff;color:#17202b!important;-webkit-text-fill-color:#17202b!important;opacity:1!important;pointer-events:auto!important;font-weight:800}
+.duty-auto-test-month-row{display:grid;grid-template-columns:42px minmax(0,1fr) 42px;gap:7px;align-items:center}.duty-auto-test-month-row strong{min-height:42px;display:grid;place-items:center;border:1px solid #cfd5dc;border-radius:7px;background:#fff;color:#17202b;font-size:15px}.duty-auto-test-month-row button{min-height:42px;border:1px solid #c79a3b;border-radius:7px;background:#fff;color:#071426;font-size:24px;font-weight:900;display:grid;place-items:center;padding:0}
 #dutyAutoTestCreate{min-height:42px;border:1px solid #b88a2b;border-radius:7px;background:#071426;color:#fff;font-weight:900;padding:0 12px;opacity:1!important;pointer-events:auto!important;cursor:pointer;display:flex!important;align-items:center!important;justify-content:center!important;text-align:center!important;line-height:1.2!important}
 .duty-auto-test-preview{margin-top:9px;padding:10px;border:1px solid #dfe3e8;border-radius:8px;background:#fff;font-size:11px;line-height:1.6}
-@media(max-width:600px){.duty-auto-test-controls{grid-template-columns:1fr}.duty-auto-test-controls input,#dutyAutoTestCreate{width:100%}}
+@media(max-width:600px){.duty-auto-test-controls{grid-template-columns:1fr}#dutyAutoTestCreate{width:100%}}
 #dutyAutoTestCreate{box-sizing:border-box!important;width:100%!important;margin:0!important;padding:0!important;display:grid!important;place-items:center!important;text-align:center!important;text-indent:0!important}
 #dutyAutoTestCreate::before,#dutyAutoTestCreate::after{content:none!important;display:none!important}
 </style>
 <script id="duty-auto-test-script">
 (function initDutyAutoTest(){
- const year=document.getElementById('dutyAutoTestYear'),month=document.getElementById('dutyAutoTestMonthSelect'),button=document.getElementById('dutyAutoTestCreate'),preview=document.getElementById('dutyAutoTestPreview');
- if(!year||!month||!button||!preview){setTimeout(initDutyAutoTest,100);return}
+ const prev=document.getElementById('dutyAutoPrevMonth'),nextBtn=document.getElementById('dutyAutoNextMonth'),label=document.getElementById('dutyAutoMonthLabel'),button=document.getElementById('dutyAutoTestCreate'),preview=document.getElementById('dutyAutoTestPreview');
+ if(!prev||!nextBtn||!label||!button||!preview){setTimeout(initDutyAutoTest,100);return}
  if(button.dataset.ready==='1')return;button.dataset.ready='1';
- const now=new Date(),next=new Date(now.getFullYear(),now.getMonth()+1,1);
- year.value=String(next.getFullYear());month.value=String(next.getMonth()+1);button.disabled=false;
+ const now=new Date();let target=new Date(now.getFullYear(),now.getMonth()+1,1);
+ const renderMonth=()=>{label.textContent=target.getFullYear()+'年 '+(target.getMonth()+1)+'月'};
+ renderMonth();prev.onclick=e=>{e.preventDefault();target=new Date(target.getFullYear(),target.getMonth()-1,1);renderMonth()};nextBtn.onclick=e=>{e.preventDefault();target=new Date(target.getFullYear(),target.getMonth()+1,1);renderMonth()};
  const esc=s=>String(s||'').replace(/[&<>"']/g,ch=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[ch]));
  const baseName=n=>String(n||'').replace(/[父母]$/,'').replace(/\s+/g,'').trim();
  button.onclick=async function(e){
-   e.preventDefault();e.stopPropagation();
-   const y=parseInt(year.value,10),m=parseInt(month.value,10);
-   if(!Number.isInteger(y)||!Number.isInteger(m)||m<1||m>12){alert('対象年月を確認してください。');return false}
+   e.preventDefault();e.stopPropagation();const y=target.getFullYear(),m=target.getMonth()+1;
    button.disabled=true;button.textContent='名簿を取得中…';preview.hidden=false;preview.innerHTML='保護者出欠から名簿を取得しています。';
    try{
      const access=sessionStorage.getItem('yachiyoAttendancePass')||'';
      const r=await fetch('/.netlify/functions/attendance-data',{cache:'no-store',headers:{'x-access-password':access}});
      if(!r.ok)throw new Error('保護者出欠の名簿を取得できませんでした。');
-     const body=await r.json(),members=Array.isArray(body?.data?.members)?body.data.members:[];
-     const map=new Map();
-     members.forEach(mem=>{
-       const grade=String(mem?.grades?.[0]||mem?.grade||''),name=baseName(mem?.name),kana=String(mem?.kana||'').replace(/[父母]$/,'').trim();
-       if(!['1','2','3'].includes(grade)||!name)return;
-       const key=grade+'|'+(kana||name);
-       if(!map.has(key))map.set(key,{grade,name,kana:kana||name,parents:[]});
-       map.get(key).parents.push(String(mem?.parent||''));
-     });
-     const families=[...map.values()].sort((a,b)=>Number(b.grade)-Number(a.grade)||a.kana.localeCompare(b.kana,'ja'));
-     const byGrade=g=>families.filter(x=>x.grade===g);
-     const active=m>=6?['2','1']:['3','2','1'];
-     const rows=active.map(g=>'<section style="margin-top:8px"><b>'+g+'年生 '+byGrade(g).length+'家庭</b><div>'+byGrade(g).map(x=>esc(x.name)).join('、')+'</div></section>').join('');
-     preview.innerHTML='<b>'+y+'年'+m+'月 当番表（案）・試験</b><br><span>公開・保存はされません。</span>'+rows+'<div style="margin-top:10px;color:#9a6d12">現在は家庭単位の候補名簿まで取得しています。次に前月の続きと活動日を使って当番日へ2家庭ずつ配置します。</div>';
+     const body=await r.json(),members=Array.isArray(body?.data?.members)?body.data.members:[],map=new Map();
+     members.forEach(mem=>{const grade=String(mem?.grades?.[0]||mem?.grade||''),name=baseName(mem?.name),kana=String(mem?.kana||'').replace(/[父母]$/,'').trim();if(!['1','2','3'].includes(grade)||!name)return;const key=grade+'|'+(kana||name);if(!map.has(key))map.set(key,{grade,name,kana:kana||name});});
+     const families=[...map.values()].sort((a,b)=>Number(b.grade)-Number(a.grade)||a.kana.localeCompare(b.kana,'ja')),byGrade=g=>families.filter(x=>x.grade===g),active=m>=6?['2','1']:['3','2','1'];
+     preview.innerHTML='<b>'+y+'年'+m+'月 当番表（案）・試験</b><br><span>公開・保存はされません。</span>'+active.map(g=>'<section style="margin-top:8px"><b>'+g+'年生 '+byGrade(g).length+'家庭</b><div>'+byGrade(g).map(x=>esc(x.name)).join('、')+'</div></section>').join('');
    }catch(err){preview.innerHTML='<b>作成できませんでした</b><br>'+esc(err.message||'名簿取得に失敗しました。')}
-   finally{button.disabled=false;button.textContent='当番表（案）を作成'}
-   return false;
+   finally{button.disabled=false;button.textContent='当番表（案）を作成'}return false;
  };
 })();
 </script>
