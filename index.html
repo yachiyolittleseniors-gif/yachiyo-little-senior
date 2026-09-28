@@ -46,7 +46,32 @@ html{min-height:100%;background:#f4f3ef}
 </script>
 <link as="image" fetchpriority="high" href="./official-logo-crisp-final.png" rel="preload"/>
 <link rel="preload" as="image" href="./activity-game.jpg" fetchpriority="low"/>
-<link rel="preload" as="image" href="/.netlify/functions/site-data?section=hero&amp;image=0" fetchpriority="high"/>
+<script id="hero-lcp-early-preload">
+(function(){
+  const request=fetch('/.netlify/functions/site-data?section=hero&manifest=1',{cache:'no-store'})
+    .then(function(response){return response.ok?response.json():null})
+    .then(function(json){
+      const item=Array.isArray(json&&json.data)?json.data[0]:null;
+      const image=item&&item.image;
+      if(image){
+        try{
+          const resolved=new URL(image,location.href);
+          if(resolved.origin===location.origin){
+            const link=document.createElement('link');
+            link.rel='preload';
+            link.as='image';
+            link.href=resolved.href;
+            link.setAttribute('fetchpriority','high');
+            document.head.appendChild(link);
+          }
+        }catch(error){}
+      }
+      return json;
+    })
+    .catch(function(){return null});
+  window.__yachiyoHeroManifestPromise=request;
+})();
+</script>
 <link rel="preload" as="image" href="./activity-meeting.jpg" fetchpriority="low"/>
 <meta charset="utf-8"/>
 <!-- Created by tatsuki.saitoh -->
@@ -3908,17 +3933,17 @@ function openProtectedArea(type){
 
   async function loadHero(){
     try{
-      const r=await fetch(api+'?section=hero&manifest=1',{cache:'no-store'});
-      if(r.ok){
-        const j=await r.json();
-        const d=Array.isArray(j.data)?j.data:[];
-        if(d[0]&&d[0].image){
-          window.__yachiyoPhotoCache&&window.__yachiyoPhotoCache.set('hero',d[0].image);
-          hero.style.setProperty('--hero-photo',`url("${d[0].image}")`);
-        }
+      let j=window.__yachiyoHeroManifestPromise?await window.__yachiyoHeroManifestPromise:null;
+      if(!j){
+        const r=await fetch(api+'?section=hero&manifest=1',{cache:'no-store'});
+        if(r.ok)j=await r.json();
+      }
+      const d=Array.isArray(j&&j.data)?j.data:[];
+      if(d[0]&&d[0].image){
+        window.__yachiyoPhotoCache&&window.__yachiyoPhotoCache.set('hero',d[0].image);
+        hero.style.setProperty('--hero-photo',`url("${d[0].image}")`);
       }
     }catch(e){}
-
   }
   loadHero();
 
