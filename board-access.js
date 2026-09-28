@@ -51,6 +51,7 @@ window.boardAccessReady=(async function requireBoardPassword(){
         const result=await window.YLSPasskeys.authenticate();
         if(!result?.token)return false;
         saveAccess(result.token);
+        try{sessionStorage.setItem('yachiyoBoardPasskeyJustVerified','1')}catch(_){}
         try{localStorage.setItem(passkeyKey,'1')}catch(_){}
         document.documentElement.style.visibility='';
         return true;
