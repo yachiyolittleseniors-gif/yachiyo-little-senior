@@ -307,7 +307,7 @@ body{padding-top:var(--fixed-header-height)!important}
     <dialog class="summary-dialog" id="summaryDialog" aria-labelledby="summaryTitle"><div class="summary-dialog-head"><h2 id="summaryTitle">出欠内訳</h2><button class="summary-close" id="summaryClose" type="button" aria-label="閉じる">×</button></div><div class="breakdown-list" id="summaryBody"></div><p class="breakdown-unset" id="summaryUnset"></p></dialog>
     <div class="board-shell" id="board"><div class="empty">読み込み中...</div></div>
     <section class="editor" id="editor"><h3 id="editorName"></h3><p>この名前で回答を編集しています。</p><label class="comment-date-field">対象日<select id="commentEventDate" aria-label="コメントの対象日"></select></label><textarea id="commentText" maxlength="500" placeholder="コメントを入力（例：車出しできます／AM・PMのみ参加可能）"></textarea><div class="upper-grade-check" id="upperGradeField" hidden><div id="escortGradeButtons" class="escort-grade-buttons"></div></div><div style="margin-top:8px;display:flex;gap:8px;flex-wrap:wrap"><button class="small-btn" id="commentSave">コメントを追加</button><button class="secondary" id="editCancel">選択解除</button></div></section>
-    <section class="comment-section"><h2>最新コメント一覧</h2><div class="comment-list" id="commentList"><div class="empty">読み込み中...</div></div></section>
+    <section class="comment-section"><h2>最新コメント一覧</h2><div class="comment-list" id="commentList"></div></section>
     <dialog class="report-dialog" id="reportDialog" aria-labelledby="reportTitle">
       <div class="report-dialog-frame">
         <div class="report-dialog-actions">
