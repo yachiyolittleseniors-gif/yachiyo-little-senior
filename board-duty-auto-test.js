@@ -32,8 +32,26 @@ function init(){
         var key=(kana||name).normalize('NFKC'); if(!groups[grade].has(key))groups[grade].set(key,{name:name,kana:kana||name});
       });
       var y=target.getFullYear(),m=target.getMonth()+1,active=m>=6?['2','1']:['3','2','1'];
-      preview.innerHTML='';var h=document.createElement('b');h.textContent=y+'年'+m+'月 当番表（案）・試験';preview.appendChild(h);
-      active.forEach(function(g){var vals=Array.from(groups[g].values()).sort(function(a,b){return a.kana.localeCompare(b.kana,'ja')});var d=document.createElement('div');d.style.marginTop='8px';var b=document.createElement('b');b.textContent=g+'年生 '+vals.length+'家庭';var n=document.createElement('div');n.textContent=vals.map(function(x){return x.name}).join('、');d.appendChild(b);d.appendChild(n);preview.appendChild(d);});
+      preview.innerHTML='';
+      var h=document.createElement('b');h.textContent=y+'年'+m+'月 家庭名簿の確認（試験）';preview.appendChild(h);
+      var note=document.createElement('div');note.className='duty-family-note';note.textContent='まだ当番表には配置しません。家庭単位の候補を確認してください。';preview.appendChild(note);
+      active.forEach(function(g){
+        var vals=Array.from(groups[g].values()).sort(function(a,b){return a.kana.localeCompare(b.kana,'ja')});
+        var d=document.createElement('section');d.className='duty-family-grade';
+        var b=document.createElement('b');b.textContent=g+'年生 '+vals.length+'候補';d.appendChild(b);
+        vals.forEach(function(x,index){
+          var row=document.createElement('div');row.className='duty-family-row';
+          var num=document.createElement('span');num.className='duty-family-no';num.textContent=String(index+1);
+          var copy=document.createElement('span');copy.className='duty-family-copy';
+          var name=document.createElement('strong');name.textContent=x.name;
+          var kana=document.createElement('small');kana.textContent=x.kana;
+          copy.appendChild(name);copy.appendChild(kana);
+          var badge=document.createElement('span');badge.className='duty-family-badge';badge.textContent='候補';
+          row.appendChild(num);row.appendChild(copy);row.appendChild(badge);d.appendChild(row);
+        });
+        preview.appendChild(d);
+      });
+      var warn=document.createElement('div');warn.className='duty-family-warning';warn.textContent='同一家庭の父母が別候補になっている場合は、次の段階で家庭IDを指定して統合します。名字だけでは自動統合しません。';preview.appendChild(warn);
     }catch(err){preview.style.display='block';preview.textContent='作成できませんでした：'+(err&&err.name==='AbortError'?'名簿取得がタイムアウトしました。':String(err&&err.message||err||'エラー'));}
     finally{create.disabled=false;} return false;
   };
