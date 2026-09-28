@@ -18,7 +18,9 @@ function init(){
     try{
       if(window.boardAccessReady)await window.boardAccessReady;
       var access=sessionStorage.getItem('yachiyoAttendancePass')||'';
-      var response=await fetch('/.netlify/functions/attendance-data',{cache:'no-store',headers:{'x-access-password':access}});
+      var headers={};
+      if(access)headers['x-access-password']=access;
+      var response=await fetch('/.netlify/functions/attendance-data',{cache:'no-store',credentials:'same-origin',headers:headers});
       if(!response.ok)throw new Error('保護者出欠の名簿を取得できませんでした。');
       var body=await response.json(), members=body&&body.data&&Array.isArray(body.data.members)?body.data.members:[], groups={'1':new Map(),'2':new Map(),'3':new Map()};
       members.forEach(function(mem){
