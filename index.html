@@ -4716,6 +4716,10 @@ document.addEventListener('DOMContentLoaded',function(){
     timer=setTimeout(reset,2200);
     if(taps>=5){
       reset();
+      const container=button.closest('#heroPhotoAdmin');
+      if(container)container.style.setProperty('display','flex','important');
+      const change=document.getElementById('heroPhotoChange');if(change)change.style.setProperty('display','none','important');
+      const announce=document.getElementById('heroAnnouncementEdit');if(announce)announce.style.setProperty('display','none','important');
       button.style.setProperty('display','block','important');
     }
   }
