@@ -1556,63 +1556,7 @@ body:after{display:none!important;content:none!important}
 <script src="./duty-image-reader.js?v=20260918-1"></script>
 <script src="./duty-roster-data.js?v=20260918-1"></script>
 <script src="./board-duty-roster.js?v=20260926-2048"></script>
-<script>
-(function(){
-  function setupDutyAutoTest(){
-    const prev=document.getElementById('dutyAutoPrevMonth');
-    const next=document.getElementById('dutyAutoNextMonth');
-    const label=document.getElementById('dutyAutoMonthLabel');
-    const create=document.getElementById('dutyAutoTestCreate');
-    const preview=document.getElementById('dutyAutoTestPreview');
-    if(!prev||!next||!label||!create||!preview)return;
-    if(create.dataset.bound==='1')return;
-    create.dataset.bound='1';
-    const now=new Date();
-    let target=new Date(now.getFullYear(),now.getMonth()+1,1);
-    function paint(){label.textContent=target.getFullYear()+'年 '+(target.getMonth()+1)+'月';}
-    paint();
-    prev.addEventListener('click',function(e){e.preventDefault();target=new Date(target.getFullYear(),target.getMonth()-1,1);paint();});
-    next.addEventListener('click',function(e){e.preventDefault();target=new Date(target.getFullYear(),target.getMonth()+1,1);paint();});
-    create.addEventListener('click',async function(e){
-      e.preventDefault();
-      const y=target.getFullYear(),m=target.getMonth()+1;
-      preview.hidden=false;preview.textContent='保護者出欠から名簿を取得しています。';
-      create.disabled=true;
-      try{
-        await window.boardAccessReady;
-        const access=sessionStorage.getItem('yachiyoAttendancePass')||'';
-        const response=await fetch('/.netlify/functions/attendance-data',{cache:'no-store',headers:{'x-access-password':access}});
-        if(!response.ok)throw new Error('保護者出欠の名簿を取得できませんでした。');
-        const body=await response.json();
-        const members=Array.isArray(body&&body.data&&body.data.members)?body.data.members:[];
-        const groups={1:new Map(),2:new Map(),3:new Map()};
-        members.forEach(function(mem){
-          const grade=String((mem.grades&&mem.grades[0])||mem.grade||'');
-          if(!groups[grade])return;
-          const name=String(mem.name||'').replace(/[父母]$/,'').trim();
-          const kana=String(mem.kana||'').replace(/[父母]$/,'').trim();
-          if(!name)return;
-          const key=(kana||name).normalize('NFKC');
-          if(!groups[grade].has(key))groups[grade].set(key,{name:name,kana:kana||name});
-        });
-        const active=m>=6?['2','1']:['3','2','1'];
-        preview.replaceChildren();
-        const title=document.createElement('b');title.textContent=y+'年'+m+'月 当番表（案）・試験';preview.appendChild(title);
-        const note=document.createElement('div');note.textContent='公開・保存はされません。';preview.appendChild(note);
-        active.forEach(function(g){
-          const values=Array.from(groups[g].values()).sort(function(a,b){return a.kana.localeCompare(b.kana,'ja')});
-          const section=document.createElement('div');section.style.marginTop='8px';
-          const h=document.createElement('b');h.textContent=g+'年生 '+values.length+'家庭';section.appendChild(h);
-          const names=document.createElement('div');names.textContent=values.map(function(x){return x.name}).join('、');section.appendChild(names);preview.appendChild(section);
-        });
-      }catch(err){preview.textContent='作成できませんでした：'+String(err&&err.message||'名簿取得に失敗しました。');}
-      finally{create.disabled=false;}
-    });
-  }
-  if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',setupDutyAutoTest,{once:true});else setupDutyAutoTest();
-})();
-</script>
-
+<script src="./board-duty-auto-test.js?v=20260928-1410"></script>
 <script src="./board-rules.js?v=20260914-4"></script>
 <script src="./board-archive.js?v=20260914-3"></script>
 
