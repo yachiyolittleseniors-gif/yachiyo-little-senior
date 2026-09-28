@@ -71,25 +71,7 @@ img,video,iframe{max-width:100%}
   .mobile-links{max-height:calc(100vh - 70px);overflow-y:auto}
 }
 </style>
-<style id="footer-layout-only-fix">
-@media(max-width:700px){
-  .restored-footer-nav{
-    display:grid!important;
-    grid-template-columns:repeat(2,minmax(0,1fr))!important;
-    grid-auto-flow:row!important;
-  }
-  .restored-footer-nav>a{
-    grid-column:auto!important;
-    width:auto!important;
-    min-width:0!important;
-    display:flex!important;
-    align-items:center!important;
-    justify-content:center!important;
-    text-align:center!important;
-  }
-  .restored-footer-nav>a.footer-board-full{grid-column:1/-1!important}
-}
-</style>
+
 <style>
 .staff-panel{margin-top:22px;background:#fff;border:1px solid #c9a24c;border-radius:20px;padding:26px 22px;color:#07182c;box-shadow:0 18px 42px rgba(5,20,38,.10)}
 .staff-head{text-align:center;margin-bottom:18px}.staff-head .en{color:#c79a3b;letter-spacing:.16em}.staff-head h2{margin:5px 0 2px;color:#07182c}
@@ -379,14 +361,7 @@ body.staff-editing .graduate-admin{display:block}
   }
 }
 </style>
-<style id="footer-canonical-mobile-fix">
-@media (max-width:600px){
-  .restored-footer-nav{
-    display:grid!important;
-    grid-template-columns:repeat(2,minmax(0,1fr))!important;
-  }
-}
-</style>
+
 <style id="standards-v2-css">
 .standards-v2{margin:28px 0;background:#07172b;border-radius:14px;overflow:hidden;border:1px solid rgba(199,154,59,.45);box-shadow:0 14px 34px rgba(7,20,38,.12)}
 .standards-v2-head{padding:27px 26px 23px;color:#fff}
@@ -1109,21 +1084,7 @@ body.staff-editing .graduate-admin{display:block}
   font-weight:500 !important;
 }
 </style>
-<style id="footer-all-two-column-fix">
-@media (max-width:600px){
-  .restored-footer-nav{
-    display:grid!important;
-    grid-template-columns:repeat(2,minmax(0,1fr))!important;
-    grid-auto-flow:row!important;
-  }
-  .restored-footer-nav>a,
-  .restored-footer-nav>a:last-child,
-  .restored-footer-nav>a.footer-board-full{
-    grid-column:auto!important;
-    width:auto!important;
-  }
-}
-</style>
+
 <style id="major-achievements-style">
 /* Major tournament achievements: hidden publicly until at least one record exists */
 .major-achievements{display:none;margin-top:24px}
@@ -1417,11 +1378,7 @@ html{scroll-padding-top:var(--fixed-header-height)}
 #teamMovieCard .team-youtube-icon{width:48px;height:48px;border:1.5px solid rgba(226,189,103,.9);border-radius:50%;background:rgba(199,154,59,.08);box-shadow:inset 0 0 0 4px rgba(199,154,59,.04),0 5px 16px rgba(0,0,0,.18)}
 #teamMovieCard .team-youtube-icon::before{margin-left:4px;border-top:7px solid transparent;border-bottom:7px solid transparent;border-left:11px solid #e2bd67}
 @media(max-width:600px){#teamMovieCard .team-youtube-icon{width:44px;height:44px}}
-</style><style id="footer-visibility-emergency-fix">
-.restored-footer{display:block!important;visibility:visible!important;opacity:1!important;height:auto!important;min-height:0!important;overflow:visible!important;position:relative!important;z-index:2!important}
-.restored-footer-inner,.restored-footer-nav,.ground-address,.footer-privacy-link,.restored-footer-copy{visibility:visible!important;opacity:1!important}
-@media(max-width:900px){.restored-footer-nav{display:grid!important;grid-template-columns:repeat(2,minmax(0,1fr))!important;height:auto!important;max-height:none!important;overflow:visible!important}.restored-footer-nav>a{display:flex!important;visibility:visible!important;opacity:1!important}}
-</style><style id="team-footer-bottom-gap-fix">html,body{margin-bottom:0!important;padding-bottom:0!important}.restored-footer{margin-bottom:0!important}.restored-footer-inner{padding-bottom:max(28px,env(safe-area-inset-bottom))!important}body.staff-editing{padding-bottom:0!important}</style><style id="staff-mode-bottom-space-fix">body.staff-editing .restored-footer{margin-bottom:0!important}body.staff-editing .restored-footer-inner{padding-bottom:max(28px,env(safe-area-inset-bottom))!important}body.staff-editing:after{display:none!important;content:none!important}</style><style id="team-movie-ios-tap-fix">
+</style><style id="team-movie-ios-tap-fix">
 body.staff-editing #teamMovieCard{overflow:visible!important}
 body.staff-editing #teamMovieAdmin,
 body.staff-editing #teamMovieAdmin *{pointer-events:auto!important}
@@ -1429,12 +1386,18 @@ body.staff-editing #teamMovieAdmin{position:relative!important;z-index:20!import
 body.staff-editing #teamMovieSave,
 body.staff-editing #teamMovieDelete{position:relative!important;z-index:30!important;touch-action:manipulation!important;-webkit-tap-highlight-color:rgba(0,0,0,.08)!important}
 </style>
-<style id="team-footer-force-visible">
-.restored-footer{display:block!important;visibility:visible!important;opacity:1!important;height:auto!important;min-height:0!important;overflow:visible!important;position:relative!important;z-index:2!important;background:#071426!important}
-.restored-footer-inner{display:block!important;visibility:visible!important;opacity:1!important;height:auto!important;overflow:visible!important}
-.restored-footer-nav{visibility:visible!important;opacity:1!important;height:auto!important;max-height:none!important;overflow:visible!important}
+
+<style id="team-footer-canonical">
+html,body{margin-bottom:0!important;padding-bottom:0!important}
+.restored-footer{display:block!important;position:relative!important;z-index:2!important;width:100%!important;height:auto!important;min-height:0!important;margin:0!important;overflow:visible!important;visibility:visible!important;opacity:1!important;background:#071426!important;color:#fff!important}
+.restored-footer-inner{display:block!important;width:100%!important;height:auto!important;max-height:none!important;overflow:visible!important;visibility:visible!important;opacity:1!important;padding-bottom:max(28px,env(safe-area-inset-bottom))!important}
+.restored-footer-nav{height:auto!important;max-height:none!important;overflow:visible!important;visibility:visible!important;opacity:1!important}
 .restored-footer-nav>a,.ground-address,.footer-privacy-link,.restored-footer-copy{visibility:visible!important;opacity:1!important}
-@media(max-width:900px){.restored-footer-nav{display:grid!important;grid-template-columns:repeat(2,minmax(0,1fr))!important}.restored-footer-nav>a{display:flex!important}}
+body.staff-editing:after{display:none!important;content:none!important}
+@media(max-width:900px){
+ .restored-footer-nav{display:grid!important;grid-template-columns:repeat(2,minmax(0,1fr))!important;grid-auto-flow:row!important}
+ .restored-footer-nav>a,.restored-footer-nav>a:last-child,.restored-footer-nav>a.footer-board-full{display:flex!important;grid-column:auto!important;width:auto!important;min-width:0!important;align-items:center!important;justify-content:center!important;text-align:center!important}
+}
 </style>
 </head>
 <body id="page-top">
