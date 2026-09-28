@@ -13,6 +13,15 @@ window.__operatorSetupLoaded=true;
     const localKey='yachiyoOperatorPasskeyRegistered';
     let registered=false;
     try{registered=localStorage.getItem(localKey)==='1'}catch(e){}
+    if(!registered&&window.YLSOperatorPasskeys?.supported()){
+      try{
+        const status=await window.YLSOperatorPasskeys.status();
+        if(status?.registered===true||status?.hasCredentials===true||Number(status?.credentialCount||0)>0){
+          registered=true;
+          try{localStorage.setItem(localKey,'1')}catch(e){}
+        }
+      }catch(e){}
+    }
     if(registered){
       title.textContent='生体認証を登録済み';
       text.textContent='次回から生体認証でログインできます。';
