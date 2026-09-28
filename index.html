@@ -3959,22 +3959,7 @@ function openProtectedArea(type){
   change.style.display='none';
   toggle.textContent='管理';
 
-  // Hidden admin entrance: コピーライトを2秒以内に5回タップ
-  let secretTapCount=0, secretTapTimer=null;
-  const footer=document.querySelector('.restored-footer-copy');
-  if(footer){
-    footer.addEventListener('pointerup',function(e){
-      if(e.target.closest('#heroPhotoAdmin'))return;
-      secretTapCount++;
-      clearTimeout(secretTapTimer);
-      secretTapTimer=setTimeout(()=>{secretTapCount=0},2000);
-      if(secretTapCount>=5){
-        secretTapCount=0;
-        clearTimeout(secretTapTimer);
-        document.getElementById('heroPhotoAdmin').style.display='flex';
-      }
-    },{passive:true});
-  }
+  // Hidden admin entrance is handled by unified-admin-reveal-script below.
 
   toggle.addEventListener('click',async function(){
     if(sessionStorage.getItem('yachiyoAdminMode')==='1'){setAdmin(false);document.getElementById('heroPhotoAdmin').style.display='none';return;}
