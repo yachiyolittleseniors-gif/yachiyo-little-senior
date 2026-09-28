@@ -34,12 +34,35 @@ function init(){
       var prefix=y+'-'+String(mo).padStart(2,'0')+'-',hs=holidays(y),events=schedule.filter(ev=>String(ev?.date||'').startsWith(prefix)),days=[],satoyama=new Set();
       for(var d=1;d<=new Date(y,mo,0).getDate();d++){var dt=new Date(y,mo-1,d),date=prefix+String(d).padStart(2,'0'),evs=events.filter(ev=>ev.date===date);if(dt.getDay()===0||dt.getDay()===6||hs.has(date)||evs.length)days.push(d);if(evs.some(ev=>/里山/.test(String(ev.title||'')+' '+String(ev.note||'')+' '+String(ev.memo||''))))satoyama.add(d);}
       var rows=days.map(function(d){var dt=new Date(y,mo-1,d),r=[d,['日','月','火','水','木','金','土'][dt.getDay()]];active.forEach(function(g){for(var z=0;z<2;z++){r.push(lists[g][pos[g]%lists[g].length].name);pos[g]++;}});return r;});
-      var canvas=document.createElement('canvas');canvas.width=1200;canvas.height=Math.max(900,410+rows.length*64);var ctx=canvas.getContext('2d');if(!ctx)throw new Error('画像を生成できませんでした。');
-      ctx.fillStyle='#fff';ctx.fillRect(0,0,1200,canvas.height);var cols=[45,180,300,515,730,945,1155];
-      ctx.fillStyle='#079b51';ctx.fillRect(45,55,1110,72);ctx.fillStyle='#fff';ctx.font='700 30px sans-serif';ctx.fillText(y+'年 '+mo+'月 当番表',430,102);
-      var heads=['日付','曜日'].concat(active.flatMap(g=>[g+'年',g+'年']));heads.forEach(function(t,i){ctx.fillStyle='#079b51';ctx.fillRect(cols[i],127,cols[i+1]-cols[i],62);ctx.strokeStyle='#27313d';ctx.strokeRect(cols[i],127,cols[i+1]-cols[i],62);ctx.fillStyle='#071426';ctx.font='700 24px sans-serif';var w=ctx.measureText(t).width;ctx.fillText(t,cols[i]+(cols[i+1]-cols[i]-w)/2,168);});
-      var yy=189;rows.forEach(function(r){ctx.fillStyle=satoyama.has(r[0])?'#fff200':'#fff';ctx.fillRect(45,yy,1110,64);r.forEach(function(t,i){ctx.strokeStyle='#27313d';ctx.strokeRect(cols[i],yy,cols[i+1]-cols[i],64);ctx.fillStyle='#071426';ctx.font='700 23px sans-serif';var w=ctx.measureText(String(t)).width;ctx.fillText(String(t),cols[i]+(cols[i+1]-cols[i]-w)/2,yy+41);});yy+=64;});
-      ctx.fillStyle='#071426';ctx.font='700 21px sans-serif';ctx.fillText('☆ 当番の交代が必要な場合は、サイト内の「当番変更申請」より申請してください。',60,yy+55);ctx.fillText('　 申請後は、全体LINEでの共有も併せてお願いいたします。',60,yy+92);ctx.fillText('☆ 黄色の日は里山活動日になります。車の駐車場所に必ず気を付けてください。',60,yy+148);
+      var canvas=document.createElement('canvas');canvas.width=1400;canvas.height=Math.max(1050,330+rows.length*82+300);var ctx=canvas.getContext('2d');if(!ctx)throw new Error('画像を生成できませんでした。');
+      ctx.fillStyle='#fff';ctx.fillRect(0,0,canvas.width,canvas.height);
+      var left=45,top=50,totalW=1310,monthW=125,dateW=90,dowW=90,dataW=(totalW-monthW-dateW-dowW)/4;
+      var x=[left,left+monthW,left+monthW+dateW,left+monthW+dateW+dowW];
+      for(var ci=0;ci<4;ci++)x.push(x[3]+dataW*(ci+1));
+      ctx.strokeStyle='#20252b';ctx.lineWidth=2;
+      ctx.fillStyle='#079b51';ctx.fillRect(left,top,totalW,64);
+      ctx.strokeRect(left,top,totalW,64);
+      ctx.fillStyle='#071426';ctx.font='700 27px sans-serif';ctx.textAlign='center';ctx.textBaseline='middle';
+      ctx.fillText(y+'年',left+monthW/2,top+32);ctx.fillText('日付',x[1]+dateW/2,top+32);ctx.fillText('曜日',x[2]+dowW/2,top+32);
+      var g1=active[0]||'2',g2=active[1]||'1';
+      ctx.fillText(g1+'年',(x[3]+x[5])/2,top+32);ctx.fillText(g2+'年',(x[5]+x[7])/2,top+32);
+      var rowTop=top+64,rowH=72,monthBottom=rowTop+rows.length*rowH;
+      ctx.fillStyle='#fff';ctx.fillRect(left,rowTop,monthW,rows.length*rowH);ctx.strokeRect(left,rowTop,monthW,rows.length*rowH);
+      ctx.fillStyle='#071426';ctx.font='700 30px sans-serif';ctx.fillText(mo+'月',left+monthW/2,rowTop+rows.length*rowH/2);
+      rows.forEach(function(r,ri){
+        var yy=rowTop+ri*rowH;ctx.fillStyle=satoyama.has(r[0])?'#fff200':'#fff';ctx.fillRect(x[1],yy,totalW-monthW,rowH);
+        for(var cidx=1;cidx<7;cidx++)ctx.strokeRect(x[cidx],yy,x[cidx+1]-x[cidx],rowH);
+        ctx.font='700 25px sans-serif';ctx.textAlign='center';ctx.textBaseline='middle';
+        r.forEach(function(t,i){
+          if(i===0){ctx.fillStyle=r[1]==='日'?'#c73535':r[1]==='土'?'#2c67a8':'#071426';ctx.fillText(String(t),x[1]+dateW/2,yy+rowH/2);}
+          else if(i===1){ctx.fillStyle=t==='日'?'#c73535':t==='土'?'#2c67a8':'#071426';ctx.fillText(String(t),x[2]+dowW/2,yy+rowH/2);}
+          else{ctx.fillStyle='#071426';var cx=x[i+1]+(x[i+2]-x[i+1])/2;ctx.fillText(String(t),cx,yy+rowH/2);}
+        });
+      });
+      var noteY=monthBottom+58;ctx.textAlign='left';ctx.textBaseline='alphabetic';ctx.fillStyle='#071426';ctx.font='700 22px sans-serif';
+      ctx.fillText('☆　都合によりお当番の交代は可能です。その際は、下記のご対応をお願いいたします。',70,noteY);
+      ctx.font='600 20px sans-serif';ctx.fillText('① サイト内の「当番変更申請」より申請してください。',145,noteY+40);ctx.fillText('② 申請後は、全体LINEでの共有も併せてお願いいたします。',145,noteY+78);
+      ctx.font='700 22px sans-serif';ctx.fillText('☆　黄色の日は里山活動日になります。車の駐車場所に必ず気を付けてください。',70,noteY+145);
       var src=canvas.toDataURL('image/png');preview.innerHTML='';var title=document.createElement('b');title.textContent=y+'年'+mo+'月 当番表（案）';var img=document.createElement('img');img.className='duty-simple-image';img.src=src;img.alt=title.textContent;var actions=document.createElement('div');actions.className='duty-simple-actions';var dl=document.createElement('button');dl.type='button';dl.textContent='画像を保存';dl.onclick=function(){var a=document.createElement('a');a.href=src;a.download='当番表_'+y+'年'+String(mo).padStart(2,'0')+'月_案.png';a.click();};var detail=document.createElement('button');detail.type='button';detail.textContent='詳細を見る';detail.onclick=function(){var box=preview.querySelector('.duty-simple-detail');box.hidden=!box.hidden;};actions.append(dl,detail);var detailBox=document.createElement('div');detailBox.className='duty-simple-detail';detailBox.hidden=true;detailBox.textContent='選手数と家庭数：一致　／　対象日：土日・祝日・スケジュール登録日　／　黄色：里山活動日';preview.append(title,img,actions,detailBox);
     }catch(err){preview.innerHTML='<div class="duty-simple-error"><b>作成できませんでした</b><br>'+String(err?.message||err)+'</div>';}
     finally{create.disabled=false;create.textContent='当番表（案）を作成';}
