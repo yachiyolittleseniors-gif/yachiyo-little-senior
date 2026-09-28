@@ -2425,5 +2425,16 @@ body.photo-admin-on #accessPasswordChange{
 })();
 </script>
 <script src="./team-movie.js?v=20260928-0919"></script>
-</body>
+<script id="team-admin-password-guard">
+(function(){
+ const b=document.getElementById('staffEditBtn');
+ if(!b)return;
+ b.addEventListener('pointerup',function(e){
+   if(e.pointerType==='touch') e.stopPropagation();
+ },{passive:true});
+ b.addEventListener('touchend',function(e){
+   e.stopPropagation();
+ },{passive:true});
+})();
+</script></body>
 </html>
