@@ -1851,6 +1851,7 @@ function openProtectedArea(type){
       const response=await fetch(api+'?section=seniorcup-settings',{cache:'no-store'});
       if(!response.ok)return;
       const result=await response.json();
+      window.__yachiyoSeniorCupSettingsPromise=Promise.resolve(result);
       if(result.data&&result.data.visible===false){
         if(select.value===seniorcupOption.value)select.value='';
         seniorcupOption.remove();
@@ -1895,8 +1896,7 @@ function openProtectedArea(type){
   try{visible=localStorage.getItem('yachiyoSeniorCupVisible')!=='false'}catch(e){}
   apply(visible);
 
-  fetch('/.netlify/functions/site-data?section=seniorcup-settings',{cache:'no-store'})
-    .then(response=>response.ok?response.json():null)
+  (window.__yachiyoSeniorCupSettingsPromise||fetch('/.netlify/functions/site-data?section=seniorcup-settings',{cache:'no-store'}).then(response=>response.ok?response.json():null))
     .then(json=>{
       if(json&&json.data&&typeof json.data.visible==='boolean'){
         visible=json.data.visible;
