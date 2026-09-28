@@ -47,25 +47,14 @@ function init(){
           var name=document.createElement('strong');name.textContent=x.name;
           var kana=document.createElement('small');kana.textContent=x.kana;
           copy.appendChild(name);copy.appendChild(kana);
-          var badge=document.createElement('button');badge.type='button';badge.className='duty-family-badge';badge.textContent='家庭設定';badge.dataset.familyName=x.name;badge.dataset.familyKana=x.kana;badge.dataset.familyGrade=g;
-          badge.addEventListener('click',function(){
-            var current=preview.querySelector('.duty-family-editor');if(current)current.remove();
-            var editor=document.createElement('div');editor.className='duty-family-editor';
-            var title=document.createElement('b');title.textContent=g+'年生 '+x.name+' の家庭設定';
-            var help=document.createElement('p');help.textContent='同じ家庭としてまとめる候補を選択します。試験中のため、まだ保護者出欠データには保存しません。';
-            var select=document.createElement('select');select.className='duty-family-select';
-            var none=document.createElement('option');none.value='';none.textContent='この家庭を単独で扱う';select.appendChild(none);
-            vals.forEach(function(other){if(other===x)return;var o=document.createElement('option');o.value=other.name;o.textContent=other.name+'（'+other.kana+'）';select.appendChild(o);});
-            var actions=document.createElement('div');actions.className='duty-family-editor-actions';
-            var ok=document.createElement('button');ok.type='button';ok.textContent='試験設定';ok.addEventListener('click',function(){badge.textContent=select.value?'統合候補あり':'単独家庭';badge.classList.add('is-set');editor.remove();});
-            var cancel=document.createElement('button');cancel.type='button';cancel.textContent='閉じる';cancel.addEventListener('click',function(){editor.remove();});
-            actions.appendChild(ok);actions.appendChild(cancel);editor.appendChild(title);editor.appendChild(help);editor.appendChild(select);editor.appendChild(actions);row.after(editor);
-          });
+          var badge=document.createElement('span');badge.className='duty-family-badge is-ok';badge.textContent='✓';
           row.appendChild(num);row.appendChild(copy);row.appendChild(badge);d.appendChild(row);
         });
         preview.appendChild(d);
       });
-      var warn=document.createElement('div');warn.className='duty-family-warning';warn.textContent='同一家庭の父母が別候補になっている場合は、次の段階で家庭IDを指定して統合します。名字だけでは自動統合しません。';preview.appendChild(warn);
+      var actions=document.createElement('div');actions.className='duty-family-simple-actions';
+      var proceed=document.createElement('button');proceed.type='button';proceed.textContent='この名簿で次へ';proceed.addEventListener('click',function(){alert('次の段階で当番表（案）の自動配置へ進みます。現在はまだ公開・保存しません。');});
+      actions.appendChild(proceed);preview.appendChild(actions);
     }catch(err){preview.style.display='block';preview.textContent='作成できませんでした：'+(err&&err.name==='AbortError'?'名簿取得がタイムアウトしました。':String(err&&err.message||err||'エラー'));}
     finally{create.disabled=false;} return false;
   };
