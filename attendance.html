@@ -535,7 +535,7 @@ function jumpToParentGrade(parent,grade){
   const headHeight=board.querySelector('thead')?.offsetHeight||0;
   board.scrollTo({top:Math.max(0,row.offsetTop-headHeight),behavior:'smooth'});
 }
-function render(){const existingEditor=$('#editor');if(existingEditor&&existingEditor.closest('#board'))existingEditor.remove();
+function render(){const existingEditor=$('#editor'),editorHome=$('#editorHome');if(existingEditor&&existingEditor.closest('#board')&&editorHome)editorHome.appendChild(existingEditor);
   const events=visibleEvents(),members=sortedMembers(),seenGroups=new Set();
   const hasGroup=(parent,grade)=>members.some(member=>member.parent===parent&&member.grades?.[0]===grade);
   const gradeButtons=parent=>normalizeGradeOrder(data.gradeOrder).map(grade=>`<button type="button" data-jump-parent="${parent}" data-jump-grade="${grade}" ${hasGroup(parent,grade)?'':'disabled'}>${grade}年</button>`).join('');
