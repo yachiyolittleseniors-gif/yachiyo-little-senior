@@ -88,6 +88,19 @@ function init(){
     finally{create.disabled=false;create.textContent='当番表（案）を作成';}
   };
 }
-function boot(){init();setTimeout(init,250);setTimeout(init,1000);}
+
+function initTemporaryDuty(){
+  var open=document.getElementById('temporaryDutyCreateBtn'),box=document.getElementById('temporaryDutyBuilder'),rows=document.getElementById('temporaryDutyRows'),add=document.getElementById('temporaryDutyAddDate'),make=document.getElementById('temporaryDutyPreview'),result=document.getElementById('temporaryDutyResult');
+  if(!open||!box||!rows||!add||!make||!result||open.dataset.bound==='1')return;open.dataset.bound='1';
+  function row(){
+    var d=document.createElement('div');d.className='temporary-duty-row';
+    d.innerHTML='<input type="date" class="tmp-date"><select class="tmp-grade"><option value="3">3年</option><option value="2" selected>2年</option><option value="1">1年</option></select><select class="tmp-slot"><option value="午前">午前</option><option value="午後">午後</option><option value="終日">終日</option></select><input class="tmp-names" placeholder="担当者（例：石山・加藤）"><button type="button" class="tmp-remove">削除</button>';
+    d.querySelector('.tmp-remove').onclick=function(){d.remove();};rows.appendChild(d);
+  }
+  open.onclick=function(){box.hidden=!box.hidden;if(!box.hidden&&!rows.children.length)row();};
+  add.onclick=row;
+  make.onclick=function(){var data=Array.from(rows.querySelectorAll('.temporary-duty-row')).map(function(r){return{date:r.querySelector('.tmp-date').value,grade:r.querySelector('.tmp-grade').value,slot:r.querySelector('.tmp-slot').value,names:r.querySelector('.tmp-names').value.trim()};}).filter(x=>x.date&&x.names);if(!data.length){alert('日付と担当者を入力してください。');return;}result.hidden=false;result.innerHTML='<b>臨時当番表（案）</b>'+data.map(x=>'<div>'+x.date+'　'+x.grade+'年　【'+x.slot+'】 '+x.names+'</div>').join('')+'<p>画像生成・確定保存は次の段階で接続します。</p>';};
+}
+function boot(){init();initTemporaryDuty();setTimeout(function(){init();initTemporaryDuty();},250);setTimeout(function(){init();initTemporaryDuty();},1000);}
 if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',boot,{once:true});else boot();
 })();
