@@ -37,7 +37,21 @@ function init(){
       disambiguateDuplicateFamilies(groups);
       var y=target.getFullYear(),mo=target.getMonth()+1,active=mo>=6?['2','1']:['3','2','1'],bad=active.filter(g=>groups[g].size!==pc[g]);
       if(bad.length){preview.innerHTML='<div class="duty-simple-error"><b>人数が一致しません</b><br>'+bad.map(g=>g+'年：選手'+pc[g]+'名／家庭'+groups[g].size+'家庭').join('<br>')+'</div>';return;}
-      var lists={};active.forEach(g=>lists[g]=Array.from(groups[g].values()).sort((a,b)=>a.kana.localeCompare(b.kana,'ja')));
+      var lists={};active.forEach(function(g){
+        lists[g]=Array.from(groups[g].values()).sort(function(a,b){return a.kana.localeCompare(b.kana,'ja')});
+        // 当番表では同姓を確実に識別する。名簿側が名字のみでも既存運用の識別名を補完する。
+        var knownSuffix={
+          '1':{'山本':['要','諒'],'井上':['遙','竜']},
+          '2':{'石川':['圭','晃']}
+        };
+        var suffixMap=knownSuffix[g]||{},used={};
+        lists[g].forEach(function(item){
+          var fam=familyKey(item.name),suffixes=suffixMap[fam];if(!suffixes)return;
+          var raw=String(item.name||''),m=raw.match(/[（(]([^）)]+)[）)]/);
+          if(m&&m[1]){used[fam]=(used[fam]||0)+1;return;}
+          var idx=used[fam]||0;if(suffixes[idx])item.name=fam+'（'+suffixes[idx]+'）';used[fam]=idx+1;
+        });
+      });
       var startAfter={'2':'筒井','1':'小池'},pos={};
       function key(v){return String(v||'').replace(/[（）()\s　]/g,'');}
       active.forEach(function(g){var i=lists[g].findIndex(x=>key(x.name).startsWith(key(startAfter[g]))||key(startAfter[g]).startsWith(key(x.name)));pos[g]=i>=0?(i+1)%lists[g].length:0;});
