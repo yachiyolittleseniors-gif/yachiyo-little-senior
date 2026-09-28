@@ -3554,6 +3554,14 @@ body.photo-admin-on .recruit-mode-admin{display:block}
 <meta content="index,follow,max-image-preview:large,max-snippet:-1,max-video-preview:-1" name="robots"/>
 </meta></meta></meta></meta></meta>
 <script src="./admin-visibility.js?v=20260926-4" defer></script>
+
+<style id="hero-loading-logo-style">
+.hero{position:relative}
+.hero-loading-logo{position:absolute;inset:0;z-index:0;display:flex;align-items:center;justify-content:center;background:#071426;opacity:1;transition:opacity .25s ease;pointer-events:none}
+.hero-loading-logo img{width:min(82vw,620px);height:auto;display:block}
+.hero.hero-image-ready .hero-loading-logo{opacity:0}
+.hero .hero-inner{position:relative;z-index:1}
+</style>
 </head>
 <body id="page-top">
 <header class="header">
@@ -3584,7 +3592,7 @@ body.photo-admin-on .recruit-mode-admin{display:block}
 </div>
 </header>
 <main class="page show" id="home">
-<section class="hero"><div class="hero-inner">
+<section class="hero"><div class="hero-loading-logo" aria-hidden="true"><img src="./official-logo-crisp-final.png" alt=""></div><div class="hero-inner">
 <div class="hero-main">
 <div aria-controls="heroAnnouncementDetailModal" aria-haspopup="dialog" aria-label="お知らせの詳細を見る" aria-live="polite" class="hero-announcement" id="heroAnnouncement" role="button"><span class="hero-announcement-label">お知らせ</span><span class="hero-announcement-message" id="heroAnnouncementMessage"></span><span class="hero-announcement-detail-hint" hidden="" id="heroAnnouncementDetailHint">詳しく見る ›</span></div>
 <div aria-hidden="true" class="pc-reference-hero-copy">
@@ -5109,5 +5117,6 @@ document.addEventListener('DOMContentLoaded',function(){
   }
 }
 </style>
+<script src="./hero-loading-logo.js?v=20260928-2355" defer></script>
 </body>
 </html>
