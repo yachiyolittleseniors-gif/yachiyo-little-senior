@@ -79,8 +79,15 @@
     const result=window.DutyRosterData.applyChanges(table,row[0],grade,name,changes);
     return{value:displayName(result.value,grade),changed:result.changed,original:displayName(result.original,grade),column:column};
   }
+  function isPublicRosterActive(item,now=new Date()){
+    const table=item&&item.table;if(!table||!Number(table.year)||!Number(table.month)||!Array.isArray(table.rows)||!table.rows.length)return true;
+    const lastDay=Math.max.apply(null,table.rows.map(function(row){return Number(row&&row[0])||0}));
+    if(!lastDay)return true;
+    const end=new Date(Number(table.year),Number(table.month)-1,lastDay,23,59,59,999);
+    return now<=end;
+  }
   function renderTables(){
-    tableList.innerHTML=images.filter(function(item){return item.table}).map(function(item){const table=item.table;const grades=table.grades||[2,1];
+    tableList.innerHTML=images.filter(function(item){return item.table&&isPublicRosterActive(item)}).map(function(item){const table=item.table;const grades=table.grades||[2,1];
       const rows=table.rows.map(function(row,index){
         const cells=[appliedCell(table,row,grades[0],0,row[2]),appliedCell(table,row,grades[0],1,row[3]),appliedCell(table,row,grades[1],0,row[4]),appliedCell(table,row,grades[1],1,row[5])];
         const cellMarkup=cells.map(function(cell){const title=cell.changed?' title="変更前：'+escapeHtml(cell.original)+'"':'';return'<td class="'+(cell.changed?'is-changed':'')+'"'+title+'><span>'+escapeHtml(cell.value)+'</span></td>'}).join('');
@@ -120,14 +127,14 @@
     images.forEach(function(item,index){
       const sourceKey=imageSourceKey(item);let image=existingImages.get(String(item.id));
       if(!image||image.dataset.sourceKey!==sourceKey){image=document.createElement('img');image.className='duty-roster-image';image.src=imageSource(item);image.dataset.dutyId=String(item.id);image.dataset.sourceKey=sourceKey}
-      image.alt=item.name||('当番表 '+(index+1));image.loading=index===0?'eager':'lazy';image.decoding='async';imageFragment.appendChild(image);
+      image.alt=item.name||('当番表 '+(index+1));image.loading=index===0?'eager':'lazy';image.decoding='async';if(isPublicRosterActive(item))imageFragment.appendChild(image);
       const row=document.createElement('div');row.className='duty-roster-admin-item';const name=document.createElement('span');name.textContent=adminImageLabel(item,index);const actions=document.createElement('div');actions.className='duty-roster-admin-actions';
       const up=document.createElement('button');up.type='button';up.textContent='↑';up.title='上へ';up.disabled=index===0;up.addEventListener('click',function(){move(index,-1)});
       const down=document.createElement('button');down.type='button';down.textContent='↓';down.title='下へ';down.disabled=index===images.length-1;down.addEventListener('click',function(){move(index,1)});
       const remove=document.createElement('button');remove.type='button';remove.textContent='削除';remove.className='duty-roster-delete';remove.addEventListener('click',function(){removeImage(index)});
       actions.append(up,down,remove);row.append(name,actions);adminList.appendChild(row);
     });
-    if(images.length)list.replaceChildren(imageFragment);renderTables();renderChanges();renderRequests();
+    if(images.length){list.replaceChildren(imageFragment);if(!list.childElementCount){const empty=document.createElement('div');empty.className='duty-roster-loading';empty.textContent='現在掲載中の当番表はありません。';list.appendChild(empty)}}renderTables();renderChanges();renderRequests();
   }
 
   async function load(){
