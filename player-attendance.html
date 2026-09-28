@@ -239,6 +239,31 @@ body{padding-top:var(--fixed-header-height)!important}
 }
 </style>
 
+<style id="attendance-initial-card-visual-fix">
+/* 未選択時も一覧カードを通常表示。編集可否は disabled 属性で維持する */
+#attendanceView .board-shell,
+#attendanceView .board-shell table,
+#attendanceView .board-shell tbody tr,
+#attendanceView .board-shell th,
+#attendanceView .board-shell td,
+#attendanceView .member-btn,
+#attendanceView .status-btn:disabled{
+  opacity:1!important;
+  filter:none!important;
+}
+#attendanceView .status-btn:disabled{
+  background:#fff!important;
+  color:var(--ink)!important;
+}
+#attendanceView .status-btn.status-o:disabled{
+  color:var(--ok)!important;
+  background:#f1fbf5!important;
+}
+#attendanceView .status-btn.status-x:disabled{
+  color:var(--ng)!important;
+  background:#fff3f3!important;
+}
+</style>
 </head><body id="page-top">
 <header class="header">
 <nav class="nav">
