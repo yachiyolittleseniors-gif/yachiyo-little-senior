@@ -1578,6 +1578,17 @@ body:after{display:none!important;content:none!important}
 #dutyAutoPrevMonth::before,#dutyAutoNextMonth::before{
   display:block!important;color:#071426!important;-webkit-text-fill-color:#071426!important;
   font-size:38px!important;font-weight:700!important;line-height:1!important;transform:none!important;
+  visibility:visible!important;opacity:1!important;
+}
+#dutyAutoPrevMonth,#dutyAutoNextMonth{
+  visibility:visible!important;opacity:1!important;
+}
+/* 後段の旧スタイルより確実に優先し、紺の四角を残さない */
+.duty-auto-test-month-row #dutyAutoPrevMonth,
+.duty-auto-test-month-row #dutyAutoNextMonth{
+  border:0!important;border-color:transparent!important;border-radius:0!important;
+  background:transparent!important;background-color:transparent!important;background-image:none!important;
+  box-shadow:none!important;color:#071426!important;-webkit-text-fill-color:#071426!important;
 }
 #dutyAutoPrevMonth::before{content:"‹"!important}
 #dutyAutoNextMonth::before{content:"›"!important}
