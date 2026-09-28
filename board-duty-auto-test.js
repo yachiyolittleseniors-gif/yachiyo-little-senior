@@ -83,7 +83,16 @@ function init(){
           if(err&&err.name==='AbortError')return;
           var w=window.open(src,'_blank');if(!w)alert('画像を開けませんでした。画像を長押しして保存してください。');
         }
-      };var detail=document.createElement('button');detail.type='button';detail.textContent='詳細を見る';detail.onclick=function(){var box=preview.querySelector('.duty-simple-detail');box.hidden=!box.hidden;};actions.append(dl,detail);var detailBox=document.createElement('div');detailBox.className='duty-simple-detail';detailBox.hidden=true;detailBox.textContent='選手数と家庭数：一致　／　対象日：土日・祝日・スケジュール登録日　／　黄色：里山活動日';preview.append(title,img,actions,detailBox);
+      };var detail=document.createElement('button');detail.type='button';detail.textContent='詳細を見る';detail.onclick=function(){var box=preview.querySelector('.duty-simple-detail');box.hidden=!box.hidden;};var confirmBtn=document.createElement('button');confirmBtn.type='button';confirmBtn.textContent='この案で確定';confirmBtn.onclick=async function(){
+        if(!window.confirmGeneratedDutyRoster){alert('当番表の登録機能を読み込めませんでした。ページを再読み込みしてください。');return;}
+        if(!confirm(y+'年'+mo+'月の当番表をこの案で確定・登録しますか？'))return;
+        confirmBtn.disabled=true;confirmBtn.textContent='登録中…';
+        try{
+          var ok=await window.confirmGeneratedDutyRoster({name:'当番表_'+y+'年'+String(mo).padStart(2,'0')+'月.png',data:src,table:{year:y,month:mo,grades:active.slice(),activityDays:Array.from(satoyama),rows:rows}});
+          if(ok){confirmBtn.textContent='確定済み';confirmBtn.disabled=true;}
+          else{confirmBtn.textContent='この案で確定';confirmBtn.disabled=false;}
+        }catch(err){confirmBtn.textContent='この案で確定';confirmBtn.disabled=false;alert(err?.message||'当番表を登録できませんでした。');}
+      };actions.append(dl,confirmBtn,detail);var detailBox=document.createElement('div');detailBox.className='duty-simple-detail';detailBox.hidden=true;detailBox.textContent='選手数と家庭数：一致　／　対象日：土日・祝日・スケジュール登録日　／　黄色：里山活動日';preview.append(title,img,actions,detailBox);
     }catch(err){preview.innerHTML='<div class="duty-simple-error"><b>作成できませんでした</b><br>'+String(err?.message||err)+'</div>';}
     finally{create.disabled=false;create.textContent='当番表（案）を作成';}
   };
