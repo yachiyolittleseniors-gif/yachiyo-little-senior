@@ -121,7 +121,7 @@ function init(){
         var warn=document.createElement('div');warn.className='duty-generated-warning';warn.textContent='土日・祝日・サイトのスケジュール登録日を対象にしています。黄色はスケジュールから判定した里山活動日です。';plan.appendChild(warn);
         var imageBox=document.createElement('section');imageBox.className='duty-generated-image';
         var imageTitle=document.createElement('b');imageTitle.textContent='原本画像プレビュー';imageBox.appendChild(imageTitle);
-        var canvas=document.createElement('canvas');canvas.width=1200;canvas.height=Math.max(900,250+days.length*78+260);var ctx=canvas.getContext('2d');
+        var canvas=document.createElement('canvas');canvas.width=1200;canvas.height=Math.max(900,250+days.length*78+260);var ctx=canvas.getContext('2d');if(!ctx)throw new Error('画像生成を開始できませんでした');
         ctx.fillStyle='#ffffff';ctx.fillRect(0,0,canvas.width,canvas.height);
         ctx.fillStyle='#079b51';ctx.fillRect(45,55,1110,72);
         ctx.fillStyle='#071426';ctx.font='700 31px sans-serif';ctx.fillText(y+'年',65,102);
@@ -141,7 +141,7 @@ function init(){
         preview.appendChild(plan);plan.scrollIntoView({behavior:'smooth',block:'start'});
       });
       actions.appendChild(proceed);preview.appendChild(actions);
-      if(allMatch){actions.hidden=true;setTimeout(function(){proceed.click();},0);}
+      if(allMatch){actions.hidden=true;setTimeout(function(){try{proceed.click();}catch(err){actions.hidden=false;preview.insertAdjacentHTML('beforeend','<div class="duty-family-warning">画像作成でエラーが発生しました：'+String(err&&err.message||err)+'</div>');}},0);}
     }catch(err){preview.style.display='block';preview.textContent='作成できませんでした：'+(err&&err.name==='AbortError'?'名簿取得がタイムアウトしました。':String(err&&err.message||err||'エラー'));}
     finally{create.disabled=false;} return false;
   };
