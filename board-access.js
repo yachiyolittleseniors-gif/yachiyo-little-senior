@@ -38,28 +38,30 @@ window.boardAccessReady=(async function requireBoardPassword(){
     document.documentElement.style.visibility='';
     return true;
   }
+  let passkeyAttempt=null;
   async function verifyPasskey(){
-    // Do not gate WebAuthn behind browser-local storage. A passkey registered
-    // in iCloud Keychain can be available to Safari and Chrome on the same
-    // iPhone even though each browser has separate localStorage.
+    // Do not gate WebAuthn behind browser-local storage. A synced passkey can
+    // be available on another device/browser even when localStorage is empty.
+    // At the same time, keep one shared attempt per page entry so WebAuthn UI
+    // can never be opened twice by overlapping access checks.
     if(!window.YLSPasskeys?.supported())return false;
-    try{
-      const result=await window.YLSPasskeys.authenticate();
-      if(!result?.token)return false;
-      saveAccess(result.token);
-      // Keep this only as a UI hint for the current browser; it is no longer
-      // required in order to attempt passkey authentication.
-      try{localStorage.setItem(passkeyKey,'1')}catch(_){}
-      document.documentElement.style.visibility='';
-      return true;
-    }catch(e){
-      // 404 means no passkeys exist on the server. 401 means authentication
-      // failed; neither should prevent another browser from trying next time.
-      if(e?.status===404){
-        try{localStorage.removeItem(passkeyKey)}catch(_){}
+    if(passkeyAttempt)return passkeyAttempt;
+    passkeyAttempt=(async()=>{
+      try{
+        const result=await window.YLSPasskeys.authenticate();
+        if(!result?.token)return false;
+        saveAccess(result.token);
+        try{localStorage.setItem(passkeyKey,'1')}catch(_){}
+        document.documentElement.style.visibility='';
+        return true;
+      }catch(e){
+        if(e?.status===404){
+          try{localStorage.removeItem(passkeyKey)}catch(_){}
+        }
+        return false;
       }
-      return false;
-    }
+    })();
+    return passkeyAttempt;
   }
   const searchParams=new URLSearchParams(location.search);
   const returnSource=searchParams.get('from');
