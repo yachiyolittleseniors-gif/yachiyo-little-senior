@@ -3902,8 +3902,8 @@ function openProtectedArea(type){
 })();
 </script>
 <script src="./home-latest-data.js?v=20260927-seo1" defer></script>
-<button data-nosnippet="" id="heroAdminToggle" type="button">管理</button>
 <div data-nosnippet="" id="heroPhotoAdmin">
+<button data-nosnippet="" id="heroAdminToggle" type="button">管理</button>
 <label data-nosnippet="" for="heroPhotoInput" id="heroPhotoChange">トップの写真を変更</label>
 <button class="hero-announcement-admin" data-nosnippet="" id="heroAnnouncementEdit" type="button">トップお知らせ編集</button>
 <input accept="image/*" id="heroPhotoInput" type="file"/>
@@ -3960,7 +3960,22 @@ function openProtectedArea(type){
   change.style.display='none';
   toggle.textContent='管理';
 
-  // Hidden admin entrance is handled by unified-admin-reveal-script below.
+  // Hidden admin entrance: コピーライトを2秒以内に5回タップ
+  let secretTapCount=0, secretTapTimer=null;
+  const footer=document.querySelector('.restored-footer-copy');
+  if(footer){
+    footer.addEventListener('pointerup',function(e){
+      if(e.target.closest('#heroPhotoAdmin'))return;
+      secretTapCount++;
+      clearTimeout(secretTapTimer);
+      secretTapTimer=setTimeout(()=>{secretTapCount=0},2000);
+      if(secretTapCount>=5){
+        secretTapCount=0;
+        clearTimeout(secretTapTimer);
+        document.getElementById('heroPhotoAdmin').style.display='flex';
+      }
+    },{passive:true});
+  }
 
   toggle.addEventListener('click',async function(){
     if(sessionStorage.getItem('yachiyoAdminMode')==='1'){setAdmin(false);document.getElementById('heroPhotoAdmin').style.display='none';return;}
@@ -4717,6 +4732,8 @@ document.addEventListener('DOMContentLoaded',function(){
     timer=setTimeout(reset,2200);
     if(taps>=5){
       reset();
+      const container=button.closest('#heroPhotoAdmin');
+      if(container)container.style.setProperty('display','flex','important');
       button.style.setProperty('display','block','important');
     }
   }
@@ -5106,16 +5123,5 @@ document.addEventListener('DOMContentLoaded',function(){
   }
 }
 </style>
-<script src="./first-visit-splash.js?v=20260929-0035" defer></script><script id="home-admin-password-guard">
-(function(){
- const b=document.getElementById('heroAdminToggle');
- if(!b)return;
- b.addEventListener('pointerup',function(e){
-   if(e.pointerType==='touch') e.stopPropagation();
- },{passive:true});
- b.addEventListener('touchend',function(e){
-   e.stopPropagation();
- },{passive:true});
-})();
-</script></body>
+<script src="./first-visit-splash.js?v=20260929-0035" defer></script></body>
 </html>
