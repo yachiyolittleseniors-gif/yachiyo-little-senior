@@ -45,7 +45,9 @@ html{min-height:100%;background:#f4f3ef}
 })();
 </script>
 <link as="image" fetchpriority="high" href="./official-logo-crisp-final.png" rel="preload"/>
-<link rel="preload" as="image" href="/.netlify/functions/site-data?section=hero&amp;image=0" fetchpriority="high"/>
+<link rel="preload" as="image" href="./activity-game.jpg" fetchpriority="low"/>
+<link rel="preload" as="image" href="/.netlify/functions/site-data?section=hero&amp;current=1" fetchpriority="high"/>
+<link rel="preload" as="image" href="./activity-meeting.jpg" fetchpriority="low"/>
 <meta charset="utf-8"/>
 <!-- Created by tatsuki.saitoh -->
 <meta content="tatsuki.saitoh" name="author">
@@ -1883,7 +1885,7 @@ body.photo-admin-on .seniorcup-admin-control{display:block}
 /* Photo-enhanced final version */
 .hero{background:linear-gradient(90deg,rgba(4,12,22,.9) 0%,rgba(4,12,22,.66) 42%,rgba(4,12,22,.25) 100%),var(--hero-photo) center 44%/cover no-repeat #071426 !important;}
 .hero:after{display:none!important}
-.photo{background:url("/.netlify/images?url=/team-photo.jpg") center/cover no-repeat !important;min-height:340px;border:1px solid rgba(199,154,59,.28)}
+.photo{background:url("./team-photo.jpg") center/cover no-repeat !important;min-height:340px;border:1px solid rgba(199,154,59,.28)}
 .photo:before{display:none!important}
 .activity-grid{display:grid;grid-template-columns:1.2fr .8fr;gap:18px;margin-top:18px}
 .activity-main,.activity-side{position:relative;overflow:hidden;border:1px solid #d8d6d0;background:#111}
@@ -2042,7 +2044,7 @@ img,video,iframe{max-width:100%}
 }
 </script>
 <style>
-:root{--hero-photo:url("/.netlify/functions/site-data?section=hero&image=0")}
+:root{--hero-photo:url("/.netlify/functions/site-data?section=hero&current=1")}
 #heroPhotoAdmin{position:fixed;right:16px;bottom:16px;z-index:9998;display:none;gap:8px;align-items:center;justify-content:flex-end;flex-wrap:wrap;max-width:calc(100vw - 32px)}
 #heroPhotoAdmin button,#heroPhotoAdmin label{border:1px solid rgba(212,175,55,.75);background:#071426;color:#e2bd67;border-radius:999px;padding:10px 14px;font-size:12px;font-weight:700;box-shadow:0 5px 18px rgba(0,0,0,.22);cursor:pointer}
 #heroPhotoAdmin label{display:none;background:#b48a32;color:#fff}
@@ -3155,6 +3157,7 @@ window.__loadYachiyoPhotos = function(){
   }
 }
 </style>
+<link as="image" href="./official-logo-crisp-final.png" rel="preload"/>
 <style id="new-header-logo-style">
 .official-brand-wrap{
   height:62px;
@@ -3554,25 +3557,10 @@ body.photo-admin-on .recruit-mode-admin{display:block}
 <meta content="index,follow,max-image-preview:large,max-snippet:-1,max-video-preview:-1" name="robots"/>
 </meta></meta></meta></meta></meta>
 <script src="./admin-visibility.js?v=20260926-4" defer></script>
-<style id="first-visit-splash-style">
-#firstVisitSplash{position:fixed;inset:0;z-index:2147483000;display:flex;align-items:center;justify-content:center;background:radial-gradient(circle at 50% 46%,#10243d 0,#071426 58%,#04101e 100%);opacity:1;transition:opacity .55s ease;pointer-events:none}
-#firstVisitSplash.is-leaving{opacity:0}
-#firstVisitSplash .first-visit-logo{position:relative;width:min(84vw,720px);opacity:0;transform:scale(.985);animation:firstVisitLogoIn 1.65s ease-out .08s forwards}
-#firstVisitSplash img{display:block;width:100%;height:auto;filter:drop-shadow(0 10px 26px rgba(0,0,0,.25))}
-#firstVisitSplash .first-visit-shine{position:absolute;inset:-35% -20%;background:linear-gradient(105deg,transparent 43%,rgba(255,239,185,0) 47%,rgba(255,239,185,.2) 50%,rgba(255,239,185,0) 53%,transparent 57%);transform:translateX(-95%);animation:firstVisitShine .65s ease 1.55s forwards;pointer-events:none}
-@keyframes firstVisitLogoIn{to{opacity:1;transform:scale(1)}}
-@keyframes firstVisitShine{to{transform:translateX(95%)}}
-@media(prefers-reduced-motion:reduce){#firstVisitSplash .first-visit-logo{opacity:1;transform:none;animation:none}#firstVisitSplash .first-visit-shine{display:none}}
-</style><style id="hero-lcp-image-style">
-.hero{background:#071426!important}
-.hero-lcp-image{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;object-position:center 44%;z-index:0;pointer-events:none}
-.hero::before{content:"";position:absolute;inset:0;z-index:1;pointer-events:none;background:linear-gradient(90deg,rgba(4,12,22,.90) 0%,rgba(4,12,22,.66) 42%,rgba(4,12,22,.25) 100%)}
-.hero::after{z-index:1}
-.hero-inner{z-index:2}
-@media(max-width:900px){.hero-lcp-image{object-position:center center}}
-@media(max-width:600px){.hero-lcp-image{object-position:58% center}}
-</style></head>
-<body id="page-top"><div id="firstVisitSplash" aria-hidden="true" hidden><div class="first-visit-logo"><img src="./official-logo-crisp-final.png" alt=""><div class="first-visit-shine"></div></div></div>
+<link rel="preload" as="image" href="./six-principles-six-kajo-mobile-v2.webp?v=20260908-mobile3" media="(max-width:900px)" fetchpriority="high">
+<link rel="preload" as="image" href="./six-principles-six-kajo-desktop.webp?v=20260908-pc2" media="(min-width:901px)" fetchpriority="high">
+</head>
+<body id="page-top">
 <header class="header">
 <nav class="nav">
 <div class="brand"><div class="official-brand-wrap">
@@ -3601,7 +3589,7 @@ body.photo-admin-on .recruit-mode-admin{display:block}
 </div>
 </header>
 <main class="page show" id="home">
-<section class="hero"><img id="heroLcpImage" class="hero-lcp-image" src="/.netlify/functions/site-data?section=hero&amp;image=0" alt="" aria-hidden="true" fetchpriority="high" loading="eager" decoding="async"/><div class="hero-inner">
+<section class="hero"><div class="hero-inner">
 <div class="hero-main">
 <div aria-controls="heroAnnouncementDetailModal" aria-haspopup="dialog" aria-label="お知らせの詳細を見る" aria-live="polite" class="hero-announcement" id="heroAnnouncement" role="button"><span class="hero-announcement-label">お知らせ</span><span class="hero-announcement-message" id="heroAnnouncementMessage"></span><span class="hero-announcement-detail-hint" hidden="" id="heroAnnouncementDetailHint">詳しく見る ›</span></div>
 <div aria-hidden="true" class="pc-reference-hero-copy">
@@ -3722,7 +3710,7 @@ body.photo-admin-on .recruit-mode-admin{display:block}
 </div>
 </div>
 </div>
-<section class="container"><div class="section-label" style="color:#071426">ACTIVITY<small style="color:#a67d27">活動風景</small></div><div class="activity-grid"><div class="activity-main"><img alt="八千代リトルシニア 試合風景" class="photo-loading" data-edit-photo="photo2" decoding="async" loading="lazy" src="/.netlify/images?url=/activity-game.jpg"/><div class="photo-caption">最後まで、全力で</div></div><div class="activity-stack"><div class="activity-side"><img alt="八千代リトルシニア 整列" class="photo-loading" data-edit-photo="photo3" decoding="async" loading="lazy" src="/.netlify/images?url=/activity-lineup.jpg"/><div class="photo-caption">礼儀を大切に</div></div><div class="activity-side"><img alt="八千代リトルシニア ミーティング" class="photo-loading" data-edit-photo="photo4" decoding="async" loading="lazy" src="/.netlify/images?url=/activity-meeting.jpg"/><div class="photo-caption">仲間と考え、成長する</div></div></div></div></section><div class="banner kokoro-waza-karada">
+<section class="container"><div class="section-label" style="color:#071426">ACTIVITY<small style="color:#a67d27">活動風景</small></div><div class="activity-grid"><div class="activity-main"><img alt="八千代リトルシニア 試合風景" class="photo-loading" data-edit-photo="photo2" decoding="async" loading="lazy" src="./activity-game.jpg"/><div class="photo-caption">最後まで、全力で</div></div><div class="activity-stack"><div class="activity-side"><img alt="八千代リトルシニア 整列" class="photo-loading" data-edit-photo="photo3" decoding="async" loading="lazy" src="./activity-lineup.jpg"/><div class="photo-caption">礼儀を大切に</div></div><div class="activity-side"><img alt="八千代リトルシニア ミーティング" class="photo-loading" data-edit-photo="photo4" decoding="async" loading="lazy" src="./activity-meeting.jpg"/><div class="photo-caption">仲間と考え、成長する</div></div></div></div></section><div class="banner kokoro-waza-karada">
 <h2>心・技・体</h2>
 <div aria-label="心・技・体" class="kwt-grid">
 <div class="kwt-item">
@@ -3845,7 +3833,64 @@ function closeModal(){
 <a href="./join">入団案内</a>
 <a href="./contact">お問い合わせ</a>
 <a href="./links">リンク集</a>
-<a href="https://www.instagram.com/yachiy<div data-nosnippet="" id="heroPhotoAdmin">
+<a href="https://www.instagram.com/yachiyo_little_senior/" rel="noopener noreferrer" target="_blank">Instagram</a>
+<a href="https://www.facebook.com/874baseball" rel="noopener noreferrer" target="_blank">Facebook</a>
+<a href="./terms">サイト利用について</a>
+<a href="./board.html">チーム専用ページ 🔒</a>
+</nav>
+<div class="ground-address"><div class="ground-access-address">アクセス：千葉県八千代市島田台775</div><a class="ground-map-link" href="https://www.google.com/maps/search/?api=1&amp;query=%E5%8D%83%E8%91%89%E7%9C%8C%E5%85%AB%E5%8D%83%E4%BB%A3%E5%B8%82%E5%B3%B6%E7%94%B0%E5%8F%B0%EF%BC%97%EF%BC%97%EF%BC%95" rel="noopener noreferrer" target="_blank">Googleマップで見る <span aria-hidden="true">↗</span></a></div>
+<div class="footer-privacy-link" style="text-align:center;margin-top:10px;font-size:11px;"><a href="/privacy" style="color:#8f9aa7;text-decoration:none;">プライバシーポリシー</a></div>
+<div class="restored-footer-copy">© YACHIYO LITTLE SENIOR. All Rights Reserved.</div>
+</div>
+</footer>
+<script>
+function openProtectedArea(type){
+  const entered=prompt("パスワードを入力してください");
+  if(entered===null) return false;
+  return false;
+}
+</script>
+<script>
+(function(){
+  const btn=document.querySelector('.menu');
+  const menu=document.getElementById('mobileLinks');
+  if(!btn || !menu) return;
+
+  btn.setAttribute('type','button');
+  btn.setAttribute('aria-label','メニューを開く');
+  btn.setAttribute('aria-controls','mobileLinks');
+  btn.setAttribute('aria-expanded','false');
+
+  function setOpen(open){
+    menu.classList.toggle('show', open);
+    btn.setAttribute('aria-expanded', open ? 'true' : 'false');
+    btn.setAttribute('aria-label', open ? 'メニューを閉じる' : 'メニューを開く');
+    btn.textContent = open ? '✕' : '☰';
+  }
+
+  btn.onclick=function(e){
+    e.preventDefault();
+    e.stopPropagation();
+    setOpen(!menu.classList.contains('show'));
+  };
+
+  menu.querySelectorAll('a').forEach(function(a){
+    a.addEventListener('click', function(){ setOpen(false); });
+  });
+
+  document.addEventListener('click', function(e){
+    if(menu.classList.contains('show') && !menu.contains(e.target) && e.target!==btn){
+      setOpen(false);
+    }
+  });
+
+  document.addEventListener('keydown', function(e){
+    if(e.key==='Escape') setOpen(false);
+  });
+})();
+</script>
+<script src="./home-latest-data.js?v=20260927-seo1" defer></script>
+<div data-nosnippet="" id="heroPhotoAdmin">
 <button data-nosnippet="" id="heroAdminToggle" type="button">管理</button>
 <label data-nosnippet="" for="heroPhotoInput" id="heroPhotoChange">トップの写真を変更</label>
 <button class="hero-announcement-admin" data-nosnippet="" id="heroAnnouncementEdit" type="button">トップお知らせ編集</button>
@@ -4574,7 +4619,6 @@ document.addEventListener('DOMContentLoaded',function(){
       const r=await fetch(api+'?section=seniorcup-settings',{cache:'no-store'});
       if(!r.ok){apply();return}
       const j=await r.json();
-      window.__yachiyoSeniorCupSettingsPromise=Promise.resolve(j);
       if(j.data && typeof j.data.visible==='boolean') visible=j.data.visible;
     }catch(e){}
     apply();
@@ -4768,11 +4812,6 @@ body.photo-admin-on #heroPhotoChange{
   justify-content:center!important;
   text-align:center!important;
 }
-body.photo-admin-on #accessPasswordChange{
-  white-space:normal!important;
-  font-size:10px!important;
-  line-height:1.15!important;
-}
 @media(max-width:600px){
   .unified-admin-toggle{
     right:max(12px,env(safe-area-inset-right))!important;
@@ -4782,6 +4821,17 @@ body.photo-admin-on #accessPasswordChange{
     padding:12px 14px!important;
     font-size:11px!important;
   }
+}
+
+/* Senior Cup CTA: single gold-text overview button */
+.seniorcup-home-copy{justify-content:flex-start!important;}
+.seniorcup-home-cta{
+  color:#e2bd67!important;
+  -webkit-text-fill-color:#e2bd67!important;
+  background:linear-gradient(180deg,rgba(12,35,61,.96),rgba(4,19,36,.98))!important;
+  border:1px solid rgba(226,189,103,.9)!important;
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.06),0 7px 16px rgba(0,0,0,.22)!important;
+  letter-spacing:.08em;
 }
 </style>
 <script id="admin-start-position-unified">
@@ -4899,7 +4949,8 @@ body.photo-admin-on #accessPasswordChange{
   try{visible=localStorage.getItem('yachiyoSeniorCupVisible')!=='false'}catch(e){}
   apply(visible);
 
-  (window.__yachiyoSeniorCupSettingsPromise||fetch('/.netlify/functions/site-data?section=seniorcup-settings',{cache:'no-store'}).then(response=>response.ok?response.json():null))
+  fetch('/.netlify/functions/site-data?section=seniorcup-settings',{cache:'no-store'})
+    .then(response=>response.ok?response.json():null)
     .then(json=>{
       if(json&&json.data&&typeof json.data.visible==='boolean'){
         visible=json.data.visible;
@@ -5063,5 +5114,5 @@ document.addEventListener('DOMContentLoaded',function(){
   }
 }
 </style>
-<script src="./first-visit-splash.js?v=20260929-0035" defer></script></body>
+</body>
 </html>
