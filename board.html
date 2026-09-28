@@ -1461,7 +1461,7 @@ body:after{display:none!important;content:none!important}
   <b>当番表 自動作成（試験）</b>
   <p>公開中の当番表には影響しません。まず管理画面内だけで当番表（案）を作成して確認します。</p>
   <div class="duty-auto-test-controls">
-    <label>対象月 <span class="duty-auto-test-month-row"><select id="dutyAutoTestYear" aria-label="対象年"></select><span>年</span><select id="dutyAutoTestMonthSelect" aria-label="対象月"></select><span>月</span></span></label>
+    <label>対象月 <span class="duty-auto-test-month-row"><input id="dutyAutoTestYear" type="number" min="2026" max="2100" inputmode="numeric" aria-label="対象年"><span>年</span><input id="dutyAutoTestMonthSelect" type="number" min="1" max="12" inputmode="numeric" aria-label="対象月"><span>月</span></span></label>
     <button id="dutyAutoTestCreate" type="button">当番表（案）を作成</button>
   </div>
   <div class="duty-auto-test-note">保護者出欠のふりがな・学年・父母情報を使い、家庭単位・50音順で候補名簿を作成します。確定・公開・原本保存はまだ行いません。</div>
@@ -1721,26 +1721,26 @@ body.photo-admin-on #accessPasswordChange{
 .duty-auto-test-note{display:none}
 .duty-auto-test-controls{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:8px;align-items:end;margin:8px 0 0}
 .duty-auto-test-controls label{display:grid;gap:3px;font-size:11px;font-weight:800;color:#17202b}
-.duty-auto-test-month-row{display:grid;grid-template-columns:minmax(0,1fr) auto minmax(0,.7fr) auto;gap:5px;align-items:center}.duty-auto-test-controls select{width:100%;min-height:38px;padding:6px 8px;border:1px solid #cfd5dc;border-radius:7px;background:#fff;color:#17202b;opacity:1!important;pointer-events:auto!important;-webkit-appearance:menulist!important}
-#dutyAutoTestCreate{min-height:38px;border:1px solid #b88a2b;border-radius:7px;background:#c79a3b;color:#fff;font-weight:900;padding:7px 12px;opacity:1!important;pointer-events:auto!important;cursor:pointer}
+.duty-auto-test-month-row{display:grid;grid-template-columns:minmax(0,1fr) auto minmax(0,.7fr) auto;gap:5px;align-items:center}.duty-auto-test-controls input{width:100%;min-height:38px;padding:6px 8px;border:1px solid #cfd5dc;border-radius:7px;background:#fff;color:#17202b!important;-webkit-text-fill-color:#17202b!important;opacity:1!important;pointer-events:auto!important;font-weight:800}
+#dutyAutoTestCreate{min-height:42px;border:1px solid #b88a2b;border-radius:7px;background:#071426;color:#fff;font-weight:900;padding:0 12px;opacity:1!important;pointer-events:auto!important;cursor:pointer;display:flex!important;align-items:center!important;justify-content:center!important;text-align:center!important;line-height:1.2!important}
 .duty-auto-test-preview{margin-top:9px;padding:10px;border:1px solid #dfe3e8;border-radius:8px;background:#fff;font-size:11px;line-height:1.6}
-@media(max-width:600px){.duty-auto-test-controls{grid-template-columns:1fr}.duty-auto-test-controls select,#dutyAutoTestCreate{width:100%}}
+@media(max-width:600px){.duty-auto-test-controls{grid-template-columns:1fr}.duty-auto-test-controls input,#dutyAutoTestCreate{width:100%}}
 </style>
 <script id="duty-auto-test-script">
 (function initDutyAutoTest(){
  const year=document.getElementById('dutyAutoTestYear'),month=document.getElementById('dutyAutoTestMonthSelect'),button=document.getElementById('dutyAutoTestCreate'),preview=document.getElementById('dutyAutoTestPreview');
  if(!year||!month||!button||!preview){setTimeout(initDutyAutoTest,100);return}
  if(button.dataset.ready==='1')return;button.dataset.ready='1';
- const now=new Date(),next=new Date(now.getFullYear(),now.getMonth()+1,1),baseYear=next.getFullYear();
- year.innerHTML='';for(let y=baseYear-1;y<=baseYear+2;y++){const o=document.createElement('option');o.value=String(y);o.textContent=String(y);if(y===baseYear)o.selected=true;year.appendChild(o)}
- month.innerHTML='';for(let m=1;m<=12;m++){const o=document.createElement('option');o.value=String(m);o.textContent=String(m);if(m===next.getMonth()+1)o.selected=true;month.appendChild(o)}
+ const now=new Date(),next=new Date(now.getFullYear(),now.getMonth()+1,1);
+ year.value=String(next.getFullYear());month.value=String(next.getMonth()+1);
  year.disabled=false;month.disabled=false;button.disabled=false;
- button.onclick=function(){
-   const y=Number(year.value),m=Number(month.value);
-   if(!y||!m){alert('対象月を選択してください。');return}
+ button.onclick=function(e){
+   e.preventDefault();e.stopPropagation();
+   const y=parseInt(year.value,10),m=parseInt(month.value,10);
+   if(!Number.isInteger(y)||y<2026||y>2100||!Number.isInteger(m)||m<1||m>12){alert('対象年月を確認してください。');return false}
    preview.hidden=false;
    preview.innerHTML='<b>'+y+'年'+m+'月 当番表（案）</b><br>試験機能は正常に動作しています。現在は公開・保存されません。';
-   preview.scrollIntoView({behavior:'smooth',block:'nearest'});
+   return false;
  };
 })();
 </script>
