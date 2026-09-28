@@ -141,7 +141,12 @@ function init(){
         preview.appendChild(plan);plan.scrollIntoView({behavior:'smooth',block:'start'});
       });
       actions.appendChild(proceed);preview.appendChild(actions);
-      if(allMatch){actions.hidden=true;setTimeout(function(){try{proceed.click();}catch(err){actions.hidden=false;preview.insertAdjacentHTML('beforeend','<div class="duty-family-warning">画像作成でエラーが発生しました：'+String(err&&err.message||err)+'</div>');}},0);}
+      if(allMatch){
+        actions.hidden=false;
+        proceed.disabled=false;
+        proceed.textContent='当番表画像を作成';
+        proceed.style.display='block';
+      }
     }catch(err){preview.style.display='block';preview.textContent='作成できませんでした：'+(err&&err.name==='AbortError'?'名簿取得がタイムアウトしました。':String(err&&err.message||err||'エラー'));}
     finally{create.disabled=false;} return false;
   };
