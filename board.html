@@ -1461,7 +1461,7 @@ body:after{display:none!important;content:none!important}
   <b>当番表 自動作成（試験）</b>
   <p>公開中の当番表には影響しません。まず管理画面内だけで当番表（案）を作成して確認します。</p>
   <div class="duty-auto-test-controls">
-    <label>対象月 <input id="dutyAutoTestMonth" type="month"></label>
+    <label>対象月 <span class="duty-auto-test-month-row"><select id="dutyAutoTestYear" aria-label="対象年"></select><span>年</span><select id="dutyAutoTestMonthSelect" aria-label="対象月"></select><span>月</span></span></label>
     <button id="dutyAutoTestCreate" type="button">当番表（案）を作成</button>
   </div>
   <div class="duty-auto-test-note">保護者出欠のふりがな・学年・父母情報を使い、家庭単位・50音順で候補名簿を作成します。確定・公開・原本保存はまだ行いません。</div>
@@ -1721,22 +1721,28 @@ body.photo-admin-on #accessPasswordChange{
 .duty-auto-test-note{display:none}
 .duty-auto-test-controls{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:8px;align-items:end;margin:8px 0 0}
 .duty-auto-test-controls label{display:grid;gap:3px;font-size:11px;font-weight:800;color:#17202b}
-.duty-auto-test-controls input{width:100%;min-height:38px;padding:6px 8px;border:1px solid #cfd5dc;border-radius:7px;background:#fff;color:#17202b;opacity:1!important;pointer-events:auto!important}
+.duty-auto-test-month-row{display:grid;grid-template-columns:minmax(0,1fr) auto minmax(0,.7fr) auto;gap:5px;align-items:center}.duty-auto-test-controls select{width:100%;min-height:38px;padding:6px 8px;border:1px solid #cfd5dc;border-radius:7px;background:#fff;color:#17202b;opacity:1!important;pointer-events:auto!important;-webkit-appearance:menulist!important}
 #dutyAutoTestCreate{min-height:38px;border:1px solid #b88a2b;border-radius:7px;background:#c79a3b;color:#fff;font-weight:900;padding:7px 12px;opacity:1!important;pointer-events:auto!important;cursor:pointer}
 .duty-auto-test-preview{margin-top:9px;padding:10px;border:1px solid #dfe3e8;border-radius:8px;background:#fff;font-size:11px;line-height:1.6}
-@media(max-width:600px){.duty-auto-test-controls{grid-template-columns:1fr}.duty-auto-test-controls input,#dutyAutoTestCreate{width:100%}}
+@media(max-width:600px){.duty-auto-test-controls{grid-template-columns:1fr}.duty-auto-test-controls select,#dutyAutoTestCreate{width:100%}}
 </style>
 <script id="duty-auto-test-script">
-document.addEventListener('DOMContentLoaded',()=>{
- const month=document.getElementById('dutyAutoTestMonth'),button=document.getElementById('dutyAutoTestCreate'),preview=document.getElementById('dutyAutoTestPreview');
- if(!month||!button||!preview)return;
- const now=new Date();let y=now.getFullYear(),m=now.getMonth()+2;if(m>12){m=1;y++}month.value=y+'-'+String(m).padStart(2,'0');month.disabled=false;button.disabled=false;
- button.addEventListener('click',()=>{
-   if(!month.value){alert('対象月を選択してください。');return}
+(function initDutyAutoTest(){
+ const year=document.getElementById('dutyAutoTestYear'),month=document.getElementById('dutyAutoTestMonthSelect'),button=document.getElementById('dutyAutoTestCreate'),preview=document.getElementById('dutyAutoTestPreview');
+ if(!year||!month||!button||!preview){setTimeout(initDutyAutoTest,100);return}
+ if(button.dataset.ready==='1')return;button.dataset.ready='1';
+ const now=new Date(),next=new Date(now.getFullYear(),now.getMonth()+1,1),baseYear=next.getFullYear();
+ year.innerHTML='';for(let y=baseYear-1;y<=baseYear+2;y++){const o=document.createElement('option');o.value=String(y);o.textContent=String(y);if(y===baseYear)o.selected=true;year.appendChild(o)}
+ month.innerHTML='';for(let m=1;m<=12;m++){const o=document.createElement('option');o.value=String(m);o.textContent=String(m);if(m===next.getMonth()+1)o.selected=true;month.appendChild(o)}
+ year.disabled=false;month.disabled=false;button.disabled=false;
+ button.onclick=function(){
+   const y=Number(year.value),m=Number(month.value);
+   if(!y||!m){alert('対象月を選択してください。');return}
    preview.hidden=false;
-   preview.innerHTML='<b>'+month.value.replace('-','年')+'月 当番表（案）</b><br>試験機能を準備しました。現在は公開・保存されません。<br><span style="color:#9a6d12">次の段階で、保護者出欠から家庭単位の名簿取得とローテーション作成を接続します。</span>';
- });
-});
+   preview.innerHTML='<b>'+y+'年'+m+'月 当番表（案）</b><br>試験機能は正常に動作しています。現在は公開・保存されません。';
+   preview.scrollIntoView({behavior:'smooth',block:'nearest'});
+ };
+})();
 </script>
 </body>
 </html>
