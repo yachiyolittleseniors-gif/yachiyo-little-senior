@@ -3555,17 +3555,16 @@ body.photo-admin-on .recruit-mode-admin{display:block}
 </meta></meta></meta></meta></meta>
 <script src="./admin-visibility.js?v=20260926-4" defer></script>
 <style id="splash-test-style">
-#splashTest{position:fixed;inset:0;z-index:999999;background:radial-gradient(circle at 50% 46%,#102b49 0,#071426 54%,#04101e 100%);display:flex;align-items:center;justify-content:center;pointer-events:none;animation:splashOut .32s ease 1.35s forwards}
-#splashTest .splashTestLogo{position:relative;width:min(84vw,720px);animation:splashPop .72s cubic-bezier(.18,.86,.25,1.12) both}
-#splashTest img{display:block;width:100%;height:auto;filter:drop-shadow(0 10px 26px rgba(0,0,0,.28))}
-#splashTest .spark{position:absolute;width:9px;height:9px;border-radius:50%;background:#e2bd67;box-shadow:0 0 14px #e2bd67;opacity:0;animation:splashSpark .7s ease-out .38s both}
-#splashTest .a{left:5%;top:8%}#splashTest .b{right:8%;top:18%;animation-delay:.48s}#splashTest .c{right:22%;bottom:4%;animation-delay:.58s}
-@keyframes splashPop{0%{opacity:0;transform:scale(.8) translateY(8px)}60%{opacity:1;transform:scale(1.045)}100%{opacity:1;transform:scale(1)}}
-@keyframes splashSpark{0%{opacity:0;transform:scale(.2)}45%{opacity:1;transform:scale(1.55)}100%{opacity:0;transform:scale(.3) translateY(-9px)}}
+#splashTest{position:fixed;inset:0;z-index:999999;background:radial-gradient(circle at 50% 46%,#10243d 0,#071426 58%,#04101e 100%);display:flex;align-items:center;justify-content:center;pointer-events:none;animation:splashOut .45s ease 1.75s forwards}
+#splashTest .splashTestLogo{position:relative;width:min(84vw,720px);opacity:0;transform:scale(.985);animation:splashSlowIn 1s ease-out .08s forwards}
+#splashTest img{display:block;width:100%;height:auto;filter:drop-shadow(0 10px 26px rgba(0,0,0,.25))}
+#splashTest .shine{position:absolute;inset:-35% -20%;background:linear-gradient(105deg,transparent 43%,rgba(255,239,185,0) 47%,rgba(255,239,185,.22) 50%,rgba(255,239,185,0) 53%,transparent 57%);transform:translateX(-95%);animation:splashShine .55s ease 1.05s forwards;pointer-events:none}
+@keyframes splashSlowIn{0%{opacity:0;transform:scale(.985)}100%{opacity:1;transform:scale(1)}}
+@keyframes splashShine{to{transform:translateX(95%)}}
 @keyframes splashOut{to{opacity:0;visibility:hidden}}
-@media(prefers-reduced-motion:reduce){#splashTest{animation:splashOut .01s linear .3s forwards}#splashTest .splashTestLogo{animation:none}#splashTest .spark{display:none}}
+@media(prefers-reduced-motion:reduce){#splashTest{animation:splashOut .01s linear .4s forwards}#splashTest .splashTestLogo{opacity:1;transform:none;animation:none}#splashTest .shine{display:none}}
 </style></head>
-<body id="page-top"><div id="splashTest" aria-hidden="true"><div class="splashTestLogo"><span class="spark a"></span><span class="spark b"></span><span class="spark c"></span><img src="./official-logo-crisp-final.png" alt=""></div></div>
+<body id="page-top"><div id="splashTest" aria-hidden="true"><div class="splashTestLogo"><img src="./official-logo-crisp-final.png" alt=""><div class="shine"></div></div></div>
 <header class="header">
 <nav class="nav">
 <div class="brand"><div class="official-brand-wrap">
