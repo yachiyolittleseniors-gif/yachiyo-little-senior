@@ -253,6 +253,12 @@ body{padding-top:var(--fixed-header-height)!important}
 </style>
 
 
+
+<style id="attendance-comment-popover-safe">
+#editor.comment-popover{position:fixed!important;z-index:1200!important;width:min(620px,calc(100vw - 24px))!important;margin:0!important;max-height:min(520px,calc(100dvh - 90px));overflow:auto;box-shadow:0 14px 38px rgba(7,20,38,.28);border:1px solid #b9c8db;background:#fff}
+#editor.comment-popover:before{content:"";position:absolute;top:-9px;left:var(--popover-arrow-left,40px);width:16px;height:16px;background:#fff;border-left:1px solid #b9c8db;border-top:1px solid #b9c8db;transform:rotate(45deg)}
+@media(max-width:600px){#editor.comment-popover{width:calc(100vw - 20px)!important;max-height:calc(100dvh - 82px)}}
+</style>
 </head><body id="page-top">
 <header class="header">
 <nav class="nav">
@@ -561,10 +567,27 @@ function render(){
 }
 function showSummary(eventId){const event=visibleEvents().find(item=>String(item.id)===String(eventId));if(!event)return;$('#summaryTitle').textContent=formatDate(event.date)+(event.title?' '+event.title:'');const grades=['1','2','3'];$('#summaryBody').innerHTML=grades.map(grade=>{const rows=['father','mother'].map(parent=>{const counts=countStatuses(eventId,data.members.filter(member=>member.grades.includes(grade)&&member.parent===parent));return `<div class="breakdown-row"><span class="breakdown-parent">${parent==='father'?'父':'母'}</span>${countMarkup(counts)}</div>`}).join('');return `<section class="breakdown-grade"><h3>${grade}年生</h3>${rows}</section>`}).join('');const unset=data.members.filter(member=>!member.grades.length||!member.parent).length;$('#summaryUnset').textContent=unset?`学年または父・母が未設定の回答者：${unset}名`:'※人数は回答者に設定した学年と父・母で集計しています。';$('#summaryDialog').showModal()}
 $('#summaryClose').onclick=()=>$('#summaryDialog').close();$('#summaryDialog').onclick=e=>{if(e.target===$('#summaryDialog'))$('#summaryDialog').close()};
+
+function positionCommentPopover(){
+  const editor=$('#editor');if(!editor)return;
+  if(!selectedMember){editor.classList.remove('comment-popover');editor.style.left='';editor.style.top='';return}
+  const anchor=document.querySelector('[data-select-member="'+CSS.escape(String(selectedMember))+'"]');if(!anchor)return;
+  editor.classList.add('comment-popover');
+  const rect=anchor.getBoundingClientRect(),gap=10,pad=10;
+  const width=Math.min(620,window.innerWidth-20);
+  let left=Math.max(pad,Math.min(rect.left,window.innerWidth-width-pad));
+  let top=rect.bottom+gap;
+  editor.style.left=left+'px';editor.style.top=top+'px';
+  editor.style.setProperty('--popover-arrow-left',Math.max(18,Math.min(rect.left+rect.width/2-left-8,width-34))+'px');
+  requestAnimationFrame(()=>{const er=editor.getBoundingClientRect(),maxBottom=window.innerHeight-pad;if(er.bottom>maxBottom){top=Math.max(parseInt(getComputedStyle(document.documentElement).getPropertyValue('--fixed-header-height'))+pad,rect.top-er.height-gap);editor.style.top=top+'px'}});
+}
+window.addEventListener('resize',()=>{if(selectedMember)positionCommentPopover()});
+window.addEventListener('scroll',()=>{if(selectedMember)positionCommentPopover()},{passive:true});
+
 function selectMember(id){const next=selectedMember===id?'':id;if(next!==selectedMember){$('#commentText').value='';selectedEscortGrade=''}selectedMember=next;render()}
 function renderEditor(){
   const m=data.members.find(x=>x.id===selectedMember),select=$('#commentEventDate'),events=visibleEvents(),previous=select.value;
-  $('#editor').classList.toggle('show',!!m);if(!m)return;$('#editorName').textContent=memberDisplayName(m);
+  $('#editor').classList.toggle('show',!!m);if(!m){positionCommentPopover();return}$('#editorName').textContent=memberDisplayName(m);positionCommentPopover();
   select.innerHTML=events.map(e=>`<option value="${esc(e.date)}">${esc(formatDate(e.date))} ${esc(e.title||'')}</option>`).join('');if(previous&&events.some(e=>e.date===previous))select.value=previous;select.onchange=()=>{selectedEscortGrade='';renderEditor()};
   const savedEscort=[...data.comments].reverse().find(c=>String(c.memberId)===String(m.id)&&String(c.eventDate||'')===String(select.value||'')&&c.escortSetting===true);if(savedEscort)selectedEscortGrade=String(savedEscort.escortGrade||'');const grade=String(m.grades?.[0]||'');const targets=grade==='1'?['2','3']:grade==='2'?['3']:[];
   const field=$('#upperGradeField'),buttons=$('#escortGradeButtons');field.hidden=!targets.length;
