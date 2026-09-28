@@ -32,7 +32,8 @@ function init(){
       function key(v){return String(v||'').replace(/[（）()\s　]/g,'');}
       active.forEach(function(g){var i=lists[g].findIndex(x=>key(x.name).startsWith(key(startAfter[g]))||key(startAfter[g]).startsWith(key(x.name)));pos[g]=i>=0?(i+1)%lists[g].length:0;});
       var prefix=y+'-'+String(mo).padStart(2,'0')+'-',hs=holidays(y),events=schedule.filter(ev=>String(ev?.date||'').startsWith(prefix)),days=[],satoyama=new Set();
-      for(var d=1;d<=new Date(y,mo,0).getDate();d++){var dt=new Date(y,mo-1,d),date=prefix+String(d).padStart(2,'0'),evs=events.filter(ev=>ev.date===date);if(dt.getDay()===0||dt.getDay()===6||hs.has(date)||evs.length)days.push(d);if(evs.some(ev=>/里山/.test(String(ev.title||'')+' '+String(ev.note||'')+' '+String(ev.memo||''))))satoyama.add(d);}
+      for(var d=1;d<=new Date(y,mo,0).getDate();d++){var dt=new Date(y,mo-1,d),date=prefix+String(d).padStart(2,'0'),evs=events.filter(ev=>ev.date===date);if(dt.getDay()===0||dt.getDay()===6||hs.has(date)||evs.length)days.push(d);var saturdayOrdinal=Math.ceil(d/7);
+        if((dt.getDay()===6&&(saturdayOrdinal===2||saturdayOrdinal===4))||evs.some(ev=>/里山/.test(String(ev.title||'')+' '+String(ev.note||'')+' '+String(ev.memo||''))))satoyama.add(d);}
       var rows=days.map(function(d){var dt=new Date(y,mo-1,d),r=[d,['日','月','火','水','木','金','土'][dt.getDay()]];active.forEach(function(g){for(var z=0;z<2;z++){r.push(lists[g][pos[g]%lists[g].length].name);pos[g]++;}});return r;});
       var canvas=document.createElement('canvas');canvas.width=1400;canvas.height=Math.max(1050,330+rows.length*82+300);var ctx=canvas.getContext('2d');if(!ctx)throw new Error('画像を生成できませんでした。');
       ctx.fillStyle='#fff';ctx.fillRect(0,0,canvas.width,canvas.height);
