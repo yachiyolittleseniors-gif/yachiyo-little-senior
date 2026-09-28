@@ -2,7 +2,7 @@
 (function(){
   var API='/.netlify/functions/site-data?section=team-movie';
   var UPLOAD='/.netlify/functions/team-movie-upload';
-  var CHUNK_SIZE=3*1024*1024;
+  var CHUNK_SIZE=1024*1024;
   var defaults={title:'雨天時の室内練習',description:'雨の日は室内練習場を利用して練習を行っています。選手たちの練習風景をご覧ください。',visible:false,showControls:false,storageKey:''};
   var data=Object.assign({},defaults),objectUrl='';
   function el(id){return document.getElementById(id)}
@@ -37,7 +37,7 @@
       else{video.src=API+'&file=1&v='+encodeURIComponent(data.updatedAt||'');video.hidden=false;video.controls=!!data.showControls;video.loop=!data.showControls;video.muted=!data.showControls;video.autoplay=!data.showControls;video.playsInline=true;if(!data.showControls)video.play().catch(function(){})}
     }else{video.pause();video.removeAttribute('src');video.load();video.hidden=true}
   }
-  function fill(){el('teamMovieTitleEdit').value=data.title||defaults.title;el('teamMovieDescriptionEdit').value=data.description||defaults.description;el('teamMovieVisibleEdit').checked=data.visible!==false;el('teamMovieControlsEdit').checked=!!data.showControls;var saved=el('teamMovieSavedFile');if(saved)saved.textContent=data.fileName?'保存済み：'+data.fileName:'保存済み動画：なし'}
+  function fill(){el('teamMovieTitleEdit').value=data.title||defaults.title;el('teamMovieDescriptionEdit').value=data.description||defaults.description;el('teamMovieVisibleEdit').checked=data.visible!==false;el('teamMovieControlsEdit').checked=!!data.showControls;var saved=el('teamMovieSavedFile');if(saved)saved.textContent=data.fileName?'保存済み動画：'+data.fileName:'保存済み動画：なし'}
   function adminPassword(){return sessionStorage.getItem('yachiyoAdminPassword')||''}
   async function load(){try{var r=await fetch(API,{cache:'no-store'});if(r.ok){var j=await r.json();if(j.data&&typeof j.data==='object')data=Object.assign({},defaults,j.data)}}catch(e){}await draw();fill()}
   async function saveTeamMovie(e){
@@ -47,13 +47,15 @@
     try{
       var base={title:el('teamMovieTitleEdit').value.trim(),description:el('teamMovieDescriptionEdit').value.trim(),visible:el('teamMovieVisibleEdit').checked,showControls:el('teamMovieControlsEdit').checked};
       var file=el('teamMovieFileEdit').files&&el('teamMovieFileEdit').files[0];
-      if(file){
+      var selectedName=file?file.name:'';
+      var savedLabel=el('teamMovieSavedFile');
+      if(file){if(savedLabel)savedLabel.textContent='アップロード中：'+selectedName;
         if(file.size>50*1024*1024)throw new Error('動画は50MB以下にしてください。');
         var count=Math.ceil(file.size/CHUNK_SIZE);
         for(var i=0;i<count;i++){
           status.textContent='動画をアップロードしています… '+(i+1)+' / '+count;
           var chunk=file.slice(i*CHUNK_SIZE,Math.min(file.size,(i+1)*CHUNK_SIZE));
-          var up=await fetch(UPLOAD,{method:'POST',headers:{'content-type':'application/octet-stream','x-video-type':file.type||'video/quicktime','x-file-name':encodeURIComponent(file.name),'x-admin-password':p,'x-chunk-index':String(i),'x-chunk-count':String(count),'x-total-size':String(file.size)},body:chunk});
+          var controller=new AbortController();var timer=setTimeout(function(){controller.abort()},30000);var up;try{up=await fetch(UPLOAD,{method:'POST',headers:{'content-type':'application/octet-stream','x-video-type':file.type||'video/quicktime','x-file-name':encodeURIComponent(file.name),'x-admin-password':p,'x-chunk-index':String(i),'x-chunk-count':String(count),'x-total-size':String(file.size)},body:chunk,signal:controller.signal})}finally{clearTimeout(timer)};
           var ut=await up.text(),uj={};try{uj=ut?JSON.parse(ut):{}}catch(_){}
           if(!up.ok)throw new Error(uj.error||ut||('HTTP '+up.status));
           if(i===count-1)data=Object.assign({},data,uj.data||{},base);
@@ -64,7 +66,7 @@
       var j=await r.json().catch(function(){return {}});
       if(!r.ok)throw new Error(j.error||('HTTP '+r.status));
       data=Object.assign({},data,base,j.data||{});await draw();fill();status.textContent='保存しました';if(typeof showSaveNotice==='function')showSaveNotice('保存しました');
-    }catch(err){status.textContent='保存エラー：'+(err.message||'通信エラー');alert('TEAM MOVIEを保存できませんでした：'+(err.message||'通信エラー'))}
+    }catch(err){fill();var msg=err&&err.name==='AbortError'?'アップロードがタイムアウトしました。もう一度お試しください。':(err.message||'通信エラー');status.textContent='保存エラー：'+msg;alert('TEAM MOVIEを保存できませんでした：'+msg)}
     finally{save.disabled=false;save.textContent='保存'}
   }
   save.onclick=saveTeamMovie;
