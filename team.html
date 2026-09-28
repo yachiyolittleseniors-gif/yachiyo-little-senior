@@ -2404,5 +2404,18 @@ body.photo-admin-on #accessPasswordChange{
 })();
 </script>
 <script src="./team-movie.js?v=20260928-0919"></script>
-</body>
+<script id="team-admin-reveal-emergency-fix">
+(function(){
+ const trigger=document.querySelector('.restored-footer-copy');
+ const button=document.getElementById('staffEditBtn');
+ if(!trigger||!button)return;
+ let count=0,timer=null,last=0;
+ function hit(){
+   count++; clearTimeout(timer); timer=setTimeout(()=>count=0,2500);
+   if(count>=5){count=0;clearTimeout(timer);button.classList.add('unified-admin-toggle');button.style.setProperty('display','block','important');}
+ }
+ trigger.addEventListener('touchend',function(){last=Date.now();hit()},{passive:true});
+ trigger.addEventListener('pointerup',function(e){if(e.pointerType==='touch')return;if(Date.now()-last<500)return;hit()},{passive:true});
+})();
+</script></body>
 </html>
