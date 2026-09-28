@@ -7,6 +7,7 @@ function init(){
   var create=document.getElementById('dutyAutoTestCreate');
   var preview=document.getElementById('dutyAutoTestPreview');
   if(!prev||!next||!label||!create||!preview)return;
+  if(create.dataset.dutyAutoBound==='1')return;create.dataset.dutyAutoBound='1';
   var now=new Date(), target=new Date(now.getFullYear(),now.getMonth()+1,1);
   function paint(){label.textContent=target.getFullYear()+'年 '+(target.getMonth()+1)+'月';}
   paint();
@@ -32,5 +33,6 @@ function init(){
     finally{create.disabled=false;} return false;
   };
 }
-if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',init,{once:true});else init();
+function boot(){init();setTimeout(init,250);setTimeout(init,1000);}
+if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',boot,{once:true});else boot();
 })();
