@@ -893,9 +893,35 @@ export default async (request, context) => {
     if (section === "team-movie" && request.method === "GET" && url.searchParams.get("file") === "1") {
       const meta = await store.get(key, { type:"json", consistency:"strong" });
       if (!meta?.storageKey) return new Response("Video not found",{status:404});
-      const blob = await store.get(meta.storageKey,{type:"blob",consistency:"strong"});
+      let blob;
+      if(meta.storageKey==="chunks" && Number(meta.chunkCount)>0){
+        const parts=[];
+        for(let i=0;i<Number(meta.chunkCount);i++){
+          const part=await store.get("team-movie/chunks/"+i,{type:"blob",consistency:"strong"});
+          if(!part)return new Response("Video not found",{status:404});
+          parts.push(part);
+        }
+        blob=new Blob(parts,{type:meta.contentType||"video/mp4"});
+      }else{
+        blob=await store.get(meta.storageKey,{type:"blob",consistency:"strong"});
+      }
       if (!blob) return new Response("Video not found",{status:404});
-      return new Response(blob,{status:200,headers:{"content-type":meta.contentType||"video/mp4","cache-control":"public, max-age=3600","accept-ranges":"bytes","x-content-type-options":"nosniff"}});
+      const total=blob.size;
+      const range=request.headers.get("range");
+      const headers={"content-type":meta.contentType||"video/mp4","cache-control":"public, max-age=3600","accept-ranges":"bytes","x-content-type-options":"nosniff"};
+      if(range){
+        const match=/bytes=(\d*)-(\d*)/.exec(range);
+        if(match){
+          const start=match[1]?Number(match[1]):0;
+          const end=match[2]?Math.min(Number(match[2]),total-1):total-1;
+          if(start<=end&&start<total){
+            const slice=blob.slice(start,end+1,meta.contentType||"video/mp4");
+            return new Response(slice,{status:206,headers:{...headers,"content-range":`bytes ${start}-${end}/${total}`,"content-length":String(end-start+1)}});
+          }
+        }
+        return new Response(null,{status:416,headers:{...headers,"content-range":`bytes */${total}`}});
+      }
+      return new Response(blob,{status:200,headers:{...headers,"content-length":String(total)}});
     }
 
     if (request.method === "GET") {
