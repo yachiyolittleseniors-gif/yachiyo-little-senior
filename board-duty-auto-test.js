@@ -64,7 +64,18 @@ function init(){
       ctx.fillText('☆　都合によりお当番の交代は可能です。その際は、下記のご対応をお願いいたします。',70,noteY);
       ctx.font='600 20px sans-serif';ctx.fillText('① サイト内の「当番変更申請」より申請してください。',145,noteY+40);ctx.fillText('② 申請後は、全体LINEでの共有も併せてお願いいたします。',145,noteY+78);
       ctx.font='700 22px sans-serif';ctx.fillText('☆　黄色の日は里山活動日になります。車の駐車場所に必ず気を付けてください。',70,noteY+145);
-      var src=canvas.toDataURL('image/png');preview.innerHTML='';var title=document.createElement('b');title.textContent=y+'年'+mo+'月 当番表（案）';var img=document.createElement('img');img.className='duty-simple-image';img.src=src;img.alt=title.textContent;var actions=document.createElement('div');actions.className='duty-simple-actions';var dl=document.createElement('button');dl.type='button';dl.textContent='画像を保存';dl.onclick=function(){var a=document.createElement('a');a.href=src;a.download='当番表_'+y+'年'+String(mo).padStart(2,'0')+'月_案.png';a.click();};var detail=document.createElement('button');detail.type='button';detail.textContent='詳細を見る';detail.onclick=function(){var box=preview.querySelector('.duty-simple-detail');box.hidden=!box.hidden;};actions.append(dl,detail);var detailBox=document.createElement('div');detailBox.className='duty-simple-detail';detailBox.hidden=true;detailBox.textContent='選手数と家庭数：一致　／　対象日：土日・祝日・スケジュール登録日　／　黄色：里山活動日';preview.append(title,img,actions,detailBox);
+      var src=canvas.toDataURL('image/png');preview.innerHTML='';var title=document.createElement('b');title.textContent=y+'年'+mo+'月 当番表（案）';var img=document.createElement('img');img.className='duty-simple-image';img.src=src;img.alt=title.textContent;var actions=document.createElement('div');actions.className='duty-simple-actions';var dl=document.createElement('button');dl.type='button';dl.textContent='画像を保存';dl.onclick=async function(){
+        var filename='当番表_'+y+'年'+String(mo).padStart(2,'0')+'月_案.png';
+        try{
+          var blob=await new Promise(function(resolve,reject){canvas.toBlob(function(b){b?resolve(b):reject(new Error('画像変換に失敗しました'));},'image/png');});
+          var file=new File([blob],filename,{type:'image/png'});
+          if(navigator.share&&navigator.canShare&&navigator.canShare({files:[file]})){await navigator.share({files:[file],title:filename});return;}
+          var url=URL.createObjectURL(blob),a=document.createElement('a');a.href=url;a.download=filename;document.body.appendChild(a);a.click();a.remove();setTimeout(function(){URL.revokeObjectURL(url);},1500);
+        }catch(err){
+          if(err&&err.name==='AbortError')return;
+          var w=window.open(src,'_blank');if(!w)alert('画像を開けませんでした。画像を長押しして保存してください。');
+        }
+      };var detail=document.createElement('button');detail.type='button';detail.textContent='詳細を見る';detail.onclick=function(){var box=preview.querySelector('.duty-simple-detail');box.hidden=!box.hidden;};actions.append(dl,detail);var detailBox=document.createElement('div');detailBox.className='duty-simple-detail';detailBox.hidden=true;detailBox.textContent='選手数と家庭数：一致　／　対象日：土日・祝日・スケジュール登録日　／　黄色：里山活動日';preview.append(title,img,actions,detailBox);
     }catch(err){preview.innerHTML='<div class="duty-simple-error"><b>作成できませんでした</b><br>'+String(err?.message||err)+'</div>';}
     finally{create.disabled=false;create.textContent='当番表（案）を作成';}
   };
