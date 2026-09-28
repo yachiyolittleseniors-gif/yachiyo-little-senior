@@ -572,7 +572,8 @@
   });
 
   resumeBtn.addEventListener('click',async()=>{
-    const adminPassword=panel.dataset.adminPassword || prompt('パスワードを入力してください。');
+    // 再開は重要操作のため、管理画面を開いた時の認証を流用せず毎回管理者パスワードを再入力する。
+    const adminPassword=prompt('管理者パスワードを入力してください。');
     if(!adminPassword) return;
 
     const ok=confirm(
