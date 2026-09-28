@@ -115,7 +115,10 @@
     const today=new Date(),todayKey=today.getFullYear()+'-'+String(today.getMonth()+1).padStart(2,'0')+'-'+String(today.getDate()).padStart(2,'0');
     const ordered=sortChanges(changes),activeOrdered=ordered.filter(function(item){return item.status!=='cancelled'&&item.date>=todayKey});changeSection.hidden=!activeOrdered.length;
     changeList.innerHTML=activeOrdered.map(function(item){return'<div class="duty-change-item">'+changeMarkup(item)+changeUpdatedMarkup(item)+'</div>'}).join('');
-    const adminOrdered=ordered;
+    // 管理画面の「登録済み変更履歴」も、公開中の当番表が存在する月だけ表示する。
+    // 当番表の最終日を過ぎて公開表示から消えた月（例：9月）は履歴も同時に非表示にする。
+    const activeRosterMonths=new Set(images.filter(function(item){return item.table&&isPublicRosterActive(item)}).map(function(item){return item.table.year+'-'+String(item.table.month).padStart(2,'0')}));
+    const adminOrdered=ordered.filter(function(item){return activeRosterMonths.has(String(item.date||'').slice(0,7))});
     changeAdminList.innerHTML=adminOrdered.length?adminOrdered.map(function(item){const cancelled=item.status==='cancelled';return'<div class="duty-change-admin-item'+(cancelled?' is-cancelled':'')+'"><span>'+displayDate(item.date)+'・'+item.grade+'年生　'+escapeHtml(displayName(item.from,item.grade))+' → <b>'+escapeHtml(displayName(item.to,item.grade))+'</b>'+(cancelled?'<em class="duty-change-cancelled">取消済み</em>':'')+changeUpdatedMarkup(item)+'</span><div class="duty-change-admin-buttons">'+(!cancelled?'<button type="button" data-cancel-duty-change="'+escapeHtml(item.id)+'">取消</button>':'')+'<button type="button" class="delete" data-delete-duty-change="'+escapeHtml(item.id)+'">削除</button></div></div>'}).join(''):'<div class="duty-change-preview">登録済みの当番変更はありません。</div>';
     changeAdminList.querySelectorAll('[data-cancel-duty-change]').forEach(function(button){button.addEventListener('click',function(){cancelChange(button.dataset.cancelDutyChange)})});
     changeAdminList.querySelectorAll('[data-delete-duty-change]').forEach(function(button){button.addEventListener('click',function(){deleteChange(button.dataset.deleteDutyChange)})});
