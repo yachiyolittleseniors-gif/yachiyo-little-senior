@@ -18,13 +18,9 @@
   async function loadChunkedVideo(){
     if(!Number.isInteger(data.chunkCount)||data.chunkCount<1)return false;
     try{
-      var parts=[];
-      for(var i=0;i<data.chunkCount;i++){
-        var r=await fetch(UPLOAD+'?chunk='+i,{cache:'no-store'});
-        if(!r.ok)throw new Error('動画の読み込みに失敗しました。');
-        parts.push(await r.blob());
-      }
-      setVideoBlob(new Blob(parts,{type:data.contentType||'video/mp4'}));
+      applyPlaybackMode();
+      video.src=API+'&file=1&v='+encodeURIComponent(data.updatedAt||'');
+      video.hidden=false;video.load();startAutoPlayback();
       return true;
     }catch(e){video.hidden=true;return false}
   }
