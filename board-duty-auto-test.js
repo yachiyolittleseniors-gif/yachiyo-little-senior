@@ -69,7 +69,7 @@ function init(){
       var actions=document.createElement('div');actions.className='duty-family-simple-actions';
       var allMatch=active.every(function(g){return (playerCounts[g]||0)===groups[g].size;});
       if(allMatch){Array.from(preview.querySelectorAll('.duty-family-grade,.duty-family-note')).forEach(function(el){el.hidden=true;});h.textContent=y+'年'+m+'月 当番表（案）を作成しました';}
-      var proceed=document.createElement('button');proceed.type='button';proceed.textContent=allMatch?'人数一致・当番表案を見る':'人数不一致のため確認が必要';proceed.disabled=!allMatch;
+      var proceed=document.createElement('button');proceed.type='button';proceed.textContent=allMatch?'当番表画像を作成':'人数不一致のため確認が必要';proceed.disabled=!allMatch;if(allMatch){proceed.style.setProperty('color','#fff','important');proceed.style.setProperty('-webkit-text-fill-color','#fff','important');proceed.style.setProperty('opacity','1','important');}
       proceed.addEventListener('click',function(){
         var old=preview.querySelector('.duty-generated-plan');if(old)old.remove();
         var plan=document.createElement('section');plan.className='duty-generated-plan';
