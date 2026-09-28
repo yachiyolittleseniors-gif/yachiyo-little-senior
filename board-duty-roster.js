@@ -91,6 +91,15 @@
     }).join('');
   }
 
+  function cleanupExpiredImages(now=new Date()){
+    const cutoffYear=now.getFullYear()-1,cutoffMonth=now.getMonth()+1;
+    const before=images.length;
+    images=images.filter(function(item){
+      const table=item&&item.table;if(!table||!Number(table.year)||!Number(table.month))return true;
+      return Number(table.year)>cutoffYear||(Number(table.year)===cutoffYear&&Number(table.month)>=cutoffMonth);
+    });
+    return images.length!==before;
+  }
   function saveCache(){try{const value=JSON.stringify({initialized:true,images:images,changes:changes,requests:requests});if(value.length<=4*1024*1024)sessionStorage.setItem(CACHE_KEY,value);else sessionStorage.removeItem(CACHE_KEY)}catch(e){}}
   function loadCache(){try{const cached=normalize(JSON.parse(sessionStorage.getItem(CACHE_KEY)||'null'));if(cached.images.length||cached.changes.length){images=cached.images;changes=cached.changes;requests=cached.requests;render()}}catch(e){sessionStorage.removeItem(CACHE_KEY)}}
 
@@ -122,7 +131,7 @@
   }
 
   async function load(){
-    try{await window.boardAccessReady;const accessPassword=sessionStorage.getItem('yachiyoAttendancePass')||'';const response=await fetch(API,{cache:'no-store',headers:{'x-access-password':accessPassword}});if(!response.ok)throw new Error('load failed');const body=await response.json();const normalized=normalize(body.data);images=normalized.images;changes=normalized.changes;requests=normalized.requests;saveCache();render()}catch(e){render()}
+    try{await window.boardAccessReady;const accessPassword=sessionStorage.getItem('yachiyoAttendancePass')||'';const response=await fetch(API,{cache:'no-store',headers:{'x-access-password':accessPassword}});if(!response.ok)throw new Error('load failed');const body=await response.json();const normalized=normalize(body.data);images=normalized.images;changes=normalized.changes;requests=normalized.requests;const cleaned=cleanupExpiredImages();saveCache();render();if(cleaned&&panel.dataset.adminPassword){persist('','期限切れの当番表原本を整理しました',false).catch(function(){})}}catch(e){render()}
   }
 
   function readAsDataUrl(file){return new Promise(function(resolve,reject){const reader=new FileReader();reader.onload=function(){resolve(String(reader.result||''))};reader.onerror=reject;reader.readAsDataURL(file)})}
