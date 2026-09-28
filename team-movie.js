@@ -37,7 +37,7 @@
       else{video.src=API+'&file=1&v='+encodeURIComponent(data.updatedAt||'');video.hidden=false;video.controls=!!data.showControls;video.loop=!data.showControls;video.muted=!data.showControls;video.autoplay=!data.showControls;video.playsInline=true;if(!data.showControls)video.play().catch(function(){})}
     }else{video.pause();video.removeAttribute('src');video.load();video.hidden=true}
   }
-  function fill(){el('teamMovieTitleEdit').value=data.title||defaults.title;el('teamMovieDescriptionEdit').value=data.description||defaults.description;el('teamMovieVisibleEdit').checked=data.visible!==false;el('teamMovieControlsEdit').checked=!!data.showControls}
+  function fill(){el('teamMovieTitleEdit').value=data.title||defaults.title;el('teamMovieDescriptionEdit').value=data.description||defaults.description;el('teamMovieVisibleEdit').checked=data.visible!==false;el('teamMovieControlsEdit').checked=!!data.showControls;var saved=el('teamMovieSavedFile');if(saved)saved.textContent=data.fileName?'保存済み：'+data.fileName:'保存済み動画：なし'}
   function adminPassword(){return sessionStorage.getItem('yachiyoAdminPassword')||''}
   async function load(){try{var r=await fetch(API,{cache:'no-store'});if(r.ok){var j=await r.json();if(j.data&&typeof j.data==='object')data=Object.assign({},defaults,j.data)}}catch(e){}await draw();fill()}
   async function saveTeamMovie(e){
@@ -63,7 +63,7 @@
       var r=await fetch(API,{method:'POST',headers:{'content-type':'application/json','x-admin-password':p},body:JSON.stringify({data:Object.assign({},data,base)})});
       var j=await r.json().catch(function(){return {}});
       if(!r.ok)throw new Error(j.error||('HTTP '+r.status));
-      data=Object.assign({},data,base,j.data||{});el('teamMovieFileEdit').value='';await draw();fill();status.textContent='保存しました';if(typeof showSaveNotice==='function')showSaveNotice('保存しました');
+      data=Object.assign({},data,base,j.data||{});await draw();fill();status.textContent='保存しました';if(typeof showSaveNotice==='function')showSaveNotice('保存しました');
     }catch(err){status.textContent='保存エラー：'+(err.message||'通信エラー');alert('TEAM MOVIEを保存できませんでした：'+(err.message||'通信エラー'))}
     finally{save.disabled=false;save.textContent='保存'}
   }
