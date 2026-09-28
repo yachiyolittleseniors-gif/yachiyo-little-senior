@@ -37,25 +37,11 @@ function init(){
       disambiguateDuplicateFamilies(groups);
       var y=target.getFullYear(),mo=target.getMonth()+1,active=mo>=6?['2','1']:['3','2','1'],bad=active.filter(g=>groups[g].size!==pc[g]);
       if(bad.length){preview.innerHTML='<div class="duty-simple-error"><b>人数が一致しません</b><br>'+bad.map(g=>g+'年：選手'+pc[g]+'名／家庭'+groups[g].size+'家庭').join('<br>')+'</div>';return;}
+      // 保護者出欠の登録名を正として使用。末尾の「父／母」だけ外し、名前は加工しない。
       var lists={};active.forEach(function(g){
-        lists[g]=Array.from(groups[g].values()).sort(function(a,b){return a.kana.localeCompare(b.kana,'ja')});
-        // 同姓は名簿の「ふりがな（同じ苗字は名前まで）」から自動判定し、姓（名）で表示する。
-        var familyCounts=new Map();
-        lists[g].forEach(function(item){
-          var kana=String(item.kana||'').normalize('NFKC').trim().replace(/[父母]$/,'');
-          var parts=kana.split(/[\s　]+/).filter(Boolean);
-          var fam=parts[0]||familyKey(item.rawName||item.name);
-          item._dutyFamily=fam;item._dutyGiven=parts.length>1?parts.slice(1).join(''):'';
-          familyCounts.set(fam,(familyCounts.get(fam)||0)+1);
-        });
-        lists[g].forEach(function(item){
-          var fam=item._dutyFamily;
-          if((familyCounts.get(fam)||0)<2)return;
-          var raw=String(item.rawName||item.name||'').replace(/[父母]$/,'').trim();
-          var rawGiven=raw.replace(fam,'').replace(/[（）()\s　]/g,'');
-          var given=rawGiven||item._dutyGiven;
-          if(given)item.name=fam+'（'+given+'）';
-        });
+        lists[g]=Array.from(groups[g].values()).map(function(item){
+          return Object.assign({},item,{name:String(item.rawName||item.name||'').replace(/[父母]$/,'').trim()});
+        }).sort(function(a,b){return a.kana.localeCompare(b.kana,'ja')});
       });
       var startAfter={'2':'筒井','1':'小池'},pos={};
       function key(v){return String(v||'').replace(/[（）()\s　]/g,'');}
