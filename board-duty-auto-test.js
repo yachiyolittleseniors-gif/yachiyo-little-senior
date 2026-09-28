@@ -28,8 +28,9 @@ function init(){
       var body=await response.json(), members=body&&body.data&&Array.isArray(body.data.members)?body.data.members:[], groups={'1':new Map(),'2':new Map(),'3':new Map()};
       var playerResponse=await fetch('/.netlify/functions/site-data?section=players',{cache:'no-store',credentials:'same-origin'});
       if(!playerResponse.ok)throw new Error('選手紹介の名簿を取得できませんでした。');
-      var playerBody=await playerResponse.json(),players=Array.isArray(playerBody&&playerBody.data)?playerBody.data:[],playerCounts={'1':0,'2':0,'3':0};
-      players.forEach(function(p){var gm=String(p&&p.grade||'').match(/^([123])年/);if(gm)playerCounts[gm[1]]++;});
+      var playerBody=await playerResponse.json(),players=Array.isArray(playerBody&&playerBody.data)?playerBody.data:[],playerCounts={'1':0,'2':0,'3':0},playerFamilies={'1':new Map(),'2':new Map(),'3':new Map()};
+      function familyKey(value){return String(value||'').normalize('NFKC').trim().split(/[\s　（(]/)[0].replace(/[父母]$/,'');}
+      players.forEach(function(p){var gm=String(p&&p.grade||'').match(/^([123])年/);if(!gm)return;var g=gm[1];playerCounts[g]++;var key=familyKey(p&&p.name);if(key){if(!playerFamilies[g].has(key))playerFamilies[g].set(key,[]);playerFamilies[g].get(key).push(String(p&&p.name||''));}});
       members.forEach(function(mem){
         var grade=String(mem&&mem.grades&&mem.grades[0]||mem&&mem.grade||''); if(!groups[grade])return;
         var rawName=String(mem&&mem.name||'').replace(/[父母]$/,'').trim(), kana=String(mem&&mem.kana||'').replace(/[父母]$/,'').trim(); if(!rawName)return;
@@ -45,6 +46,11 @@ function init(){
         var d=document.createElement('section');d.className='duty-family-grade';
         var b=document.createElement('b');var pc=playerCounts[g]||0,diff=vals.length-pc,matched=pc===vals.length;
         b.textContent=g+'年生　選手'+pc+'名 ／ 家庭候補'+vals.length+'家庭　'+(matched?'✓ 一致':'⚠ '+(diff>0?diff+'家庭多い':Math.abs(diff)+'家庭少ない'));b.className=matched?'duty-family-count-ok':'duty-family-count-warn';d.appendChild(b);
+        if(!matched){
+          var counts=new Map();vals.forEach(function(v){var k=familyKey(v.name);counts.set(k,(counts.get(k)||0)+1);});
+          var suspects=vals.filter(function(v){var k=familyKey(v.name);return (counts.get(k)||0)>1;}).map(function(v){return v.name});
+          if(suspects.length){var alert=document.createElement('div');alert.className='duty-family-suspects';alert.textContent='要確認：'+Array.from(new Set(suspects)).join('、');d.appendChild(alert);}
+        }
         vals.forEach(function(x,index){
           var row=document.createElement('div');row.className='duty-family-row';
           var num=document.createElement('span');num.className='duty-family-no';num.textContent=String(index+1);
