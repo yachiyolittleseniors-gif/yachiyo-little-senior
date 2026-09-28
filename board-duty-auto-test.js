@@ -46,8 +46,10 @@ function init(){
         };
         var suffixMap=knownSuffix[g]||{},used={};
         lists[g].forEach(function(item){
-          var fam=familyKey(item.name),suffixes=suffixMap[fam];if(!suffixes)return;
-          var raw=String(item.name||''),m=raw.match(/[（(]([^）)]+)[）)]/);
+          var raw=String(item.name||'').replace(/[父母]$/,'').trim();
+          var fam=Object.keys(suffixMap).find(function(s){return raw.indexOf(s)===0;})||familyKey(raw);
+          var suffixes=suffixMap[fam];if(!suffixes)return;
+          var m=raw.match(/[（(]([^）)]+)[）)]/);
           if(m&&m[1]){used[fam]=(used[fam]||0)+1;return;}
           var idx=used[fam]||0;if(suffixes[idx])item.name=fam+'（'+suffixes[idx]+'）';used[fam]=idx+1;
         });
