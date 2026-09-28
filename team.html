@@ -1398,24 +1398,7 @@ body.staff-editing:after{display:none!important;content:none!important}
  .restored-footer-nav>a,.restored-footer-nav>a:last-child,.restored-footer-nav>a.footer-board-full{display:flex!important;grid-column:auto!important;width:auto!important;min-width:0!important;align-items:center!important;justify-content:center!important;text-align:center!important}
 }
 </style>
-<style id="team-admin-soft-visual-final">
-#staffEditBtn.unified-admin-toggle{
-  border:1px solid rgba(199,154,59,.28)!important;
-  border-radius:999px!important;
-  background:rgba(7,20,38,.28)!important;
-  background-image:none!important;
-  color:rgba(226,189,103,.62)!important;
-  box-shadow:none!important;
-  backdrop-filter:blur(2px)!important;
-  -webkit-backdrop-filter:blur(2px)!important;
-}
-#staffEditBtn.unified-admin-toggle:hover,
-#staffEditBtn.unified-admin-toggle:focus-visible{
-  border-color:rgba(199,154,59,.42)!important;
-  background:rgba(7,20,38,.38)!important;
-  color:rgba(226,189,103,.78)!important;
-}
-</style></head>
+</head>
 <body id="page-top">
 <header class="header">
 <nav class="nav">
@@ -1882,7 +1865,7 @@ function openProtectedArea(type){
   staffToggle.textContent='管理';
   staffToggle.style.display='none';
 
-  staffToggle.onclick=async function(){
+  staffToggle.addEventListener('click',async function(){
     if(sessionStorage.getItem('yachiyoAdminMode')==='1'){
       sessionStorage.removeItem('yachiyoAdminMode');
       sessionStorage.removeItem('yachiyoAdminPassword');
@@ -1893,8 +1876,10 @@ function openProtectedArea(type){
       return;
     }
     await verifyAndOpen();
-    if(document.body.classList.contains('staff-editing'))setStaffAdmin(true);
-  };
+    if(document.body.classList.contains('staff-editing')){
+      setStaffAdmin(true);
+    }
+  });
  document.getElementById('staffAdd').onclick=()=>{staff.push({role:'',name:''});renderEditor()};
  editor.onclick=e=>{const b=e.target.closest('[data-del]');if(!b)return;staff.splice(Number(b.dataset.del),1);renderEditor()};
  editor.oninput=e=>{if(!e.target.dataset.k)return;staff[Number(e.target.dataset.i)][e.target.dataset.k]=e.target.value};
@@ -1910,11 +1895,29 @@ function openProtectedArea(type){
      staff=clean;render();document.body.classList.remove('staff-editing');showSaveNotice('保存しました');
    }catch(e){alert('保存できませんでした。')}
  };
- render();
- if('requestIdleCallback' in window)requestIdleCallback(load,{timeout:900});else setTimeout(load,250);
+ load();
 })();
 </script>
+<script>
+(function(){
+  const footer=document.querySelector('.restored-footer-copy');
+  const adminBtn=document.getElementById('staffEditBtn');
+  if(!footer || !adminBtn) return;
 
+  let tapCount=0, tapTimer=null;
+  footer.addEventListener('pointerup',function(e){
+    if(e.target.closest('#staffEditBtn')) return;
+    tapCount++;
+    clearTimeout(tapTimer);
+    tapTimer=setTimeout(function(){tapCount=0;},2000);
+    if(tapCount>=5){
+      tapCount=0;
+      clearTimeout(tapTimer);
+      adminBtn.style.display='block';
+    }
+  },{passive:true});
+})();
+</script>
 
 
 <script>
@@ -2068,8 +2071,7 @@ function openProtectedArea(type){
   });
   const observer=new MutationObserver(()=>{if(document.body.classList.contains('staff-editing')) fillEditor();});
   observer.observe(document.body,{attributes:true,attributeFilter:['class']});
-  render();fillEditor();
-  if('requestIdleCallback' in window)requestIdleCallback(load,{timeout:1100});else setTimeout(load,350);
+  load();
 })();
 </script>
 <script>
@@ -2158,8 +2160,7 @@ function openProtectedArea(type){
     if(document.body.classList.contains('staff-editing'))fillEditor();
   });
   observer.observe(document.body,{attributes:true,attributeFilter:['class']});
-  render();fillEditor();
-  if('requestIdleCallback' in window)requestIdleCallback(load,{timeout:1300});else setTimeout(load,450);
+  load();
 })();
 </script>
 <style id="nonblocking-save-notice-style">
@@ -2212,26 +2213,46 @@ function openProtectedArea(type){
   let taps=0;
   let timer=null;
   let lastTouchAt=0;
-  function reset(){taps=0;clearTimeout(timer);timer=null}
+  function reset(){
+    taps=0;
+    clearTimeout(timer);
+    timer=null;
+  }
   function countTap(){
     taps++;
     clearTimeout(timer);
     timer=setTimeout(reset,2200);
-    if(taps>=5){reset();button.style.setProperty('display','block','important')}
+    if(taps>=5){
+      reset();
+      button.style.setProperty('display','block','important');
+    }
   }
   trigger.addEventListener('pointerup',function(event){
-    if(event.pointerType==='touch'){event.stopImmediatePropagation();return}
-    event.stopImmediatePropagation();countTap();
+    if(event.pointerType==='touch'){
+      event.stopImmediatePropagation();
+      return;
+    }
+    event.stopImmediatePropagation();
+    countTap();
   },{capture:true,passive:true});
   trigger.addEventListener('touchend',function(event){
-    lastTouchAt=Date.now();event.preventDefault();event.stopImmediatePropagation();countTap();
+    lastTouchAt=Date.now();
+    event.preventDefault();
+    event.stopImmediatePropagation();
+    countTap();
   },{capture:true,passive:false});
   trigger.addEventListener('click',function(event){
-    if(Date.now()-lastTouchAt<800){event.preventDefault();event.stopImmediatePropagation();return}
-    event.stopImmediatePropagation();countTap();
+    if(Date.now()-lastTouchAt<800){
+      event.preventDefault();
+      event.stopImmediatePropagation();
+      return;
+    }
+    event.stopImmediatePropagation();
+    countTap();
   },{capture:true,passive:false});
   trigger.addEventListener('dblclick',function(event){
-    event.preventDefault();event.stopImmediatePropagation();
+    event.preventDefault();
+    event.stopImmediatePropagation();
   },{capture:true,passive:false});
 })();
 </script>
@@ -2404,18 +2425,5 @@ body.photo-admin-on #accessPasswordChange{
 })();
 </script>
 <script src="./team-movie.js?v=20260928-0919"></script>
-<script id="team-admin-reveal-emergency-fix">
-(function(){
- const trigger=document.querySelector('.restored-footer-copy');
- const button=document.getElementById('staffEditBtn');
- if(!trigger||!button)return;
- let count=0,timer=null,last=0;
- function hit(){
-   count++; clearTimeout(timer); timer=setTimeout(()=>count=0,2500);
-   if(count>=5){count=0;clearTimeout(timer);button.classList.add('unified-admin-toggle');button.style.setProperty('display','block','important');}
- }
- trigger.addEventListener('touchend',function(){last=Date.now();hit()},{passive:true});
- trigger.addEventListener('pointerup',function(e){if(e.pointerType==='touch')return;if(Date.now()-last<500)return;hit()},{passive:true});
-})();
-</script></body>
+</body>
 </html>
