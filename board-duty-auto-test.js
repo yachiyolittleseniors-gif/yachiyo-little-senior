@@ -69,6 +69,8 @@ function init(){
       ctx.strokeStyle='#20252b';ctx.lineWidth=2;
       ctx.fillStyle='#079b51';ctx.fillRect(left,top,totalW,64);
       ctx.strokeRect(left,top,totalW,64);
+      // ヘッダーも本文と同じ列境界で罫線を入れる。
+      [x[1],x[2],x[3],x[5]].forEach(function(v){ctx.beginPath();ctx.moveTo(v,top);ctx.lineTo(v,top+64);ctx.stroke();});
       ctx.fillStyle='#071426';ctx.font='700 27px sans-serif';ctx.textAlign='center';ctx.textBaseline='middle';
       ctx.fillText(y+'年',left+monthW/2,top+32);ctx.fillText('日付',x[1]+dateW/2,top+32);ctx.fillText('曜日',x[2]+dowW/2,top+32);
       var g1=active[0]||'2',g2=active[1]||'1';
