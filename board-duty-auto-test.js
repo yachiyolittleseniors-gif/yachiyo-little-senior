@@ -4,6 +4,14 @@ function init(){
   if(!prev||!next||!label||!create||!preview||create.dataset.dutySimpleBound==='1')return;
   create.dataset.dutySimpleBound='1';
   var now=new Date(),target=new Date(now.getFullYear(),now.getMonth()+1,1);
+  try{
+    var known=[{year:2026,month:9},{year:2026,month:10}];
+    if(window.dutyRosterState&&Array.isArray(window.dutyRosterState.images)&&window.DutyRosterData&&window.DutyRosterData.tableForImage){
+      window.dutyRosterState.images.forEach(function(img){var t=window.DutyRosterData.tableForImage(img);if(t&&Number(t.year)&&Number(t.month))known.push({year:Number(t.year),month:Number(t.month)});});
+    }
+    known.sort(function(a,b){return a.year-b.year||a.month-b.month;});
+    var latest=known[known.length-1];if(latest)target=new Date(latest.year,latest.month,1);
+  }catch(e){}
   function paint(){label.textContent=target.getFullYear()+'年 '+(target.getMonth()+1)+'月';}
   paint();
   prev.onclick=function(e){e.preventDefault();target=new Date(target.getFullYear(),target.getMonth()-1,1);paint();};
