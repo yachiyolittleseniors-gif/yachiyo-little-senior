@@ -1882,9 +1882,7 @@ function openProtectedArea(type){
   staffToggle.textContent='管理';
   staffToggle.style.display='none';
 
-  staffToggle.addEventListener('click',async function(event){
-    event.preventDefault();
-    event.stopPropagation();
+  staffToggle.onclick=async function(){
     if(sessionStorage.getItem('yachiyoAdminMode')==='1'){
       sessionStorage.removeItem('yachiyoAdminMode');
       sessionStorage.removeItem('yachiyoAdminPassword');
@@ -1895,10 +1893,8 @@ function openProtectedArea(type){
       return;
     }
     await verifyAndOpen();
-    if(document.body.classList.contains('staff-editing')){
-      setStaffAdmin(true);
-    }
-  });
+    if(document.body.classList.contains('staff-editing'))setStaffAdmin(true);
+  };
  document.getElementById('staffAdd').onclick=()=>{staff.push({role:'',name:''});renderEditor()};
  editor.onclick=e=>{const b=e.target.closest('[data-del]');if(!b)return;staff.splice(Number(b.dataset.del),1);renderEditor()};
  editor.oninput=e=>{if(!e.target.dataset.k)return;staff[Number(e.target.dataset.i)][e.target.dataset.k]=e.target.value};
@@ -2212,25 +2208,31 @@ function openProtectedArea(type){
   button.classList.add('unified-admin-toggle');
   trigger.classList.add('unified-admin-reveal');
   trigger.setAttribute('aria-label','管理ボタンを表示');
-  let taps=0,timer=null,lastTouchAt=0;
+
+  let taps=0;
+  let timer=null;
+  let lastTouchAt=0;
   function reset(){taps=0;clearTimeout(timer);timer=null}
   function countTap(){
     taps++;
     clearTimeout(timer);
     timer=setTimeout(reset,2200);
-    if(taps>=5){
-      reset();
-      button.style.setProperty('display','block','important');
-    }
+    if(taps>=5){reset();button.style.setProperty('display','block','important')}
   }
+  trigger.addEventListener('pointerup',function(event){
+    if(event.pointerType==='touch'){event.stopImmediatePropagation();return}
+    event.stopImmediatePropagation();countTap();
+  },{capture:true,passive:true});
   trigger.addEventListener('touchend',function(event){
-    lastTouchAt=Date.now();
-    countTap();
-  },{passive:true});
-  trigger.addEventListener('click',function(){
-    if(Date.now()-lastTouchAt<700)return;
-    countTap();
-  },{passive:true});
+    lastTouchAt=Date.now();event.preventDefault();event.stopImmediatePropagation();countTap();
+  },{capture:true,passive:false});
+  trigger.addEventListener('click',function(event){
+    if(Date.now()-lastTouchAt<800){event.preventDefault();event.stopImmediatePropagation();return}
+    event.stopImmediatePropagation();countTap();
+  },{capture:true,passive:false});
+  trigger.addEventListener('dblclick',function(event){
+    event.preventDefault();event.stopImmediatePropagation();
+  },{capture:true,passive:false});
 })();
 </script>
 <style id="admin-position-final-unified">
