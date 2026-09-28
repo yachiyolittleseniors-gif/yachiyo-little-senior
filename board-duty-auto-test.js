@@ -92,7 +92,7 @@ function init(){
           if(ok){confirmBtn.textContent='確定済み';confirmBtn.disabled=true;}
           else{confirmBtn.textContent='この案で確定';confirmBtn.disabled=false;}
         }catch(err){confirmBtn.textContent='この案で確定';confirmBtn.disabled=false;alert(err?.message||'当番表を登録できませんでした。');}
-      };actions.append(dl,confirmBtn,detail);var detailBox=document.createElement('div');detailBox.className='duty-simple-detail';detailBox.hidden=true;detailBox.textContent='選手数と家庭数：一致　／　対象日：土日・祝日・スケジュール登録日　／　黄色：里山活動日';preview.append(title,img,actions,detailBox);
+      };confirmBtn.style.color='#d4af37';confirmBtn.style.fontWeight='800';actions.append(dl,detail,confirmBtn);var detailBox=document.createElement('div');detailBox.className='duty-simple-detail';detailBox.hidden=true;detailBox.textContent='選手数と家庭数：一致　／　対象日：土日・祝日・スケジュール登録日　／　黄色：里山活動日';preview.append(title,img,actions,detailBox);
     }catch(err){preview.innerHTML='<div class="duty-simple-error"><b>作成できませんでした</b><br>'+String(err?.message||err)+'</div>';}
     finally{create.disabled=false;create.textContent='当番表（案）を作成';}
   };
