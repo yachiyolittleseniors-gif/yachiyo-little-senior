@@ -137,7 +137,9 @@
       const up=document.createElement('button');up.type='button';up.textContent='↑';up.title='上へ';up.disabled=index===0;up.addEventListener('click',function(){move(index,-1)});
       const down=document.createElement('button');down.type='button';down.textContent='↓';down.title='下へ';down.disabled=index===images.length-1;down.addEventListener('click',function(){move(index,1)});
       const remove=document.createElement('button');remove.type='button';remove.textContent='削除';remove.className='duty-roster-delete';remove.addEventListener('click',function(){removeImage(index)});
-      actions.append(up,down,remove);row.append(name,actions);adminList.appendChild(row);
+      actions.append(up,down,remove);row.append(name,actions);
+      // 公開期間が終了した原本は1年間データ保管するが、管理画面の一覧には表示しない。
+      if(isPublicRosterActive(item))adminList.appendChild(row);
     });
     if(images.length){list.replaceChildren(imageFragment);if(!list.childElementCount){const empty=document.createElement('div');empty.className='duty-roster-loading';empty.textContent='現在掲載中の当番表はありません。';list.appendChild(empty)}}renderTables();renderChanges();renderRequests();
   }
