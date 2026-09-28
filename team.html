@@ -1421,7 +1421,15 @@ html{scroll-padding-top:var(--fixed-header-height)}
 .restored-footer{display:block!important;visibility:visible!important;opacity:1!important;height:auto!important;min-height:0!important;overflow:visible!important;position:relative!important;z-index:2!important}
 .restored-footer-inner,.restored-footer-nav,.ground-address,.footer-privacy-link,.restored-footer-copy{visibility:visible!important;opacity:1!important}
 @media(max-width:900px){.restored-footer-nav{display:grid!important;grid-template-columns:repeat(2,minmax(0,1fr))!important;height:auto!important;max-height:none!important;overflow:visible!important}.restored-footer-nav>a{display:flex!important;visibility:visible!important;opacity:1!important}}
-</style><style id="team-footer-bottom-gap-fix">html,body{margin-bottom:0!important;padding-bottom:0!important}.restored-footer{margin-bottom:0!important}.restored-footer-inner{padding-bottom:max(28px,env(safe-area-inset-bottom))!important}body.staff-editing{padding-bottom:0!important}</style><style id="staff-mode-bottom-space-fix">body.staff-editing .restored-footer{margin-bottom:0!important}body.staff-editing .restored-footer-inner{padding-bottom:max(28px,env(safe-area-inset-bottom))!important}body.staff-editing:after{display:none!important;content:none!important}</style></head>
+</style><style id="team-footer-bottom-gap-fix">html,body{margin-bottom:0!important;padding-bottom:0!important}.restored-footer{margin-bottom:0!important}.restored-footer-inner{padding-bottom:max(28px,env(safe-area-inset-bottom))!important}body.staff-editing{padding-bottom:0!important}</style><style id="staff-mode-bottom-space-fix">body.staff-editing .restored-footer{margin-bottom:0!important}body.staff-editing .restored-footer-inner{padding-bottom:max(28px,env(safe-area-inset-bottom))!important}body.staff-editing:after{display:none!important;content:none!important}</style><style id="team-movie-ios-tap-fix">
+body.staff-editing #teamMovieCard{overflow:visible!important}
+body.staff-editing #teamMovieAdmin,
+body.staff-editing #teamMovieAdmin *{pointer-events:auto!important}
+body.staff-editing #teamMovieAdmin{position:relative!important;z-index:20!important}
+body.staff-editing #teamMovieSave,
+body.staff-editing #teamMovieDelete{position:relative!important;z-index:30!important;touch-action:manipulation!important;-webkit-tap-highlight-color:rgba(0,0,0,.08)!important}
+</style>
+</head>
 <body id="page-top">
 <header class="header">
 <nav class="nav">
@@ -2547,8 +2555,9 @@ body.photo-admin-on #accessPasswordChange{
   function fill(){el('teamMovieTitleEdit').value=data.title||defaults.title;el('teamMovieDescriptionEdit').value=data.description||defaults.description;el('teamMovieVisibleEdit').checked=data.visible!==false;el('teamMovieControlsEdit').checked=!!data.showControls}
   function adminPassword(){return sessionStorage.getItem('yachiyoAdminPassword')||''}
   async function load(){try{var r=await fetch(API,{cache:'no-store'});if(r.ok){var j=await r.json();if(j.data&&typeof j.data==='object')data=Object.assign({},defaults,j.data)}}catch(e){}await draw();fill()}
-  save.addEventListener('click',async function(e){
-    e.preventDefault();e.stopPropagation();var p=adminPassword();if(!p){alert('管理者認証をやり直してください。');return}
+  async function saveTeamMovie(e){
+    if(e){e.preventDefault();e.stopPropagation()}
+    var p=adminPassword();if(!p){alert('管理者認証をやり直してください。');return}
     save.disabled=true;save.textContent='保存中…';status.textContent='保存処理を開始しています…';
     try{
       var base={title:el('teamMovieTitleEdit').value.trim(),description:el('teamMovieDescriptionEdit').value.trim(),visible:el('teamMovieVisibleEdit').checked,showControls:el('teamMovieControlsEdit').checked};
@@ -2572,7 +2581,12 @@ body.photo-admin-on #accessPasswordChange{
       data=Object.assign({},data,base,j.data||{});el('teamMovieFileEdit').value='';await draw();fill();status.textContent='保存しました';if(typeof showSaveNotice==='function')showSaveNotice('保存しました');
     }catch(err){status.textContent='保存エラー：'+(err.message||'通信エラー');alert('TEAM MOVIEを保存できませんでした：'+(err.message||'通信エラー'))}
     finally{save.disabled=false;save.textContent='保存'}
-  });
+  }
+  save.onclick=saveTeamMovie;
+  save.addEventListener('touchend',function(e){
+    e.preventDefault();
+    if(!save.disabled)saveTeamMovie(e);
+  },{passive:false});
   del.addEventListener('click',async function(e){
     e.preventDefault();e.stopPropagation();if(!data.storageKey){alert('削除する動画はありません。');return}if(!confirm('登録中の動画を削除しますか？'))return;
     var p=adminPassword();if(!p){alert('管理者認証をやり直してください。');return}
