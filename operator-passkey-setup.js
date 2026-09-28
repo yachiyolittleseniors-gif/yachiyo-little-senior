@@ -11,8 +11,9 @@ window.__operatorSetupLoaded=true;
     if(!panel||!button||!title||!text)return;
     panel.hidden=false;
     const localKey='yachiyoOperatorPasskeyRegistered';
+    const boardLocalKey='yachiyoBoardPasskeyRegistered';
     let registered=false;
-    try{registered=localStorage.getItem(localKey)==='1'}catch(e){}
+    try{registered=localStorage.getItem(localKey)==='1'||localStorage.getItem(boardLocalKey)==='1'}catch(e){}
     if(registered){
       title.textContent='生体認証を登録済み';
       text.textContent='次回から生体認証でログインできます。';
@@ -39,7 +40,7 @@ window.__operatorSetupLoaded=true;
         button.disabled=true; button.textContent='端末で認証してください';
         try{
           await window.YLSOperatorPasskeys.remove();
-          try{localStorage.removeItem(localKey)}catch(e){}
+          try{localStorage.removeItem(localKey);localStorage.removeItem(boardLocalKey)}catch(e){}
           registered=false;
           panel.classList.remove('is-registered','is-collapsed');
           title.textContent='生体認証で次回からログイン';
@@ -61,7 +62,7 @@ window.__operatorSetupLoaded=true;
       try{
         const label=navigator.userAgentData?.platform||navigator.platform||'登録端末';
         await window.YLSOperatorPasskeys.register(access,label);
-        try{localStorage.setItem(localKey,'1')}catch(e){}
+        try{localStorage.setItem(localKey,'1');localStorage.setItem(boardLocalKey,'1')}catch(e){}
         registered=true;
         title.textContent='運営用の生体認証を登録済み';
         text.textContent='指導者出欠・事務局・審判部で共通して利用できます。別の端末は、その端末でパスワードログイン後に個別に登録してください。';
