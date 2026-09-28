@@ -552,7 +552,7 @@ function render(){
   h+='</tbody></table>';
   $('#board').innerHTML=h;
   document.querySelectorAll('[data-select-member]').forEach(b=>b.onclick=()=>selectMember(b.dataset.selectMember));
-  document.querySelectorAll('[data-summary-event]').forEach(b=>b.onclick=()=>showSummary(b.dataset.summaryEvent));
+  document.querySelectorAll('[data-summary-event]').forEach(b=>b.onclick=function(event){if(event.target.closest('.status-btn'))return;showSummary(b.dataset.summaryEvent)});
   document.querySelectorAll('[data-open-parent-jump]').forEach(button=>button.onclick=event=>{event.stopPropagation();const parent=button.dataset.openParentJump,menu=document.querySelector(`[data-parent-jump-menu="${parent}"]`),willOpen=menu.hidden;document.querySelectorAll('[data-parent-jump-menu]').forEach(item=>item.hidden=true);document.querySelectorAll('[data-open-parent-jump]').forEach(item=>item.setAttribute('aria-expanded','false'));menu.hidden=!willOpen;button.setAttribute('aria-expanded',String(willOpen))});
   document.querySelectorAll('[data-jump-parent][data-jump-grade]').forEach(button=>button.onclick=event=>{event.stopPropagation();jumpToParentGrade(button.dataset.jumpParent,button.dataset.jumpGrade);document.querySelectorAll('[data-parent-jump-menu]').forEach(item=>item.hidden=true);document.querySelectorAll('[data-open-parent-jump]').forEach(item=>item.setAttribute('aria-expanded','false'))});
   document.querySelectorAll('.status-btn:not(:disabled)').forEach(b=>b.onclick=saveAnswer);
