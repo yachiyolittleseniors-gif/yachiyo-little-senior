@@ -18,7 +18,7 @@ function init(){
   next.onclick=function(e){e.preventDefault();target=new Date(target.getFullYear(),target.getMonth()+1,1);paint();};
   function familyKey(v){return String(v||'').normalize('NFKC').trim().split(/[\s　（(]/)[0].replace(/[父母]$/,'');}
   function displayName(v){var s=String(v||'').replace(/[父母]$/,'').trim();return s.replace(/^([^\s　（(]+)[\s　]+(.+)$/,function(_,a,b){return a+'（'+b.replace(/[（）()]/g,'')+'）';});}
-  function disambiguateDuplicateFamilies(groups){Object.keys(groups).forEach(function(g){var counts=new Map();Array.from(groups[g].values()).forEach(function(item){var fam=familyKey(item.name);counts.set(fam,(counts.get(fam)||0)+1);});Array.from(groups[g].values()).forEach(function(item){var fam=familyKey(item.name);if((counts.get(fam)||0)<2)return;var raw=String(item.name||'').replace(/[父母]$/,'').trim(),rest=raw.slice(fam.length).replace(/[（）()\s　]/g,'');if(rest)item.name=fam+'（'+rest+'）';});});}
+  function disambiguateDuplicateFamilies(groups){Object.keys(groups).forEach(function(g){var counts=new Map();Array.from(groups[g].values()).forEach(function(item){var fam=String(item.family||familyKey(item.rawName||item.name));counts.set(fam,(counts.get(fam)||0)+1);});Array.from(groups[g].values()).forEach(function(item){var fam=String(item.family||familyKey(item.rawName||item.name));if((counts.get(fam)||0)<2)return;var raw=String(item.rawName||item.name||'').replace(/[父母]$/,'').trim(),rest=raw.replace(fam,'').replace(/[（）()\s　]/g,'');if(rest)item.name=fam+'（'+rest+'）';});});}
   function holidays(year){var s=new Set(),add=(m,d)=>s.add(year+'-'+String(m).padStart(2,'0')+'-'+String(d).padStart(2,'0')),nth=(m,n)=>1+((8-new Date(year,m-1,1).getDay())%7)+(n-1)*7;add(1,1);add(1,nth(1,2));add(2,11);add(2,23);add(3,Math.floor(20.8431+.242194*(year-1980)-Math.floor((year-1980)/4)));add(4,29);add(5,3);add(5,4);add(5,5);add(7,nth(7,3));add(8,11);add(9,nth(9,3));add(9,Math.floor(23.2488+.242194*(year-1980)-Math.floor((year-1980)/4)));add(10,nth(10,2));add(11,3);add(11,23);return s;}
   create.onclick=async function(e){
     e.preventDefault();create.disabled=true;create.textContent='作成中…';preview.hidden=false;preview.innerHTML='<div class="duty-simple-status">名簿・スケジュールを確認しています…</div>';
@@ -32,7 +32,7 @@ function init(){
       if(results.some(r=>!r.ok))throw new Error('必要なデータを取得できませんでした。');
       var att=await results[0].json(),pj=await results[1].json(),sj=await results[2].json(),members=att?.data?.members||[],players=Array.isArray(pj?.data)?pj.data:[],schedule=Array.isArray(sj?.data)?sj.data:[];
       var groups={'1':new Map(),'2':new Map(),'3':new Map()},pc={'1':0,'2':0,'3':0};
-      members.forEach(function(mem){var g=String(mem?.grades?.[0]||mem?.grade||'');if(!groups[g])return;var n=displayName(mem?.name),k=String(mem?.kana||n).replace(/[父母]$/,'').trim().normalize('NFKC');if(n&&!groups[g].has(k))groups[g].set(k,{name:n,kana:k});});
+      members.forEach(function(mem){var g=String(mem?.grades?.[0]||mem?.grade||'');if(!groups[g])return;var raw=String(mem?.name||'').replace(/[父母]$/,'').trim(),family=familyKey(raw),n=displayName(raw),k=String(mem?.kana||n).replace(/[父母]$/,'').trim().normalize('NFKC');if(n&&!groups[g].has(k))groups[g].set(k,{name:n,rawName:raw,family:family,kana:k});});
       players.forEach(function(p){var m=String(p?.grade||'').match(/^([123])年/);if(m)pc[m[1]]++;});
       disambiguateDuplicateFamilies(groups);
       var y=target.getFullYear(),mo=target.getMonth()+1,active=mo>=6?['2','1']:['3','2','1'],bad=active.filter(g=>groups[g].size!==pc[g]);
