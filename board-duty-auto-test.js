@@ -14,13 +14,16 @@ function init(){
   prev.onclick=function(e){e.preventDefault();target=new Date(target.getFullYear(),target.getMonth()-1,1);paint();return false;};
   next.onclick=function(e){e.preventDefault();target=new Date(target.getFullYear(),target.getMonth()+1,1);paint();return false;};
   create.onclick=async function(e){
-    e.preventDefault();create.disabled=true;preview.hidden=false;preview.textContent='保護者出欠から名簿を取得しています。';
+    e.preventDefault();create.disabled=true;preview.hidden=false;preview.style.display='block';preview.style.minHeight='0';preview.textContent='保護者出欠から名簿を取得しています…';
     try{
       if(window.boardAccessReady)await window.boardAccessReady;
       var access=sessionStorage.getItem('yachiyoAttendancePass')||'';
       var headers={};
       if(access)headers['x-access-password']=access;
-      var response=await fetch('/.netlify/functions/attendance-data',{cache:'no-store',credentials:'same-origin',headers:headers});
+      var controller=new AbortController();var timer=setTimeout(function(){controller.abort();},8000);
+      var response;
+      try{response=await fetch('/.netlify/functions/attendance-data',{cache:'no-store',credentials:'same-origin',headers:headers,signal:controller.signal});}
+      finally{clearTimeout(timer);}
       if(!response.ok)throw new Error('保護者出欠の名簿を取得できませんでした。');
       var body=await response.json(), members=body&&body.data&&Array.isArray(body.data.members)?body.data.members:[], groups={'1':new Map(),'2':new Map(),'3':new Map()};
       members.forEach(function(mem){
@@ -31,7 +34,7 @@ function init(){
       var y=target.getFullYear(),m=target.getMonth()+1,active=m>=6?['2','1']:['3','2','1'];
       preview.innerHTML='';var h=document.createElement('b');h.textContent=y+'年'+m+'月 当番表（案）・試験';preview.appendChild(h);
       active.forEach(function(g){var vals=Array.from(groups[g].values()).sort(function(a,b){return a.kana.localeCompare(b.kana,'ja')});var d=document.createElement('div');d.style.marginTop='8px';var b=document.createElement('b');b.textContent=g+'年生 '+vals.length+'家庭';var n=document.createElement('div');n.textContent=vals.map(function(x){return x.name}).join('、');d.appendChild(b);d.appendChild(n);preview.appendChild(d);});
-    }catch(err){preview.textContent='作成できませんでした：'+String(err&&err.message||err||'エラー');}
+    }catch(err){preview.style.display='block';preview.textContent='作成できませんでした：'+(err&&err.name==='AbortError'?'名簿取得がタイムアウトしました。':String(err&&err.message||err||'エラー'));}
     finally{create.disabled=false;} return false;
   };
 }
