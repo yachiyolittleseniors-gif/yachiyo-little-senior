@@ -3845,64 +3845,7 @@ function closeModal(){
 <a href="./join">入団案内</a>
 <a href="./contact">お問い合わせ</a>
 <a href="./links">リンク集</a>
-<a href="https://www.instagram.com/yachiyo_little_senior/" rel="noopener noreferrer" target="_blank">Instagram</a>
-<a href="https://www.facebook.com/874baseball" rel="noopener noreferrer" target="_blank">Facebook</a>
-<a href="./terms">サイト利用について</a>
-<a href="./board.html">チーム専用ページ 🔒</a>
-</nav>
-<div class="ground-address"><div class="ground-access-address">アクセス：千葉県八千代市島田台775</div><a class="ground-map-link" href="https://www.google.com/maps/search/?api=1&amp;query=%E5%8D%83%E8%91%89%E7%9C%8C%E5%85%AB%E5%8D%83%E4%BB%A3%E5%B8%82%E5%B3%B6%E7%94%B0%E5%8F%B0%EF%BC%97%EF%BC%97%EF%BC%95" rel="noopener noreferrer" target="_blank">Googleマップで見る <span aria-hidden="true">↗</span></a></div>
-<div class="footer-privacy-link" style="text-align:center;margin-top:10px;font-size:11px;"><a href="/privacy" style="color:#8f9aa7;text-decoration:none;">プライバシーポリシー</a></div>
-<div class="restored-footer-copy">© YACHIYO LITTLE SENIOR. All Rights Reserved.</div>
-</div>
-</footer>
-<script>
-function openProtectedArea(type){
-  const entered=prompt("パスワードを入力してください");
-  if(entered===null) return false;
-  return false;
-}
-</script>
-<script>
-(function(){
-  const btn=document.querySelector('.menu');
-  const menu=document.getElementById('mobileLinks');
-  if(!btn || !menu) return;
-
-  btn.setAttribute('type','button');
-  btn.setAttribute('aria-label','メニューを開く');
-  btn.setAttribute('aria-controls','mobileLinks');
-  btn.setAttribute('aria-expanded','false');
-
-  function setOpen(open){
-    menu.classList.toggle('show', open);
-    btn.setAttribute('aria-expanded', open ? 'true' : 'false');
-    btn.setAttribute('aria-label', open ? 'メニューを閉じる' : 'メニューを開く');
-    btn.textContent = open ? '✕' : '☰';
-  }
-
-  btn.onclick=function(e){
-    e.preventDefault();
-    e.stopPropagation();
-    setOpen(!menu.classList.contains('show'));
-  };
-
-  menu.querySelectorAll('a').forEach(function(a){
-    a.addEventListener('click', function(){ setOpen(false); });
-  });
-
-  document.addEventListener('click', function(e){
-    if(menu.classList.contains('show') && !menu.contains(e.target) && e.target!==btn){
-      setOpen(false);
-    }
-  });
-
-  document.addEventListener('keydown', function(e){
-    if(e.key==='Escape') setOpen(false);
-  });
-})();
-</script>
-<script src="./home-latest-data.js?v=20260927-seo1" defer></script>
-<div data-nosnippet="" id="heroPhotoAdmin">
+<a href="https://www.instagram.com/yachiy<div data-nosnippet="" id="heroPhotoAdmin">
 <button data-nosnippet="" id="heroAdminToggle" type="button">管理</button>
 <label data-nosnippet="" for="heroPhotoInput" id="heroPhotoChange">トップの写真を変更</label>
 <button class="hero-announcement-admin" data-nosnippet="" id="heroAnnouncementEdit" type="button">トップお知らせ編集</button>
@@ -3927,7 +3870,6 @@ function openProtectedArea(type){
         if(d[0]&&d[0].image){
           window.__yachiyoPhotoCache&&window.__yachiyoPhotoCache.set('hero',d[0].image);
           hero.style.setProperty('--hero-photo',`url("${d[0].image}")`);
-          const heroImg=document.getElementById('heroLcpImage');if(heroImg&&heroImg.src!==new URL(d[0].image,location.href).href)heroImg.src=d[0].image;
         }
       }
     }catch(e){}
@@ -3941,7 +3883,6 @@ function openProtectedArea(type){
       sessionStorage.setItem('yachiyoAdminMode','1');
       change.style.display='inline-block';
       adminPanel.style.setProperty('display',window.matchMedia('(max-width:600px)').matches?'grid':'flex','important');
-      toggle.style.setProperty('display','block','important');
       toggle.textContent='管理終了';
     }else{
       sessionStorage.removeItem('yachiyoAdminMode');
@@ -4007,11 +3948,11 @@ function openProtectedArea(type){
         const img=new Image();
         img.onerror=reject;
         img.onload=()=>{
-          const max=1400, scale=Math.min(1,max/Math.max(img.width,img.height));
+          const max=1600, scale=Math.min(1,max/Math.max(img.width,img.height));
           const c=document.createElement('canvas');
           c.width=Math.round(img.width*scale); c.height=Math.round(img.height*scale);
           c.getContext('2d').drawImage(img,0,0,c.width,c.height);
-          resolve(c.toDataURL('image/jpeg',.72));
+          resolve(c.toDataURL('image/jpeg',.76));
         };
         img.src=reader.result;
       };
@@ -4036,7 +3977,6 @@ function openProtectedArea(type){
        window.__yachiyoPhotoDataPromise=null;
       window.__yachiyoPhotoCache&&window.__yachiyoPhotoCache.set('hero',image);
        hero.style.setProperty('--hero-photo',`url("${image}")`);
-       const heroImg=document.getElementById('heroLcpImage');if(heroImg)heroImg.src=image;
       showSaveNotice('保存しました');
     }catch(e){
       alert(e.message==='LIMITED'?'試行回数の上限です。15分後に再度お試しください。':'保存できませんでした。管理パスワードを確認してください。');
