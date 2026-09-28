@@ -1725,6 +1725,7 @@ body.photo-admin-on #accessPasswordChange{
 #dutyAutoTestCreate{min-height:42px;border:1px solid #b88a2b;border-radius:7px;background:#071426;color:#fff;font-weight:900;padding:0 12px;opacity:1!important;pointer-events:auto!important;cursor:pointer;display:flex!important;align-items:center!important;justify-content:center!important;text-align:center!important;line-height:1.2!important}
 .duty-auto-test-preview{margin-top:9px;padding:10px;border:1px solid #dfe3e8;border-radius:8px;background:#fff;font-size:11px;line-height:1.6}
 @media(max-width:600px){.duty-auto-test-controls{grid-template-columns:1fr}#dutyAutoTestCreate{width:100%}}
+#dutyAutoMonthLabel{display:grid!important;place-items:center!important;visibility:visible!important;opacity:1!important;color:#17202b!important;-webkit-text-fill-color:#17202b!important;font-size:16px!important;font-weight:900!important;line-height:1!important;min-height:42px!important;background:#fff!important}
 #dutyAutoTestCreate{box-sizing:border-box!important;width:100%!important;margin:0!important;padding:0!important;display:grid!important;place-items:center!important;text-align:center!important;text-indent:0!important}
 #dutyAutoTestCreate::before,#dutyAutoTestCreate::after{content:none!important;display:none!important}
 </style>
@@ -1734,7 +1735,7 @@ body.photo-admin-on #accessPasswordChange{
  if(!prev||!nextBtn||!label||!button||!preview){setTimeout(initDutyAutoTest,100);return}
  if(button.dataset.ready==='1')return;button.dataset.ready='1';
  const now=new Date();let target=new Date(now.getFullYear(),now.getMonth()+1,1);
- const renderMonth=()=>{label.textContent=target.getFullYear()+'年 '+(target.getMonth()+1)+'月'};
+ const renderMonth=()=>{const text=target.getFullYear()+'年 '+(target.getMonth()+1)+'月';label.textContent=text;label.setAttribute('data-month-label',text);requestAnimationFrame(()=>{label.textContent=text})};
  renderMonth();prev.onclick=e=>{e.preventDefault();target=new Date(target.getFullYear(),target.getMonth()-1,1);renderMonth()};nextBtn.onclick=e=>{e.preventDefault();target=new Date(target.getFullYear(),target.getMonth()+1,1);renderMonth()};
  const esc=s=>String(s||'').replace(/[&<>"']/g,ch=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[ch]));
  const baseName=n=>String(n||'').replace(/[父母]$/,'').replace(/\s+/g,'').trim();
