@@ -1461,7 +1461,7 @@ body:after{display:none!important;content:none!important}
   <b>当番表 自動作成（試験）</b>
   <p>公開中の当番表には影響しません。まず管理画面内だけで当番表（案）を作成して確認します。</p>
   <div class="duty-auto-test-controls">
-    <label>対象月 <span class="duty-auto-test-month-row"><button id="dutyAutoPrevMonth" type="button" aria-label="前の月">‹</button><strong id="dutyAutoMonthLabel" style="display:grid!important;place-items:center!important;visibility:visible!important;opacity:1!important;color:#17202b!important;-webkit-text-fill-color:#17202b!important;background:#fff!important;font-size:16px!important;font-weight:900!important">2026年 10月</strong><button id="dutyAutoNextMonth" type="button" aria-label="次の月">›</button></span></label>
+    <label>対象月 <span class="duty-auto-test-month-row"><button id="dutyAutoPrevMonth" type="button" aria-label="前の月" onclick="window.changeDutyAutoMonth&&window.changeDutyAutoMonth(-1)">‹</button><strong id="dutyAutoMonthLabel" style="display:grid!important;place-items:center!important;visibility:visible!important;opacity:1!important;color:#17202b!important;-webkit-text-fill-color:#17202b!important;background:#fff!important;font-size:16px!important;font-weight:900!important">2026年 10月</strong><button id="dutyAutoNextMonth" type="button" aria-label="次の月" onclick="window.changeDutyAutoMonth&&window.changeDutyAutoMonth(1)">›</button></span></label>
     <button id="dutyAutoTestCreate" type="button">当番表（案）を作成</button>
   </div>
   <div class="duty-auto-test-note">保護者出欠のふりがな・学年・父母情報を使い、家庭単位・50音順で候補名簿を作成します。確定・公開・原本保存はまだ行いません。</div>
@@ -1729,6 +1729,20 @@ body.photo-admin-on #accessPasswordChange{
 #dutyAutoTestCreate{box-sizing:border-box!important;width:100%!important;margin:0!important;padding:0!important;display:grid!important;place-items:center!important;text-align:center!important;text-indent:0!important}
 #dutyAutoTestCreate::before,#dutyAutoTestCreate::after{content:none!important;display:none!important}
 </style>
+<script id="duty-auto-month-nav">
+(function(){
+ const label=document.getElementById('dutyAutoMonthLabel');
+ if(!label)return;
+ const m=String(label.textContent||'').match(/(\d{4})年\s*(\d{1,2})月/);
+ let target=m?new Date(Number(m[1]),Number(m[2])-1,1):new Date();
+ window.changeDutyAutoMonth=function(delta){
+   target=new Date(target.getFullYear(),target.getMonth()+Number(delta||0),1);
+   label.textContent=target.getFullYear()+'年 '+(target.getMonth()+1)+'月';
+   label.dataset.year=String(target.getFullYear());label.dataset.month=String(target.getMonth()+1);
+ };
+ label.dataset.year=String(target.getFullYear());label.dataset.month=String(target.getMonth()+1);
+})();
+</script>
 <script id="duty-auto-test-script">
 (function initDutyAutoTest(){
  const prev=document.getElementById('dutyAutoPrevMonth'),nextBtn=document.getElementById('dutyAutoNextMonth'),label=document.getElementById('dutyAutoMonthLabel'),button=document.getElementById('dutyAutoTestCreate'),preview=document.getElementById('dutyAutoTestPreview');
@@ -1740,7 +1754,7 @@ body.photo-admin-on #accessPasswordChange{
  const esc=s=>String(s||'').replace(/[&<>"']/g,ch=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[ch]));
  const baseName=n=>String(n||'').replace(/[父母]$/,'').replace(/\s+/g,'').trim();
  button.onclick=async function(e){
-   e.preventDefault();e.stopPropagation();const y=target.getFullYear(),m=target.getMonth()+1;
+   e.preventDefault();e.stopPropagation();const y=Number(label?.dataset?.year)||target.getFullYear(),m=Number(label?.dataset?.month)||target.getMonth()+1;
    button.disabled=true;button.textContent='名簿を取得中…';preview.hidden=false;preview.innerHTML='保護者出欠から名簿を取得しています。';
    try{
      const access=sessionStorage.getItem('yachiyoAttendancePass')||'';
