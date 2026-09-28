@@ -42,8 +42,8 @@ function init(){
       });
       var y=target.getFullYear(),m=target.getMonth()+1,active=m>=6?['2','1']:['3','2','1'];
       preview.innerHTML='';
-      var h=document.createElement('b');h.textContent=y+'年'+m+'月 家庭名簿の確認（試験）';preview.appendChild(h);
-      var note=document.createElement('div');note.className='duty-family-note';note.textContent='まだ当番表には配置しません。家庭単位の候補を確認してください。';preview.appendChild(note);
+      var h=document.createElement('b');h.textContent=y+'年'+m+'月 当番表作成チェック';preview.appendChild(h);
+      var note=document.createElement('div');note.className='duty-family-note';note.textContent='選手数と家庭数を自動確認しています。';preview.appendChild(note);
       active.forEach(function(g){
         var vals=Array.from(groups[g].values()).sort(function(a,b){return a.kana.localeCompare(b.kana,'ja')});
         var d=document.createElement('section');d.className='duty-family-grade';
