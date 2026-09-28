@@ -241,6 +241,12 @@ body{padding-top:var(--fixed-header-height)!important}
 </style>
 
 
+
+<style id="attendance-comment-popover-safe">
+#editor.comment-popover{position:fixed!important;z-index:1200!important;width:min(620px,calc(100vw - 24px))!important;margin:0!important;max-height:min(520px,calc(100dvh - 90px));overflow:auto;box-shadow:0 14px 38px rgba(7,20,38,.28);border:1px solid #b9c8db;background:#fff}
+#editor.comment-popover:before{content:"";position:absolute;top:-9px;left:var(--popover-arrow-left,40px);width:16px;height:16px;background:#fff;border-left:1px solid #b9c8db;border-top:1px solid #b9c8db;transform:rotate(45deg)}
+@media(max-width:600px){#editor.comment-popover{width:calc(100vw - 20px)!important;max-height:calc(100dvh - 82px)}}
+</style>
 </head><body id="page-top">
 <header class="header">
 <nav class="nav">
@@ -516,10 +522,27 @@ function jumpToPlayerGrade(grade){const board=$('#board'),row=board?.querySelect
 function render(){const events=visibleEvents(),members=sortedMembers(),seenGrades=new Set(),hasGrade=grade=>members.some(member=>member.grades?.[0]===grade),gradeButtons=gradeDisplayOrder().map(grade=>`<button type="button" data-jump-player-grade="${grade}" ${hasGrade(grade)?'':'disabled'}>${grade}年</button>`).join('');let h='<table><thead><tr><th class="name-col head-name"><span class="head-name-label">選手</span><span class="player-grade-picker"><button class="player-grade-trigger" type="button" data-open-player-grade aria-expanded="false">学年移動 ↓</button><span class="player-grade-menu" data-player-grade-menu hidden>'+gradeButtons+'</span></span></th>';for(const e of events){const counts=countStatuses(e.id);h+=`<th class="event-head"><button class="event-summary-btn" type="button" data-summary-event="${esc(e.id)}" aria-label="${esc(formatDate(e.date))}の学年別内訳を開く"><span class="event-date">${esc(formatDate(e.date))}</span><span class="event-counts">${countMarkup(counts)}</span></button></th>`}h+='</tr></thead><tbody>';for(const m of members){const grade=m.grades?.[0]||'',gradeStart=grade&&!seenGrades.has(grade);if(gradeStart)seenGrades.add(grade);h+=`<tr${gradeStart?` data-player-grade-start="${esc(grade)}"`:''}><th class="name-col"><button class="member-btn ${selectedMember===m.id?'selected':''}" data-select-member="${esc(m.id)}">${memberDisplayHtml(m)}</button></th>`;for(const e of events){const s=data.answers?.[m.id]?.[e.id]||'',on=selectedMember===m.id,busy=savingMembers.has(String(m.id));h+=`<td><button class="status-btn ${statusClass(s)}" ${on&&!busy?'':'disabled'} data-member="${esc(m.id)}" data-event="${esc(e.id)}">${esc(s||'・')}</button></td>`}h+='</tr>'}h+='</tbody></table>';$('#board').innerHTML=h;document.querySelectorAll('[data-select-member]').forEach(b=>b.onclick=()=>selectMember(b.dataset.selectMember));document.querySelectorAll('[data-summary-event]').forEach(b=>b.onclick=()=>showSummary(b.dataset.summaryEvent));const trigger=document.querySelector('[data-open-player-grade]'),menu=document.querySelector('[data-player-grade-menu]');if(trigger&&menu)trigger.onclick=event=>{event.stopPropagation();menu.hidden=!menu.hidden;trigger.setAttribute('aria-expanded',String(!menu.hidden))};document.querySelectorAll('[data-jump-player-grade]').forEach(button=>button.onclick=event=>{event.stopPropagation();jumpToPlayerGrade(button.dataset.jumpPlayerGrade);menu.hidden=true;trigger.setAttribute('aria-expanded','false')});document.querySelectorAll('.status-btn:not(:disabled)').forEach(b=>b.onclick=saveAnswer);renderReportControls(events);renderEditor();renderComments();renderAdmin()}
 function showSummary(eventId){const event=visibleEvents().find(item=>String(item.id)===String(eventId));if(!event)return;$('#summaryTitle').textContent=formatDate(event.date)+(event.title?' '+event.title:'');$('#summaryBody').innerHTML=gradeDisplayOrder().map(grade=>{const counts=countStatuses(eventId,data.members.filter(member=>member.grades.includes(grade)));return `<section class="breakdown-grade"><h3><span class="member-grade-badge grade-${grade}">${grade}年</span></h3><div class="breakdown-row"><span class="breakdown-parent">計</span>${countMarkup(counts)}</div></section>`}).join('');const unset=data.members.filter(member=>!member.grades.length).length;$('#summaryUnset').textContent=unset?`学年が未設定の選手：${unset}名`:'※人数は選手に設定した学年で集計しています。';$('#summaryDialog').showModal()}
 $('#summaryClose').onclick=()=>$('#summaryDialog').close();$('#summaryDialog').onclick=e=>{if(e.target===$('#summaryDialog'))$('#summaryDialog').close()};
+
+function positionCommentPopover(){
+  const editor=$('#editor');if(!editor)return;
+  if(!selectedMember){editor.classList.remove('comment-popover');editor.style.left='';editor.style.top='';return}
+  const anchor=document.querySelector('[data-select-member="'+CSS.escape(String(selectedMember))+'"]');if(!anchor)return;
+  editor.classList.add('comment-popover');
+  const rect=anchor.getBoundingClientRect(),gap=10,pad=10;
+  const width=Math.min(620,window.innerWidth-20);
+  let left=Math.max(pad,Math.min(rect.left,window.innerWidth-width-pad));
+  let top=rect.bottom+gap;
+  editor.style.left=left+'px';editor.style.top=top+'px';
+  editor.style.setProperty('--popover-arrow-left',Math.max(18,Math.min(rect.left+rect.width/2-left-8,width-34))+'px');
+  requestAnimationFrame(()=>{const er=editor.getBoundingClientRect(),maxBottom=window.innerHeight-pad;if(er.bottom>maxBottom){top=Math.max(parseInt(getComputedStyle(document.documentElement).getPropertyValue('--fixed-header-height'))+pad,rect.top-er.height-gap);editor.style.top=top+'px'}});
+}
+window.addEventListener('resize',()=>{if(selectedMember)positionCommentPopover()});
+window.addEventListener('scroll',()=>{if(selectedMember)positionCommentPopover()},{passive:true});
+
 function selectMember(id){const next=selectedMember===id?'':id;if(next!==selectedMember){$('#commentText').value='';selectedEscortGrade=''}selectedMember=next;render()}
 function renderEditor(){
   const m=data.members.find(x=>x.id===selectedMember),select=$('#commentEventDate'),events=visibleEvents(),previous=select.value;
-  $('#editor').classList.toggle('show',!!m);if(!m)return;$('#editorName').textContent=memberDisplayName(m);
+  $('#editor').classList.toggle('show',!!m);if(!m){positionCommentPopover();return}$('#editorName').textContent=memberDisplayName(m);positionCommentPopover();
   select.innerHTML=events.map(e=>`<option value="${esc(e.date)}">${esc(formatDate(e.date))} ${esc(e.title||'')}</option>`).join('');if(previous&&events.some(e=>e.date===previous))select.value=previous;select.onchange=()=>{selectedEscortGrade='';renderEditor()};
   const savedEscort=[...data.comments].reverse().find(c=>String(c.memberId)===String(m.id)&&String(c.eventDate||'')===String(select.value||'')&&c.escortSetting===true);if(savedEscort)selectedEscortGrade=String(savedEscort.escortGrade||'');const grade=String(m.grades?.[0]||'');const targets=grade==='1'?['2','3']:grade==='2'?['3']:[];
   const field=$('#upperGradeField'),buttons=$('#escortGradeButtons');field.hidden=!targets.length;
