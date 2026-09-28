@@ -3563,7 +3563,9 @@ body.photo-admin-on .recruit-mode-admin{display:block}
 @keyframes firstVisitLogoIn{to{opacity:1;transform:scale(1)}}
 @keyframes firstVisitShine{to{transform:translateX(95%)}}
 @media(prefers-reduced-motion:reduce){#firstVisitSplash .first-visit-logo{opacity:1;transform:none;animation:none}#firstVisitSplash .first-visit-shine{display:none}}
-</style></head>
+</style><script id="hero-cache-first-paint">
+(()=>{try{const u=localStorage.getItem('yachiyoHeroVersionedUrlV1');if(u&&u.startsWith('/.netlify/functions/site-data?section=hero&image='))document.documentElement.style.setProperty('--hero-photo','url("'+u.replace(/"/g,'%22')+'")')}catch(e){}})();
+</script></head>
 <body id="page-top"><div id="firstVisitSplash" aria-hidden="true" hidden><div class="first-visit-logo"><img src="./official-logo-crisp-final.png" alt=""><div class="first-visit-shine"></div></div></div>
 <header class="header">
 <nav class="nav">
@@ -3918,6 +3920,8 @@ function openProtectedArea(type){
         const d=Array.isArray(j.data)?j.data:[];
         if(d[0]&&d[0].image){
           window.__yachiyoPhotoCache&&window.__yachiyoPhotoCache.set('hero',d[0].image);
+          try{localStorage.setItem('yachiyoHeroVersionedUrlV1',d[0].image)}catch(e){}
+          document.documentElement.style.setProperty('--hero-photo',`url("${d[0].image}")`);
           hero.style.setProperty('--hero-photo',`url("${d[0].image}")`);
         }
       }
