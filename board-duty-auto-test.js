@@ -68,6 +68,7 @@ function init(){
       });
       var actions=document.createElement('div');actions.className='duty-family-simple-actions';
       var allMatch=active.every(function(g){return (playerCounts[g]||0)===groups[g].size;});
+      if(allMatch){Array.from(preview.querySelectorAll('.duty-family-grade,.duty-family-note')).forEach(function(el){el.hidden=true;});h.textContent=y+'年'+m+'月 当番表（案）を作成しました';}
       var proceed=document.createElement('button');proceed.type='button';proceed.textContent=allMatch?'人数一致・当番表案を見る':'人数不一致のため確認が必要';proceed.disabled=!allMatch;
       proceed.addEventListener('click',function(){
         var old=preview.querySelector('.duty-generated-plan');if(old)old.remove();
@@ -132,9 +133,15 @@ function init(){
         var img=document.createElement('img');img.alt=y+'年'+m+'月 当番表（案）画像';img.src=canvas.toDataURL('image/png');imageBox.appendChild(img);
         var dl=document.createElement('button');dl.type='button';dl.textContent='画像を保存';dl.addEventListener('click',function(){var a=document.createElement('a');a.href=img.src;a.download='当番表_'+y+'年'+String(m).padStart(2,'0')+'月_案.png';a.click();});imageBox.appendChild(dl);
         plan.appendChild(imageBox);
+        table.hidden=true;warn.hidden=true;info.hidden=true;
+        var finalActions=document.createElement('div');finalActions.className='duty-final-actions';
+        var edit=document.createElement('button');edit.type='button';edit.textContent='詳細を確認';edit.addEventListener('click',function(){table.hidden=!table.hidden;warn.hidden=table.hidden;info.hidden=table.hidden;edit.textContent=table.hidden?'詳細を確認':'詳細を閉じる';});
+        var confirm=document.createElement('button');confirm.type='button';confirm.textContent='この内容で確定（準備中）';confirm.disabled=true;
+        finalActions.appendChild(edit);finalActions.appendChild(confirm);plan.appendChild(finalActions);
         preview.appendChild(plan);plan.scrollIntoView({behavior:'smooth',block:'start'});
       });
       actions.appendChild(proceed);preview.appendChild(actions);
+      if(allMatch){actions.hidden=true;setTimeout(function(){proceed.click();},0);}
     }catch(err){preview.style.display='block';preview.textContent='作成できませんでした：'+(err&&err.name==='AbortError'?'名簿取得がタイムアウトしました。':String(err&&err.message||err||'エラー'));}
     finally{create.disabled=false;} return false;
   };
