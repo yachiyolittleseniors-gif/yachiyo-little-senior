@@ -2194,8 +2194,10 @@ export default async (request, context) => {
     }
     if (section === "team-movie" && body?.action === "deleteTeamMovie") {
       const old=await store.get(key,{type:"json",consistency:"strong"});
-      if(old?.storageKey) await store.delete(old.storageKey).catch(()=>{});
-      const data={...(old||{}),storageKey:"",fileName:"",contentType:"",size:0,visible:false,updatedAt:new Date().toISOString()};
+      if(old?.storageKey && old.storageKey!=="chunks") await store.delete(old.storageKey).catch(()=>{});
+      const chunkCount=Number(old?.chunkCount)||0;
+      for(let i=0;i<chunkCount;i++) await store.delete("team-movie/chunks/"+i).catch(()=>{});
+      const data={...(old||{}),storageKey:"",chunkCount:0,fileName:"",contentType:"",size:0,visible:false,updatedAt:new Date().toISOString()};
       delete data.video;
       await store.setJSON(key,data);
       return json({ok:true,data});
