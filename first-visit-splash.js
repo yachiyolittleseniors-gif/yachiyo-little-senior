@@ -1,12 +1,14 @@
 (()=>{'use strict';
 function init(){
  const splash=document.getElementById('firstVisitSplash');if(!splash)return;
- const KEY='yachiyoHeroSplashSeenV1';
- let seen=false;try{seen=localStorage.getItem(KEY)==='1'}catch(e){}
+ const KEY='yachiyoHeroSplashSeenSessionV1';
+ let seen=false;try{seen=sessionStorage.getItem(KEY)==='1'}catch(e){}
  if(seen){splash.remove();return}
+ // Mark immediately so reloads in this tab/session never replay the animation.
+ try{sessionStorage.setItem(KEY,'1')}catch(e){}
  splash.hidden=false;
  let minDone=false,heroDone=false,closed=false;
- const close=()=>{if(closed||!minDone||!heroDone)return;closed=true;try{localStorage.setItem(KEY,'1')}catch(e){}splash.classList.add('is-leaving');setTimeout(()=>splash.remove(),620)};
+ const close=()=>{if(closed||!minDone||!heroDone)return;closed=true;splash.classList.add('is-leaving');setTimeout(()=>splash.remove(),620)};
  setTimeout(()=>{minDone=true;close()},1850);
  const finishHero=()=>{heroDone=true;close()};
  fetch('/.netlify/functions/site-data?section=hero&manifest=1',{cache:'no-store'})
