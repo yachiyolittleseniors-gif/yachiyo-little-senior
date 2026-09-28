@@ -73,10 +73,16 @@ function init(){
         var old=preview.querySelector('.duty-generated-plan');if(old)old.remove();
         var plan=document.createElement('section');plan.className='duty-generated-plan';
         var ph=document.createElement('b');ph.textContent=y+'年'+m+'月 当番表（案）';plan.appendChild(ph);
-        var info=document.createElement('div');info.className='duty-generated-info';info.textContent='10月の続きから、各学年2家庭ずつ配置した試験案です。まだ公開・保存されません。';plan.appendChild(info);
+        var info=document.createElement('div');info.className='duty-generated-info';info.textContent='前月の続きから、各学年2家庭ずつ配置した試験案です。祝日・スケジュール・里山活動日を反映します。まだ公開・保存されません。';plan.appendChild(info);
         var lastTables=(window.DutyRosterData&&Array.isArray(window.DutyRosterData.INITIAL_TABLES))?window.DutyRosterData.INITIAL_TABLES:[];
-        var starts={'2':'竹内','1':'川村'};
         var startAfter={'2':'筒井','1':'小池'};
+        if(window.DutyRosterData&&window.DutyRosterData.tableForImage){
+          try{
+            var currentImages=(window.dutyRosterState&&Array.isArray(window.dutyRosterState.images))?window.dutyRosterState.images:[];
+            var targetPrev=new Date(y,m-2,1),py=targetPrev.getFullYear(),pm=targetPrev.getMonth()+1;
+            currentImages.forEach(function(img){var t=window.DutyRosterData.tableForImage(img);if(!t||t.year!==py||t.month!==pm||!Array.isArray(t.rows)||!t.rows.length)return;var last=t.rows[t.rows.length-1],grades=t.grades||[2,1];grades.forEach(function(gr,idx){var second=last[3+idx*2];if(second)startAfter[String(gr)]=second;});});
+          }catch(e){}
+        }
         var gradeLists={};
         active.forEach(function(g){gradeLists[g]=Array.from(groups[g].values()).sort(function(a,b){return a.kana.localeCompare(b.kana,'ja')});});
         function key(v){return String(v||'').replace(/[（）()\s　]/g,'');}
@@ -112,6 +118,20 @@ function init(){
           tbody.appendChild(tr);
         });table.appendChild(tbody);plan.appendChild(table);
         var warn=document.createElement('div');warn.className='duty-generated-warning';warn.textContent='土日・祝日・サイトのスケジュール登録日を対象にしています。黄色はスケジュールから判定した里山活動日です。';plan.appendChild(warn);
+        var imageBox=document.createElement('section');imageBox.className='duty-generated-image';
+        var imageTitle=document.createElement('b');imageTitle.textContent='原本画像プレビュー';imageBox.appendChild(imageTitle);
+        var canvas=document.createElement('canvas');canvas.width=1200;canvas.height=Math.max(900,250+days.length*78+260);var ctx=canvas.getContext('2d');
+        ctx.fillStyle='#ffffff';ctx.fillRect(0,0,canvas.width,canvas.height);
+        ctx.fillStyle='#079b51';ctx.fillRect(45,55,1110,72);
+        ctx.fillStyle='#071426';ctx.font='700 31px sans-serif';ctx.fillText(y+'年',65,102);
+        ctx.fillStyle='#ffffff';ctx.font='700 30px sans-serif';ctx.fillText(m+'月 当番表',510,102);
+        var cols=[45,180,300,515,730,945,1155],headers=['日付','曜日','2年','2年','1年','1年'];
+        ctx.font='700 25px sans-serif';for(var ci=0;ci<6;ci++){ctx.fillStyle='#079b51';ctx.fillRect(cols[ci],127,cols[ci+1]-cols[ci],62);ctx.strokeStyle='#27313d';ctx.strokeRect(cols[ci],127,cols[ci+1]-cols[ci],62);ctx.fillStyle='#071426';var tw=ctx.measureText(headers[ci]).width;ctx.fillText(headers[ci],cols[ci]+(cols[ci+1]-cols[ci]-tw)/2,168);}
+        var trs=tbody.querySelectorAll('tr'),yy=189;trs.forEach(function(tr){var activity=tr.classList.contains('is-activity');ctx.fillStyle=activity?'#fff200':'#ffffff';ctx.fillRect(45,yy,1110,64);var cells=tr.querySelectorAll('td');cells.forEach(function(cell,ci){ctx.strokeStyle='#27313d';ctx.strokeRect(cols[ci],yy,cols[ci+1]-cols[ci],64);ctx.fillStyle='#071426';ctx.font='700 24px sans-serif';var txt=cell.textContent,tw=ctx.measureText(txt).width;ctx.fillText(txt,cols[ci]+(cols[ci+1]-cols[ci]-tw)/2,yy+41);});yy+=64;});
+        ctx.fillStyle='#071426';ctx.font='700 22px sans-serif';ctx.fillText('☆ 当番の交代が必要な場合は、サイト内の「当番変更申請」より申請してください。',60,yy+65);ctx.fillText('　 申請後は、全体LINEでの共有も併せてお願いいたします。',60,yy+103);ctx.fillText('☆ 黄色の日は里山活動日になります。車の駐車場所に必ず気を付けてください。',60,yy+165);
+        var img=document.createElement('img');img.alt=y+'年'+m+'月 当番表（案）画像';img.src=canvas.toDataURL('image/png');imageBox.appendChild(img);
+        var dl=document.createElement('button');dl.type='button';dl.textContent='画像を保存';dl.addEventListener('click',function(){var a=document.createElement('a');a.href=img.src;a.download='当番表_'+y+'年'+String(m).padStart(2,'0')+'月_案.png';a.click();});imageBox.appendChild(dl);
+        plan.appendChild(imageBox);
         preview.appendChild(plan);plan.scrollIntoView({behavior:'smooth',block:'start'});
       });
       actions.appendChild(proceed);preview.appendChild(actions);
