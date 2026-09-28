@@ -3916,7 +3916,7 @@ function openProtectedArea(type){
     }catch(e){}
 
   }
-  loadHero();
+  if('requestIdleCallback' in window)requestIdleCallback(loadHero,{timeout:1800});else setTimeout(loadHero,900);
 
   function setAdmin(on){
     document.body.classList.toggle('photo-admin-on',on);
