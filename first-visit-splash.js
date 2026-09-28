@@ -4,7 +4,7 @@ function init(){
  splash.hidden=false;
  let minDone=false,heroDone=false,closed=false;
  const close=()=>{if(closed||!minDone||!heroDone)return;closed=true;splash.classList.add('is-leaving');setTimeout(()=>splash.remove(),620)};
- setTimeout(()=>{minDone=true;close()},1500);
+ setTimeout(()=>{minDone=true;close()},1800);
  const finishHero=()=>{heroDone=true;close()};
  fetch('/.netlify/functions/site-data?section=hero&manifest=1',{cache:'no-store'})
   .then(r=>r.ok?r.json():Promise.reject())
