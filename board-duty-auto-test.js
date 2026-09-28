@@ -45,7 +45,7 @@ function init(){
       var rows=days.map(function(d){var dt=new Date(y,mo-1,d),r=[d,['日','月','火','水','木','金','土'][dt.getDay()]];active.forEach(function(g){for(var z=0;z<2;z++){r.push(lists[g][pos[g]%lists[g].length].name);pos[g]++;}});return r;});
       var canvas=document.createElement('canvas');canvas.width=1400;canvas.height=Math.max(1050,330+rows.length*82+300);var ctx=canvas.getContext('2d');if(!ctx)throw new Error('画像を生成できませんでした。');
       ctx.fillStyle='#fff';ctx.fillRect(0,0,canvas.width,canvas.height);
-      var left=45,top=50,totalW=1310,monthW=125,dateW=90,dowW=90,dataW=(totalW-monthW-dateW-dowW)/4;
+      var totalW=1310,left=Math.round((canvas.width-totalW)/2),top=50,monthW=125,dateW=90,dowW=90,dataW=(totalW-monthW-dateW-dowW)/4;
       var x=[left,left+monthW,left+monthW+dateW,left+monthW+dateW+dowW];
       for(var ci=0;ci<4;ci++)x.push(x[3]+dataW*(ci+1));
       ctx.strokeStyle='#20252b';ctx.lineWidth=2;
@@ -69,9 +69,9 @@ function init(){
         });
       });
       var noteY=monthBottom+58;ctx.textAlign='left';ctx.textBaseline='alphabetic';ctx.fillStyle='#071426';ctx.font='700 22px sans-serif';
-      ctx.fillText('☆　都合によりお当番の交代は可能です。その際は、下記のご対応をお願いいたします。',70,noteY);
-      ctx.font='600 20px sans-serif';ctx.fillText('① サイト内の「当番変更申請」より申請してください。',145,noteY+40);ctx.fillText('② 申請後は、全体LINEでの共有も併せてお願いいたします。',145,noteY+78);
-      ctx.font='700 22px sans-serif';ctx.fillText('☆　黄色の日は里山活動日になります。車の駐車場所に必ず気を付けてください。',70,noteY+145);
+      ctx.fillText('☆　都合によりお当番の交代は可能です。その際は、下記のご対応をお願いいたします。',left+25,noteY);
+      ctx.font='600 20px sans-serif';ctx.fillText('① サイト内の「当番変更申請」より申請してください。',left+100,noteY+40);ctx.fillText('② 申請後は、全体LINEでの共有も併せてお願いいたします。',left+100,noteY+78);
+      ctx.font='700 22px sans-serif';ctx.fillText('☆　黄色の日は里山活動日になります。車の駐車場所に必ず気を付けてください。',left+25,noteY+145);
       var src=canvas.toDataURL('image/png');preview.innerHTML='';var title=document.createElement('b');title.textContent=y+'年'+mo+'月 当番表（案）';var img=document.createElement('img');img.className='duty-simple-image';img.src=src;img.alt=title.textContent;var actions=document.createElement('div');actions.className='duty-simple-actions';var dl=document.createElement('button');dl.type='button';dl.textContent='画像を保存';dl.onclick=async function(){
         var filename='当番表_'+y+'年'+String(mo).padStart(2,'0')+'月_案.png';
         try{
