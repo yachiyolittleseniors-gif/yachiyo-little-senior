@@ -3594,7 +3594,11 @@ body.photo-admin-on .recruit-mode-admin{display:block}
 .hero-photo-intro::after{content:"";position:absolute;inset:0;background:linear-gradient(90deg,rgba(4,12,22,.9) 0%,rgba(4,12,22,.66) 42%,rgba(4,12,22,.25) 100%)}
 .hero-photo-intro.is-revealing{animation:heroPhotoIntroReveal 1.8s ease-out forwards}
 @keyframes heroPhotoIntroReveal{from{opacity:0}to{opacity:1}}
-@media(max-width:900px){.hero-photo-intro img{object-position:center center}}
+@media(max-width:900px){
+.hero{background-image:linear-gradient(90deg,rgba(4,12,22,.76) 0%,rgba(4,12,22,.48) 42%,rgba(4,12,22,.16) 100%),var(--hero-photo)!important}
+.hero-photo-intro::after{background:linear-gradient(90deg,rgba(4,12,22,.76) 0%,rgba(4,12,22,.48) 42%,rgba(4,12,22,.16) 100%)}
+.hero-photo-intro img{object-position:center center}
+}
 @media(max-width:600px){.hero-photo-intro img{object-position:58% center}}
 @media(prefers-reduced-motion:reduce){.hero-photo-intro{opacity:0;animation:none}}
 </style>
