@@ -3951,7 +3951,6 @@ function openProtectedArea(type){
       img.onload=()=>resolve(true);
       img.onerror=()=>resolve(false);
       img.src=src;
-      if(img.complete)resolve(img.naturalWidth>0);
     });
     if(!loaded)return false;
     if(img.decode)await img.decode().catch(()=>{});
