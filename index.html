@@ -3945,24 +3945,24 @@ function openProtectedArea(type){
   const adminPanel=document.getElementById('heroPhotoAdmin');
   if(!hero||!toggle||!change||!input||!adminPanel)return;
 
-  async function showHeroImage(src){
-    const img=new Image();
-    const loaded=await new Promise(resolve=>{
+  function showHeroImage(src){
+    hero.style.setProperty('--hero-photo',`url("${src}")`);
+    return new Promise(resolve=>{
+      const img=new Image();
       img.onload=()=>resolve(true);
       img.onerror=()=>resolve(false);
       img.src=src;
+      if(img.complete&&img.naturalWidth>0)resolve(true);
     });
-    if(!loaded)return false;
-    if(img.decode)await img.decode().catch(()=>{});
-    hero.style.setProperty('--hero-photo',`url("${src}")`);
-    await new Promise(resolve=>requestAnimationFrame(()=>requestAnimationFrame(resolve)));
-    return true;
   }
 
   async function loadHero(){
     try{
       const freshImage=await window.__yachiyoHeroImage;
-      if(freshImage&&await showHeroImage(freshImage))return true;
+      if(freshImage){
+        const ready=showHeroImage(freshImage);
+        if(await ready)return true;
+      }
       const r=await fetch(api+'?section=hero&manifest=1',{cache:'no-store'});
       if(r.ok){
         const j=await r.json();
