@@ -262,6 +262,19 @@ body{padding-top:var(--fixed-header-height)!important}
 #commentList:not([data-loaded="true"]) > .empty{visibility:hidden}
 </style>
 <script src="./back-to-top.js?v=20260929-chevron1" defer></script>
+<style id="attendance-comment-popup-style">
+#commentPopup{box-sizing:border-box;width:calc(100% - 28px);max-width:640px;max-height:calc(100vh - 32px);max-height:calc(100dvh - 32px);padding:0;margin:auto;border:1px solid #c6a052;border-radius:14px;background:#fff;color:#071426;overflow:auto;overscroll-behavior:contain;box-shadow:0 16px 60px rgba(0,0,0,.3)}
+#commentPopup:not([open]){display:none}
+#commentPopup::backdrop{background:rgba(3,12,24,.68)}
+#commentPopup .comment-popup-head{display:flex;align-items:center;justify-content:space-between;gap:16px;padding:16px 18px;border-bottom:1px solid #d8dce1;background:#071426;color:#fff}
+#commentPopupTitle{margin:0;font-size:20px;line-height:1.4}
+#commentPopup .comment-popup-close{flex:0 0 auto;min-height:44px;padding:8px 14px;border:1px solid #c6a052;border-radius:7px;background:#fff;color:#071426;font-size:16px;font-weight:700}
+#commentPopup .editor{margin:0;padding:18px;border:0;background:#fff}
+#commentPopup .editor h3{position:static;margin:0 0 10px;padding:0;line-height:1.5}
+#commentPopup .editor textarea{box-sizing:border-box;font-size:16px}
+#commentPopup .comment-popup-error{margin:14px 18px 0;padding:12px;background:#fff2f2;color:#9e2929;border:1px solid #e4b8b8}
+#commentPopup button:focus-visible{outline:3px solid #c6a052;outline-offset:2px}
+</style>
 </head><body id="page-top">
 <header class="header">
 <nav class="nav">
@@ -299,7 +312,7 @@ body{padding-top:var(--fixed-header-height)!important}
   </section>
 
   <div id="attendanceView">
-    <div class="notice"><b>回答方法：</b>左の自分の名前をタップしてから、○×を編集してください。選択した本人の行だけ編集できます。<br><b>コメント入力：</b>名前を選択すると回答表の下に入力欄が表示されます。対象日と内容を入力し、「コメントを追加」を押してください。上級生に帯同する場合は、コメント欄の「帯同」にチェックを入れてください。</div>
+    <div class="notice"><b>回答方法：</b>左の自分の名前をタップしてから、○×を編集してください。選択した本人の行だけ編集できます。<br><b>コメント入力：</b>名前を選択するとコメント入力がポップアップで開きます。「閉じる」で回答表に戻り、選択した本人の○×を編集できます。対象日と内容を入力し、「コメントを追加」を押してください。上級生に帯同する場合は、コメント欄の「帯同」にチェックを入れてください。</div>
     
     <details class="report-launch" id="reportLaunch">
       <summary class="report-launch-head report-launch-summary"><h2>保護者出席一覧の出力</h2><span class="report-launch-summary-meta"><span class="sync" id="syncText"></span><span class="report-launch-chevron" aria-hidden="true"></span></span></summary>
@@ -955,4 +968,5 @@ body.photo-admin-on #accessPasswordChange{
 </script>
 <script src="./attendance-future-only.js?v=20260927"></script>
 <script src="./attendance-comment-delete.js?v=20260927-1" defer></script>
+<script src="./attendance-comment-popup.js?v=20260929-1" defer></script>
 </body></html>
