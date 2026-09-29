@@ -3558,8 +3558,14 @@ body.photo-admin-on .recruit-mode-admin{display:block}
 <script src="./admin-visibility.js?v=20260926-4" defer></script>
 <link rel="preload" as="image" href="./six-principles-six-kajo-mobile-v2.webp?v=20260908-mobile3" media="(max-width:900px)" fetchpriority="high">
 <link rel="preload" as="image" href="./six-principles-six-kajo-desktop.webp?v=20260908-pc2" media="(min-width:901px)" fetchpriority="high">
-</head>
-<body id="page-top">
+<style id="hero-fresh-load-cover-style">
+#heroFreshLoadCover{position:fixed;inset:0;z-index:2147483000;display:flex;align-items:center;justify-content:center;background:radial-gradient(circle at 50% 46%,#10243d 0,#071426 58%,#04101e 100%);opacity:1;transition:opacity .5s ease;pointer-events:none}
+#heroFreshLoadCover.is-ready{opacity:0}
+#heroFreshLoadCover img{display:block;width:min(84vw,720px);height:auto;opacity:0;transform:scale(.985);animation:heroFreshLogoIn 1.15s ease-out .08s forwards;filter:drop-shadow(0 10px 26px rgba(0,0,0,.25))}
+@keyframes heroFreshLogoIn{to{opacity:1;transform:scale(1)}}
+@media(prefers-reduced-motion:reduce){#heroFreshLoadCover img{opacity:1;transform:none;animation:none}}
+</style></head>
+<body id="page-top"><div id="heroFreshLoadCover" aria-hidden="true"><img src="./official-logo-crisp-final.png" alt=""></div>
 <header class="header">
 <nav class="nav">
 <div class="brand"><div class="official-brand-wrap">
@@ -5113,5 +5119,21 @@ document.addEventListener('DOMContentLoaded',function(){
   }
 }
 </style>
-</body>
+<script id="hero-fresh-load-cover-script">
+(function(){
+ const cover=document.getElementById('heroFreshLoadCover');if(!cover)return;
+ let done=false;
+ function close(){if(done)return;done=true;cover.classList.add('is-ready');setTimeout(()=>cover.remove(),560)}
+ fetch('/.netlify/functions/site-data?section=hero&manifest=1',{cache:'no-store'})
+  .then(r=>r.ok?r.json():Promise.reject())
+  .then(j=>{
+    const src=j&&j.data&&j.data[0]&&j.data[0].image;
+    if(!src){close();return}
+    const im=new Image();
+    im.onload=close;im.onerror=close;im.src=src;
+    if(im.complete&&im.naturalWidth)close();
+  }).catch(close);
+ setTimeout(close,2800);
+})();
+</script></body>
 </html>
