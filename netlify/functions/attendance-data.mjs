@@ -759,6 +759,13 @@ export default async (request, context) => {
         source: "site",
       };
       const state = await loadMemberState(store, data, memberId);
+      if (Object.prototype.hasOwnProperty.call(body, "escortGrade")) {
+        state.comments = state.comments.filter(item => !(item.escortSetting === true && String(item.eventDate || "") === eventDate));
+        if (escortGrade) state.comments.push({
+          id: "escort_" + Date.now().toString(36), memberId, text: "", eventDate,
+          upperGrade: true, escortGrade, escortSetting: true, updatedAt: comment.updatedAt, source: "site"
+        });
+      }
       state.comments = dedupeSameDayComments(state.comments);
       const existingIndex = state.comments.findIndex(item => item.escortSetting !== true && String(item.eventDate || "") === eventDate);
       if (existingIndex >= 0) {
