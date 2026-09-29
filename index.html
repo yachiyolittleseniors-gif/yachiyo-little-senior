@@ -3586,6 +3586,7 @@ body.photo-admin-on .recruit-mode-admin{display:block}
 #firstVisitSplash .first-visit-since span{letter-spacing:.25em;padding-left:.25em}
 #firstVisitSplash .first-visit-since::before,#firstVisitSplash .first-visit-since::after{content:"";display:block;width:clamp(22px,6vw,44px);height:1px;background:linear-gradient(to right,transparent,rgba(199,154,59,.55))}
 #firstVisitSplash .first-visit-since::after{transform:scaleX(-1)}
+@media(max-width:600px){#firstVisitSplash .first-visit-logo{translate:0 -38px}}
 @keyframes splashSinceIn{from{opacity:0;translate:0 5px}to{opacity:1;translate:0 0}}
 @keyframes splashLogoIn{from{opacity:0;transform:scale(.985)}to{opacity:1;transform:scale(1)}}
 @keyframes splashGoldGlow{0%,100%{filter:drop-shadow(0 0 0 rgba(255,201,70,0))}50%{filter:drop-shadow(0 0 3px rgba(255,201,70,.7)) drop-shadow(0 0 8px rgba(255,201,70,.35))}}
