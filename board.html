@@ -1419,15 +1419,6 @@ body:after{display:none!important;content:none!important}
   </div>
   <div id="dutyRosterAdminFields">
     <strong>当番表</strong>
-    <div class="duty-change-admin">
-      <div class="duty-change-heading"><b>登録済み変更履歴</b><button id="toggleDutyAdminHistory" type="button" aria-expanded="false">表示 ▼</button></div>
-      <div id="dutyChangeAdminList" class="duty-change-admin-list" hidden></div>
-      <div class="duty-request-admin-block">
-        <b>当番変更申請</b>
-        <p>一般画面から届いた申請です。</p>
-        <div id="dutyRequestAdminList" class="duty-change-admin-list"></div>
-      </div>
-    </div>
     <div class="duty-auto-test-admin" id="dutyAutoTestAdmin">
   <b>当番表 自動作成</b>
   <p>対象月の当番表（案）を自動作成します。内容を確認後、「この案で確定」を押すと正式な当番表として登録されます。</p>
@@ -1438,9 +1429,7 @@ body:after{display:none!important;content:none!important}
   <div class="duty-auto-test-note">保護者出欠の登録情報を使い、家庭単位・50音順で当番表（案）を作成します。確定するまでは公開中の当番表には影響しません。</div>
   <div id="dutyAutoTestPreview" class="duty-auto-test-preview" hidden></div>
 </div>
-<div class="duty-image-admin">
-      <b>保存済み原本</b>
-      <div id="dutyRosterAdminList"></div>
+
       <details class="duty-manual-register">
         <summary>手動・臨時当番表を登録／作成</summary>
         <div class="duty-manual-register-body">
@@ -1463,6 +1452,18 @@ body:after{display:none!important;content:none!important}
           </details>
         </div>
       </details>
+    <div class="duty-change-admin">
+      <div class="duty-change-heading"><b>登録済み変更履歴</b><button id="toggleDutyAdminHistory" type="button" aria-expanded="false">表示 ▼</button></div>
+      <div id="dutyChangeAdminList" class="duty-change-admin-list" hidden></div>
+      <div class="duty-request-admin-block">
+        <b>当番変更申請</b>
+        <p>一般画面から届いた申請です。</p>
+        <div id="dutyRequestAdminList" class="duty-change-admin-list"></div>
+      </div>
+    </div>
+    <div class="duty-image-admin">
+      <b>保存済み原本</b>
+      <div id="dutyRosterAdminList"></div>
     </div>
   </div>
   <div id="rulesAdminFields">
