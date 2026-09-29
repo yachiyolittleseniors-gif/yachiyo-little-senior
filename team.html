@@ -2436,5 +2436,10 @@ body.photo-admin-on #accessPasswordChange{
    e.stopPropagation();
  },{passive:true});
 })();
-</script></body>
+</script><style id="team-admin-position-adjustment">
+@media(max-width:600px){
+body:not(.staff-editing) #staffEditBtn.unified-admin-toggle{bottom:calc(24px + env(safe-area-inset-bottom))!important}
+}
+</style>
+</body>
 </html>
