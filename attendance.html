@@ -266,7 +266,13 @@ body{padding-top:var(--fixed-header-height)!important}
 #member-comment-row>td{padding:0!important;text-align:left!important;background:#fffdf6!important;border-bottom:2px solid #c6a052}
 #member-comment-row #editor{box-sizing:border-box;position:sticky;left:0;width:min(640px,calc(100vw - 40px));max-width:640px;margin:0;padding:16px;border:0;border-left:4px solid #c6a052;background:#fffdf6;text-align:left;white-space:normal}
 #member-comment-row #editor h3{position:static;margin:0 0 8px;padding:0;line-height:1.5}
-#member-comment-row #editor textarea{box-sizing:border-box;font-size:16px}
+/* compact escort control; give its space to the comment textarea */
+#member-comment-row #editor textarea{box-sizing:border-box;font-size:16px;min-height:120px;line-height:1.6;resize:vertical}
+#member-comment-row #editor #upperGradeField{margin-top:6px;padding:0 10px;border-radius:8px}
+#member-comment-row #editor .escort-grade-buttons{gap:4px 14px}
+#member-comment-row #editor .escort-check{min-height:44px;gap:8px}
+#member-comment-row #editor .escort-check-box{flex-basis:22px;width:22px;height:22px;border-radius:5px;font-size:16px}
+#member-comment-row #editor .escort-check-text{font-size:14px}
 </style>
 </head><body id="page-top">
 <header class="header">
