@@ -5,8 +5,8 @@
   style.textContent = `
     .back-to-top {
       position: fixed;
-      left: max(14px, env(safe-area-inset-left));
-      bottom: calc(16px + env(safe-area-inset-bottom));
+      right: max(14px, env(safe-area-inset-right));
+      bottom: calc(72px + env(safe-area-inset-bottom));
       z-index: 9000;
       width: 44px;
       height: 44px;
