@@ -11,6 +11,28 @@ import {
   verifyAdminPassword,
 } from "./admin-rate-limit.mjs";
 
+
+// Keep only manifest fields; validate against strong storage on every request.
+let heroManifestSnapshot = null;
+async function readHeroManifestData(store, key) {
+  const cached = heroManifestSnapshot;
+  try {
+    const entry = await store.getWithMetadata(key, {
+      type: "json", consistency: "strong",
+      ...(cached?.etag ? { etag: cached.etag } : {})
+    });
+    if (!entry) { heroManifestSnapshot = null; return null; }
+    if (cached && entry.etag === cached.etag && entry.data === null) return cached.data;
+    const data = Array.isArray(entry.data) ? entry.data.map(item => ({
+      key: item?.key, image: Boolean(item?.image), updatedAt: item?.updatedAt
+    })) : [];
+    heroManifestSnapshot = { etag: entry.etag, data };
+    return data;
+  } catch {
+    return store.get(key, { type: "json", consistency: "strong" });
+  }
+}
+
 const DEFAULT_ACCESS_SALT = "yachiyo-access-v1";
 const DEFAULT_ACCESS_HASH =
   "19eb403934ae615b2961d9f6b5ddd86aab32a0fdf4e96adeb8aa2fcb351276ba";
@@ -1186,10 +1208,9 @@ export default async (request, context) => {
         return json({ data: Array.isArray(documents) ? documents : [] });
       }
 
-      let data = await store.get(key, {
-        type: "json",
-        consistency: "strong"
-      });
+      let data = section === "hero" && url.searchParams.get("manifest") === "1"
+        ? await readHeroManifestData(store, key)
+        : await store.get(key, { type: "json", consistency: "strong" });
 
       if (section === "staff" && Array.isArray(data)) {
         let changed = false;
