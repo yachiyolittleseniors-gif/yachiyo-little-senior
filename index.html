@@ -3559,42 +3559,6 @@ body.photo-admin-on .recruit-mode-admin{display:block}
 <script src="./admin-visibility.js?v=20260926-4" defer></script>
 <link rel="preload" as="image" href="./six-principles-six-kajo-mobile-v2.webp?v=20260908-mobile3" media="(max-width:900px)" fetchpriority="high">
 <link rel="preload" as="image" href="./six-principles-six-kajo-desktop.webp?v=20260908-pc2" media="(min-width:901px)" fetchpriority="high">
-<style id="admin-password-dialog-style">
-.admin-password-backdrop[hidden]{display:none!important}
-.admin-password-backdrop{
-  position:fixed;inset:0;z-index:30000;display:flex;align-items:center;justify-content:center;
-  padding:20px;background:rgba(0,0,0,.66);backdrop-filter:blur(4px);-webkit-backdrop-filter:blur(4px)
-}
-.admin-password-card{
-  width:min(420px,100%);padding:24px;border:1px solid rgba(226,189,103,.82);
-  border-radius:14px;background:#071426;color:#fff;box-shadow:0 18px 55px rgba(0,0,0,.42)
-}
-.admin-password-card h2{margin:0 0 18px;font-family:inherit;font-size:18px;line-height:1.5;font-weight:700}
-.admin-password-card input{
-  display:block;width:100%;min-height:48px;padding:10px 12px;border:1px solid #8793a2;
-  border-radius:8px;background:#fff;color:#101820;font:inherit;font-size:18px
-}
-.admin-password-actions{display:flex;justify-content:flex-end;gap:10px;margin-top:18px}
-.admin-password-actions button{
-  min-height:44px;padding:8px 18px;border:1px solid #c79a3b;border-radius:8px;
-  background:#0c1d33;color:#fff;font:inherit;font-weight:700
-}
-.admin-password-actions button[type="submit"]{background:#c79a3b;color:#101923}
-@media(max-width:600px){.admin-password-card{padding:20px}.admin-password-card h2{font-size:17px}}
-</style>
-<style id="mobile-footer-admin-style">
-.mobile-footer-admin{display:none}
-@media(max-width:600px){
-  .mobile-footer-admin{
-    display:inline-flex!important;align-items:center;justify-content:center;
-    min-width:88px;min-height:44px;margin:16px auto 0;padding:8px 22px;
-    border:1px solid rgba(226,189,103,.82);border-radius:999px;
-    background:#071426;color:#e2bd67;font:700 13px/1.2 inherit;
-    box-shadow:0 5px 14px rgba(0,0,0,.2);touch-action:manipulation;
-    -webkit-tap-highlight-color:transparent;cursor:pointer
-  }
-}
-</style>
 </head>
 <body id="page-top">
 <header class="header">
@@ -3876,7 +3840,6 @@ function closeModal(){
 </nav>
 <div class="ground-address"><div class="ground-access-address">アクセス：千葉県八千代市島田台775</div><a class="ground-map-link" href="https://www.google.com/maps/search/?api=1&amp;query=%E5%8D%83%E8%91%89%E7%9C%8C%E5%85%AB%E5%8D%83%E4%BB%A3%E5%B8%82%E5%B3%B6%E7%94%B0%E5%8F%B0%EF%BC%97%EF%BC%97%EF%BC%95" rel="noopener noreferrer" target="_blank">Googleマップで見る <span aria-hidden="true">↗</span></a></div>
 <div class="footer-privacy-link" style="text-align:center;margin-top:10px;font-size:11px;"><a href="/privacy" style="color:#8f9aa7;text-decoration:none;">プライバシーポリシー</a></div>
-<button id="mobileFooterAdmin" class="mobile-footer-admin" type="button" aria-label="管理者パスワードを入力">管理</button>
 <div class="restored-footer-copy">© YACHIYO LITTLE SENIOR. All Rights Reserved.</div>
 </div>
 </footer>
@@ -3933,18 +3896,6 @@ function openProtectedArea(type){
 <button class="hero-announcement-admin" data-nosnippet="" id="heroAnnouncementEdit" type="button">トップお知らせ編集</button>
 <input accept="image/*" id="heroPhotoInput" type="file"/>
 </div>
-<div id="adminPasswordDialog" class="admin-password-backdrop" hidden>
-  <section class="admin-password-card" role="dialog" aria-modal="true" aria-labelledby="adminPasswordTitle">
-    <h2 id="adminPasswordTitle">管理者パスワードを入力してください</h2>
-    <form id="adminPasswordForm">
-      <input id="adminPasswordInput" type="password" autocomplete="current-password" required aria-label="管理者パスワード">
-      <div class="admin-password-actions">
-        <button id="adminPasswordCancel" type="button">キャンセル</button>
-        <button type="submit">OK</button>
-      </div>
-    </form>
-  </section>
-</div>
 <script>
 (async function(){
   const api='/.netlify/functions/site-data';
@@ -3963,6 +3914,7 @@ function openProtectedArea(type){
         const d=Array.isArray(j.data)?j.data:[];
         if(d[0]&&d[0].image){
           window.__yachiyoPhotoCache&&window.__yachiyoPhotoCache.set('hero',d[0].image);
+          hero.style.setProperty('--hero-photo',`url("${d[0].image}")`);
         }
       }
     }catch(e){}
@@ -3977,20 +3929,12 @@ function openProtectedArea(type){
       change.style.display='inline-block';
       adminPanel.style.setProperty('display',window.matchMedia('(max-width:600px)').matches?'grid':'flex','important');
       toggle.textContent='管理終了';
-      const mobileEntry=document.getElementById('mobileFooterAdmin');
-      if(mobileEntry)mobileEntry.textContent='管理終了';
     }else{
       sessionStorage.removeItem('yachiyoAdminMode');
       sessionStorage.removeItem('yachiyoAdminPassword');
       change.style.display='none';
       toggle.textContent='管理';
-      const mobileEntry=document.getElementById('mobileFooterAdmin');
-      if(mobileEntry)mobileEntry.textContent='管理';
-      toggle.style.setProperty(
-        'display',
-        window.matchMedia('(max-width:600px)').matches ? 'inline-flex' : 'none',
-        'important'
-      );
+      toggle.style.setProperty('display','none','important');
     }
   }
 
@@ -4019,50 +3963,9 @@ function openProtectedArea(type){
     },{passive:true});
   }
 
-  function requestAdminPassword(){
-    const backdrop=document.getElementById('adminPasswordDialog');
-    const form=document.getElementById('adminPasswordForm');
-    const field=document.getElementById('adminPasswordInput');
-    const cancel=document.getElementById('adminPasswordCancel');
-    return new Promise(resolve=>{
-      let done=false;
-      const finish=value=>{
-        if(done)return;
-        done=true;
-        backdrop.hidden=true;
-        field.value='';
-        form.removeEventListener('submit',onSubmit);
-        cancel.removeEventListener('click',onCancel);
-        backdrop.removeEventListener('click',onBackdrop);
-        document.removeEventListener('keydown',onKeydown);
-        resolve(value);
-      };
-      const onSubmit=event=>{event.preventDefault();finish(field.value)};
-      const onCancel=()=>finish(null);
-      const onBackdrop=event=>{if(event.target===backdrop)finish(null)};
-      const onKeydown=event=>{if(event.key==='Escape')finish(null)};
-      form.addEventListener('submit',onSubmit);
-      cancel.addEventListener('click',onCancel);
-      backdrop.addEventListener('click',onBackdrop);
-      document.addEventListener('keydown',onKeydown);
-      field.value='';
-      backdrop.hidden=false;
-      requestAnimationFrame(()=>field.focus());
-    });
-  }
-
   toggle.addEventListener('click',async function(){
-    if(sessionStorage.getItem('yachiyoAdminMode')==='1'){
-      setAdmin(false);
-      if(window.matchMedia('(max-width:600px)').matches){
-        adminPanel.style.setProperty('display','flex','important');
-        toggle.style.setProperty('display','inline-flex','important');
-      }else{
-        adminPanel.style.display='none';
-      }
-      return;
-    }
-    const pw=await requestAdminPassword();
+    if(sessionStorage.getItem('yachiyoAdminMode')==='1'){setAdmin(false);document.getElementById('heroPhotoAdmin').style.display='none';return;}
+    const pw=prompt('管理パスワードを入力してください');
     if(!pw)return;
     toggle.disabled=true;
     try{
@@ -4793,12 +4696,58 @@ document.addEventListener('DOMContentLoaded',function(){
 <script id="unified-admin-reveal-script">
 (function(){
   const button=document.getElementById("heroAdminToggle");
-  const mobileEntry=document.getElementById("mobileFooterAdmin");
-  if(!button)return;
+  const trigger=document.querySelector(".restored-footer-copy");
+  if(!button||!trigger)return;
   button.classList.add('unified-admin-toggle');
-  if(mobileEntry){
-    mobileEntry.addEventListener('click',function(){button.click()});
+  trigger.classList.add('unified-admin-reveal');
+  trigger.setAttribute('aria-label','管理ボタンを表示');
+
+  let taps=0;
+  let timer=null;
+  let lastTouchAt=0;
+  function reset(){
+    taps=0;
+    clearTimeout(timer);
+    timer=null;
   }
+  function countTap(){
+    taps++;
+    clearTimeout(timer);
+    timer=setTimeout(reset,2200);
+    if(taps>=5){
+      reset();
+      const container=button.closest('#heroPhotoAdmin');
+      if(container)container.style.setProperty('display','flex','important');
+      button.style.setProperty('display','block','important');
+    }
+  }
+  trigger.addEventListener('pointerup',function(event){
+    if(event.pointerType==='touch'){
+      event.stopImmediatePropagation();
+      return;
+    }
+    event.stopImmediatePropagation();
+    countTap();
+  },{capture:true,passive:true});
+  trigger.addEventListener('touchend',function(event){
+    lastTouchAt=Date.now();
+    event.preventDefault();
+    event.stopImmediatePropagation();
+    countTap();
+  },{capture:true,passive:false});
+  trigger.addEventListener('click',function(event){
+    if(Date.now()-lastTouchAt<800){
+      event.preventDefault();
+      event.stopImmediatePropagation();
+      return;
+    }
+    event.stopImmediatePropagation();
+    countTap();
+  },{capture:true,passive:false});
+  trigger.addEventListener('dblclick',function(event){
+    event.preventDefault();
+    event.stopImmediatePropagation();
+  },{capture:true,passive:false});
 })();
 </script>
 <style id="admin-position-final-unified">
