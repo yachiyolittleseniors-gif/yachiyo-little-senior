@@ -1,16 +1,20 @@
 (()=>{'use strict';
-function init(){
- const splash=document.getElementById('firstVisitSplash');if(!splash)return;
- splash.hidden=false;
- let minDone=false,heroDone=false,closed=false;
- const close=()=>{if(closed||!minDone||!heroDone)return;closed=true;splash.classList.add('is-leaving');setTimeout(()=>splash.remove(),620)};
- setTimeout(()=>{minDone=true;close()},1800);
- const finishHero=()=>{heroDone=true;close()};
- fetch('/.netlify/functions/site-data?section=hero&manifest=1',{cache:'no-store'})
-  .then(r=>r.ok?r.json():Promise.reject())
-  .then(j=>{const src=j&&j.data&&j.data[0]&&j.data[0].image;if(!src){finishHero();return}const img=new Image();img.onload=finishHero;img.onerror=finishHero;img.src=src;if(img.complete&&img.naturalWidth)finishHero()})
-  .catch(finishHero);
- setTimeout(()=>{heroDone=true;minDone=true;close()},2500);
+const cover=document.getElementById('firstVisitSplash');
+if(!cover)return;
+let closed=false, shownAt=0, showTimer, endTimer;
+function remove(){if(closed)return;closed=true;clearTimeout(showTimer);clearTimeout(endTimer);cover.remove();}
+function finish(){if(closed)return;if(!shownAt){remove();return;}
+ const remaining=Math.max(0,1800-(performance.now()-shownAt));
+ clearTimeout(endTimer);endTimer=setTimeout(()=>{cover.classList.add('is-leaving');setTimeout(remove,350);},remaining);
 }
-if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',init,{once:true});else init();
+const hardStop=setTimeout(remove,3000);
+showTimer=setTimeout(()=>{if(closed)return;shownAt=performance.now();cover.hidden=false;},120);
+window.addEventListener('pagehide',remove,{once:true});
+fetch('/.netlify/functions/site-data?section=hero&manifest=1',{cache:'no-store'})
+ .then(r=>{if(!r.ok)throw new Error('hero');return r.json();})
+ .then(j=>{const src=j&&j.data&&j.data[0]&&j.data[0].image;if(!src){finish();return;}
+ const img=new Image();
+ img.onload=()=>{const hero=document.querySelector('.hero');if(hero)hero.style.setProperty('--hero-photo','url("'+src+'")');finish();};
+ img.onerror=finish;img.src=src;
+ }).catch(finish);
 })();
