@@ -3592,17 +3592,15 @@ body.photo-admin-on .recruit-mode-admin{display:block}
 .hero-photo-intro{position:absolute;inset:0;z-index:0;pointer-events:none;overflow:hidden;opacity:0}
 .hero-photo-intro img{display:block;width:100%;height:100%;object-fit:cover;object-position:50% 44%}
 .hero-photo-intro::after{content:"";position:absolute;inset:0;background:linear-gradient(90deg,rgba(4,12,22,.9) 0%,rgba(4,12,22,.66) 42%,rgba(4,12,22,.25) 100%)}
-.hero-photo-intro.is-revealing{animation:heroPhotoIntroAppear .2s ease-out forwards}
-.hero-photo-intro.is-revealing img{animation:heroPhotoIntroZoom 1.8s ease-out both}
-@keyframes heroPhotoIntroAppear{from{opacity:0}to{opacity:1}}
-@keyframes heroPhotoIntroZoom{from{transform:scale(1.06)}to{transform:scale(1)}}
+.hero-photo-intro.is-revealing{animation:heroPhotoIntroReveal 1.8s ease-out forwards}
+@keyframes heroPhotoIntroReveal{from{opacity:0}to{opacity:1}}
 @media(max-width:900px){
 .hero{background-image:linear-gradient(90deg,rgba(4,12,22,.76) 0%,rgba(4,12,22,.48) 42%,rgba(4,12,22,.16) 100%),var(--hero-photo)!important}
 .hero-photo-intro::after{background:linear-gradient(90deg,rgba(4,12,22,.76) 0%,rgba(4,12,22,.48) 42%,rgba(4,12,22,.16) 100%)}
 .hero-photo-intro img{object-position:center center}
 }
 @media(max-width:600px){.hero-photo-intro img{object-position:58% center}}
-@media(prefers-reduced-motion:reduce){.hero-photo-intro{opacity:0;animation:none}.hero-photo-intro img{animation:none}}
+@media(prefers-reduced-motion:reduce){.hero-photo-intro{opacity:0;animation:none}}
 </style>
 <main class="page show" id="home">
 <section class="hero"><div class="hero-photo-intro" aria-hidden="true"></div><div class="hero-inner">
@@ -3632,34 +3630,41 @@ body.photo-admin-on .recruit-mode-admin{display:block}
 </div></section>
 <script id="hero-photo-intro-controller">
 (function(){
-  const layer=document.querySelector('.hero-photo-intro');
-  if(!layer)return;
-  if(window.matchMedia('(prefers-reduced-motion: reduce)').matches){layer.remove();return;}
+  const curtain=document.querySelector('.hero-photo-intro');
+  if(!curtain)return;
+  if(window.matchMedia('(prefers-reduced-motion: reduce)').matches){curtain.remove();return;}
   const image=new Image();
-  let started=false,finished=false,endTimer;
-  const cleanup=()=>{
+  let late=false,finished=false;
+  const reveal=()=>{
     if(finished)return;
     finished=true;
-    clearTimeout(endTimer);
-    layer.remove();
-  };
-  const failSafe=setTimeout(cleanup,8000);
-  const reveal=()=>{
-    if(started||finished)return;
-    started=true;
+    clearTimeout(lateTimer);
     clearTimeout(failSafe);
-    image.alt='';
-    layer.appendChild(image);
-    layer.classList.add('is-revealing');
-    image.addEventListener('animationend',cleanup,{once:true});
-    endTimer=setTimeout(cleanup,2200);
+    if(late){
+      image.alt='';
+      curtain.appendChild(image);
+      curtain.classList.add('is-revealing');
+      curtain.addEventListener('animationend',()=>curtain.remove(),{once:true});
+    }else{
+      curtain.remove();
+    }
   };
+  const lateTimer=setTimeout(()=>{late=true;},120);
+  const failSafe=setTimeout(()=>{if(!finished){finished=true;curtain.remove();}},8000);
   image.addEventListener('load',reveal,{once:true});
-  image.addEventListener('error',()=>{clearTimeout(failSafe);cleanup();},{once:true});
+  image.addEventListener('error',()=>{
+    clearTimeout(lateTimer);
+    clearTimeout(failSafe);
+    curtain.remove();
+  },{once:true});
   image.src='/.netlify/functions/site-data?section=hero&current=1';
   if(image.complete){
     if(image.naturalWidth>0)reveal();
-    else{clearTimeout(failSafe);cleanup();}
+    else{
+      clearTimeout(lateTimer);
+      clearTimeout(failSafe);
+      curtain.remove();
+    }
   }
 })();
 </script>
