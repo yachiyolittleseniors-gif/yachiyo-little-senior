@@ -17,12 +17,13 @@ const CREDENTIALS_KEY = "auth/board-passkeys.json";
 const CHALLENGE_PREFIX = "auth/board-passkey-challenge/";
 const ACCESS_CONFIG_KEY = "content/access-settings.json";
 const CHALLENGE_LIFETIME = 5 * 60 * 1000;
-const MAX_CREDENTIALS = 40;
+// Capacity for 1,000 members with up to five passkeys each.
+const MAX_CREDENTIALS = 5000;
 
 function json(data, status = 200, headers = {}) {
   return new Response(JSON.stringify(data), {
     status,
-    headers: { "content-type": "application/json; charset=utf-8", "cache-control": "no-store", ...headers },
+    headers: { "content-type": "application/json; charset=utf-8", "cache-control": "no-store", "x-passkey-capacity": String(MAX_CREDENTIALS), ...headers },
   });
 }
 function safeEqual(a, b) {
@@ -137,6 +138,11 @@ export default async request => {
       }
       const credentials = await loadCredentials(store);
       const { credential, credentialDeviceType, credentialBackedUp } = verification.registrationInfo;
+      // A registration may finish after other registrations filled the remaining slots.
+      // Reject the new credential instead of evicting an existing member's passkey.
+      if (credentials.length >= MAX_CREDENTIALS && !credentials.some(item => item.id === credential.id)) {
+        return json({ error: "登録上限に達しました。" }, 409);
+      }
       const savedCredential = {
         id: credential.id,
         publicKey: base64Url(credential.publicKey),
@@ -147,8 +153,7 @@ export default async request => {
         label: String(body?.label || "登録端末").trim().slice(0, 60),
         createdAt: new Date().toISOString(),
       };
-      const updated = [savedCredential, ...credentials.filter(item => item.id !== credential.id)]
-        .slice(0, MAX_CREDENTIALS);
+      const updated = [savedCredential, ...credentials.filter(item => item.id !== credential.id)];
       await store.setJSON(CREDENTIALS_KEY, { credentials: updated });
       return json({ ok: true });
     }
