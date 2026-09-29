@@ -1021,6 +1021,9 @@ html,body{margin-bottom:0!important;padding-bottom:0!important}
 body:after{display:none!important;content:none!important}
 #admin-position-scroll-spacer{display:none!important;height:0!important;min-height:0!important}
 </style>
+<style id="password-change-label-style">
+#accessPasswordAdminFields .password-change-heading,#coachPasswordAdminFields .password-change-heading{display:inline-block;font-size:.8em;margin-top:4px;color:#e2bd67}
+</style>
 </head>
 <body id="page-top">
 <header class="site-header">
@@ -1399,21 +1402,21 @@ body:after{display:none!important;content:none!important}
   </div>
   <button id="resumeDensukeBtn" class="restore" type="button" style="display:none!important" hidden>伝助移行を再開</button>
   <div id="accessPasswordAdminFields">
-    <strong>チーム専用ページ</strong>
+    <strong>チーム専用ページ<br><span class="password-change-heading">パスワード変更</span></strong>
     <label for="accessPasswordInput">新しいパスワード</label>
     <input id="accessPasswordInput" type="password" minlength="8" maxlength="64" autocomplete="new-password" placeholder="8文字以上">
     <label for="accessPasswordConfirmInput">新しいパスワード（確認）</label>
     <input id="accessPasswordConfirmInput" type="password" minlength="8" maxlength="64" autocomplete="new-password" placeholder="もう一度入力">
-    <button id="saveAccessPasswordBtn" type="button">パスワードを変更</button>
+    <button id="saveAccessPasswordBtn" type="button">チーム専用パスワードを変更</button>
     <p id="accessPasswordStatus">8文字以上で設定してください。</p>
   </div>
   <div id="coachPasswordAdminFields">
-    <strong>指導者出欠確認</strong>
+    <strong>指導者出欠確認<br><span class="password-change-heading">パスワード変更</span></strong>
     <label for="coachPasswordInput">新しいパスワード</label>
     <input id="coachPasswordInput" type="password" minlength="8" maxlength="64" autocomplete="new-password" placeholder="8文字以上">
     <label for="coachPasswordConfirmInput">新しいパスワード（確認）</label>
     <input id="coachPasswordConfirmInput" type="password" minlength="8" maxlength="64" autocomplete="new-password" placeholder="もう一度入力">
-    <button id="saveCoachPasswordBtn" type="button">パスワードを変更</button>
+    <button id="saveCoachPasswordBtn" type="button">指導者用パスワードを変更</button>
     <p id="coachPasswordStatus">8文字以上で設定してください。</p>
   </div>
   <div id="tournamentAdminFields">
@@ -1585,7 +1588,7 @@ body:after{display:none!important;content:none!important}
 </style>
 </style>
 <script src="./board-live-score.js?v=20260924-reset1"></script>
-<script src="./board-updates.js?v=20260926-1837"></script>
+<script src="./board-updates.js?v=20260929-password-labels"></script>
 <script src="./board-referee-documents.js?v=20260927-0030"></script>
 <script src="./board-tournaments.js?v=20260914-1"></script>
 <script src="./board-meetings.js?v=20260927-0030"></script>
