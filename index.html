@@ -3559,6 +3559,29 @@ body.photo-admin-on .recruit-mode-admin{display:block}
 <script src="./admin-visibility.js?v=20260926-4" defer></script>
 <link rel="preload" as="image" href="./six-principles-six-kajo-mobile-v2.webp?v=20260908-mobile3" media="(max-width:900px)" fetchpriority="high">
 <link rel="preload" as="image" href="./six-principles-six-kajo-desktop.webp?v=20260908-pc2" media="(min-width:901px)" fetchpriority="high">
+<style id="admin-password-dialog-style">
+.admin-password-backdrop[hidden]{display:none!important}
+.admin-password-backdrop{
+  position:fixed;inset:0;z-index:30000;display:flex;align-items:center;justify-content:center;
+  padding:20px;background:rgba(0,0,0,.66);backdrop-filter:blur(4px);-webkit-backdrop-filter:blur(4px)
+}
+.admin-password-card{
+  width:min(420px,100%);padding:24px;border:1px solid rgba(226,189,103,.82);
+  border-radius:14px;background:#071426;color:#fff;box-shadow:0 18px 55px rgba(0,0,0,.42)
+}
+.admin-password-card h2{margin:0 0 18px;font-family:inherit;font-size:18px;line-height:1.5;font-weight:700}
+.admin-password-card input{
+  display:block;width:100%;min-height:48px;padding:10px 12px;border:1px solid #8793a2;
+  border-radius:8px;background:#fff;color:#101820;font:inherit;font-size:18px
+}
+.admin-password-actions{display:flex;justify-content:flex-end;gap:10px;margin-top:18px}
+.admin-password-actions button{
+  min-height:44px;padding:8px 18px;border:1px solid #c79a3b;border-radius:8px;
+  background:#0c1d33;color:#fff;font:inherit;font-weight:700
+}
+.admin-password-actions button[type="submit"]{background:#c79a3b;color:#101923}
+@media(max-width:600px){.admin-password-card{padding:20px}.admin-password-card h2{font-size:17px}}
+</style>
 </head>
 <body id="page-top">
 <header class="header">
@@ -3896,6 +3919,18 @@ function openProtectedArea(type){
 <button class="hero-announcement-admin" data-nosnippet="" id="heroAnnouncementEdit" type="button">トップお知らせ編集</button>
 <input accept="image/*" id="heroPhotoInput" type="file"/>
 </div>
+<div id="adminPasswordDialog" class="admin-password-backdrop" hidden>
+  <section class="admin-password-card" role="dialog" aria-modal="true" aria-labelledby="adminPasswordTitle">
+    <h2 id="adminPasswordTitle">管理者パスワードを入力してください</h2>
+    <form id="adminPasswordForm">
+      <input id="adminPasswordInput" type="password" autocomplete="current-password" required aria-label="管理者パスワード">
+      <div class="admin-password-actions">
+        <button id="adminPasswordCancel" type="button">キャンセル</button>
+        <button type="submit">OK</button>
+      </div>
+    </form>
+  </section>
+</div>
 <script>
 (async function(){
   const api='/.netlify/functions/site-data';
@@ -3933,7 +3968,11 @@ function openProtectedArea(type){
       sessionStorage.removeItem('yachiyoAdminPassword');
       change.style.display='none';
       toggle.textContent='管理';
-      toggle.style.setProperty('display','none','important');
+      toggle.style.setProperty(
+        'display',
+        window.matchMedia('(max-width:600px)').matches ? 'inline-flex' : 'none',
+        'important'
+      );
     }
   }
 
@@ -3962,9 +4001,50 @@ function openProtectedArea(type){
     },{passive:true});
   }
 
+  function requestAdminPassword(){
+    const backdrop=document.getElementById('adminPasswordDialog');
+    const form=document.getElementById('adminPasswordForm');
+    const field=document.getElementById('adminPasswordInput');
+    const cancel=document.getElementById('adminPasswordCancel');
+    return new Promise(resolve=>{
+      let done=false;
+      const finish=value=>{
+        if(done)return;
+        done=true;
+        backdrop.hidden=true;
+        field.value='';
+        form.removeEventListener('submit',onSubmit);
+        cancel.removeEventListener('click',onCancel);
+        backdrop.removeEventListener('click',onBackdrop);
+        document.removeEventListener('keydown',onKeydown);
+        resolve(value);
+      };
+      const onSubmit=event=>{event.preventDefault();finish(field.value)};
+      const onCancel=()=>finish(null);
+      const onBackdrop=event=>{if(event.target===backdrop)finish(null)};
+      const onKeydown=event=>{if(event.key==='Escape')finish(null)};
+      form.addEventListener('submit',onSubmit);
+      cancel.addEventListener('click',onCancel);
+      backdrop.addEventListener('click',onBackdrop);
+      document.addEventListener('keydown',onKeydown);
+      field.value='';
+      backdrop.hidden=false;
+      requestAnimationFrame(()=>field.focus());
+    });
+  }
+
   toggle.addEventListener('click',async function(){
-    if(sessionStorage.getItem('yachiyoAdminMode')==='1'){setAdmin(false);document.getElementById('heroPhotoAdmin').style.display='none';return;}
-    const pw=prompt('管理パスワードを入力してください');
+    if(sessionStorage.getItem('yachiyoAdminMode')==='1'){
+      setAdmin(false);
+      if(window.matchMedia('(max-width:600px)').matches){
+        adminPanel.style.setProperty('display','flex','important');
+        toggle.style.setProperty('display','inline-flex','important');
+      }else{
+        adminPanel.style.display='none';
+      }
+      return;
+    }
+    const pw=await requestAdminPassword();
     if(!pw)return;
     toggle.disabled=true;
     try{
@@ -4696,31 +4776,54 @@ document.addEventListener('DOMContentLoaded',function(){
 (function(){
   const button=document.getElementById("heroAdminToggle");
   const trigger=document.querySelector(".restored-footer-copy");
-  if(!button||!trigger)return;
+  const container=button&&button.closest('#heroPhotoAdmin');
+  if(!button||!trigger||!container)return;
   button.classList.add('unified-admin-toggle');
+
+  if(window.matchMedia('(max-width:600px)').matches){
+    const footerCopy=trigger;
+    const announcement=document.getElementById('heroAnnouncementEdit');
+    if(announcement)announcement.style.display='none';
+    const change=document.getElementById('heroPhotoChange');
+    if(change)change.style.display='none';
+    if(footerCopy.parentNode)footerCopy.parentNode.insertBefore(container,footerCopy);
+    container.style.setProperty('position','static','important');
+    container.style.setProperty('inset','auto','important');
+    container.style.setProperty('display','flex','important');
+    container.style.setProperty('width','100%','important');
+    container.style.setProperty('max-width','100%','important');
+    container.style.setProperty('margin','14px auto 0','important');
+    container.style.setProperty('justify-content','center','important');
+    container.style.setProperty('z-index','auto','important');
+    button.style.setProperty('position','static','important');
+    button.style.setProperty('display','inline-flex','important');
+    button.style.setProperty('width','auto','important');
+    button.style.setProperty('min-width','88px','important');
+    button.style.setProperty('min-height','44px','important');
+    button.style.setProperty('margin','0','important');
+    button.style.setProperty('padding','9px 22px','important');
+    button.style.setProperty('border','1px solid rgba(226,189,103,.82)','important');
+    button.style.setProperty('border-radius','999px','important');
+    button.style.setProperty('background','#071426','important');
+    button.style.setProperty('color','#e2bd67','important');
+    button.style.setProperty('box-shadow','0 5px 14px rgba(0,0,0,.2)','important');
+    button.style.setProperty('font-size','13px','important');
+    button.style.setProperty('z-index','auto','important');
+    return;
+  }
+
   trigger.classList.add('unified-admin-reveal');
   trigger.setAttribute('aria-label','管理ボタンを表示');
-
   const hasPointerEvents='PointerEvent' in window;
-  let taps=0;
-  let timer=null;
-  let lastTouchAt=0;
-  function reset(){
-    taps=0;
-    clearTimeout(timer);
-    timer=null;
-  }
+  let taps=0,timer=null,lastTouchAt=0;
+  function reset(){taps=0;clearTimeout(timer);timer=null}
   function countTap(){
     taps++;
     clearTimeout(timer);
-    timer=setTimeout(reset,2200);
+    timer=setTimeout(reset,6000);
     if(taps>=5){
       reset();
-      const container=button.closest('#heroPhotoAdmin');
-      if(container){
-        const display=window.matchMedia('(max-width:600px)').matches?'grid':'flex';
-        container.style.setProperty('display',display,'important');
-      }
+      container.style.setProperty('display','flex','important');
       button.style.setProperty('display','block','important');
     }
   }
