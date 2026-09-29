@@ -9,7 +9,7 @@ function boot(){
  function apiInfo(){var p=location.pathname,coach=p.indexOf('coach-attendance')>=0,player=p.indexOf('player-attendance')>=0;return{url:player?'/.netlify/functions/player-attendance-data':coach?'/.netlify/functions/coach-attendance-data':'/.netlify/functions/attendance-data',coach:coach}}
  function headers(){var x={'content-type':'application/json'},i=apiInfo();if(i.coach)x['x-coach-password']=sessionStorage.getItem('yachiyoCoachAttendancePass')||'';else x['x-access-password']=sessionStorage.getItem('yachiyoAttendancePass')||'';return x}
  function selected(){var el=document.querySelector('[data-select-member].selected');return el?String(el.getAttribute('data-select-member')||''):''}
- function current(){return comments.find(function(x){return x.escortSetting!==true&&String(x.memberId)===memberId&&String(x.eventDate||'')===String(date.value||'')})||null}
+ function current(){return comments.find(function(x){return x.escortSetting!==true&&String(x.memberId)===memberId&&String(x.eventDate||'')===String(date.value||'')})||comments.find(function(x){return String(x.memberId)===memberId&&String(x.eventDate||'')===String(date.value||'')})||null}
  function show(){memberId=selected()||memberId;var x=current();if(x){box.value=String(x.text||'');btn.disabled=false}else{if(document.activeElement!==box)box.value='';btn.disabled=true}}
  async function load(){try{var r=await fetch(apiInfo().url,{headers:headers(),cache:'no-store'});var j=await r.json();if(r.ok&&j&&j.data&&Array.isArray(j.data.comments))comments=j.data.comments}catch(e){}show()}
  document.addEventListener('click',function(e){
@@ -108,7 +108,35 @@ function boot(){
    };
  }
  date.addEventListener('change',show);
- btn.addEventListener('click',async function(){var x=current();if(!x||!memberId||!date.value)return;if(!confirm('表示中のコメントを削除しますか？'))return;var y=window.scrollY;btn.disabled=true;try{var r=await fetch(apiInfo().url,{method:'POST',headers:headers(),body:JSON.stringify({action:'deleteComment',memberId:memberId,eventDate:date.value})});var j=await r.json().catch(function(){return{}});if(!r.ok)throw new Error(j.error||'削除できませんでした。');if(j&&j.data&&Array.isArray(j.data.comments))comments=j.data.comments;else comments=comments.filter(function(item){return item.escortSetting===true||!(String(item.memberId)===memberId&&String(item.eventDate||'')===String(date.value))});box.value='';btn.disabled=true;if(j&&j.data&&typeof normalize==='function'&&typeof data!=='undefined'){data=normalize(j.data);if(typeof window.renderComments==='function')window.renderComments()}var notice=document.getElementById('commentDeleteNotice');if(!notice){notice=document.createElement('div');notice.id='commentDeleteNotice';notice.setAttribute('role','status');notice.style.cssText='margin-top:10px;padding:10px 12px;border-radius:8px;background:#eef7ef;color:#176b35;font-weight:800;font-size:14px;line-height:1.5';btn.parentNode.parentNode.appendChild(notice)}notice.textContent='コメントを削除しました。';requestAnimationFrame(function(){window.scrollTo({top:y,left:0,behavior:'instant'})});setTimeout(function(){window.scrollTo({top:y,left:0,behavior:'instant'})},250)}catch(e){alert(e.message||'コメントを削除できませんでした。');show()}});
+ btn.addEventListener('click',async function(){
+   var x=current(),id=memberId,day=date.value;
+   if(!x||!id||!day)return;
+   if(typeof savingMembers!=='undefined'&&savingMembers.has(id))return;
+   if(!confirm('この日のコメントと帯同設定を削除しますか？'))return;
+   var y=window.scrollY;btn.disabled=true;
+   if(typeof savingMembers!=='undefined')savingMembers.add(id);
+   try{
+     var r=await fetch(apiInfo().url,{method:'POST',headers:headers(),body:JSON.stringify({action:'deleteComment',memberId:id,eventDate:day})});
+     var j=await r.json().catch(function(){return{}});
+     if(!r.ok)throw new Error(j.error||'削除できませんでした。');
+     comments=j&&j.data&&Array.isArray(j.data.comments)?j.data.comments:comments.filter(function(item){return !(String(item.memberId)===id&&String(item.eventDate||'')===day)});
+     escortDrafts.delete(JSON.stringify([id,day]));
+     if(j&&j.data&&typeof normalize==='function'&&typeof data!=='undefined')data=normalize(j.data);
+     if(selected()===id&&date.value===day){
+       box.value='';btn.disabled=true;
+       if(typeof selectedEscortGrade!=='undefined')selectedEscortGrade='';
+       if(typeof window.renderEditor==='function')window.renderEditor();
+       var oldNotice=document.getElementById('commentSaveNotice');if(oldNotice)oldNotice.textContent='';
+       var notice=document.getElementById('commentDeleteNotice');
+       if(!notice){notice=document.createElement('div');notice.id='commentDeleteNotice';notice.setAttribute('role','status');notice.style.cssText='margin-top:10px;padding:10px 12px;border-radius:8px;background:#eef7ef;color:#176b35;font-weight:800;font-size:14px;line-height:1.5';editor.appendChild(notice)}
+       notice.textContent=apiInfo().coach?'コメントを削除しました。':'コメントと帯同設定を削除しました。';
+     }
+     if(typeof window.renderComments==='function')window.renderComments();
+     requestAnimationFrame(function(){window.scrollTo({top:y,left:0,behavior:'instant'})});
+   }catch(e){alert(e.message||'コメントを削除できませんでした。');show()}
+   finally{if(typeof savingMembers!=='undefined')savingMembers.delete(id)}
+ });
+
  load();
 }
 if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',boot,{once:true});else boot();
