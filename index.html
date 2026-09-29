@@ -3589,9 +3589,13 @@ body.photo-admin-on .recruit-mode-admin{display:block}
 </div>
 </header>
 <style id="hero-photo-intro-animation">
-.hero-photo-intro{position:absolute;inset:0;z-index:0;pointer-events:none;background:rgba(3,12,24,.48);opacity:1}
+.hero-photo-intro{position:absolute;inset:0;z-index:0;pointer-events:none;overflow:hidden;opacity:0}
+.hero-photo-intro img{display:block;width:100%;height:100%;object-fit:cover;object-position:50% 44%}
+.hero-photo-intro::after{content:"";position:absolute;inset:0;background:linear-gradient(90deg,rgba(4,12,22,.9) 0%,rgba(4,12,22,.66) 42%,rgba(4,12,22,.25) 100%)}
 .hero-photo-intro.is-revealing{animation:heroPhotoIntroReveal 1.8s ease-out forwards}
-@keyframes heroPhotoIntroReveal{from{opacity:1}to{opacity:0}}
+@keyframes heroPhotoIntroReveal{from{opacity:0}to{opacity:1}}
+@media(max-width:900px){.hero-photo-intro img{object-position:center center}}
+@media(max-width:600px){.hero-photo-intro img{object-position:58% center}}
 @media(prefers-reduced-motion:reduce){.hero-photo-intro{opacity:0;animation:none}}
 </style>
 <main class="page show" id="home">
@@ -3633,6 +3637,8 @@ body.photo-admin-on .recruit-mode-admin{display:block}
     clearTimeout(lateTimer);
     clearTimeout(failSafe);
     if(late){
+      image.alt='';
+      curtain.appendChild(image);
       curtain.classList.add('is-revealing');
       curtain.addEventListener('animationend',()=>curtain.remove(),{once:true});
     }else{
