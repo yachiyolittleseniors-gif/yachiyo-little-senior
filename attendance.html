@@ -255,6 +255,10 @@ body{padding-top:var(--fixed-header-height)!important}
 
 <style id="attendance-scroll-axis-lock">#board.board-shell{-webkit-overflow-scrolling:touch;overscroll-behavior-x:contain}</style>
 <script src="./attendance-scroll-axis-lock.js?v=20260928-2310" defer></script>
+<style id="answer-wait-notice-style">
+#answerWaitNotice{position:fixed;left:50%;bottom:calc(20px + env(safe-area-inset-bottom));transform:translateX(-50%);z-index:20010;max-width:calc(100vw - 32px);width:max-content;padding:10px 16px;border-radius:10px;background:#24364b;color:#fff;font-size:13px;font-weight:500;line-height:1.5;box-shadow:0 3px 14px rgba(0,0,0,.14);pointer-events:none}
+#answerWaitNotice[hidden]{display:none}
+</style>
 </head><body id="page-top">
 <header class="header">
 <nav class="nav">
@@ -563,7 +567,7 @@ function render(){
 }
 function showSummary(eventId){const event=visibleEvents().find(item=>String(item.id)===String(eventId));if(!event)return;$('#summaryTitle').textContent=formatDate(event.date)+(event.title?' '+event.title:'');const grades=['1','2','3'];$('#summaryBody').innerHTML=grades.map(grade=>{const rows=['father','mother'].map(parent=>{const counts=countStatuses(eventId,data.members.filter(member=>member.grades.includes(grade)&&member.parent===parent));return `<div class="breakdown-row"><span class="breakdown-parent">${parent==='father'?'父':'母'}</span>${countMarkup(counts)}</div>`}).join('');return `<section class="breakdown-grade"><h3>${grade}年生</h3>${rows}</section>`}).join('');const unset=data.members.filter(member=>!member.grades.length||!member.parent).length;$('#summaryUnset').textContent=unset?`学年または父・母が未設定の回答者：${unset}名`:'※人数は回答者に設定した学年と父・母で集計しています。';$('#summaryDialog').showModal()}
 $('#summaryClose').onclick=()=>$('#summaryDialog').close();$('#summaryDialog').onclick=e=>{if(e.target===$('#summaryDialog'))$('#summaryDialog').close()};
-function selectMember(id){if(pendingAnswers.size){showError('◯×の保存が終わってから回答者を切り替えてください。');return;}const next=selectedMember===id?'':id;if(next!==selectedMember){$('#commentText').value='';selectedEscortGrade=''}selectedMember=next;render()}
+function selectMember(id){if(pendingAnswers.size){showAnswerWaitNotice();return;}const next=selectedMember===id?'':id;if(next!==selectedMember){$('#commentText').value='';selectedEscortGrade=''}selectedMember=next;render()}
 function renderEditor(){
   const m=data.members.find(x=>x.id===selectedMember),select=$('#commentEventDate'),events=visibleEvents(),previous=select.value;
   $('#editor').classList.toggle('show',!!m);if(!m)return;$('#editorName').textContent=memberDisplayName(m);
@@ -590,7 +594,14 @@ function refreshAnswerCells(){
     if(counts)counts.innerHTML=countMarkup(countStatuses(button.dataset.summaryEvent));
   });
 }
+function showAnswerWaitNotice(){
+  let notice=document.getElementById('answerWaitNotice');
+  if(!notice){notice=document.createElement('div');notice.id='answerWaitNotice';notice.setAttribute('role','status');notice.setAttribute('aria-live','polite');document.body.appendChild(notice)}
+  notice.textContent=answerSaveFailed?'未保存があります。「再保存」を押してください。':'保存中です。少しお待ちください。';
+  notice.hidden=false;
+}
 function showAnswerSaveState(){
+  const notice=document.getElementById('answerWaitNotice');if(notice){notice.hidden=!pendingAnswers.size;if(pendingAnswers.size)notice.textContent=answerSaveFailed?'未保存があります。「再保存」を押してください。':'保存中です。少しお待ちください。'}
   const status=$('#syncText');status.textContent=pendingAnswers.size?(answerSaveFailed?'未保存があります ':'保存中…'):'保存済み '+new Date().toLocaleTimeString('ja-JP',{hour:'2-digit',minute:'2-digit'});
   if(answerSaveFailed){const retry=document.createElement('button');retry.type='button';retry.textContent='再保存';retry.onclick=flushAnswers;status.appendChild(retry)}
 }
@@ -618,7 +629,7 @@ function saveAnswer(ev){
 window.addEventListener('beforeunload',event=>{if(pendingAnswers.size){event.preventDefault();event.returnValue=''}});
 
 $('#commentSave').onclick=async()=>{const text=$('#commentText').value.trim(),memberId=selectedMember,eventDate=$('#commentEventDate').value;if(!memberId||!text||!eventDate||savingMembers.has(memberId))return;savingMembers.add(memberId);$('#syncText').textContent='保存中…';render();try{const j=await api('POST',{action:'comment',memberId,text,eventDate});data=normalize(j.data);$('#commentText').value='';$('#syncText').textContent='コメント保存済み'}catch{showError('コメントを保存できませんでした。')}finally{savingMembers.delete(memberId);render()}};
-$('#editCancel').onclick=()=>{if(pendingAnswers.size){showError('◯×の保存が終わってから編集を終了してください。');return;}selectedMember='';render()};
+$('#editCancel').onclick=()=>{if(pendingAnswers.size){showAnswerWaitNotice();return;}selectedMember='';render()};
 function commentDateValue(comment){if(comment.eventDate){const value=new Date(comment.eventDate+'T00:00:00').getTime();if(Number.isFinite(value))return value}const match=String(comment.text||'').match(/(\d{1,2})\s*(?:\/|月)\s*(\d{1,2})(?:日)?/);if(match){const now=new Date(),dates=[-1,0,1].map(offset=>new Date(now.getFullYear()+offset,Number(match[1])-1,Number(match[2])).getTime());return dates.sort((a,b)=>Math.abs(a-now)-Math.abs(b-now))[0]}return new Date(comment.updatedAt||0).getTime()||0}
 function sortedComments(){return [...data.comments].filter(comment=>comment&&(comment.text||comment.upperGrade)).sort((a,b)=>commentDateValue(b)-commentDateValue(a)||new Date(b.updatedAt||0)-new Date(a.updatedAt||0))}
 function todayDateKey(){const now=new Date(),year=now.getFullYear(),month=String(now.getMonth()+1).padStart(2,'0'),day=String(now.getDate()).padStart(2,'0');return `${year}-${month}-${day}`}
