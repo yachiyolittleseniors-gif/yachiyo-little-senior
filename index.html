@@ -3558,8 +3558,21 @@ body.photo-admin-on .recruit-mode-admin{display:block}
 <script src="./admin-visibility.js?v=20260926-4" defer></script>
 <link rel="preload" as="image" href="./six-principles-six-kajo-mobile-v2.webp?v=20260908-mobile3" media="(max-width:900px)" fetchpriority="high">
 <link rel="preload" as="image" href="./six-principles-six-kajo-desktop.webp?v=20260908-pc2" media="(min-width:901px)" fetchpriority="high">
+<style id="first-visit-splash-style">
+#firstVisitSplash[hidden]{display:none!important}
+#firstVisitSplash{position:fixed;inset:0;z-index:2147483000;display:flex;align-items:center;justify-content:center;background:radial-gradient(circle at 50% 46%,#10243d 0,#071426 58%,#04101e 100%);pointer-events:none;opacity:1;transition:opacity .3s ease;animation:splashSafetyExit 0s 3.2s forwards}
+#firstVisitSplash.is-leaving{opacity:0}
+#firstVisitSplash .first-visit-logo{position:relative;width:min(84vw,720px);overflow:hidden;animation:splashLogoIn .6s ease both}
+#firstVisitSplash img{display:block;width:100%;height:auto}
+#firstVisitSplash .first-visit-shine{position:absolute;inset:-35% -20%;background:linear-gradient(105deg,transparent 43%,rgba(255,239,185,.3) 50%,transparent 57%);transform:translateX(-100%);animation:splashShine .65s ease .85s forwards}
+@keyframes splashLogoIn{from{opacity:0;transform:scale(.985)}to{opacity:1;transform:scale(1)}}
+@keyframes splashShine{to{transform:translateX(100%)}}
+@keyframes splashSafetyExit{to{visibility:hidden;opacity:0}}
+@media(prefers-reduced-motion:reduce){#firstVisitSplash .first-visit-logo,#firstVisitSplash .first-visit-shine{animation:none}#firstVisitSplash .first-visit-shine{display:none}}
+</style>
 </head>
-<body id="page-top">
+<body id="page-top"><div id="firstVisitSplash" aria-hidden="true" hidden><div class="first-visit-logo"><img src="./official-logo-crisp-final.png" alt=""><div class="first-visit-shine"></div></div></div>
+<script src="./first-visit-splash.js?v=20260929-failsafe1"></script>
 <header class="header">
 <nav class="nav">
 <div class="brand"><div class="official-brand-wrap">
