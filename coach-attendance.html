@@ -270,6 +270,12 @@ document.addEventListener('DOMContentLoaded',()=>{
 #commentList:not([data-loaded="true"]) > .empty{visibility:hidden}
 </style>
 <script src="./back-to-top.js?v=20260929-chevron1" defer></script>
+<style id="attendance-comment-popup-style">
+#member-comment-row>td{padding:0!important;text-align:left!important;background:#fffdf6!important;border-bottom:2px solid #c6a052}
+#member-comment-row #editor{box-sizing:border-box;position:sticky;left:0;width:min(640px,calc(100vw - 40px));max-width:640px;margin:0;padding:16px;border:0;border-left:4px solid #c6a052;background:#fffdf6;text-align:left;white-space:normal}
+#member-comment-row #editor h3{position:static;margin:0 0 8px;padding:0;line-height:1.5}
+#member-comment-row #editor textarea{box-sizing:border-box;font-size:16px}
+</style>
 </head><body id="page-top">
 <header class="header">
 <nav class="nav">
@@ -315,7 +321,7 @@ document.addEventListener('DOMContentLoaded',()=>{
   <section class="locked-card hidden" id="lockedView"></section>
 
   <div id="attendanceView">
-    <div class="notice"><b>回答方法：</b>左の自分の名前をタップしてから、○×を編集してください。選択した本人の行だけ編集できます。<br><b>コメント入力：</b>名前を選択すると回答表の下に入力欄が表示されます。対象日と内容を入力し、「コメントを追加」を押してください。<br><span style="color:#6f7884">※名前はチーム紹介ページの指導者一覧から自動反映されます。</span></div>
+    <div class="notice"><b>回答方法：</b>左の自分の名前をタップしてから、○×を編集してください。選択した本人の行だけ編集できます。<br><b>コメント入力：</b>名前を押すと、その名前のすぐ下に入力欄が開きます。同じ名前をもう一度押すと入力欄が閉じ、編集を解除します。対象日と内容を入力し、「コメントを追加」を押してください。<br><span style="color:#6f7884">※名前はチーム紹介ページの指導者一覧から自動反映されます。</span></div>
     <details class="report-launch" id="reportLaunch">
       <summary class="report-launch-title report-launch-summary"><h2>指導者出席一覧の出力</h2><span class="report-launch-summary-meta"><span class="sync" id="syncText"></span><span class="report-launch-chevron" aria-hidden="true"></span></span></summary>
       <div class="report-launch-body">
@@ -914,4 +920,5 @@ body.photo-admin-on #accessPasswordChange{
 <script src="./operator-passkey-setup.js?v=20260927-csp3"></script>
 <script src="./attendance-future-only.js?v=20260927"></script>
 <script src="./attendance-comment-delete.js?v=20260927-1" defer></script>
+<script src="./attendance-comment-popup.js?v=20260929-2" defer></script>
 </body></html>
