@@ -51,8 +51,24 @@
   }
 
   document.addEventListener('click', function (ev) {
+    var homeLogo = ev.target && ev.target.closest ? ev.target.closest('[data-home-logo]') : null;
+    if (homeLogo) {
+      // The home logo remains an image so iOS can offer its native long-press save action.
+      ev.preventDefault();
+      if (homeLogo.tagName === 'A') window.location.assign('/');
+      else window.scrollTo({ top: 0, behavior: 'smooth' });
+      return;
+    }
     var el = ev.target && ev.target.closest ? ev.target.closest('[data-csp-onclick]') : null;
     if (el) run(el.getAttribute('data-csp-onclick'), el, ev);
+  });
+  document.addEventListener('keydown', function (ev) {
+    if (ev.key !== 'Enter' && ev.key !== ' ') return;
+    var homeLogo = ev.target && ev.target.closest ? ev.target.closest('[data-home-logo]') : null;
+    if (!homeLogo) return;
+    ev.preventDefault();
+    if (homeLogo.tagName === 'A') window.location.assign('/');
+    else window.scrollTo({ top: 0, behavior: 'smooth' });
   });
   document.addEventListener('load', function (ev) {
     var el = ev.target;
