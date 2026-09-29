@@ -6,6 +6,15 @@ function boot(){
  var editor=document.getElementById('editor');
  var btn=document.createElement('button');btn.type='button';btn.id='safeCommentDelete';btn.className='secondary';btn.textContent='コメントを削除';btn.disabled=true;cancel.parentNode.insertBefore(btn,cancel);
  var comments=[],memberId='';
+ var actionNotice=document.createElement('div');actionNotice.id='commentActionNotice';actionNotice.setAttribute('role','status');actionNotice.hidden=true;editor.appendChild(actionNotice);
+ var noticeVersion=0;
+ function paintNotice(message,tone){
+   actionNotice.textContent=message;actionNotice.hidden=!message;
+   actionNotice.style.cssText='margin-top:10px;padding:10px 12px;border-radius:8px;font-weight:800;font-size:14px;line-height:1.5;background:'+(tone==='error'?'#fff0ef':tone==='pending'?'#f0f3f7':'#eef7ef')+';color:'+(tone==='error'?'#a52c25':tone==='pending'?'#4b5563':'#176b35');
+ }
+ function beginNotice(message,tone){var ticket={version:++noticeVersion,key:draftKey()};paintNotice(message,tone);return ticket}
+ function finishNotice(ticket,message,tone){if(ticket.version===noticeVersion&&ticket.key===draftKey())paintNotice(message,tone)}
+ function clearNotice(){noticeVersion++;paintNotice('')}
  function apiInfo(){var p=location.pathname,coach=p.indexOf('coach-attendance')>=0,player=p.indexOf('player-attendance')>=0;return{url:player?'/.netlify/functions/player-attendance-data':coach?'/.netlify/functions/coach-attendance-data':'/.netlify/functions/attendance-data',coach:coach}}
  function headers(){var x={'content-type':'application/json'},i=apiInfo();if(i.coach)x['x-coach-password']=sessionStorage.getItem('yachiyoCoachAttendancePass')||'';else x['x-access-password']=sessionStorage.getItem('yachiyoAttendancePass')||'';return x}
  function selected(){var el=document.querySelector('[data-select-member].selected');return el?String(el.getAttribute('data-select-member')||''):''}
@@ -13,7 +22,7 @@ function boot(){
  function show(){memberId=selected()||memberId;var x=current();if(x){box.value=String(x.text||'');btn.disabled=false}else{if(document.activeElement!==box)box.value='';btn.disabled=true}}
  async function load(){try{var r=await fetch(apiInfo().url,{headers:headers(),cache:'no-store'});var j=await r.json();if(r.ok&&j&&j.data&&Array.isArray(j.data.comments))comments=j.data.comments}catch(e){}show()}
  document.addEventListener('click',function(e){
-   if(e.target.closest('[data-select-member]'))setTimeout(function(){memberId=selected();show()},0);
+   if(e.target.closest('[data-select-member]')){clearNotice();setTimeout(function(){memberId=selected();show()},0)}
 
  },true);
 
@@ -56,7 +65,8 @@ function boot(){
  if(typeof window.saveEscortGrade==='function'){
    var originalSaveEscortGrade=window.saveEscortGrade;
    window.saveEscortGrade=function(grade){
-     var key=draftKey();
+     var key=draftKey(),ticket=beginNotice('保存中…','pending');
+     var sync=document.getElementById('syncText');if(sync)sync.textContent='帯同設定を保存中…';
      escortDrafts.set(key,String(grade||''));
      if(typeof selectedEscortGrade!=='undefined')selectedEscortGrade=String(grade||'');
      editor.querySelectorAll('[data-escort-grade]').forEach(function(input){input.disabled=true});
@@ -65,6 +75,8 @@ function boot(){
        // The original handler writes the escort setting, without creating a comment.
        if(typeof data!=='undefined'&&Array.isArray(data.comments))comments=data.comments;
        memberId=selected()||memberId;btn.disabled=!current();
+       var saved=sync&&sync.textContent===(grade?grade+'年生帯同を保存しました':'帯同設定を解除しました');
+       finishNotice(ticket,saved?'保存しました。':'保存できませんでした。もう一度お試しください。',saved?'success':'error');
      }).finally(function(){
        escortDrafts.delete(key);
        if(escortPending===pending)escortPending=null;
@@ -103,37 +115,43 @@ function boot(){
  }
  var saveBtn=document.getElementById('commentSave'),originalSave=saveBtn&&saveBtn.onclick;
  if(saveBtn&&typeof originalSave==='function'){
-   var saveNotice=document.createElement('div');saveNotice.id='commentSaveNotice';saveNotice.setAttribute('role','status');saveNotice.style.cssText='margin-top:10px;font-size:14px;line-height:1.6';editor.appendChild(saveNotice);
    saveBtn.onclick=async function(event){
-     var id=selected(),day=date.value,text=box.value.trim();
-     if(!id||!day){saveNotice.textContent='名前と対象日を選択してください。';return}
-     if(!text){saveNotice.textContent='コメントを入力すると、帯同の有無と一緒に保存します。帯同チェックだけなら自動で保存されます。';return}
+     var id=selected(),day=date.value,text=box.value.trim(),ticket=beginNotice('保存中…','pending');
+     if(!id||!day){finishNotice(ticket,'名前と対象日を選択してください。','error');return}
+     if(!text){
+       if(escortPending)await escortPending;
+       var savedEscort=comments.some(function(item){return String(item.memberId)===id&&String(item.eventDate||'')===day&&item.escortSetting===true&&item.escortGrade});
+       finishNotice(ticket,savedEscort?'保存しました。':apiInfo().coach?'コメントを入力してください。':'コメントを入力するか、帯同にチェックを入れてください。',savedEscort?'success':'error');
+       return;
+     }
      var label=saveBtn.textContent,oldBoxDisabled=box.disabled,oldDateDisabled=date.disabled;
      saveBtn.disabled=true;box.disabled=true;date.disabled=true;saveBtn.textContent='保存中…';
-     saveNotice.textContent=escortPending?'帯同設定の保存後にコメントを保存します。':'コメントを保存しています。';
+
      try{
        if(escortPending)await escortPending;
-       if(selected()!==id||date.value!==day){saveNotice.textContent='回答者または対象日が変わったため保存を中止しました。';return}
-       if(typeof savingMembers!=='undefined'&&savingMembers.has(id)){saveNotice.textContent='ほかの回答を保存中です。完了後にもう一度押してください。';return}
+       if(selected()!==id||date.value!==day)return;
+       if(typeof savingMembers!=='undefined'&&savingMembers.has(id)){finishNotice(ticket,'ほかの回答を保存中です。完了後にもう一度押してください。','pending');return}
        var sync=document.getElementById('syncText');if(sync)sync.textContent='コメントを保存中…';
        await originalSave.call(saveBtn,event);
        if(sync&&sync.textContent==='コメント保存済み'){
-         saveNotice.textContent='コメントを保存しました。';
+         finishNotice(ticket,'保存しました。','success');
          await load();
        }else{
-         saveNotice.textContent='コメントを保存できませんでした。内容を確認して、もう一度押してください。';
+         finishNotice(ticket,'保存できませんでした。もう一度お試しください。','error');
        }
-     }catch(e){saveNotice.textContent='コメントを保存できませんでした。もう一度押してください。'}
+     }catch(e){finishNotice(ticket,'保存できませんでした。もう一度お試しください。','error')}
      finally{saveBtn.disabled=false;box.disabled=oldBoxDisabled;date.disabled=oldDateDisabled;saveBtn.textContent=label}
    };
  }
- date.addEventListener('change',show);
+ date.addEventListener('change',function(){clearNotice();show()});
+ box.addEventListener('input',clearNotice);
+ cancel.addEventListener('click',clearNotice);
  btn.addEventListener('click',async function(){
    var x=current(),id=memberId,day=date.value;
    if(!x||!id||!day)return;
    if(typeof savingMembers!=='undefined'&&savingMembers.has(id))return;
    if(!confirm('この日のコメントと帯同設定を削除しますか？'))return;
-   var y=window.scrollY;btn.disabled=true;
+   var ticket=beginNotice('削除中…','pending'),y=window.scrollY;btn.disabled=true;
    if(typeof savingMembers!=='undefined')savingMembers.add(id);
    try{
      var r=await fetch(apiInfo().url,{method:'POST',headers:headers(),body:JSON.stringify({action:'deleteComment',memberId:id,eventDate:day})});
@@ -146,14 +164,11 @@ function boot(){
        box.value='';btn.disabled=true;
        if(typeof selectedEscortGrade!=='undefined')selectedEscortGrade='';
        if(typeof window.renderEditor==='function')window.renderEditor();
-       var oldNotice=document.getElementById('commentSaveNotice');if(oldNotice)oldNotice.textContent='';
-       var notice=document.getElementById('commentDeleteNotice');
-       if(!notice){notice=document.createElement('div');notice.id='commentDeleteNotice';notice.setAttribute('role','status');notice.style.cssText='margin-top:10px;padding:10px 12px;border-radius:8px;background:#eef7ef;color:#176b35;font-weight:800;font-size:14px;line-height:1.5';editor.appendChild(notice)}
-       notice.textContent=apiInfo().coach?'コメントを削除しました。':'コメントと帯同設定を削除しました。';
+       finishNotice(ticket,'削除しました。','success');
      }
      if(typeof window.renderComments==='function')window.renderComments();
      requestAnimationFrame(function(){window.scrollTo({top:y,left:0,behavior:'instant'})});
-   }catch(e){alert(e.message||'コメントを削除できませんでした。');show()}
+   }catch(e){finishNotice(ticket,'削除できませんでした。もう一度お試しください。','error');show()}
    finally{if(typeof savingMembers!=='undefined')savingMembers.delete(id)}
  });
 
