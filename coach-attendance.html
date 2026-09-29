@@ -262,6 +262,10 @@ document.addEventListener('DOMContentLoaded',()=>{
 #board.board-shell{-webkit-overflow-scrolling:touch;overscroll-behavior-x:contain}
 </style>
 <script src="./coach-scroll-axis-lock.js?v=20260928-2310" defer></script>
+<style id="answer-wait-notice-style">
+#answerWaitNotice{position:fixed;left:50%;bottom:calc(20px + env(safe-area-inset-bottom));transform:translateX(-50%);z-index:20010;max-width:calc(100vw - 32px);width:max-content;padding:10px 16px;border-radius:10px;background:#24364b;color:#fff;font-size:13px;font-weight:500;line-height:1.5;box-shadow:0 3px 14px rgba(0,0,0,.14);pointer-events:none}
+#answerWaitNotice[hidden]{display:none}
+</style>
 </head><body id="page-top">
 <header class="header">
 <nav class="nav">
@@ -525,7 +529,7 @@ async function saveReportImage(){
 function render(){const events=visibleEvents();let h='<table><thead><tr><th class="name-col head-name">指導者</th>';for(const e of events){const counts=countStatuses(e.id);h+=`<th class="event-head"><button class="event-summary-btn" type="button" data-summary-event="${esc(e.id)}" aria-label="${esc(formatDate(e.date))}の役職別内訳を開く"><span class="event-date">${esc(formatDate(e.date))}</span><span class="event-counts">${countMarkup(counts)}</span></button></th>`}h+='</tr></thead><tbody>';for(const m of sortedMembers()){h+=`<tr><th class="name-col"><button class="member-btn ${selectedMember===m.id?'selected':''}" data-select-member="${esc(m.id)}">${memberDisplayHtml(m)}</button></th>`;for(const e of events){const s=data.answers?.[m.id]?.[e.id]||'',on=selectedMember===m.id,busy=savingMembers.has(String(m.id))&&!hasPendingAnswers(String(m.id));h+=`<td><button class="status-btn ${statusClass(s)}" ${on&&!busy?'':'disabled'} data-member="${esc(m.id)}" data-event="${esc(e.id)}">${esc(s||'・')}</button></td>`}h+='</tr>'}h+='</tbody></table>';$('#board').innerHTML=h;document.querySelectorAll('[data-select-member]').forEach(b=>b.onclick=()=>selectMember(b.dataset.selectMember));document.querySelectorAll('[data-summary-event]').forEach(b=>b.onclick=()=>showSummary(b.dataset.summaryEvent));document.querySelectorAll('.status-btn:not(:disabled)').forEach(b=>b.onclick=saveAnswer);renderReportControls(events);renderEditor();renderComments();renderAdmin()}
 function showSummary(eventId){const event=visibleEvents().find(item=>String(item.id)===String(eventId));if(!event)return;$('#summaryTitle').textContent=formatDate(event.date)+(event.title?' '+event.title:'');const roles=['監督','ヘッドコーチ','コーチ'];$('#summaryBody').innerHTML=roles.map(role=>{const counts=countStatuses(eventId,data.members.filter(member=>member.role===role));return `<section class="breakdown-grade"><h3>${esc(role)}</h3><div class="breakdown-row"><span class="breakdown-parent">計</span>${countMarkup(counts)}</div></section>`}).join('');$('#summaryUnset').textContent='※人数はチーム紹介の監督・ヘッドコーチ・コーチで集計しています。';$('#summaryDialog').showModal()}
 $('#summaryClose').onclick=()=>$('#summaryDialog').close();$('#summaryDialog').onclick=e=>{if(e.target===$('#summaryDialog'))$('#summaryDialog').close()};
-function selectMember(id){if(pendingAnswers.size){showError('◯×の保存が終わってから回答者を切り替えてください。');return;}const next=selectedMember===id?'':id;if(next!==selectedMember){$('#commentText').value='';$('#upperGradeCheck').checked=false}selectedMember=next;render()}
+function selectMember(id){if(pendingAnswers.size){showAnswerWaitNotice();return;}const next=selectedMember===id?'':id;if(next!==selectedMember){$('#commentText').value='';$('#upperGradeCheck').checked=false}selectedMember=next;render()}
 function renderEditor(){
   const m=data.members.find(x=>x.id===selectedMember),select=$('#commentEventDate'),events=visibleEvents(),previous=select.value;
   $('#editor').classList.toggle('show',!!m);$('#editorName').textContent=m?m.name+' を編集中':'';
@@ -550,7 +554,14 @@ function refreshAnswerCells(){
     if(counts)counts.innerHTML=countMarkup(countStatuses(button.dataset.summaryEvent));
   });
 }
+function showAnswerWaitNotice(){
+  let notice=document.getElementById('answerWaitNotice');
+  if(!notice){notice=document.createElement('div');notice.id='answerWaitNotice';notice.setAttribute('role','status');notice.setAttribute('aria-live','polite');document.body.appendChild(notice)}
+  notice.textContent=answerSaveFailed?'未保存があります。「再保存」を押してください。':'保存中です。少しお待ちください。';
+  notice.hidden=false;
+}
 function showAnswerSaveState(){
+  const notice=document.getElementById('answerWaitNotice');if(notice){notice.hidden=!pendingAnswers.size;if(pendingAnswers.size)notice.textContent=answerSaveFailed?'未保存があります。「再保存」を押してください。':'保存中です。少しお待ちください。'}
   const status=$('#syncText');status.textContent=pendingAnswers.size?(answerSaveFailed?'未保存があります ':'保存中…'):'保存済み '+new Date().toLocaleTimeString('ja-JP',{hour:'2-digit',minute:'2-digit'});
   if(answerSaveFailed){const retry=document.createElement('button');retry.type='button';retry.textContent='再保存';retry.onclick=flushAnswers;status.appendChild(retry)}
 }
@@ -578,7 +589,7 @@ function saveAnswer(ev){
 window.addEventListener('beforeunload',event=>{if(pendingAnswers.size){event.preventDefault();event.returnValue=''}});
 
 $('#commentSave').onclick=async()=>{const text=$('#commentText').value.trim(),memberId=selectedMember,eventDate=$('#commentEventDate').value;if(!memberId||!text||!eventDate||savingMembers.has(memberId))return;savingMembers.add(memberId);$('#syncText').textContent='保存中…';render();try{const j=await api('POST',{action:'comment',memberId,text,eventDate,upperGrade:false});data=normalize(j.data);$('#commentText').value='';$('#syncText').textContent='コメント保存済み'}catch{showError('コメントを保存できませんでした。')}finally{savingMembers.delete(memberId);render()}};
-$('#editCancel').onclick=()=>{if(pendingAnswers.size){showError('◯×の保存が終わってから編集を終了してください。');return;}selectedMember='';render()};
+$('#editCancel').onclick=()=>{if(pendingAnswers.size){showAnswerWaitNotice();return;}selectedMember='';render()};
 function commentDateValue(comment){if(comment.eventDate){const value=new Date(comment.eventDate+'T00:00:00').getTime();if(Number.isFinite(value))return value}const match=String(comment.text||'').match(/(\d{1,2})\s*(?:\/|月)\s*(\d{1,2})(?:日)?/);if(match){const now=new Date(),dates=[-1,0,1].map(offset=>new Date(now.getFullYear()+offset,Number(match[1])-1,Number(match[2])).getTime());return dates.sort((a,b)=>Math.abs(a-now)-Math.abs(b-now))[0]}return new Date(comment.updatedAt||0).getTime()||0}
 function sortedComments(){return [...data.comments].filter(comment=>comment&&(comment.text||comment.upperGrade)).sort((a,b)=>commentDateValue(b)-commentDateValue(a)||new Date(b.updatedAt||0)-new Date(a.updatedAt||0))}
 function todayDateKey(){const now=new Date(),year=now.getFullYear(),month=String(now.getMonth()+1).padStart(2,'0'),day=String(now.getDate()).padStart(2,'0');return `${year}-${month}-${day}`}
