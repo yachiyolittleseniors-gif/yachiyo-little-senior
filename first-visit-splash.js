@@ -1,37 +1,16 @@
 (()=>{'use strict';
 function init(){
-  const splash=document.getElementById('firstVisitSplash');
-  if(!splash)return;
-  const image=new Image();
-  let done=false,visible=false,visibleAt=0;
-  let showTimer,closeTimer,failSafe;
-  const remove=()=>{splash.remove()};
-  const close=()=>{
-    if(done)return;
-    done=true;
-    clearTimeout(showTimer);
-    clearTimeout(failSafe);
-    if(!visible){remove();return}
-    const remaining=Math.max(0,1800-(performance.now()-visibleAt));
-    closeTimer=setTimeout(()=>{
-      splash.classList.add('is-leaving');
-      setTimeout(remove,600);
-    },remaining);
-  };
-  showTimer=setTimeout(()=>{
-    if(done)return;
-    visible=true;
-    visibleAt=performance.now();
-    splash.hidden=false;
-  },120);
-  image.onload=close;
-  image.onerror=close;
-  image.src='/.netlify/functions/site-data?section=hero&current=1';
-  if(image.complete){
-    if(image.naturalWidth>0)close();
-    else close();
-  }
-  failSafe=setTimeout(close,5000);
+ const splash=document.getElementById('firstVisitSplash');if(!splash)return;
+ splash.hidden=false;
+ let minDone=false,heroDone=false,closed=false;
+ const close=()=>{if(closed||!minDone||!heroDone)return;closed=true;splash.classList.add('is-leaving');setTimeout(()=>splash.remove(),620)};
+ setTimeout(()=>{minDone=true;close()},1800);
+ const finishHero=()=>{heroDone=true;close()};
+ fetch('/.netlify/functions/site-data?section=hero&manifest=1',{cache:'no-store'})
+  .then(r=>r.ok?r.json():Promise.reject())
+  .then(j=>{const src=j&&j.data&&j.data[0]&&j.data[0].image;if(!src){finishHero();return}const img=new Image();img.onload=finishHero;img.onerror=finishHero;img.src=src;if(img.complete&&img.naturalWidth)finishHero()})
+  .catch(finishHero);
+ setTimeout(()=>{heroDone=true;minDone=true;close()},2500);
 }
 if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',init,{once:true});else init();
 })();
