@@ -57,15 +57,20 @@ function boot(){
      escortDrafts.set(draftKey(),String(grade||''));
      if(typeof selectedEscortGrade!=='undefined')selectedEscortGrade=String(grade||'');
    };
-   var originalRenderEditor=window.renderEditor;
+   var originalRenderEditor=window.renderEditor,activeDraftKey='';
    window.renderEditor=function(){
      var result=originalRenderEditor.apply(this,arguments);
-     var key=draftKey();
-     if(escortDrafts.has(key)){
-       var grade=escortDrafts.get(key);
-       selectedEscortGrade=grade;
-       editor.querySelectorAll('[data-escort-grade]').forEach(function(input){input.checked=input.dataset.escortGrade===grade});
-     }
+     var id=selected(),key=id?draftKey():'';
+     if(activeDraftKey&&activeDraftKey!==key)escortDrafts.delete(activeDraftKey);
+     if(key&&activeDraftKey!==key)escortDrafts.set(key,'');
+     activeDraftKey=key;
+     if(!id)return result;
+     var items=typeof data!=='undefined'?data.comments.filter(function(item){return String(item.memberId)===id&&String(item.eventDate||'')===date.value}):[];
+     var savedText=items.filter(function(item){return item.escortSetting!==true&&String(item.text||'').trim()}).sort(function(a,b){return new Date(b.updatedAt||0)-new Date(a.updatedAt||0)})[0];
+     var savedEscort=items.filter(function(item){return item.escortSetting===true}).sort(function(a,b){return new Date(b.updatedAt||0)-new Date(a.updatedAt||0)})[0];
+     var grade=escortDrafts.has(key)?escortDrafts.get(key):(savedText?String((savedEscort&&savedEscort.escortGrade)||savedText.escortGrade||''):'');
+     selectedEscortGrade=grade;
+     editor.querySelectorAll('[data-escort-grade]').forEach(function(input){input.checked=input.dataset.escortGrade===grade});
      return result;
    };
    var originalApi=window.api;
