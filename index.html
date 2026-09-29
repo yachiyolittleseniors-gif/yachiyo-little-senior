@@ -3589,9 +3589,10 @@ body.photo-admin-on .recruit-mode-admin{display:block}
 </div>
 </header>
 <style id="hero-photo-intro-animation">
-.hero-photo-intro{position:absolute;inset:0;z-index:0;pointer-events:none;background:rgba(3,12,24,.48);animation:heroPhotoIntroReveal 1.8s ease-out forwards}
+.hero-photo-intro{position:absolute;inset:0;z-index:0;pointer-events:none;background:rgba(3,12,24,.48);opacity:1}
+.hero-photo-intro.is-revealing{animation:heroPhotoIntroReveal 1.8s ease-out forwards}
 @keyframes heroPhotoIntroReveal{from{opacity:1}to{opacity:0}}
-@media(prefers-reduced-motion:reduce){.hero-photo-intro{animation:none;opacity:0}}
+@media(prefers-reduced-motion:reduce){.hero-photo-intro{opacity:0;animation:none}}
 </style>
 <main class="page show" id="home">
 <section class="hero"><div class="hero-photo-intro" aria-hidden="true"></div><div class="hero-inner">
@@ -3619,6 +3620,44 @@ body.photo-admin-on .recruit-mode-admin{display:block}
 <div class="panel-row"><span>育成方針</span><b>心・技・体</b></div>
 </aside>
 </div></section>
+<script id="hero-photo-intro-controller">
+(function(){
+  const curtain=document.querySelector('.hero-photo-intro');
+  if(!curtain)return;
+  if(window.matchMedia('(prefers-reduced-motion: reduce)').matches){curtain.remove();return;}
+  const image=new Image();
+  let late=false,finished=false;
+  const reveal=()=>{
+    if(finished)return;
+    finished=true;
+    clearTimeout(lateTimer);
+    clearTimeout(failSafe);
+    if(late){
+      curtain.classList.add('is-revealing');
+      curtain.addEventListener('animationend',()=>curtain.remove(),{once:true});
+    }else{
+      curtain.remove();
+    }
+  };
+  const lateTimer=setTimeout(()=>{late=true;},120);
+  const failSafe=setTimeout(()=>{if(!finished){finished=true;curtain.remove();}},8000);
+  image.addEventListener('load',reveal,{once:true});
+  image.addEventListener('error',()=>{
+    clearTimeout(lateTimer);
+    clearTimeout(failSafe);
+    curtain.remove();
+  },{once:true});
+  image.src='/.netlify/functions/site-data?section=hero&current=1';
+  if(image.complete){
+    if(image.naturalWidth>0)reveal();
+    else{
+      clearTimeout(lateTimer);
+      clearTimeout(failSafe);
+      curtain.remove();
+    }
+  }
+})();
+</script>
 <section class="news"><div class="news-inner">
 <div class="section-label">TEAM GUIDE<small>チーム案内</small></div>
 <div class="news-list">
@@ -3919,7 +3958,6 @@ function openProtectedArea(type){
         const d=Array.isArray(j.data)?j.data:[];
         if(d[0]&&d[0].image){
           window.__yachiyoPhotoCache&&window.__yachiyoPhotoCache.set('hero',d[0].image);
-          hero.style.setProperty('--hero-photo',`url("${d[0].image}")`);
         }
       }
     }catch(e){}
