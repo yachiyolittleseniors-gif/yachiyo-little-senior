@@ -124,10 +124,10 @@ function normalizedRosterName(value) {
   return String(value || "").normalize("NFKC").replace(/[\s　]+/g, "").trim();
 }
 
-async function syncPlayersFromRoster(store, data) {
+async function syncPlayersFromRoster(store, data, prefetchedRoster) {
   let roster = null;
   try {
-    roster = await store.get(PLAYERS_KEY, {
+    roster = prefetchedRoster !== undefined ? prefetchedRoster : await store.get(PLAYERS_KEY, {
       type: "json",
       consistency: "strong",
     });
@@ -168,10 +168,10 @@ async function syncPlayersFromRoster(store, data) {
   return data;
 }
 
-async function syncEventsFromParentAttendance(store, data) {
+async function syncEventsFromParentAttendance(store, data, prefetchedAttendance) {
   let parentAttendance = null;
   try {
-    parentAttendance = await store.get(PARENT_ATTENDANCE_KEY, {
+    parentAttendance = prefetchedAttendance !== undefined ? prefetchedAttendance : await store.get(PARENT_ATTENDANCE_KEY, {
       type: "json",
       consistency: "strong",
     });
@@ -609,9 +609,13 @@ export default async (request, context) => {
       try { saved = await store.get(KEY, { type: "json" }); } catch { saved = null; }
       let data = normalize(saved || {});
       const merged = mergeInitial(data);
-      data = await mergeMemberStates(store, merged.data);
-      data = await syncPlayersFromRoster(store, data);
-      data = await syncEventsFromParentAttendance(store, data);
+      const [memberData, roster, parentAttendance] = await Promise.all([
+        mergeMemberStates(store, merged.data),
+        store.get(PLAYERS_KEY, { type: "json", consistency: "strong" }).catch(() => null),
+        store.get(PARENT_ATTENDANCE_KEY, { type: "json", consistency: "strong" }).catch(() => null),
+      ]);
+      data = await syncPlayersFromRoster(store, memberData, roster ?? null);
+      data = await syncEventsFromParentAttendance(store, data, parentAttendance ?? null);
       if (config.migrationEnded && data.densukeImportVersion < 2) {
         try {
           const html = await fetchDensukeHtml();
