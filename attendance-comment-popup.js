@@ -1,89 +1,58 @@
-/* The existing attendance editor is reused; loading/saving stays in attendance.html. */
+/* Reuse the original editor directly below the selected member's row. */
 (function () {
   'use strict';
   function boot() {
     var editor = document.getElementById('editor');
-    if (!editor || document.getElementById('commentPopup')) return;
-    var popup = document.createElement('dialog');
-    if (typeof popup.showModal !== 'function') return;
-    popup.id = 'commentPopup';
-    popup.setAttribute('aria-labelledby', 'commentPopupTitle');
-    popup.setAttribute('aria-describedby', 'editorName');
-    var header = document.createElement('div');
-    header.className = 'comment-popup-head';
-    var title = document.createElement('h2');
-    title.id = 'commentPopupTitle';
-    title.textContent = 'コメント入力';
-    var close = document.createElement('button');
-    close.type = 'button';
-    close.className = 'comment-popup-close';
-    close.textContent = '閉じる';
-    header.append(title, close);
-    var error = document.createElement('div');
-    error.className = 'comment-popup-error';
-    error.setAttribute('role', 'alert');
-    error.hidden = true;
-    popup.append(header, error);
-    document.body.appendChild(popup);
-    popup.appendChild(editor);
-
-    var returnMember = '', previousOverflow = '';
-    function selectedButton() {
-      return document.querySelector('#board [data-select-member].selected');
+    var board = document.getElementById('board');
+    if (!editor || !board || typeof window.render !== 'function' ||
+        document.getElementById('member-comment-row')) return;
+    var home = document.createComment('attendance editor home');
+    editor.parentNode.insertBefore(home, editor);
+    var originalRender = window.render;
+    var previousMember = '';
+    function setWidth() {
+      if (board.clientWidth) editor.style.width = Math.min(board.clientWidth, 640) + 'px';
     }
-    function openFor(button) {
-      var selected = selectedButton();
-      if (!selected || selected.dataset.selectMember !== button.dataset.selectMember ||
-          !editor.classList.contains('show') || popup.open) return;
-      returnMember = selected.dataset.selectMember;
-      previousOverflow = document.body.style.overflow;
-      popup.showModal();
-      document.body.style.overflow = 'hidden';
-      popup.scrollTop = 0;
-      close.focus({preventScroll: true});
-    }
-    close.addEventListener('click', function () { popup.close(); });
-    popup.addEventListener('click', function (event) {
-      if (event.target !== popup) return;
-      var r = popup.getBoundingClientRect();
-      if (event.clientX < r.left || event.clientX > r.right ||
-          event.clientY < r.top || event.clientY > r.bottom) popup.close();
-    });
-    popup.addEventListener('close', function () {
-      document.body.style.overflow = previousOverflow;
-      var buttons = document.querySelectorAll('#board [data-select-member]');
-      for (var i = 0; i < buttons.length; i++) {
-        if (buttons[i].dataset.selectMember === returnMember) {
-          buttons[i].focus({preventScroll: true});
-          break;
+    window.render = function () {
+      var top = board.scrollTop, left = board.scrollLeft;
+      // The original render replaces the table. Keep the editor and its handlers alive.
+      home.parentNode.insertBefore(editor, home.nextSibling);
+      var result = originalRender.apply(this, arguments);
+      var selected = board.querySelector('[data-select-member].selected');
+      board.querySelectorAll('[data-select-member]').forEach(function (button) {
+        button.setAttribute('aria-expanded', button === selected ? 'true' : 'false');
+        button.setAttribute('aria-controls', 'editor');
+      });
+      if (selected && editor.classList.contains('show')) {
+        var memberRow = selected.closest('tr');
+        var row = document.createElement('tr');
+        row.id = 'member-comment-row';
+        var cell = document.createElement('td');
+        cell.colSpan = memberRow.cells.length;
+        row.appendChild(cell);
+        cell.appendChild(editor);
+        memberRow.after(row);
+        setWidth();
+        board.scrollTop = top;
+        board.scrollLeft = left;
+        if (previousMember !== selected.dataset.selectMember) {
+          var head = board.querySelector('thead');
+          var headHeight = head ? head.getBoundingClientRect().height : 0;
+          var br = board.getBoundingClientRect(), mr = memberRow.getBoundingClientRect();
+          if (mr.top < br.top + headHeight || mr.bottom + 80 > br.bottom) {
+            board.scrollTop += mr.top - br.top - headHeight;
+          }
         }
+        previousMember = selected.dataset.selectMember;
+      } else {
+        previousMember = '';
+        board.scrollTop = top;
+        board.scrollLeft = left;
       }
-    });
-    // Reopening the selected person's editor must not toggle their selection off.
-    document.addEventListener('click', function (event) {
-      var button = event.target.closest && event.target.closest('#board [data-select-member]');
-      var selected = selectedButton();
-      if (button && selected && selected.dataset.selectMember === button.dataset.selectMember) {
-        event.preventDefault();
-        event.stopPropagation();
-        openFor(button);
-      } else if (button) {
-        // render() replaces the clicked row. Keep its identity before it detaches.
-        setTimeout(function () { openFor(button); }, 0);
-      }
-    }, true);
-    new MutationObserver(function () {
-      if (popup.open && !editor.classList.contains('show')) popup.close();
-    }).observe(editor, {attributes: true, attributeFilter: ['class']});
-    var sourceError = document.getElementById('errorBox');
-    if (sourceError) {
-      function syncError() {
-        error.textContent = sourceError.textContent;
-        error.hidden = !sourceError.classList.contains('show');
-      }
-      new MutationObserver(syncError).observe(sourceError, {attributes: true, childList: true, characterData: true, subtree: true});
-      syncError();
-    }
+      return result;
+    };
+    window.addEventListener('resize', setWidth, {passive: true});
+    window.render();
   }
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', boot, {once: true});
   else boot();
