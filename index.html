@@ -3559,22 +3559,8 @@ body.photo-admin-on .recruit-mode-admin{display:block}
 <script src="./admin-visibility.js?v=20260926-4" defer></script>
 <link rel="preload" as="image" href="./six-principles-six-kajo-mobile-v2.webp?v=20260908-mobile3" media="(max-width:900px)" fetchpriority="high">
 <link rel="preload" as="image" href="./six-principles-six-kajo-desktop.webp?v=20260908-pc2" media="(min-width:901px)" fetchpriority="high">
-<style id="mobile-hero-tint">
-@media(max-width:900px){.hero{background-image:linear-gradient(90deg,rgba(4,12,22,.76) 0%,rgba(4,12,22,.48) 42%,rgba(4,12,22,.16) 100%),var(--hero-photo)!important}}
-</style>
-<style id="first-visit-splash-style">
-#firstVisitSplash[hidden]{display:none!important}
-#firstVisitSplash{position:fixed;inset:0;z-index:2147483000;display:flex;align-items:center;justify-content:center;background:radial-gradient(circle at 50% 46%,#10243d 0,#071426 58%,#04101e 100%);opacity:1;transition:opacity .55s ease;pointer-events:none}
-#firstVisitSplash.is-leaving{opacity:0}
-#firstVisitSplash .first-visit-logo{position:relative;width:min(84vw,720px);opacity:0;transform:scale(.985);animation:firstVisitLogoIn 1.65s ease-out .08s forwards}
-#firstVisitSplash img{display:block;width:100%;height:auto;filter:drop-shadow(0 10px 26px rgba(0,0,0,.25))}
-#firstVisitSplash .first-visit-shine{position:absolute;inset:-35% -20%;background:linear-gradient(105deg,transparent 43%,rgba(255,239,185,0) 47%,rgba(255,239,185,.2) 50%,rgba(255,239,185,0) 53%,transparent 57%);transform:translateX(-95%);animation:firstVisitShine .65s ease 1.55s forwards;pointer-events:none}
-@keyframes firstVisitLogoIn{to{opacity:1;transform:scale(1)}}
-@keyframes firstVisitShine{to{transform:translateX(95%)}}
-@media(prefers-reduced-motion:reduce){#firstVisitSplash .first-visit-logo{opacity:1;transform:none;animation:none}#firstVisitSplash .first-visit-shine{display:none}}
-</style>
 </head>
-<body id="page-top"><div id="firstVisitSplash" aria-hidden="true" hidden><div class="first-visit-logo"><img src="./official-logo-crisp-final.png" alt=""><div class="first-visit-shine"></div></div></div>
+<body id="page-top">
 <header class="header">
 <nav class="nav">
 <div class="brand"><div class="official-brand-wrap">
@@ -3602,7 +3588,6 @@ body.photo-admin-on .recruit-mode-admin{display:block}
 <a href="./board.html" data-csp-onclick="toggleMenu()">チーム専用ページ 🔒</a>
 </div>
 </header>
-
 <main class="page show" id="home">
 <section class="hero"><div class="hero-inner">
 <div class="hero-main">
@@ -3629,7 +3614,6 @@ body.photo-admin-on .recruit-mode-admin{display:block}
 <div class="panel-row"><span>育成方針</span><b>心・技・体</b></div>
 </aside>
 </div></section>
-
 <section class="news"><div class="news-inner">
 <div class="section-label">TEAM GUIDE<small>チーム案内</small></div>
 <div class="news-list">
@@ -3930,6 +3914,7 @@ function openProtectedArea(type){
         const d=Array.isArray(j.data)?j.data:[];
         if(d[0]&&d[0].image){
           window.__yachiyoPhotoCache&&window.__yachiyoPhotoCache.set('hero',d[0].image);
+          hero.style.setProperty('--hero-photo',`url("${d[0].image}")`);
         }
       }
     }catch(e){}
@@ -5129,5 +5114,5 @@ document.addEventListener('DOMContentLoaded',function(){
   }
 }
 </style>
-<script src="./first-visit-splash.js?v=20260929-hero-load1" defer></script></body>
+</body>
 </html>
