@@ -3945,26 +3945,38 @@ function openProtectedArea(type){
   const adminPanel=document.getElementById('heroPhotoAdmin');
   if(!hero||!toggle||!change||!input||!adminPanel)return;
 
+  async function showHeroImage(src){
+    const img=new Image();
+    const loaded=await new Promise(resolve=>{
+      img.onload=()=>resolve(true);
+      img.onerror=()=>resolve(false);
+      img.src=src;
+      if(img.complete)resolve(img.naturalWidth>0);
+    });
+    if(!loaded)return false;
+    if(img.decode)await img.decode().catch(()=>{});
+    hero.style.setProperty('--hero-photo',`url("${src}")`);
+    await new Promise(resolve=>requestAnimationFrame(()=>requestAnimationFrame(resolve)));
+    return true;
+  }
+
   async function loadHero(){
     try{
       const freshImage=await window.__yachiyoHeroImage;
-      if(freshImage){
-        hero.style.setProperty('--hero-photo',`url("${freshImage}")`);
-        return;
-      }
+      if(freshImage&&await showHeroImage(freshImage))return true;
       const r=await fetch(api+'?section=hero&manifest=1',{cache:'no-store'});
       if(r.ok){
         const j=await r.json();
         const d=Array.isArray(j.data)?j.data:[];
         if(d[0]&&d[0].image){
           window.__yachiyoPhotoCache&&window.__yachiyoPhotoCache.set('hero',d[0].image);
-          hero.style.setProperty('--hero-photo',`url("${d[0].image}")`);
+          return await showHeroImage(d[0].image);
         }
       }
     }catch(e){}
-
+    return false;
   }
-  loadHero();
+  window.__yachiyoHeroReady=loadHero();
 
   function setAdmin(on){
     document.body.classList.toggle('photo-admin-on',on);
