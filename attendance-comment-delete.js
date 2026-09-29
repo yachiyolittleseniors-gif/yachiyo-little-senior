@@ -53,9 +53,24 @@ function boot(){
  var escortDrafts=new Map();
  function draftKey(){return JSON.stringify([selected(),date.value])}
  if(typeof window.saveEscortGrade==='function'){
+   var originalSaveEscortGrade=window.saveEscortGrade;
    window.saveEscortGrade=function(grade){
-     escortDrafts.set(draftKey(),String(grade||''));
+     var key=draftKey();
+     escortDrafts.set(key,String(grade||''));
      if(typeof selectedEscortGrade!=='undefined')selectedEscortGrade=String(grade||'');
+     editor.querySelectorAll('[data-escort-grade]').forEach(function(input){input.disabled=true});
+     var result=originalSaveEscortGrade.call(this,grade);
+     var pending=Promise.resolve(result).then(function(){
+       // The original handler writes the escort setting, without creating a comment.
+       if(typeof data!=='undefined'&&Array.isArray(data.comments))comments=data.comments;
+       memberId=selected()||memberId;btn.disabled=!current();
+     }).finally(function(){
+       escortDrafts.delete(key);
+       if(escortPending===pending)escortPending=null;
+       if(typeof window.renderEditor==='function')window.renderEditor();
+     });
+     escortPending=pending;
+     return pending;
    };
    var originalRenderEditor=window.renderEditor,activeDraftKey='';
    window.renderEditor=function(){
@@ -67,7 +82,7 @@ function boot(){
      var items=typeof data!=='undefined'?data.comments.filter(function(item){return String(item.memberId)===id&&String(item.eventDate||'')===date.value}):[];
      var savedText=items.filter(function(item){return item.escortSetting!==true&&String(item.text||'').trim()}).sort(function(a,b){return new Date(b.updatedAt||0)-new Date(a.updatedAt||0)})[0];
      var savedEscort=items.filter(function(item){return item.escortSetting===true}).sort(function(a,b){return new Date(b.updatedAt||0)-new Date(a.updatedAt||0)})[0];
-     var grade=escortDrafts.has(key)?escortDrafts.get(key):(savedText?String((savedEscort&&savedEscort.escortGrade)||savedText.escortGrade||''):'');
+     var grade=escortDrafts.has(key)?escortDrafts.get(key):String((savedEscort&&savedEscort.escortGrade)||(savedText&&savedText.escortGrade)||'');
      selectedEscortGrade=grade;
      editor.querySelectorAll('[data-escort-grade]').forEach(function(input){input.checked=input.dataset.escortGrade===grade});
      return result;
@@ -91,7 +106,7 @@ function boot(){
    saveBtn.onclick=async function(event){
      var id=selected(),day=date.value,text=box.value.trim();
      if(!id||!day){saveNotice.textContent='名前と対象日を選択してください。';return}
-     if(!text){saveNotice.textContent='コメントを入力してください。帯同の有無と一緒に保存します。';return}
+     if(!text){saveNotice.textContent='コメントを入力すると、帯同の有無と一緒に保存します。帯同チェックだけなら自動で保存されます。';return}
      var label=saveBtn.textContent,oldBoxDisabled=box.disabled,oldDateDisabled=date.disabled;
      saveBtn.disabled=true;box.disabled=true;date.disabled=true;saveBtn.textContent='保存中…';
      saveNotice.textContent=escortPending?'帯同設定の保存後にコメントを保存します。':'コメントを保存しています。';
