@@ -24,7 +24,7 @@
   let requests=[];
 
 
-  if(!list||!tableList||!adminList||!fileInput||!saveBtn||!panel||!changeSection||!changeList||!changeYear||!changeGrade||!changeText||!pasteChangeBtn||!changePreview||!saveChangesBtn||!changeAdminList)return;
+  if(!list||!tableList||!adminList||!fileInput||!saveBtn||!panel||!changeSection||!changeList||!changeAdminList)return;
 
   function cleanName(value){return window.DutyRosterData.cleanName(value)}
   function escapeHtml(value){return String(value||'').replace(/[&<>"']/g,function(char){return{'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[char]})}
@@ -324,7 +324,8 @@
     });
   }
 
-  changeYear.value=String(new Date().getFullYear());
+  const hasLegacyChangeForm=!!(changeYear&&changeGrade&&changeText&&pasteChangeBtn&&changePreview&&saveChangesBtn);
+  if(hasLegacyChangeForm)changeYear.value=String(new Date().getFullYear());
   const adminHistoryToggle=document.getElementById('toggleDutyAdminHistory');
   if(adminHistoryToggle&&changeAdminList){
     changeAdminList.hidden=true;
@@ -355,13 +356,13 @@
     originalsToggle.setAttribute('aria-expanded',String(open));
     originalsToggle.textContent=open?'原本を閉じる':'原本を見る';
   });
-  [changeYear,changeText].forEach(function(element){element.addEventListener('input',function(){updateChangePreview(false)});element.addEventListener('change',function(){updateChangePreview(false)})});
-  changeGrade.addEventListener('change',function(){updateChangePreview(true)});
+  if(hasLegacyChangeForm)[changeYear,changeText].forEach(function(element){element.addEventListener('input',function(){updateChangePreview(false)});element.addEventListener('change',function(){updateChangePreview(false)})});
+  if(hasLegacyChangeForm)changeGrade.addEventListener('change',function(){updateChangePreview(true)});
   const requestToggle=document.getElementById('toggleDutyRequest'),requestContent=document.getElementById('dutyRequestContent');
   if(requestToggle&&requestContent)requestToggle.addEventListener('click',function(){const open=requestContent.hidden;requestContent.hidden=!open;requestToggle.setAttribute('aria-expanded',String(open));requestToggle.textContent=open?'閉じる':'申請する';populateRequestForm()});
   const requestStatusToggle=document.getElementById('toggleDutyRequestStatus'),requestStatusList=document.getElementById('dutyRequestStatusList');
   if(requestStatusToggle&&requestStatusList)requestStatusToggle.addEventListener('click',function(){const open=requestStatusList.hidden;requestStatusList.hidden=!open;requestStatusToggle.setAttribute('aria-expanded',String(open));const pending=requests.filter(function(item){return item.status==='pending'}).length;requestStatusToggle.textContent=open?'申請内容を閉じる':(pending?'申請内容を見る（申請中 '+pending+'件）':'申請内容を見る')});
   document.getElementById('dutyRequestRosterDate')?.addEventListener('change',populateRequestForm);document.getElementById('submitDutyRequest')?.addEventListener('click',submitRequest);
-  pasteChangeBtn.addEventListener('click',pasteChangeText);
-  saveChangesBtn.addEventListener('click',saveChanges);saveBtn.addEventListener('click',addImages);loadCache();render();load();
+  if(hasLegacyChangeForm)pasteChangeBtn.addEventListener('click',pasteChangeText);
+  if(hasLegacyChangeForm)saveChangesBtn.addEventListener('click',saveChanges);saveBtn.addEventListener('click',addImages);loadCache();render();load();
 })();
