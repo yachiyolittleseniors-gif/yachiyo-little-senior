@@ -32,8 +32,9 @@ function boot(){
          var field=item.escortSetting===true?'escort':'text';
          if(!group[field]||new Date(item.updatedAt||0)>new Date(group[field].updatedAt||0))group[field]=item;
        });
-       return Array.from(groups.values()).filter(function(group){return group.text&&String(group.text.text||'').trim()}).map(function(group){
+       return Array.from(groups.values()).filter(function(group){return (group.text&&String(group.text.text||'').trim())||(group.escort&&group.escort.escortGrade)}).map(function(group){
          var item=Object.assign({},group.text||group.escort);
+         if(!group.text&&group.escort)item.text=group.escort.escortGrade+'年生に帯同します。';
          if(group.escort){
            item.escortGrade=group.escort.escortGrade||'';
            item.upperGrade=!!group.escort.upperGrade;
