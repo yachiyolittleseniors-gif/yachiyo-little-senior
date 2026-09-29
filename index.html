@@ -2,6 +2,7 @@
 
 <html lang="ja">
 <head>
+<script src="./hero-early-load.js?v=20260929-1"></script>
 <script src="./csp-event-handlers.js?v=20260925-a-plus"></script>
 <!-- Google tag (gtag.js) -->
 <script async="" src="https://www.googletagmanager.com/gtag/js?id=G-L8BMMSXDP9"></script>
@@ -3920,7 +3921,7 @@ function openProtectedArea(type){
 
   async function loadHero(){
     try{
-      const r=await fetch(api+'?section=hero&manifest=1',{cache:'no-store'});
+      const r=(await window.__yachiyoHeroResponse)||await fetch(api+'?section=hero&manifest=1',{cache:'no-store'});
       if(r.ok){
         const j=await r.json();
         const d=Array.isArray(j.data)?j.data:[];
