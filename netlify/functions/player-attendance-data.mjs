@@ -794,7 +794,7 @@ export default async (request, context) => {
       const memberExists = data.members.some(m => String(m.id) === memberId);
       if (!memberExists) return json({ error: "Member not found" }, 404);
       const state = await loadMemberState(store, data, memberId);
-      state.comments = state.comments.filter(comment => comment.escortSetting === true || String(comment.eventDate || "") !== eventDate);
+      state.comments = state.comments.filter(comment => String(comment.eventDate || "") !== eventDate);
       state.updatedAt = new Date().toISOString();
       await store.setJSON(memberStateKey(memberId), state);
       applyMemberState(data, memberId, state);
