@@ -4,15 +4,12 @@
 <head>
 <script>
 (()=>{'use strict';
-window.__yachiyoHeroResponse=fetch('/.netlify/functions/site-data?section=hero&manifest=1',{cache:'no-store'})
- .then(response=>{
-  if(response.ok)response.clone().json().then(data=>{
-   const src=data&&data.data&&data.data[0]&&data.data[0].image;
-   if(!src)return;
-   const image=new Image();image.fetchPriority='high';image.src=src;
-   window.__yachiyoHeroPreload=image;
-  }).catch(()=>{});
-  return response;
+window.__yachiyoHeroImage=fetch('/.netlify/functions/site-data?section=hero&current=1',{cache:'no-store',priority:'high'})
+ .then(async response=>{
+  if(!response.ok)throw new Error('Hero image unavailable');
+  const blob=await response.blob();
+  if(!blob.size||!blob.type.startsWith('image/'))throw new Error('Invalid hero image');
+  return URL.createObjectURL(blob);
  }).catch(()=>null);
 })();
 </script>
@@ -3934,7 +3931,12 @@ function openProtectedArea(type){
 
   async function loadHero(){
     try{
-      const r=(await window.__yachiyoHeroResponse)||await fetch(api+'?section=hero&manifest=1',{cache:'no-store'});
+      const freshImage=await window.__yachiyoHeroImage;
+      if(freshImage){
+        hero.style.setProperty('--hero-photo',`url("${freshImage}")`);
+        return;
+      }
+      const r=await fetch(api+'?section=hero&manifest=1',{cache:'no-store'});
       if(r.ok){
         const j=await r.json();
         const d=Array.isArray(j.data)?j.data:[];
