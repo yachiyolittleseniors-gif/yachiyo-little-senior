@@ -12,12 +12,11 @@
       height: 44px;
       display: grid;
       place-items: center;
-      border: 1px solid rgba(226,189,103,.75);
-      border-radius: 50%;
-      background: rgba(7,20,38,.94);
+      border: 1px solid rgba(226,189,103,.55);
+      border-radius: 12px;
+      background: rgba(7,20,38,.92);
       color: #e2bd67;
-      box-shadow: 0 5px 16px rgba(0,0,0,.22);
-      font: 700 23px/1 sans-serif;
+      box-shadow: 0 4px 12px rgba(0,0,0,.16);
       cursor: pointer;
       opacity: 0;
       visibility: hidden;
@@ -32,6 +31,7 @@
       transform: translateY(0);
     }
     .back-to-top:focus-visible { outline: 2px solid #e2bd67; outline-offset: 3px; }
+    .back-to-top svg { display: block; width: 20px; height: 20px; }
     body.photo-admin-on .back-to-top,
     body:has(.modal.show, .modal.open, dialog[open], [aria-modal="true"]:not([hidden])) .back-to-top {
       opacity: 0;
@@ -47,7 +47,7 @@
     button.className = 'back-to-top';
     button.setAttribute('aria-label', 'このページの先頭へ戻る');
     button.title = 'ページの先頭へ';
-    button.textContent = '↑';
+    button.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m5 14 7-7 7 7"/></svg>';
     document.body.appendChild(button);
 
     const update = () => {
