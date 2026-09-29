@@ -3582,6 +3582,19 @@ body.photo-admin-on .recruit-mode-admin{display:block}
 .admin-password-actions button[type="submit"]{background:#c79a3b;color:#101923}
 @media(max-width:600px){.admin-password-card{padding:20px}.admin-password-card h2{font-size:17px}}
 </style>
+<style id="mobile-footer-admin-style">
+.mobile-footer-admin{display:none}
+@media(max-width:600px){
+  .mobile-footer-admin{
+    display:inline-flex!important;align-items:center;justify-content:center;
+    min-width:88px;min-height:44px;margin:16px auto 0;padding:8px 22px;
+    border:1px solid rgba(226,189,103,.82);border-radius:999px;
+    background:#071426;color:#e2bd67;font:700 13px/1.2 inherit;
+    box-shadow:0 5px 14px rgba(0,0,0,.2);touch-action:manipulation;
+    -webkit-tap-highlight-color:transparent;cursor:pointer
+  }
+}
+</style>
 </head>
 <body id="page-top">
 <header class="header">
@@ -3863,6 +3876,7 @@ function closeModal(){
 </nav>
 <div class="ground-address"><div class="ground-access-address">アクセス：千葉県八千代市島田台775</div><a class="ground-map-link" href="https://www.google.com/maps/search/?api=1&amp;query=%E5%8D%83%E8%91%89%E7%9C%8C%E5%85%AB%E5%8D%83%E4%BB%A3%E5%B8%82%E5%B3%B6%E7%94%B0%E5%8F%B0%EF%BC%97%EF%BC%97%EF%BC%95" rel="noopener noreferrer" target="_blank">Googleマップで見る <span aria-hidden="true">↗</span></a></div>
 <div class="footer-privacy-link" style="text-align:center;margin-top:10px;font-size:11px;"><a href="/privacy" style="color:#8f9aa7;text-decoration:none;">プライバシーポリシー</a></div>
+<button id="mobileFooterAdmin" class="mobile-footer-admin" type="button" aria-label="管理者パスワードを入力">管理</button>
 <div class="restored-footer-copy">© YACHIYO LITTLE SENIOR. All Rights Reserved.</div>
 </div>
 </footer>
@@ -3963,11 +3977,15 @@ function openProtectedArea(type){
       change.style.display='inline-block';
       adminPanel.style.setProperty('display',window.matchMedia('(max-width:600px)').matches?'grid':'flex','important');
       toggle.textContent='管理終了';
+      const mobileEntry=document.getElementById('mobileFooterAdmin');
+      if(mobileEntry)mobileEntry.textContent='管理終了';
     }else{
       sessionStorage.removeItem('yachiyoAdminMode');
       sessionStorage.removeItem('yachiyoAdminPassword');
       change.style.display='none';
       toggle.textContent='管理';
+      const mobileEntry=document.getElementById('mobileFooterAdmin');
+      if(mobileEntry)mobileEntry.textContent='管理';
       toggle.style.setProperty(
         'display',
         window.matchMedia('(max-width:600px)').matches ? 'inline-flex' : 'none',
@@ -4776,41 +4794,14 @@ document.addEventListener('DOMContentLoaded',function(){
 (function(){
   const button=document.getElementById("heroAdminToggle");
   const trigger=document.querySelector(".restored-footer-copy");
-  const container=button&&button.closest('#heroPhotoAdmin');
-  if(!button||!trigger||!container)return;
+  if(!button)return;
   button.classList.add('unified-admin-toggle');
 
-  if(window.matchMedia('(max-width:600px)').matches){
-    const footerCopy=trigger;
-    const announcement=document.getElementById('heroAnnouncementEdit');
-    if(announcement)announcement.style.display='none';
-    const change=document.getElementById('heroPhotoChange');
-    if(change)change.style.display='none';
-    if(footerCopy.parentNode)footerCopy.parentNode.insertBefore(container,footerCopy);
-    container.style.setProperty('position','static','important');
-    container.style.setProperty('inset','auto','important');
-    container.style.setProperty('display','flex','important');
-    container.style.setProperty('width','100%','important');
-    container.style.setProperty('max-width','100%','important');
-    container.style.setProperty('margin','14px auto 0','important');
-    container.style.setProperty('justify-content','center','important');
-    container.style.setProperty('z-index','auto','important');
-    button.style.setProperty('position','static','important');
-    button.style.setProperty('display','inline-flex','important');
-    button.style.setProperty('width','auto','important');
-    button.style.setProperty('min-width','88px','important');
-    button.style.setProperty('min-height','44px','important');
-    button.style.setProperty('margin','0','important');
-    button.style.setProperty('padding','9px 22px','important');
-    button.style.setProperty('border','1px solid rgba(226,189,103,.82)','important');
-    button.style.setProperty('border-radius','999px','important');
-    button.style.setProperty('background','#071426','important');
-    button.style.setProperty('color','#e2bd67','important');
-    button.style.setProperty('box-shadow','0 5px 14px rgba(0,0,0,.2)','important');
-    button.style.setProperty('font-size','13px','important');
-    button.style.setProperty('z-index','auto','important');
-    return;
+  const mobileEntry=document.getElementById('mobileFooterAdmin');
+  if(mobileEntry){
+    mobileEntry.addEventListener('click',function(){button.click()});
   }
+  if(!trigger||window.matchMedia('(max-width:600px)').matches)return;
 
   trigger.classList.add('unified-admin-reveal');
   trigger.setAttribute('aria-label','管理ボタンを表示');
@@ -4823,7 +4814,8 @@ document.addEventListener('DOMContentLoaded',function(){
     timer=setTimeout(reset,6000);
     if(taps>=5){
       reset();
-      container.style.setProperty('display','flex','important');
+      const container=button.closest('#heroPhotoAdmin');
+      if(container)container.style.setProperty('display','flex','important');
       button.style.setProperty('display','block','important');
     }
   }
