@@ -3226,8 +3226,14 @@ html{scroll-padding-top:var(--fixed-header-height)}
   }
 }
 </style>
-<link href="./desktop-2026.css?v=20260908-pc2" rel="stylesheet"/>
-<link href="./desktop-home-balanced.css?v=20260926-hero-current1" rel="stylesheet"/>
+<style id="pc-only-elements-default">
+.pc-reference-hero-copy,
+.pc-reference-recruit-copy,
+.pc-reference-news-title,
+.pc-six-principles{ display:none; }
+</style>
+<link href="./desktop-2026.css?v=20260908-pc2" rel="stylesheet" media="(min-width:901px)"/>
+<link href="./desktop-home-balanced.css?v=20260926-hero-current1" rel="stylesheet" media="(min-width:901px)"/>
 <style id="footer-access-link-style">
 .ground-address{text-align:center;line-height:1.65}
 .ground-access-address{color:#c5cdd6;font-size:13px;font-weight:700}
