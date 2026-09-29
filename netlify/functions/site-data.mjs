@@ -1361,8 +1361,16 @@ export default async (request, context) => {
         });
       }
 
-      if (photoSection && url.searchParams.has("image")) {
-        const id = String(url.searchParams.get("image") || "");
+      const currentHeroImage =
+        section === "hero" && url.searchParams.get("current") === "1";
+
+      if (
+        photoSection &&
+        (url.searchParams.has("image") || currentHeroImage)
+      ) {
+        const id = currentHeroImage
+          ? "0"
+          : String(url.searchParams.get("image") || "");
         const item = section === "photos"
           ? (Array.isArray(data)
               ? data.find(entry => String(entry?.key || "") === id)
@@ -1390,7 +1398,9 @@ export default async (request, context) => {
           headers: {
             "content-type": match[1] || "image/jpeg",
             "content-length": String(bytes.byteLength),
-            "cache-control": "public, max-age=31536000, immutable"
+            "cache-control": url.searchParams.has("v")
+              ? "public, max-age=31536000, immutable"
+              : "no-store, max-age=0, must-revalidate"
           }
         });
       }
