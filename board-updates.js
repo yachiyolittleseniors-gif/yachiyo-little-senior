@@ -410,7 +410,7 @@
       alert(accessPasswordStatus.textContent);
     }finally{
       saveAccessPasswordBtn.disabled=false;
-      saveAccessPasswordBtn.textContent='パスワードを変更';
+      saveAccessPasswordBtn.textContent='チーム専用パスワードを変更';
     }
   });
 
@@ -447,7 +447,7 @@
       alert(coachPasswordStatus.textContent);
     }finally{
       saveCoachPasswordBtn.disabled=false;
-      saveCoachPasswordBtn.textContent='パスワードを変更';
+      saveCoachPasswordBtn.textContent='指導者用パスワードを変更';
     }
   });
 
