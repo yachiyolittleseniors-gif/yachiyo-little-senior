@@ -4336,7 +4336,17 @@ function openProtectedArea(type){
    if(Math.abs(distance)>45)show(current+(distance<0?1:-1),true);
  },{passive:true});
  document.addEventListener('visibilitychange',()=>{if(document.hidden)clearInterval(timer);else startTimer()});
- load();
+ // Start fetching shortly before the ground gallery reaches the viewport.
+ if('IntersectionObserver' in window){
+   const observer=new IntersectionObserver(entries=>{
+     if(!entries.some(entry=>entry.isIntersecting))return;
+     observer.disconnect();
+     load();
+   },{rootMargin:'900px 0px'});
+   observer.observe(box);
+ }else{
+   load();
+ }
 })();
 </script>
 <script>
