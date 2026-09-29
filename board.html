@@ -1401,24 +1401,6 @@ body:after{display:none!important;content:none!important}
     <button id="endDensukeBtn" class="danger" type="button">伝助を終了</button>
   </div>
   <button id="resumeDensukeBtn" class="restore" type="button" style="display:none!important" hidden>伝助移行を再開</button>
-  <div id="accessPasswordAdminFields">
-    <strong>チーム専用ページ<br><span class="password-change-heading">パスワード変更</span></strong>
-    <label for="accessPasswordInput">新しいパスワード</label>
-    <input id="accessPasswordInput" type="password" minlength="8" maxlength="64" autocomplete="new-password" placeholder="8文字以上">
-    <label for="accessPasswordConfirmInput">新しいパスワード（確認）</label>
-    <input id="accessPasswordConfirmInput" type="password" minlength="8" maxlength="64" autocomplete="new-password" placeholder="もう一度入力">
-    <button id="saveAccessPasswordBtn" type="button">チーム専用パスワードを変更</button>
-    <p id="accessPasswordStatus">8文字以上で設定してください。</p>
-  </div>
-  <div id="coachPasswordAdminFields">
-    <strong>指導者出欠確認<br><span class="password-change-heading">パスワード変更</span></strong>
-    <label for="coachPasswordInput">新しいパスワード</label>
-    <input id="coachPasswordInput" type="password" minlength="8" maxlength="64" autocomplete="new-password" placeholder="8文字以上">
-    <label for="coachPasswordConfirmInput">新しいパスワード（確認）</label>
-    <input id="coachPasswordConfirmInput" type="password" minlength="8" maxlength="64" autocomplete="new-password" placeholder="もう一度入力">
-    <button id="saveCoachPasswordBtn" type="button">指導者用パスワードを変更</button>
-    <p id="coachPasswordStatus">8文字以上で設定してください。</p>
-  </div>
   <div id="tournamentAdminFields">
     <strong>開催中の公式戦PDF</strong>
     <label for="tournamentTitleInput">大会名・資料名</label>
@@ -1498,8 +1480,8 @@ body:after{display:none!important;content:none!important}
     <button id="saveDocumentArchiveBtn" type="button">格納庫に保存</button>
     <div id="documentArchiveList"></div>
   </div>
-  <div id="systemAdminFields" class="system-admin-fields">
-    <div class="system-admin-heading">
+  <details id="systemAdminFields" class="system-admin-fields">
+    <summary class="system-admin-heading">
       <span class="system-admin-icon" aria-hidden="true">⚙</span>
       <span class="system-admin-divider" aria-hidden="true"></span>
       <div class="system-admin-copy">
@@ -1508,7 +1490,30 @@ body:after{display:none!important;content:none!important}
         <small class="system-admin-sub"><i></i>TEAM MANAGEMENT SYSTEM<i></i></small>
       </div>
       <span class="system-admin-chevron" aria-hidden="true">›</span>
-    </div>
+    </summary>
+    <details id="systemPasswordSettings" class="system-password-card">
+      <summary class="system-password-toggle"><span><strong>パスワード変更</strong><small>チーム専用ページ・指導者出欠確認</small></span><b class="system-password-chevron" aria-hidden="true">›</b></summary>
+      <div class="system-password-body">
+  <div id="accessPasswordAdminFields">
+    <strong>チーム専用ページ<br><span class="password-change-heading">パスワード変更</span></strong>
+    <label for="accessPasswordInput">新しいパスワード</label>
+    <input id="accessPasswordInput" type="password" minlength="8" maxlength="64" autocomplete="new-password" placeholder="8文字以上">
+    <label for="accessPasswordConfirmInput">新しいパスワード（確認）</label>
+    <input id="accessPasswordConfirmInput" type="password" minlength="8" maxlength="64" autocomplete="new-password" placeholder="もう一度入力">
+    <button id="saveAccessPasswordBtn" type="button">チーム専用パスワードを変更</button>
+    <p id="accessPasswordStatus">8文字以上で設定してください。</p>
+  </div>
+  <div id="coachPasswordAdminFields">
+    <strong>指導者出欠確認<br><span class="password-change-heading">パスワード変更</span></strong>
+    <label for="coachPasswordInput">新しいパスワード</label>
+    <input id="coachPasswordInput" type="password" minlength="8" maxlength="64" autocomplete="new-password" placeholder="8文字以上">
+    <label for="coachPasswordConfirmInput">新しいパスワード（確認）</label>
+    <input id="coachPasswordConfirmInput" type="password" minlength="8" maxlength="64" autocomplete="new-password" placeholder="もう一度入力">
+    <button id="saveCoachPasswordBtn" type="button">指導者用パスワードを変更</button>
+    <p id="coachPasswordStatus">8文字以上で設定してください。</p>
+  </div>
+      </div>
+    </details>
     <div id="adminVisibilityFields" class="admin-visibility-fields">
       <button id="adminVisibilityToggle" class="admin-visibility-toggle" type="button" aria-expanded="false" aria-controls="adminVisibilityBody">
         <span><strong>管理ボタン表示設定</strong><small id="adminVisibilitySummary">設定を読み込んでいます…</small></span>
@@ -1523,12 +1528,25 @@ body:after{display:none!important;content:none!important}
         <p id="adminVisibilityStatus" class="backup-note"></p>
       </div>
     </div>
-  </div>
+  </details>
   <button id="closeDensukeAdminBtn" type="button">キャンセル</button>
 </div>
 
 
 <style id="system-admin-style">
+/* Expand system settings, then choose the password or visibility card. */
+#systemAdminFields>summary,#systemPasswordSettings>summary{cursor:pointer;list-style:none;-webkit-tap-highlight-color:transparent}
+#systemAdminFields>summary::-webkit-details-marker,#systemPasswordSettings>summary::-webkit-details-marker{display:none}
+#systemAdminFields[open]>summary .system-admin-chevron,#systemPasswordSettings[open]>summary .system-password-chevron{transform:rotate(90deg)}
+#systemAdminFields .system-password-card{margin:0 0 14px;border:1px solid rgba(199,162,75,.55);border-radius:14px;background:#0b1a2e;overflow:hidden}
+#systemAdminFields .system-password-toggle{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:16px}
+#systemAdminFields .system-password-toggle strong{display:block;color:#fff;font-size:16px;line-height:1.5}
+#systemAdminFields .system-password-toggle small{display:block;color:#b7c2cf;font-size:11px;line-height:1.6;margin-top:4px}
+#systemAdminFields .system-password-chevron{color:#d5ad52;font-size:24px}
+#systemAdminFields .system-password-body{padding:0 16px 16px}
+#systemAdminFields #accessPasswordAdminFields{margin-top:0;padding-top:12px}
+#systemAdminFields>summary:focus-visible,#systemPasswordSettings>summary:focus-visible{outline:2px solid #e2bd67;outline-offset:2px}
+
 #systemAdminFields{margin-top:28px;padding-top:22px;border-top:1px solid rgba(199,162,75,.42)}
 .system-admin-heading{position:relative;display:grid;grid-template-columns:58px 1px minmax(0,1fr) 18px;align-items:center;gap:14px;margin:0 0 14px;padding:17px 18px;border:1.5px solid rgba(211,170,72,.72);border-radius:22px;background:linear-gradient(135deg,#07172d 0%,#0c2038 62%,#07172d 100%);box-shadow:inset 0 1px 0 rgba(255,224,145,.12),0 8px 24px rgba(2,12,25,.18);overflow:hidden}
 .system-admin-heading:after{content:"";position:absolute;right:-28px;top:-45px;width:125px;height:145px;transform:rotate(35deg);background:linear-gradient(90deg,transparent,rgba(255,255,255,.045),transparent);pointer-events:none}
