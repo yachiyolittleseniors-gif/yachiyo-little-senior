@@ -262,7 +262,7 @@ function dedupeSameDayComments(comments = []) {
     const memberId = String(comment.memberId || "");
     const eventDate = String(comment.eventDate || "");
     if (!memberId || !/^\d{4}-\d{2}-\d{2}$/.test(eventDate)) continue;
-    const key = memberId + "|" + eventDate;
+    const key = memberId + "|" + eventDate + (comment.escortSetting === true ? "|escort" : "|comment");
     const current = best.get(key);
     const nextTime = new Date(comment.updatedAt || 0).getTime() || 0;
     const currentTime = current ? (new Date(current.updatedAt || 0).getTime() || 0) : -1;
@@ -580,6 +580,7 @@ export default async (request, context) => {
     if (!config.migrationEnded) {
       adminActions.add("answer");
       adminActions.add("comment");
+      adminActions.add("escort");
     }
     let adminAuth = null;
     if (adminActions.has(action)) {
@@ -593,7 +594,7 @@ export default async (request, context) => {
     }
 
     if (
-      (action === "answer" || action === "comment" || action === "deleteComment") &&
+      (action === "answer" || action === "comment" || action === "escort" || action === "deleteComment") &&
       config.migrationEnded &&
       !(await accessOK(store, request))
     ) {
@@ -620,7 +621,7 @@ export default async (request, context) => {
     data = await mergeMemberStates(store, data);
     data = cleanupOldData(data);
 
-    if (["answer", "comment", "deleteComment"].includes(action)) {
+    if (["answer", "comment", "escort", "deleteComment"].includes(action)) {
       if (!config.migrationEnded) {
         if (!adminAuth?.ok) {
           return json({ error: "伝助終了前は保護者出欠確認へ入力できません。", locked: true }, 423);
@@ -730,7 +731,7 @@ export default async (request, context) => {
       const memberExists = data.members.some(m => String(m.id) === memberId);
       if (!memberExists) return json({ error: "Member not found" }, 404);
       const state = await loadMemberState(store, data, memberId);
-      state.comments = state.comments.filter(comment => String(comment.eventDate || "") !== eventDate);
+      state.comments = state.comments.filter(comment => comment.escortSetting === true || String(comment.eventDate || "") !== eventDate);
       state.updatedAt = new Date().toISOString();
       await store.setJSON(memberStateKey(memberId), state);
       applyMemberState(data, memberId, state);
@@ -759,7 +760,7 @@ export default async (request, context) => {
       };
       const state = await loadMemberState(store, data, memberId);
       state.comments = dedupeSameDayComments(state.comments);
-      const existingIndex = state.comments.findIndex(item => String(item.eventDate || "") === eventDate);
+      const existingIndex = state.comments.findIndex(item => item.escortSetting !== true && String(item.eventDate || "") === eventDate);
       if (existingIndex >= 0) {
         comment.id = state.comments[existingIndex].id || comment.id;
         state.comments[existingIndex] = comment;
