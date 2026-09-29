@@ -3914,7 +3914,6 @@ function openProtectedArea(type){
         const d=Array.isArray(j.data)?j.data:[];
         if(d[0]&&d[0].image){
           window.__yachiyoPhotoCache&&window.__yachiyoPhotoCache.set('hero',d[0].image);
-          hero.style.setProperty('--hero-photo',`url("${d[0].image}")`);
         }
       }
     }catch(e){}
@@ -4702,6 +4701,7 @@ document.addEventListener('DOMContentLoaded',function(){
   trigger.classList.add('unified-admin-reveal');
   trigger.setAttribute('aria-label','管理ボタンを表示');
 
+  const hasPointerEvents='PointerEvent' in window;
   let taps=0;
   let timer=null;
   let lastTouchAt=0;
@@ -4717,24 +4717,26 @@ document.addEventListener('DOMContentLoaded',function(){
     if(taps>=5){
       reset();
       const container=button.closest('#heroPhotoAdmin');
-      if(container)container.style.setProperty('display','flex','important');
+      if(container){
+        const display=window.matchMedia('(max-width:600px)').matches?'grid':'flex';
+        container.style.setProperty('display',display,'important');
+      }
       button.style.setProperty('display','block','important');
     }
   }
   trigger.addEventListener('pointerup',function(event){
-    if(event.pointerType==='touch'){
-      event.stopImmediatePropagation();
-      return;
-    }
     event.stopImmediatePropagation();
+    if(event.pointerType==='touch')lastTouchAt=Date.now();
     countTap();
   },{capture:true,passive:true});
-  trigger.addEventListener('touchend',function(event){
-    lastTouchAt=Date.now();
-    event.preventDefault();
-    event.stopImmediatePropagation();
-    countTap();
-  },{capture:true,passive:false});
+  if(!hasPointerEvents){
+    trigger.addEventListener('touchend',function(event){
+      lastTouchAt=Date.now();
+      event.preventDefault();
+      event.stopImmediatePropagation();
+      countTap();
+    },{capture:true,passive:false});
+  }
   trigger.addEventListener('click',function(event){
     if(Date.now()-lastTouchAt<800){
       event.preventDefault();
@@ -4742,7 +4744,7 @@ document.addEventListener('DOMContentLoaded',function(){
       return;
     }
     event.stopImmediatePropagation();
-    countTap();
+    if(!hasPointerEvents||event.detail===0)countTap();
   },{capture:true,passive:false});
   trigger.addEventListener('dblclick',function(event){
     event.preventDefault();
