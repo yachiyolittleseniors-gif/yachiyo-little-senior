@@ -3588,8 +3588,13 @@ body.photo-admin-on .recruit-mode-admin{display:block}
 <a href="./board.html" data-csp-onclick="toggleMenu()">チーム専用ページ 🔒</a>
 </div>
 </header>
+<style id="hero-photo-intro-animation">
+.hero-photo-intro{position:absolute;inset:0;z-index:0;pointer-events:none;background:rgba(3,12,24,.48);animation:heroPhotoIntroReveal 1.15s ease-out forwards}
+@keyframes heroPhotoIntroReveal{from{opacity:1}to{opacity:0}}
+@media(prefers-reduced-motion:reduce){.hero-photo-intro{animation:none;opacity:0}}
+</style>
 <main class="page show" id="home">
-<section class="hero"><div class="hero-inner">
+<section class="hero"><div class="hero-photo-intro" aria-hidden="true"></div><div class="hero-inner">
 <div class="hero-main">
 <div aria-controls="heroAnnouncementDetailModal" aria-haspopup="dialog" aria-label="お知らせの詳細を見る" aria-live="polite" class="hero-announcement" id="heroAnnouncement" role="button"><span class="hero-announcement-label">お知らせ</span><span class="hero-announcement-message" id="heroAnnouncementMessage"></span><span class="hero-announcement-detail-hint" hidden="" id="heroAnnouncementDetailHint">詳しく見る ›</span></div>
 <div aria-hidden="true" class="pc-reference-hero-copy">
