@@ -62,7 +62,6 @@ function boot(){
      var result=originalRenderEditor.apply(this,arguments);
      var id=selected(),key=id?draftKey():'';
      if(activeDraftKey&&activeDraftKey!==key)escortDrafts.delete(activeDraftKey);
-     if(key&&activeDraftKey!==key)escortDrafts.set(key,'');
      activeDraftKey=key;
      if(!id)return result;
      var items=typeof data!=='undefined'?data.comments.filter(function(item){return String(item.memberId)===id&&String(item.eventDate||'')===date.value}):[];
