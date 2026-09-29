@@ -3582,14 +3582,19 @@ body.photo-admin-on .recruit-mode-admin{display:block}
 #firstVisitSplash .first-visit-logo{position:relative;width:min(84vw,720px);overflow:visible;animation:splashLogoIn .6s ease both}
 #firstVisitSplash img{display:block;width:100%;height:auto;animation:splashGoldGlow 1.45s ease-in-out .15s both}
 #firstVisitSplash .first-visit-shine{position:absolute;inset:0;pointer-events:none;background:linear-gradient(105deg,transparent 44%,rgba(255,245,206,.68) 50%,transparent 56%);background-size:300% 100%;background-position:100% 0;-webkit-mask-image:url("./official-logo-crisp-final.png");mask-image:url("./official-logo-crisp-final.png");-webkit-mask-size:100% 100%;mask-size:100% 100%;-webkit-mask-repeat:no-repeat;mask-repeat:no-repeat;opacity:0;animation:splashShine .65s ease .8s forwards}
+#firstVisitSplash .first-visit-since{position:absolute;top:100%;left:50%;transform:translateX(-50%);margin-top:clamp(18px,5vw,43px);display:flex;align-items:center;justify-content:center;gap:clamp(12px,3.5vw,25px);width:max-content;color:#e2bd67;font-family:Georgia,"Times New Roman",serif;font-size:clamp(12px,3.47vw,25px);font-weight:400;line-height:1.2;white-space:nowrap;animation:splashSinceIn .5s ease .3s both}
+#firstVisitSplash .first-visit-since span{letter-spacing:.25em;padding-left:.25em}
+#firstVisitSplash .first-visit-since::before,#firstVisitSplash .first-visit-since::after{content:"";display:block;width:clamp(22px,6vw,44px);height:1px;background:linear-gradient(to right,transparent,rgba(199,154,59,.55))}
+#firstVisitSplash .first-visit-since::after{transform:scaleX(-1)}
+@keyframes splashSinceIn{from{opacity:0;translate:0 5px}to{opacity:1;translate:0 0}}
 @keyframes splashLogoIn{from{opacity:0;transform:scale(.985)}to{opacity:1;transform:scale(1)}}
 @keyframes splashGoldGlow{0%,100%{filter:drop-shadow(0 0 0 rgba(255,201,70,0))}50%{filter:drop-shadow(0 0 3px rgba(255,201,70,.7)) drop-shadow(0 0 8px rgba(255,201,70,.35))}}
 @keyframes splashShine{0%{background-position:100% 0;opacity:0}12%{opacity:1}88%{opacity:1}100%{background-position:0% 0;opacity:0}}
 @keyframes splashSafetyExit{to{visibility:hidden;opacity:0}}
-@media(prefers-reduced-motion:reduce){#firstVisitSplash .first-visit-logo,#firstVisitSplash .first-visit-shine,#firstVisitSplash img{animation:none}#firstVisitSplash .first-visit-shine{display:none}}
+@media(prefers-reduced-motion:reduce){#firstVisitSplash .first-visit-logo,#firstVisitSplash .first-visit-shine,#firstVisitSplash img,#firstVisitSplash .first-visit-since{animation:none}#firstVisitSplash .first-visit-shine{display:none}}
 </style>
 </head>
-<body id="page-top"><div id="firstVisitSplash" aria-hidden="true" hidden><div class="first-visit-logo"><img src="./official-logo-crisp-final.png" alt=""><div class="first-visit-shine"></div></div></div>
+<body id="page-top"><div id="firstVisitSplash" aria-hidden="true" hidden><div class="first-visit-logo"><img src="./official-logo-crisp-final.png" alt=""><div class="first-visit-shine"></div><div class="first-visit-since"><span>SINCE 1982</span></div></div></div>
 <script src="./first-visit-splash.js?v=20260929-singlefetch"></script>
 <header class="header">
 <nav class="nav">
