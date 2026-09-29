@@ -181,6 +181,9 @@ function normalizeAssignment(value = {}) {
     manualEscortFathers: Array.isArray(value.manualEscortFathers)
       ? [...new Set(value.manualEscortFathers.map(item => cleanText(item, 60)).filter(Boolean))].slice(0, 30)
       : [],
+    familyCompanions: Array.isArray(value.familyCompanions)
+      ? [...new Set(value.familyCompanions.map(item => cleanText(item, 80)).filter(item => /^.+(?:妹|姉|弟|兄|祖父|祖母)(?:[①-⑳]|[1-9])?$/.test(item)))].slice(0, 60)
+      : [],
     dutyOverrides: Array.isArray(value.dutyOverrides)
       ? value.dutyOverrides.filter(item => item && typeof item.checked === "boolean" && cleanText(item.name, 60))
           .slice(0, 300).map(item => ({ name: cleanText(item.name, 60), checked: item.checked }))
