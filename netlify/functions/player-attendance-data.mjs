@@ -775,7 +775,11 @@ export default async (request, context) => {
       const allowed = memberGrade === "1" ? ["2","3"] : memberGrade === "2" ? ["3"] : [];
       if (escortGrade && !allowed.includes(escortGrade)) return json({ error: "Invalid escort grade" }, 400);
       const state = await loadMemberState(store, data, memberId);
-      state.comments = state.comments.filter(c => !(c.escortSetting === true && String(c.eventDate || "") === eventDate));
+      state.comments = state.comments
+        .filter(c => !(c.escortSetting === true && String(c.eventDate || "") === eventDate))
+        .map(c => String(c.eventDate || "") === eventDate
+          ? { ...c, escortGrade, upperGrade: !!escortGrade }
+          : c);
       if (escortGrade) state.comments.push({
         id: `escort_${Date.now().toString(36)}_${Math.random().toString(36).slice(2,8)}`,
         memberId, text: "", eventDate, upperGrade: true, escortGrade, escortSetting: true,
