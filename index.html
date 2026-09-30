@@ -4,11 +4,27 @@
 <head>
 <script>
 (()=>{'use strict';
-window.__yachiyoHeroImage=fetch('/.netlify/functions/site-data?section=hero&current=1',{cache:'no-store',priority:'high'})
+let resolveReady;
+window.__yachiyoHeroReady=new Promise(resolve=>{resolveReady=resolve;});
+const controller=new AbortController();
+let settled=false;
+const request={
+  signal:controller.signal,
+  finish(ok){
+    if(settled)return;
+    settled=true;clearTimeout(timeout);
+    if(!ok)controller.abort();
+    resolveReady(ok===true);
+  }
+};
+// Bound the request itself; never reveal a photo that is still loading later.
+const timeout=setTimeout(()=>request.finish(false),20000);
+window.__yachiyoHeroRequest=request;
+window.__yachiyoHeroImage=fetch('/.netlify/functions/site-data?section=hero&current=1',{cache:'no-store',priority:'high',signal:request.signal})
  .then(async response=>{
   if(!response.ok)throw new Error('Hero image unavailable');
   const blob=await response.blob();
-  if(!blob.size||!blob.type.startsWith('image/'))throw new Error('Invalid hero image');
+  if(request.signal.aborted||!blob.size||!blob.type.startsWith('image/'))throw new Error('Invalid hero image');
   return URL.createObjectURL(blob);
  }).catch(()=>null);
 })();
@@ -3602,7 +3618,7 @@ body.photo-admin-on .recruit-mode-admin{display:block}
 <script src="./back-to-top.js?v=20260930-padding1" defer></script>
 </head>
 <body id="page-top"><div id="firstVisitSplash" aria-hidden="true" hidden><div class="first-visit-logo"><img src="./official-logo-crisp-final.png" alt=""><div class="first-visit-shine"></div><div class="first-visit-since"><span>SINCE 1982</span></div></div></div>
-<script src="./first-visit-splash.js?v=20260930-hero-ready"></script>
+<script src="./first-visit-splash.js?v=20260930-hero-settled2"></script>
 <header class="header">
 <nav class="nav">
 <div class="brand"><div class="official-brand-wrap" data-home-logo role="link" tabindex="0" aria-label="ホームへ戻る">
@@ -3947,22 +3963,36 @@ function openProtectedArea(type){
   const change=document.getElementById('heroPhotoChange');
   const input=document.getElementById('heroPhotoInput');
   const adminPanel=document.getElementById('heroPhotoAdmin');
-  if(!hero||!toggle||!change||!input||!adminPanel)return;
+  const heroRequest=window.__yachiyoHeroRequest;
+  const signal=heroRequest&&heroRequest.signal;
+  if(!hero){if(heroRequest)heroRequest.finish(false);return;}
 
   function showHeroImage(src){
     return new Promise(resolve=>{
+      if(signal&&signal.aborted){resolve(false);return;}
       const img=new Image();
-      let started=false;
+      let started=false,done=false;
+      const finish=ok=>{
+        if(done)return;
+        done=true;img.onload=null;img.onerror=null;
+        if(signal)signal.removeEventListener('abort',cancel);
+        resolve(ok);
+      };
+      const cancel=()=>{finish(false);img.src='';};
       const apply=async()=>{
-        if(started)return;
+        if(started||done)return;
         started=true;
-        try{if(img.decode)await img.decode();}catch(e){}
+        try{if(img.decode)await img.decode();}catch(e){finish(false);return;}
+        if(done||(signal&&signal.aborted)||!img.naturalWidth){finish(false);return;}
         hero.style.setProperty('--hero-photo',`url("${src}")`);
-        resolve(true);
+        // Retain the decoded image while the CSS background is being painted.
+        if(heroRequest)heroRequest.image=img;
+        finish(true);
       };
       img.fetchPriority='high';
       img.onload=apply;
-      img.onerror=()=>resolve(false);
+      img.onerror=()=>finish(false);
+      if(signal)signal.addEventListener('abort',cancel,{once:true});
       img.src=src;
       if(img.complete&&img.naturalWidth>0)apply();
     });
@@ -3975,7 +4005,8 @@ function openProtectedArea(type){
         const ready=showHeroImage(freshImage);
         if(await ready)return true;
       }
-      const r=await fetch(api+'?section=hero&manifest=1',{cache:'no-store'});
+      if(signal&&signal.aborted)return false;
+      const r=await fetch(api+'?section=hero&manifest=1',{cache:'no-store',signal});
       if(r.ok){
         const j=await r.json();
         const d=Array.isArray(j.data)?j.data:[];
@@ -3987,7 +4018,10 @@ function openProtectedArea(type){
     }catch(e){}
     return false;
   }
-  window.__yachiyoHeroReady=loadHero();
+  const ready=loadHero();
+  if(heroRequest)ready.then(ok=>heroRequest.finish(ok),()=>heroRequest.finish(false));
+  else window.__yachiyoHeroReady=ready;
+  if(!toggle||!change||!input||!adminPanel)return;
 
   function setAdmin(on){
     document.body.classList.toggle('photo-admin-on',on);

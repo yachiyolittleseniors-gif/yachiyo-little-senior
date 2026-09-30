@@ -331,6 +331,8 @@ function leave(){
 }
 function awaitHero(){
   const ready=window.__yachiyoHeroReady;
+  if(!ready||typeof ready.then!=='function')return;
+  clearTimeout(guardTimer);
   Promise.resolve(ready).catch(()=>false).then(()=>{
     if(closed||leaving)return;
     // Allow the decoded background to paint behind the cover before fading.
@@ -340,8 +342,10 @@ function awaitHero(){
     }));
   });
 }
+// This fallback only covers a missing loader. An active image request owns its timeout.
 guardTimer=setTimeout(leave,6000);
-if(document.readyState==='loading'){
+if(window.__yachiyoHeroReady){awaitHero();}
+else if(document.readyState==='loading'){
   document.addEventListener('DOMContentLoaded',awaitHero,{once:true});
 }else{awaitHero();}
 mobileMotion();
