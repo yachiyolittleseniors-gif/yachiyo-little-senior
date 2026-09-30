@@ -32,8 +32,8 @@
    currentSettings=d;
    const cfg=d&&d.pages&&typeof d.pages==='object'?d:{pages:(d&&typeof d==='object'?d:{}),autoOffEnabled:true,expiresAt:{}};
    const loginMode=cfg.autoEnableOnLogin===true;
-   const exp=loginMode?grantUntil():Number(cfg.expiresAt&&cfg.expiresAt[KEY]||0);
-   const allowed=loginMode?exp>Date.now():cfg.pages[KEY]!==false&&!(cfg.autoOffEnabled!==false&&exp&&exp<=Date.now());
+   const exp=loginMode?grantUntil():0;
+   const allowed=loginMode?exp>Date.now():cfg.pages[KEY]!==false;
    const session=window.YLSAdminSession;
    const sessionUntil=session?.expiresAt?.()||0;
    // Manual visibility follows page settings; only automatic reveal follows the login session.
@@ -41,7 +41,7 @@
    ready=true;if(timer){clearTimeout(timer);timer=null}
    if(enabled){
      showAdminUi();
-     const until=loginMode?Math.min(exp,sessionUntil):(cfg.autoOffEnabled!==false&&exp>Date.now()?exp:0);
+     const until=loginMode?Math.min(exp,sessionUntil):0;
      if(until)timer=setTimeout(()=>{enabled=false;clearAdminState()},Math.min(Math.max(0,until-Date.now()),2147483647));
    }
    else clearAdminState();
@@ -58,8 +58,7 @@
  window.addEventListener('focus',()=>{if(ready)apply(currentSettings)});
  const blocked=()=>{
    const loginMode=currentSettings?.autoEnableOnLogin===true;
-   const manualExpiry=Number(currentSettings?.expiresAt?.[KEY]||0);
-   const expired=loginMode?(window.YLSAdminSession?.isActive?.()!==true||grantUntil()<=Date.now()):(currentSettings?.autoOffEnabled!==false&&manualExpiry>0&&manualExpiry<=Date.now());
+   const expired=loginMode&&(window.YLSAdminSession?.isActive?.()!==true||grantUntil()<=Date.now());
    if(enabled&&expired){enabled=false;clearAdminState()}
    return !ready||!enabled;
  };

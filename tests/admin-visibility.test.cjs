@@ -13,8 +13,8 @@ test('OFF: manual ON button is available before authentication and unchanged on 
 test('OFF: manual OFF stays hidden after authentication, ignoring old automatic grants',async()=>{
  const app=await setup({pages:{'index.html':false},autoEnableOnLogin:false,autoOffEnabled:false},{grant:1801000});assert.equal(app.visible(),false);app.login();assert.equal(app.visible(),false);
 });
-test('OFF: manual 30-minute expiry is not extended by authentication',async()=>{
- const app=await setup({pages:{'index.html':true},autoEnableOnLogin:false,autoOffEnabled:true,expiresAt:{'index.html':2000}});assert.equal(app.visible(),true);app.login();app.tick(2000);assert.equal(app.visible(),false);app.login();assert.equal(app.visible(),false);
+test('OFF: removed manual timer no longer hides manually enabled pages',async()=>{
+ const app=await setup({pages:{'index.html':true},autoEnableOnLogin:false,autoOffEnabled:true,expiresAt:{'index.html':2000}});assert.equal(app.visible(),true);app.login();app.tick(2000);assert.equal(app.visible(),true);app.expire();assert.equal(app.visible(),true);
 });
 test('ON: only authenticated device with automatic grant reveals buttons for 30 minutes',async()=>{
  const cfg={pages:{'index.html':false},autoEnableOnLogin:true};const app=await setup(cfg,{grant:1801000});assert.equal(app.visible(),false);app.login();assert.equal(app.visible(),true);app.expire();assert.equal(app.visible(),false);
