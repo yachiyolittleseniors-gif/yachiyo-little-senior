@@ -1586,7 +1586,7 @@ html{scroll-padding-top:var(--fixed-header-height)}
 <div class="info-row"><b>場所</b><span>八千代リトルシニア専用グラウンド<br>（東邦グラウンド）</span></div>
 <div class="info-row"><b>体験</b><span>お問い合わせ → 日程調整 → 体験参加</span></div>
 <div class="info-row"><b>持ち物</b><span>野球のできる服装・グローブ・飲み物</span></div>
-<a class="visit-contact" href="./contact">お問い合わせはこちら<span class="visit-contact-arrow" aria-hidden="true">›</span></a>
+<a class="visit-contact" href="./contact" data-ga-event="trial_application_click">お問い合わせはこちら<span class="visit-contact-arrow" aria-hidden="true">›</span></a>
 </div>
 <style id="join-access-card-style">
 #join .access-card{margin-top:24px;padding-top:16px;text-align:left}
@@ -1703,6 +1703,21 @@ function closeModal(){
 
   document.addEventListener('keydown', function(e){
     if(e.key==='Escape') setOpen(false);
+  });
+})();
+</script>
+<script id="trial-application-ga4-tracking">
+(function(){
+  const link=document.querySelector('[data-ga-event="trial_application_click"]');
+  if(!link) return;
+  link.addEventListener('click',function(){
+    if(typeof window.gtag==='function'){
+      window.gtag('event','trial_application_click',{
+        event_category:'recruitment',
+        event_label:'join_to_contact',
+        link_url:link.href
+      });
+    }
   });
 })();
 </script>
