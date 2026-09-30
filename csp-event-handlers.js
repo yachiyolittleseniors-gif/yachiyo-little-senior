@@ -55,8 +55,15 @@
     if (homeLogo) {
       // The home logo remains an image so iOS can offer its native long-press save action.
       ev.preventDefault();
-      if (homeLogo.tagName === 'A') window.location.assign('/');
-      else window.scrollTo({ top: 0, behavior: 'smooth' });
+      var onHome = location.pathname === '/' || location.pathname === '/index.html';
+      if (onHome && homeLogo.tagName !== 'A') {
+        try { sessionStorage.setItem('yachiyo:force-opening','1'); } catch (_) {}
+        window.location.reload();
+      } else if (homeLogo.tagName === 'A') {
+        window.location.assign('/');
+      } else {
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+      }
       return;
     }
     var el = ev.target && ev.target.closest ? ev.target.closest('[data-csp-onclick]') : null;
@@ -67,8 +74,15 @@
     var homeLogo = ev.target && ev.target.closest ? ev.target.closest('[data-home-logo]') : null;
     if (!homeLogo) return;
     ev.preventDefault();
-    if (homeLogo.tagName === 'A') window.location.assign('/');
-    else window.scrollTo({ top: 0, behavior: 'smooth' });
+    var onHome = location.pathname === '/' || location.pathname === '/index.html';
+    if (onHome && homeLogo.tagName !== 'A') {
+      try { sessionStorage.setItem('yachiyo:force-opening','1'); } catch (_) {}
+      window.location.reload();
+    } else if (homeLogo.tagName === 'A') {
+      window.location.assign('/');
+    } else {
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
   });
   document.addEventListener('load', function (ev) {
     var el = ev.target;
