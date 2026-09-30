@@ -1,8 +1,11 @@
 (()=>{
   const nativeFetch=window.fetch.bind(window);
   const key='yachiyoAdminSessionExpiresAt';
-  let timer=null,noticeShown=false;
+  let timer=null,noticeShown=false,verifiedUntil=0;
   function expire(showNotice){
+    verifiedUntil=0;
+    if(timer)clearTimeout(timer);
+    timer=null;
     try{localStorage.removeItem(key);localStorage.removeItem('yachiyoAdminRevealUntil');sessionStorage.removeItem('yachiyoAdminPassword')}catch(_){}
     document.dispatchEvent(new Event('yachiyo:admin-session-expired'));
     if(!showNotice||noticeShown)return;
@@ -19,13 +22,15 @@
     if(document.body)show();else document.addEventListener('DOMContentLoaded',show,{once:true});
   }
   function activate(expiresAt){
-    if(!Number.isFinite(expiresAt))return;
+    if(!Number.isFinite(expiresAt)||expiresAt<=Date.now()){expire(false);return;}
+    verifiedUntil=expiresAt;
     noticeShown=false;
     try{localStorage.setItem(key,String(expiresAt))}catch(_){}
     if(timer)clearTimeout(timer);
     timer=setTimeout(()=>expire(true),Math.max(0,expiresAt-Date.now()));
+    document.dispatchEvent(new Event('yachiyo:admin-session-active'));
   }
-  window.YLSAdminSession={activate};
+  window.YLSAdminSession={activate,isActive:()=>verifiedUntil>Date.now(),expiresAt:()=>verifiedUntil};
   window.fetch=async(input,init)=>{
     const response=await nativeFetch(input,init);
     try{
@@ -37,14 +42,19 @@
     }catch(_){}
     return response;
   };
-  nativeFetch('/.netlify/functions/admin-session',{cache:'no-store'}).then(async response=>{
-    if(response.ok){const data=await response.json();activate(data.expiresAt)}
-  }).catch(()=>{});
+  async function verify(){
+    try{
+      const response=await nativeFetch('/.netlify/functions/admin-session',{cache:'no-store'});
+      if(response.ok){const data=await response.json();activate(data.expiresAt)}
+      else expire(false);
+    }catch(_){expire(false)}
+  }
+  verify();
   window.addEventListener('storage',event=>{
-    if(event.key===key){if(event.newValue)activate(Number(event.newValue));else if(timer){clearTimeout(timer);timer=null;}}
+    if(event.key===key){if(event.newValue)verify();else expire(false);}
   });
   document.addEventListener('visibilitychange',()=>{
     if(document.hidden)return;
-    try{const until=Number(localStorage.getItem(key));if(until&&until<=Date.now())expire(true)}catch(_){}
+    if(verifiedUntil&&verifiedUntil<=Date.now())expire(true);
   });
 })();

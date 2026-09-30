@@ -19,7 +19,7 @@
  function clearAdminState(){
    try{sessionStorage.removeItem('yachiyoAdminMode');sessionStorage.removeItem('yachiyoAdminPassword')}catch(e){}
    try{localStorage.removeItem('yachiyoAdminMode')}catch(e){}
-   document.body?.classList.remove('editing','photo-admin-on','admin-mode','admin-open','is-admin');
+   document.body?.classList.remove('editing','staff-editing','photo-admin-on','admin-mode','admin-open','is-admin');
    document.documentElement.classList.add(HIDE_CLASS);
    selectors.forEach(sel=>document.querySelectorAll(sel).forEach(el=>{el.style.setProperty('display','none','important');el.setAttribute('aria-hidden','true')}));
    ['#adminModal','#yachiyoUnifiedAdminModal','.admin-modal','.admin-password-modal','.password-modal'].forEach(sel=>document.querySelectorAll(sel).forEach(el=>{el.classList.remove('show','is-open','open','active');el.hidden=true;el.setAttribute('aria-hidden','true')}));
@@ -34,9 +34,15 @@
    const loginMode=cfg.autoEnableOnLogin===true;
    const exp=loginMode?grantUntil():Number(cfg.expiresAt&&cfg.expiresAt[KEY]||0);
    const allowed=loginMode?exp>Date.now():cfg.pages[KEY]!==false&&!(cfg.autoOffEnabled!==false&&exp&&exp<=Date.now());
-   enabled=(!desktop.matches||cfg.desktopEnabled===true)&&allowed;
+   const session=window.YLSAdminSession;
+   const sessionUntil=session?.expiresAt?.()||0;
+   enabled=session?.isActive?.()===true&&(!desktop.matches||cfg.desktopEnabled===true)&&allowed;
    ready=true;if(timer){clearTimeout(timer);timer=null}
-   if(enabled){showAdminUi();if((loginMode||cfg.autoOffEnabled!==false)&&exp>Date.now())timer=setTimeout(()=>{enabled=false;clearAdminState()},Math.min(exp-Date.now()+100,2147483647));}
+   if(enabled){
+     showAdminUi();
+     const until=(loginMode||cfg.autoOffEnabled!==false)&&exp>Date.now()?Math.min(exp,sessionUntil):sessionUntil;
+     timer=setTimeout(()=>{enabled=false;clearAdminState()},Math.min(Math.max(0,until-Date.now()),2147483647));
+   }
    else clearAdminState();
  }
  clearAdminState();
@@ -45,11 +51,12 @@
  fetch('/.netlify/functions/site-data?section=admin-visibility-settings',{cache:'no-store'})
    .then(r=>r.ok?r.json():Promise.reject()).then(j=>apply(j&&j.data)).catch(()=>{ready=true;enabled=false;clearAdminState()});
  document.addEventListener('yachiyo:admin-session-expired',()=>{if(ready)apply(currentSettings)});
+ document.addEventListener('yachiyo:admin-session-active',()=>{if(ready)apply(currentSettings)});
  window.addEventListener('storage',e=>{if(e.key===GRANT_KEY)apply(currentSettings)});
  document.addEventListener('visibilitychange',()=>{if(!document.hidden&&ready)apply(currentSettings)});
  window.addEventListener('focus',()=>{if(ready)apply(currentSettings)});
  const blocked=()=>{
-   if(enabled&&currentSettings?.autoEnableOnLogin===true&&grantUntil()<=Date.now()){enabled=false;clearAdminState()}
+   if(enabled&&(window.YLSAdminSession?.isActive?.()!==true||(currentSettings?.autoEnableOnLogin===true&&grantUntil()<=Date.now()))){enabled=false;clearAdminState()}
    return !ready||!enabled;
  };
  ['pointerdown','pointerup','touchstart','touchend','click','dblclick'].forEach(type=>document.addEventListener(type,e=>{
