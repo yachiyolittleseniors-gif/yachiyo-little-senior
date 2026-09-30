@@ -299,7 +299,7 @@ body{padding-top:var(--fixed-header-height)!important}
   <section class="locked-card hidden" id="lockedView"></section>
 
   <div id="attendanceView">
-    <div class="notice"><b>回答方法：</b>左の自分の名前をタップしてから、○×を編集してください。選択した本人の行だけ編集できます。<br><b>コメント入力：</b>名前を押すと、その名前のすぐ下に入力欄が開きます。同じ名前をもう一度押すと入力欄が閉じ、編集を解除します。対象日と内容を入力し、「コメントを追加」を押してください。上級生に帯同する場合は、コメント欄の「帯同」にチェックを入れてください。<br><span style="color:#6f7884">※選手名・学年は選手紹介から、日程はスケジュールページから自動反映します。</span></div>
+    <div class="notice"><b>回答方法：</b>左の自分の名前をタップしてから、○×を編集してください。選択した本人の行だけ編集できます。<br><b>コメント入力：</b>名前を押すと、その名前のすぐ下に入力欄が開きます。同じ名前をもう一度押すと入力欄が閉じ、編集を解除します。対象日と内容を入力し、「コメントを追加」を押してください。<br><span style="color:#6f7884">※選手名・学年は選手紹介から、日程はスケジュールページから自動反映します。</span></div>
     
     <details class="report-launch" id="reportLaunch">
       <summary class="report-launch-head report-launch-summary"><h2>選手出席一覧の出力</h2><span class="report-launch-summary-meta"><span class="sync" id="syncText"></span><span class="report-launch-chevron" aria-hidden="true"></span></span></summary>
@@ -313,7 +313,7 @@ body{padding-top:var(--fixed-header-height)!important}
     </details>
     <dialog class="summary-dialog" id="summaryDialog" aria-labelledby="summaryTitle"><div class="summary-dialog-head"><h2 id="summaryTitle">出欠内訳</h2><button class="summary-close" id="summaryClose" type="button" aria-label="閉じる">×</button></div><div class="breakdown-list" id="summaryBody"></div><p class="breakdown-unset" id="summaryUnset"></p></dialog>
     <div class="board-shell" id="board"><div class="empty">読み込み中...</div></div>
-    <section class="editor" id="editor"><h3 id="editorName"></h3><p>この名前で回答を編集しています。</p><label class="comment-date-field">対象日<select id="commentEventDate" aria-label="コメントの対象日"></select></label><textarea id="commentText" maxlength="500" placeholder="コメントを入力（例：車出しできます／AM・PMのみ参加可能）"></textarea><div class="upper-grade-check" id="upperGradeField" hidden><div id="escortGradeButtons" class="escort-grade-buttons"></div></div><div style="margin-top:8px;display:flex;gap:8px;flex-wrap:wrap"><button class="small-btn" id="commentSave">コメントを追加</button><button class="secondary" id="editCancel">選択解除</button></div></section>
+    <section class="editor" id="editor"><h3 id="editorName"></h3><p>この名前で回答を編集しています。</p><label class="comment-date-field">対象日<select id="commentEventDate" aria-label="コメントの対象日"></select></label><textarea id="commentText" maxlength="500" placeholder="コメントを入力（例：遅れて参加します／欠席理由）"></textarea><div style="margin-top:8px;display:flex;gap:8px;flex-wrap:wrap"><button class="small-btn" id="commentSave">コメントを追加</button><button class="secondary" id="editCancel">選択解除</button></div></section>
     <section class="comment-section"><h2>最新コメント一覧</h2><div class="comment-list" id="commentList"></div></section>
     <dialog class="report-dialog" id="reportDialog" aria-labelledby="reportTitle">
       <div class="report-dialog-frame">
@@ -548,11 +548,6 @@ function renderEditor(){
   select.innerHTML=events.map(e=>`<option value="${esc(e.date)}">${esc(formatDate(e.date))} ${esc(e.title||'')}</option>`).join('');if(previous&&events.some(e=>e.date===previous))select.value=previous;select.onchange=()=>{selectedEscortGrade='';renderEditor()};
   const existingComment=data.comments.some(c=>c.escortSetting!==true&&String(c.memberId)===String(m.id)&&String(c.eventDate||'')===String(select.value||''));
   $('#commentSave').textContent=existingComment?'コメントを上書き':'コメントを追加';
-  const savedEscort=[...data.comments].reverse().find(c=>String(c.memberId)===String(m.id)&&String(c.eventDate||'')===String(select.value||'')&&c.escortSetting===true);if(savedEscort)selectedEscortGrade=String(savedEscort.escortGrade||'');const grade=String(m.grades?.[0]||'');const targets=grade==='1'?['2','3']:grade==='2'?['3']:[];
-  const field=$('#upperGradeField'),buttons=$('#escortGradeButtons');field.hidden=!targets.length;
-  if(!targets.includes(selectedEscortGrade))selectedEscortGrade='';
-  buttons.innerHTML=targets.map(target=>`<label class="escort-check"><input type="checkbox" data-escort-grade="${target}" ${selectedEscortGrade===target?'checked':''}><span class="escort-check-box" aria-hidden="true"></span><span class="escort-check-text">${target}年生に帯同する</span></label>`).join('');
-  buttons.querySelectorAll('[data-escort-grade]').forEach(input=>input.onchange=()=>{selectedEscortGrade=input.checked?input.dataset.escortGrade:'';buttons.querySelectorAll('[data-escort-grade]').forEach(other=>{if(other!==input)other.checked=false})});
 }
 const pendingAnswers=new Map();
 let answerSaving=false,answerSaveFailed=false;
@@ -603,7 +598,7 @@ function saveAnswer(ev){
 }
 window.addEventListener('beforeunload',event=>{if(pendingAnswers.size){event.preventDefault();event.returnValue=''}});
 
-$('#commentSave').onclick=async()=>{const escortGrade=selectedEscortGrade,text=$('#commentText').value.trim()||(escortGrade?escortGrade+'年生に帯同します。':''),memberId=selectedMember,eventDate=$('#commentEventDate').value;if(!memberId||!text||!eventDate||savingMembers.has(memberId))return;savingMembers.add(memberId);$('#syncText').textContent='保存中…';render();try{const j=await api('POST',{action:'comment',memberId,text,eventDate,escortGrade});data=normalize(j.data);$('#commentText').value='';$('#syncText').textContent='コメント保存済み'}catch{showError('コメントを保存できませんでした。')}finally{savingMembers.delete(memberId);render()}};
+$('#commentSave').onclick=async()=>{const text=$('#commentText').value.trim(),memberId=selectedMember,eventDate=$('#commentEventDate').value;if(!memberId||!text||!eventDate||savingMembers.has(memberId))return;savingMembers.add(memberId);$('#syncText').textContent='保存中…';render();try{const j=await api('POST',{action:'comment',memberId,text,eventDate,escortGrade:''});data=normalize(j.data);$('#commentText').value='';$('#syncText').textContent='コメント保存済み'}catch{showError('コメントを保存できませんでした。')}finally{savingMembers.delete(memberId);render()}};
 $('#editCancel').onclick=()=>{if(pendingAnswers.size){showAnswerWaitNotice();return;}selectedMember='';render()};
 function commentDateValue(comment){if(comment.eventDate){const value=new Date(comment.eventDate+'T00:00:00').getTime();if(Number.isFinite(value))return value}const match=String(comment.text||'').match(/(\d{1,2})\s*(?:\/|月)\s*(\d{1,2})(?:日)?/);if(match){const now=new Date(),dates=[-1,0,1].map(offset=>new Date(now.getFullYear()+offset,Number(match[1])-1,Number(match[2])).getTime());return dates.sort((a,b)=>Math.abs(a-now)-Math.abs(b-now))[0]}return new Date(comment.updatedAt||0).getTime()||0}
 function sortedComments(){const actualComments=new Set(data.comments.filter(comment=>comment&&!comment.escortSetting).map(comment=>String(comment.memberId)+'|'+String(comment.eventDate||'')));return [...data.comments].filter(comment=>comment&&(comment.text||comment.upperGrade)&&(!comment.escortSetting||!actualComments.has(String(comment.memberId)+'|'+String(comment.eventDate||'')))).sort((a,b)=>commentDateValue(b)-commentDateValue(a)||new Date(b.updatedAt||0)-new Date(a.updatedAt||0))}
