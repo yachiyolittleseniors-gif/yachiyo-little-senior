@@ -1368,7 +1368,8 @@ html{scroll-padding-top:var(--fixed-header-height)}
 #teamMovieCard .team-youtube-public,#teamInterviewCard .team-youtube-public{width:100%}
 #teamMovieCard .team-youtube-head,#teamInterviewCard .team-youtube-head{min-height:52px}
 #teamMovieCard .team-youtube-public>p,#teamInterviewCard .team-youtube-public>p{min-height:50px}
-#teamMovieCard video{display:block;margin-top:18px;width:100%;height:auto;max-height:none;object-fit:contain}
+#teamMovieCard video{display:block;margin-top:18px;width:100%;height:auto;aspect-ratio:1 / 1;max-height:none;object-fit:cover;object-position:center}
+#teamMovieCard video[hidden]{display:none}
 @media(max-width:600px){
  #teamMovieCard,#teamInterviewCard{height:auto!important;min-height:0!important}
  #teamMovieCard .team-youtube-head,#teamInterviewCard .team-youtube-head{min-height:48px}
@@ -1607,7 +1608,7 @@ body.staff-editing:after{display:none!important;content:none!important}
 <label>タイトル<input id="teamMovieTitleEdit" maxlength="80" type="text" value="雨天時の室内練習"></label>
 <label>説明文<textarea id="teamMovieDescriptionEdit" maxlength="300" rows="4">雨の日は室内練習場を利用して練習を行っています。選手たちの練習風景をご覧ください。</textarea></label>
 <label>動画ファイル（MP4 / MOV / M4V / WebM）<input id="teamMovieFileEdit" accept="video/mp4,video/quicktime,video/x-m4v,video/webm,.mp4,.mov,.m4v,.webm" type="file"><span id="teamMovieSavedFile" style="display:block;margin-top:7px;color:#e2bd67;font-size:12px;font-weight:800"></span></label>
-<label class="team-interview-visible"><input id="teamMovieControlsEdit" type="checkbox"><span>再生ボタンを表示する</span></label><label class="team-interview-visible"><input id="teamMovieVisibleEdit" type="checkbox"><span>このTEAM MOVIEを表示する</span></label>
+<label class="team-interview-visible"><input id="teamMovieAutoplayEdit" type="checkbox"><span>自動再生をONにする</span></label><label class="team-interview-visible"><input id="teamMovieVisibleEdit" type="checkbox"><span>このTEAM MOVIEを表示する</span></label>
 <div class="team-interview-admin-actions team-movie-actions"><button class="team-interview-cancel team-movie-delete" id="teamMovieDelete" type="button">動画を削除</button><button class="team-interview-save" id="teamMovieSave" type="button">保存</button></div>
 </div></div>
 <div class="team-movie-separator" aria-hidden="true"></div>
@@ -2376,7 +2377,7 @@ body.photo-admin-on #accessPasswordChange{
 })();
 </script>
 <script src="./mobile-navigation.js?v=20260930-menu1" defer></script>
-<script src="./team-movie.js?v=20260928-0919"></script>
+<script src="./team-movie.js?v=20260930-autoplay-fill"></script>
 <script id="team-admin-password-guard">
 (function(){
  const b=document.getElementById('staffEditBtn');
