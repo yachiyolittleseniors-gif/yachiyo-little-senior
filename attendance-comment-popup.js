@@ -24,7 +24,6 @@
     }
     var originalRender = window.render;
     var previousMember = '';
-    var originalBoardOverflowY = board.style.overflowY;
     function positionOverlay() {
       if (overlay.style.display === 'none') return;
       var selected = board.querySelector('[data-select-member].selected');
@@ -35,9 +34,11 @@
       var row = memberRow.getBoundingClientRect();
       var head = board.querySelector('thead');
       var headHeight = head ? head.getBoundingClientRect().height : 0;
-      var anchor = row.bottom;
+      var visible = row.bottom > bounds.top + headHeight && row.top < bounds.bottom;
+      overlay.style.visibility = visible ? 'visible' : 'hidden';
+      overlay.style.pointerEvents = visible ? 'auto' : 'none';
       overlay.style.left = (bounds.left - outer.left) + 'px';
-      overlay.style.top = (anchor - outer.top) + 'px';
+      overlay.style.top = (row.bottom - outer.top) + 'px';
       overlay.style.width = Math.min(board.clientWidth, 640) + 'px';
     }
     window.render = function () {
@@ -57,16 +58,8 @@
         editor.style.display = 'block';
         overlay.style.display = 'block';
         if (previousMember !== selected.dataset.selectMember) {
-          board.style.overflowY = originalBoardOverflowY;
-          var memberRow = selected.closest('tr');
-          var head = board.querySelector('thead');
-          var headHeight = head ? head.getBoundingClientRect().height : 0;
-          var br = board.getBoundingClientRect(), mr = memberRow.getBoundingClientRect();
-          board.scrollTop += mr.top - br.top - headHeight;
           overlay.scrollTop = 0;
         }
-        // Keep the selected name visible while editing; horizontal scrolling still works.
-        board.style.overflowY = 'hidden';
         previousMember = selected.dataset.selectMember;
         positionOverlay();
         // Leave scroll room below the page content without moving the comment list.
@@ -76,7 +69,6 @@
         editor.style.display = 'none';
         overlay.style.display = 'none';
         container.style.paddingBottom = originalPadding;
-        board.style.overflowY = originalBoardOverflowY;
       }
       return result;
     };
