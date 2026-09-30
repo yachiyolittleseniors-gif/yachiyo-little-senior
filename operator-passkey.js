@@ -161,6 +161,7 @@
         // No registered passkey / cancelled / failed: fall back to password.
       }
     }
+    let enteredPassword;
     if (supported() && window.YLSPasskeyLogin) {
       const choice = await window.YLSPasskeyLogin({
         title: "運営用ログイン",
@@ -175,8 +176,9 @@
         return choice.value;
       }
       if (choice.method === "cancel") return "";
+      if (choice.method === "password") enteredPassword = choice.password;
     }
-    const entered = prompt(promptMessage);
+    const entered = enteredPassword === undefined ? prompt(promptMessage) : enteredPassword;
     if (entered === null) return "";
     try {
       const response = await fetch("/.netlify/functions/coach-attendance-data", {

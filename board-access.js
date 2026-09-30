@@ -81,18 +81,20 @@ window.boardAccessReady=(async function requireBoardPassword(){
     }catch(e){}
   }else{clearAccess()}
   if(await verifyPasskey())return true;
+  let enteredPassword;
   if(window.YLSPasskeys?.supported()&&window.YLSPasskeyLogin){
     const choice=await window.YLSPasskeyLogin({
       title:'チーム専用ページ',
       authenticate:()=>verifyPasskey(true)
     });
     if(choice.method==='passkey')return true;
+    if(choice.method==='password')enteredPassword=choice.password;
     if(choice.method==='cancel'){
       if(history.length>1){history.back()}else{location.replace('./')}
       return false;
     }
   }
-  const p=prompt('パスワードを入力してください。');
+  const p=enteredPassword===undefined?prompt('パスワードを入力してください。'):enteredPassword;
   if(p===null){
     if(history.length>1){history.back()}else{location.replace('./')}
     return false;
