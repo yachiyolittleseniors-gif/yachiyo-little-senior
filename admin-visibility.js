@@ -10,7 +10,7 @@
  let currentSettings=null;
  const GRANT_KEY='yachiyoAdminRevealUntil';
  function grantUntil(){try{return Number(localStorage.getItem(GRANT_KEY))||0}catch(e){return 0}}
- const selectors=['.unified-admin-toggle','.manage-btn','#manageBtn','#adminBtn','#adminToggle','#staffToggle','#heroAdminToggle','#cupAdminBtn','#densukeToggleBtn'];
+ const selectors=['.unified-admin-toggle','.manage-btn','#manageBtn','#adminBtn','#adminToggle','#staffToggle','#heroAdminToggle','#cupAdminBtn','#densukeToggleBtn','#contactAdminBtn'];
  const HIDE_CLASS='admin-visibility-disabled';
  const style=document.createElement('style');
  style.id='admin-visibility-runtime-style';
@@ -61,7 +61,7 @@
  };
  ['pointerdown','pointerup','touchstart','touchend','click','dblclick'].forEach(type=>document.addEventListener(type,e=>{
    if(!blocked())return; const t=e.target;
-   if(t&&((t.closest&&t.closest('footer'))||(t.closest&&t.closest('.unified-admin-reveal'))||(t.closest&&t.closest(selectors.join(','))))){e.preventDefault();e.stopImmediatePropagation();clearAdminState()}
+   if(t?.closest?.('.unified-admin-reveal,.restored-footer-copy,'+selectors.join(','))){e.preventDefault();e.stopImmediatePropagation();clearAdminState()}
  },true));
  // Some pages recreate their admin button after load. Keep only the button hidden, without observing/mutating the page tree.
  setTimeout(()=>{if(blocked())clearAdminState()},800);
