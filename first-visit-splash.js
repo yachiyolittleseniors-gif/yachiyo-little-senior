@@ -2,6 +2,7 @@
 const cover=document.getElementById('firstVisitSplash');
 if(!cover)return;
 cover.hidden=false;
+const openedAt=performance.now();
 let closed=false,stopMotion=()=>{};
 function remove(){if(closed)return;closed=true;stopMotion();cover.remove();}
 function wait(ms){return new Promise(resolve=>setTimeout(resolve,ms));}
@@ -221,11 +222,11 @@ function mobileMotion(){
         const draw=variant==='bounce'?drawBounce:drawSpin;
         draw(0);source.style.opacity='0';
         observer=new ResizeObserver(resize);observer.observe(cover);
-        const duration=variant==='bounce'?3100:4000;
-        const started=performance.now();
+        const timelineDuration=variant==='bounce'?3100:4000;
+        const duration=1400;
         function tick(now){
           if(finished||closed)return;
-          try{const elapsed=now-started;draw(Math.min(elapsed,duration));if(elapsed>=duration){finish();return;}raf=requestAnimationFrame(tick);}catch(_){finish();}
+          try{const elapsed=now-openedAt;draw(Math.min(elapsed/duration,1)*timelineDuration);if(elapsed>=duration){finish();return;}raf=requestAnimationFrame(tick);}catch(_){finish();}
         }
         raf=requestAnimationFrame(tick);
       }catch(_){finish();}
@@ -233,13 +234,10 @@ function mobileMotion(){
     if(source.complete)begin();else{source.addEventListener('load',begin,{once:true});source.addEventListener('error',finish,{once:true});}
   });
 }
-function start(){
-  const imageReady=window.__yachiyoHeroReady||Promise.resolve(false);
-  Promise.all([mobileMotion(),Promise.race([imageReady.catch(()=>false),wait(8000)])])
-    .then(()=>{if(closed)return;cover.classList.add('is-leaving');setTimeout(remove,350);});
-}
-if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',start,{once:true});else start();
+// The cover is already present: measure the entire opening from its reveal,
+// not DOMContentLoaded or image loading. Motion 1400ms, hold 100ms, fade 300ms.
+setTimeout(()=>{if(closed)return;stopMotion();cover.classList.add('is-leaving');},1500);
+setTimeout(remove,1800);
+mobileMotion();
 window.addEventListener('pagehide',remove,{once:true});
-// A stalled frame or failed image must never leave the opening covering the site.
-setTimeout(remove,9000);
 })();
