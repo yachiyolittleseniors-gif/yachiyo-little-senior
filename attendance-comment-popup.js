@@ -34,11 +34,9 @@
       var row = memberRow.getBoundingClientRect();
       var head = board.querySelector('thead');
       var headHeight = head ? head.getBoundingClientRect().height : 0;
-      var visible = row.bottom > bounds.top + headHeight && row.top < bounds.bottom;
-      overlay.style.visibility = visible ? 'visible' : 'hidden';
-      overlay.style.pointerEvents = visible ? 'auto' : 'none';
+      var anchor = Math.max(bounds.top + headHeight, Math.min(row.bottom, bounds.bottom));
       overlay.style.left = (bounds.left - outer.left) + 'px';
-      overlay.style.top = (row.bottom - outer.top) + 'px';
+      overlay.style.top = (anchor - outer.top) + 'px';
       overlay.style.width = Math.min(board.clientWidth, 640) + 'px';
     }
     window.render = function () {
