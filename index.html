@@ -53,14 +53,10 @@ html{min-height:100%;background:#f4f3ef}
   .mobile-reference-news-title{display:none!important}
 }
 </style>
-<script id="home-reload-scroll-reset">
+<script id="home-scroll-restoration">
 (function(){
-  if('scrollRestoration' in history)history.scrollRestoration='manual';
-  window.addEventListener('pageshow',function(){
-    window.scrollTo(0,0);
-    requestAnimationFrame(function(){window.scrollTo(0,0)});
-    setTimeout(function(){window.scrollTo(0,0)},120);
-  });
+  // Let the browser restore the reading position on reload and history navigation.
+  if('scrollRestoration' in history)history.scrollRestoration='auto';
 })();
 </script>
 <script id="seniorcup-visibility-prepaint">
