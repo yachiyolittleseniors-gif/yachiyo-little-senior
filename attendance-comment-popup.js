@@ -9,6 +9,7 @@
     var home = document.createComment('attendance editor home');
     editor.parentNode.insertBefore(home, editor);
     var container = board.parentNode;
+    var originalPadding = container.style.paddingBottom;
     container.style.position = 'relative';
     var overlay = document.createElement('div');
     overlay.id = 'member-comment-overlay';
@@ -66,10 +67,13 @@
         }
         previousMember = selected.dataset.selectMember;
         positionOverlay();
+        // Leave scroll room below the page content without moving the comment list.
+        container.style.paddingBottom = Math.ceil(overlay.getBoundingClientRect().height) + 'px';
       } else {
         previousMember = '';
         editor.style.display = 'none';
         overlay.style.display = 'none';
+        container.style.paddingBottom = originalPadding;
       }
       return result;
     };
