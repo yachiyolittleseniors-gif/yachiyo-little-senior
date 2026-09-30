@@ -19,10 +19,62 @@ function init(){
   function familyKey(v){return String(v||'').normalize('NFKC').trim().split(/[\s　（(]/)[0].replace(/[父母]$/,'');}
   function displayName(v){var s=String(v||'').replace(/[父母]$/,'').trim();return s.replace(/^([^\s　（(]+)[\s　]+(.+)$/,function(_,a,b){return a+'（'+b.replace(/[（）()]/g,'')+'）';});}
   function disambiguateDuplicateFamilies(groups){Object.keys(groups).forEach(function(g){var items=Array.from(groups[g].values()),byFamily=new Map();items.forEach(function(item){var kana=String(item.kana||'').normalize('NFKC').replace(/[父母]$/,'').trim(),raw=String(item.rawName||item.name||'').replace(/[父母]$/,'').trim(),fam=String(item.family||familyKey(raw));var key=fam;if(!key&&kana)key=kana.split(/[\s　]/)[0];var arr=byFamily.get(key)||[];arr.push(item);byFamily.set(key,arr);});byFamily.forEach(function(arr,fam){if(arr.length<2)return;arr.forEach(function(item,index){var raw=String(item.rawName||item.name||'').replace(/[父母]$/,'').trim(),kana=String(item.kana||'').normalize('NFKC').replace(/[父母]$/,'').trim(),rest=raw.replace(String(fam),'').replace(/[（）()\s　]/g,'');if(!rest){var parts=kana.split(/[\s　]+/).filter(Boolean);rest=parts.length>1?parts.slice(1).join(''):'';}if(!rest)rest=String(index+1);item.name=String(fam)+'（'+rest+'）';});});});}
+  function collectFamilies(members){
+    var groups={'1':new Map(),'2':new Map(),'3':new Map()};
+    members.forEach(function(mem){var g=String(mem?.grades?.[0]||mem?.grade||'');if(!groups[g])return;var raw=String(mem?.name||'').replace(/[父母]$/,'').trim(),n=displayName(raw),k=String(mem?.kana||n).replace(/[父母]$/,'').trim().normalize('NFKC');if(!n)return;var item=groups[g].get(k);if(!item){item={name:n,rawName:raw,family:familyKey(raw),kana:k,grade:g,memberIds:[]};groups[g].set(k,item);}if(mem.id!=null)item.memberIds.push(String(mem.id));});
+    return groups;
+  }
+  function isExcluded(item,excluded){return excluded.some(function(ex){
+    if(item.memberIds.length&&ex.memberIds.length)return item.memberIds.some(function(id){return ex.memberIds.includes(id);});
+    return item.grade===ex.grade&&item.kana===ex.kana;
+  });}
+  var settingsApi='/.netlify/functions/site-data?section=duty-roster-settings',excluded=[],families=[],settingsReady=false,settingsDirty=false,settingsLoading=null;
+  var fields=document.createElement('div');fields.id='dutyExclusionFields';
+  fields.innerHTML='<label for="dutyExcludedFamily">当番表から外す家庭</label><p>休部中などの家庭を選択してください。父母とも対象から外れ、解除するまで次回以降も適用されます。</p><div class="duty-exclusion-entry"><select id="dutyExcludedFamily" disabled><option value="">読み込み中…</option></select><button type="button" id="dutyExclusionAdd" disabled>追加</button></div><div id="dutyExclusionList"></div><button type="button" id="dutyExclusionSave" disabled>除外設定を保存</button><p id="dutyExclusionStatus" role="status" aria-live="polite"></p>';
+  create.parentNode.insertBefore(fields,create);
+  var select=fields.querySelector('select'),addEx=fields.querySelector('#dutyExclusionAdd'),saveEx=fields.querySelector('#dutyExclusionSave'),exList=fields.querySelector('#dutyExclusionList'),exStatus=fields.querySelector('#dutyExclusionStatus');
+  function invalidateDraft(){preview.replaceChildren();preview.hidden=true;settingsDirty=true;exStatus.textContent='未保存です。保存後に当番表（案）を作成してください。';}
+  function paintExclusions(){
+    select.replaceChildren(new Option('家庭を選択',''));
+    families.forEach(function(item,index){if(!isExcluded(item,excluded))select.add(new Option(item.grade+'年 '+item.rawName+' 家庭',String(index)));});
+    exList.replaceChildren();
+    excluded.forEach(function(item,index){var row=document.createElement('div'),name=document.createElement('span'),remove=document.createElement('button');row.className='duty-exclusion-item';name.textContent=item.grade+'年 '+item.name+' 家庭';remove.type='button';remove.textContent='解除';remove.setAttribute('aria-label',name.textContent+'の除外を解除');remove.onclick=function(){excluded.splice(index,1);invalidateDraft();paintExclusions();};row.append(name,remove);exList.append(row);});
+    if(!excluded.length)exList.textContent='除外する家庭はありません。';
+    select.disabled=addEx.disabled=!settingsReady;saveEx.disabled=!settingsReady||!settingsDirty;
+  }
+  function accessHeaders(){var access=sessionStorage.getItem('yachiyoAttendancePass')||'';return access?{'x-access-password':access}:{};}
+  async function loadExclusions(){
+    if(settingsLoading)return settingsLoading;
+    settingsLoading=(async function(){
+      await window.boardAccessReady;
+      var responses=await Promise.all([fetch(settingsApi,{cache:'no-store',credentials:'same-origin',headers:accessHeaders()}),fetch('/.netlify/functions/attendance-data',{cache:'no-store',credentials:'same-origin',headers:accessHeaders()})]);
+      if(responses.some(function(r){return !r.ok;}))throw new Error('除外設定を取得できませんでした。');
+      var data=await responses[0].json(),att=await responses[1].json(),groups=collectFamilies(att?.data?.members||[]);
+      excluded=Array.isArray(data?.data?.excludedFamilies)?data.data.excludedFamilies:[];
+      families=['3','2','1'].flatMap(function(g){return Array.from(groups[g].values()).sort(function(a,b){return a.kana.localeCompare(b.kana,'ja');});});
+      settingsReady=true;paintExclusions();exStatus.textContent='';
+    })();
+    try{await settingsLoading;}finally{settingsLoading=null;}
+  }
+  async function saveExclusions(){
+    if(!settingsReady)throw new Error('除外設定の読み込みが完了していません。ページを再読み込みしてください。');
+    if(!settingsDirty)return;
+    var password=document.getElementById('densukeAdminPanel')?.dataset.adminPassword||'';
+    if(!password)throw new Error('管理画面を開き直してください。');
+    fields.querySelectorAll('button,select').forEach(function(el){el.disabled=true;});
+    try{var response=await fetch(settingsApi,{method:'POST',credentials:'same-origin',headers:{'content-type':'application/json','x-admin-password':password},body:JSON.stringify({data:{excludedFamilies:excluded}})}),body=await response.json();if(!response.ok)throw new Error(body.error||'除外設定を保存できませんでした。');settingsDirty=false;exStatus.textContent='保存しました。次回以降の自動作成にも適用されます。';}
+    finally{paintExclusions();}
+  }
+  addEx.onclick=function(){if(select.value==='')return;var item=families[Number(select.value)];if(!item||isExcluded(item,excluded))return;excluded.push({grade:item.grade,name:item.rawName,kana:item.kana,memberIds:item.memberIds.slice()});invalidateDraft();paintExclusions();};
+  saveEx.onclick=async function(){create.disabled=true;try{await saveExclusions();}catch(err){exStatus.textContent=err.message;}finally{create.disabled=false;}};
+  loadExclusions().catch(function(){exStatus.textContent='除外設定を読み込めませんでした。ページを再読み込みしてください。';});
   function holidays(year){var s=new Set(),add=(m,d)=>s.add(year+'-'+String(m).padStart(2,'0')+'-'+String(d).padStart(2,'0')),nth=(m,n)=>1+((8-new Date(year,m-1,1).getDay())%7)+(n-1)*7;add(1,1);add(1,nth(1,2));add(2,11);add(2,23);add(3,Math.floor(20.8431+.242194*(year-1980)-Math.floor((year-1980)/4)));add(4,29);add(5,3);add(5,4);add(5,5);add(7,nth(7,3));add(8,11);add(9,nth(9,3));add(9,Math.floor(23.2488+.242194*(year-1980)-Math.floor((year-1980)/4)));add(10,nth(10,2));add(11,3);add(11,23);return s;}
   create.onclick=async function(e){
     e.preventDefault();create.disabled=true;create.textContent='作成中…';preview.hidden=false;preview.innerHTML='<div class="duty-simple-status">名簿・スケジュールを確認しています…</div>';
     try{
+      if(!settingsReady)await loadExclusions();
+      await saveExclusions();
+      fields.querySelectorAll('button,select').forEach(function(el){el.disabled=true;});
       var headers={},access=sessionStorage.getItem('yachiyoAttendancePass')||'';if(access)headers['x-access-password']=access;
       var results=await Promise.all([
         fetch('/.netlify/functions/attendance-data',{cache:'no-store',credentials:'same-origin',headers:headers}),
@@ -31,18 +83,18 @@ function init(){
       ]);
       if(results.some(r=>!r.ok))throw new Error('必要なデータを取得できませんでした。');
       var att=await results[0].json(),pj=await results[1].json(),sj=await results[2].json(),members=att?.data?.members||[],players=Array.isArray(pj?.data)?pj.data:[],schedule=Array.isArray(sj?.data)?sj.data:[];
-      var groups={'1':new Map(),'2':new Map(),'3':new Map()},pc={'1':0,'2':0,'3':0};
-      members.forEach(function(mem){var g=String(mem?.grades?.[0]||mem?.grade||'');if(!groups[g])return;var raw=String(mem?.name||'').replace(/[父母]$/,'').trim(),family=familyKey(raw),n=displayName(raw),k=String(mem?.kana||n).replace(/[父母]$/,'').trim().normalize('NFKC');if(n&&!groups[g].has(k))groups[g].set(k,{name:n,rawName:raw,family:family,kana:k});});
+      var groups=collectFamilies(members),pc={'1':0,'2':0,'3':0};
       players.forEach(function(p){var m=String(p?.grade||'').match(/^([123])年/);if(m)pc[m[1]]++;});
       disambiguateDuplicateFamilies(groups);
       var y=target.getFullYear(),mo=target.getMonth()+1,active=mo>=6?['2','1']:['3','2','1'],bad=active.filter(g=>groups[g].size!==pc[g]);
       if(bad.length){preview.innerHTML='<div class="duty-simple-error"><b>人数が一致しません</b><br>'+bad.map(g=>g+'年：選手'+pc[g]+'名／家庭'+groups[g].size+'家庭').join('<br>')+'</div>';return;}
       // 保護者出欠の登録名を正として使用。末尾の「父／母」だけ外し、名前は加工しない。
       var lists={};active.forEach(function(g){
-        lists[g]=Array.from(groups[g].values()).map(function(item){
+        lists[g]=Array.from(groups[g].values()).filter(function(item){return !isExcluded(item,excluded);}).map(function(item){
           return Object.assign({},item,{name:String(item.rawName||item.name||'').replace(/[父母]$/,'').trim()});
         }).sort(function(a,b){return a.kana.localeCompare(b.kana,'ja')});
       });
+      var empty=active.filter(function(g){return !lists[g].length;});if(empty.length)throw new Error(empty.join('・')+'年の当番対象が0家庭です。除外設定を確認してください。');
       var startAfter={'2':'筒井','1':'小池'},pos={};
       function key(v){return String(v||'').replace(/[（）()\s　]/g,'');}
       active.forEach(function(g){var i=lists[g].findIndex(x=>key(x.name).startsWith(key(startAfter[g]))||key(startAfter[g]).startsWith(key(x.name)));pos[g]=i>=0?(i+1)%lists[g].length:0;});
@@ -97,13 +149,13 @@ function init(){
         if(!confirm(y+'年'+mo+'月の当番表をこの案で確定・登録しますか？'))return;
         confirmBtn.disabled=true;confirmBtn.textContent='登録中…';
         try{
-          var ok=await window.confirmGeneratedDutyRoster({name:'当番表_'+y+'年'+String(mo).padStart(2,'0')+'月.png',data:src,table:{year:y,month:mo,grades:active.slice(),activityDays:Array.from(satoyama),rows:rows}});
+          var ok=await window.confirmGeneratedDutyRoster({name:'当番表_'+y+'年'+String(mo).padStart(2,'0')+'月.png',data:src,table:{year:y,month:mo,grades:active.map(Number),activityDays:Array.from(satoyama),rows:rows}});
           if(ok){confirmBtn.textContent='確定済み';confirmBtn.disabled=true;}
           else{confirmBtn.textContent='この案で確定';confirmBtn.disabled=false;}
         }catch(err){confirmBtn.textContent='この案で確定';confirmBtn.disabled=false;alert(err?.message||'当番表を登録できませんでした。');}
-      };confirmBtn.style.setProperty('color','#d4af37','important');confirmBtn.style.setProperty('-webkit-text-fill-color','#d4af37','important');confirmBtn.style.fontWeight='900';actions.append(dl,detail,confirmBtn);var detailBox=document.createElement('div');detailBox.className='duty-simple-detail';detailBox.hidden=true;detailBox.textContent='選手数と家庭数：一致　／　対象日：土日・祝日・スケジュール登録日　／　黄色：里山活動日';preview.append(title,img,actions,detailBox);
+      };confirmBtn.style.setProperty('color','#d4af37','important');confirmBtn.style.setProperty('-webkit-text-fill-color','#d4af37','important');confirmBtn.style.fontWeight='900';actions.append(dl,detail,confirmBtn);var detailBox=document.createElement('div');detailBox.className='duty-simple-detail';detailBox.hidden=true;detailBox.textContent='当番対象：'+active.map(function(g){return g+'年 '+lists[g].length+'家庭（除外 '+(groups[g].size-lists[g].length)+'家庭）';}).join('／')+'　／　選手数と家庭数：一致　／　対象日：土日・祝日・スケジュール登録日　／　黄色：里山活動日';preview.append(title,img,actions,detailBox);
     }catch(err){preview.innerHTML='<div class="duty-simple-error"><b>作成できませんでした</b><br>'+String(err?.message||err)+'</div>';}
-    finally{create.disabled=false;create.textContent='当番表（案）を作成';}
+    finally{create.disabled=false;create.textContent='当番表（案）を作成';paintExclusions();}
   };
 }
 

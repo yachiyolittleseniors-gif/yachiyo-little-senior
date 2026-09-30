@@ -57,6 +57,7 @@ const allowed = new Set([
   "news",
   "rules",
   "duty-roster",
+  "duty-roster-settings",
   "staff",
   "team-interview",
   "team-movie",
@@ -954,6 +955,7 @@ export default async (request, context) => {
       if (
         section === "rules" ||
         section === "duty-roster" ||
+        section === "duty-roster-settings" ||
         section === "referee-documents" ||
         section === "board-meeting-documents" ||
         section === "board-meeting-schedule" ||
@@ -1910,6 +1912,18 @@ export default async (request, context) => {
 
     if (!adminAuth.ok) return adminAuthError(json, adminAuth);
 
+    if (section === "duty-roster-settings") {
+      const items=body?.data?.excludedFamilies;
+      if(!Array.isArray(items)||items.length>300||items.some(item=>
+        !item||!['1','2','3'].includes(item.grade)||typeof item.name!=='string'||!item.name.trim()||item.name.length>100||
+        typeof item.kana!=='string'||!item.kana.trim()||item.kana.length>150||
+        !Array.isArray(item.memberIds)||item.memberIds.length>10||item.memberIds.some(id=>typeof id!=='string'||!id||id.length>150)
+      ))return json({error:"除外する家庭を確認してください。"},400);
+      const data={excludedFamilies:items.map(item=>({grade:item.grade,name:item.name,kana:item.kana,memberIds:[...new Set(item.memberIds)]})),updatedAt:new Date().toISOString()};
+      await store.setJSON(key,data);
+      return json({ok:true,data});
+    }
+
     if (section === "seniorcup-registration") {
       if (typeof body?.data?.closed !== "boolean") return json({ error: "受付状態を確認してください。" }, 400);
       const data = { closed: body.data.closed, updatedAt: new Date().toISOString() };
@@ -2418,3 +2432,4 @@ export default async (request, context) => {
     }, 500);
   }
 };
+
