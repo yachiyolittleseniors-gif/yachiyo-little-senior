@@ -32,6 +32,12 @@ window.boardAccessReady=(async function requireBoardPassword(){
       credentials:'same-origin',
       body:JSON.stringify({action:'verifyAccessPassword',password:value})
     });
+    if(response.status===429){
+      const result=await response.json().catch(()=>({}));
+      const error=new Error(result.error||'ログインの試行回数が多いため、一時的に制限しています。しばらく待ってからお試しください。');
+      error.rateLimited=true;
+      throw error;
+    }
     if(!response.ok)return false;
     const result=await response.json().catch(()=>({}));
     saveAccess(result.token||value);
@@ -89,7 +95,7 @@ window.boardAccessReady=(async function requireBoardPassword(){
   try{
     if(await verify(p))return true;
   }catch(e){
-    alert('パスワードを確認できませんでした。通信状況を確認してください。');
+    alert(e.rateLimited?e.message:'パスワードを確認できませんでした。通信状況を確認してください。');
     location.replace('./');
     return false;
   }

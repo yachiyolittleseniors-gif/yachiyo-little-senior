@@ -22,9 +22,10 @@ export default async (request, context) => {
     const auth = await verifyAdminPassword({ store, request, context,
       expectedPassword: process.env.ADMIN_PASSWORD || "", requireSession: false });
     if (!auth.ok) return adminAuthError(json, auth);
-    const session = await createAdminSession();
+    const session = await createAdminSession(request);
     return json({ ok: true, expiresAt: session.expiresAt }, 200, { "set-cookie": adminSessionCookie(session.token) });
   } catch {
     return json({ error: "管理者認証を確認できませんでした。" }, 503);
   }
 };
+

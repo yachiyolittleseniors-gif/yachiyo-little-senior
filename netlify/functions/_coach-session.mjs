@@ -1,3 +1,5 @@
+import { accessSessionSignature } from "./_access-state.mjs";
+
 const COACH_SESSION_COOKIE = "yls_coach_session";
 const COACH_SESSION_SECONDS = 60 * 60 * 4;
 
@@ -12,46 +14,22 @@ function safeEqual(a, b) {
   return difference === 0;
 }
 
-function base64Url(bytes) {
-  return btoa(String.fromCharCode(...bytes))
-    .replace(/\+/g, "-")
-    .replace(/\//g, "_")
-    .replace(/=+$/g, "");
+async function signCoachSession(value, options) {
+  return accessSessionSignature("coach", value, options);
 }
 
-async function signCoachSession(value) {
-  const secret =
-    process.env.COACH_SESSION_SECRET ||
-    process.env.ADMIN_PASSWORD ||
-    process.env.COACH_ACCESS_PASSWORD;
-  if (!secret) throw new Error("Coach session signing secret is not configured");
-  const key = await crypto.subtle.importKey(
-    "raw",
-    new TextEncoder().encode(secret),
-    { name: "HMAC", hash: "SHA-256" },
-    false,
-    ["sign"]
-  );
-  const signature = await crypto.subtle.sign(
-    "HMAC",
-    key,
-    new TextEncoder().encode(`coach:${value}`)
-  );
-  return base64Url(new Uint8Array(signature));
-}
-
-export async function createCoachSessionToken() {
+export async function createCoachSessionToken(options) {
   const expiresAt = Math.floor(Date.now() / 1000) + COACH_SESSION_SECONDS;
   const value = String(expiresAt);
-  return `${value}.${await signCoachSession(value)}`;
+  return `${value}.${await signCoachSession(value, options)}`;
 }
 
-export async function coachSessionTokenIsValid(token) {
+export async function coachSessionTokenIsValid(token, options) {
   const value = String(token || "");
   if (!/^\d{10,12}\.[A-Za-z0-9_-]{43}$/.test(value)) return false;
   const [expiresAt, signature] = value.split(".");
   if (Number(expiresAt) <= Math.floor(Date.now() / 1000)) return false;
-  try { return safeEqual(signature, await signCoachSession(expiresAt)); }
+  try { return safeEqual(signature, await signCoachSession(expiresAt, options)); }
   catch { return false; }
 }
 
@@ -65,7 +43,7 @@ function getCookie(request, name) {
 }
 
 export async function coachSessionIsValid(request) {
-  return coachSessionTokenIsValid(getCookie(request, COACH_SESSION_COOKIE));
+  return coachSessionTokenIsValid(getCookie(request, COACH_SESSION_COOKIE), { request });
 }
 
 export function coachSessionCookie(token) {

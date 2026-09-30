@@ -1,8 +1,9 @@
+import { verifyAccessPassword } from "./_access-password.mjs";
+import { accessRateLimitResponse } from "./_access-rate-limit.mjs";
 import { getStore } from "@netlify/blobs";
 import {
   coachSessionCookie,
   coachSessionIsValid,
-  coachSessionTokenIsValid,
   createCoachSessionToken,
 } from "./_coach-session.mjs";
 import {
@@ -18,9 +19,6 @@ const STAFF_KEY = "content/staff.json";
 const PARENT_ATTENDANCE_KEY = "content/attendance.json";
 const MEMBER_STATE_PREFIX = "coach-attendance/member-state/";
 const DENSUKE_URL = "https://densuke.biz/list?cd=ZhxJNW9dPNGVtm7c";
-const DEFAULT_COACH_ACCESS_SALT = "yachiyo-coach-access-v1";
-const DEFAULT_COACH_ACCESS_HASH =
-  "937e76fe820379b5e095356a7dae5cbd223b5c9af6dd444e48a3f3b34bd4f8eb";
 
 const MIGRATED_DATA = { events: [], members: [], answers: {} };
 const MIGRATED_COMMENTS = [];
@@ -46,47 +44,15 @@ async function hashAccessPassword(password, salt) {
   return bytesToHex(new Uint8Array(digest));
 }
 
-function safeEqual(a, b) {
-  const left = String(a || "");
-  const right = String(b || "");
-  let difference = left.length ^ right.length;
-  const length = Math.max(left.length, right.length);
-
-  for (let i = 0; i < length; i++) {
-    difference |=
-      (left.charCodeAt(i) || 0) ^
-      (right.charCodeAt(i) || 0);
-  }
-
-  return difference === 0;
+async function coachAccessPasswordIsValid(store, enteredPassword, request, context) {
+  return verifyAccessPassword({ role: "coach", store, request, context, password: enteredPassword });
 }
 
-async function coachAccessPasswordIsValid(store, enteredPassword) {
-  const entered = String(enteredPassword || "");
-  if (await coachSessionTokenIsValid(entered)) return true;
-  if (!entered || entered.length > 128) return false;
-
-  let saved = null;
-  try {
-    saved = await store.get(COACH_ACCESS_CONFIG_KEY, {
-      type: "json",
-      consistency: "strong",
-    });
-  } catch {
-    saved = null;
-  }
-
-  const salt = saved?.salt || DEFAULT_COACH_ACCESS_SALT;
-  const expectedHash = saved?.hash || DEFAULT_COACH_ACCESS_HASH;
-  const enteredHash = await hashAccessPassword(entered, salt);
-  return safeEqual(enteredHash, expectedHash);
-}
-
-async function coachAccessOK(store, request) {
+async function coachAccessOK(store, request, context) {
   if (await coachSessionIsValid(request)) return true;
   return coachAccessPasswordIsValid(
     store,
-    request.headers.get("x-coach-password") || ""
+    request.headers.get("x-coach-password") || "", request, context
   );
 }
 
@@ -495,7 +461,7 @@ export default async (request, context) => {
 
   try {
     if (request.method === "GET") {
-      if (!(await coachAccessOK(store, request))) {
+      if (!(await coachAccessOK(store, request, context))) {
         return json({ error: "Unauthorized" }, 401);
       }
 
@@ -530,9 +496,9 @@ export default async (request, context) => {
     const action = body.action || "";
 
     if (action === "verifyCoachPassword") {
-      const valid = await coachAccessPasswordIsValid(store, body.password);
+      const valid = await coachAccessPasswordIsValid(store, body.password, request, context);
       if (!valid) return json({ ok: false }, 401);
-      const token = await createCoachSessionToken();
+      const token = await createCoachSessionToken({ store, request });
       return json(
         { ok: true, token },
         200,
@@ -558,7 +524,7 @@ export default async (request, context) => {
 
     if (
       (action === "answer" || action === "comment" || action === "deleteComment") &&
-      !(await coachAccessOK(store, request))
+      !(await coachAccessOK(store, request, context))
     ) {
       return json({ error: "Unauthorized" }, 401);
     }
@@ -579,6 +545,7 @@ export default async (request, context) => {
       const salt = crypto.randomUUID();
       const hash = await hashAccessPassword(password, salt);
       await store.setJSON(COACH_ACCESS_CONFIG_KEY, {
+        authVersion: crypto.randomUUID(),
         salt,
         hash,
         updatedAt: new Date().toISOString(),
@@ -717,6 +684,8 @@ export default async (request, context) => {
 
     return json({ error: "Unknown action" }, 400);
   } catch (error) {
+    const limited = accessRateLimitResponse(error);
+    if (limited) return limited;
     console.error("coach-attendance-data error:", error);
     return json({ error: "Server error" }, 500);
   }

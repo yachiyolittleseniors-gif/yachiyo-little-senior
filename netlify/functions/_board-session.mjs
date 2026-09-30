@@ -1,3 +1,5 @@
+import { accessSessionSignature } from "./_access-state.mjs";
+
 const BOARD_SESSION_COOKIE = "yls_board_session";
 const BOARD_SESSION_SECONDS = 60 * 60 * 4;
 
@@ -12,46 +14,22 @@ function safeEqual(a, b) {
   return difference === 0;
 }
 
-function base64Url(bytes) {
-  return btoa(String.fromCharCode(...bytes))
-    .replace(/\+/g, "-")
-    .replace(/\//g, "_")
-    .replace(/=+$/g, "");
+async function signBoardSession(value, options) {
+  return accessSessionSignature("board", value, options);
 }
 
-async function signBoardSession(value) {
-  const secret =
-    process.env.BOARD_SESSION_SECRET ||
-    process.env.ADMIN_PASSWORD ||
-    process.env.ACCESS_PASSWORD;
-  if (!secret) throw new Error("Board session signing secret is not configured");
-  const key = await crypto.subtle.importKey(
-    "raw",
-    new TextEncoder().encode(secret),
-    { name: "HMAC", hash: "SHA-256" },
-    false,
-    ["sign"]
-  );
-  const signature = await crypto.subtle.sign(
-    "HMAC",
-    key,
-    new TextEncoder().encode(value)
-  );
-  return base64Url(new Uint8Array(signature));
-}
-
-export async function createBoardSessionToken() {
+export async function createBoardSessionToken(options) {
   const expiresAt = Math.floor(Date.now() / 1000) + BOARD_SESSION_SECONDS;
   const value = String(expiresAt);
-  return `${value}.${await signBoardSession(value)}`;
+  return `${value}.${await signBoardSession(value, options)}`;
 }
 
-export async function boardSessionTokenIsValid(token) {
+export async function boardSessionTokenIsValid(token, options) {
   const value = String(token || "");
   if (!/^\d{10,12}\.[A-Za-z0-9_-]{43}$/.test(value)) return false;
   const [expiresAt, signature] = value.split(".");
   if (Number(expiresAt) <= Math.floor(Date.now() / 1000)) return false;
-  try { return safeEqual(signature, await signBoardSession(expiresAt)); }
+  try { return safeEqual(signature, await signBoardSession(expiresAt, options)); }
   catch { return false; }
 }
 
@@ -65,7 +43,7 @@ function getCookie(request, name) {
 }
 
 export async function boardSessionIsValid(request) {
-  return boardSessionTokenIsValid(getCookie(request, BOARD_SESSION_COOKIE));
+  return boardSessionTokenIsValid(getCookie(request, BOARD_SESSION_COOKIE), { request });
 }
 
 export function boardSessionCookie(token) {

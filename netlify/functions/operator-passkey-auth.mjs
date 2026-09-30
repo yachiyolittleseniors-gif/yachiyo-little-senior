@@ -1,3 +1,6 @@
+import { verifyAccessPassword } from "./_access-password.mjs";
+import { accessRateLimitResponse } from "./_access-rate-limit.mjs";
+import { accessVersion } from "./_access-state.mjs";
 import { getStore } from "@netlify/blobs";
 import {
   generateAuthenticationOptions,
@@ -8,14 +11,12 @@ import {
 import {
   coachSessionCookie,
   coachSessionIsValid,
-  coachSessionTokenIsValid,
   createCoachSessionToken,
 } from "./_coach-session.mjs";
 
 const STORE = "yachiyo-public-site";
 const CREDENTIALS_KEY = "auth/operator-passkeys.json";
 const CHALLENGE_PREFIX = "auth/operator-passkey-challenge/";
-const ACCESS_CONFIG_KEY = "content/coach-attendance-access.json";
 const CHALLENGE_LIFETIME = 5 * 60 * 1000;
 // Capacity for 1,000 members with up to five passkeys each.
 const MAX_CREDENTIALS = 5000;
@@ -26,35 +27,9 @@ function json(data, status = 200, headers = {}) {
     headers: { "content-type": "application/json; charset=utf-8", "cache-control": "no-store", "x-passkey-capacity": String(MAX_CREDENTIALS), ...headers },
   });
 }
-function safeEqual(a, b) {
-  const left = String(a || "");
-  const right = String(b || "");
-  let difference = left.length ^ right.length;
-  const length = Math.max(left.length, right.length);
-  for (let index = 0; index < length; index += 1) {
-    difference |= (left.charCodeAt(index) || 0) ^ (right.charCodeAt(index) || 0);
-  }
-  return difference === 0;
-}
-function bytesToHex(bytes) {
-  return Array.from(bytes, byte => byte.toString(16).padStart(2, "0")).join("");
-}
-async function hashAccessPassword(password, salt) {
-  const input = new TextEncoder().encode(`${salt}:${password}`);
-  const digest = await crypto.subtle.digest("SHA-256", input);
-  return bytesToHex(new Uint8Array(digest));
-}
-async function coachAccessIsValid(store, request) {
+async function coachAccessIsValid(store, request, context) {
   if (await coachSessionIsValid(request)) return true;
-  const entered = String(request.headers.get("x-coach-password") || "");
-  if (await coachSessionTokenIsValid(entered)) return true;
-  if (!entered || entered.length > 128) return false;
-  const saved = await store.get(ACCESS_CONFIG_KEY, { type: "json", consistency: "strong" });
-  if (saved?.salt && saved?.hash) {
-    return safeEqual(await hashAccessPassword(entered, saved.salt), saved.hash);
-  }
-  if (process.env.COACH_ACCESS_PASSWORD) return safeEqual(entered, process.env.COACH_ACCESS_PASSWORD);
-  return false;
+  return verifyAccessPassword({ role: "coach", store, request, context, password: request.headers.get("x-coach-password"), legacyFallback: false });
 }
 function base64Url(bytes) {
   return Buffer.from(bytes).toString("base64url");
@@ -73,29 +48,33 @@ function relyingParty(request) {
   const origin = configuredOrigin || requestUrl.origin;
   return { origin, rpID: process.env.PASSKEY_RP_ID || new URL(origin).hostname };
 }
-async function loadCredentials(store) {
+async function loadCredentials(store, request) {
   const saved = await store.get(CREDENTIALS_KEY, { type: "json", consistency: "strong" });
+  const version = await accessVersion("coach", { store, request });
+  if (String(saved?.authVersion || "") !== version) return [];
   return Array.isArray(saved?.credentials) ? saved.credentials : [];
 }
-async function saveChallenge(store, type, options, rp) {
+async function saveChallenge(store, type, options, rp, request) {
   const ceremonyID = randomID();
   await store.setJSON(`${CHALLENGE_PREFIX}${ceremonyID}.json`, {
+    authVersion: await accessVersion("coach", { store, request }),
     type, challenge: options.challenge, origin: rp.origin, rpID: rp.rpID,
     expiresAt: Date.now() + CHALLENGE_LIFETIME,
   });
   return ceremonyID;
 }
-async function takeChallenge(store, ceremonyID, expectedType) {
+async function takeChallenge(store, ceremonyID, expectedType, request) {
   const cleanID = String(ceremonyID || "");
   if (!/^[A-Za-z0-9_-]{20,80}$/.test(cleanID)) return null;
   const key = `${CHALLENGE_PREFIX}${cleanID}.json`;
   const challenge = await store.get(key, { type: "json", consistency: "strong" });
   await store.delete(key).catch(() => {});
   if (!challenge || challenge.type !== expectedType || Number(challenge.expiresAt) < Date.now()) return null;
+  if (String(challenge.authVersion || "") !== await accessVersion("coach", { store, request })) return null;
   return challenge;
 }
 
-export default async request => {
+export default async (request, context) => {
   if (request.method !== "POST") return json({ error: "method not allowed" }, 405);
   const origin = request.headers.get("origin");
   if (origin && origin !== new URL(request.url).origin) return json({ error: "unauthorized origin" }, 403);
@@ -104,14 +83,15 @@ export default async request => {
   const action = String(body?.action || "");
   const store = getStore({ name: STORE, consistency: "strong" });
   try {
+    await accessVersion("coach", { store, request });
     if (action === "status") {
-      const credentials = await loadCredentials(store);
+      const credentials = await loadCredentials(store, request);
       return json({ ok: true, registered: credentials.length > 0, count: credentials.length });
     }
 
     if (action === "registration-options") {
-      if (!(await coachAccessIsValid(store, request))) return json({ error: "unauthorized" }, 401);
-      const credentials = await loadCredentials(store);
+      if (!(await coachAccessIsValid(store, request, context))) return json({ error: "unauthorized" }, 401);
+      const credentials = await loadCredentials(store, request);
       if (credentials.length >= MAX_CREDENTIALS) return json({ error: "登録上限に達しました。" }, 409);
       const rp = relyingParty(request);
       const options = await generateRegistrationOptions({
@@ -127,11 +107,11 @@ export default async request => {
         },
         supportedAlgorithmIDs: [-7, -257],
       });
-      return json({ options, ceremonyID: await saveChallenge(store, "registration", options, rp) });
+      return json({ options, ceremonyID: await saveChallenge(store, "registration", options, rp, request) });
     }
     if (action === "registration-verify") {
-      if (!(await coachAccessIsValid(store, request))) return json({ error: "unauthorized" }, 401);
-      const challenge = await takeChallenge(store, body?.ceremonyID, "registration");
+      if (!(await coachAccessIsValid(store, request, context))) return json({ error: "unauthorized" }, 401);
+      const challenge = await takeChallenge(store, body?.ceremonyID, "registration", request);
       if (!challenge) return json({ error: "認証の有効時間が切れました。" }, 400);
       const verification = await verifyRegistrationResponse({
         response: body?.credential,
@@ -143,7 +123,7 @@ export default async request => {
       if (!verification.verified || !verification.registrationInfo) {
         return json({ error: "登録を確認できませんでした。" }, 400);
       }
-      const credentials = await loadCredentials(store);
+      const credentials = await loadCredentials(store, request);
       const { credential, credentialDeviceType, credentialBackedUp } = verification.registrationInfo;
       // A registration may finish after other registrations filled the remaining slots.
       // Reject the new credential instead of evicting an existing member's passkey.
@@ -161,21 +141,21 @@ export default async request => {
         createdAt: new Date().toISOString(),
       };
       const updated = [savedCredential, ...credentials.filter(item => item.id !== credential.id)];
-      await store.setJSON(CREDENTIALS_KEY, { credentials: updated });
+      await store.setJSON(CREDENTIALS_KEY, { credentials: updated, authVersion: await accessVersion("coach", { store, request }) });
       return json({ ok: true });
     }
     if (action === "delete-credential") {
-      if (!(await coachAccessIsValid(store, request))) return json({ error: "unauthorized" }, 401);
+      if (!(await coachAccessIsValid(store, request, context))) return json({ error: "unauthorized" }, 401);
       const credentialID = String(body?.credentialID || "");
       if (!credentialID) return json({ error: "削除する生体認証を確認できませんでした。" }, 400);
-      const credentials = await loadCredentials(store);
+      const credentials = await loadCredentials(store, request);
       const updated = credentials.filter(item => item.id !== credentialID);
       if (updated.length === credentials.length) return json({ error: "登録済みの生体認証が見つかりません。" }, 404);
-      await store.setJSON(CREDENTIALS_KEY, { credentials: updated });
+      await store.setJSON(CREDENTIALS_KEY, { credentials: updated, authVersion: await accessVersion("coach", { store, request }) });
       return json({ ok: true });
     }
     if (action === "authentication-options") {
-      const credentials = await loadCredentials(store);
+      const credentials = await loadCredentials(store, request);
       if (!credentials.length) return json({ error: "registered passkey not found" }, 404);
       const rp = relyingParty(request);
       const options = await generateAuthenticationOptions({
@@ -183,12 +163,12 @@ export default async request => {
         allowCredentials: credentials.map(item => ({ id: item.id, transports: item.transports })),
         userVerification: "required",
       });
-      return json({ options, ceremonyID: await saveChallenge(store, "authentication", options, rp) });
+      return json({ options, ceremonyID: await saveChallenge(store, "authentication", options, rp, request) });
     }
     if (action === "authentication-verify") {
-      const challenge = await takeChallenge(store, body?.ceremonyID, "authentication");
+      const challenge = await takeChallenge(store, body?.ceremonyID, "authentication", request);
       if (!challenge) return json({ error: "認証の有効時間が切れました。" }, 400);
-      const credentials = await loadCredentials(store);
+      const credentials = await loadCredentials(store, request);
       const credential = credentials.find(item => item.id === body?.credential?.id);
       if (!credential) return json({ error: "登録済み端末ではありません。" }, 401);
       const verification = await verifyAuthenticationResponse({
@@ -207,12 +187,14 @@ export default async request => {
       if (!verification.verified) return json({ error: "認証を確認できませんでした。" }, 401);
       credential.counter = verification.authenticationInfo.newCounter;
       credential.lastUsedAt = new Date().toISOString();
-      await store.setJSON(CREDENTIALS_KEY, { credentials });
-      const token = await createCoachSessionToken();
+      await store.setJSON(CREDENTIALS_KEY, { credentials, authVersion: await accessVersion("coach", { store, request }) });
+      const token = await createCoachSessionToken({ store, request });
       return json({ ok: true, token, credentialID: credential.id }, 200, { "set-cookie": coachSessionCookie(token) });
     }
     return json({ error: "unknown action" }, 400);
   } catch (error) {
+    const limited = accessRateLimitResponse(error);
+    if (limited) return limited;
     console.error("operator-passkey-auth", action, error);
     return json({ error: "生体認証を完了できませんでした。" }, 400);
   }

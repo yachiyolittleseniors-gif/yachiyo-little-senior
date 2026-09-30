@@ -1,21 +1,18 @@
+import { verifyAccessPassword } from "./_access-password.mjs";
+import { accessRateLimitResponse } from "./_access-rate-limit.mjs";
 import { getStore } from "@netlify/blobs";
 import {
   boardSessionIsValid,
-  boardSessionTokenIsValid,
 } from "./_board-session.mjs";
 
 const STORE = "yachiyo-public-site";
 const KEY = "content/car-assignments.json";
-const ACCESS_CONFIG_KEY = "content/access-settings.json";
 const PARENT_KEY = "content/attendance.json";
 const PLAYER_KEY = "content/player-attendance.json";
 const PARENT_MEMBER_STATE_PREFIX = "attendance/member-state/";
 const PLAYER_MEMBER_STATE_PREFIX = "player-attendance/member-state/";
 const COACH_KEY = "content/coach-attendance.json";
 const COACH_MEMBER_STATE_PREFIX = "coach-attendance/member-state/";
-const DEFAULT_ACCESS_SALT = "yachiyo-access-v1";
-const DEFAULT_ACCESS_HASH =
-  "19eb403934ae615b2961d9f6b5ddd86aab32a0fdf4e96adeb8aa2fcb351276ba";
 
 function json(data, status = 200, extraHeaders = {}) {
   return new Response(JSON.stringify(data), {
@@ -28,39 +25,9 @@ function json(data, status = 200, extraHeaders = {}) {
   });
 }
 
-function bytesToHex(bytes) {
-  return Array.from(bytes, byte => byte.toString(16).padStart(2, "0")).join("");
-}
-
-async function hashAccessPassword(password, salt) {
-  const input = new TextEncoder().encode(`${salt}:${password}`);
-  const digest = await crypto.subtle.digest("SHA-256", input);
-  return bytesToHex(new Uint8Array(digest));
-}
-
-function safeEqual(a, b) {
-  const left = String(a || "");
-  const right = String(b || "");
-  let difference = left.length ^ right.length;
-  const length = Math.max(left.length, right.length);
-  for (let i = 0; i < length; i++) {
-    difference |= (left.charCodeAt(i) || 0) ^ (right.charCodeAt(i) || 0);
-  }
-  return difference === 0;
-}
-
-async function accessOK(store, request) {
+async function accessOK(store, request, context) {
   if (await boardSessionIsValid(request)) return true;
-  const entered = String(request.headers.get("x-access-password") || "");
-  if (await boardSessionTokenIsValid(entered)) return true;
-  if (!entered || entered.length > 128) return false;
-  const saved = await store.get(ACCESS_CONFIG_KEY, {
-    type: "json",
-    consistency: "strong",
-  });
-  const salt = saved?.salt || DEFAULT_ACCESS_SALT;
-  const expectedHash = saved?.hash || DEFAULT_ACCESS_HASH;
-  return safeEqual(await hashAccessPassword(entered, salt), expectedHash);
+  return verifyAccessPassword({ role: "board", store, request, context, password: request.headers.get("x-access-password") });
 }
 
 function cleanText(value, max = 200) {
@@ -221,7 +188,7 @@ function normalizeAssignment(value = {}) {
 export default async (request, context) => {
   const store = getStore({ name: STORE, consistency: "strong" });
   try {
-    if (!(await accessOK(store, request))) {
+    if (!(await accessOK(store, request, context))) {
       return json({ error: "Unauthorized" }, 401);
     }
     let assignments = {};
@@ -273,7 +240,10 @@ export default async (request, context) => {
     await store.setJSON(KEY, assignments);
     return json({ ok: true, assignment, assignments });
   } catch (error) {
+    const limited = accessRateLimitResponse(error);
+    if (limited) return limited;
     console.error("car-assignment-data error:", error);
     return json({ error: "Server error" }, 500);
   }
 };
+

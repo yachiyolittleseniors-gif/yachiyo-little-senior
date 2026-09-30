@@ -1,11 +1,11 @@
+import { verifyAccessPassword } from "./_access-password.mjs";
+import { accessRateLimitResponse } from "./_access-rate-limit.mjs";
 import { getStore } from "@netlify/blobs";
 import {
   boardSessionCookie,
   boardSessionIsValid,
-  boardSessionTokenIsValid,
   createBoardSessionToken,
 } from "./_board-session.mjs";
-import { coachSessionTokenIsValid } from "./_coach-session.mjs";
 import {
   adminAuthError,
   verifyAdminPassword,
@@ -33,13 +33,6 @@ async function readHeroManifestData(store, key) {
   }
 }
 
-const DEFAULT_ACCESS_SALT = "yachiyo-access-v1";
-const DEFAULT_ACCESS_HASH =
-  "19eb403934ae615b2961d9f6b5ddd86aab32a0fdf4e96adeb8aa2fcb351276ba";
-const COACH_ACCESS_CONFIG_KEY = "content/coach-attendance-access.json";
-const DEFAULT_COACH_ACCESS_SALT = "yachiyo-coach-access-v1";
-const DEFAULT_COACH_ACCESS_HASH =
-  "937e76fe820379b5e095356a7dae5cbd223b5c9af6dd444e48a3f3b34bd4f8eb";
 
 const allowed = new Set([
   "schedule",
@@ -97,71 +90,12 @@ async function hashAccessPassword(password, salt) {
   return bytesToHex(new Uint8Array(digest));
 }
 
-function safeEqual(a, b) {
-  const left = String(a || "");
-  const right = String(b || "");
-  let difference = left.length ^ right.length;
-  const length = Math.max(left.length, right.length);
-
-  for (let i = 0; i < length; i++) {
-    difference |=
-      (left.charCodeAt(i) || 0) ^
-      (right.charCodeAt(i) || 0);
-  }
-
-  return difference === 0;
+async function accessPasswordIsValid(store, enteredPassword, request, context) {
+  return verifyAccessPassword({ role: "board", store, request, context, password: enteredPassword });
 }
 
-async function accessPasswordIsValid(store, enteredPassword) {
-  const entered = String(enteredPassword || "");
-
-  if (await boardSessionTokenIsValid(entered)) return true;
-
-  if (!entered || entered.length > 128) {
-    return false;
-  }
-
-  const saved = await store.get("content/access-settings.json", {
-    type: "json",
-    consistency: "strong"
-  });
-
-  if (saved?.salt && saved?.hash) {
-    const enteredHash = await hashAccessPassword(entered, saved.salt);
-    return safeEqual(enteredHash, saved.hash);
-  }
-
-  if (process.env.ACCESS_PASSWORD) {
-    return safeEqual(entered, process.env.ACCESS_PASSWORD);
-  }
-
-  const enteredHash = await hashAccessPassword(
-    entered,
-    DEFAULT_ACCESS_SALT
-  );
-  return safeEqual(enteredHash, DEFAULT_ACCESS_HASH);
-}
-
-async function coachAccessPasswordIsValid(store, enteredPassword) {
-  const entered = String(enteredPassword || '');
-  if (await coachSessionTokenIsValid(entered)) return true;
-  if (!entered || entered.length > 128) return false;
-  let saved = null;
-  try {
-    saved = await store.get(COACH_ACCESS_CONFIG_KEY, {type: 'json', consistency: 'strong'});
-  } catch {
-    saved = null;
-  }
-  if (saved?.salt && saved?.hash) {
-    return safeEqual(await hashAccessPassword(entered, saved.salt), saved.hash);
-  }
-  if (process.env.COACH_ACCESS_PASSWORD) {
-    return safeEqual(entered, process.env.COACH_ACCESS_PASSWORD);
-  }
-  return safeEqual(
-    await hashAccessPassword(entered, DEFAULT_COACH_ACCESS_SALT),
-    DEFAULT_COACH_ACCESS_HASH
-  );
+async function coachAccessPasswordIsValid(store, enteredPassword, request, context) {
+  return verifyAccessPassword({ role: "coach", store, request, context, password: enteredPassword });
 }
 
 function json(data, status = 200, extraHeaders = {}) {
@@ -966,8 +900,8 @@ export default async (request, context) => {
         const coachPassword = request.headers.get("x-coach-password") || "";
         const accessGranted =
           await boardSessionIsValid(request) ||
-          await accessPasswordIsValid(store, accessPassword) ||
-          (section === "board-meeting-schedule" && coachPassword && await coachAccessPasswordIsValid(store, coachPassword));
+          await accessPasswordIsValid(store, accessPassword, request, context) ||
+          (section === "board-meeting-schedule" && coachPassword && await coachAccessPasswordIsValid(store, coachPassword, request, context));
 
         if (!accessGranted) {
           return json({ error: "unauthorized" }, 401);
@@ -1101,7 +1035,7 @@ export default async (request, context) => {
         const accessPassword = request.headers.get("x-access-password") || "";
         const accessGranted =
           await boardSessionIsValid(request) ||
-          await accessPasswordIsValid(store, accessPassword);
+          await accessPasswordIsValid(store, accessPassword, request, context);
 
         if (!accessGranted) {
           return json({ error: "unauthorized" }, 401);
@@ -1524,9 +1458,9 @@ export default async (request, context) => {
       const accessPassword = request.headers.get("x-access-password") || "";
       const accessGranted =
         await boardSessionIsValid(request) ||
-        await accessPasswordIsValid(store, accessPassword);
+        await accessPasswordIsValid(store, accessPassword, request, context);
       if (!accessGranted) return json({ error: "unauthorized" }, 401);
-      if (!(await coachAccessPasswordIsValid(store, request.headers.get("x-coach-password") || ""))) {
+      if (!(await coachAccessPasswordIsValid(store, request.headers.get("x-coach-password") || "", request, context))) {
         return json({ error: "パスワードが違います。" }, 401);
       }
 
@@ -1606,7 +1540,7 @@ export default async (request, context) => {
     }
     if (section === "duty-roster" && body?.action === "submitDutyChangeRequest") {
       const accessPassword = request.headers.get("x-access-password") || "";
-      const accessGranted = await boardSessionIsValid(request) || await accessPasswordIsValid(store, accessPassword);
+      const accessGranted = await boardSessionIsValid(request) || await accessPasswordIsValid(store, accessPassword, request, context);
       if (!accessGranted) return json({ error: "unauthorized" }, 401);
       const req = body?.request || {};
       const date = String(req.date || "");
@@ -1653,14 +1587,14 @@ export default async (request, context) => {
     ) {
       const valid = await accessPasswordIsValid(
         store,
-        body.password
+        body.password, request, context
       );
 
       if (!valid) {
         return json({ ok: false }, 401);
       }
 
-      const token = await createBoardSessionToken();
+      const token = await createBoardSessionToken({ store, request });
       return json(
         { ok: true, token },
         200,
@@ -1672,7 +1606,7 @@ export default async (request, context) => {
       const accessPassword = request.headers.get("x-access-password") || "";
       const accessGranted =
         await boardSessionIsValid(request) ||
-        await accessPasswordIsValid(store, accessPassword);
+        await accessPasswordIsValid(store, accessPassword, request, context);
       if (!accessGranted) return json({ error: "unauthorized" }, 401);
 
       const action = String(body?.action || "");
@@ -1735,14 +1669,14 @@ export default async (request, context) => {
       const accessPassword = request.headers.get("x-access-password") || "";
       const accessGranted =
         await boardSessionIsValid(request) ||
-        await accessPasswordIsValid(store, accessPassword);
+        await accessPasswordIsValid(store, accessPassword, request, context);
 
       if (!accessGranted) {
         return json({ error: "unauthorized" }, 401);
       }
 
       const protectedBoardActions = new Set(["uploadBoardMeetingDocument","renameBoardMeetingDocument","deleteBoardMeetingDocument","uploadRefereeDocument","renameRefereeDocument","deleteRefereeDocument","saveBoardMeetingEvent","deleteBoardMeetingEvent"]);
-      if (protectedBoardActions.has(String(body?.action || "")) && !(await coachAccessPasswordIsValid(store, request.headers.get("x-coach-password") || ""))) {
+      if (protectedBoardActions.has(String(body?.action || "")) && !(await coachAccessPasswordIsValid(store, request.headers.get("x-coach-password") || "", request, context))) {
         return json({ error: "パスワードが違います。" }, 401);
       }
 
@@ -2239,6 +2173,7 @@ export default async (request, context) => {
       );
 
       await store.setJSON(key, {
+        authVersion: crypto.randomUUID(),
         salt,
         hash,
         updatedAt: new Date().toISOString()
@@ -2425,6 +2360,8 @@ export default async (request, context) => {
       ok: true
     });
   } catch (error) {
+    const limited = accessRateLimitResponse(error);
+    if (limited) return limited;
     console.error(error);
 
     return json({

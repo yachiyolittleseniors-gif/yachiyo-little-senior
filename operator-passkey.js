@@ -177,6 +177,10 @@
         body: JSON.stringify({ action: "verifyCoachPassword", password: entered }),
       });
       const result = await response.json().catch(() => ({}));
+      if (response.status === 429) {
+        alert(result.error || "ログインの試行回数が多いため、一時的に制限しています。しばらく待ってからお試しください。");
+        return "";
+      }
       if (response.ok) {
         const value = result.token || entered;
         try { sessionStorage.setItem("yachiyoCoachAttendancePass", value); } catch (error) {}
