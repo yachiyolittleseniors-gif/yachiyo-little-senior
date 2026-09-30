@@ -10,6 +10,8 @@
       z-index: 9000;
       width: 44px;
       height: 44px;
+      padding: 0;
+      line-height: 1;
       display: grid;
       place-items: center;
       border: 1px solid rgba(226,189,103,.55);

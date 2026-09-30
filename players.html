@@ -527,7 +527,7 @@ html{scroll-padding-top:var(--fixed-header-height)}
 <meta content="https://yachiyo-little-senior.netlify.app/team-hero.jpg" name="twitter:image"/>
 <meta content="index,follow,max-image-preview:large,max-snippet:-1,max-video-preview:-1" name="robots"/>
 <script src="./admin-visibility.js?v=20260930-session2" defer></script>
-<script src="./back-to-top.js?v=20260929-chevron1" defer></script>
+<script src="./back-to-top.js?v=20260930-padding1" defer></script>
 </head>
 <body id="page-top">
 <header class="header">
@@ -1102,57 +1102,7 @@ body.photo-admin-on #accessPasswordChange{
   if(wasOpen)scheduleAlign();
 })();
 </script>
-<script id="seniorcup-menu-visibility">
-(()=>{
-  const menus=document.querySelectorAll('.mobile-links,.site-menu');
-  if(!menus.length)return;
-  const links=[];
-  menus.forEach(menu=>{
-    let link=menu.querySelector('[data-seniorcup-menu-link]');
-    if(!link){
-      link=document.createElement('a');
-      link.href='./seniorcup';
-      link.textContent='八千代リトルシニア杯';
-      link.setAttribute('data-seniorcup-menu-link','');
-      const termsLink=[...menu.querySelectorAll('a')].find(item=>{
-        const href=item.getAttribute('href')||'';
-        return /(?:terms|site-policy)\.html(?:$|[?#])/.test(href)||item.textContent.includes('サイト利用について');
-      });
-      if(termsLink)menu.insertBefore(link,termsLink);
-      else menu.appendChild(link);
-    }
-    links.push(link);
-  });
-
-  function apply(visible){
-    links.forEach(link=>{
-      if(visible)link.style.removeProperty('display');
-      else link.style.setProperty('display','none','important');
-      link.setAttribute('aria-hidden',visible?'false':'true');
-    });
-  }
-
-  let visible=true;
-  try{visible=localStorage.getItem('yachiyoSeniorCupVisible')!=='false'}catch(e){}
-  apply(visible);
-
-  fetch('/.netlify/functions/site-data?section=seniorcup-settings',{cache:'no-store'})
-    .then(response=>response.ok?response.json():null)
-    .then(json=>{
-      if(json&&json.data&&typeof json.data.visible==='boolean'){
-        visible=json.data.visible;
-        try{localStorage.setItem('yachiyoSeniorCupVisible',String(visible))}catch(e){}
-        apply(visible);
-      }
-    })
-    .catch(()=>{});
-
-  new MutationObserver(()=>{
-    if(document.documentElement.classList.contains('seniorcup-hidden'))apply(false);
-    else if(document.querySelector('.seniorcup-home-banner'))apply(true);
-  }).observe(document.documentElement,{attributes:true,attributeFilter:['class']});
-})();
-</script>
+<script src="./mobile-navigation.js?v=20260930-menu1" defer></script>
 <script id="player-kana-editing">
 let editingPlayerId='';
 function playerSortKey(player){return String(player?.kana||player?.name||'').trim()}
