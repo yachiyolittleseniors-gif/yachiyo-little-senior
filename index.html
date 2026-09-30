@@ -53,10 +53,41 @@ html{min-height:100%;background:#f4f3ef}
   .mobile-reference-news-title{display:none!important}
 }
 </style>
-<script id="home-scroll-restoration">
+<script id="page-scroll-restoration">
 (function(){
-  // Let the browser restore the reading position on reload and history navigation.
-  if('scrollRestoration' in history)history.scrollRestoration='auto';
+  const key='yachiyo:reading-position:'+location.pathname+location.search;
+  const navigation=performance.getEntriesByType('navigation')[0];
+  const reload=navigation&&navigation.type==='reload';
+  let saved=null;
+  try{const raw=sessionStorage.getItem(key);if(raw!==null&&Number.isFinite(Number(raw)))saved=Math.max(0,Number(raw));}catch(e){}
+  let restoring=Boolean(reload&&saved!==null);
+  let frame=0,timer=0,deadline=0;
+  if('scrollRestoration' in history)history.scrollRestoration=restoring?'manual':'auto';
+  function save(){
+    if(restoring)return;
+    try{sessionStorage.setItem(key,String(window.scrollY));}catch(e){}
+  }
+  function finish(){restoring=false;clearTimeout(timer);save();}
+  function restore(){
+    if(!restoring)return;
+    window.scrollTo({top:saved,left:0,behavior:'instant'});
+    if(Math.abs(window.scrollY-saved)<2||Date.now()>=deadline){finish();return;}
+    timer=setTimeout(restore,100);
+  }
+  window.addEventListener('scroll',function(){
+    if(restoring)return;
+    cancelAnimationFrame(frame);
+    frame=requestAnimationFrame(save);
+  },{passive:true});
+  window.addEventListener('pagehide',save);
+  window.addEventListener('pageshow',function(){
+    if(!restoring){save();return;}
+    deadline=Date.now()+2500;
+    requestAnimationFrame(()=>requestAnimationFrame(restore));
+  });
+  ['touchstart','wheel','keydown'].forEach(type=>window.addEventListener(type,function(){
+    if(restoring)finish();
+  },{passive:true}));
 })();
 </script>
 <script id="seniorcup-visibility-prepaint">
@@ -3614,7 +3645,7 @@ body.photo-admin-on .recruit-mode-admin{display:block}
 <script src="./back-to-top.js?v=20260930-padding1" defer></script>
 </head>
 <body id="page-top"><div id="firstVisitSplash" aria-hidden="true" hidden><div class="first-visit-logo"><img src="./official-logo-crisp-final.png" alt=""><div class="first-visit-shine"></div><div class="first-visit-since"><span>SINCE 1982</span></div></div></div>
-<script src="./first-visit-splash.js?v=20260930-hero-settled2"></script>
+<script src="./first-visit-splash.js?v=20260930-no-reload"></script>
 <header class="header">
 <nav class="nav">
 <div class="brand"><div class="official-brand-wrap" data-home-logo role="link" tabindex="0" aria-label="ホームへ戻る">

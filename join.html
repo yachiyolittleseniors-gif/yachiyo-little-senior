@@ -4,7 +4,41 @@
 <head>
 <script src="./csp-event-handlers.js?v=20260929-logo-home"></script>
 <script id="page-scroll-restoration">
-if('scrollRestoration' in history)history.scrollRestoration='auto';
+(function(){
+  const key='yachiyo:reading-position:'+location.pathname+location.search;
+  const navigation=performance.getEntriesByType('navigation')[0];
+  const reload=navigation&&navigation.type==='reload';
+  let saved=null;
+  try{const raw=sessionStorage.getItem(key);if(raw!==null&&Number.isFinite(Number(raw)))saved=Math.max(0,Number(raw));}catch(e){}
+  let restoring=Boolean(reload&&saved!==null);
+  let frame=0,timer=0,deadline=0;
+  if('scrollRestoration' in history)history.scrollRestoration=restoring?'manual':'auto';
+  function save(){
+    if(restoring)return;
+    try{sessionStorage.setItem(key,String(window.scrollY));}catch(e){}
+  }
+  function finish(){restoring=false;clearTimeout(timer);save();}
+  function restore(){
+    if(!restoring)return;
+    window.scrollTo({top:saved,left:0,behavior:'instant'});
+    if(Math.abs(window.scrollY-saved)<2||Date.now()>=deadline){finish();return;}
+    timer=setTimeout(restore,100);
+  }
+  window.addEventListener('scroll',function(){
+    if(restoring)return;
+    cancelAnimationFrame(frame);
+    frame=requestAnimationFrame(save);
+  },{passive:true});
+  window.addEventListener('pagehide',save);
+  window.addEventListener('pageshow',function(){
+    if(!restoring){save();return;}
+    deadline=Date.now()+2500;
+    requestAnimationFrame(()=>requestAnimationFrame(restore));
+  });
+  ['touchstart','wheel','keydown'].forEach(type=>window.addEventListener(type,function(){
+    if(restoring)finish();
+  },{passive:true}));
+})();
 </script>
 
 <!-- Google tag (gtag.js) -->

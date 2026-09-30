@@ -1,6 +1,8 @@
 (()=>{'use strict';
 const cover=document.getElementById('firstVisitSplash');
 if(!cover)return;
+// A reload resumes reading; only ordinary home entry plays the opening.
+if(performance.getEntriesByType('navigation')[0]?.type==='reload'){cover.remove();return;}
 cover.hidden=false;
 const openedAt=performance.now();
 let closed=false,stopMotion=()=>{},exitTimer=0,guardTimer=0;
