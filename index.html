@@ -4,6 +4,30 @@
 <head>
 <script>
 (()=>{'use strict';
+const previewKey='yachiyo:hero-reload-image';
+const validPreview=value=>typeof value==='string'&&value.length<3000000&&/^data:image\/(?:jpeg|png|webp|gif);base64,[a-z0-9+/=\\r\\n]+$/i.test(value);
+if(performance.getEntriesByType('navigation')[0]?.type==='reload'){
+  try{
+    const previous=sessionStorage.getItem(previewKey);
+    if(validPreview(previous)){
+      document.documentElement.style.setProperty('--hero-photo','url("'+previous+'")');
+      const preload=document.createElement('link');
+      preload.rel='preload';preload.as='image';preload.href=previous;preload.fetchPriority='high';
+      document.head.appendChild(preload);
+    }
+  }catch(e){}
+}
+let cacheRevision=0;
+window.__yachiyoRememberHeroImage=function(src){
+  const revision=++cacheRevision;
+  const save=value=>{if(revision!==cacheRevision||!validPreview(value))return;try{sessionStorage.setItem(previewKey,value)}catch(e){}};
+  if(validPreview(src)){save(src);return;}
+  const current=window.__yachiyoHeroRequest;
+  if(current?.objectUrl!==src||!current.blob)return;
+  const reader=new FileReader();
+  reader.onload=()=>save(reader.result);
+  reader.readAsDataURL(current.blob);
+};
 let resolveReady;
 window.__yachiyoHeroReady=new Promise(resolve=>{resolveReady=resolve;});
 const controller=new AbortController();
@@ -25,7 +49,9 @@ window.__yachiyoHeroImage=fetch('/.netlify/functions/site-data?section=hero&curr
   if(!response.ok)throw new Error('Hero image unavailable');
   const blob=await response.blob();
   if(request.signal.aborted||!blob.size||!blob.type.startsWith('image/'))throw new Error('Invalid hero image');
-  return URL.createObjectURL(blob);
+  request.blob=blob;
+  request.objectUrl=URL.createObjectURL(blob);
+  return request.objectUrl;
  }).catch(()=>null);
 })();
 </script>
@@ -3978,6 +4004,7 @@ function openProtectedArea(type){
         hero.style.setProperty('--hero-photo',`url("${src}")`);
         // Retain the decoded image while the CSS background is being painted.
         if(heroRequest)heroRequest.image=img;
+        window.__yachiyoRememberHeroImage(src);
         finish(true);
       };
       img.fetchPriority='high';
@@ -4114,6 +4141,7 @@ function openProtectedArea(type){
        window.__yachiyoPhotoDataPromise=null;
       window.__yachiyoPhotoCache&&window.__yachiyoPhotoCache.set('hero',image);
        hero.style.setProperty('--hero-photo',`url("${image}")`);
+      window.__yachiyoRememberHeroImage(image);
       showSaveNotice('保存しました');
     }catch(e){
       alert(e.message==='LIMITED'?'試行回数の上限です。15分後に再度お試しください。':'保存できませんでした。管理パスワードを確認してください。');
