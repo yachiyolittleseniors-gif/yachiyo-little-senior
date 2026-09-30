@@ -35,7 +35,7 @@
     .back-to-top:focus-visible { outline: 2px solid #e2bd67; outline-offset: 3px; }
     .back-to-top svg { display: block; width: 20px; height: 20px; }
     body.photo-admin-on .back-to-top,
-    body:has(.modal.show, .modal.open, dialog[open], [aria-modal="true"]:not([hidden])) .back-to-top {
+    body:has(.modal.show, .modal.open, dialog[open], [aria-modal="true"]:not([hidden]):not([aria-hidden="true"]):not([hidden] *):not([aria-hidden="true"] *)) .back-to-top {
       opacity: 0;
       visibility: hidden;
       pointer-events: none;
