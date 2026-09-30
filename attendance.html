@@ -587,6 +587,8 @@ function renderEditor(){
   const m=data.members.find(x=>x.id===selectedMember),select=$('#commentEventDate'),events=visibleEvents(),previous=select.value;
   $('#editor').classList.toggle('show',!!m);if(!m)return;$('#editorName').textContent=memberDisplayName(m);
   select.innerHTML=events.map(e=>`<option value="${esc(e.date)}">${esc(formatDate(e.date))} ${esc(e.title||'')}</option>`).join('');if(previous&&events.some(e=>e.date===previous))select.value=previous;select.onchange=()=>{selectedEscortGrade='';renderEditor()};
+  const existingComment=data.comments.some(c=>c.escortSetting!==true&&String(c.memberId)===String(m.id)&&String(c.eventDate||'')===String(select.value||''));
+  $('#commentSave').textContent=existingComment?'コメントを上書き':'コメントを追加';
   const savedEscort=[...data.comments].reverse().find(c=>String(c.memberId)===String(m.id)&&String(c.eventDate||'')===String(select.value||'')&&c.escortSetting===true);if(savedEscort)selectedEscortGrade=String(savedEscort.escortGrade||'');const grade=String(m.grades?.[0]||'');const targets=grade==='1'?['2','3']:grade==='2'?['3']:[];
   const field=$('#upperGradeField'),buttons=$('#escortGradeButtons');field.hidden=!targets.length;
   if(!targets.includes(selectedEscortGrade))selectedEscortGrade='';
