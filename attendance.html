@@ -276,10 +276,10 @@ body{padding-top:var(--fixed-header-height)!important}
 #editor .escort-check-box{flex-basis:20px;width:20px;height:20px;border-radius:5px;font-size:14px}
 #editor .escort-check-text{font-size:14px}
 #editor .escort-check input:focus-visible+.escort-check-box{outline:2px solid #071426;outline-offset:2px}
-#commentList .comment-meta{display:grid;grid-template-columns:minmax(0,1fr) auto;grid-template-areas:"name date" "escort updated";gap:5px 8px;align-items:center;margin-bottom:7px}
+#commentList .comment-meta{display:grid;grid-template-columns:auto minmax(0,1fr) auto;grid-template-areas:"name date escort" "updated updated updated";gap:5px 8px;align-items:center;margin-bottom:7px}
 #commentList .comment-name{grid-area:name;min-width:0;overflow-wrap:anywhere}
-#commentList .comment-event-date{grid-area:date;justify-self:end;white-space:nowrap}
-#commentList .comment-escort{grid-area:escort}
+#commentList .comment-event-date{grid-area:date;justify-self:start;white-space:nowrap}
+#commentList .comment-escort{grid-area:escort;justify-self:end;white-space:nowrap}
 #commentList .comment-updated{grid-area:updated;justify-self:end;white-space:nowrap;font-size:10px}
 </style>
 <style id="attendance-tap-zoom-guard">
