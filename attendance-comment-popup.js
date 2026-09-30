@@ -31,7 +31,7 @@
       if (!memberRow) return;
       var outer = container.getBoundingClientRect();
       var bounds = board.getBoundingClientRect();
-      var row = memberRow.getBoundingClientRect();
+      var row = memberRow.cells[0].getBoundingClientRect();
       var head = board.querySelector('thead');
       var headHeight = head ? head.getBoundingClientRect().height : 0;
       var anchor = Math.max(bounds.top + headHeight, Math.min(row.bottom, bounds.bottom));
@@ -52,6 +52,15 @@
       board.scrollTop = top;
       board.scrollLeft = left;
       if (selected && editor.classList.contains('show')) {
+        var selectedRow = selected.closest('tr');
+        var header = board.querySelector('thead');
+        var headerHeight = header ? header.getBoundingClientRect().height : 0;
+        Array.prototype.forEach.call(selectedRow.cells, function (cell, index) {
+          cell.style.position = 'sticky';
+          cell.style.top = headerHeight + 'px';
+          cell.style.zIndex = index === 0 ? '9' : '7';
+          cell.style.backgroundColor = '#fff';
+        });
         overlay.appendChild(editor);
         editor.style.display = 'block';
         overlay.style.display = 'block';
