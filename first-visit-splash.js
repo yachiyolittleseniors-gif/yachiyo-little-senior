@@ -1,13 +1,18 @@
 (()=>{'use strict';
 const cover=document.getElementById('firstVisitSplash');
 if(!cover)return;
+let forceOpening=false;
+try{
+  forceOpening=sessionStorage.getItem('yachiyo:force-opening')==='1';
+  if(forceOpening)sessionStorage.removeItem('yachiyo:force-opening');
+}catch(e){}
 // A successful hero replacement requests the opening once on the next home view.
 let heroChanged=window.__yachiyoHeroChanged===true;
 try{
   heroChanged=heroChanged||sessionStorage.getItem('yachiyo:hero-opening-pending')==='1';
   if(heroChanged)sessionStorage.removeItem('yachiyo:hero-opening-pending');
 }catch(e){}
-if(performance.getEntriesByType('navigation')[0]?.type==='reload'&&!heroChanged){cover.remove();return;}
+if(performance.getEntriesByType('navigation')[0]?.type==='reload'&&!heroChanged&&!forceOpening){cover.remove();return;}
 cover.hidden=false;
 const openedAt=performance.now();
 let closed=false,stopMotion=()=>{},exitTimer=0,guardTimer=0;
