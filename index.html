@@ -2,6 +2,29 @@
 
 <html lang="ja">
 <head>
+<script id="hero-image-early-fetch">
+(()=>{'use strict';
+let resolveReady;
+window.__yachiyoHeroReady=new Promise(resolve=>{resolveReady=resolve;});
+const controller=new AbortController();
+let settled=false;
+const request={
+  signal:controller.signal,
+  finish(ok){
+    if(settled)return;
+    settled=true;clearTimeout(timeout);
+    if(!ok)controller.abort();
+    resolveReady(ok===true);
+  }
+};
+// Bound the request itself; never reveal a photo that is still loading later.
+const timeout=setTimeout(()=>request.finish(false),20000);
+window.__yachiyoHeroRequest=request;
+request.fetchImage=()=>fetch('/.netlify/functions/site-data?section=hero&current=1',{cache:'no-store',priority:'high',signal:request.signal});
+// Start the photo transfer in parallel with the server version check.
+window.__yachiyoHeroResponse=request.fetchImage().catch(()=>null);
+})();
+</script>
 <script src="/.netlify/functions/site-data?section=hero&amp;bootstrap=1"></script>
 <script>
 (()=>{'use strict';
@@ -29,25 +52,17 @@ window.__yachiyoRememberHeroImage=function(src,explicitVersion){
   if(current?.objectUrl!==src||!current.blob)return;
   const reader=new FileReader();reader.onload=()=>save(reader.result);reader.readAsDataURL(current.blob);
 };
-let resolveReady;
-window.__yachiyoHeroReady=new Promise(resolve=>{resolveReady=resolve;});
-const controller=new AbortController();
-let settled=false;
-const request={
-  signal:controller.signal,
-  finish(ok){
-    if(settled)return;
-    settled=true;clearTimeout(timeout);
-    if(!ok)controller.abort();
-    resolveReady(ok===true);
-  }
-};
-// Bound the request itself; never reveal a photo that is still loading later.
-const timeout=setTimeout(()=>request.finish(false),20000);
-window.__yachiyoHeroRequest=request;
-window.__yachiyoHeroImage=fetch('/.netlify/functions/site-data?section=hero&current=1',{cache:'no-store',priority:'high',signal:request.signal})
+const request=window.__yachiyoHeroRequest;
+window.__yachiyoHeroImage=window.__yachiyoHeroResponse
  .then(async response=>{
-  if(!response.ok)throw new Error('Hero image unavailable');
+  if(!response||!response.ok)throw new Error('Hero image unavailable');
+  const receivedVersion=response.headers.get('x-yachiyo-hero-version');
+  if(serverVersion&&receivedVersion&&receivedVersion!==serverVersion){
+    // A photo may change while the two requests are in flight. Fetch after validation.
+    if(response.body)response.body.cancel().catch(()=>{});
+    response=await request.fetchImage();
+    if(!response.ok)throw new Error('Hero image unavailable');
+  }
   request.version=response.headers.get('x-yachiyo-hero-version')||serverVersion;
   const blob=await response.blob();
   if(request.signal.aborted||!blob.size||!blob.type.startsWith('image/'))throw new Error('Invalid hero image');
