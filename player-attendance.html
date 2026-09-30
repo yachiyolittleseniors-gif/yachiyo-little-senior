@@ -406,6 +406,29 @@ function commentMatchesDate(comment,date){
   const target=new Date(date+'T00:00:00');
   return Number(match[1])===target.getMonth()+1&&Number(match[2])===target.getDate();
 }
+let parentEscortByPlayer=new Map();
+async function loadParentEscortForReport(date){
+  const response=await fetch('/.netlify/functions/attendance-data',{cache:'no-store',headers:{'x-access-password':accessPass},signal:AbortSignal.timeout(30000)});
+  if(!response.ok)throw new Error('保護者の帯同情報を取得できませんでした。');
+  const result=await response.json(),parents=Array.isArray(result.data?.members)?result.data.members:[],comments=Array.isArray(result.data?.comments)?result.data.comments:[];
+  const normalizeName=name=>String(name||'').normalize('NFKC').replace(/[\s　]+/g,'');
+  const families=new Map();
+  for(const parent of parents){
+    const grade=String(parent.grades?.[0]||parent.grade||''),family=normalizeName(parent.name).replace(/[父母]$/,'');
+    if(!grade||!family)continue;
+    const escort=comments.filter(comment=>String(comment.memberId)===String(parent.id)&&comment.upperGrade===true&&commentMatchesDate(comment,date)).sort((a,b)=>new Date(b.updatedAt||0)-new Date(a.updatedAt||0))[0];
+    if(!escort)continue;
+    const target=String(escort.escortGrade||'upper'),key=grade+'|'+family;
+    if(!families.has(key)||families.get(key)==='upper')families.set(key,target);
+  }
+  const matches=new Map();
+  for(const player of data.members){
+    const grade=String(player.grades?.[0]||''),name=normalizeName(player.name);
+    const family=[...families.keys()].filter(key=>key.startsWith(grade+'|')&&name.startsWith(key.split('|')[1])).sort((a,b)=>b.length-a.length)[0];
+    if(family)matches.set(String(player.id),families.get(family));
+  }
+  parentEscortByPlayer=matches;
+}
 function reportSnapshot(eventId){
   const event=visibleEvents().find(item=>String(item.id)===String(eventId));
   if(!event)return null;
@@ -421,8 +444,7 @@ function reportSnapshot(eventId){
     member:byId.get(String(comment.memberId))
   }));
   const totals=statuses.map(status=>ordered.filter(member=>(data.answers?.[member.id]?.[event.id]||'')===status).length);
-  const escortGradeByMember=new Map();
-  comments.filter(comment=>comment.escortGrade||comment.upperGrade).forEach(comment=>escortGradeByMember.set(String(comment.memberId),String(comment.escortGrade||'upper')));
+  const escortGradeByMember=new Map(parentEscortByPlayer);
   return{event,grades,comments,totals,escortGradeByMember};
 }
 function reportStatusClass(status){return status==='○'?'o':status==='×'?'x':'u'}
@@ -605,7 +627,7 @@ function sortedComments(){const actualComments=new Set(data.comments.filter(comm
 function todayDateKey(){const now=new Date(),year=now.getFullYear(),month=String(now.getMonth()+1).padStart(2,'0'),day=String(now.getDate()).padStart(2,'0');return `${year}-${month}-${day}`}
 function isPastComment(comment){const eventDate=String(comment?.eventDate||'');return /^\d{4}-\d{2}-\d{2}$/.test(eventDate)&&eventDate<todayDateKey()}
 function renderComments(){const byId=new Map(data.members.map(m=>[m.id,memberDisplayName(m)]));const list=sortedComments().filter(comment=>!isPastComment(comment)).slice(0,50);$('#commentList').innerHTML=list.length?list.map(c=>`<article class="comment-item"><div class="comment-meta"><span class="comment-name">${esc(byId.get(c.memberId)||'選手')}</span> ${(c.escortGrade||c.upperGrade)?'<span class="upper-grade-badge">'+esc(c.escortGrade?c.escortGrade+'年生帯同':'上級生帯同')+'</span>':''}　${c.eventDate?esc(formatDate(c.eventDate))+'　':''}${esc(new Date(c.updatedAt).toLocaleString('ja-JP'))}</div><div class="comment-text">${esc(c.text||'')}</div></article>`).join(''):'<div class="empty">コメントはまだありません。</div>'}
-$('#openReportBtn').onclick=()=>{const eventId=$('#reportEventSelect').value;if(!eventId||!renderReport(eventId)){alert('出力する日程を選択してください。');return}$('#reportDialog').showModal();document.body.style.overflow='hidden'};
+$('#openReportBtn').onclick=async()=>{const eventId=$('#reportEventSelect').value,event=visibleEvents().find(item=>String(item.id)===String(eventId));if(!event){alert('出力する日程を選択してください。');return}const button=$('#openReportBtn');button.disabled=true;button.textContent='保護者の帯同を照合中…';try{await loadParentEscortForReport(event.date);if(!renderReport(eventId))throw new Error('選手出席一覧を作成できませんでした。');$('#reportDialog').showModal();document.body.style.overflow='hidden'}catch(error){alert(error.name==='TimeoutError'?'帯同情報の取得に時間がかかっています。もう一度お試しください。':error.message||'帯同情報を確認できませんでした。もう一度お試しください。')}finally{button.disabled=false;button.textContent='選手出席一覧を出力'}};
 $('#closeReportBtn').onclick=()=>{$('#reportDialog').close();document.body.style.overflow=''};
 $('#saveReportImageBtn').onclick=saveReportImage;
 $('#printReportBtn').onclick=()=>window.print();
