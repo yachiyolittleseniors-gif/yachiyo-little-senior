@@ -1,13 +1,17 @@
 (() => {
   const endpoint = "/.netlify/functions/operator-passkey-auth";
-  // The old marker could be set by another device's server-side registration.
-  // This marker is written only after this browser successfully registers/authenticates.
+  // Keep existing registrations usable while migrating to a locally verified marker.
   const registrationKey = "yachiyoOperatorPasskeyVerified";
+  const legacyRegistrationKeys = ['yachiyoOperatorPasskeyRegistered', 'yachiyoCoachPasskeyRegistered'];
   function isRegistered() {
-    try { return localStorage.getItem(registrationKey) === "1"; } catch (_) { return false; }
+    try { return localStorage.getItem(registrationKey) === "1" || legacyRegistrationKeys.some(key => localStorage.getItem(key) === "1"); } catch (_) { return false; }
+  }
+  function clearLegacyRegistration() {
+    try { legacyRegistrationKeys.forEach(key => localStorage.removeItem(key)); } catch (_) {}
   }
   function rememberRegistration() {
     try { localStorage.setItem(registrationKey, "1"); } catch (_) {}
+    clearLegacyRegistration();
   }
   function supported() {
     return Boolean(window.PublicKeyCredential && navigator.credentials && typeof navigator.credentials.create === "function" && typeof navigator.credentials.get === "function");
@@ -137,6 +141,7 @@
     if (!credentialID) throw new Error("削除する生体認証を確認できませんでした。");
     const result = await request({ action: "delete-credential", credentialID });
     try { localStorage.removeItem(registrationKey); } catch (_) {}
+    clearLegacyRegistration();
     return result;
   }
   async function authorize(promptMessage = "パスワードを入力してください。") {
@@ -148,6 +153,11 @@
           return result.token;
         }
       } catch (error) {
+        // A legacy server-wide marker may be stale on this browser. Do not keep
+        // automatically opening WebAuthn after an unsuccessful migration.
+        try {
+          if (localStorage.getItem(registrationKey) !== '1') clearLegacyRegistration();
+        } catch (_) {}
         // No registered passkey / cancelled / failed: fall back to password.
       }
     }
