@@ -15,7 +15,7 @@
    const manual=document.getElementById('adminManualVisibilitySettings');
    if(manual)manual.hidden=on;
    const note=document.getElementById('adminVisibilityNote');
-   if(note)note.textContent=on?'普段は非表示。管理者認証後、この端末だけ30分間、5回タップで管理ボタンを表示できます。':'チェックしたページで管理ボタンを使えます。チェックを外すと非表示になります。';
+   if(note)note.textContent=on?'普段は非表示。管理者認証後、この端末だけ30分間、5回タップで管理ボタンを表示できます。':'下のページ別設定で表示・非表示を決めます。管理者認証によって表示は切り替わりません。';
  }
  autoAuth?.addEventListener('change',renderMode);
  const desktop=document.getElementById('adminDesktopEnabled');

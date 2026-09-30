@@ -36,12 +36,13 @@
    const allowed=loginMode?exp>Date.now():cfg.pages[KEY]!==false&&!(cfg.autoOffEnabled!==false&&exp&&exp<=Date.now());
    const session=window.YLSAdminSession;
    const sessionUntil=session?.expiresAt?.()||0;
-   enabled=session?.isActive?.()===true&&(!desktop.matches||cfg.desktopEnabled===true)&&allowed;
+   // Manual visibility follows page settings; only automatic reveal follows the login session.
+   enabled=(!loginMode||session?.isActive?.()===true)&&(!desktop.matches||cfg.desktopEnabled===true)&&allowed;
    ready=true;if(timer){clearTimeout(timer);timer=null}
    if(enabled){
      showAdminUi();
-     const until=(loginMode||cfg.autoOffEnabled!==false)&&exp>Date.now()?Math.min(exp,sessionUntil):sessionUntil;
-     timer=setTimeout(()=>{enabled=false;clearAdminState()},Math.min(Math.max(0,until-Date.now()),2147483647));
+     const until=loginMode?Math.min(exp,sessionUntil):(cfg.autoOffEnabled!==false&&exp>Date.now()?exp:0);
+     if(until)timer=setTimeout(()=>{enabled=false;clearAdminState()},Math.min(Math.max(0,until-Date.now()),2147483647));
    }
    else clearAdminState();
  }
@@ -50,13 +51,16 @@
  else if(desktop.addListener)desktop.addListener(()=>apply(currentSettings));
  fetch('/.netlify/functions/site-data?section=admin-visibility-settings',{cache:'no-store'})
    .then(r=>r.ok?r.json():Promise.reject()).then(j=>apply(j&&j.data)).catch(()=>{ready=true;enabled=false;clearAdminState()});
- document.addEventListener('yachiyo:admin-session-expired',()=>{if(ready)apply(currentSettings)});
+ document.addEventListener('yachiyo:admin-session-expired',()=>{clearAdminState();if(ready)apply(currentSettings)});
  document.addEventListener('yachiyo:admin-session-active',()=>{if(ready)apply(currentSettings)});
  window.addEventListener('storage',e=>{if(e.key===GRANT_KEY)apply(currentSettings)});
  document.addEventListener('visibilitychange',()=>{if(!document.hidden&&ready)apply(currentSettings)});
  window.addEventListener('focus',()=>{if(ready)apply(currentSettings)});
  const blocked=()=>{
-   if(enabled&&(window.YLSAdminSession?.isActive?.()!==true||(currentSettings?.autoEnableOnLogin===true&&grantUntil()<=Date.now()))){enabled=false;clearAdminState()}
+   const loginMode=currentSettings?.autoEnableOnLogin===true;
+   const manualExpiry=Number(currentSettings?.expiresAt?.[KEY]||0);
+   const expired=loginMode?(window.YLSAdminSession?.isActive?.()!==true||grantUntil()<=Date.now()):(currentSettings?.autoOffEnabled!==false&&manualExpiry>0&&manualExpiry<=Date.now());
+   if(enabled&&expired){enabled=false;clearAdminState()}
    return !ready||!enabled;
  };
  ['pointerdown','pointerup','touchstart','touchend','click','dblclick'].forEach(type=>document.addEventListener(type,e=>{
