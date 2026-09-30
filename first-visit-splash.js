@@ -220,23 +220,7 @@ function mobileMotion(){
       ctx.save();ctx.beginPath();ctx.rect(-100,-100,2372,597);boundary();ctx.clip('evenodd');
       ctx.drawImage(source,0,0,2172,397);ctx.restore();
       sphericalTurn(angle,sphereMix);
-      // Hot tongues curl across the lower rim, leaving the emblem readable.
-      if(fire>0){
-        ctx.save();ctx.globalCompositeOperation='screen';
-        for(let i=0;i<5;i++){
-          const x=90+i*66,y=342+Math.sin(ms*.02+i)*16;
-          const bend=Math.sin(ms*.019+i*2)*36;
-          const heat=ctx.createLinearGradient(x,y,x,y-155);
-          heat.addColorStop(0,'rgba(255,245,177,'+fire*.8+')');
-          heat.addColorStop(.4,'rgba(255,131,12,'+fire*.65+')');
-          heat.addColorStop(1,'rgba(241,55,5,0)');
-          ctx.fillStyle=heat;ctx.beginPath();ctx.moveTo(x-24,y);
-          ctx.bezierCurveTo(x-58,y-54,x+bend+28,y-88,x+bend,y-165);
-          ctx.bezierCurveTo(x+bend+70,y-91,x+49,y-48,x+24,y);
-          ctx.closePath();ctx.fill();
-        }
-        ctx.restore();
-      }
+
     }
     ctx.restore();
   }
