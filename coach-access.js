@@ -15,13 +15,11 @@ window.coachAccessReady=(async function(){
   }
   let saved='';try{saved=sessionStorage.getItem(storageKey)||''}catch(e){}
   if(saved){document.documentElement.style.visibility='';return true}
-  let boardVerified=false;try{boardVerified=sessionStorage.getItem('yachiyoBoardPasskeyJustVerified')==='1'}catch(e){}
-  if(boardVerified){try{sessionStorage.removeItem('yachiyoBoardPasskeyJustVerified')}catch(e){}}
-  if(window.YLSOperatorPasskeys?.supported()&&window.YLSOperatorPasskeys?.isRegistered()&&!boardVerified){
-    try{
-      const result=await window.YLSOperatorPasskeys.authenticate();
-      if(result?.token){remember(result.token);document.documentElement.style.visibility='';return true}
-    }catch(e){}
+  try{sessionStorage.removeItem('yachiyoBoardPasskeyJustVerified')}catch(e){}
+  if(window.YLSOperatorPasskeys?.authorize){
+    const value=await window.YLSOperatorPasskeys.authorize('運営用パスワードを入力してください。');
+    if(value){remember(value);document.documentElement.style.visibility='';return true}
+    location.replace('./board.html?from=coach');return false;
   }
   document.documentElement.style.visibility='';
   const entered=prompt('運営用パスワードを入力してください。');
