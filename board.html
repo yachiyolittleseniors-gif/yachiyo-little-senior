@@ -1050,6 +1050,13 @@ body:after{display:none!important;content:none!important}
 #dutyExclusionFields+#dutyAutoTestCreate{grid-column:1/-1}
 </style>
 <script src="./reading-position.js?v=20261001-refresh1"></script>
+<style id="board-refresh-stabilizer-style">
+html.board-refreshing body{visibility:hidden!important}
+html.board-refreshing{background:#f4f3ef}
+@media(max-width:900px){html.board-refreshing{background:linear-gradient(to bottom,#071426 0 72px,#f4f3ef 72px 100%)}}
+@media(max-width:600px){html.board-refreshing{background:linear-gradient(to bottom,#071426 0 66px,#f4f3ef 66px 100%)}}
+</style>
+<script src="./board-refresh-stabilizer.js?v=20261001-1"></script>
 </head>
 <body id="page-top">
 <header class="site-header">
