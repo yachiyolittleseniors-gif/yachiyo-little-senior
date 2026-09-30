@@ -53,43 +53,7 @@ html{min-height:100%;background:#f4f3ef}
   .mobile-reference-news-title{display:none!important}
 }
 </style>
-<script id="page-scroll-restoration">
-(function(){
-  const key='yachiyo:reading-position:'+location.pathname+location.search;
-  const navigation=performance.getEntriesByType('navigation')[0];
-  const reload=navigation&&navigation.type==='reload';
-  let saved=null;
-  try{const raw=sessionStorage.getItem(key);if(raw!==null&&Number.isFinite(Number(raw)))saved=Math.max(0,Number(raw));}catch(e){}
-  let restoring=Boolean(reload&&saved!==null);
-  let frame=0,timer=0,deadline=0;
-  if('scrollRestoration' in history)history.scrollRestoration=restoring?'manual':'auto';
-  function save(){
-    if(restoring)return;
-    try{sessionStorage.setItem(key,String(window.scrollY));}catch(e){}
-  }
-  function finish(){restoring=false;clearTimeout(timer);save();}
-  function restore(){
-    if(!restoring)return;
-    window.scrollTo({top:saved,left:0,behavior:'instant'});
-    if(Math.abs(window.scrollY-saved)<2||Date.now()>=deadline){finish();return;}
-    timer=setTimeout(restore,100);
-  }
-  window.addEventListener('scroll',function(){
-    if(restoring)return;
-    cancelAnimationFrame(frame);
-    frame=requestAnimationFrame(save);
-  },{passive:true});
-  window.addEventListener('pagehide',save);
-  window.addEventListener('pageshow',function(){
-    if(!restoring){save();return;}
-    deadline=Date.now()+2500;
-    requestAnimationFrame(()=>requestAnimationFrame(restore));
-  });
-  ['touchstart','wheel','keydown'].forEach(type=>window.addEventListener(type,function(){
-    if(restoring)finish();
-  },{passive:true}));
-})();
-</script>
+<script src="./reading-position.js?v=20260930-ready1"></script>
 <script id="seniorcup-visibility-prepaint">
 (function(){
   try{
@@ -2026,7 +1990,7 @@ body.photo-admin-on .seniorcup-admin-control{display:block}
 </style>
 <style>
 /* ===== Performance polish ===== */
-section:not(.hero):not(.pagehero){content-visibility:auto;contain-intrinsic-size:1px 700px}
+section:not(.hero):not(.pagehero){content-visibility:visible;contain-intrinsic-size:none}
 img{height:auto}
 </style>
 <style>
@@ -3975,7 +3939,7 @@ function openProtectedArea(type){
   });
 })();
 </script>
-<script src="./home-latest-data.js?v=20260927-seo1" defer></script>
+<script src="./home-latest-data.js?v=20260930-ready1" defer></script>
 <div data-nosnippet="" id="heroPhotoAdmin">
 <button data-nosnippet="" id="heroAdminToggle" type="button">管理</button>
 <label data-nosnippet="" for="heroPhotoInput" id="heroPhotoChange">トップの写真を変更</label>
@@ -4228,7 +4192,7 @@ function openProtectedArea(type){
    }catch(e){alert(e.message==='LIMITED'?'試行回数の上限です。15分後に再度お試しください。':'保存できませんでした。管理パスワードを確認してください。')}
    input.value=''; current=null;
  };
- load();
+ window.yachiyoTrackInitialLoad(load());
 })();
 </script>
 <script>
@@ -4456,11 +4420,11 @@ function openProtectedArea(type){
    const observer=new IntersectionObserver(entries=>{
      if(!entries.some(entry=>entry.isIntersecting))return;
      observer.disconnect();
-     load();
+     window.yachiyoTrackInitialLoad(load());
    },{rootMargin:'900px 0px'});
    observer.observe(box);
  }else{
-   load();
+   window.yachiyoTrackInitialLoad(load());
  }
 })();
 </script>
@@ -4509,7 +4473,7 @@ function openProtectedArea(type){
    try{await persist();modal.hidden=true;editingIndex=-1;render();showSaveNotice('保存しました')}catch(e){data=old;alert(e.message==='LIMITED'?'試行回数の上限です。15分後に再度お試しください。':'保存できませんでした。')}
  };
  async function remove(i){if(!confirm('このNEWSを削除しますか？'))return;const old=data.slice();data.splice(i,1);try{await persist();render()}catch(e){data=old;alert(e.message==='LIMITED'?'試行回数の上限です。15分後に再度お試しください。':'削除できませんでした。')}}
- load();
+ window.yachiyoTrackInitialLoad(load());
 })();
 </script>
 <script>
@@ -4627,7 +4591,7 @@ function openProtectedArea(type){
    }catch(error){alert('トップのお知らせを保存できませんでした。')}
    finally{save.disabled=false;save.textContent='保存する'}
  });
- load();
+ window.yachiyoTrackInitialLoad(load());
 })();
 </script>
 <style>
@@ -4788,7 +4752,7 @@ document.addEventListener('DOMContentLoaded',function(){
     }
   });
 
-  load();
+  window.yachiyoTrackInitialLoad(load());
 })();
 </script>
 <style id="nonblocking-save-notice-style">
@@ -5059,7 +5023,7 @@ body.photo-admin-on #heroPhotoChange{
     }
   });
 
-  load();
+  window.yachiyoTrackInitialLoad(load());
 })();
 </script>
 <style id="seniorcup-star-stream">
@@ -5148,6 +5112,7 @@ body:not(.photo-admin-on) #heroAdminToggle.unified-admin-toggle:focus-visible{co
 </style>
 </body>
 </html>
+
 
 
 

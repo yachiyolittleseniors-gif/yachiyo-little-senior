@@ -14,6 +14,9 @@
   if(!list||!toggle||!editor||!admin||!add||!save)return;
   let data=defaults.map(x=>({...x}));
   let busy=false;
+  function setExpanded(open){list.classList.toggle('show',open);toggle.setAttribute('aria-expanded',String(open));toggle.textContent=open?'歴代優勝チームを閉じる':'歴代優勝チームを見る';}
+  if(performance.getEntriesByType('navigation')[0]?.type==='reload'){try{setExpanded(sessionStorage.getItem('yachiyo:cup-winners-open')==='true')}catch(e){}}
+  window.addEventListener('pagehide',()=>{try{sessionStorage.setItem('yachiyo:cup-winners-open',String(list.classList.contains('show')))}catch(e){}});
   const clean=items=>(Array.isArray(items)?items:[]).map(x=>({edition:Number(x.edition)||0,year:Number(x.year)||0,team:String(x.team||'').trim()})).filter(x=>x.edition&&x.year&&x.team).sort((a,b)=>a.edition-b.edition);
   function renderList(){
     list.replaceChildren();
@@ -41,7 +44,7 @@
     data=clean(data);
   }
   function renderAll(){renderList();renderEditor();}
-  toggle.addEventListener('click',()=>{const open=!list.classList.contains('show');list.classList.toggle('show',open);toggle.setAttribute('aria-expanded',String(open));toggle.textContent=open?'歴代優勝チームを閉じる':'歴代優勝チームを見る';});
+  toggle.addEventListener('click',()=>setExpanded(!list.classList.contains('show')));
   add.addEventListener('click',()=>{syncEditor();const maxEdition=Math.max(0,...data.map(x=>x.edition));const maxYear=Math.max(2025,...data.map(x=>x.year));const item={edition:maxEdition+1,year:maxYear+1,team:''};data.push(item);renderEditor();const row=[...editor.querySelectorAll('.winner-edit-row')].find(r=>Number(r.dataset.edition)===item.edition);const teamInput=row?.querySelector('input[type=\"text\"]');if(teamInput){teamInput.focus();teamInput.scrollIntoView({behavior:'smooth',block:'center'});}});
   save.addEventListener('click',async()=>{
     if(busy)return;syncEditor();
@@ -56,6 +59,7 @@
     }catch(e){alert(e.message);}finally{busy=false;save.disabled=false;save.textContent='歴代優勝を保存';}
   });
   new MutationObserver(()=>{admin.classList.toggle('show',document.getElementById('cupAdminArea')?.classList.contains('show'));}).observe(document.getElementById('cupAdminArea'),{attributes:true,attributeFilter:['class']});
-  fetch(API,{cache:'no-store'}).then(r=>r.ok?r.json():Promise.reject()).then(j=>{const loaded=clean(j.data);if(loaded.length)data=loaded;renderAll();}).catch(()=>renderAll());
+  (window.yachiyoTrackInitialLoad||(value=>value))(fetch(API,{cache:'no-store'}).then(r=>r.ok?r.json():Promise.reject()).then(j=>{const loaded=clean(j.data);if(loaded.length)data=loaded;renderAll();}).catch(()=>renderAll()));
   renderAll();
 })();
+

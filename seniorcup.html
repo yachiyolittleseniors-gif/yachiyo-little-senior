@@ -4,43 +4,7 @@
 <head>
 <script src="./csp-event-handlers.js?v=20260929-logo-home"></script>
 <script src="./admin-session-client.js?v=20260930-session2"></script>
-<script id="page-scroll-restoration">
-(function(){
-  const key='yachiyo:reading-position:'+location.pathname+location.search;
-  const navigation=performance.getEntriesByType('navigation')[0];
-  const reload=navigation&&navigation.type==='reload';
-  let saved=null;
-  try{const raw=sessionStorage.getItem(key);if(raw!==null&&Number.isFinite(Number(raw)))saved=Math.max(0,Number(raw));}catch(e){}
-  let restoring=Boolean(reload&&saved!==null);
-  let frame=0,timer=0,deadline=0;
-  if('scrollRestoration' in history)history.scrollRestoration=restoring?'manual':'auto';
-  function save(){
-    if(restoring)return;
-    try{sessionStorage.setItem(key,String(window.scrollY));}catch(e){}
-  }
-  function finish(){restoring=false;clearTimeout(timer);save();}
-  function restore(){
-    if(!restoring)return;
-    window.scrollTo({top:saved,left:0,behavior:'instant'});
-    if(Math.abs(window.scrollY-saved)<2||Date.now()>=deadline){finish();return;}
-    timer=setTimeout(restore,100);
-  }
-  window.addEventListener('scroll',function(){
-    if(restoring)return;
-    cancelAnimationFrame(frame);
-    frame=requestAnimationFrame(save);
-  },{passive:true});
-  window.addEventListener('pagehide',save);
-  window.addEventListener('pageshow',function(){
-    if(!restoring){save();return;}
-    deadline=Date.now()+2500;
-    requestAnimationFrame(()=>requestAnimationFrame(restore));
-  });
-  ['touchstart','wheel','keydown'].forEach(type=>window.addEventListener(type,function(){
-    if(restoring)finish();
-  },{passive:true}));
-})();
-</script>
+<script src="./reading-position.js?v=20260930-ready1"></script>
 <!-- Google tag (gtag.js) -->
 <script async="" src="https://www.googletagmanager.com/gtag/js?id=G-L8BMMSXDP9"></script>
 <script>
@@ -666,8 +630,8 @@ html{scroll-padding-top:var(--fixed-header-height)}
 </div>
 </footer>
 <button data-nosnippet="" id="cupAdminBtn" type="button">管理</button>
-<script src="./seniorcup-documents.js?v=20260920-picker1"></script>
-<script src="./seniorcup-winners.js?v=20260920-1"></script>
+<script src="./seniorcup-documents.js?v=20260930-ready1"></script>
+<script src="./seniorcup-winners.js?v=20260930-ready1"></script>
 <script>
 (function(){
   const API='/.netlify/functions/site-data';
@@ -928,7 +892,7 @@ function renderReplyMode(){
     }catch(error){registrationCheck.checked=registrationClosed;alert(error.message);}
     finally{registrationBusy=false;registrationCheck.disabled=false;registrationSave.disabled=false;registrationSave.textContent='受付状態を保存';}
   });
-  loadRegistration();
+  window.yachiyoTrackInitialLoad(loadRegistration());
   async function load(slot){
     const c=slots[slot];
     try{const r=await fetch(API+'?section='+encodeURIComponent(c.section),{cache:'no-store'});if(!r.ok)throw 0;const j=await r.json();render(slot,j.data)}
@@ -1020,7 +984,7 @@ function renderReplyMode(){
     },{passive:true});
   }
 
-  load('roster');loadGuideline();loadPartners();loadReplyMode();
+  [load('roster'),loadGuideline(),loadPartners(),loadReplyMode()].forEach(window.yachiyoTrackInitialLoad);
 })();
 </script>
 <script>
@@ -1264,3 +1228,4 @@ body.photo-admin-on #accessPasswordChange{
 <script src="./mobile-navigation.js?v=20260930-menu1" defer></script>
 </body>
 </html>
+

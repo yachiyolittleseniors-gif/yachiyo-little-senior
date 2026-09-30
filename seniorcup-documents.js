@@ -106,5 +106,6 @@
     try{await request({action:'deleteResultDocument',id:item.id});}
     catch(error){alert(error.message);}finally{busy=false;render();}
   }
-  fetch(API,{cache:'no-store'}).then(response=>{if(!response.ok)throw new Error();return response.json();}).then(result=>{documents=Array.isArray(result.data)?result.data:[];render();}).catch(()=>{list.textContent='資料を読み込めませんでした。ページを再読み込みしてください。';});
+  (window.yachiyoTrackInitialLoad||(value=>value))(fetch(API,{cache:'no-store'}).then(response=>{if(!response.ok)throw new Error();return response.json();}).then(result=>{documents=Array.isArray(result.data)?result.data:[];render();}).catch(()=>{list.textContent='資料を読み込めませんでした。ページを再読み込みしてください。';}));
 })();
+

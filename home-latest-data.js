@@ -1,4 +1,4 @@
-(async function(){
+(window.yachiyoTrackInitialLoad||(value=>value))((async function(){
   const api='/.netlify/functions/site-data';
   const esc=s=>String(s??'').replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));
   async function get(section){
@@ -130,4 +130,4 @@
   }catch(e){
     document.querySelectorAll('.latest-meta').forEach(el=>el.textContent='最新情報を読み込めませんでした。');
   }
-})();
+})());

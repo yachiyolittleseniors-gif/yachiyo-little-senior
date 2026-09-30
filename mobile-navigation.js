@@ -21,7 +21,8 @@
         link.href = './seniorcup';
         link.textContent = '八千代リトルシニア杯';
         const terms = [...menu.querySelectorAll('a[href]')].find(item => pageKey(item.href) === 'terms');
-        if (terms) menu.insertBefore(link, terms);
+        const team = [...menu.querySelectorAll('a[href]')].find(item => pageKey(item.href) === 'board');
+        if (terms || team) menu.insertBefore(link, terms || team);
         else menu.appendChild(link);
       }
       link.setAttribute('data-seniorcup-menu-link', '');
@@ -54,3 +55,4 @@
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', init, { once: true });
   else init();
 })();
+
