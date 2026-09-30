@@ -161,24 +161,7 @@
         // No registered passkey / cancelled / failed: fall back to password.
       }
     }
-    let enteredPassword;
-    if (supported() && window.YLSPasskeyLogin) {
-      const choice = await window.YLSPasskeyLogin({
-        title: "運営用ログイン",
-        authenticate: async () => {
-          const result = await authenticate();
-          if (!result?.token) throw new Error("Authentication was not completed");
-          return result.token;
-        },
-      });
-      if (choice.method === "passkey") {
-        try { sessionStorage.setItem("yachiyoCoachAttendancePass", choice.value); } catch (_) {}
-        return choice.value;
-      }
-      if (choice.method === "cancel") return "";
-      if (choice.method === "password") enteredPassword = choice.password;
-    }
-    const entered = enteredPassword === undefined ? prompt(promptMessage) : enteredPassword;
+    const entered = prompt(promptMessage);
     if (entered === null) return "";
     try {
       const response = await fetch("/.netlify/functions/coach-attendance-data", {
