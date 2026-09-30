@@ -120,7 +120,7 @@ function boot(){
      if(!id||!day){finishNotice(ticket,'名前と対象日を選択してください。','error');return}
      var checked=editor.querySelector('[data-escort-grade]:checked');
      if(!text&&!checked){
-       finishNotice(ticket,apiInfo().coach?'コメントを入力してください。':'コメントを入力するか、帯同にチェックを入れてください。','error');
+       finishNotice(ticket,apiInfo().coach||location.pathname.includes('player-attendance')?'コメントを入力してください。':'コメントを入力するか、帯同にチェックを入れてください。','error');
        return;
      }
      if(checked&&typeof selectedEscortGrade!=='undefined')selectedEscortGrade=checked.dataset.escortGrade;
