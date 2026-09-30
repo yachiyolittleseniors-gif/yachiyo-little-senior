@@ -118,12 +118,12 @@ function boot(){
    saveBtn.onclick=async function(event){
      var id=selected(),day=date.value,text=box.value.trim(),ticket=beginNotice('保存中…','pending');
      if(!id||!day){finishNotice(ticket,'名前と対象日を選択してください。','error');return}
-     if(!text){
-       if(escortPending)await escortPending;
-       var savedEscort=comments.some(function(item){return String(item.memberId)===id&&String(item.eventDate||'')===day&&item.escortSetting===true&&item.escortGrade});
-       finishNotice(ticket,savedEscort?'保存しました。':apiInfo().coach?'コメントを入力してください。':'コメントを入力するか、帯同にチェックを入れてください。',savedEscort?'success':'error');
+     var checked=editor.querySelector('[data-escort-grade]:checked');
+     if(!text&&!checked){
+       finishNotice(ticket,apiInfo().coach?'コメントを入力してください。':'コメントを入力するか、帯同にチェックを入れてください。','error');
        return;
      }
+     if(checked&&typeof selectedEscortGrade!=='undefined')selectedEscortGrade=checked.dataset.escortGrade;
      var label=saveBtn.textContent,oldBoxDisabled=box.disabled,oldDateDisabled=date.disabled;
      saveBtn.disabled=true;box.disabled=true;date.disabled=true;saveBtn.textContent='保存中…';
 
@@ -140,7 +140,7 @@ function boot(){
          finishNotice(ticket,'保存できませんでした。もう一度お試しください。','error');
        }
      }catch(e){finishNotice(ticket,'保存できませんでした。もう一度お試しください。','error')}
-     finally{saveBtn.disabled=false;box.disabled=oldBoxDisabled;date.disabled=oldDateDisabled;saveBtn.textContent=label}
+     finally{saveBtn.disabled=false;box.disabled=oldBoxDisabled;date.disabled=oldDateDisabled;saveBtn.textContent=label;if(typeof window.renderEditor==='function'&&selected()===id&&date.value===day)window.renderEditor()}
    };
  }
  date.addEventListener('change',function(){clearNotice();show()});
