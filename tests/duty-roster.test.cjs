@@ -77,7 +77,7 @@ test('explicit father selection replaces the automatic mother duty',()=>{
 
 test('server persistence retains false overrides and reload applies them',()=>{
   const {run,context}=setup();
-  const server=read('netlify/functions/car-assignment-data.mjs').replace(/^import .*;\n/,'').split('export default async')[0];
+  const server=read('netlify/functions/car-assignment-data.mjs').replace(/^import[\s\S]*?;\r?\n/gm,'').split('export default async')[0];
   const serverContext=vm.createContext({Date});
   vm.runInContext(server,serverContext);
   run("setDutyOverride('荒木母',false);setDutyOverride('加藤母',true)");
