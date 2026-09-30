@@ -3,13 +3,13 @@
  const TTL=30*60*1000;
  const autoAuth=document.getElementById('adminAutoEnableOnLogin');
  const GRANT_KEY='yachiyoAdminRevealUntil';
- let authenticatedAt=0;
+ let authenticatedUntil=0;
  function syncGrant(){
    if(!state.autoEnableOnLogin){try{localStorage.removeItem(GRANT_KEY)}catch(e){}return;}
-   if(!authenticatedAt||!document.getElementById('densukeAdminPanel')?.dataset.adminPassword)return;
-   try{localStorage.setItem(GRANT_KEY,String(authenticatedAt+TTL))}catch(e){}
+   if(!authenticatedUntil||!document.getElementById('densukeAdminPanel')?.dataset.adminPassword)return;
+   try{localStorage.setItem(GRANT_KEY,String(authenticatedUntil))}catch(e){}
  }
- document.addEventListener('yachiyo:admin-authenticated',()=>{authenticatedAt=Date.now();syncGrant()});
+ document.addEventListener('yachiyo:admin-authenticated',event=>{authenticatedUntil=Number(event.detail?.expiresAt)||0;syncGrant()});
  function renderMode(){
    const on=autoAuth?.checked===true;
    const manual=document.getElementById('adminManualVisibilitySettings');

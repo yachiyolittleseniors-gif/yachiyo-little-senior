@@ -1,3 +1,5 @@
+import { adminSession } from "./_admin-session.mjs";
+
 const MAX_FAILURES = 5;
 const LOCK_SECONDS = 15 * 60;
 const PREFIX = "security/admin-rate-limit";
@@ -39,9 +41,14 @@ export async function verifyAdminPassword({
   request,
   context,
   expectedPassword,
+  requireSession = true,
 }) {
   if (!expectedPassword) {
     return { ok: false, notConfigured: true };
+  }
+
+  if (requireSession && !(await adminSession(request))) {
+    return { ok: false, sessionExpired: true };
   }
 
   const key = await clientKey(request, context);
@@ -91,6 +98,9 @@ export async function verifyAdminPassword({
 }
 
 export function adminAuthError(json, result) {
+  if (result.sessionExpired) {
+    return json({ error: "管理権限が終了しました。チーム専用ページで管理者認証をしてください。", code: "ADMIN_SESSION_EXPIRED" }, 401);
+  }
   if (result.notConfigured) {
     return json({ error: "ADMIN_PASSWORD is not configured" }, 503);
   }

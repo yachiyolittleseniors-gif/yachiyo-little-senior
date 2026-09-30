@@ -44,6 +44,7 @@
  else if(desktop.addListener)desktop.addListener(()=>apply(currentSettings));
  fetch('/.netlify/functions/site-data?section=admin-visibility-settings',{cache:'no-store'})
    .then(r=>r.ok?r.json():Promise.reject()).then(j=>apply(j&&j.data)).catch(()=>{ready=true;enabled=false;clearAdminState()});
+ document.addEventListener('yachiyo:admin-session-expired',()=>{if(ready)apply(currentSettings)});
  window.addEventListener('storage',e=>{if(e.key===GRANT_KEY)apply(currentSettings)});
  document.addEventListener('visibilitychange',()=>{if(!document.hidden&&ready)apply(currentSettings)});
  window.addEventListener('focus',()=>{if(ready)apply(currentSettings)});

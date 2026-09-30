@@ -346,13 +346,13 @@
     if(!adminPassword) return;
 
     try{
-      const r=await fetch(API,{
+      const r=await fetch('/.netlify/functions/admin-session',{
         method:'POST',
         headers:{
           'content-type':'application/json',
           'x-admin-password':adminPassword
         },
-        body:JSON.stringify({action:'adminPing'})
+        body:JSON.stringify({action:'start'})
       });
 
       if(r.status===429){
@@ -360,7 +360,8 @@
         return;
       }
       if(r.status===401){
-        alert('パスワードが違います。');
+        const error=await r.json().catch(()=>({}));
+        alert(error.error==='unauthorized'?'パスワードが違います。':error.error||'管理者認証を確認してください。');
         return;
       }
 
@@ -369,8 +370,11 @@
         return;
       }
 
+      const session=await r.json();
+      if(!session.ok||!Number.isFinite(session.expiresAt))throw new Error('invalid session');
+      window.YLSAdminSession?.activate(session.expiresAt);
       panel.dataset.adminPassword=adminPassword;
-      document.dispatchEvent(new Event('yachiyo:admin-authenticated'));
+      document.dispatchEvent(new CustomEvent('yachiyo:admin-authenticated',{detail:{expiresAt:session.expiresAt}}));
       panel.classList.add('show');
       adminBtn.textContent='管理終了';
     }catch(e){
