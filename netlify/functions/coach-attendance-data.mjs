@@ -583,7 +583,8 @@ export default async (request, context) => {
         hash,
         updatedAt: new Date().toISOString(),
       });
-      await store.delete("auth/coach-passkeys.json").catch(() => {});
+      await store.delete("auth/operator-passkeys.json");
+      await store.delete("auth/coach-passkeys.json");
       return json({ ok: true, passkeysReset: true });
     }
 

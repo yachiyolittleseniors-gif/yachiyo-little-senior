@@ -2243,7 +2243,7 @@ export default async (request, context) => {
         hash,
         updatedAt: new Date().toISOString()
       });
-      await store.delete("auth/board-passkeys.json").catch(() => {});
+      await store.delete("auth/board-passkeys.json");
 
       return json({ ok: true, passkeysReset: true });
     }

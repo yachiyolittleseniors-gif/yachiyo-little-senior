@@ -1,7 +1,5 @@
 const COACH_SESSION_COOKIE = "yls_coach_session";
 const COACH_SESSION_SECONDS = 60 * 60 * 4;
-const DEFAULT_ACCESS_HASH =
-  "937e76fe820379b5e095356a7dae5cbd223b5c9af6dd444e48a3f3b34bd4f8eb";
 
 function safeEqual(a, b) {
   const left = String(a || "");
@@ -25,8 +23,8 @@ async function signCoachSession(value) {
   const secret =
     process.env.COACH_SESSION_SECRET ||
     process.env.ADMIN_PASSWORD ||
-    process.env.COACH_ACCESS_PASSWORD ||
-    DEFAULT_ACCESS_HASH;
+    process.env.COACH_ACCESS_PASSWORD;
+  if (!secret) throw new Error("Coach session signing secret is not configured");
   const key = await crypto.subtle.importKey(
     "raw",
     new TextEncoder().encode(secret),
@@ -49,15 +47,12 @@ export async function createCoachSessionToken() {
 }
 
 export async function coachSessionTokenIsValid(token) {
-  const [expiresAt, signature, extra] = String(token || "").split(".");
-  if (
-    !expiresAt ||
-    !signature ||
-    extra ||
-    !/^\d+$/.test(expiresAt) ||
-    Number(expiresAt) < Math.floor(Date.now() / 1000)
-  ) return false;
-  return safeEqual(signature, await signCoachSession(expiresAt));
+  const value = String(token || "");
+  if (!/^\d{10,12}\.[A-Za-z0-9_-]{43}$/.test(value)) return false;
+  const [expiresAt, signature] = value.split(".");
+  if (Number(expiresAt) <= Math.floor(Date.now() / 1000)) return false;
+  try { return safeEqual(signature, await signCoachSession(expiresAt)); }
+  catch { return false; }
 }
 
 function getCookie(request, name) {
@@ -65,7 +60,8 @@ function getCookie(request, name) {
   const prefix = `${name}=`;
   const part = cookie.split(";").map(item => item.trim())
     .find(item => item.startsWith(prefix));
-  return part ? decodeURIComponent(part.slice(prefix.length)) : "";
+  try { return part ? decodeURIComponent(part.slice(prefix.length)) : ""; }
+  catch { return ""; }
 }
 
 export async function coachSessionIsValid(request) {

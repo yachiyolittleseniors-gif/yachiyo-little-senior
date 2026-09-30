@@ -97,6 +97,8 @@ async function takeChallenge(store, ceremonyID, expectedType) {
 
 export default async request => {
   if (request.method !== "POST") return json({ error: "method not allowed" }, 405);
+  const origin = request.headers.get("origin");
+  if (origin && origin !== new URL(request.url).origin) return json({ error: "unauthorized origin" }, 403);
   let body;
   try { body = await request.json(); } catch { return json({ error: "invalid json" }, 400); }
   const action = String(body?.action || "");
@@ -158,6 +160,7 @@ export default async request => {
       return json({ ok: true });
     }
     if (action === "delete-credential") {
+      if (!(await accessIsValid(store, request))) return json({ error: "unauthorized" }, 401);
       const credentialID = String(body?.credentialID || "");
       if (!credentialID) return json({ error: "削除する生体認証を確認できませんでした。" }, 400);
       const credentials = await loadCredentials(store);

@@ -5,6 +5,26 @@
 [functions]
   node_bundler = "esbuild"
 
+# Server sources and test fixtures are not public site assets.
+# The deployed API remains available under /.netlify/functions/.
+[[redirects]]
+  from = "/netlify/*"
+  to = "/404.html"
+  status = 404
+  force = true
+
+[[redirects]]
+  from = "/tests/*"
+  to = "/404.html"
+  status = 404
+  force = true
+
+[[redirects]]
+  from = "/package.json"
+  to = "/404.html"
+  status = 404
+  force = true
+
 # 公開ページの正規URLは拡張子なしに統一する。
 # 旧URLや既存の検索結果からの評価は301で正規URLへ引き継ぐ。
 [[redirects]]
