@@ -13,7 +13,7 @@
     container.style.position = 'relative';
     var overlay = document.createElement('div');
     overlay.id = 'member-comment-overlay';
-    overlay.style.cssText = 'display:none;position:absolute;z-index:20;width:min(640px,calc(100% - 2px));max-height:min(72dvh,650px);overflow:auto;background:#fffdf6;border:1px solid #c6a052;border-left:4px solid #c6a052;box-shadow:0 15px 32px rgba(7,20,38,.22);box-sizing:border-box;';
+    overlay.style.cssText = 'display:none;position:absolute;z-index:20;width:min(640px,calc(100% - 2px));max-height:min(72dvh,650px);overflow:auto;overscroll-behavior-y:contain;-webkit-overflow-scrolling:touch;background:#fffdf6;border:1px solid #c6a052;border-left:4px solid #c6a052;box-shadow:0 15px 32px rgba(7,20,38,.22);box-sizing:border-box;';
     board.after(overlay);
     editor.style.cssText = 'box-sizing:border-box;display:none;width:100%;max-width:none;margin:0;padding:16px;border:0;background:#fffdf6;text-align:left;white-space:normal;';
     var textarea = editor.querySelector('textarea');
