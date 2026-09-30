@@ -3,8 +3,9 @@ const cover=document.getElementById('firstVisitSplash');
 if(!cover)return;
 cover.hidden=false;
 const openedAt=performance.now();
-let closed=false,stopMotion=()=>{};
-function remove(){if(closed)return;closed=true;stopMotion();cover.remove();}
+let closed=false,stopMotion=()=>{},exitTimer=0,guardTimer=0;
+let leaving=false;
+function remove(){if(closed)return;closed=true;clearTimeout(exitTimer);clearTimeout(guardTimer);stopMotion();cover.remove();}
 function wait(ms){return new Promise(resolve=>setTimeout(resolve,ms));}
 function mobileMotion(){
   if(!window.matchMedia('(max-width: 767px)').matches||window.matchMedia('(prefers-reduced-motion: reduce)').matches)return wait(1500);
@@ -321,11 +322,28 @@ function mobileMotion(){
     if(source.complete)begin();else{source.addEventListener('load',begin,{once:true});source.addEventListener('error',finish,{once:true});}
   });
 }
-// The cover is already present: measure the entire opening from its reveal,
-// not DOMContentLoaded or image loading. Motion 1400ms, hold 100ms, fade 300ms.
-setTimeout(()=>{if(closed)return;stopMotion();cover.classList.add('is-leaving');},1500);
-setTimeout(remove,1800);
+// Keep the existing motion; reveal the page only when its hero is ready.
+function leave(){
+  if(closed||leaving)return;
+  leaving=true;clearTimeout(guardTimer);stopMotion();
+  cover.classList.add('is-leaving');
+  exitTimer=setTimeout(remove,300);
+}
+function awaitHero(){
+  const ready=window.__yachiyoHeroReady;
+  Promise.resolve(ready).catch(()=>false).then(()=>{
+    if(closed||leaving)return;
+    // Allow the decoded background to paint behind the cover before fading.
+    requestAnimationFrame(()=>requestAnimationFrame(()=>{
+      if(closed||leaving)return;
+      exitTimer=setTimeout(leave,Math.max(0,1500-(performance.now()-openedAt)));
+    }));
+  });
+}
+guardTimer=setTimeout(leave,6000);
+if(document.readyState==='loading'){
+  document.addEventListener('DOMContentLoaded',awaitHero,{once:true});
+}else{awaitHero();}
 mobileMotion();
 window.addEventListener('pagehide',remove,{once:true});
 })();
-

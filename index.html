@@ -3602,7 +3602,7 @@ body.photo-admin-on .recruit-mode-admin{display:block}
 <script src="./back-to-top.js?v=20260930-padding1" defer></script>
 </head>
 <body id="page-top"><div id="firstVisitSplash" aria-hidden="true" hidden><div class="first-visit-logo"><img src="./official-logo-crisp-final.png" alt=""><div class="first-visit-shine"></div><div class="first-visit-since"><span>SINCE 1982</span></div></div></div>
-<script src="./first-visit-splash.js?v=20260930-fire-wrap"></script>
+<script src="./first-visit-splash.js?v=20260930-hero-ready"></script>
 <header class="header">
 <nav class="nav">
 <div class="brand"><div class="official-brand-wrap" data-home-logo role="link" tabindex="0" aria-label="ホームへ戻る">
@@ -3950,13 +3950,21 @@ function openProtectedArea(type){
   if(!hero||!toggle||!change||!input||!adminPanel)return;
 
   function showHeroImage(src){
-    hero.style.setProperty('--hero-photo',`url("${src}")`);
     return new Promise(resolve=>{
       const img=new Image();
-      img.onload=()=>resolve(true);
+      let started=false;
+      const apply=async()=>{
+        if(started)return;
+        started=true;
+        try{if(img.decode)await img.decode();}catch(e){}
+        hero.style.setProperty('--hero-photo',`url("${src}")`);
+        resolve(true);
+      };
+      img.fetchPriority='high';
+      img.onload=apply;
       img.onerror=()=>resolve(false);
       img.src=src;
-      if(img.complete&&img.naturalWidth>0)resolve(true);
+      if(img.complete&&img.naturalWidth>0)apply();
     });
   }
 
