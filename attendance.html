@@ -267,13 +267,20 @@ body{padding-top:var(--fixed-header-height)!important}
 #member-comment-row>td{padding:0!important;text-align:left!important;background:#fffdf6!important;border-bottom:2px solid #c6a052}
 #member-comment-row #editor{box-sizing:border-box;position:sticky;left:0;width:min(640px,calc(100vw - 40px));max-width:640px;margin:0;padding:16px;border:0;border-left:4px solid #c6a052;background:#fffdf6;text-align:left;white-space:normal}
 #member-comment-row #editor h3{position:static;margin:0 0 8px;padding:0;line-height:1.5}
-/* compact escort control; give its space to the comment textarea */
-#member-comment-row #editor textarea{box-sizing:border-box;font-size:16px;min-height:120px;line-height:1.6;resize:vertical}
-#member-comment-row #editor #upperGradeField{margin-top:6px;padding:0 10px;border-radius:8px}
-#member-comment-row #editor .escort-grade-buttons{gap:4px 14px}
-#member-comment-row #editor .escort-check{min-height:44px;gap:8px}
-#member-comment-row #editor .escort-check-box{flex-basis:22px;width:22px;height:22px;border-radius:5px;font-size:16px}
-#member-comment-row #editor .escort-check-text{font-size:14px}
+/* Compact controls follow the editor even when it moves into the overlay. */
+#editor #commentText{box-sizing:border-box;font-size:16px;min-height:160px!important;line-height:1.6;resize:vertical}
+#editor #upperGradeField{margin-top:6px;padding:0 8px;border-radius:8px}
+#editor #upperGradeField[hidden]{display:none}
+#editor .escort-grade-buttons{gap:8px;flex-wrap:nowrap}
+#editor .escort-check{flex:0 0 auto;min-height:44px;gap:6px;padding:0}
+#editor .escort-check-box{flex-basis:20px;width:20px;height:20px;border-radius:5px;font-size:14px}
+#editor .escort-check-text{font-size:14px}
+#editor .escort-check input:focus-visible+.escort-check-box{outline:2px solid #071426;outline-offset:2px}
+#commentList .comment-meta{display:grid;grid-template-columns:minmax(0,1fr) auto;grid-template-areas:"name date" "escort updated";gap:5px 8px;align-items:center;margin-bottom:7px}
+#commentList .comment-name{grid-area:name;min-width:0;overflow-wrap:anywhere}
+#commentList .comment-event-date{grid-area:date;justify-self:end;white-space:nowrap}
+#commentList .comment-escort{grid-area:escort}
+#commentList .comment-updated{grid-area:updated;justify-self:end;white-space:nowrap;font-size:10px}
 </style>
 <style id="attendance-tap-zoom-guard">
 /* Rapid answer taps stay taps; preserve scrolling and two-finger zoom. */
@@ -598,7 +605,7 @@ function renderEditor(){
   const savedEscort=[...data.comments].reverse().find(c=>String(c.memberId)===String(m.id)&&String(c.eventDate||'')===String(select.value||'')&&c.escortSetting===true);if(savedEscort)selectedEscortGrade=String(savedEscort.escortGrade||'');const grade=String(m.grades?.[0]||'');const targets=grade==='1'?['2','3']:grade==='2'?['3']:[];
   const field=$('#upperGradeField'),buttons=$('#escortGradeButtons');field.hidden=!targets.length;
   if(!targets.includes(selectedEscortGrade))selectedEscortGrade='';
-  buttons.innerHTML=targets.map(target=>`<label class="escort-check"><input type="checkbox" data-escort-grade="${target}" ${selectedEscortGrade===target?'checked':''}><span class="escort-check-box" aria-hidden="true"></span><span class="escort-check-text">${target}年生に帯同する</span></label>`).join('');
+  buttons.innerHTML=targets.map(target=>`<label class="escort-check"><input type="checkbox" data-escort-grade="${target}" ${selectedEscortGrade===target?'checked':''}><span class="escort-check-box" aria-hidden="true"></span><span class="escort-check-text">${target}年生に帯同</span></label>`).join('');
   buttons.querySelectorAll('[data-escort-grade]').forEach(input=>input.onchange=()=>{selectedEscortGrade=input.checked?input.dataset.escortGrade:'';buttons.querySelectorAll('[data-escort-grade]').forEach(other=>{if(other!==input)other.checked=false})});
 }
 const pendingAnswers=new Map();
@@ -656,7 +663,7 @@ function commentDateValue(comment){if(comment.eventDate){const value=new Date(co
 function sortedComments(){const actualComments=new Set(data.comments.filter(comment=>comment&&!comment.escortSetting).map(comment=>String(comment.memberId)+'|'+String(comment.eventDate||'')));return [...data.comments].filter(comment=>comment&&(comment.text||comment.upperGrade)&&(!comment.escortSetting||!actualComments.has(String(comment.memberId)+'|'+String(comment.eventDate||'')))).sort((a,b)=>commentDateValue(b)-commentDateValue(a)||new Date(b.updatedAt||0)-new Date(a.updatedAt||0))}
 function todayDateKey(){const now=new Date(),year=now.getFullYear(),month=String(now.getMonth()+1).padStart(2,'0'),day=String(now.getDate()).padStart(2,'0');return `${year}-${month}-${day}`}
 function isPastComment(comment){const eventDate=String(comment?.eventDate||'');return /^\d{4}-\d{2}-\d{2}$/.test(eventDate)&&eventDate<todayDateKey()}
-function renderComments(){const byId=new Map(data.members.map(m=>[m.id,memberDisplayName(m)]));const list=sortedComments().filter(comment=>!isPastComment(comment)).slice(0,50);$('#commentList').innerHTML=list.length?list.map(c=>`<article class="comment-item"><div class="comment-meta"><span class="comment-name">${esc(byId.get(c.memberId)||'回答者')}</span> ${(c.escortGrade||c.upperGrade)?'<span class="upper-grade-badge">'+esc(c.escortGrade?c.escortGrade+'年生帯同':'上級生帯同')+'</span>':''}　${c.eventDate?esc(formatDate(c.eventDate))+'　':''}${esc(new Date(c.updatedAt).toLocaleString('ja-JP'))}</div><div class="comment-text">${esc(c.text||'')}</div></article>`).join(''):'<div class="empty">コメントはまだありません。</div>'}
+function renderComments(){const byId=new Map(data.members.map(m=>[m.id,memberDisplayName(m)]));const list=sortedComments().filter(comment=>!isPastComment(comment)).slice(0,50);$('#commentList').innerHTML=list.length?list.map(c=>`<article class="comment-item"><div class="comment-meta"><span class="comment-name">${esc(byId.get(c.memberId)||'回答者')}</span><span class="comment-event-date">${c.eventDate?esc(formatDate(c.eventDate)):''}</span><span class="comment-escort">${(c.escortGrade||c.upperGrade)?'<span class="upper-grade-badge">'+esc(c.escortGrade?c.escortGrade+'年生帯同':'上級生帯同')+'</span>':''}</span><span class="comment-updated">${esc(new Date(c.updatedAt).toLocaleString('ja-JP'))}</span></div><div class="comment-text">${esc(c.text||'')}</div></article>`).join(''):'<div class="empty">コメントはまだありません。</div>'}
 $('#openReportBtn').onclick=()=>{const eventId=$('#reportEventSelect').value;if(!eventId||!renderReport(eventId)){alert('出力する日程を選択してください。');return}$('#reportDialog').showModal();document.body.style.overflow='hidden'};
 $('#closeReportBtn').onclick=()=>{$('#reportDialog').close();document.body.style.overflow=''};
 $('#saveReportImageBtn').onclick=saveReportImage;
