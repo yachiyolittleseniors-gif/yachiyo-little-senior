@@ -30,8 +30,14 @@ function init(){
   });}
   var settingsApi='/.netlify/functions/site-data?section=duty-roster-settings',excluded=[],families=[],settingsReady=false,settingsDirty=false,settingsLoading=null;
   var fields=document.createElement('div');fields.id='dutyExclusionFields';
-  fields.innerHTML='<label for="dutyExcludedFamily">当番表から外す家庭</label><p>休部中などの家庭を選択してください。父母とも対象から外れ、解除するまで次回以降も適用されます。</p><div class="duty-exclusion-entry"><select id="dutyExcludedFamily" disabled><option value="">読み込み中…</option></select><button type="button" id="dutyExclusionAdd" disabled>追加</button></div><div id="dutyExclusionList"></div><button type="button" id="dutyExclusionSave" disabled>除外設定を保存</button><p id="dutyExclusionStatus" role="status" aria-live="polite"></p>';
+  fields.hidden=true;
+  fields.innerHTML='<p>休部中などの家庭を選択してください。父母とも対象から外れ、解除するまで次回以降も適用されます。</p><div class="duty-exclusion-entry"><select id="dutyExcludedFamily" disabled><option value="">読み込み中…</option></select><button type="button" id="dutyExclusionAdd" disabled>追加</button></div><div id="dutyExclusionList"></div><button type="button" id="dutyExclusionSave" disabled>除外設定を保存</button><p id="dutyExclusionStatus" role="status" aria-live="polite"></p>';
   create.parentNode.insertBefore(fields,create);
+  var exclusionHeading=document.createElement('div');exclusionHeading.className='duty-exclusion-heading';
+  var exclusionLabel=document.createElement('label');exclusionLabel.htmlFor='dutyExcludedFamily';exclusionLabel.textContent='当番表から外す家庭';
+  var exclusionToggle=document.createElement('button');exclusionToggle.type='button';exclusionToggle.id='dutyExclusionToggle';exclusionToggle.textContent='表示 ▼';exclusionToggle.setAttribute('aria-controls','dutyExclusionFields');exclusionToggle.setAttribute('aria-expanded','false');
+  exclusionToggle.onclick=function(){fields.hidden=!fields.hidden;exclusionToggle.textContent=fields.hidden?'表示 ▼':'閉じる ▲';exclusionToggle.setAttribute('aria-expanded',String(!fields.hidden));};
+  exclusionHeading.append(exclusionLabel,exclusionToggle);create.parentNode.insertBefore(exclusionHeading,fields);
   var select=fields.querySelector('select'),addEx=fields.querySelector('#dutyExclusionAdd'),saveEx=fields.querySelector('#dutyExclusionSave'),exList=fields.querySelector('#dutyExclusionList'),exStatus=fields.querySelector('#dutyExclusionStatus');
   function invalidateDraft(){preview.replaceChildren();preview.hidden=true;settingsDirty=true;exStatus.textContent='未保存です。保存後に当番表（案）を作成してください。';}
   function paintExclusions(){
