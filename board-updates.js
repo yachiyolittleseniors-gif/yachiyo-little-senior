@@ -370,6 +370,7 @@
       }
 
       panel.dataset.adminPassword=adminPassword;
+      document.dispatchEvent(new Event('yachiyo:admin-authenticated'));
       panel.classList.add('show');
       adminBtn.textContent='管理終了';
     }catch(e){
