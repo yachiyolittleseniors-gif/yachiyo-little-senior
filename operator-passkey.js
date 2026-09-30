@@ -161,6 +161,21 @@
         // No registered passkey / cancelled / failed: fall back to password.
       }
     }
+    if (supported() && window.YLSPasskeyLogin) {
+      const choice = await window.YLSPasskeyLogin({
+        title: "運営用ログイン",
+        authenticate: async () => {
+          const result = await authenticate();
+          if (!result?.token) throw new Error("Authentication was not completed");
+          return result.token;
+        },
+      });
+      if (choice.method === "passkey") {
+        try { sessionStorage.setItem("yachiyoCoachAttendancePass", choice.value); } catch (_) {}
+        return choice.value;
+      }
+      if (choice.method === "cancel") return "";
+    }
     const entered = prompt(promptMessage);
     if (entered === null) return "";
     try {

@@ -39,11 +39,11 @@ window.boardAccessReady=(async function requireBoardPassword(){
     return true;
   }
   let passkeyAttempt=null;
-  async function verifyPasskey(){
+  async function verifyPasskey(manual=false){
     // Only automatically open WebAuthn on a browser with a successful registration.
-    // Other browsers go directly to password entry instead of a cross-device QR prompt.
+    // An explicit choice can recover an existing passkey after site data is cleared.
     if(!window.YLSPasskeys?.supported())return false;
-    try{if(localStorage.getItem(passkeyKey)!=='1')return false}catch(_){return false}
+    if(!manual){try{if(localStorage.getItem(passkeyKey)!=='1')return false}catch(_){return false}}
     if(passkeyAttempt)return passkeyAttempt;
     passkeyAttempt=(async()=>{
       try{
@@ -61,7 +61,7 @@ window.boardAccessReady=(async function requireBoardPassword(){
         return false;
       }
     })();
-    return passkeyAttempt;
+    try{return await passkeyAttempt}finally{passkeyAttempt=null}
   }
   const searchParams=new URLSearchParams(location.search);
   const returnSource=searchParams.get('from');
@@ -81,6 +81,17 @@ window.boardAccessReady=(async function requireBoardPassword(){
     }catch(e){}
   }else{clearAccess()}
   if(await verifyPasskey())return true;
+  if(window.YLSPasskeys?.supported()&&window.YLSPasskeyLogin){
+    const choice=await window.YLSPasskeyLogin({
+      title:'チーム専用ページ',
+      authenticate:()=>verifyPasskey(true)
+    });
+    if(choice.method==='passkey')return true;
+    if(choice.method==='cancel'){
+      if(history.length>1){history.back()}else{location.replace('./')}
+      return false;
+    }
+  }
   const p=prompt('パスワードを入力してください。');
   if(p===null){
     if(history.length>1){history.back()}else{location.replace('./')}
