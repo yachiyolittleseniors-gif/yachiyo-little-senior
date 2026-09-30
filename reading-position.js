@@ -7,9 +7,19 @@
   let saved=null;
   try{const raw=sessionStorage.getItem(key);if(raw!==null&&Number.isFinite(Number(raw)))saved=Math.max(0,Number(raw));}catch(e){}
   let restoring=Boolean(reload&&saved!==null),frame=0,timer=0;
+  const maskInitialPaint=restoring&&saved>0&&document.currentScript?.hasAttribute('data-suppress-initial-flash');
+  let revealGuard=0;
+  if(maskInitialPaint){
+    const style=document.createElement('style');
+    style.textContent='html.reading-position-pending{background:#071426!important}html.reading-position-pending body{visibility:hidden!important}';
+    document.head.appendChild(style);
+    document.documentElement.classList.add('reading-position-pending');
+    // Fail open if a content request stalls; the page must remain usable.
+    revealGuard=setTimeout(()=>{if(restoring){window.scrollTo({top:saved,left:0,behavior:'instant'});finish();}},10000);
+  }
   if('scrollRestoration' in history)history.scrollRestoration=restoring?'manual':'auto';
   function save(){if(!restoring)try{sessionStorage.setItem(key,String(window.scrollY));}catch(e){}}
-  function finish(){restoring=false;clearTimeout(timer);save();}
+  function finish(){restoring=false;clearTimeout(timer);clearTimeout(revealGuard);document.documentElement.classList.remove('reading-position-pending');save();}
   window.addEventListener('scroll',()=>{if(restoring)return;cancelAnimationFrame(frame);frame=requestAnimationFrame(save);},{passive:true});
   window.addEventListener('pagehide',save);
   window.addEventListener('pageshow',async()=>{
