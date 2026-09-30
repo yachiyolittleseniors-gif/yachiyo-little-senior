@@ -3635,7 +3635,7 @@ body.photo-admin-on .recruit-mode-admin{display:block}
 <script src="./back-to-top.js?v=20260930-padding1" defer></script>
 </head>
 <body id="page-top"><div id="firstVisitSplash" aria-hidden="true" hidden><div class="first-visit-logo"><img src="./official-logo-crisp-final.png" alt=""><div class="first-visit-shine"></div><div class="first-visit-since"><span>SINCE 1982</span></div></div></div>
-<script src="./first-visit-splash.js?v=20260930-no-reload"></script>
+<script src="./first-visit-splash.js?v=20261001-photo-change"></script>
 <header class="header">
 <nav class="nav">
 <div class="brand"><div class="official-brand-wrap" data-home-logo role="link" tabindex="0" aria-label="ホームへ戻る">
@@ -4142,6 +4142,7 @@ function openProtectedArea(type){
       window.__yachiyoPhotoCache&&window.__yachiyoPhotoCache.set('hero',image);
        hero.style.setProperty('--hero-photo',`url("${image}")`);
       window.__yachiyoRememberHeroImage(image);
+      try{sessionStorage.setItem('yachiyo:hero-opening-pending','1')}catch(e){}
       showSaveNotice('保存しました');
     }catch(e){
       alert(e.message==='LIMITED'?'試行回数の上限です。15分後に再度お試しください。':'保存できませんでした。管理パスワードを確認してください。');

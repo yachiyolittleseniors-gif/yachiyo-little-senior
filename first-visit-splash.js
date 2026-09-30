@@ -1,8 +1,13 @@
 (()=>{'use strict';
 const cover=document.getElementById('firstVisitSplash');
 if(!cover)return;
-// A reload resumes reading; only ordinary home entry plays the opening.
-if(performance.getEntriesByType('navigation')[0]?.type==='reload'){cover.remove();return;}
+// A successful hero replacement requests the opening once on the next home view.
+let heroChanged=false;
+try{
+  heroChanged=sessionStorage.getItem('yachiyo:hero-opening-pending')==='1';
+  if(heroChanged)sessionStorage.removeItem('yachiyo:hero-opening-pending');
+}catch(e){}
+if(performance.getEntriesByType('navigation')[0]?.type==='reload'&&!heroChanged){cover.remove();return;}
 cover.hidden=false;
 const openedAt=performance.now();
 let closed=false,stopMotion=()=>{},exitTimer=0,guardTimer=0;
