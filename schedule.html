@@ -2295,14 +2295,13 @@ renderCalendar();
 
   async function verifyAdminPassword(password){
     try{
-      const data = Array.isArray(window.scheduleData) ? window.scheduleData : [];
-      const r = await fetch('/.netlify/functions/site-data?section=schedule',{
+      const r = await fetch('/.netlify/functions/site-data?section=access-settings',{
         method:'POST',
         headers:{
           'content-type':'application/json',
           'x-admin-password':password
         },
-        body:JSON.stringify({data})
+        body:JSON.stringify({action:'verifyAdminPassword'})
       });
       return {ok:r.ok,status:r.status};
     }catch(e){
