@@ -6,6 +6,8 @@
  if(page==='board.html'||!TARGETS.has(page))return;
  const KEY=page;
  let enabled=true,ready=false,timer=null;
+ const desktop=window.matchMedia('(min-width:901px)');
+ let currentSettings=null;
  const selectors=['.unified-admin-toggle','.manage-btn','#manageBtn','#adminBtn','#adminToggle','#staffToggle','#heroAdminToggle','#cupAdminBtn','#densukeToggleBtn'];
  const HIDE_CLASS='admin-visibility-disabled';
  const style=document.createElement('style');
@@ -25,15 +27,19 @@
    selectors.forEach(sel=>document.querySelectorAll(sel).forEach(el=>{el.style.removeProperty('display');el.removeAttribute('aria-hidden')}));
  }
  function apply(d){
+   currentSettings=d;
    const cfg=d&&d.pages&&typeof d.pages==='object'?d:{pages:(d&&typeof d==='object'?d:{}),autoOffEnabled:true,expiresAt:{}};
    const exp=Number(cfg.expiresAt&&cfg.expiresAt[KEY]||0);
-   enabled=cfg.pages[KEY]!==false&&!(cfg.autoOffEnabled!==false&&exp&&exp<=Date.now());
+   enabled=(!desktop.matches||cfg.desktopEnabled===true)&&cfg.pages[KEY]!==false&&!(cfg.autoOffEnabled!==false&&exp&&exp<=Date.now());
    ready=true;if(timer){clearTimeout(timer);timer=null}
    if(enabled){showAdminUi();if(cfg.autoOffEnabled!==false&&exp>Date.now())timer=setTimeout(()=>{enabled=false;clearAdminState()},Math.min(exp-Date.now()+100,2147483647));}
    else clearAdminState();
  }
+ apply(null);
+ if(desktop.addEventListener)desktop.addEventListener('change',()=>apply(currentSettings));
+ else if(desktop.addListener)desktop.addListener(()=>apply(currentSettings));
  fetch('/.netlify/functions/site-data?section=admin-visibility-settings',{cache:'no-store'})
-   .then(r=>r.ok?r.json():Promise.reject()).then(j=>apply(j&&j.data)).catch(()=>{ready=true;enabled=true;showAdminUi()});
+   .then(r=>r.ok?r.json():Promise.reject()).then(j=>apply(j&&j.data)).catch(()=>apply(currentSettings));
  const blocked=()=>ready&&!enabled;
  ['pointerdown','pointerup','touchstart','touchend','click','dblclick'].forEach(type=>document.addEventListener(type,e=>{
    if(!blocked())return; const t=e.target;
