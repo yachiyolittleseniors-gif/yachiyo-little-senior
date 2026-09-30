@@ -17,12 +17,12 @@ window.coachAccessReady=(async function(){
   if(saved){document.documentElement.style.visibility='';return true}
   try{sessionStorage.removeItem('yachiyoBoardPasskeyJustVerified')}catch(e){}
   if(window.YLSOperatorPasskeys?.authorize){
-    const value=await window.YLSOperatorPasskeys.authorize('運営用パスワードを入力してください。');
+    const value=await window.YLSOperatorPasskeys.authorize('パスワードを入力して下さい。');
     if(value){remember(value);document.documentElement.style.visibility='';return true}
     location.replace('./board.html?from=coach');return false;
   }
   document.documentElement.style.visibility='';
-  const entered=prompt('運営用パスワードを入力してください。');
+  const entered=prompt('パスワードを入力して下さい。');
   if(entered===null){location.replace('./board.html?from=coach');return false}
   if(await verifyPassword(entered))return true;
   alert('パスワードが違います。');location.replace('./board.html');return false;
