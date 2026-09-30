@@ -97,6 +97,12 @@
     try {
       credential = await navigator.credentials.create({ publicKey: creationOptions(start.options) });
     } catch (error) {
+      if (error?.name === "InvalidStateError") {
+        // Recover the existing passkey without changing the native login UI.
+        const result = await authenticate();
+        if (!result?.token) throw new Error("登録済みの生体認証を確認できませんでした。");
+        return { ...result, recovered: true };
+      }
       throw friendlyError(error, "生体認証を登録できませんでした。");
     }
     if (!credential) throw new Error("生体認証の登録がキャンセルされました。");

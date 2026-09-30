@@ -71,7 +71,17 @@
   async function register(accessValue, label = "") {
     if (!supported()) throw new Error("この端末は生体認証に対応していません。");
     const start = await request({ action: "registration-options" }, accessValue);
-    const credential = await navigator.credentials.create({ publicKey: creationOptions(start.options) });
+    let credential;
+    try {
+      credential = await navigator.credentials.create({ publicKey: creationOptions(start.options) });
+    } catch (error) {
+      if (error?.name !== "InvalidStateError") throw error;
+      // The passkey still exists after site data was cleared. Verify possession
+      // before the existing setup flow restores its local registration marker.
+      const result = await authenticate();
+      if (!result?.token) throw new Error("登録済みの生体認証を確認できませんでした。");
+      return { ...result, recovered: true };
+    }
     if (!credential) throw new Error("生体認証の登録がキャンセルされました。");
     return request({
       action: "registration-verify", ceremonyID: start.ceremonyID,
