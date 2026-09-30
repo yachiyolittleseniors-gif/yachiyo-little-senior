@@ -2,31 +2,32 @@
 
 <html lang="ja">
 <head>
+<script src="/.netlify/functions/site-data?section=hero&amp;bootstrap=1"></script>
 <script>
 (()=>{'use strict';
-const previewKey='yachiyo:hero-reload-image';
-const validPreview=value=>typeof value==='string'&&value.length<3000000&&/^data:image\/(?:jpeg|png|webp|gif);base64,[a-z0-9+/=\\r\\n]+$/i.test(value);
-if(performance.getEntriesByType('navigation')[0]?.type==='reload'){
-  try{
-    const previous=sessionStorage.getItem(previewKey);
-    if(validPreview(previous)){
-      document.documentElement.style.setProperty('--hero-photo','url("'+previous+'")');
-      const preload=document.createElement('link');
-      preload.rel='preload';preload.as='image';preload.href=previous;preload.fetchPriority='high';
-      document.head.appendChild(preload);
-    }
-  }catch(e){}
+const previewKey='yachiyo:hero-versioned-preview';
+const validPreview=value=>typeof value==='string'&&value.length<3000000&&/^data:image\/(?:jpeg|png|webp|gif);base64,[a-z0-9+/=]+$/i.test(value);
+const serverVersion=String(window.__yachiyoHeroVersion||'');
+const isReload=performance.getEntriesByType('navigation')[0]?.type==='reload';
+let previous=null;
+try{previous=JSON.parse(sessionStorage.getItem(previewKey)||'null')}catch(e){}
+const matchingPreview=Boolean(serverVersion&&previous?.version===serverVersion&&validPreview(previous?.image));
+window.__yachiyoHeroChanged=isReload&&!matchingPreview;
+if(isReload&&matchingPreview){
+  document.documentElement.style.setProperty('--hero-photo','url("'+previous.image+'")');
+  const preload=document.createElement('link');
+  preload.rel='preload';preload.as='image';preload.href=previous.image;preload.fetchPriority='high';
+  document.head.appendChild(preload);
 }
 let cacheRevision=0;
-window.__yachiyoRememberHeroImage=function(src){
+window.__yachiyoRememberHeroImage=function(src,explicitVersion){
   const revision=++cacheRevision;
-  const save=value=>{if(revision!==cacheRevision||!validPreview(value))return;try{sessionStorage.setItem(previewKey,value)}catch(e){}};
-  if(validPreview(src)){save(src);return;}
   const current=window.__yachiyoHeroRequest;
+  const version=String(explicitVersion||current?.version||serverVersion||'');
+  const save=image=>{if(revision!==cacheRevision||!version||!validPreview(image))return;try{sessionStorage.setItem(previewKey,JSON.stringify({version,image}))}catch(e){}};
+  if(validPreview(src)){save(src);return;}
   if(current?.objectUrl!==src||!current.blob)return;
-  const reader=new FileReader();
-  reader.onload=()=>save(reader.result);
-  reader.readAsDataURL(current.blob);
+  const reader=new FileReader();reader.onload=()=>save(reader.result);reader.readAsDataURL(current.blob);
 };
 let resolveReady;
 window.__yachiyoHeroReady=new Promise(resolve=>{resolveReady=resolve;});
@@ -47,6 +48,7 @@ window.__yachiyoHeroRequest=request;
 window.__yachiyoHeroImage=fetch('/.netlify/functions/site-data?section=hero&current=1',{cache:'no-store',priority:'high',signal:request.signal})
  .then(async response=>{
   if(!response.ok)throw new Error('Hero image unavailable');
+  request.version=response.headers.get('x-yachiyo-hero-version')||serverVersion;
   const blob=await response.blob();
   if(request.signal.aborted||!blob.size||!blob.type.startsWith('image/'))throw new Error('Invalid hero image');
   request.blob=blob;
@@ -3635,7 +3637,7 @@ body.photo-admin-on .recruit-mode-admin{display:block}
 <script src="./back-to-top.js?v=20260930-padding1" defer></script>
 </head>
 <body id="page-top"><div id="firstVisitSplash" aria-hidden="true" hidden><div class="first-visit-logo"><img src="./official-logo-crisp-final.png" alt=""><div class="first-visit-shine"></div><div class="first-visit-since"><span>SINCE 1982</span></div></div></div>
-<script src="./first-visit-splash.js?v=20261001-photo-change"></script>
+<script src="./first-visit-splash.js?v=20261001-global-photo"></script>
 <header class="header">
 <nav class="nav">
 <div class="brand"><div class="official-brand-wrap" data-home-logo role="link" tabindex="0" aria-label="ホームへ戻る">
@@ -4137,11 +4139,12 @@ function openProtectedArea(type){
       });
       if(r.status===429)throw new Error('LIMITED');
       if(!r.ok)throw new Error('save failed');
+      const savedHero=await r.json();
      window.__yachiyoPhotoDataPromise=null;
        window.__yachiyoPhotoDataPromise=null;
       window.__yachiyoPhotoCache&&window.__yachiyoPhotoCache.set('hero',image);
        hero.style.setProperty('--hero-photo',`url("${image}")`);
-      window.__yachiyoRememberHeroImage(image);
+      window.__yachiyoRememberHeroImage(image,savedHero.version);
       try{sessionStorage.setItem('yachiyo:hero-opening-pending','1')}catch(e){}
       showSaveNotice('保存しました');
     }catch(e){
@@ -5143,6 +5146,7 @@ body:not(.photo-admin-on) #heroAdminToggle.unified-admin-toggle:focus-visible{co
 </style>
 </body>
 </html>
+
 
 
 

@@ -2,9 +2,9 @@
 const cover=document.getElementById('firstVisitSplash');
 if(!cover)return;
 // A successful hero replacement requests the opening once on the next home view.
-let heroChanged=false;
+let heroChanged=window.__yachiyoHeroChanged===true;
 try{
-  heroChanged=sessionStorage.getItem('yachiyo:hero-opening-pending')==='1';
+  heroChanged=heroChanged||sessionStorage.getItem('yachiyo:hero-opening-pending')==='1';
   if(heroChanged)sessionStorage.removeItem('yachiyo:hero-opening-pending');
 }catch(e){}
 if(performance.getEntriesByType('navigation')[0]?.type==='reload'&&!heroChanged){cover.remove();return;}
@@ -358,3 +358,4 @@ else if(document.readyState==='loading'){
 mobileMotion();
 window.addEventListener('pagehide',remove,{once:true});
 })();
+

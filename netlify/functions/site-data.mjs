@@ -1,3 +1,4 @@
+import { randomUUID } from "node:crypto";
 import { verifyAccessPassword } from "./_access-password.mjs";
 import { accessRateLimitResponse } from "./_access-rate-limit.mjs";
 import { getStore } from "@netlify/blobs";
@@ -24,7 +25,7 @@ async function readHeroManifestData(store, key) {
     if (!entry) { heroManifestSnapshot = null; return null; }
     if (cached && entry.etag === cached.etag && entry.data === null) return cached.data;
     const data = Array.isArray(entry.data) ? entry.data.map(item => ({
-      key: item?.key, image: Boolean(item?.image), updatedAt: item?.updatedAt
+      key: item?.key, image: Boolean(item?.image), updatedAt: item?.updatedAt, version: item?.version
     })) : [];
     heroManifestSnapshot = { etag: entry.etag, data };
     return data;
@@ -882,6 +883,21 @@ export default async (request, context) => {
     }
 
     if (request.method === "GET") {
+      if (section === "hero" && url.searchParams.get("bootstrap") === "1") {
+        const photos = await readHeroManifestData(store, key);
+        const photo = Array.isArray(photos) ? photos[0] : null;
+        const version = photo?.image ? String(photo.version || photo.updatedAt || "") : "";
+        return new Response("window.__yachiyoHeroVersion=" + JSON.stringify(version) + ";", {
+          status: 200,
+          headers: {
+            "content-type": "application/javascript; charset=utf-8",
+            "cache-control": "no-store, max-age=0, must-revalidate",
+            "netlify-cdn-cache-control": "no-store",
+            "cdn-cache-control": "no-store",
+            "x-content-type-options": "nosniff"
+          }
+        });
+      }
       if (section === "access-settings") {
         return json({ error: "method not allowed" }, 405);
       }
@@ -1355,6 +1371,7 @@ export default async (request, context) => {
           headers: {
             "content-type": match[1] || "image/jpeg",
             "content-length": String(bytes.byteLength),
+            ...(section === "hero" ? {"x-yachiyo-hero-version": String(item.version || item.updatedAt || "")} : {}),
             "cache-control": url.searchParams.has("v")
               ? "public, max-age=31536000, immutable"
               : "no-store, max-age=0, must-revalidate"
@@ -2328,6 +2345,10 @@ export default async (request, context) => {
       body.data = normalized.data;
     }
 
+    if (section === "hero" && Array.isArray(body.data)) {
+      const version = randomUUID();
+      body.data = body.data.map(item => ({ ...item, version }));
+    }
     const serialized = JSON.stringify(body.data);
 
     if (serialized.length > 8000000) {
@@ -2357,7 +2378,8 @@ export default async (request, context) => {
     }
 
     return json({
-      ok: true
+      ok: true,
+      ...(section === "hero" ? {version: body.data?.[0]?.version || ""} : {})
     });
   } catch (error) {
     const limited = accessRateLimitResponse(error);
@@ -2369,4 +2391,5 @@ export default async (request, context) => {
     }, 500);
   }
 };
+
 
