@@ -449,7 +449,7 @@ function renderReport(eventId){
   $('#reportSummary').textContent='参加 '+info.totals[0]+'名　不参加 '+info.totals[1]+'名　未入力 '+info.totals[2]+'名';
   $('#reportGrades').innerHTML=info.grades.map(group=>{
     const cards=group.groups.map(item=>{
-      const names=item.members.length?item.members.map(member=>esc(member.name)+(info.escortGradeByMember.has(String(member.id))?'<span class="report-member-accompany">（'+esc(info.escortGradeByMember.get(String(member.id))==='upper'?'上級生帯同':info.escortGradeByMember.get(String(member.id))+'年生帯同')+'）</span>':'')).join('、'):'該当者なし';
+      const names=item.members.length?item.members.map(member=>esc(member.name)+(info.escortGradeByMember.has(String(member.id))?'<span class="report-member-accompany">（'+esc(info.escortGradeByMember.get(String(member.id))==='upper'?'上級帯同':info.escortGradeByMember.get(String(member.id))+'帯同')+'）</span>':'')).join('、'):'該当者なし';
       const kind=reportStatusClass(item.status);
       return '<section class="report-status report-status-'+kind+'"><h4>'+(item.status?item.status+' ':'')+reportStatusLabel(item.status)+'（'+item.members.length+'名）</h4><p>'+names+'</p></section>';
     }).join('');
@@ -482,7 +482,7 @@ function createReportCanvas(info){
   let ctx=canvas.getContext('2d');ctx.font='28px "Yu Gothic","Hiragino Kaku Gothic ProN",sans-serif';
   const layouts=info.grades.map(group=>{
     const cards=group.groups.map(item=>{
-      const names=item.members.length?item.members.map(member=>member.name+(info.escortGradeByMember.has(String(member.id))?'（'+(info.escortGradeByMember.get(String(member.id))==='upper'?'上級生帯同':info.escortGradeByMember.get(String(member.id))+'年生帯同')+'）':'')).join('、'):'該当者なし';
+      const names=item.members.length?item.members.map(member=>member.name+(info.escortGradeByMember.has(String(member.id))?'（'+(info.escortGradeByMember.get(String(member.id))==='upper'?'上級帯同':info.escortGradeByMember.get(String(member.id))+'帯同')+'）':'')).join('、'):'該当者なし';
       return{...item,lines:wrapCanvasText(ctx,names,colWidth-40)};
     });
     return{...group,cards,height:82+Math.max(...cards.map(card=>card.lines.length))*40+102};
