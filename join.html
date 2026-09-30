@@ -1708,31 +1708,32 @@ function closeModal(){
 </script>
 <script id="trial-application-ga4-tracking">
 (function(){
-  document.addEventListener('click',function(e){
-    const link=e.target.closest('[data-ga-event="trial_application_click"]');
-    if(!link) return;
+  const link=document.querySelector('[data-ga-event="trial_application_click"]');
+  if(!link) return;
 
-    const payload={
-      event_category:'recruitment',
-      event_label:'join_to_contact',
-      link_url:link.href,
-      transport_type:'beacon'
+  link.addEventListener('click',function(e){
+    if(typeof window.gtag!=='function') return;
+
+    e.preventDefault();
+    const destination=link.href;
+    let navigated=false;
+    const go=function(){
+      if(navigated) return;
+      navigated=true;
+      window.location.href=destination;
     };
 
-    // Push directly to the GA4 dataLayer so the event is queued even if
-    // gtag.js has not finished loading at the exact moment of the tap.
-    window.dataLayer=window.dataLayer||[];
-    window.dataLayer.push({
-      event:'trial_application_click',
-      event_category:payload.event_category,
-      event_label:payload.event_label,
-      link_url:payload.link_url
+    window.gtag('event','trial_application_click',{
+      event_category:'recruitment',
+      event_label:'join_to_contact',
+      link_url:destination,
+      send_to:'G-L8BMMSXDP9',
+      transport_type:'beacon',
+      event_callback:go
     });
 
-    if(typeof window.gtag==='function'){
-      window.gtag('event','trial_application_click',payload);
-    }
-  },true);
+    setTimeout(go,800);
+  });
 })();
 </script>
 <script src="./mobile-navigation.js?v=20260930-menu1" defer></script>
