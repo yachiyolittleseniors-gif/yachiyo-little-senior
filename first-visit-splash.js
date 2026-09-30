@@ -10,8 +10,9 @@ function mobileMotion(){
   if(!window.matchMedia('(max-width: 767px)').matches||window.matchMedia('(prefers-reduced-motion: reduce)').matches)return wait(1500);
   const source=cover.querySelector('img'),wrapper=cover.querySelector('.first-visit-logo');
   if(!source||!wrapper)return wait(1500);
-  // One independent draw per opening; approximately one visit in ten gets the bounce.
-  const variant=Math.random()<0.1?'bounce':'spin';
+  // One draw per opening: 5% fire, 10% bounce, 85% spin.
+  const drawChance=Math.random();
+  const variant=drawChance<0.05?'fire':drawChance<0.15?'bounce':'spin';
   cover.dataset.motion=variant;
   return new Promise(resolve=>{
     let finished=false,raf=0,observer=null,canvas=null;
@@ -151,6 +152,94 @@ function mobileMotion(){
     }
     ctx.restore();
   }
+  function flames(ms,cx,cy,r,power) {
+    if(power<=0)return;
+    const t=ms/1000;
+    ctx.save();ctx.globalCompositeOperation='screen';
+    const glow=ctx.createRadialGradient(cx,cy,r*.6,cx,cy-r*.28,r*3.1);
+    glow.addColorStop(0,'rgba(255,212,116,0)');
+    glow.addColorStop(.4,'rgba(255,79,8,'+(.65*power)+')');
+    glow.addColorStop(1,'rgba(255,120,12,0)');
+    ctx.fillStyle=glow;ctx.fillRect(cx-r*3.1,cy-r*4.4,r*6.2,r*7.5);
+    // Broad, asymmetric tongues with curling necks and warm inner cores.
+    const tongues=[[-1.05,.55,2.8,.45],[-.75,.15,3.8,.5],
+      [-.24,-.25,4.25,.59],[.37,-.12,3.95,.56],[.86,.3,3.2,.46],
+      [1.05,.7,2.5,.35],[-.5,.4,3.1,.42],[.22,.4,3.3,.46],
+      [-.9,.92,1.7,.35],[.9,.9,1.8,.35]];
+    tongues.forEach((flame,i)=>{
+      const [offset,base,length,spread]=flame;
+      const phase=t*16+i*2.37;
+      const pulse=.86+.14*Math.sin(phase*1.6);
+      const bx=cx+offset*r,by=cy+base*r;
+      const len=r*length*pulse*power,w=r*spread;
+      const bend=r*(.32*Math.sin(phase)+.12*Math.sin(phase*2.1));
+      const tipX=bx+bend+r*.2*Math.sin(phase-1.5),tipY=by-len;
+      function tongue(k,alpha){
+        const height=len*k,tip=by-height,side=w*k;
+        const grad=ctx.createLinearGradient(bx,by,tipX,tip);
+        grad.addColorStop(0,'rgba(255,247,188,'+alpha*power+')');
+        grad.addColorStop(.3,'rgba(255,185,51,'+alpha*power+')');
+        grad.addColorStop(.65,'rgba(255,91,12,'+alpha*.86*power+')');
+        grad.addColorStop(1,'rgba(231,42,5,'+alpha*.65*power+')');
+        ctx.fillStyle=grad;ctx.beginPath();ctx.moveTo(bx-side,by);
+        ctx.bezierCurveTo(bx-side*1.65,by-height*.27,bx+bend-side*.9,by-height*.44,bx+bend-side*.45,by-height*.58);
+        ctx.bezierCurveTo(bx+bend+side*.45,by-height*.76,tipX+side*.8,tip+height*.14,tipX,tip);
+        ctx.bezierCurveTo(tipX+side*1.6,tip+height*.16,bx+bend+side*.55,by-height*.48,bx+side*.68,by-height*.4);
+        ctx.bezierCurveTo(bx+side*1.8,by-height*.2,bx+side*1.1,by-height*.08,bx+side,by);
+        ctx.closePath();ctx.fill();
+      }
+      tongue(1,.78);tongue(.67,.6);
+    });
+    for(let i=0;i<65;i++){
+      const life=(t*(.6+(i%4)*.11)+i*.173)%1;
+      const x=cx+Math.sin(i*9.1)*r*1.3+Math.sin(t*4+i)*r*.2*life;
+      const y=cy-r*.6-life*r*5.2;
+      ctx.globalAlpha=power*Math.sin(life*Math.PI)*.85;
+      ctx.fillStyle=i%3?'#e9af46':'#fff0b0';
+      ctx.beginPath();ctx.ellipse(x,y,r*.015+(.3*(i%2)),r*.026, .25,0,Math.PI*2);ctx.fill();
+    }
+    ctx.restore();
+  }
+  function drawFire(ms) {
+    ctx.clearRect(0,0,width,height);
+    if(!source.complete||!source.naturalWidth)return;
+    const box=source.getBoundingClientRect(),frame=cover.getBoundingClientRect();
+    const scale=box.width/2172,left=box.left-frame.left,top=box.top-frame.top;
+    const timeline=Math.min(ms/1400,1)*4000;
+    const sphereMix=ease((timeline-400)/320)*(1-ease((timeline-3120)/380));
+    const p=ease((timeline-720)/2400);
+    const angle=p*Math.PI*2;
+    const fire=ease((ms-100)/130)*(1-ease((ms-1050)/300));
+    flames(ms,left+226*scale,top+198.5*scale,198.5*scale,fire);
+    ctx.save();ctx.translate(left,top);ctx.scale(scale,scale);
+    if(sphereMix<=0) {
+      // Exact original artwork at the beginning and the end.
+      ctx.drawImage(source,0,0,2172,397);
+    }else{
+      // The wordmark stays fixed throughout the transition.
+      ctx.save();ctx.beginPath();ctx.rect(-100,-100,2372,597);boundary();ctx.clip('evenodd');
+      ctx.drawImage(source,0,0,2172,397);ctx.restore();
+      sphericalTurn(angle,sphereMix);
+      // Hot tongues curl across the lower rim, leaving the emblem readable.
+      if(fire>0){
+        ctx.save();ctx.globalCompositeOperation='screen';
+        for(let i=0;i<5;i++){
+          const x=90+i*66,y=342+Math.sin(ms*.02+i)*16;
+          const bend=Math.sin(ms*.019+i*2)*36;
+          const heat=ctx.createLinearGradient(x,y,x,y-155);
+          heat.addColorStop(0,'rgba(255,245,177,'+fire*.8+')');
+          heat.addColorStop(.4,'rgba(255,131,12,'+fire*.65+')');
+          heat.addColorStop(1,'rgba(241,55,5,0)');
+          ctx.fillStyle=heat;ctx.beginPath();ctx.moveTo(x-24,y);
+          ctx.bezierCurveTo(x-58,y-54,x+bend+28,y-88,x+bend,y-165);
+          ctx.bezierCurveTo(x+bend+70,y-91,x+49,y-48,x+24,y);
+          ctx.closePath();ctx.fill();
+        }
+        ctx.restore();
+      }
+    }
+    ctx.restore();
+  }
   function drawSpin(ms) {
     ctx.clearRect(0,0,width,height);
     if(!source.complete||!source.naturalWidth)return;
@@ -219,10 +308,10 @@ function mobileMotion(){
           ctx.setTransform(dpr,0,0,dpr,0,0);
         }
         resize();prepareBall();
-        const draw=variant==='bounce'?drawBounce:drawSpin;
+        const draw=variant==='fire'?drawFire:variant==='bounce'?drawBounce:drawSpin;
         draw(0);source.style.opacity='0';
         observer=new ResizeObserver(resize);observer.observe(cover);
-        const timelineDuration=variant==='bounce'?3100:4000;
+        const timelineDuration=variant==='fire'?1400:variant==='bounce'?3100:4000;
         const duration=1400;
         function tick(now){
           if(finished||closed)return;
@@ -241,3 +330,4 @@ setTimeout(remove,1800);
 mobileMotion();
 window.addEventListener('pagehide',remove,{once:true});
 })();
+
