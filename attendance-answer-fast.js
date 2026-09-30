@@ -1,8 +1,32 @@
-/* Guardian attendance: keep rapid taps responsive and save cells in parallel. */
+/* Guardian attendance: rapid taps first, quiet debounced saves second. */
 (function(){
   'use strict';
 
   let flushTimer=0;
+  let slowNoticeTimer=0;
+
+  function hideWaitNotice(){
+    clearTimeout(slowNoticeTimer);
+    const notice=document.getElementById('answerWaitNotice');
+    if(notice)notice.hidden=true;
+  }
+
+  function showSlowWaitNotice(){
+    clearTimeout(slowNoticeTimer);
+    slowNoticeTimer=setTimeout(()=>{
+      if(!answerSaving)return;
+      let notice=document.getElementById('answerWaitNotice');
+      if(!notice){
+        notice=document.createElement('div');
+        notice.id='answerWaitNotice';
+        notice.setAttribute('role','status');
+        notice.setAttribute('aria-live','polite');
+        document.body.appendChild(notice);
+      }
+      notice.textContent='保存中です。少しお待ちください。';
+      notice.hidden=false;
+    },900);
+  }
 
   refreshAnswerCells=function(){
     document.querySelectorAll('#board .status-btn').forEach(button=>{
@@ -19,30 +43,47 @@
   };
 
   showAnswerSaveState=function(){
-    const busy=answerSaving||pendingAnswers.size>0;
-    const notice=document.getElementById('answerWaitNotice');
-    if(notice){
-      notice.hidden=!busy;
-      if(busy)notice.textContent=answerSaveFailed?'未保存があります。「再保存」を押してください。':'保存中です。少しお待ちください。';
-    }
     const status=$('#syncText');
-    status.textContent=busy?(answerSaveFailed?'未保存があります ':'保存中…'):'保存済み '+new Date().toLocaleTimeString('ja-JP',{hour:'2-digit',minute:'2-digit'});
+
     if(answerSaveFailed){
+      hideWaitNotice();
+      status.textContent='未保存があります ';
       const retry=document.createElement('button');
       retry.type='button';
       retry.textContent='再保存';
       retry.onclick=flushAnswers;
       status.appendChild(retry);
+      return;
     }
+
+    if(answerSaving){
+      status.textContent='保存中…';
+      showSlowWaitNotice();
+      return;
+    }
+
+    hideWaitNotice();
+
+    if(pendingAnswers.size){
+      // User is still tapping. Do not interrupt with a save toast.
+      status.textContent='入力中…';
+      return;
+    }
+
+    status.textContent='保存済み '+new Date().toLocaleTimeString('ja-JP',{
+      hour:'2-digit',minute:'2-digit'
+    });
   };
 
   function scheduleFlush(){
     clearTimeout(flushTimer);
-    flushTimer=setTimeout(()=>void flushAnswers(),120);
+    // Save only after taps settle, so ○× can be changed rapidly.
+    flushTimer=setTimeout(()=>void flushAnswers(),450);
   }
 
   flushAnswers=async function(){
     if(answerSaving||!pendingAnswers.size)return;
+
     clearTimeout(flushTimer);
     answerSaving=true;
     answerSaveFailed=false;
@@ -51,7 +92,13 @@
     const batch=[...pendingAnswers.entries()];
     const results=await Promise.all(batch.map(async([key,item])=>{
       try{
-        await api('POST',{action:'answer',memberId:item.memberId,eventId:item.eventId,status:item.status});
+        await api('POST',{
+          action:'answer',
+          memberId:item.memberId,
+          eventId:item.eventId,
+          status:item.status
+        });
+        // Delete only if the same cell was not changed again while saving.
         if(pendingAnswers.get(key)===item)pendingAnswers.delete(key);
         return true;
       }catch{
@@ -76,12 +123,14 @@
     if(s)data.answers[m][e]=s;
     else delete data.answers[m][e];
 
-    pendingAnswers.set(JSON.stringify([m,e]),{memberId:m,eventId:e,status:s});
+    pendingAnswers.set(JSON.stringify([m,e]),{
+      memberId:m,eventId:e,status:s
+    });
+
     refreshAnswerCells();
     showAnswerSaveState();
     scheduleFlush();
   };
 
-  // Rebind any cells already rendered before this helper loaded.
   if(document.querySelector('#board .status-btn'))refreshAnswerCells();
 })();
