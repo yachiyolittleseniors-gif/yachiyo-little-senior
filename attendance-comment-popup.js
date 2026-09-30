@@ -75,6 +75,27 @@
       }
       return result;
     };
+    window.refreshAttendanceEditorOverlay = function () {
+      var selected = board.querySelector('[data-select-member].selected');
+      board.querySelectorAll('[data-select-member]').forEach(function (button) {
+        button.setAttribute('aria-expanded', button === selected ? 'true' : 'false');
+        button.setAttribute('aria-controls', 'editor');
+      });
+      if (selected && editor.classList.contains('show')) {
+        overlay.appendChild(editor);
+        editor.style.display = 'block';
+        overlay.style.display = 'block';
+        if (previousMember !== selected.dataset.selectMember) overlay.scrollTop = 0;
+        previousMember = selected.dataset.selectMember;
+        positionOverlay();
+        container.style.paddingBottom = Math.ceil(overlay.getBoundingClientRect().height) + 'px';
+      } else {
+        previousMember = '';
+        editor.style.display = 'none';
+        overlay.style.display = 'none';
+        container.style.paddingBottom = originalPadding;
+      }
+    };
     board.addEventListener('scroll', positionOverlay, {passive: true});
     window.addEventListener('resize', positionOverlay, {passive: true});
     window.render();
