@@ -60,6 +60,10 @@
   });
   new MutationObserver(()=>{admin.classList.toggle('show',document.getElementById('cupAdminArea')?.classList.contains('show'));}).observe(document.getElementById('cupAdminArea'),{attributes:true,attributeFilter:['class']});
   (window.yachiyoTrackInitialLoad||(value=>value))(fetch(API,{cache:'no-store'}).then(r=>r.ok?r.json():Promise.reject()).then(j=>{const loaded=clean(j.data);if(loaded.length)data=loaded;renderAll();}).catch(()=>renderAll()));
+  const previous=window.yachiyoReadReloadData?.('cup-winners');
+  if(Array.isArray(previous)){data=previous;renderAll();}
+  window.addEventListener('pagehide',()=>window.yachiyoRememberReloadData?.('cup-winners',data));
   renderAll();
 })();
+
 

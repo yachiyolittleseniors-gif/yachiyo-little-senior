@@ -4,7 +4,7 @@
 <head>
 <script src="./csp-event-handlers.js?v=20260929-logo-home"></script>
 <script src="./admin-session-client.js?v=20260930-session2"></script>
-<script src="./reading-position.js?v=20261001-paint2" data-suppress-initial-flash></script>
+<script src="./reading-position.js?v=20261001-visible1"></script>
 <!-- Google tag (gtag.js) -->
 <script async="" src="https://www.googletagmanager.com/gtag/js?id=G-L8BMMSXDP9"></script>
 <script>
@@ -630,8 +630,8 @@ html{scroll-padding-top:var(--fixed-header-height)}
 </div>
 </footer>
 <button data-nosnippet="" id="cupAdminBtn" type="button">管理</button>
-<script src="./seniorcup-documents.js?v=20260930-ready1"></script>
-<script src="./seniorcup-winners.js?v=20260930-ready1"></script>
+<script src="./seniorcup-documents.js?v=20261001-visible1"></script>
+<script src="./seniorcup-winners.js?v=20261001-visible1"></script>
 <script>
 (function(){
   const API='/.netlify/functions/site-data';
@@ -984,6 +984,14 @@ function renderReplyMode(){
     },{passive:true});
   }
 
+  const previousCup=window.yachiyoReadReloadData('cup');
+  if(previousCup){
+    if(typeof previousCup.guideline==='string')guidelineText.textContent=previousCup.guideline;
+    if(Array.isArray(previousCup.partners)){partners=previousCup.partners.map(normalizePartner);renderPartners();}
+    if(['contact','email'].includes(previousCup.replyMode)){replyMode=previousCup.replyMode;renderReplyMode();}
+    if(previousCup.registrationReady){registrationReady=true;registrationClosed=previousCup.registrationClosed===true;applyRegistrationState();}
+  }
+  window.addEventListener('pagehide',()=>window.yachiyoRememberReloadData('cup',{guideline:guidelineText.textContent,partners,replyMode,registrationReady,registrationClosed}));
   [load('roster'),loadGuideline(),loadPartners(),loadReplyMode()].forEach(window.yachiyoTrackInitialLoad);
 })();
 </script>
@@ -1228,4 +1236,5 @@ body.photo-admin-on #accessPasswordChange{
 <script src="./mobile-navigation.js?v=20260930-menu1" defer></script>
 </body>
 </html>
+
 

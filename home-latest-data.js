@@ -1,4 +1,7 @@
 (window.yachiyoTrackInitialLoad||(value=>value))((async function(){
+  const previous=window.yachiyoReadReloadData?.('home-latest');
+  if(previous){for(const [id,html] of Object.entries(previous)){const el=document.querySelector('#'+id+' .latest-meta');if(el&&typeof html==='string')el.innerHTML=html;}}
+  window.addEventListener('pagehide',()=>window.yachiyoRememberReloadData?.('home-latest',Object.fromEntries(['latestScheduleCard','latestResultCard'].map(id=>[id,document.querySelector('#'+id+' .latest-meta')?.innerHTML||'']))));
   const api='/.netlify/functions/site-data';
   const esc=s=>String(s??'').replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));
   async function get(section){
@@ -131,3 +134,4 @@
     document.querySelectorAll('.latest-meta').forEach(el=>el.textContent='最新情報を読み込めませんでした。');
   }
 })());
+

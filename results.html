@@ -4,7 +4,7 @@
 <head>
 <script src="./csp-event-handlers.js?v=20260929-logo-home"></script>
 <script src="./admin-session-client.js?v=20260930-session2"></script>
-<script src="./reading-position.js?v=20261001-paint2" data-suppress-initial-flash data-reading-ready-event="yachiyo:results-ready"></script>
+<script src="./reading-position.js?v=20261001-visible1" data-reading-ready-event="yachiyo:results-ready"></script>
 <!-- Google tag (gtag.js) -->
 <script async="" src="https://www.googletagmanager.com/gtag/js?id=G-L8BMMSXDP9"></script>
 <script>
@@ -1656,13 +1656,7 @@ tournamentPdfInput.addEventListener('change',async()=>{
   reader.readAsDataURL(file);
 });
 
-(async()=>{
-  try{
-    const loaded=await Promise.all([
-      sharedLoad('results'),
-      sharedLoad('result-documents'),
-      sharedLoad('result-squad-settings').catch(()=>({}))
-    ]);
+function applyInitialResults(loaded,first){
     resultsData=mergeLegacyResults(loaded[0]);
     resultDocuments=loaded[1];
     squadSettings=normalizeSquadSettings(loaded[2]);
@@ -1671,27 +1665,36 @@ tournamentPdfInput.addEventListener('change',async()=>{
     const years=[...new Set(resultsData.map(gameYear).filter(Boolean))].sort().reverse();
     const tournaments=[...new Set(resultsData.map(x=>tournamentParts(x.tournament).name).filter(Boolean))].sort();
     const yf=document.getElementById('yearFilter'), tf=document.getElementById('tournamentFilter');
+    const selected=first?reloadedResultsView:{year:yf?.value||'',tournament:tf?.value||''};
+    if(yf)while(yf.options.length>1)yf.remove(1);
+    if(tf)while(tf.options.length>1)tf.remove(1);
     if(yf){
       years.forEach(y=>yf.insertAdjacentHTML('beforeend',`<option value="${escHtml(y)}">${escHtml(y)}年度</option>`));
-      yf.addEventListener('change',renderResults);
+
     }
     if(tf){
       tournaments.forEach(t=>tf.insertAdjacentHTML('beforeend',`<option value="${escHtml(t)}">${escHtml(t)}</option>`));
-      tf.addEventListener('change',renderResults);
+
     }
-    if(reloadedResultsView){
-      if(yf&&[...yf.options].some(option=>option.value===reloadedResultsView.year))yf.value=reloadedResultsView.year;
-      if(tf&&[...tf.options].some(option=>option.value===reloadedResultsView.tournament))tf.value=reloadedResultsView.tournament;
+    if(selected){
+      if(yf&&[...yf.options].some(option=>option.value===selected.year))yf.value=selected.year;
+      if(tf&&[...tf.options].some(option=>option.value===selected.tournament))tf.value=selected.tournament;
     }
     renderResults();
+}
+const cachedResults=window.yachiyoReadReloadData('results');
+const hasCachedResults=Array.isArray(cachedResults)&&Array.isArray(cachedResults[0]);
+if(hasCachedResults)applyInitialResults(cachedResults,true);
+['yearFilter','tournamentFilter'].forEach(id=>document.getElementById(id)?.addEventListener('change',renderResults));
+window.addEventListener('pagehide',()=>window.yachiyoRememberReloadData('results',[resultsData,resultDocuments,squadSettings]));
+(async()=>{
+  try{
+    const loaded=await Promise.all([sharedLoad('results'),sharedLoad('result-documents'),sharedLoad('result-squad-settings').catch(()=>({}))]);
+    applyInitialResults(loaded,!hasCachedResults);
   }catch(e){
-    document.getElementById('results').innerHTML='<div class="empty">試合結果を読み込めませんでした。</div>';
-  }finally{
-    // The reload position depends on the full results list, including the archive.
-    window.dispatchEvent(new Event('yachiyo:results-ready'));
-  }
-})();
-</script>
+    if(!hasCachedResults)document.getElementById('results').innerHTML='<div class="empty">試合結果を読み込めませんでした。</div>';
+  }finally{window.dispatchEvent(new Event('yachiyo:results-ready'));}
+})();</script>
 <script>
 (function(){
   const btn=document.querySelector('.menu');
@@ -2059,3 +2062,4 @@ body.photo-admin-on #accessPasswordChange{
 <script src="./mobile-navigation.js?v=20260930-menu1" defer></script>
 </body>
 </html>
+

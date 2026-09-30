@@ -53,7 +53,7 @@ html{min-height:100%;background:#f4f3ef}
   .mobile-reference-news-title{display:none!important}
 }
 </style>
-<script src="./reading-position.js?v=20261001-paint2" data-suppress-initial-flash></script>
+<script src="./reading-position.js?v=20261001-visible1"></script>
 <script id="seniorcup-visibility-prepaint">
 (function(){
   try{
@@ -3939,7 +3939,7 @@ function openProtectedArea(type){
   });
 })();
 </script>
-<script src="./home-latest-data.js?v=20260930-ready1" defer></script>
+<script src="./home-latest-data.js?v=20261001-visible1" defer></script>
 <div data-nosnippet="" id="heroPhotoAdmin">
 <button data-nosnippet="" id="heroAdminToggle" type="button">管理</button>
 <label data-nosnippet="" for="heroPhotoInput" id="heroPhotoChange">トップの写真を変更</label>
@@ -4435,7 +4435,7 @@ function openProtectedArea(type){
  const add=document.getElementById('newsAddBtn'), close=document.getElementById('newsClose'), save=document.getElementById('newsSave');
  const date=document.getElementById('newsDate'), dateMode=document.getElementById('newsDateMode'), title=document.getElementById('newsTitle'), body=document.getElementById('newsBody');
  const modalTitle=document.getElementById('newsModalTitle');
- let data=[],editingIndex=-1;
+ let data=window.yachiyoReadReloadData('home-news')||[],editingIndex=-1;
  const todayJst=()=>new Intl.DateTimeFormat('en-CA',{timeZone:'Asia/Tokyo',year:'numeric',month:'2-digit',day:'2-digit'}).format(new Date());
  const esc=s=>String(s||'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
  function render(){
@@ -4445,6 +4445,8 @@ function openProtectedArea(type){
    list.querySelectorAll('.news-edit').forEach(b=>b.onclick=()=>edit(Number(b.dataset.i)));
    list.querySelectorAll('.news-delete').forEach(b=>b.onclick=()=>remove(Number(b.dataset.i)));
  }
+ render();
+ window.addEventListener('pagehide',()=>window.yachiyoRememberReloadData('home-news',data));
  async function load(){
    try{const r=await fetch(api+'?section=news',{cache:'no-store'});if(!r.ok)return;const j=await r.json();data=Array.isArray(j.data)?j.data:[];render()}catch(e){}
  }
@@ -5112,6 +5114,7 @@ body:not(.photo-admin-on) #heroAdminToggle.unified-admin-toggle:focus-visible{co
 </style>
 </body>
 </html>
+
 
 
 
