@@ -161,6 +161,20 @@ function mobileMotion(){
     glow.addColorStop(.4,'rgba(255,79,8,'+(.65*power)+')');
     glow.addColorStop(1,'rgba(255,120,12,0)');
     ctx.fillStyle=glow;ctx.fillRect(cx-r*3.1,cy-r*4.4,r*6.2,r*7.5);
+    // A continuous skirt of flame behind the sphere, visible below its rim.
+    const flicker=Math.sin(t*21)*.035+Math.sin(t*33)*.02;
+    const skirt=ctx.createLinearGradient(cx,cy+r*.55,cx,cy+r*1.32);
+    skirt.addColorStop(0,'rgba(255,247,191,'+power*.95+')');
+    skirt.addColorStop(.55,'rgba(255,182,43,'+power*.9+')');
+    skirt.addColorStop(1,'rgba(247,74,8,0)');
+    ctx.fillStyle=skirt;ctx.beginPath();
+    ctx.moveTo(cx-r*1.04,cy+r*.22);
+    ctx.bezierCurveTo(cx-r*1.2,cy+r*.7,cx-r*.86,cy+r*(1.04+flicker),cx-r*.7,cy+r*1.16);
+    ctx.quadraticCurveTo(cx-r*.49,cy+r*1.02,cx-r*.31,cy+r*(1.23+flicker));
+    ctx.quadraticCurveTo(cx-r*.04,cy+r*1.12,cx+r*.16,cy+r*(1.26-flicker));
+    ctx.quadraticCurveTo(cx+r*.42,cy+r*1.04,cx+r*.62,cy+r*1.15);
+    ctx.bezierCurveTo(cx+r*.85,cy+r*.99,cx+r*1.21,cy+r*.65,cx+r*1.04,cy+r*.22);
+    ctx.closePath();ctx.fill();
     // Broad, asymmetric tongues with curling necks and warm inner cores.
     const tongues=[[-1.05,.55,2.8,.45],[-.75,.15,3.8,.5],
       [-.24,-.25,4.25,.59],[.37,-.12,3.95,.56],[.86,.3,3.2,.46],
