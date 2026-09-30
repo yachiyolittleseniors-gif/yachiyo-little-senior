@@ -1,4 +1,4 @@
-/* Guardian attendance rapid-input controller.
+/* Guardian/player attendance rapid-input controller.
    UI updates immediately. Each cell saves its latest state after taps settle.
    Different cells may save in parallel; the same cell always saves in order. */
 (function(){
