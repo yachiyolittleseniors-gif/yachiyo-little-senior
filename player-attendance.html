@@ -267,6 +267,11 @@ body{padding-top:var(--fixed-header-height)!important}
 #member-comment-row #editor .escort-check-box{flex-basis:22px;width:22px;height:22px;border-radius:5px;font-size:16px}
 #member-comment-row #editor .escort-check-text{font-size:14px}
 </style>
+<style id="attendance-tap-zoom-guard">
+/* Rapid answer taps stay taps; preserve scrolling and two-finger zoom. */
+#board.board-shell,
+#board.board-shell button{touch-action:manipulation!important}
+</style>
 </head><body id="page-top">
 <header class="header">
 <nav class="nav">

@@ -275,6 +275,11 @@ document.addEventListener('DOMContentLoaded',()=>{
 #member-comment-row #editor h3{position:static;margin:0 0 8px;padding:0;line-height:1.5}
 #member-comment-row #editor textarea{box-sizing:border-box;font-size:16px}
 </style>
+<style id="attendance-tap-zoom-guard">
+/* Rapid answer taps stay taps; preserve scrolling and two-finger zoom. */
+#board.board-shell,
+#board.board-shell button{touch-action:manipulation!important}
+</style>
 </head><body id="page-top">
 <header class="header">
 <nav class="nav">
