@@ -4,15 +4,8 @@
 <head>
 <script src="./csp-event-handlers.js?v=20260929-logo-home"></script>
 <script src="./admin-session-client.js?v=20260930-session2"></script>
-<script id="page-reload-scroll-reset">
-(function(){
-  if('scrollRestoration' in history)history.scrollRestoration='manual';
-  window.addEventListener('pageshow',function(){
-    window.scrollTo(0,0);
-    requestAnimationFrame(function(){window.scrollTo(0,0)});
-    setTimeout(function(){window.scrollTo(0,0)},120);
-  });
-})();
+<script id="page-scroll-restoration">
+if('scrollRestoration' in history)history.scrollRestoration='auto';
 </script>
 <!-- Google tag (gtag.js) -->
 <script async="" src="https://www.googletagmanager.com/gtag/js?id=G-L8BMMSXDP9"></script>
@@ -1411,10 +1404,18 @@ window.addEventListener('resize',()=>{
   clearTimeout(resultFitResizeTimer);
   resultFitResizeTimer=setTimeout(()=>fitResultLines(document.getElementById('results')),100);
 });
+function scrollResultEditor(panel){
+  requestAnimationFrame(()=>{
+    if(!panel.classList.contains('open'))return;
+    const header=document.querySelector('.header,.site-header');
+    const offset=(header?header.getBoundingClientRect().bottom:0)+12;
+    window.scrollTo({top:Math.max(0,window.scrollY+panel.getBoundingClientRect().top-offset),behavior:'instant'});
+  });
+}
 function togglePanel(){
   const panel=document.getElementById('panel');
   if(panel.classList.contains('open'))clearForm();
-  else panel.classList.add('open');
+  else{panel.classList.add('open');scrollResultEditor(panel)}
 }
 function updateSquadField(preferredName){
   const grade=document.getElementById('grade');
@@ -1454,7 +1455,7 @@ function toggleSquadSettings(){
   const panel=document.getElementById('squadSettingsPanel');
   document.getElementById('panel').classList.remove('open');
   if(panel.classList.contains('open'))closeSquadSettings();
-  else{syncSquadSettingsForm();panel.classList.add('open')}
+  else{syncSquadSettingsForm();panel.classList.add('open');scrollResultEditor(panel)}
 }
 function closeSquadSettings(){
   document.getElementById('squadSettingsPanel').classList.remove('open');
@@ -1496,7 +1497,7 @@ function startEditGame(id){
   document.getElementById('formModeTitle').textContent='試合結果を編集';
   document.getElementById('resultSubmitButton').textContent='更新する';
   document.getElementById('panel').classList.add('open');
-  document.getElementById('panel').scrollIntoView({block:'start'});
+  scrollResultEditor(document.getElementById('panel'));
 }
 async function editTournamentName(key){
   const games=resultsData.filter(game=>tournamentKey(game)===key);
@@ -1827,7 +1828,7 @@ function openProtectedArea(type){
     sessionStorage.setItem(KEY,'1');
     apply();
     requestAnimationFrame(()=>requestAnimationFrame(()=>{
-      const target=document.querySelector('main.wrap');
+      const target=document.querySelector('.results-admin-toolbar');
       const header=document.querySelector('.header');
       if(!target)return;
       const top=target.getBoundingClientRect().top+window.scrollY-(header?header.offsetHeight:0)-12;

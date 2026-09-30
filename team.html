@@ -4,15 +4,8 @@
 <head>
 <script src="./csp-event-handlers.js?v=20260929-logo-home"></script>
 <script src="./admin-session-client.js?v=20260930-session2"></script>
-<script id="page-reload-scroll-reset">
-(function(){
-  if('scrollRestoration' in history)history.scrollRestoration='manual';
-  window.addEventListener('pageshow',function(){
-    window.scrollTo(0,0);
-    requestAnimationFrame(function(){window.scrollTo(0,0)});
-    setTimeout(function(){window.scrollTo(0,0)},120);
-  });
-})();
+<script id="page-scroll-restoration">
+if('scrollRestoration' in history)history.scrollRestoration='auto';
 </script>
 <!-- Google tag (gtag.js) -->
 <script async="" src="https://www.googletagmanager.com/gtag/js?id=G-L8BMMSXDP9"></script>
@@ -1849,7 +1842,7 @@ function openProtectedArea(type){
     if(on){
       staffToggle.style.display='block';
       requestAnimationFrame(()=>requestAnimationFrame(()=>{
-        const target=document.querySelector('#team > .container');
+        const target=document.querySelector('#staffAdmin');
         const header=document.querySelector('.header');
         if(!target)return;
         const top=target.getBoundingClientRect().top+window.scrollY-(header?header.offsetHeight:0)-12;
@@ -2355,25 +2348,25 @@ body.photo-admin-on #accessPasswordChange{
 </style>
 <script id="admin-start-position-unified">
 (()=>{
-  const watched=document.body;
+  const watched=document.querySelector('body');
   if(!watched)return;
   let wasOpen=watched.classList.contains('staff-editing');
   function align(){
     if(!watched.classList.contains('staff-editing'))return;
-    const target=document.querySelector('#team > .container');
-    const header=document.querySelector('.header,.site-header');
+    const target=[...document.querySelectorAll('#staffAdmin')].find(el=>el.getClientRects().length);
     if(!target)return;
-    const desiredTop=(header?header.getBoundingClientRect().bottom:0)+12;
-    const nextTop=Math.max(0,Math.round(window.scrollY+target.getBoundingClientRect().top-desiredTop));
-    window.scrollTo(0,nextTop);
+    const header=document.querySelector('.header,.site-header');
+    const offset=(header?header.getBoundingClientRect().bottom:0)+12;
+    window.scrollTo({top:Math.max(0,Math.round(window.scrollY+target.getBoundingClientRect().top-offset)),behavior:'instant'});
   }
+  function schedule(){requestAnimationFrame(()=>requestAnimationFrame(align))}
   new MutationObserver(()=>{
     const open=watched.classList.contains('staff-editing');
-    if(open&&!wasOpen){requestAnimationFrame(()=>requestAnimationFrame(align))}
-    document.getElementById('admin-position-scroll-spacer')?.remove();
+    if(open&&!wasOpen)schedule();
     wasOpen=open;
   }).observe(watched,{attributes:true,attributeFilter:['class']});
-  document.getElementById('admin-position-scroll-spacer')?.remove();
+  // Align only when opening; editing, resizing and saving must not reset the position.
+  if(wasOpen)schedule();
 })();
 </script>
 <script src="./mobile-navigation.js?v=20260930-menu1" defer></script>

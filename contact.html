@@ -4,15 +4,8 @@
 <head>
 <script src="./csp-event-handlers.js?v=20260929-logo-home"></script>
 <script src="./admin-session-client.js?v=20260930-session2"></script>
-<script id="page-reload-scroll-reset">
-(function(){
-  if('scrollRestoration' in history)history.scrollRestoration='manual';
-  window.addEventListener('pageshow',function(){
-    window.scrollTo(0,0);
-    requestAnimationFrame(function(){window.scrollTo(0,0)});
-    setTimeout(function(){window.scrollTo(0,0)},120);
-  });
-})();
+<script id="page-scroll-restoration">
+if('scrollRestoration' in history)history.scrollRestoration='auto';
 </script>
 <!-- Google tag (gtag.js) -->
 <script async="" src="https://www.googletagmanager.com/gtag/js?id=G-L8BMMSXDP9"></script>
@@ -1941,7 +1934,11 @@ function openProtectedArea(type){
       panel.hidden=false;
       if(adminBtn) adminBtn.textContent='管理終了';
       apply();
-      panel.scrollIntoView({behavior:'smooth',block:'center'});
+      requestAnimationFrame(()=>{
+        const header=document.querySelector('.header,.site-header');
+        const offset=(header?header.getBoundingClientRect().bottom:0)+12;
+        window.scrollTo({top:Math.max(0,window.scrollY+panel.getBoundingClientRect().top-offset),behavior:'instant'});
+      });
     }catch(e){alert(e.message||'管理画面を開けませんでした。')}
   }
 
