@@ -1708,17 +1708,31 @@ function closeModal(){
 </script>
 <script id="trial-application-ga4-tracking">
 (function(){
-  const link=document.querySelector('[data-ga-event="trial_application_click"]');
-  if(!link) return;
-  link.addEventListener('click',function(){
+  document.addEventListener('click',function(e){
+    const link=e.target.closest('[data-ga-event="trial_application_click"]');
+    if(!link) return;
+
+    const payload={
+      event_category:'recruitment',
+      event_label:'join_to_contact',
+      link_url:link.href,
+      transport_type:'beacon'
+    };
+
+    // Push directly to the GA4 dataLayer so the event is queued even if
+    // gtag.js has not finished loading at the exact moment of the tap.
+    window.dataLayer=window.dataLayer||[];
+    window.dataLayer.push({
+      event:'trial_application_click',
+      event_category:payload.event_category,
+      event_label:payload.event_label,
+      link_url:payload.link_url
+    });
+
     if(typeof window.gtag==='function'){
-      window.gtag('event','trial_application_click',{
-        event_category:'recruitment',
-        event_label:'join_to_contact',
-        link_url:link.href
-      });
+      window.gtag('event','trial_application_click',payload);
     }
-  });
+  },true);
 })();
 </script>
 <script src="./mobile-navigation.js?v=20260930-menu1" defer></script>
