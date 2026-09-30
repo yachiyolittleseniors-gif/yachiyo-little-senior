@@ -139,37 +139,6 @@
     try { localStorage.removeItem(registrationKey); } catch (_) {}
     return result;
   }
-  async function chooseLoginMethod(message = '') {
-    if (!document.body) await new Promise(resolve => document.addEventListener('DOMContentLoaded', resolve, { once: true }));
-    return new Promise(resolve => {
-      const overlay = document.createElement('div');
-      overlay.setAttribute('role', 'dialog');
-      overlay.setAttribute('aria-modal', 'true');
-      overlay.setAttribute('aria-label', '運営用ログイン');
-      overlay.style.cssText = 'visibility:visible;position:fixed;inset:0;z-index:50000;display:grid;place-items:center;padding:20px;background:#071426;';
-      const card = document.createElement('div');
-      card.style.cssText = 'width:100%;max-width:360px;padding:24px;border:1px solid #c79a3b;border-radius:16px;background:#0c1d33;color:#fff;text-align:center;font-family:system-ui,sans-serif;';
-      const title = document.createElement('h2');
-      title.textContent = '運営用ログイン';
-      title.style.cssText = 'margin:0 0 14px;font-size:20px;color:#e2bd67;';
-      const text = document.createElement('p');
-      text.textContent = message || '登録済みの方は、生体認証でログインできます。';
-      text.style.cssText = 'margin:0 0 18px;font-size:14px;line-height:1.7;';
-      card.append(title, text);
-      function addButton(label, method, primary) {
-        const button = document.createElement('button');
-        button.type = 'button';button.textContent = label;
-        button.style.cssText = 'display:block;width:100%;min-height:48px;margin:10px 0;padding:12px;border:1px solid #c79a3b;border-radius:10px;font:700 15px system-ui;cursor:pointer;background:'+(primary?'#c79a3b':'transparent')+';color:'+(primary?'#071426':'#fff')+';';
-        button.addEventListener('click', () => { overlay.remove();resolve(method); }, { once: true });
-        card.append(button);
-        return button;
-      }
-      const first = addButton('生体認証でログイン', 'passkey', true);
-      addButton('パスワードでログイン', 'password', false);
-      addButton('戻る', 'cancel', false);
-      overlay.append(card);document.body.append(overlay);first.focus();
-    });
-  }
   async function authorize(promptMessage = "パスワードを入力してください。") {
     if (supported() && isRegistered()) {
       try {
@@ -180,25 +149,6 @@
         }
       } catch (error) {
         // No registered passkey / cancelled / failed: fall back to password.
-      }
-    }
-    // A browser cannot reliably detect a synced passkey without opening WebAuthn.
-    // Let the user select it before requiring a password, then remember a success.
-    if (supported()) {
-      let message = '';
-      while (true) {
-        const method = await chooseLoginMethod(message);
-        if (method === 'cancel') return '';
-        if (method === 'password') break;
-        try {
-          const result = await authenticate();
-          if (result?.token) {
-            try { sessionStorage.setItem('yachiyoCoachAttendancePass', result.token); } catch (_) {}
-            return result.token;
-          }
-        } catch (error) {
-          message = error?.name === 'NotAllowedError' ? 'ログイン方法を選んでください。' : '生体認証を確認できませんでした。パスワードでもログインできます。';
-        }
       }
     }
     const entered = prompt(promptMessage);
