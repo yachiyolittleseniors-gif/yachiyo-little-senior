@@ -13,31 +13,6 @@ window.__operatorSetupLoaded=true;
     const localKey='yachiyoOperatorPasskeyVerified';
     let registered=false;
     try{registered=localStorage.getItem(localKey)==='1'}catch(e){}
-    // Server-wide credentials do not prove that this browser has a passkey.
-    // An existing/synced passkey can be enabled explicitly without registering again.
-    const useExisting=document.createElement('button');
-    useExisting.type='button';
-    useExisting.textContent='登録済みの生体認証を使う';
-    useExisting.hidden=registered||!window.YLSOperatorPasskeys?.supported();
-    button.insertAdjacentElement('afterend',useExisting);
-    useExisting.addEventListener('click',async()=>{
-      if(useExisting.disabled)return;
-      useExisting.disabled=true;
-      try{
-        const result=await window.YLSOperatorPasskeys.authenticate();
-        if(!result?.token)throw new Error('生体認証を確認できませんでした。');
-        try{sessionStorage.setItem('yachiyoCoachAttendancePass',result.token)}catch(_){}
-        registered=true;useExisting.hidden=true;
-        title.textContent='運営用の生体認証を登録済み';
-        text.textContent='次回からこの端末で生体認証を利用できます。';
-        button.textContent='この端末の生体認証を削除';
-        panel.classList.add('is-registered','is-collapsed');
-        if(summary)summary.setAttribute('aria-expanded','false');
-        if(chevron)chevron.textContent='▼';
-      }catch(e){
-        if(e?.name!=='NotAllowedError')alert(e?.message||'生体認証を確認できませんでした。');
-      }finally{useExisting.disabled=false}
-    });
     if(registered){
       title.textContent='生体認証を登録済み';
       text.textContent='次回から生体認証でログインできます。';
@@ -66,7 +41,6 @@ window.__operatorSetupLoaded=true;
           await window.YLSOperatorPasskeys.remove();
           try{localStorage.removeItem(localKey)}catch(e){}
           registered=false;
-          useExisting.hidden=!window.YLSOperatorPasskeys?.supported();
           panel.classList.remove('is-registered','is-collapsed');
           title.textContent='生体認証で次回からログイン';
           text.textContent='この端末に登録すると、次回からパスワード入力を省略できます。使えない場合は従来のパスワードで入れます。';
@@ -89,7 +63,6 @@ window.__operatorSetupLoaded=true;
         await window.YLSOperatorPasskeys.register(access,label);
         try{localStorage.setItem(localKey,'1')}catch(e){}
         registered=true;
-        useExisting.hidden=true;
         title.textContent='運営用の生体認証を登録済み';
         text.textContent='指導者出欠・事務局・審判部で共通して利用できます。別の端末は、その端末でパスワードログイン後に個別に登録してください。';
         button.hidden=false;
