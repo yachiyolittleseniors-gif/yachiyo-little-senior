@@ -1,5 +1,14 @@
 (() => {
   const endpoint = "/.netlify/functions/operator-passkey-auth";
+  // The old marker could be set by another device's server-side registration.
+  // This marker is written only after this browser successfully registers/authenticates.
+  const registrationKey = "yachiyoOperatorPasskeyVerified";
+  function isRegistered() {
+    try { return localStorage.getItem(registrationKey) === "1"; } catch (_) { return false; }
+  }
+  function rememberRegistration() {
+    try { localStorage.setItem(registrationKey, "1"); } catch (_) {}
+  }
   function supported() {
     return Boolean(window.PublicKeyCredential && navigator.credentials && typeof navigator.credentials.create === "function" && typeof navigator.credentials.get === "function");
   }
@@ -87,10 +96,12 @@
       throw friendlyError(error, "生体認証を登録できませんでした。");
     }
     if (!credential) throw new Error("生体認証の登録がキャンセルされました。");
-    return request({
+    const result = await request({
       action: "registration-verify", ceremonyID: start.ceremonyID,
       credential: registrationJSON(credential), label,
     }, accessValue);
+    rememberRegistration();
+    return result;
   }
   let authenticationInFlight = null;
   async function authenticateOnce() {
@@ -103,10 +114,12 @@
       throw friendlyError(error, "生体認証を利用できませんでした。");
     }
     if (!credential) throw new Error("生体認証がキャンセルされました。");
-    return request({
+    const result = await request({
       action: "authentication-verify", ceremonyID: start.ceremonyID,
       credential: authenticationJSON(credential),
     });
+    if (result?.token) rememberRegistration();
+    return result;
   }
   async function authenticate() {
     if (authenticationInFlight) return authenticationInFlight;
@@ -122,10 +135,12 @@
     const auth = await authenticate();
     const credentialID = auth?.credentialID;
     if (!credentialID) throw new Error("削除する生体認証を確認できませんでした。");
-    return request({ action: "delete-credential", credentialID });
+    const result = await request({ action: "delete-credential", credentialID });
+    try { localStorage.removeItem(registrationKey); } catch (_) {}
+    return result;
   }
   async function authorize(promptMessage = "パスワードを入力してください。") {
-    if (supported()) {
+    if (supported() && isRegistered()) {
       try {
         const result = await authenticate();
         if (result?.token) {
@@ -156,5 +171,5 @@
     return "";
   }
 
-  window.YLSOperatorPasskeys = { authenticate, authorize, register, remove, supported, status: () => request({ action: "status" }) };
+  window.YLSOperatorPasskeys = { authenticate, authorize, register, remove, supported, isRegistered, status: () => request({ action: "status" }) };
 })();

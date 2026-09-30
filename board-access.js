@@ -40,11 +40,10 @@ window.boardAccessReady=(async function requireBoardPassword(){
   }
   let passkeyAttempt=null;
   async function verifyPasskey(){
-    // Do not gate WebAuthn behind browser-local storage. A synced passkey can
-    // be available on another device/browser even when localStorage is empty.
-    // At the same time, keep one shared attempt per page entry so WebAuthn UI
-    // can never be opened twice by overlapping access checks.
+    // Only automatically open WebAuthn on a browser with a successful registration.
+    // Other browsers go directly to password entry instead of a cross-device QR prompt.
     if(!window.YLSPasskeys?.supported())return false;
+    try{if(localStorage.getItem(passkeyKey)!=='1')return false}catch(_){return false}
     if(passkeyAttempt)return passkeyAttempt;
     passkeyAttempt=(async()=>{
       try{

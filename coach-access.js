@@ -17,7 +17,7 @@ window.coachAccessReady=(async function(){
   if(saved){document.documentElement.style.visibility='';return true}
   let boardVerified=false;try{boardVerified=sessionStorage.getItem('yachiyoBoardPasskeyJustVerified')==='1'}catch(e){}
   if(boardVerified){try{sessionStorage.removeItem('yachiyoBoardPasskeyJustVerified')}catch(e){}}
-  if(window.YLSOperatorPasskeys?.supported()&&!boardVerified){
+  if(window.YLSOperatorPasskeys?.supported()&&window.YLSOperatorPasskeys?.isRegistered()&&!boardVerified){
     try{
       const result=await window.YLSOperatorPasskeys.authenticate();
       if(result?.token){remember(result.token);document.documentElement.style.visibility='';return true}
