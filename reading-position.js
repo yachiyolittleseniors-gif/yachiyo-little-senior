@@ -1,6 +1,8 @@
 (function(){
   'use strict';
   const loads=[];
+  const readyEvent=document.currentScript?.getAttribute('data-reading-ready-event');
+  if(readyEvent)loads.push(new Promise(resolve=>window.addEventListener(readyEvent,resolve,{once:true})));
   window.yachiyoTrackInitialLoad=promise=>{loads.push(promise);return promise;};
   const key='yachiyo:reading-position:'+location.pathname+location.search;
   const reload=performance.getEntriesByType('navigation')[0]?.type==='reload';
