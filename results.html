@@ -251,7 +251,9 @@ body:not(.admin-mode) .delete{display:none!important}
 </style>
 <style>
 /* ===== Performance polish ===== */
-section:not(.hero):not(.pagehero){content-visibility:auto;contain-intrinsic-size:1px 700px}
+section:not(.hero):not(.pagehero):not(.tournament-group){content-visibility:auto;contain-intrinsic-size:1px 700px}
+/* Result cards need their real height before restoring a reading position. */
+.tournament-group{content-visibility:visible;contain-intrinsic-size:none}
 img{height:auto}
 </style>
 <style>
