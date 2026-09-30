@@ -1712,28 +1712,32 @@ function closeModal(){
   if(!link) return;
 
   link.addEventListener('click',function(e){
-    if(typeof window.gtag!=='function') return;
-
     e.preventDefault();
     const destination=link.href;
     let navigated=false;
     const go=function(){
       if(navigated) return;
       navigated=true;
-      window.location.href=destination;
+      window.location.assign(destination);
     };
 
+    // Measurement Protocol-style transport via the already loaded gtag queue.
+    // Disable page navigation briefly so Safari cannot cancel the hit.
+    window.dataLayer=window.dataLayer||[];
+    window.gtag=window.gtag||function(){window.dataLayer.push(arguments);};
     window.gtag('event','trial_application_click',{
+      send_to:'G-L8BMMSXDP9',
       event_category:'recruitment',
       event_label:'join_to_contact',
       link_url:destination,
-      send_to:'G-L8BMMSXDP9',
+      debug_mode:true,
       transport_type:'beacon',
-      event_callback:go
+      event_callback:go,
+      event_timeout:1500
     });
 
-    setTimeout(go,800);
-  });
+    setTimeout(go,1600);
+  },false);
 })();
 </script>
 <script src="./mobile-navigation.js?v=20260930-menu1" defer></script>
