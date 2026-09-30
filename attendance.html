@@ -235,6 +235,26 @@ body{padding-top:var(--fixed-header-height)!important}
 .board-shell{max-height:82vh;max-height:82dvh}
 
 </style>
+<style id="attendance-status-tap-accuracy">
+.status-btn{
+  touch-action:manipulation;
+  -webkit-tap-highlight-color:transparent;
+  -webkit-user-select:none;
+  user-select:none;
+}
+@media(max-width:700px){
+  .board-shell .status-btn{
+    width:56px!important;
+    height:48px!important;
+    min-width:56px!important;
+    min-height:48px!important;
+    padding:0!important;
+    border-radius:10px!important;
+    font-size:26px!important;
+  }
+  .board-shell td{padding-left:6px!important;padding-right:6px!important}
+}
+</style>
 <style id="attendance-mobile-row-density-style">
 @media(max-width:700px){
   .board-shell tbody td{padding-top:2px;padding-bottom:2px}
