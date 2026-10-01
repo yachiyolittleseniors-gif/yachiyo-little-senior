@@ -7,8 +7,6 @@ const STORE_NAME="yachiyo-public-site";
 const KEY="content/duty-change-requests.json";
 const LEGACY_KEY="content/duty-roster.json";
 const MAX_REQUESTS=300;
-// 準備中機能。true にすると、申請時に交代相手向けの1回限り承認リンクを発行する。
-const PARTNER_APPROVAL_ENABLED=false;
 const APPROVAL_TTL_MS=24*60*60*1000;
 
 function json(body,status=200,headers={}){
@@ -86,7 +84,7 @@ async function loadData(store){
   let data;
   const existing=await store.get(KEY,{type:"json",consistency:"strong"});
   if(existing?.version===1&&Array.isArray(existing.requests)){
-    data={version:1,requestSeq:Math.max(0,Number(existing.requestSeq)||0),requests:dedupePending(existing.requests.map(normalizeItem).filter(Boolean))};
+    data={version:1,requestSeq:Math.max(0,Number(existing.requestSeq)||0),partnerApprovalEnabled:existing.partnerApprovalEnabled===true,requests:dedupePending(existing.requests.map(normalizeItem).filter(Boolean))};
   }else{
     // One-time safe migration from the old combined duty-roster document.
     const legacy=await store.get(LEGACY_KEY,{type:"json",consistency:"strong"});
@@ -97,7 +95,7 @@ async function loadData(store){
       const m=/^A(\d+)$/.exec(String(item.requestNo||"").toUpperCase());
       if(m)seq=Math.max(seq,Number(m[1])||0);
     }
-    data={version:1,requestSeq:seq,requests:migrated,migratedAt:new Date().toISOString()};
+    data={version:1,requestSeq:seq,partnerApprovalEnabled:false,requests:migrated,migratedAt:new Date().toISOString()};
     await store.setJSON(KEY,data);
   }
 
@@ -145,7 +143,8 @@ function publicRequest(item){
 function publicData(data){
   return{
     requests:data.requests.map(publicRequest),
-    pendingCount:data.requests.filter(item=>item.status==="pending").length
+    pendingCount:data.requests.filter(item=>item.status==="pending").length,
+    partnerApprovalEnabled:data.partnerApprovalEnabled===true
   };
 }
 function requestMatchesRoster(roster,date,fromGrade,fromName){
@@ -212,8 +211,8 @@ export default async (request,context)=>{
     const action=String(body?.action||"");
 
     if(action==="preview-partner-approval"||action==="partner-approve"){
-      if(!PARTNER_APPROVAL_ENABLED)return json({error:"この承認方式は現在準備中です。"},404);
       const data=await loadData(store);
+      if(data.partnerApprovalEnabled!==true)return json({error:"交代相手の承認リンクは現在使用されていません。"},404);
       const token=String(body?.token||"");
       const item=await findRequestByApprovalToken(data,token);
       if(!item)return json({error:"承認リンクが無効、またはすでに使用済みです。"},404);
@@ -250,7 +249,7 @@ export default async (request,context)=>{
       let issuedApprovalToken="";
       let approvalTokenHash="";
       let approvalExpiresAt="";
-      if(PARTNER_APPROVAL_ENABLED){
+      if(data.partnerApprovalEnabled===true){
         issuedApprovalToken=newApprovalToken();
         approvalTokenHash=await sha256(issuedApprovalToken);
         approvalExpiresAt=new Date(Date.now()+APPROVAL_TTL_MS).toISOString();
@@ -268,7 +267,7 @@ export default async (request,context)=>{
       }
       data.requests=dedupePending(data.requests);
       await store.setJSON(KEY,data);
-      const extra=PARTNER_APPROVAL_ENABLED&&issuedApprovalToken?{approvalUrl:approvalUrl(request,issuedApprovalToken),approvalExpiresAt}:{};
+      const extra=data.partnerApprovalEnabled===true&&issuedApprovalToken?{approvalUrl:approvalUrl(request,issuedApprovalToken),approvalExpiresAt}:{};
       return json({ok:true,...publicData(data),...extra});
     }
 
@@ -276,6 +275,13 @@ export default async (request,context)=>{
     if(!auth.ok)return adminAuthError(json,auth);
 
     const data=await loadData(store);
+
+    if(action==="set-partner-approval"){
+      data.partnerApprovalEnabled=body?.enabled===true;
+      await store.setJSON(KEY,data);
+      return json({ok:true,...publicData(data)});
+    }
+
     const id=String(body?.id||"");
     const idx=data.requests.findIndex(item=>item.id===id);
     if(idx<0)return json({error:"申請が見つかりません。"},404);
