@@ -18,6 +18,16 @@
   const clamp=(v,min,max)=>Math.max(min,Math.min(max,v));
   const dist=(a,b)=>Math.hypot(b.x-a.x,b.y-a.y);
 
+  function syncPreviewViewport(){
+    const heroW=Math.max(hero.clientWidth,1);
+    const heroH=Math.max(hero.clientHeight,1);
+    const ratio=heroH/heroW;
+    const cardWidth=Math.min(398,Math.max(240,window.innerWidth-68));
+    const maxHeight=Math.max(300,window.innerHeight-250);
+    const width=Math.min(cardWidth,maxHeight/ratio);
+    preview.style.width=Math.round(width)+'px';
+    preview.style.height=Math.round(width*ratio)+'px';
+  }
   function applyPreview(){
     photo.style.transform='translate3d('+draft.offsetX+'px,'+draft.offsetY+'px,0) scale('+draft.scale+')';
   }
@@ -30,6 +40,7 @@
   }
   function openModal(){
     draft={...saved};
+    syncPreviewViewport();
     applyPreview();
     modal.classList.add('show');
     modal.setAttribute('aria-hidden','false');
@@ -47,6 +58,7 @@
 
   editBtn.addEventListener('click',function(){
     draft={...saved};
+    syncPreviewViewport();
     applyPreview();
     setTimeout(openModal,0);
   });
@@ -136,6 +148,10 @@
     if(pointers.size)return;
     event.preventDefault();
   },{passive:false});
+
+  window.addEventListener('resize',function(){
+    if(modal.classList.contains('show')){syncPreviewViewport();applyPreview();}
+  });
 
   (async function load(){
     try{
