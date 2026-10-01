@@ -19,9 +19,15 @@ export default async (request) => {
     const store=getStore({name:"yachiyo-public-site",consistency:"strong"});
     const data=await store.get("content/duty-roster.json",{type:"json",consistency:"strong"});
     const requests=Array.isArray(data?.requests)?data.requests:[];
-    const pendingCount=requests.filter(function(item){
-      return item&&String(item.status||"pending")==="pending";
-    }).length;
+    const uniquePending=new Set();
+    requests.forEach(function(item){
+      if(!item||String(item.status||"pending")!=="pending")return;
+      const date=String(item.date||"");
+      const grade=String(item.fromGrade||item.grade||"");
+      const from=String(item.from||"").trim().replace(/[　\s]+/g," ");
+      uniquePending.add(date+"|"+grade+"|"+from);
+    });
+    const pendingCount=uniquePending.size;
     return json({hasPending:pendingCount>0,pendingCount});
   }catch(_){
     return json({hasPending:false});
