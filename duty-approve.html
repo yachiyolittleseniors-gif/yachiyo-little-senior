@@ -1,0 +1,99 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="robots" content="noindex,nofollow">
+<title>当番変更の承認｜八千代リトルシニア</title>
+<style>
+:root{color-scheme:light}
+*{box-sizing:border-box}
+body{margin:0;background:#071426;color:#17202b;font-family:-apple-system,BlinkMacSystemFont,"Hiragino Sans","Yu Gothic",sans-serif}
+main{min-height:100svh;display:grid;place-items:center;padding:24px}
+.card{width:min(520px,100%);background:#fff;border-radius:18px;padding:24px;box-shadow:0 18px 48px rgba(0,0,0,.3);border-top:5px solid #c79a3b}
+.kicker{font-size:11px;letter-spacing:.18em;font-weight:900;color:#a67d27}
+h1{margin:6px 0 18px;color:#071426;font-size:24px}
+.detail{display:grid;gap:10px;padding:16px;border-radius:14px;background:#f5f3ed}
+.row{display:flex;justify-content:space-between;gap:16px}
+.row span:first-child{color:#6b7280;font-size:13px}
+.row b{text-align:right}
+.arrow{padding:2px 0;text-align:center;color:#a67d27;font-weight:900}
+button{width:100%;margin-top:18px;border:0;border-radius:12px;padding:14px;background:#071426;color:#e2bd67;font-weight:900;font-size:16px}
+button:disabled{opacity:.55}
+.note{margin:14px 0 0;color:#6b7280;font-size:12px;line-height:1.7}
+.status{padding:18px 0 2px;text-align:center;font-weight:800;line-height:1.7}
+.status.error{color:#9b2c2c}
+.status.ok{color:#176b3a}
+</style>
+</head>
+<body>
+<main>
+<section class="card">
+<div class="kicker">DUTY CHANGE APPROVAL</div>
+<h1>当番変更の確認</h1>
+<div id="loading" class="status">申請内容を確認しています…</div>
+<div id="content" hidden>
+<div class="detail">
+<div class="row"><span>申請番号</span><b id="requestNo"></b></div>
+<div class="row"><span>日付</span><b id="date"></b></div>
+<div class="row"><span>変更前</span><b id="from"></b></div>
+<div class="arrow">↓</div>
+<div class="row"><span>変更後</span><b id="to"></b></div>
+</div>
+<button id="approve" type="button">この変更を承認する</button>
+<p class="note">交代相手の方が内容を確認したうえで承認してください。承認すると当番表へ自動反映され、このリンクは使用できなくなります。</p>
+</div>
+<div id="message" class="status" hidden></div>
+</section>
+</main>
+<script>
+(function(){
+  const API='/.netlify/functions/duty-change-requests';
+  const token=new URLSearchParams(location.search).get('t')||'';
+  const loading=document.getElementById('loading');
+  const content=document.getElementById('content');
+  const message=document.getElementById('message');
+  const approve=document.getElementById('approve');
+  function showMessage(text,ok){
+    loading.hidden=true;content.hidden=true;message.hidden=false;
+    message.textContent=text;message.className='status '+(ok?'ok':'error');
+  }
+  function formatDate(value){
+    const p=String(value||'').split('-').map(Number);
+    if(p.length!==3||p.some(Number.isNaN))return value;
+    const d=new Date(p[0],p[1]-1,p[2]);
+    return p[0]+'年'+p[1]+'月'+p[2]+'日（'+'日月火水木金土'[d.getDay()]+'）';
+  }
+  async function call(action){
+    const r=await fetch(API,{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({action,token})});
+    const j=await r.json().catch(()=>({}));
+    if(!r.ok)throw new Error(j.error||'処理できませんでした。');
+    return j;
+  }
+  async function init(){
+    if(!token)return showMessage('承認リンクが正しくありません。',false);
+    try{
+      const j=await call('preview-partner-approval'),x=j.request||{};
+      document.getElementById('requestNo').textContent=x.requestNo?'#'+x.requestNo:'-';
+      document.getElementById('date').textContent=formatDate(x.date);
+      document.getElementById('from').textContent=x.fromGrade+'年・'+x.fromName;
+      document.getElementById('to').textContent=x.toGrade+'年・'+x.toName;
+      loading.hidden=true;content.hidden=false;
+    }catch(e){showMessage(e.message||'申請内容を確認できませんでした。',false)}
+  }
+  approve.addEventListener('click',async function(){
+    if(!confirm('この当番変更を承認しますか？'))return;
+    approve.disabled=true;approve.textContent='承認中…';
+    try{
+      const j=await call('partner-approve');
+      showMessage(j.message||'承認しました。当番表へ反映されました。',true);
+    }catch(e){
+      approve.disabled=false;approve.textContent='この変更を承認する';
+      showMessage(e.message||'承認できませんでした。',false);
+    }
+  });
+  init();
+})();
+</script>
+</body>
+</html>
