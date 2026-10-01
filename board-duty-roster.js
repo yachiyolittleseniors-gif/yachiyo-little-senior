@@ -293,6 +293,9 @@
           const clean=cleanName(name);if(!clean)return;
           const grade=String(grades[Math.floor(index/2)]);
           map.set(grade+'|'+clean,{grade:grade,name:clean});
+          const current=window.DutyRosterData.applyChanges(table,row[0],grade,clean,changes);
+          const currentName=cleanName(current&&current.value);
+          if(currentName)map.set(grade+'|'+currentName,{grade:grade,name:currentName});
         });
       });
     });
