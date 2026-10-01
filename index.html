@@ -5328,121 +5328,116 @@ body:not(.photo-admin-on) #heroAdminToggle.unified-admin-toggle:focus-visible{co
   if(!hero||!toggle)return;
 
   const api='/.netlify/functions/site-data?section=hero-position-settings';
-  let x=58,y=50,zoom=100;
-  let gesture=null;
+  let x=58,y=50,zoom=120;
+  let drag=null;
+  let pinch=null;
   let saveTimer=0;
 
-  function clamp(v,min,max){return Math.max(min,Math.min(max,v))}
-  function dist(a,b){return Math.hypot(b.clientX-a.clientX,b.clientY-a.clientY)}
-  function editing(){return toggle.checked && document.body.classList.contains('photo-admin-on')}
-  function apply(){
-    hero.style.setProperty('background-position',x+'% '+y+'%','important');
-    hero.style.setProperty('background-size','auto '+zoom+'%','important');
+  const clamp=(v,min,max)=>Math.max(min,Math.min(max,v));
+  const distance=(a,b)=>Math.hypot(b.clientX-a.clientX,b.clientY-a.clientY);
+  const editing=()=>toggle.checked&&document.body.classList.contains('photo-admin-on');
+
+  function setPhotoLayer(){
+    // Keep the dark overlay fixed; move/scale only the actual photo layer.
+    hero.style.setProperty(
+      'background-image',
+      'linear-gradient(90deg,rgba(4,12,22,.56) 0%,rgba(4,12,22,.34) 43%,rgba(4,12,22,.10) 100%),var(--hero-photo)',
+      'important'
+    );
+    hero.style.setProperty('background-repeat','no-repeat,no-repeat','important');
+    hero.style.setProperty('background-position','center center,'+x+'% '+y+'%','important');
+    hero.style.setProperty('background-size','100% 100%,auto '+zoom+'%','important');
   }
-  function flash(message){
-    if(window.showSaveNotice)window.showSaveNotice(message);
-  }
+  function flash(msg){if(window.showSaveNotice)window.showSaveNotice(msg)}
   async function save(){
-    const password=sessionStorage.getItem('yachiyoAdminPassword')||'';
-    if(!password)return;
+    const pw=sessionStorage.getItem('yachiyoAdminPassword')||'';
+    if(!pw)return;
     try{
-      const response=await fetch(api,{
+      const r=await fetch(api,{
         method:'POST',
-        headers:{'content-type':'application/json','x-admin-password':password},
+        headers:{'content-type':'application/json','x-admin-password':pw},
         body:JSON.stringify({data:{x,y,zoom,updatedAt:new Date().toISOString()}})
       });
-      if(!response.ok)throw new Error();
+      if(!r.ok)throw new Error();
       flash('画像位置を保存しました');
-    }catch(error){
-      flash('画像位置を保存できませんでした');
-    }
+    }catch(e){flash('画像位置を保存できませんでした')}
   }
-  function queueSave(){
-    clearTimeout(saveTimer);
-    saveTimer=setTimeout(save,400);
-  }
+  function queueSave(){clearTimeout(saveTimer);saveTimer=setTimeout(save,450)}
 
-  // Native checkbox handles the tap; JS only reacts after state changed.
   toggle.addEventListener('change',function(){
-    gesture=null;
+    drag=null;pinch=null;
     if(toggle.checked){
-      flash('編集ON：1本指で移動・2本指で拡大縮小');
+      // Start slightly enlarged so vertical dragging is immediately visible.
+      if(zoom<110)zoom=120;
+      setPhotoLayer();
+      flash('1本指で移動・2本指で拡大縮小');
     }else{
       queueSave();
     }
   });
 
-  hero.addEventListener('touchstart',function(event){
-    if(!editing()||!window.matchMedia('(max-width:600px)').matches)return;
-    event.preventDefault();
-    if(event.touches.length===1){
-      const t=event.touches[0];
-      gesture={type:'drag',sx:t.clientX,sy:t.clientY,x:x,y:y};
-    }else if(event.touches.length===2){
-      gesture={type:'pinch',distance:dist(event.touches[0],event.touches[1]),zoom:zoom};
-    }
-  },{passive:false});
-
-  hero.addEventListener('touchmove',function(event){
-    if(!editing()||!gesture)return;
-    event.preventDefault();
-    if(event.touches.length===1){
-      const t=event.touches[0];
-      if(gesture.type!=='drag'){
-        gesture={type:'drag',sx:t.clientX,sy:t.clientY,x:x,y:y};
-        return;
-      }
-      x=clamp(gesture.x-((t.clientX-gesture.sx)/hero.clientWidth)*100,0,100);
-      y=clamp(gesture.y-((t.clientY-gesture.sy)/hero.clientHeight)*100,0,100);
-      apply();
-    }else if(event.touches.length===2){
-      if(gesture.type!=='pinch'){
-        gesture={type:'pinch',distance:dist(event.touches[0],event.touches[1]),zoom:zoom};
-        return;
-      }
-      zoom=clamp(gesture.zoom*(dist(event.touches[0],event.touches[1])/gesture.distance),100,220);
-      apply();
-    }
-  },{passive:false});
-
-  hero.addEventListener('touchend',function(event){
+  hero.addEventListener('touchstart',function(e){
     if(!editing())return;
-    if(event.touches.length===0){
-      gesture=null;
-      queueSave();
-    }else if(event.touches.length===1){
-      const t=event.touches[0];
-      gesture={type:'drag',sx:t.clientX,sy:t.clientY,x:x,y:y};
+    e.preventDefault();
+    if(e.touches.length===1){
+      const t=e.touches[0];
+      drag={sx:t.clientX,sy:t.clientY,x,y};
+      pinch=null;
+    }else if(e.touches.length===2){
+      pinch={distance:distance(e.touches[0],e.touches[1]),zoom};
+      drag=null;
     }
-  },{passive:false});
+  },{passive:false,capture:true});
+
+  hero.addEventListener('touchmove',function(e){
+    if(!editing())return;
+    e.preventDefault();
+
+    if(e.touches.length===1){
+      const t=e.touches[0];
+      if(!drag)drag={sx:t.clientX,sy:t.clientY,x,y};
+      const dx=t.clientX-drag.sx;
+      const dy=t.clientY-drag.sy;
+      x=clamp(drag.x-(dx/hero.clientWidth)*100,0,100);
+      y=clamp(drag.y-(dy/hero.clientHeight)*100,0,100);
+      setPhotoLayer();
+    }else if(e.touches.length===2){
+      if(!pinch)pinch={distance:distance(e.touches[0],e.touches[1]),zoom};
+      zoom=clamp(pinch.zoom*(distance(e.touches[0],e.touches[1])/pinch.distance),105,240);
+      setPhotoLayer();
+    }
+  },{passive:false,capture:true});
+
+  hero.addEventListener('touchend',function(e){
+    if(!editing())return;
+    e.preventDefault();
+    if(e.touches.length===1){
+      const t=e.touches[0];
+      drag={sx:t.clientX,sy:t.clientY,x,y};
+      pinch=null;
+    }else{
+      drag=null;pinch=null;queueSave();
+    }
+  },{passive:false,capture:true});
 
   hero.addEventListener('touchcancel',function(){
     if(!editing())return;
-    gesture=null;
-    queueSave();
-  },{passive:false});
+    drag=null;pinch=null;queueSave();
+  },{passive:false,capture:true});
 
-  // Leaving admin mode always closes image editing.
-  const adminToggle=document.getElementById('heroAdminToggle');
-  if(adminToggle)adminToggle.addEventListener('click',function(){
-    setTimeout(function(){
-      if(!document.body.classList.contains('photo-admin-on'))toggle.checked=false;
-    },0);
-  });
-
-  (async function load(){
+  (async function(){
     try{
-      const response=await fetch(api,{cache:'no-store'});
-      if(response.ok){
-        const json=await response.json();
-        if(json&&json.data){
-          if(Number.isFinite(Number(json.data.x)))x=clamp(Number(json.data.x),0,100);
-          if(Number.isFinite(Number(json.data.y)))y=clamp(Number(json.data.y),0,100);
-          if(Number.isFinite(Number(json.data.zoom)))zoom=clamp(Number(json.data.zoom),100,220);
+      const r=await fetch(api,{cache:'no-store'});
+      if(r.ok){
+        const j=await r.json();
+        if(j&&j.data){
+          if(Number.isFinite(+j.data.x))x=clamp(+j.data.x,0,100);
+          if(Number.isFinite(+j.data.y))y=clamp(+j.data.y,0,100);
+          if(Number.isFinite(+j.data.zoom))zoom=clamp(+j.data.zoom,105,240);
         }
       }
-    }catch(error){}
-    apply();
+    }catch(e){}
+    setPhotoLayer();
   })();
 })();
 </script>
