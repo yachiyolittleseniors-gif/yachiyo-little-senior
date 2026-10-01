@@ -2,11 +2,9 @@
 const cover=document.getElementById('firstVisitSplash');
 if(!cover)return;
 let forceOpening=false;
-let forcedVariant='';
 try{
   forceOpening=sessionStorage.getItem('yachiyo:force-opening')==='1';
   if(forceOpening)sessionStorage.removeItem('yachiyo:force-opening');
-  forcedVariant=new URLSearchParams(location.search).get('opening')||'';
 }catch(e){}
 // A successful hero replacement requests the opening once on the next home view.
 let heroChanged=window.__yachiyoHeroChanged===true;
@@ -14,7 +12,7 @@ try{
   heroChanged=heroChanged||sessionStorage.getItem('yachiyo:hero-opening-pending')==='1';
   if(heroChanged)sessionStorage.removeItem('yachiyo:hero-opening-pending');
 }catch(e){}
-if(performance.getEntriesByType('navigation')[0]?.type==='reload'&&!heroChanged&&!forceOpening&&!forcedVariant){cover.remove();return;}
+if(performance.getEntriesByType('navigation')[0]?.type==='reload'&&!heroChanged&&!forceOpening){cover.remove();return;}
 cover.hidden=false;
 const openedAt=performance.now();
 let closed=false,stopMotion=()=>{},exitTimer=0,guardTimer=0;
@@ -25,21 +23,13 @@ function openingMotion(){
   if(window.matchMedia('(prefers-reduced-motion: reduce)').matches)return wait(1500);
   const source=cover.querySelector('img'),wrapper=cover.querySelector('.first-visit-logo');
   if(!source||!wrapper)return wait(1500);
-  // One draw per opening: 5% fire, 10% bounce, 10% 3D assemble, 75% spin.
+  // One draw per opening: 5% fire, 20% bounce, 75% spin.
   const drawChance=Math.random();
-  const variant=forcedVariant==='assemble'?'assemble':drawChance<0.05?'fire':drawChance<0.15?'bounce':drawChance<0.25?'assemble':'spin';
+  const variant=drawChance<0.05?'fire':drawChance<0.25?'bounce':'spin';
   cover.dataset.motion=variant;
-  const since=cover.querySelector('.first-visit-since');
-  if(variant==='assemble'&&since){since.style.animation='none';since.style.opacity='0';}
   return new Promise(resolve=>{
     let finished=false,raf=0,observer=null,canvas=null;
-    const finish=()=>{
-      if(finished)return;
-      finished=true;cancelAnimationFrame(raf);if(observer)observer.disconnect();if(canvas)canvas.remove();
-      source.style.opacity='';
-      if(variant==='assemble'&&since){since.style.animation='none';since.style.opacity='1';}
-      resolve();
-    };
+    const finish=()=>{if(finished)return;finished=true;cancelAnimationFrame(raf);if(observer)observer.disconnect();if(canvas)canvas.remove();source.style.opacity='';resolve();};
     stopMotion=finish;
     const loadTimeout=setTimeout(finish,1500);
     function begin(){
@@ -321,136 +311,6 @@ function openingMotion(){
     }
     ctx.restore();
 
-  let assembleTitle=null,assembleTitleDepth=null,assembleTop=null;
-  function prepareAssembleLayers(){
-    if(assembleTitle)return;
-    const titleX=410,titleY=108,titleW=1762,titleH=289;
-    const topX=410,topY=0,topW=1762,topH=118;
-
-    assembleTitle=document.createElement('canvas');
-    assembleTitle.width=titleW;assembleTitle.height=titleH;
-    const titleCtx=assembleTitle.getContext('2d');
-    titleCtx.drawImage(source,titleX,titleY,titleW,titleH,0,0,titleW,titleH);
-
-    assembleTitleDepth=document.createElement('canvas');
-    assembleTitleDepth.width=titleW;assembleTitleDepth.height=titleH;
-    const depthCtx=assembleTitleDepth.getContext('2d');
-    depthCtx.drawImage(assembleTitle,0,0);
-    depthCtx.globalCompositeOperation='source-in';
-    depthCtx.fillStyle='#4d3712';
-    depthCtx.fillRect(0,0,titleW,titleH);
-
-    assembleTop=document.createElement('canvas');
-    assembleTop.width=topW;assembleTop.height=topH;
-    assembleTop.getContext('2d').drawImage(source,topX,topY,topW,topH,0,0,topW,topH);
-  }
-
-  function drawAssemble(ms){
-    ctx.clearRect(0,0,width,height);
-    if(!source.complete||!source.naturalWidth)return;
-    prepareAssembleLayers();
-
-    const box=source.getBoundingClientRect(),frame=cover.getBoundingClientRect();
-    const scale=box.width/2172,left=box.left-frame.left,top=box.top-frame.top;
-
-    ctx.save();ctx.translate(left,top);ctx.scale(scale,scale);
-
-    // Ball stays completely fixed.
-    ctx.save();ctx.beginPath();boundary();ctx.clip();ctx.drawImage(source,0,0,2172,397);ctx.restore();
-
-    // Main "八千代リトルシニア" falls from above with a shallow 3D pitch.
-    const raw=clamp((ms-250)/2050);
-    const p=ease(raw);
-    const settle=raw<.86?0:Math.sin((raw-.86)/.14*Math.PI)*Math.max(0,1-(raw-.86)/.14);
-    const fallY=-520*(1-p)+18*settle;
-    const scaleY=.30+.70*p+.035*settle;
-    const scaleX=.93+.07*p;
-    const shear=.16*(1-p);
-    const titleX=410,titleY=108,titleW=1762,titleH=289;
-
-    ctx.save();
-    ctx.translate(titleX+titleW/2,titleY+titleH/2+fallY);
-    ctx.transform(scaleX,0,-shear,scaleY,0,0);
-    // 3D depth/extrusion behind the face.
-    const depth=Math.round(18*(.45+.55*p));
-    for(let z=depth;z>=1;z--){
-      ctx.globalAlpha=.035+.002*z;
-      ctx.drawImage(assembleTitleDepth,-titleW/2+z*.75,-titleH/2+z*.85);
-    }
-    ctx.globalAlpha=1;
-    ctx.shadowColor='rgba(0,0,0,.34)';
-    ctx.shadowBlur=14*(1-p)+4;
-    ctx.shadowOffsetY=8*(1-p)+2;
-    ctx.drawImage(assembleTitle,-titleW/2,-titleH/2);
-    ctx.restore();
-
-    // A short gold glint when the title locks into place.
-    const hit=1-clamp(Math.abs(ms-2300)/260);
-    if(hit>0){
-      ctx.save();
-      ctx.globalCompositeOperation='screen';
-      const gx=titleX+titleW*(.40+.22*(1-hit));
-      const grad=ctx.createLinearGradient(gx-90,0,gx+90,0);
-      grad.addColorStop(0,'rgba(255,238,175,0)');
-      grad.addColorStop(.5,'rgba(255,238,175,'+(hit*.48)+')');
-      grad.addColorStop(1,'rgba(255,238,175,0)');
-      ctx.fillStyle=grad;ctx.fillRect(titleX,titleY,titleW,titleH);
-      ctx.restore();
-    }
-
-    // Association name floats forward from the back after the main title lands.
-    const tp=ease((ms-2200)/900);
-    if(tp>0){
-      const topX=410,topY=0,topW=1762,topH=118;
-      ctx.save();
-      ctx.globalAlpha=tp;
-      ctx.translate(topX+topW/2,topY+topH/2+(1-tp)*26);
-      const s=.90+.10*tp;
-      ctx.scale(s,s);
-      ctx.shadowColor='rgba(226,189,103,'+(.30*tp)+')';
-      ctx.shadowBlur=12*(1-tp)+3;
-      ctx.drawImage(assembleTop,-topW/2,-topH/2);
-      ctx.restore();
-    }
-    ctx.restore();
-
-    // SINCE 1982 rises into focus separately, matching the existing placement.
-    const sp=ease((ms-2500)/850);
-    if(sp>0){
-      ctx.save();
-      ctx.globalAlpha=sp;
-      const fontSize=Math.max(12,Math.min(25,box.width*.034));
-      ctx.font=fontSize+'px "Times New Roman",Times,serif';
-      ctx.fillStyle='#e2bd67';
-      ctx.textBaseline='middle';
-      const text='SINCE 1982',tracking=fontSize*.25;
-      let total=-tracking;
-      for(const ch of text)total+=ctx.measureText(ch).width+tracking;
-      const cx=frame.width/2,cy=(box.top-frame.top)-fontSize*1.45+(1-sp)*18;
-      let x=cx-total/2;
-      for(const ch of text){
-        ctx.fillText(ch,x,cy);
-        x+=ctx.measureText(ch).width+tracking;
-      }
-      const line=Math.max(22,Math.min(44,box.width*.06))*sp;
-      ctx.strokeStyle='rgba(226,189,103,'+(.58*sp)+')';
-      ctx.lineWidth=1;
-      ctx.beginPath();ctx.moveTo(cx-total/2-line-18,cy);ctx.lineTo(cx-total/2-18,cy);
-      ctx.moveTo(cx+total/2+18,cy);ctx.lineTo(cx+total/2+line+18,cy);ctx.stroke();
-      ctx.restore();
-    }
-
-    // Final exact artwork for the last beat so it always resolves perfectly.
-    const full=ease((ms-3380)/420);
-    if(full>0){
-      ctx.save();
-      ctx.globalAlpha=full;
-      ctx.drawImage(source,left,top,box.width,box.height);
-      ctx.restore();
-    }
-  }
-  }
-
         function resize(){
           const r=cover.getBoundingClientRect();width=r.width;height=r.height;
           const dpr=Math.min(window.devicePixelRatio||1,2);
@@ -458,7 +318,7 @@ function openingMotion(){
           ctx.setTransform(dpr,0,0,dpr,0,0);
         }
         resize();prepareBall();
-        const draw=variant==='fire'?drawFire:variant==='bounce'?drawBounce:variant==='assemble'?drawAssemble:drawSpin;
+        const draw=variant==='fire'?drawFire:variant==='bounce'?drawBounce:drawSpin;
         draw(0);source.style.opacity='0';
         observer=new ResizeObserver(resize);observer.observe(cover);
         const timelineDuration=variant==='fire'?1400:variant==='bounce'?3100:4000;
