@@ -10,6 +10,7 @@
   if(!hero||!editBtn||!modal||!workspace||!image||!frame||!cancel||!saveBtn)return;
 
   const api='/.netlify/functions/site-data?section=hero-position-settings';
+  const cropCacheKey='yachiyoHeroCropV3';
   let saved={x:58,y:50,zoom:100};
   let draft={...saved};
   let baseScale=1;
@@ -138,6 +139,7 @@
       });
       if(!response.ok)throw new Error();
       saved={...draft};
+      try{localStorage.setItem(cropCacheKey,JSON.stringify(saved))}catch(e){}
       applyHero();
       closeModal();
       if(window.showSaveNotice)window.showSaveNotice('トップ画像の位置を保存しました');
@@ -217,6 +219,7 @@
           saved.x=clamp(Number(data.x)||58,0,100);
           saved.y=clamp(Number(data.y)||50,0,100);
           saved.zoom=clamp(Number(data.zoom)||100,100,220);
+          try{localStorage.setItem(cropCacheKey,JSON.stringify(saved))}catch(e){}
         }
       }
     }catch(error){}
