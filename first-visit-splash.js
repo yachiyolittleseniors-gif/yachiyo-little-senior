@@ -28,7 +28,7 @@ function dutyRequestSignal(){
     .then(function(response){return response.ok?response.json():null;})
     .then(function(data){
       if(stopped||closed||!data||data.hasPending!==true)return;
-      const mode=Math.random()<.5?'sparkle':'stars';
+      const mode='stars';
       cover.dataset.dutySignal=mode;
       canvas=document.createElement('canvas');
       canvas.setAttribute('aria-hidden','true');
@@ -37,21 +37,9 @@ function dutyRequestSignal(){
       const ctx=canvas.getContext('2d');if(!ctx){canvas.remove();canvas=null;return;}
       let width=0,height=0,dpr=1;
       const started=performance.now();
-      const sparklePoints=Array.from({length:18},function(_,i){
-        const band=i%3;
-        return{
-          x:.16+Math.random()*.68,
-          y:(band===0?.24:band===1?.43:.61)+Math.random()*.16,
-          size:2.2+Math.random()*4.6,
-          phase:Math.random()*Math.PI*2
-        };
-      });
       const flowingStars=[
-        {delay:0,sx:1.06,sy:.02,ex:-.08,ey:.74,size:6.0},
-        {delay:.10,sx:1.13,sy:.09,ex:-.02,ey:.86,size:4.8},
-        {delay:.22,sx:1.04,sy:.17,ex:-.12,ey:.98,size:5.5},
-        {delay:.34,sx:1.18,sy:-.04,ex:.08,ey:.69,size:4.2},
-        {delay:.46,sx:1.09,sy:.24,ex:-.08,ey:1.06,size:4.6}
+        {delay:0,sx:1.06,sy:.04,ex:-.06,ey:.78,size:5.8},
+        {delay:.22,sx:1.14,sy:.15,ex:.04,ey:.90,size:4.6}
       ];
       function resize(){
         const r=cover.getBoundingClientRect();width=r.width;height=r.height;
@@ -67,26 +55,6 @@ function dutyRequestSignal(){
           if(i===0)ctx.moveTo(px,py);else ctx.lineTo(px,py);
         }
         ctx.closePath();
-      }
-      function drawSparkles(progress){
-        ctx.clearRect(0,0,width,height);
-        const envelope=Math.sin(Math.PI*Math.min(1,progress));
-        sparklePoints.forEach(function(point,i){
-          const pulse=.28+.72*(.5+.5*Math.sin(progress*20+point.phase+i*.37));
-          const alpha=Math.max(0,envelope*pulse);
-          const x=width*point.x,y=height*point.y,r=point.size*(.75+.45*pulse);
-          ctx.save();
-          ctx.translate(x,y);
-          ctx.rotate(Math.PI/4);
-          ctx.shadowColor='rgba(255,211,92,'+Math.min(.95,alpha)+')';
-          ctx.shadowBlur=12+r*1.7;
-          ctx.fillStyle='rgba(255,228,143,'+Math.min(.98,alpha)+')';
-          ctx.beginPath();
-          ctx.moveTo(0,-r*1.65);ctx.lineTo(r*.35,-r*.35);ctx.lineTo(r*1.65,0);ctx.lineTo(r*.35,r*.35);
-          ctx.lineTo(0,r*1.65);ctx.lineTo(-r*.35,r*.35);ctx.lineTo(-r*1.65,0);ctx.lineTo(-r*.35,-r*.35);ctx.closePath();
-          ctx.fill();
-          ctx.restore();
-        });
       }
       function drawFlowingStars(progress){
         ctx.clearRect(0,0,width,height);
@@ -114,7 +82,7 @@ function dutyRequestSignal(){
         const elapsed=now-started;
         const remaining=Math.max(420,1250-(started-openedAt));
         const progress=Math.min(1,elapsed/remaining);
-        if(mode==='stars')drawFlowingStars(progress);else drawSparkles(progress);
+        drawFlowingStars(progress);
         if(progress<1)raf=requestAnimationFrame(tick);
       }
       resize();
