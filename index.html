@@ -2,14 +2,18 @@
 
 <html lang="ja">
 <head>
+<link rel="preload" as="image" href="/.netlify/functions/site-data?section=hero&current=1" fetchpriority="high"/>
 <script id="hero-image-early-fetch">
 (()=>{'use strict';
 let resolveReady;
 window.__yachiyoHeroReady=new Promise(resolve=>{resolveReady=resolve;});
 const controller=new AbortController();
 let settled=false;
+const heroUrl='/.netlify/functions/site-data?section=hero&current=1';
+window.__yachiyoHeroUrl=heroUrl;
 const request={
   signal:controller.signal,
+  url:heroUrl,
   finish(ok){
     if(settled)return;
     settled=true;clearTimeout(timeout);
@@ -17,12 +21,9 @@ const request={
     resolveReady(ok===true);
   }
 };
-// Bound the request itself; never reveal a photo that is still loading later.
+// The hero URL is discoverable by preload/CSS immediately; no blob indirection on first paint.
 const timeout=setTimeout(()=>request.finish(false),20000);
 window.__yachiyoHeroRequest=request;
-request.fetchImage=()=>fetch('/.netlify/functions/site-data?section=hero&current=1',{cache:'no-store',priority:'high',signal:request.signal});
-// Start the photo transfer in parallel with the server version check.
-window.__yachiyoHeroResponse=request.fetchImage().catch(()=>null);
 })();
 </script>
 <script src="/.netlify/functions/site-data?section=hero&amp;bootstrap=1"></script>
@@ -35,7 +36,7 @@ const isReload=performance.getEntriesByType('navigation')[0]?.type==='reload';
 let previous=null;
 try{previous=JSON.parse(sessionStorage.getItem(previewKey)||'null')}catch(e){}
 const matchingPreview=Boolean(serverVersion&&previous?.version===serverVersion&&validPreview(previous?.image));
-window.__yachiyoHeroChanged=isReload&&!matchingPreview;
+window.__yachiyoHeroChanged=isReload&&Boolean(previous)&&!matchingPreview;
 if(isReload&&matchingPreview){
   document.documentElement.style.setProperty('--hero-photo','url("'+previous.image+'")');
   const preload=document.createElement('link');
@@ -53,23 +54,8 @@ window.__yachiyoRememberHeroImage=function(src,explicitVersion){
   const reader=new FileReader();reader.onload=()=>save(reader.result);reader.readAsDataURL(current.blob);
 };
 const request=window.__yachiyoHeroRequest;
-window.__yachiyoHeroImage=window.__yachiyoHeroResponse
- .then(async response=>{
-  if(!response||!response.ok)throw new Error('Hero image unavailable');
-  const receivedVersion=response.headers.get('x-yachiyo-hero-version');
-  if(serverVersion&&receivedVersion&&receivedVersion!==serverVersion){
-    // A photo may change while the two requests are in flight. Fetch after validation.
-    if(response.body)response.body.cancel().catch(()=>{});
-    response=await request.fetchImage();
-    if(!response.ok)throw new Error('Hero image unavailable');
-  }
-  request.version=response.headers.get('x-yachiyo-hero-version')||serverVersion;
-  const blob=await response.blob();
-  if(request.signal.aborted||!blob.size||!blob.type.startsWith('image/'))throw new Error('Invalid hero image');
-  request.blob=blob;
-  request.objectUrl=URL.createObjectURL(blob);
-  return request.objectUrl;
- }).catch(()=>null);
+if(request)request.version=serverVersion;
+window.__yachiyoHeroImage=Promise.resolve(window.__yachiyoHeroUrl||'/.netlify/functions/site-data?section=hero&current=1');
 })();
 </script>
 <script src="./csp-event-handlers.js?v=20260929-logo-home"></script>
@@ -2125,7 +2111,7 @@ img,video,iframe{max-width:100%}
 }
 </script>
 <style>
-:root{--hero-photo:none}
+:root{--hero-photo:url("/.netlify/functions/site-data?section=hero&current=1")}
 #heroPhotoAdmin{position:fixed;right:16px;bottom:16px;z-index:40000;display:none;gap:8px;align-items:center;justify-content:flex-end;flex-wrap:wrap;max-width:calc(100vw - 32px)}
 #heroPhotoAdmin button,#heroPhotoAdmin label,#heroPhotoAdmin a{border:1px solid rgba(212,175,55,.75);background:#071426;color:#e2bd67;border-radius:999px;padding:10px 14px;font-size:12px;font-weight:700;box-shadow:0 5px 18px rgba(0,0,0,.22);cursor:pointer}
 #heroPhotoAdmin label{display:none;background:#b48a32;color:#fff}
