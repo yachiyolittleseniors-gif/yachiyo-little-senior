@@ -1,4 +1,5 @@
 [build]
+  command = "node --test tests/home-csp.test.mjs && node netlify/sync-home-csp.mjs"
   publish = "."
   functions = "netlify/functions"
 
