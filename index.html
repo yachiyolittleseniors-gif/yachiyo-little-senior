@@ -5293,7 +5293,7 @@ body:not(.photo-admin-on) #heroAdminToggle.unified-admin-toggle:focus-visible{co
 <style id="hero-position-zoom-style">
 #heroPhotoEditToggle{position:absolute!important;width:1px!important;height:1px!important;opacity:0!important;pointer-events:none!important}
 #heroPhotoEdit{display:none!important}
-#heroPhotoEdit .hero-edit-on{display:none}
+#heroPhotoEdit .hero-edit-on{display:none!important}
 @media(max-width:600px){
   body.photo-admin-on #heroPhotoEdit{
     display:flex!important;
@@ -5304,140 +5304,233 @@ body:not(.photo-admin-on) #heroAdminToggle.unified-admin-toggle:focus-visible{co
     position:relative!important;
     z-index:30001!important;
   }
-  #heroPhotoEditToggle:checked + #heroPhotoEdit{
-    background:#c79a3b!important;
-    color:#071426!important;
-  }
-  #heroPhotoEditToggle:checked + #heroPhotoEdit .hero-edit-off{display:none!important}
-  #heroPhotoEditToggle:checked + #heroPhotoEdit .hero-edit-on{display:inline!important}
-  body:has(#heroPhotoEditToggle:checked) #home > .hero{
-    touch-action:none!important;
-    -webkit-user-select:none!important;
-    user-select:none!important;
-    -webkit-tap-highlight-color:transparent!important;
-  }
-  body:has(#heroPhotoEditToggle:checked) #home > .hero .hero-inner{
-    pointer-events:none!important;
-  }
 }
+#heroImageEditModal{
+  position:fixed;
+  inset:0;
+  z-index:50000;
+  display:none;
+  align-items:center;
+  justify-content:center;
+  padding:18px;
+  background:rgba(2,8,16,.86);
+  backdrop-filter:blur(8px);
+  -webkit-backdrop-filter:blur(8px);
+}
+#heroImageEditModal.show{display:flex}
+#heroImageEditCard{
+  width:min(430px,100%);
+  max-height:calc(100dvh - 36px);
+  overflow:auto;
+  padding:16px;
+  border:1px solid rgba(226,189,103,.72);
+  border-radius:18px;
+  background:#071426;
+  box-shadow:0 24px 60px rgba(0,0,0,.5);
+}
+#heroImageEditTitle{
+  margin:0 0 12px;
+  color:#f2d782;
+  font-size:16px;
+  font-weight:800;
+  text-align:center;
+}
+#heroEditPreview{
+  position:relative;
+  width:100%;
+  height:min(56vh,520px);
+  min-height:390px;
+  overflow:hidden;
+  border:1px solid rgba(226,189,103,.6);
+  border-radius:12px;
+  background:#020a14;
+  touch-action:none;
+  -webkit-user-select:none;
+  user-select:none;
+}
+#heroEditPreviewPhoto{
+  position:absolute;
+  inset:0;
+  background-image:var(--hero-photo);
+  background-repeat:no-repeat;
+  background-position:58% 50%;
+  background-size:auto 100%;
+  will-change:background-position,background-size;
+}
+#heroEditPreviewShade{
+  position:absolute;
+  inset:0;
+  pointer-events:none;
+  background:linear-gradient(90deg,rgba(4,12,22,.56) 0%,rgba(4,12,22,.34) 43%,rgba(4,12,22,.10) 100%);
+}
+#heroImageEditHelp{
+  margin:10px 2px 12px;
+  color:#d7dde5;
+  font-size:12px;
+  line-height:1.6;
+  text-align:center;
+}
+#heroImageEditActions{
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  gap:10px;
+}
+#heroImageEditActions button{
+  min-height:46px;
+  border-radius:999px;
+  border:1px solid rgba(226,189,103,.78);
+  font-weight:800;
+}
+#heroImageEditCancel{background:transparent;color:#e2bd67}
+#heroImageEditSave{background:#c79a3b;color:#071426}
 </style>
+<div id="heroImageEditModal" aria-hidden="true">
+  <div id="heroImageEditCard" role="dialog" aria-modal="true" aria-labelledby="heroImageEditTitle">
+    <h3 id="heroImageEditTitle">トップ画像を編集</h3>
+    <div id="heroEditPreview">
+      <div id="heroEditPreviewPhoto"></div>
+      <div id="heroEditPreviewShade"></div>
+    </div>
+    <p id="heroImageEditHelp">1本指で位置を移動・2本指で拡大縮小</p>
+    <div id="heroImageEditActions">
+      <button id="heroImageEditCancel" type="button">キャンセル</button>
+      <button id="heroImageEditSave" type="button">保存</button>
+    </div>
+  </div>
+</div>
 <script id="hero-position-zoom-controller">
 (function(){
   const hero=document.querySelector('#home > .hero');
   const toggle=document.getElementById('heroPhotoEditToggle');
-  if(!hero||!toggle)return;
+  const modal=document.getElementById('heroImageEditModal');
+  const preview=document.getElementById('heroEditPreview');
+  const photo=document.getElementById('heroEditPreviewPhoto');
+  const cancel=document.getElementById('heroImageEditCancel');
+  const saveBtn=document.getElementById('heroImageEditSave');
+  if(!hero||!toggle||!modal||!preview||!photo||!cancel||!saveBtn)return;
 
   const api='/.netlify/functions/site-data?section=hero-position-settings';
-  let x=58,y=50,zoom=120;
-  let drag=null;
-  let pinch=null;
-  let saveTimer=0;
+  let saved={x:58,y:50,zoom:100};
+  let draft={...saved};
+  let drag=null,pinch=null;
 
   const clamp=(v,min,max)=>Math.max(min,Math.min(max,v));
   const distance=(a,b)=>Math.hypot(b.clientX-a.clientX,b.clientY-a.clientY);
-  const editing=()=>toggle.checked&&document.body.classList.contains('photo-admin-on');
 
-  function setPhotoLayer(){
-    // Keep the dark overlay fixed; move/scale only the actual photo layer.
-    hero.style.setProperty(
-      'background-image',
-      'linear-gradient(90deg,rgba(4,12,22,.56) 0%,rgba(4,12,22,.34) 43%,rgba(4,12,22,.10) 100%),var(--hero-photo)',
-      'important'
-    );
+  function applyPreview(){
+    photo.style.backgroundPosition=draft.x+'% '+draft.y+'%';
+    photo.style.backgroundSize='auto '+draft.zoom+'%';
+  }
+  function applyHero(){
+    hero.style.setProperty('background-position','center center,'+saved.x+'% '+saved.y+'%','important');
+    hero.style.setProperty('background-size','auto,auto '+saved.zoom+'%','important');
     hero.style.setProperty('background-repeat','no-repeat,no-repeat','important');
-    hero.style.setProperty('background-position','center center,'+x+'% '+y+'%','important');
-    hero.style.setProperty('background-size','100% 100%,auto '+zoom+'%','important');
+  }
+  function openModal(){
+    draft={...saved};
+    applyPreview();
+    modal.classList.add('show');
+    modal.setAttribute('aria-hidden','false');
+    document.documentElement.style.overflow='hidden';
+    document.body.style.overflow='hidden';
+  }
+  function closeModal(){
+    modal.classList.remove('show');
+    modal.setAttribute('aria-hidden','true');
+    document.documentElement.style.overflow='';
+    document.body.style.overflow='';
+    toggle.checked=false;
+    drag=null;pinch=null;
   }
   function flash(msg){if(window.showSaveNotice)window.showSaveNotice(msg)}
-  async function save(){
-    const pw=sessionStorage.getItem('yachiyoAdminPassword')||'';
-    if(!pw)return;
-    try{
-      const r=await fetch(api,{
-        method:'POST',
-        headers:{'content-type':'application/json','x-admin-password':pw},
-        body:JSON.stringify({data:{x,y,zoom,updatedAt:new Date().toISOString()}})
-      });
-      if(!r.ok)throw new Error();
-      flash('画像位置を保存しました');
-    }catch(e){flash('画像位置を保存できませんでした')}
-  }
-  function queueSave(){clearTimeout(saveTimer);saveTimer=setTimeout(save,450)}
 
   toggle.addEventListener('change',function(){
-    drag=null;pinch=null;
-    if(toggle.checked){
-      // Start slightly enlarged so vertical dragging is immediately visible.
-      if(zoom<110)zoom=120;
-      setPhotoLayer();
-      flash('1本指で移動・2本指で拡大縮小');
-    }else{
-      queueSave();
+    if(toggle.checked)openModal();
+  });
+
+  cancel.addEventListener('click',function(){
+    closeModal();
+  });
+
+  saveBtn.addEventListener('click',async function(){
+    const pw=sessionStorage.getItem('yachiyoAdminPassword')||'';
+    if(!pw){alert('管理画面に入り直してください。');return}
+    saveBtn.disabled=true;
+    saveBtn.textContent='保存中…';
+    try{
+      const response=await fetch(api,{
+        method:'POST',
+        headers:{'content-type':'application/json','x-admin-password':pw},
+        body:JSON.stringify({data:{mode:'modal-v1',x:draft.x,y:draft.y,zoom:draft.zoom,updatedAt:new Date().toISOString()}})
+      });
+      if(!response.ok)throw new Error();
+      saved={...draft};
+      applyHero();
+      closeModal();
+      flash('トップ画像の位置を保存しました');
+    }catch(error){
+      alert('保存できませんでした。');
+    }finally{
+      saveBtn.disabled=false;
+      saveBtn.textContent='保存';
     }
   });
 
-  hero.addEventListener('touchstart',function(e){
-    if(!editing())return;
-    e.preventDefault();
-    if(e.touches.length===1){
-      const t=e.touches[0];
-      drag={sx:t.clientX,sy:t.clientY,x,y};
+  modal.addEventListener('click',function(event){
+    if(event.target===modal)closeModal();
+  });
+
+  preview.addEventListener('touchstart',function(event){
+    event.preventDefault();
+    if(event.touches.length===1){
+      const t=event.touches[0];
+      drag={sx:t.clientX,sy:t.clientY,x:draft.x,y:draft.y};
       pinch=null;
-    }else if(e.touches.length===2){
-      pinch={distance:distance(e.touches[0],e.touches[1]),zoom};
+    }else if(event.touches.length===2){
+      pinch={distance:distance(event.touches[0],event.touches[1]),zoom:draft.zoom};
       drag=null;
     }
-  },{passive:false,capture:true});
+  },{passive:false});
 
-  hero.addEventListener('touchmove',function(e){
-    if(!editing())return;
-    e.preventDefault();
-
-    if(e.touches.length===1){
-      const t=e.touches[0];
-      if(!drag)drag={sx:t.clientX,sy:t.clientY,x,y};
-      const dx=t.clientX-drag.sx;
-      const dy=t.clientY-drag.sy;
-      x=clamp(drag.x-(dx/hero.clientWidth)*100,0,100);
-      y=clamp(drag.y-(dy/hero.clientHeight)*100,0,100);
-      setPhotoLayer();
-    }else if(e.touches.length===2){
-      if(!pinch)pinch={distance:distance(e.touches[0],e.touches[1]),zoom};
-      zoom=clamp(pinch.zoom*(distance(e.touches[0],e.touches[1])/pinch.distance),105,240);
-      setPhotoLayer();
+  preview.addEventListener('touchmove',function(event){
+    event.preventDefault();
+    if(event.touches.length===1){
+      const t=event.touches[0];
+      if(!drag)drag={sx:t.clientX,sy:t.clientY,x:draft.x,y:draft.y};
+      draft.x=clamp(drag.x-((t.clientX-drag.sx)/preview.clientWidth)*100,0,100);
+      draft.y=clamp(drag.y-((t.clientY-drag.sy)/preview.clientHeight)*100,0,100);
+      applyPreview();
+    }else if(event.touches.length===2){
+      if(!pinch)pinch={distance:distance(event.touches[0],event.touches[1]),zoom:draft.zoom};
+      draft.zoom=clamp(pinch.zoom*(distance(event.touches[0],event.touches[1])/pinch.distance),100,220);
+      applyPreview();
     }
-  },{passive:false,capture:true});
+  },{passive:false});
 
-  hero.addEventListener('touchend',function(e){
-    if(!editing())return;
-    e.preventDefault();
-    if(e.touches.length===1){
-      const t=e.touches[0];
-      drag={sx:t.clientX,sy:t.clientY,x,y};
+  preview.addEventListener('touchend',function(event){
+    if(event.touches.length===1){
+      const t=event.touches[0];
+      drag={sx:t.clientX,sy:t.clientY,x:draft.x,y:draft.y};
       pinch=null;
     }else{
-      drag=null;pinch=null;queueSave();
+      drag=null;pinch=null;
     }
-  },{passive:false,capture:true});
+  },{passive:false});
+  preview.addEventListener('touchcancel',function(){drag=null;pinch=null},{passive:false});
 
-  hero.addEventListener('touchcancel',function(){
-    if(!editing())return;
-    drag=null;pinch=null;queueSave();
-  },{passive:false,capture:true});
-
-  (async function(){
+  (async function load(){
     try{
-      const r=await fetch(api,{cache:'no-store'});
-      if(r.ok){
-        const j=await r.json();
-        if(j&&j.data){
-          if(Number.isFinite(+j.data.x))x=clamp(+j.data.x,0,100);
-          if(Number.isFinite(+j.data.y))y=clamp(+j.data.y,0,100);
-          if(Number.isFinite(+j.data.zoom))zoom=clamp(+j.data.zoom,105,240);
-        }
+      const response=await fetch(api,{cache:'no-store'});
+      if(!response.ok)return;
+      const json=await response.json();
+      const data=json&&json.data;
+      if(data&&data.mode==='modal-v1'){
+        saved.x=clamp(Number(data.x)||58,0,100);
+        saved.y=clamp(Number(data.y)||50,0,100);
+        saved.zoom=clamp(Number(data.zoom)||100,100,220);
+        applyHero();
       }
-    }catch(e){}
-    setPhotoLayer();
+    }catch(error){}
   })();
 })();
 </script>
