@@ -2133,6 +2133,12 @@ img,video,iframe{max-width:100%}
 #heroOverlayControl{display:none!important;align-items:center;gap:8px;user-select:none}
 #heroOverlayControl input{width:18px;height:18px;margin:0;accent-color:#c79a3b;flex:0 0 auto}
 body.photo-admin-on #heroOverlayControl{display:flex!important}
+body:has(#heroOverlayWeak:checked) .hero{
+  background:var(--hero-photo) center 44%/cover no-repeat #071426!important;
+}
+body:has(#heroOverlayWeak:checked) .hero .hero-inner{
+  background:transparent!important;
+}
 @media(max-width:600px){
   #heroPhotoAdmin{
     right:12px;
@@ -4010,7 +4016,7 @@ function openProtectedArea(type){
 <button data-nosnippet="" id="heroAdminToggle" type="button">管理</button>
 <label data-nosnippet="" for="heroPhotoInput" id="heroPhotoChange">トップの写真を変更</label>
 <button class="hero-announcement-admin" data-nosnippet="" id="heroAnnouncementEdit" type="button">トップお知らせ編集</button>
-<label data-nosnippet="" id="heroOverlayControl"><input id="heroOverlayWeak" type="checkbox"/><span>オーバーレイを弱める</span></label>
+<label data-nosnippet="" id="heroOverlayControl"><input id="heroOverlayWeak" type="checkbox" autocomplete="off"/><span>オーバーレイを弱める</span></label>
 <input accept="image/*" id="heroPhotoInput" type="file"/>
 </div>
 <script id="hero-overlay-controller">
@@ -4018,72 +4024,72 @@ function openProtectedArea(type){
   const api='/.netlify/functions/site-data?section=hero-overlay-settings';
   const hero=document.querySelector('.hero');
   const checkbox=document.getElementById('heroOverlayWeak');
-  if(!hero)return;
+  if(!hero||!checkbox)return;
+
   const cacheKey='yachiyoHeroOverlayWeak';
   let weak=false;
 
   function apply(){
+    checkbox.checked=weak;
     hero.classList.toggle('hero-overlay-soft',weak);
-    const background=weak
-      ? 'linear-gradient(90deg,rgba(4,12,22,.20) 0%,rgba(4,12,22,.08) 43%,rgba(4,12,22,0) 100%),var(--hero-photo) center 44%/cover no-repeat #071426'
-      : 'linear-gradient(90deg,rgba(4,12,22,.90) 0%,rgba(4,12,22,.66) 42%,rgba(4,12,22,.25) 100%),var(--hero-photo) center 44%/cover no-repeat #071426';
-    hero.style.setProperty('background',background,'important');
-    if(checkbox)checkbox.checked=weak;
-    try{localStorage.setItem(cacheKey,String(weak))}catch(error){}
+    try{localStorage.setItem(cacheKey,weak?'true':'false')}catch(error){}
   }
 
   try{
     const cached=localStorage.getItem(cacheKey);
-    if(cached==='true'){weak=true;apply();}
-  }catch(error){}
+    if(cached==='true'||cached==='false'){
+      weak=cached==='true';
+      apply();
+    }else{
+      checkbox.checked=false;
+    }
+  }catch(error){
+    checkbox.checked=false;
+  }
 
   async function load(){
     try{
       const response=await fetch(api,{cache:'no-store'});
       if(!response.ok)return;
       const json=await response.json();
-      weak=Boolean(json.data&&json.data.weak);
-      apply();
+      if(json && json.data && typeof json.data.weak==='boolean'){
+        weak=json.data.weak;
+        apply();
+      }
     }catch(error){}
   }
 
-  if(checkbox){
-    checkbox.addEventListener('change',async function(){
-      const previous=weak;
-      const next=checkbox.checked;
-      const password=sessionStorage.getItem('yachiyoAdminPassword')||'';
-      if(!password){
-        checkbox.checked=previous;
-        alert('管理画面に入り直してください。');
-        return;
-      }
-      weak=next;
-      apply();
-      checkbox.disabled=true;
-      try{
-        const response=await fetch(api,{
-          method:'POST',
-          headers:{'content-type':'application/json','x-admin-password':password},
-          body:JSON.stringify({data:{weak:next,updatedAt:new Date().toISOString()}})
-        });
-        if(response.status===429)throw new Error('LIMITED');
-        if(response.status===401)throw new Error('PASSWORD');
-        if(!response.ok)throw new Error('SAVE');
-        if(window.showSaveNotice)showSaveNotice('オーバーレイ設定を保存しました');
-      }catch(error){
-        weak=previous;
-        apply();
-        if(error.message==='LIMITED')alert('試行回数の上限です。15分後に再度お試しください。');
-        else if(error.message==='PASSWORD')alert('管理者パスワードが違います。');
-        else alert('オーバーレイ設定を保存できませんでした。');
-      }finally{
-        checkbox.disabled=false;
-      }
-    });
-  }
+  checkbox.addEventListener('change',async function(){
+    weak=checkbox.checked;
+    apply();
 
-  if(window.yachiyoTrackInitialLoad)window.yachiyoTrackInitialLoad(load());
-  else load();
+    const password=sessionStorage.getItem('yachiyoAdminPassword')||'';
+    if(!password){
+      alert('管理画面に入り直してください。');
+      return;
+    }
+
+    checkbox.disabled=true;
+    try{
+      const response=await fetch(api,{
+        method:'POST',
+        headers:{'content-type':'application/json','x-admin-password':password},
+        body:JSON.stringify({data:{weak,updatedAt:new Date().toISOString()}})
+      });
+      if(response.status===429)throw new Error('LIMITED');
+      if(response.status===401)throw new Error('PASSWORD');
+      if(!response.ok)throw new Error('SAVE');
+      if(window.showSaveNotice)showSaveNotice('オーバーレイ設定を保存しました');
+    }catch(error){
+      if(error.message==='LIMITED')alert('試行回数の上限です。15分後に再度お試しください。');
+      else if(error.message==='PASSWORD')alert('管理者パスワードが違います。');
+      else alert('サーバーへの保存に失敗しました。この端末には設定を保持しています。');
+    }finally{
+      checkbox.disabled=false;
+    }
+  });
+
+  load();
 })();
 </script>
 <script>
