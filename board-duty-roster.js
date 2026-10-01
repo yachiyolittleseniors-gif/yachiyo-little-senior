@@ -342,10 +342,10 @@
       }).join(''):'';
     }
     if(admin){
-      admin.innerHTML=ordered.length?ordered.map(function(item){
-        const pending=item.status==='pending';
-        return '<div class="duty-request-admin-item">'+(item.requestNo?'<b>申請番号 #'+escapeHtml(item.requestNo)+'</b><br>':'')+'<b>'+displayDate(item.date)+'</b><br>'+escapeHtml(requestPersonLabel(item,'from'))+' → <b>'+escapeHtml(requestPersonLabel(item,'to'))+'</b><br><span class="duty-request-wait">'+escapeHtml(requestStatusLabel(item.status))+'</span><div class="duty-request-admin-actions">'+(pending?'<button type="button" data-approve-duty-request="'+escapeHtml(item.id)+'">当番表に反映</button><button class="reject" type="button" data-reject-duty-request="'+escapeHtml(item.id)+'">却下</button>':'')+'<button class="reject" type="button" data-delete-duty-request="'+escapeHtml(item.id)+'">削除</button></div></div>';
-      }).join(''):'<div class="duty-change-preview">当番変更申請はありません。</div>';
+      const pendingItems=ordered.filter(function(item){return item.status==='pending'});
+      admin.innerHTML=pendingItems.length?pendingItems.map(function(item){
+        return '<div class="duty-request-admin-item">'+(item.requestNo?'<b>申請番号 #'+escapeHtml(item.requestNo)+'</b><br>':'')+'<b>'+displayDate(item.date)+'</b><br>'+escapeHtml(requestPersonLabel(item,'from'))+' → <b>'+escapeHtml(requestPersonLabel(item,'to'))+'</b><br><span class="duty-request-wait">確認待ち</span><div class="duty-request-admin-actions"><button type="button" data-approve-duty-request="'+escapeHtml(item.id)+'">当番表に反映</button><button class="reject" type="button" data-reject-duty-request="'+escapeHtml(item.id)+'">却下</button><button class="reject" type="button" data-delete-duty-request="'+escapeHtml(item.id)+'">削除</button></div></div>';
+      }).join(''):'<div class="duty-change-preview">確認待ちの当番変更申請はありません。</div>';
       admin.querySelectorAll('[data-approve-duty-request]').forEach(function(b){b.addEventListener('click',function(){decideRequest(b.dataset.approveDutyRequest,true)})});
       admin.querySelectorAll('[data-reject-duty-request]').forEach(function(b){b.addEventListener('click',function(){decideRequest(b.dataset.rejectDutyRequest,false)})});
       admin.querySelectorAll('[data-delete-duty-request]').forEach(function(b){b.addEventListener('click',function(){deleteRequest(b.dataset.deleteDutyRequest)})});
