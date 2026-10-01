@@ -36,6 +36,7 @@ const isReload=performance.getEntriesByType('navigation')[0]?.type==='reload';
 let previous=null;
 try{previous=JSON.parse(sessionStorage.getItem(previewKey)||'null')}catch(e){}
 const matchingPreview=Boolean(serverVersion&&previous?.version===serverVersion&&validPreview(previous?.image));
+window.__yachiyoHeroPreviewReady=matchingPreview;
 window.__yachiyoHeroChanged=isReload&&Boolean(previous)&&!matchingPreview;
 if(isReload&&matchingPreview){
   document.documentElement.style.setProperty('--hero-photo','url("'+previous.image+'")');
@@ -49,10 +50,27 @@ window.__yachiyoRememberHeroImage=function(src,explicitVersion){
   const revision=++cacheRevision;
   const current=window.__yachiyoHeroRequest;
   const version=String(explicitVersion||current?.version||serverVersion||'');
-  const save=image=>{if(revision!==cacheRevision||!version||!validPreview(image))return;try{sessionStorage.setItem(previewKey,JSON.stringify({version,image}))}catch(e){}};
+  const save=image=>{
+    if(revision!==cacheRevision||!version||!validPreview(image))return;
+    try{
+      sessionStorage.setItem(previewKey,JSON.stringify({version,image}));
+      window.__yachiyoHeroPreviewReady=true;
+    }catch(e){}
+  };
   if(validPreview(src)){save(src);return;}
-  if(current?.objectUrl!==src||!current.blob)return;
-  const reader=new FileReader();reader.onload=()=>save(reader.result);reader.readAsDataURL(current.blob);
+  if(current?.objectUrl===src&&current.blob){
+    const reader=new FileReader();reader.onload=()=>save(reader.result);reader.readAsDataURL(current.blob);return;
+  }
+  if(typeof src==='string'&&src.startsWith('/.netlify/functions/site-data?section=hero')){
+    const cacheNetworkPreview=()=>fetch(src,{cache:'no-store'})
+      .then(r=>r.ok?r.blob():null)
+      .then(blob=>{
+        if(!blob||!blob.size||!blob.type.startsWith('image/'))return;
+        const reader=new FileReader();reader.onload=()=>save(reader.result);reader.readAsDataURL(blob);
+      }).catch(()=>{});
+    if('requestIdleCallback' in window)requestIdleCallback(cacheNetworkPreview,{timeout:2500});
+    else setTimeout(cacheNetworkPreview,1200);
+  }
 };
 const request=window.__yachiyoHeroRequest;
 if(request)request.version=serverVersion;
