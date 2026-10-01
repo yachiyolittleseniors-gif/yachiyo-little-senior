@@ -61,6 +61,18 @@ window.__yachiyoHeroImage=Promise.resolve(window.__yachiyoHeroUrl||'/.netlify/fu
 </script>
 <script src="./csp-event-handlers.js?v=20260929-logo-home"></script>
 <script src="./hero-position-prepaint.js?v=20261001-1"></script>
+<style id="hero-position-first-paint">
+@media(max-width:600px){
+  #home > .hero{
+    --hero-edit-x:var(--hero-saved-x,58%);
+    --hero-edit-y:var(--hero-saved-y,50%);
+    --hero-edit-zoom:var(--hero-saved-zoom,100%);
+    background-position:center center,var(--hero-edit-x) var(--hero-edit-y)!important;
+    background-size:auto,auto var(--hero-edit-zoom)!important;
+    background-repeat:no-repeat,no-repeat!important;
+  }
+}
+</style>
 <script src="./admin-session-client.js?v=20260930-session2"></script>
 <!-- Google tag (gtag.js) -->
 <script async="" src="https://www.googletagmanager.com/gtag/js?id=G-L8BMMSXDP9"></script>
@@ -5281,14 +5293,6 @@ body:not(.photo-admin-on) #heroAdminToggle.unified-admin-toggle:focus-visible{co
 <style id="hero-position-zoom-style">
 #heroPhotoEdit{display:none!important;text-decoration:none!important}
 @media(max-width:600px){
-  #home > .hero{
-    --hero-edit-x:var(--hero-saved-x,58%);
-    --hero-edit-y:var(--hero-saved-y,50%);
-    --hero-edit-zoom:var(--hero-saved-zoom,100%);
-    background-position:center center,var(--hero-edit-x) var(--hero-edit-y)!important;
-    background-size:auto,auto var(--hero-edit-zoom)!important;
-    background-repeat:no-repeat,no-repeat!important;
-  }
   body.photo-admin-on #heroPhotoEdit{
     display:flex!important;
     align-items:center!important;
