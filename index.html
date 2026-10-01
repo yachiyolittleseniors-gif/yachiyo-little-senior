@@ -5382,6 +5382,13 @@ document.addEventListener('DOMContentLoaded',function(){
   }
 }
 </style>
+<style id="home-admin-hide-during-modal">
+/* 編集モーダル表示中は下部の管理操作を隠し、保存ボタンとの重なりを防ぐ */
+body:has(.news-modal:not([hidden])) #heroPhotoAdmin,
+body:has(#heroImageEditModal[aria-hidden="false"]) #heroPhotoAdmin{
+  display:none!important;
+}
+</style>
 <style id="home-admin-subtle-color">
 body:not(.photo-admin-on) #heroAdminToggle.unified-admin-toggle{color:rgba(199,154,59,.28)!important}
 body:not(.photo-admin-on) #heroAdminToggle.unified-admin-toggle:focus-visible{color:rgba(199,154,59,.72)!important}
