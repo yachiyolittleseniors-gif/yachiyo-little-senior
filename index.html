@@ -39,6 +39,7 @@ const matchingPreview=Boolean(serverVersion&&previous?.version===serverVersion&&
 window.__yachiyoHeroChanged=isReload&&Boolean(previous)&&!matchingPreview;
 if(isReload&&matchingPreview){
   document.documentElement.style.setProperty('--hero-photo','url("'+previous.image+'")');
+  window.__yachiyoHeroPreviewApplied=true;
   const preload=document.createElement('link');
   preload.rel='preload';preload.as='image';preload.href=previous.image;preload.fetchPriority='high';
   document.head.appendChild(preload);
@@ -4147,6 +4148,11 @@ function openProtectedArea(type){
 
   async function loadHero(){
     try{
+      // On reload, keep the already-painted version-matched preview.
+      // Replacing it with the same network image causes a visible background repaint/jump.
+      if(window.__yachiyoHeroPreviewApplied===true){
+        return true;
+      }
       const freshImage=await window.__yachiyoHeroImage;
       if(freshImage){
         const ready=showHeroImage(freshImage);
