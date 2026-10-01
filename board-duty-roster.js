@@ -55,8 +55,23 @@
     return{
       images:imageList.filter(function(item){return item&&typeof item==='object'&&(item.data||item.src)}).slice(0,8).map(function(item,index){return{id:String(item.id||('duty-'+index)),name:String(item.name||('当番表 '+(index+1))),data:item.data?String(item.data):'',src:item.src?String(item.src):'',table:window.DutyRosterData.tableForImage(item)}}),
       changes:changeItems.filter(function(item){return item&&/^\d{4}-\d{2}-\d{2}$/.test(String(item.date||''))&&['1','2','3'].includes(String(item.grade||''))&&cleanName(item.from)&&cleanName(item.to)&&!(String(item.date)==='2026-10-24'&&cleanName(item.from)==='齋藤'&&cleanName(item.to)==='荒木')}).slice(0,300).map(function(item,index){return{id:String(item.id||('change-'+index)),requestNo:String(item.requestNo||'').slice(0,20),date:String(item.date),grade:String(item.grade),from:cleanName(item.from),to:cleanName(item.to),toGrade:String(item.toGrade||item.grade||''),status:String(item.status||'active')==='cancelled'?'cancelled':'active',createdAt:String(item.createdAt||''),cancelledAt:String(item.cancelledAt||'')}}),
-      requests:Array.isArray(raw&&raw.requests)?raw.requests.filter(function(item){return item&&/^\d{4}-\d{2}-\d{2}$/.test(String(item.date||''))&&['1','2','3'].includes(String(item.grade||''))&&cleanName(item.from)&&cleanName(item.to)&&!(String(item.date)==='2026-10-24'&&cleanName(item.from)==='齋藤'&&cleanName(item.to)==='荒木')}).slice(0,200).map(function(item,index){return{id:String(item.id||('request-'+index)),requestNo:String(item.requestNo||'').slice(0,20),date:String(item.date),grade:String(item.grade),fromGrade:String(item.fromGrade||item.grade),from:cleanName(item.from),toGrade:String(item.toGrade||item.grade),to:cleanName(item.to),note:String(item.note||'').slice(0,200),status:['pending','approved','rejected'].includes(String(item.status))?String(item.status):'pending',createdAt:String(item.createdAt||''),updatedAt:String(item.updatedAt||'')}}):[]
+      requests:dedupePendingRequests(Array.isArray(raw&&raw.requests)?raw.requests.filter(function(item){return item&&/^\d{4}-\d{2}-\d{2}$/.test(String(item.date||''))&&['1','2','3'].includes(String(item.grade||''))&&cleanName(item.from)&&cleanName(item.to)&&!(String(item.date)==='2026-10-24'&&cleanName(item.from)==='齋藤'&&cleanName(item.to)==='荒木')}).slice(0,200).map(function(item,index){return{id:String(item.id||('request-'+index)),requestNo:String(item.requestNo||'').slice(0,20),date:String(item.date),grade:String(item.grade),fromGrade:String(item.fromGrade||item.grade),from:cleanName(item.from),toGrade:String(item.toGrade||item.grade),to:cleanName(item.to),note:String(item.note||'').slice(0,200),status:['pending','approved','rejected'].includes(String(item.status))?String(item.status):'pending',createdAt:String(item.createdAt||''),updatedAt:String(item.updatedAt||'')}}):[])
     };
+  }
+
+  function dedupePendingRequests(items){
+    const result=[],pendingIndex=new Map();
+    (Array.isArray(items)?items:[]).forEach(function(item){
+      if(!item){return}
+      if(item.status!=='pending'){result.push(item);return}
+      const key=[item.date,String(item.fromGrade||item.grade||''),cleanName(item.from)].join('|');
+      if(!pendingIndex.has(key)){pendingIndex.set(key,result.length);result.push(item);return}
+      const index=pendingIndex.get(key),current=result[index];
+      const currentTime=new Date(current.updatedAt||current.createdAt||0).getTime()||0;
+      const nextTime=new Date(item.updatedAt||item.createdAt||0).getTime()||0;
+      if(nextTime>=currentTime)result[index]=item;
+    });
+    return result;
   }
 
   function imageSource(item){return item.data||item.src||''}
