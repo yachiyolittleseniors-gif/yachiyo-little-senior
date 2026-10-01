@@ -288,7 +288,6 @@
       if(!String(date).startsWith(prefix))return;
       const grades=table.grades||[2,1];
       table.rows.forEach(function(row){
-        if(tableDate(table,row[0])!==date)return;
         row.slice(2,6).forEach(function(name,index){
           const clean=cleanName(name);if(!clean)return;
           const grade=String(grades[Math.floor(index/2)]);
