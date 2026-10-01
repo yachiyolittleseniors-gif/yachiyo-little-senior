@@ -2274,7 +2274,8 @@ export default async (request, context) => {
       const roster = body?.data;
       const images = roster?.images;
       const changes = Array.isArray(roster?.changes) ? roster.changes : [];
-      const requests = Array.isArray(roster?.requests) ? roster.requests : [];
+      const currentDutyRoster = await store.get(key, { type:"json", consistency:"strong" }) || {};
+      const requests = Array.isArray(roster?.requests) ? roster.requests : (Array.isArray(currentDutyRoster.requests) ? currentDutyRoster.requests : []);
 
       if (
         roster?.initialized !== true ||
