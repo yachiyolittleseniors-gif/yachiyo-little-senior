@@ -19,8 +19,8 @@ let closed=false,stopMotion=()=>{},exitTimer=0,guardTimer=0;
 let leaving=false;
 function remove(){if(closed)return;closed=true;clearTimeout(exitTimer);clearTimeout(guardTimer);stopMotion();cover.remove();}
 function wait(ms){return new Promise(resolve=>setTimeout(resolve,ms));}
-function mobileMotion(){
-  if(!window.matchMedia('(max-width: 767px)').matches||window.matchMedia('(prefers-reduced-motion: reduce)').matches)return wait(1500);
+function openingMotion(){
+  if(window.matchMedia('(prefers-reduced-motion: reduce)').matches)return wait(1500);
   const source=cover.querySelector('img'),wrapper=cover.querySelector('.first-visit-logo');
   if(!source||!wrapper)return wait(1500);
   // One draw per opening: 5% fire, 10% bounce, 85% spin.
@@ -360,7 +360,7 @@ if(window.__yachiyoHeroReady){awaitHero();}
 else if(document.readyState==='loading'){
   document.addEventListener('DOMContentLoaded',awaitHero,{once:true});
 }else{awaitHero();}
-mobileMotion();
+openingMotion();
 window.addEventListener('pagehide',remove,{once:true});
 })();
 
