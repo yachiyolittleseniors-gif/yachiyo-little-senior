@@ -4014,8 +4014,7 @@ function openProtectedArea(type){
 <button data-nosnippet="" id="heroAdminToggle" type="button">管理</button>
 <label data-nosnippet="" for="heroPhotoInput" id="heroPhotoChange">トップの写真を変更</label>
 <button class="hero-announcement-admin" data-nosnippet="" id="heroAnnouncementEdit" type="button">トップお知らせ編集</button>
-<button data-nosnippet="" id="heroPhotoZoomOut" type="button">写真を小さく</button>
-<button data-nosnippet="" id="heroPhotoZoomIn" type="button">写真を大きく</button>
+<button data-nosnippet="" id="heroPhotoEdit" type="button">画像を編集</button>
 <label data-nosnippet="" id="heroOverlayControl"><input id="heroOverlayWeak" type="checkbox" autocomplete="off"/><span>オーバーレイを弱める</span></label>
 <input accept="image/*" id="heroPhotoInput" type="file"/>
 </div>
@@ -5280,38 +5279,51 @@ body:not(.photo-admin-on) #heroAdminToggle.unified-admin-toggle:focus-visible{co
     --hero-mobile-zoom:100;
     background-position:var(--hero-mobile-x) var(--hero-mobile-y)!important;
     background-size:auto calc(var(--hero-mobile-zoom) * 1%)!important;
-    transition:background-position .65s cubic-bezier(.22,.61,.36,1),background-size .65s cubic-bezier(.22,.61,.36,1)!important;
+    transition:background-position .22s ease-out,background-size .22s ease-out!important;
   }
-  body.photo-admin-on #home > .hero{cursor:pointer;-webkit-tap-highlight-color:transparent}
-  #heroPhotoZoomOut,#heroPhotoZoomIn{display:none}
-  body.photo-admin-on #heroPhotoZoomOut,
-  body.photo-admin-on #heroPhotoZoomIn{display:flex!important}
+  #heroPhotoEdit{display:none!important}
+  body.photo-admin-on #heroPhotoEdit{display:flex!important}
+  body.hero-photo-editing #home > .hero{
+    touch-action:none;
+    cursor:grab;
+    -webkit-user-select:none;
+    user-select:none;
+    -webkit-tap-highlight-color:transparent;
+  }
+  body.hero-photo-editing #home > .hero.is-photo-gesturing{
+    cursor:grabbing;
+    transition:none!important;
+  }
+  body.hero-photo-editing #heroPhotoEdit{
+    background:#c79a3b!important;
+    color:#071426!important;
+  }
 }
 @media(min-width:601px){
-  #heroPhotoZoomOut,#heroPhotoZoomIn{display:none!important}
+  #heroPhotoEdit{display:none!important}
 }
 </style>
 <script id="hero-position-zoom-controller">
 (function(){
   const hero=document.querySelector('#home > .hero');
-  const zoomOut=document.getElementById('heroPhotoZoomOut');
-  const zoomIn=document.getElementById('heroPhotoZoomIn');
-  if(!hero)return;
+  const editBtn=document.getElementById('heroPhotoEdit');
+  if(!hero||!editBtn)return;
 
   const api='/.netlify/functions/site-data?section=hero-position-settings';
-  const ySteps=[35,50,65];
-  const zoomSteps=[100,110,120,130];
-  let y=50;
-  let zoom=100;
+  let x=58,y=50,zoom=100;
+  let editMode=false;
+  let pointers=new Map();
+  let dragStart=null;
+  let pinchStart=null;
   let saveTimer=0;
 
-  function clampTo(list,value,fallback){
-    const num=Number(value);
-    return list.includes(num)?num:fallback;
-  }
-  function apply(){
+  function clamp(value,min,max){return Math.max(min,Math.min(max,value))}
+  function apply(animated=true){
+    hero.classList.toggle('is-photo-gesturing',!animated);
+    hero.style.setProperty('--hero-mobile-x',x+'%');
     hero.style.setProperty('--hero-mobile-y',y+'%');
     hero.style.setProperty('--hero-mobile-zoom',String(zoom));
+    if(animated) requestAnimationFrame(()=>hero.classList.remove('is-photo-gesturing'));
   }
   function flash(message){
     if(window.showSaveNotice) window.showSaveNotice(message);
@@ -5323,53 +5335,89 @@ body:not(.photo-admin-on) #heroAdminToggle.unified-admin-toggle:focus-visible{co
       const response=await fetch(api,{
         method:'POST',
         headers:{'content-type':'application/json','x-admin-password':password},
-        body:JSON.stringify({data:{y,zoom,updatedAt:new Date().toISOString()}})
+        body:JSON.stringify({data:{x,y,zoom,updatedAt:new Date().toISOString()}})
       });
       if(!response.ok)throw new Error();
+      flash('画像位置を保存しました');
     }catch(error){
-      flash('位置設定を保存できませんでした');
+      flash('画像位置を保存できませんでした');
     }
   }
-  function queueSave(message){
+  function queueSave(){
     clearTimeout(saveTimer);
-    saveTimer=setTimeout(save,350);
-    flash(message);
+    saveTimer=setTimeout(save,450);
   }
-  function nextY(){
-    const index=ySteps.indexOf(y);
-    y=ySteps[(index+1)%ySteps.length];
-    apply();
-    queueSave(y===35?'写真位置：上':y===50?'写真位置：中央':'写真位置：下');
-  }
-  function changeZoom(direction){
-    let index=zoomSteps.indexOf(zoom);
-    if(index<0)index=0;
-    index=Math.max(0,Math.min(zoomSteps.length-1,index+direction));
-    const next=zoomSteps[index];
-    if(next===zoom){
-      flash(direction>0?'これ以上大きくできません':'これ以上小さくできません');
-      return;
-    }
-    zoom=next;
-    apply();
-    queueSave('写真サイズ：'+zoom+'%');
+  function setEditMode(on){
+    editMode=on;
+    document.body.classList.toggle('hero-photo-editing',on);
+    editBtn.textContent=on?'編集を終了':'画像を編集';
+    pointers.clear();
+    dragStart=null;
+    pinchStart=null;
+    if(on) flash('ドラッグで移動・2本指で拡大縮小');
+    else queueSave();
   }
 
-  hero.addEventListener('click',function(event){
-    if(!window.matchMedia('(max-width:600px)').matches)return;
+  editBtn.addEventListener('click',function(event){
+    event.preventDefault();
+    event.stopPropagation();
     if(sessionStorage.getItem('yachiyoAdminMode')!=='1')return;
-    if(event.target.closest('a,button,label,input,select,textarea'))return;
-    nextY();
+    setEditMode(!editMode);
   });
 
-  if(zoomOut) zoomOut.addEventListener('click',function(event){
-    event.preventDefault();event.stopPropagation();
-    changeZoom(-1);
-  });
-  if(zoomIn) zoomIn.addEventListener('click',function(event){
-    event.preventDefault();event.stopPropagation();
-    changeZoom(1);
-  });
+  hero.addEventListener('pointerdown',function(event){
+    if(!editMode||!window.matchMedia('(max-width:600px)').matches)return;
+    if(event.target.closest('a,button,label,input,select,textarea'))return;
+    event.preventDefault();
+    hero.setPointerCapture?.(event.pointerId);
+    pointers.set(event.pointerId,{x:event.clientX,y:event.clientY});
+
+    if(pointers.size===1){
+      dragStart={px:event.clientX,py:event.clientY,x,y};
+    }else if(pointers.size===2){
+      const pts=[...pointers.values()];
+      const dx=pts[1].x-pts[0].x,dy=pts[1].y-pts[0].y;
+      pinchStart={distance:Math.hypot(dx,dy),zoom};
+      dragStart=null;
+    }
+  },{passive:false});
+
+  hero.addEventListener('pointermove',function(event){
+    if(!editMode||!pointers.has(event.pointerId))return;
+    event.preventDefault();
+    pointers.set(event.pointerId,{x:event.clientX,y:event.clientY});
+
+    if(pointers.size===1&&dragStart){
+      const dx=event.clientX-dragStart.px;
+      const dy=event.clientY-dragStart.py;
+      x=clamp(dragStart.x-(dx/hero.clientWidth)*100,0,100);
+      y=clamp(dragStart.y-(dy/hero.clientHeight)*100,0,100);
+      apply(false);
+    }else if(pointers.size===2&&pinchStart){
+      const pts=[...pointers.values()];
+      const dx=pts[1].x-pts[0].x,dy=pts[1].y-pts[0].y;
+      const distance=Math.hypot(dx,dy);
+      zoom=clamp(pinchStart.zoom*(distance/pinchStart.distance),100,180);
+      apply(false);
+    }
+  },{passive:false});
+
+  function endPointer(event){
+    if(!pointers.has(event.pointerId))return;
+    pointers.delete(event.pointerId);
+    if(pointers.size===1){
+      const remaining=[...pointers.values()][0];
+      dragStart={px:remaining.x,py:remaining.y,x,y};
+      pinchStart=null;
+    }else if(pointers.size===0){
+      dragStart=null;
+      pinchStart=null;
+      apply(true);
+      queueSave();
+    }
+  }
+  hero.addEventListener('pointerup',endPointer);
+  hero.addEventListener('pointercancel',endPointer);
 
   (async function load(){
     try{
@@ -5377,8 +5425,9 @@ body:not(.photo-admin-on) #heroAdminToggle.unified-admin-toggle:focus-visible{co
       if(!response.ok)return;
       const json=await response.json();
       if(json&&json.data){
-        y=clampTo(ySteps,json.data.y,50);
-        zoom=clampTo(zoomSteps,json.data.zoom,100);
+        if(Number.isFinite(Number(json.data.x)))x=clamp(Number(json.data.x),0,100);
+        if(Number.isFinite(Number(json.data.y)))y=clamp(Number(json.data.y),0,100);
+        if(Number.isFinite(Number(json.data.zoom)))zoom=clamp(Number(json.data.zoom),100,180);
         apply();
       }
     }catch(error){}
