@@ -173,6 +173,16 @@ html{min-height:100%;background:#f4f3ef}
 }
 </style>
 <script src="./reading-position.js?v=20261001-visible1"></script>
+<script id="after-first-paint-helper">
+window.yachiyoAfterFirstPaint=function(task){
+  const run=function(){
+    if('requestIdleCallback' in window)requestIdleCallback(function(){task();},{timeout:1800});
+    else setTimeout(task,250);
+  };
+  if(document.readyState==='complete')setTimeout(run,150);
+  else window.addEventListener('load',function(){setTimeout(run,150);},{once:true});
+};
+</script>
 <script id="seniorcup-visibility-prepaint">
 (function(){
   try{
@@ -4197,7 +4207,7 @@ function openProtectedArea(type){
     }
   });
 
-  load();
+  window.yachiyoAfterFirstPaint(load);
 })();
 </script>
 <script>
@@ -5289,7 +5299,7 @@ body.photo-admin-on #heroPhotoChange{
     }
   });
 
-  window.yachiyoTrackInitialLoad(load());
+  window.yachiyoAfterFirstPaint(()=>window.yachiyoTrackInitialLoad(load()));
 })();
 </script>
 <style id="seniorcup-star-stream">
