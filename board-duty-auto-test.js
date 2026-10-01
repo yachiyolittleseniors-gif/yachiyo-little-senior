@@ -140,7 +140,7 @@ function init(){
       });
       var noteY=monthBottom+28;ctx.textAlign='left';ctx.textBaseline='alphabetic';ctx.fillStyle='#071426';ctx.font='700 20px sans-serif';
       ctx.fillText('☆　都合によりお当番の交代は可能です。その際は、下記のご対応をお願いいたします。',left+25,noteY);
-      ctx.font='600 18px sans-serif';ctx.fillText('① サイト内の「当番変更申請」より申請してください。',left+100,noteY+32);ctx.fillText('② 申請後は、全体LINEでの共有も併せてお願いいたします。',left+100,noteY+62);ctx.fillText('③ 母小屋のドア裏に提示されている紙の当番表を、赤字で修正をお願いします。',left+100,noteY+92);
+      ctx.font='600 18px sans-serif';ctx.fillText('① サイト内の「当番変更申請」より申請してください。',left+100,noteY+32);ctx.fillText('② 申請後は、全体LINEでの共有も併せてお願いいたします。',left+100,noteY+62);ctx.fillText('③ 母小屋のドア裏に提示されている紙の当番表を、赤字で修正をお願いいたします。',left+100,noteY+92);
       ctx.font='700 20px sans-serif';ctx.fillText('☆　黄色の日は里山活動日になります。車の駐車場所に必ず気を付けてください。',left+25,noteY+148);
       var src=canvas.toDataURL('image/png');
       preview.innerHTML='';var title=document.createElement('b');title.textContent=y+'年'+mo+'月 当番表（案）';var img=document.createElement('img');img.className='duty-simple-image';img.src=src;img.alt=title.textContent;var actions=document.createElement('div');actions.className='duty-simple-actions';var dl=document.createElement('button');dl.type='button';dl.textContent='画像を保存';dl.onclick=async function(){
