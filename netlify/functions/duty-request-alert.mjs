@@ -1,6 +1,7 @@
 import { getStore } from "@netlify/blobs";
 import { verifyAccessPassword } from "./_access-password.mjs";
 import { boardSessionIsValid } from "./_board-session.mjs";
+import { verifyAdminPassword } from "./admin-rate-limit.mjs";
 
 function json(body,status=200){
   return new Response(JSON.stringify(body),{
@@ -19,7 +20,22 @@ export default async (request,context) => {
   if(request.method!=="GET")return json({error:"method not allowed"},405);
   try{
     const store=getStore({name:"yachiyo-public-site",consistency:"strong"});
+    const details=new URL(request.url).searchParams.get("details")==="1";
+    if(details){
+      let accessGranted=await boardSessionIsValid(request);
+      const adminPassword=request.headers.get("x-admin-password")||"";
+      const accessPassword=request.headers.get("x-access-password")||"";
+      if(!accessGranted&&adminPassword){
+        const auth=await verifyAdminPassword({store,request,context,expectedPassword:process.env.ADMIN_PASSWORD||""});
+        accessGranted=auth.ok===true;
+      }
+      if(!accessGranted&&accessPassword){
+        accessGranted=await verifyAccessPassword({role:"board",store,request,context,password:accessPassword});
+      }
+      if(!accessGranted)return json({error:"unauthorized"},401);
+    }
     const data=await store.get("content/duty-roster.json",{type:"json",consistency:"strong"});
+    if(data&&data.requests!==undefined&&!Array.isArray(data.requests))throw new Error("invalid request data");
     const requests=Array.isArray(data?.requests)?data.requests:[];
     const uniquePending=new Set();
     requests.forEach(function(item){
@@ -30,19 +46,9 @@ export default async (request,context) => {
       uniquePending.add(date+"|"+grade+"|"+from);
     });
     const pendingCount=uniquePending.size;
-
-    const url=new URL(request.url);
-    if(url.searchParams.get("details")==="1"){
-      const accessPassword=request.headers.get("x-access-password")||"";
-      const accessGranted =
-        await boardSessionIsValid(request) ||
-        await verifyAccessPassword({role:"board",store,request,context,password:accessPassword});
-      if(!accessGranted)return json({error:"unauthorized"},401);
-      return json({hasPending:pendingCount>0,pendingCount,requests});
-    }
-
-    return json({hasPending:pendingCount>0,pendingCount});
+    return json({ok:true,hasPending:pendingCount>0,pendingCount,...(details?{requests}: {})});
   }catch(_){
-    return json({hasPending:false,pendingCount:0});
+    // Failure is unknown, never a successful zero count. This endpoint never writes data.
+    return json({ok:false,error:"当番変更申請を取得できませんでした。"},503);
   }
 };
