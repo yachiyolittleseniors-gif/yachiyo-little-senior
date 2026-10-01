@@ -310,6 +310,7 @@ function openingMotion(){
       ctx.restore();
     }
     ctx.restore();
+  }
 
         function resize(){
           const r=cover.getBoundingClientRect();width=r.width;height=r.height;
