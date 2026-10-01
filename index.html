@@ -4023,6 +4023,10 @@ function openProtectedArea(type){
 
   function apply(){
     hero.classList.toggle('hero-overlay-soft',weak);
+    const background=weak
+      ? 'linear-gradient(90deg,rgba(4,12,22,.52) 0%,rgba(4,12,22,.28) 43%,rgba(4,12,22,.04) 100%),var(--hero-photo) center 44%/cover no-repeat #071426'
+      : 'linear-gradient(90deg,rgba(4,12,22,.90) 0%,rgba(4,12,22,.66) 42%,rgba(4,12,22,.25) 100%),var(--hero-photo) center 44%/cover no-repeat #071426';
+    hero.style.setProperty('background',background,'important');
     if(checkbox)checkbox.checked=weak;
     try{localStorage.setItem(cacheKey,String(weak))}catch(error){}
   }
