@@ -285,21 +285,32 @@
     return (grade?grade+'年・':'')+displayName(name,grade);
   }
   async function syncPendingRequestCount(){
+    // 件数と一覧は別経路。どちらか一方の取得失敗で、もう一方を0件扱いにしない。
     try{
-      const accessPassword=sessionStorage.getItem('yachiyoAttendancePass')||'';
-      const response=await fetch('/.netlify/functions/duty-request-alert?details=1',{cache:'no-store',headers:{'x-access-password':accessPassword}});
-      if(!response.ok){
-        const fallback=await fetch('/.netlify/functions/duty-request-alert',{cache:'no-store'});
-        if(!fallback.ok)return;
-        const basic=await fallback.json();
-        const count=Math.max(0,Number(basic&&basic.pendingCount)||0);
+      const countResponse=await fetch('/.netlify/functions/duty-request-alert',{cache:'no-store'});
+      if(countResponse.ok){
+        const countBody=await countResponse.json();
+        const count=Math.max(0,Number(countBody&&countBody.pendingCount)||0);
         const requestBadge=document.getElementById('dutyRequestPendingBadge');
         if(requestBadge){requestBadge.hidden=false;requestBadge.textContent='申請中 '+count+'件'}
-        return;
+        const statusToggle=document.getElementById('toggleDutyRequestStatus');
+        if(statusToggle&&statusToggle.getAttribute('aria-expanded')!=='true'){
+          statusToggle.textContent=count?'申請内容を見る（申請中 '+count+'件）':'申請内容を見る';
+        }
       }
-      const body=await response.json();
-      const normalized=normalize({requests:Array.isArray(body&&body.requests)?body.requests:[]});
-      requests=normalized.requests;
+    }catch(e){}
+
+    try{
+      const accessPassword=sessionStorage.getItem('yachiyoAttendancePass')||'';
+      const detailResponse=await fetch('/.netlify/functions/duty-request-details',{
+        cache:'no-store',
+        credentials:'same-origin',
+        headers:{'x-access-password':accessPassword}
+      });
+      if(!detailResponse.ok)return;
+      const detailBody=await detailResponse.json();
+      if(!Array.isArray(detailBody&&detailBody.requests))return;
+      requests=normalize({requests:detailBody.requests}).requests;
       renderRequests();
     }catch(e){}
   }
