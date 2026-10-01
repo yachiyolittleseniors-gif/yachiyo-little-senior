@@ -62,6 +62,7 @@
     if(!isOctober)return name;
     name=name.replace(/[（）()]/g,'');
     if(String(grade)==='1'&&name==='石川')name='石川晃';
+    if(String(grade)==='2'&&name==='石川圭')name='石川';
     return name;
   }
 
