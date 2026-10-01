@@ -916,7 +916,19 @@ export default async (request, context) => {
       ) {
         const accessPassword = request.headers.get("x-access-password") || "";
         const coachPassword = request.headers.get("x-coach-password") || "";
+        const adminPassword = request.headers.get("x-admin-password") || "";
+        let adminGranted = false;
+        if (section === "duty-roster" && adminPassword) {
+          const adminAuth = await verifyAdminPassword({
+            store,
+            request,
+            context,
+            expectedPassword: process.env.ADMIN_PASSWORD || "",
+          });
+          adminGranted = adminAuth.ok === true;
+        }
         const accessGranted =
+          adminGranted ||
           await boardSessionIsValid(request) ||
           await accessPasswordIsValid(store, accessPassword, request, context) ||
           (section === "board-meeting-schedule" && coachPassword && await coachAccessPasswordIsValid(store, coachPassword, request, context));
