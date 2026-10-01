@@ -4033,7 +4033,7 @@ function openProtectedArea(type){
 <button data-nosnippet="" id="heroAdminToggle" type="button">管理</button>
 <label data-nosnippet="" for="heroPhotoInput" id="heroPhotoChange">トップの写真を変更</label>
 <button class="hero-announcement-admin" data-nosnippet="" id="heroAnnouncementEdit" type="button">トップお知らせ編集</button>
-<button data-nosnippet="" id="heroPhotoEdit" type="button">画像を編集</button>
+<input id="heroPhotoEditToggle" type="checkbox" autocomplete="off"/><label data-nosnippet="" for="heroPhotoEditToggle" id="heroPhotoEdit"><span class="hero-edit-off">画像を編集</span><span class="hero-edit-on">編集を終了</span></label>
 <label data-nosnippet="" id="heroOverlayControl"><input id="heroOverlayWeak" type="checkbox" autocomplete="off"/><span>オーバーレイを弱める</span></label>
 <input accept="image/*" id="heroPhotoInput" type="file"/>
 </div>
@@ -5291,42 +5291,50 @@ body:not(.photo-admin-on) #heroAdminToggle.unified-admin-toggle:focus-visible{co
 </style>
 
 <style id="hero-position-zoom-style">
+#heroPhotoEditToggle{position:absolute!important;width:1px!important;height:1px!important;opacity:0!important;pointer-events:none!important}
+#heroPhotoEdit{display:none!important}
+#heroPhotoEdit .hero-edit-on{display:none}
 @media(max-width:600px){
-  #heroPhotoEdit{display:none!important}
-  body.photo-admin-on #heroPhotoEdit{display:flex!important}
-  body.hero-photo-editing #home > .hero{
+  body.photo-admin-on #heroPhotoEdit{
+    display:flex!important;
+    align-items:center!important;
+    justify-content:center!important;
+    pointer-events:auto!important;
+    touch-action:manipulation!important;
+    position:relative!important;
+    z-index:30001!important;
+  }
+  #heroPhotoEditToggle:checked + #heroPhotoEdit{
+    background:#c79a3b!important;
+    color:#071426!important;
+  }
+  #heroPhotoEditToggle:checked + #heroPhotoEdit .hero-edit-off{display:none!important}
+  #heroPhotoEditToggle:checked + #heroPhotoEdit .hero-edit-on{display:inline!important}
+  body:has(#heroPhotoEditToggle:checked) #home > .hero{
     touch-action:none!important;
     -webkit-user-select:none!important;
     user-select:none!important;
     -webkit-tap-highlight-color:transparent!important;
   }
-  body.hero-photo-editing #home > .hero .hero-inner{
+  body:has(#heroPhotoEditToggle:checked) #home > .hero .hero-inner{
     pointer-events:none!important;
   }
-  body.hero-photo-editing #heroPhotoEdit{
-    background:#c79a3b!important;
-    color:#071426!important;
-  }
-}
-@media(min-width:601px){
-  #heroPhotoEdit{display:none!important}
 }
 </style>
 <script id="hero-position-zoom-controller">
 (function(){
   const hero=document.querySelector('#home > .hero');
-  const editBtn=document.getElementById('heroPhotoEdit');
-  if(!hero||!editBtn)return;
+  const toggle=document.getElementById('heroPhotoEditToggle');
+  if(!hero||!toggle)return;
 
   const api='/.netlify/functions/site-data?section=hero-position-settings';
   let x=58,y=50,zoom=100;
-  let editMode=false;
   let gesture=null;
   let saveTimer=0;
-  let suppressClickUntil=0;
 
   function clamp(v,min,max){return Math.max(min,Math.min(max,v))}
   function dist(a,b){return Math.hypot(b.clientX-a.clientX,b.clientY-a.clientY)}
+  function editing(){return toggle.checked && document.body.classList.contains('photo-admin-on')}
   function apply(){
     hero.style.setProperty('background-position',x+'% '+y+'%','important');
     hero.style.setProperty('background-size','auto '+zoom+'%','important');
@@ -5353,42 +5361,19 @@ body:not(.photo-admin-on) #heroAdminToggle.unified-admin-toggle:focus-visible{co
     clearTimeout(saveTimer);
     saveTimer=setTimeout(save,400);
   }
-  function setEditMode(on){
-    editMode=on;
-    document.body.classList.toggle('hero-photo-editing',on);
-    editBtn.textContent=on?'編集を終了':'画像を編集';
-    editBtn.setAttribute('aria-pressed',on?'true':'false');
+
+  // Native checkbox handles the tap; JS only reacts after state changed.
+  toggle.addEventListener('change',function(){
     gesture=null;
-    if(on)flash('編集ON：1本指で移動・2本指で拡大縮小');
-    else queueSave();
-  }
-  function toggleEdit(event){
-    if(event){
-      event.preventDefault();
-      event.stopPropagation();
+    if(toggle.checked){
+      flash('編集ON：1本指で移動・2本指で拡大縮小');
+    }else{
+      queueSave();
     }
-    if(!document.body.classList.contains('photo-admin-on'))return;
-    setEditMode(!editMode);
-  }
-
-  // iPhone Safari: touchendのあとに発生する合成clickで二重反転しないようにする
-  editBtn.addEventListener('touchend',function(event){
-    suppressClickUntil=Date.now()+1500;
-    toggleEdit(event);
-  },{passive:false});
-
-  // touchendが発生しない環境では通常のclickで動作
-  editBtn.addEventListener('click',function(event){
-    if(Date.now()<suppressClickUntil){
-      event.preventDefault();
-      event.stopPropagation();
-      return;
-    }
-    toggleEdit(event);
-  },false);
+  });
 
   hero.addEventListener('touchstart',function(event){
-    if(!editMode||!window.matchMedia('(max-width:600px)').matches)return;
+    if(!editing()||!window.matchMedia('(max-width:600px)').matches)return;
     event.preventDefault();
     if(event.touches.length===1){
       const t=event.touches[0];
@@ -5399,33 +5384,29 @@ body:not(.photo-admin-on) #heroAdminToggle.unified-admin-toggle:focus-visible{co
   },{passive:false});
 
   hero.addEventListener('touchmove',function(event){
-    if(!editMode||!gesture)return;
+    if(!editing()||!gesture)return;
     event.preventDefault();
-
     if(event.touches.length===1){
       const t=event.touches[0];
       if(gesture.type!=='drag'){
         gesture={type:'drag',sx:t.clientX,sy:t.clientY,x:x,y:y};
         return;
       }
-      const dx=t.clientX-gesture.sx;
-      const dy=t.clientY-gesture.sy;
-      x=clamp(gesture.x-(dx/hero.clientWidth)*100,0,100);
-      y=clamp(gesture.y-(dy/hero.clientHeight)*100,0,100);
+      x=clamp(gesture.x-((t.clientX-gesture.sx)/hero.clientWidth)*100,0,100);
+      y=clamp(gesture.y-((t.clientY-gesture.sy)/hero.clientHeight)*100,0,100);
       apply();
     }else if(event.touches.length===2){
       if(gesture.type!=='pinch'){
         gesture={type:'pinch',distance:dist(event.touches[0],event.touches[1]),zoom:zoom};
         return;
       }
-      const d=dist(event.touches[0],event.touches[1]);
-      zoom=clamp(gesture.zoom*(d/gesture.distance),100,220);
+      zoom=clamp(gesture.zoom*(dist(event.touches[0],event.touches[1])/gesture.distance),100,220);
       apply();
     }
   },{passive:false});
 
   hero.addEventListener('touchend',function(event){
-    if(!editMode)return;
+    if(!editing())return;
     if(event.touches.length===0){
       gesture=null;
       queueSave();
@@ -5436,20 +5417,29 @@ body:not(.photo-admin-on) #heroAdminToggle.unified-admin-toggle:focus-visible{co
   },{passive:false});
 
   hero.addEventListener('touchcancel',function(){
-    if(!editMode)return;
+    if(!editing())return;
     gesture=null;
     queueSave();
   },{passive:false});
 
+  // Leaving admin mode always closes image editing.
+  const adminToggle=document.getElementById('heroAdminToggle');
+  if(adminToggle)adminToggle.addEventListener('click',function(){
+    setTimeout(function(){
+      if(!document.body.classList.contains('photo-admin-on'))toggle.checked=false;
+    },0);
+  });
+
   (async function load(){
     try{
       const response=await fetch(api,{cache:'no-store'});
-      if(!response.ok)return;
-      const json=await response.json();
-      if(json&&json.data){
-        if(Number.isFinite(Number(json.data.x)))x=clamp(Number(json.data.x),0,100);
-        if(Number.isFinite(Number(json.data.y)))y=clamp(Number(json.data.y),0,100);
-        if(Number.isFinite(Number(json.data.zoom)))zoom=clamp(Number(json.data.zoom),100,220);
+      if(response.ok){
+        const json=await response.json();
+        if(json&&json.data){
+          if(Number.isFinite(Number(json.data.x)))x=clamp(Number(json.data.x),0,100);
+          if(Number.isFinite(Number(json.data.y)))y=clamp(Number(json.data.y),0,100);
+          if(Number.isFinite(Number(json.data.zoom)))zoom=clamp(Number(json.data.zoom),100,220);
+        }
       }
     }catch(error){}
     apply();
