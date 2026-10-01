@@ -5348,12 +5348,15 @@ body:not(.photo-admin-on) #heroAdminToggle.unified-admin-toggle:focus-visible{co
 }
 #heroEditPreviewPhoto{
   position:absolute;
-  inset:0;
+  inset:-10%;
   background-image:var(--hero-photo);
   background-repeat:no-repeat;
-  background-position:58% 50%;
-  background-size:auto 100%;
-  will-change:background-position,background-size;
+  background-position:center center;
+  background-size:cover;
+  transform:translate3d(0,0,0) scale(1);
+  transform-origin:center center;
+  will-change:transform;
+  pointer-events:none;
 }
 #heroEditPreviewShade{
   position:absolute;
@@ -5408,21 +5411,24 @@ body:not(.photo-admin-on) #heroAdminToggle.unified-admin-toggle:focus-visible{co
   if(!hero||!editBtn||!modal||!preview||!photo||!cancel||!saveBtn)return;
 
   const api='/.netlify/functions/site-data?section=hero-position-settings';
-  let saved={x:58,y:50,zoom:100};
+  let saved={offsetX:0,offsetY:0,scale:1};
   let draft={...saved};
-  let drag=null,pinch=null;
+  let pointers=new Map();
+  let dragStart=null;
+  let pinchStart=null;
 
   const clamp=(v,min,max)=>Math.max(min,Math.min(max,v));
-  const distance=(a,b)=>Math.hypot(b.clientX-a.clientX,b.clientY-a.clientY);
+  const dist=(a,b)=>Math.hypot(b.x-a.x,b.y-a.y);
 
   function applyPreview(){
-    photo.style.backgroundPosition=draft.x+'% '+draft.y+'%';
-    photo.style.backgroundSize='auto '+draft.zoom+'%';
+    photo.style.transform='translate3d('+draft.offsetX+'px,'+draft.offsetY+'px,0) scale('+draft.scale+')';
   }
   function applyHero(){
-    hero.style.setProperty('background-position','center center,'+saved.x+'% '+saved.y+'%','important');
-    hero.style.setProperty('background-size','auto,auto '+saved.zoom+'%','important');
-    hero.style.setProperty('background-repeat','no-repeat,no-repeat','important');
+    const x=clamp(58+(saved.offsetX/Math.max(preview.clientWidth,1))*100,0,100);
+    const y=clamp(50+(saved.offsetY/Math.max(preview.clientHeight,1))*100,0,100);
+    const zoom=clamp(saved.scale*100,100,220);
+    hero.style.setProperty('background-position',x+'% '+y+'%','important');
+    hero.style.setProperty('background-size','auto '+zoom+'%','important');
   }
   function openModal(){
     draft={...saved};
@@ -5437,20 +5443,14 @@ body:not(.photo-admin-on) #heroAdminToggle.unified-admin-toggle:focus-visible{co
     modal.setAttribute('aria-hidden','true');
     document.documentElement.style.overflow='';
     document.body.style.overflow='';
-    drag=null;pinch=null;
+    pointers.clear(); dragStart=null; pinchStart=null;
   }
   function flash(msg){if(window.showSaveNotice)window.showSaveNotice(msg)}
 
   editBtn.addEventListener('click',function(){
-    // href="#heroImageEditModal" opens natively; JS only synchronizes state.
     draft={...saved};
     applyPreview();
-    setTimeout(function(){
-      modal.classList.add('show');
-      modal.setAttribute('aria-hidden','false');
-      document.documentElement.style.overflow='hidden';
-      document.body.style.overflow='hidden';
-    },0);
+    setTimeout(openModal,0);
   });
 
   cancel.addEventListener('click',function(){
@@ -5469,7 +5469,7 @@ body:not(.photo-admin-on) #heroAdminToggle.unified-admin-toggle:focus-visible{co
       const response=await fetch(api,{
         method:'POST',
         headers:{'content-type':'application/json','x-admin-password':pw},
-        body:JSON.stringify({data:{mode:'modal-v1',x:draft.x,y:draft.y,zoom:draft.zoom,updatedAt:new Date().toISOString()}})
+        body:JSON.stringify({data:{mode:'modal-transform-v2',offsetX:draft.offsetX,offsetY:draft.offsetY,scale:draft.scale,updatedAt:new Date().toISOString()}})
       });
       if(!response.ok)throw new Error();
       saved={...draft};
@@ -5488,43 +5488,56 @@ body:not(.photo-admin-on) #heroAdminToggle.unified-admin-toggle:focus-visible{co
     if(event.target===modal)closeModal();
   });
 
-  preview.addEventListener('touchstart',function(event){
+  preview.addEventListener('pointerdown',function(event){
     event.preventDefault();
-    if(event.touches.length===1){
-      const t=event.touches[0];
-      drag={sx:t.clientX,sy:t.clientY,x:draft.x,y:draft.y};
-      pinch=null;
-    }else if(event.touches.length===2){
-      pinch={distance:distance(event.touches[0],event.touches[1]),zoom:draft.zoom};
-      drag=null;
-    }
-  },{passive:false});
+    preview.setPointerCapture?.(event.pointerId);
+    pointers.set(event.pointerId,{x:event.clientX,y:event.clientY});
 
+    if(pointers.size===1){
+      dragStart={x:event.clientX,y:event.clientY,offsetX:draft.offsetX,offsetY:draft.offsetY};
+      pinchStart=null;
+    }else if(pointers.size===2){
+      const pts=[...pointers.values()];
+      pinchStart={distance:dist(pts[0],pts[1]),scale:draft.scale};
+      dragStart=null;
+    }
+  });
+
+  preview.addEventListener('pointermove',function(event){
+    if(!pointers.has(event.pointerId))return;
+    event.preventDefault();
+    pointers.set(event.pointerId,{x:event.clientX,y:event.clientY});
+
+    if(pointers.size===1 && dragStart){
+      draft.offsetX=clamp(dragStart.offsetX+(event.clientX-dragStart.x),-preview.clientWidth*.45,preview.clientWidth*.45);
+      draft.offsetY=clamp(dragStart.offsetY+(event.clientY-dragStart.y),-preview.clientHeight*.45,preview.clientHeight*.45);
+      applyPreview();
+    }else if(pointers.size===2 && pinchStart){
+      const pts=[...pointers.values()];
+      const d=dist(pts[0],pts[1]);
+      draft.scale=clamp(pinchStart.scale*(d/Math.max(pinchStart.distance,1)),1,2.2);
+      applyPreview();
+    }
+  });
+
+  function endPointer(event){
+    pointers.delete(event.pointerId);
+    if(pointers.size===1){
+      const p=[...pointers.values()][0];
+      dragStart={x:p.x,y:p.y,offsetX:draft.offsetX,offsetY:draft.offsetY};
+      pinchStart=null;
+    }else if(pointers.size===0){
+      dragStart=null; pinchStart=null;
+    }
+  }
+  preview.addEventListener('pointerup',endPointer);
+  preview.addEventListener('pointercancel',endPointer);
+
+  // Touch fallback for older iOS behavior.
   preview.addEventListener('touchmove',function(event){
+    if(pointers.size)return;
     event.preventDefault();
-    if(event.touches.length===1){
-      const t=event.touches[0];
-      if(!drag)drag={sx:t.clientX,sy:t.clientY,x:draft.x,y:draft.y};
-      draft.x=clamp(drag.x-((t.clientX-drag.sx)/preview.clientWidth)*100,0,100);
-      draft.y=clamp(drag.y-((t.clientY-drag.sy)/preview.clientHeight)*100,0,100);
-      applyPreview();
-    }else if(event.touches.length===2){
-      if(!pinch)pinch={distance:distance(event.touches[0],event.touches[1]),zoom:draft.zoom};
-      draft.zoom=clamp(pinch.zoom*(distance(event.touches[0],event.touches[1])/pinch.distance),100,220);
-      applyPreview();
-    }
   },{passive:false});
-
-  preview.addEventListener('touchend',function(event){
-    if(event.touches.length===1){
-      const t=event.touches[0];
-      drag={sx:t.clientX,sy:t.clientY,x:draft.x,y:draft.y};
-      pinch=null;
-    }else{
-      drag=null;pinch=null;
-    }
-  },{passive:false});
-  preview.addEventListener('touchcancel',function(){drag=null;pinch=null},{passive:false});
 
   (async function load(){
     try{
@@ -5532,10 +5545,10 @@ body:not(.photo-admin-on) #heroAdminToggle.unified-admin-toggle:focus-visible{co
       if(!response.ok)return;
       const json=await response.json();
       const data=json&&json.data;
-      if(data&&data.mode==='modal-v1'){
-        saved.x=clamp(Number(data.x)||58,0,100);
-        saved.y=clamp(Number(data.y)||50,0,100);
-        saved.zoom=clamp(Number(data.zoom)||100,100,220);
+      if(data&&data.mode==='modal-transform-v2'){
+        saved.offsetX=Number.isFinite(Number(data.offsetX))?Number(data.offsetX):0;
+        saved.offsetY=Number.isFinite(Number(data.offsetY))?Number(data.offsetY):0;
+        saved.scale=clamp(Number(data.scale)||1,1,2.2);
         applyHero();
       }
     }catch(error){}
