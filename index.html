@@ -4465,7 +4465,7 @@ function openProtectedArea(type){
    }catch(e){alert(e.message==='LIMITED'?'試行回数の上限です。15分後に再度お試しください。':'保存できませんでした。管理パスワードを確認してください。')}
    input.value=''; current=null;
  };
- window.yachiyoTrackInitialLoad(load());
+ window.yachiyoAfterFirstPaint(()=>window.yachiyoTrackInitialLoad(load()));
 })();
 </script>
 <script>
@@ -4748,7 +4748,7 @@ function openProtectedArea(type){
    try{await persist();modal.hidden=true;editingIndex=-1;render();showSaveNotice('保存しました')}catch(e){data=old;alert(e.message==='LIMITED'?'試行回数の上限です。15分後に再度お試しください。':'保存できませんでした。')}
  };
  async function remove(i){if(!confirm('このNEWSを削除しますか？'))return;const old=data.slice();data.splice(i,1);try{await persist();render()}catch(e){data=old;alert(e.message==='LIMITED'?'試行回数の上限です。15分後に再度お試しください。':'削除できませんでした。')}}
- window.yachiyoTrackInitialLoad(load());
+ window.yachiyoAfterFirstPaint(()=>window.yachiyoTrackInitialLoad(load()));
 })();
 </script>
 <script>
@@ -4867,7 +4867,7 @@ function openProtectedArea(type){
    }catch(error){alert('トップのお知らせを保存できませんでした。')}
    finally{save.disabled=false;save.textContent='保存する'}
  });
- window.yachiyoTrackInitialLoad(load());
+ window.yachiyoAfterFirstPaint(()=>window.yachiyoTrackInitialLoad(load()));
 })();
 </script>
 <style>
@@ -5028,7 +5028,7 @@ document.addEventListener('DOMContentLoaded',function(){
     }
   });
 
-  window.yachiyoTrackInitialLoad(load());
+  window.yachiyoAfterFirstPaint(()=>window.yachiyoTrackInitialLoad(load()));
 })();
 </script>
 <style id="nonblocking-save-notice-style">
