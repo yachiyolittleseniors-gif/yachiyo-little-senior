@@ -1,16 +1,21 @@
 (()=>{
   'use strict';
 
+  function isNewUnbuiltSelection(){
+    const date=document.getElementById('eventDate')?.value||'';
+    const activeGrade=document.querySelector('.grade-btn.active');
+    const builtCars=document.querySelectorAll('#carList .car-edit').length;
+    return !!date && !!activeGrade && builtCars===0;
+  }
+
   function applyStandardCoachDefaults(){
+    if(!isNewUnbuiltSelection()) return;
+
     const coachCar=document.getElementById('coachCar');
     const manager=document.getElementById('coachManager');
     const managerDriver=document.getElementById('coachManagerDriver');
     const coachCount=document.getElementById('coachCount');
     if(!coachCar || !manager || !managerDriver || !coachCount) return;
-
-    // 保存済みの配車（0や1など値が入っている）は変更しない。
-    // 新規選択時は既存処理が coachCar を空文字に戻すため、その時だけ標準値を入れる。
-    if(String(coachCar.value||'').trim()!=='') return;
 
     coachCar.value='1';
     manager.checked=true;
@@ -25,15 +30,16 @@
   }
 
   function queueDefaults(){
-    setTimeout(applyStandardCoachDefaults,30);
-    setTimeout(applyStandardCoachDefaults,180);
+    requestAnimationFrame(()=>setTimeout(applyStandardCoachDefaults,0));
+    setTimeout(applyStandardCoachDefaults,120);
+    setTimeout(applyStandardCoachDefaults,350);
   }
 
   document.addEventListener('change',event=>{
     if(event.target?.id==='eventDate') queueDefaults();
-  },true);
+  });
 
   document.addEventListener('click',event=>{
     if(event.target?.closest?.('.grade-btn')) queueDefaults();
-  },true);
+  });
 })();
