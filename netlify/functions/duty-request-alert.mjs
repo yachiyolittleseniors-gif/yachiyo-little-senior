@@ -19,10 +19,10 @@ export default async (request) => {
     const store=getStore({name:"yachiyo-public-site",consistency:"strong"});
     const data=await store.get("content/duty-roster.json",{type:"json",consistency:"strong"});
     const requests=Array.isArray(data?.requests)?data.requests:[];
-    const hasPending=requests.some(function(item){
+    const pendingCount=requests.filter(function(item){
       return item&&String(item.status||"pending")==="pending";
-    });
-    return json({hasPending});
+    }).length;
+    return json({hasPending:pendingCount>0,pendingCount});
   }catch(_){
     return json({hasPending:false});
   }
