@@ -38,8 +38,7 @@ function dutyRequestSignal(){
       let width=0,height=0,dpr=1;
       const started=performance.now();
       const flowingStars=[
-        {delay:0,sx:1.06,sy:.04,ex:-.06,ey:.78,size:5.8},
-        {delay:.22,sx:1.14,sy:.15,ex:.04,ey:.90,size:4.6}
+        {delay:0,sx:1.08,sy:.05,ex:-.08,ey:.84,size:5.6}
       ];
       function resize(){
         const r=cover.getBoundingClientRect();width=r.width;height=r.height;
