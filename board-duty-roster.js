@@ -24,6 +24,7 @@
   let parsedChanges=[];
   let requests=[];
   let requestsLoaded=false;
+  let partnerApprovalEnabled=false;
 
 
   if(!list||!tableList||!adminList||!fileInput||!saveBtn||!panel||!changeSection||!changeList||!changeAdminList)return;
@@ -323,6 +324,11 @@
       const body=await response.json();
       if(!Array.isArray(body&&body.requests))throw new Error('invalid data');
       requests=normalizeRequestList(body.requests);
+      partnerApprovalEnabled=body.partnerApprovalEnabled===true;
+      const approvalToggle=document.getElementById('dutyPartnerApprovalToggle');
+      const approvalStatus=document.getElementById('dutyPartnerApprovalStatus');
+      if(approvalToggle)approvalToggle.checked=partnerApprovalEnabled;
+      if(approvalStatus)approvalStatus.textContent=partnerApprovalEnabled?'承認リンク：使用中':'承認リンク：未使用';
       requestsLoaded=true;
       renderRequests();
       return true;
@@ -429,6 +435,36 @@
     const previous=images.slice(),previousChanges=changes.slice();images.splice(index,1);
     if(deleteHistory)changes=changes.filter(item=>!item.date.startsWith(key+'-'));
     try{await persist('当番表と関連する変更履歴を削除しました','当番表を削除しました')}catch(e){images=previous;changes=previousChanges;render();alert(e.message)}
+  }
+
+  const partnerApprovalToggle=document.getElementById('dutyPartnerApprovalToggle');
+  const partnerApprovalStatus=document.getElementById('dutyPartnerApprovalStatus');
+  if(partnerApprovalToggle){
+    partnerApprovalToggle.addEventListener('change',async function(){
+      const desired=partnerApprovalToggle.checked;
+      partnerApprovalToggle.checked=partnerApprovalEnabled;
+      const adminPassword=prompt('管理者パスワードを入力してください');
+      if(!adminPassword)return;
+      partnerApprovalToggle.disabled=true;
+      if(partnerApprovalStatus)partnerApprovalStatus.textContent='設定を確認しています…';
+      try{
+        const headers=requestHeaders(false);
+        headers['x-admin-password']=adminPassword;
+        const response=await fetch(REQUEST_API,{method:'POST',credentials:'same-origin',headers:headers,body:JSON.stringify({action:'set-partner-approval',enabled:desired})});
+        const body=await response.json().catch(function(){return{}});
+        if(!response.ok)throw new Error(body.error||'設定を変更できませんでした。');
+        partnerApprovalEnabled=body.partnerApprovalEnabled===true;
+        partnerApprovalToggle.checked=partnerApprovalEnabled;
+        if(partnerApprovalStatus)partnerApprovalStatus.textContent=partnerApprovalEnabled?'承認リンク：使用中':'承認リンク：未使用';
+        if(window.showSaveNotice)showSaveNotice(partnerApprovalEnabled?'承認リンクをONにしました':'承認リンクをOFFにしました');
+      }catch(e){
+        partnerApprovalToggle.checked=partnerApprovalEnabled;
+        if(partnerApprovalStatus)partnerApprovalStatus.textContent=partnerApprovalEnabled?'承認リンク：使用中':'承認リンク：未使用';
+        alert(e.message||'設定を変更できませんでした。');
+      }finally{
+        partnerApprovalToggle.disabled=false;
+      }
+    });
   }
 
   const legacyLineToggle=document.getElementById('toggleLegacyDutyLine'),legacyLineBlock=document.getElementById('legacyDutyLineBlock');
