@@ -5292,14 +5292,6 @@ body:not(.photo-admin-on) #heroAdminToggle.unified-admin-toggle:focus-visible{co
 
 <style id="hero-position-zoom-style">
 @media(max-width:600px){
-  #home > .hero{
-    --hero-mobile-x:58%;
-    --hero-mobile-y:50%;
-    --hero-mobile-zoom:100;
-    background-position:var(--hero-mobile-x) var(--hero-mobile-y)!important;
-    background-size:auto calc(var(--hero-mobile-zoom) * 1%)!important;
-    transition:background-position .22s ease-out,background-size .22s ease-out!important;
-  }
   #heroPhotoEdit{display:none!important}
   body.photo-admin-on #heroPhotoEdit{display:flex!important}
   body.hero-photo-editing #home > .hero{
@@ -5329,16 +5321,15 @@ body:not(.photo-admin-on) #heroAdminToggle.unified-admin-toggle:focus-visible{co
   const api='/.netlify/functions/site-data?section=hero-position-settings';
   let x=58,y=50,zoom=100;
   let editMode=false;
-  let start=null;
+  let gesture=null;
   let saveTimer=0;
+  let lastToggleAt=0;
 
-  const clamp=(v,min,max)=>Math.max(min,Math.min(max,v));
-  const distance=(a,b)=>Math.hypot(b.clientX-a.clientX,b.clientY-a.clientY);
-
+  function clamp(v,min,max){return Math.max(min,Math.min(max,v))}
+  function dist(a,b){return Math.hypot(b.clientX-a.clientX,b.clientY-a.clientY)}
   function apply(){
-    hero.style.setProperty('--hero-mobile-x',x+'%');
-    hero.style.setProperty('--hero-mobile-y',y+'%');
-    hero.style.setProperty('--hero-mobile-zoom',String(zoom));
+    hero.style.setProperty('background-position',x+'% '+y+'%','important');
+    hero.style.setProperty('background-size','auto '+zoom+'%','important');
   }
   function flash(message){
     if(window.showSaveNotice)window.showSaveNotice(message);
@@ -5360,67 +5351,87 @@ body:not(.photo-admin-on) #heroAdminToggle.unified-admin-toggle:focus-visible{co
   }
   function queueSave(){
     clearTimeout(saveTimer);
-    saveTimer=setTimeout(save,350);
+    saveTimer=setTimeout(save,400);
   }
   function setEditMode(on){
     editMode=on;
     document.body.classList.toggle('hero-photo-editing',on);
     editBtn.textContent=on?'編集を終了':'画像を編集';
-    start=null;
-    if(on)flash('写真を指で動かせます。2本指で拡大・縮小');
+    editBtn.setAttribute('aria-pressed',on?'true':'false');
+    gesture=null;
+    if(on)flash('編集ON：1本指で移動・2本指で拡大縮小');
     else queueSave();
   }
-
-  editBtn.addEventListener('click',function(event){
-    event.preventDefault();
-    event.stopPropagation();
-    if(sessionStorage.getItem('yachiyoAdminMode')!=='1')return;
+  function toggleEdit(event){
+    if(event){
+      event.preventDefault();
+      event.stopPropagation();
+    }
+    const now=Date.now();
+    if(now-lastToggleAt<350)return;
+    lastToggleAt=now;
+    if(!document.body.classList.contains('photo-admin-on'))return;
     setEditMode(!editMode);
-  });
+  }
+
+  // iPhone Safariでも確実に反応させる
+  editBtn.addEventListener('touchend',toggleEdit,{passive:false});
+  editBtn.addEventListener('click',toggleEdit,false);
+  editBtn.addEventListener('pointerup',function(event){
+    if(event.pointerType==='mouse')toggleEdit(event);
+  },false);
 
   hero.addEventListener('touchstart',function(event){
     if(!editMode||!window.matchMedia('(max-width:600px)').matches)return;
     event.preventDefault();
-    const touches=event.touches;
-    if(touches.length===1){
-      start={type:'drag',sx:touches[0].clientX,sy:touches[0].clientY,x,y};
-    }else if(touches.length===2){
-      start={type:'pinch',distance:distance(touches[0],touches[1]),zoom};
+    if(event.touches.length===1){
+      const t=event.touches[0];
+      gesture={type:'drag',sx:t.clientX,sy:t.clientY,x:x,y:y};
+    }else if(event.touches.length===2){
+      gesture={type:'pinch',distance:dist(event.touches[0],event.touches[1]),zoom:zoom};
     }
   },{passive:false});
 
   hero.addEventListener('touchmove',function(event){
-    if(!editMode||!start)return;
+    if(!editMode||!gesture)return;
     event.preventDefault();
-    const touches=event.touches;
-    if(touches.length===1&&start.type==='drag'){
-      const dx=touches[0].clientX-start.sx;
-      const dy=touches[0].clientY-start.sy;
-      x=clamp(start.x-(dx/hero.clientWidth)*100,0,100);
-      y=clamp(start.y-(dy/hero.clientHeight)*100,0,100);
-      apply();
-    }else if(touches.length===2){
-      if(start.type!=='pinch'){
-        start={type:'pinch',distance:distance(touches[0],touches[1]),zoom};
+
+    if(event.touches.length===1){
+      const t=event.touches[0];
+      if(gesture.type!=='drag'){
+        gesture={type:'drag',sx:t.clientX,sy:t.clientY,x:x,y:y};
+        return;
       }
-      const d=distance(touches[0],touches[1]);
-      zoom=clamp(start.zoom*(d/start.distance),100,180);
+      const dx=t.clientX-gesture.sx;
+      const dy=t.clientY-gesture.sy;
+      x=clamp(gesture.x-(dx/hero.clientWidth)*100,0,100);
+      y=clamp(gesture.y-(dy/hero.clientHeight)*100,0,100);
+      apply();
+    }else if(event.touches.length===2){
+      if(gesture.type!=='pinch'){
+        gesture={type:'pinch',distance:dist(event.touches[0],event.touches[1]),zoom:zoom};
+        return;
+      }
+      const d=dist(event.touches[0],event.touches[1]);
+      zoom=clamp(gesture.zoom*(d/gesture.distance),100,220);
       apply();
     }
   },{passive:false});
 
   hero.addEventListener('touchend',function(event){
     if(!editMode)return;
-    if(event.touches.length===1){
-      start={type:'drag',sx:event.touches[0].clientX,sy:event.touches[0].clientY,x,y};
-    }else if(event.touches.length===0){
-      start=null;
+    if(event.touches.length===0){
+      gesture=null;
       queueSave();
+    }else if(event.touches.length===1){
+      const t=event.touches[0];
+      gesture={type:'drag',sx:t.clientX,sy:t.clientY,x:x,y:y};
     }
   },{passive:false});
+
   hero.addEventListener('touchcancel',function(){
     if(!editMode)return;
-    start=null;
+    gesture=null;
     queueSave();
   },{passive:false});
 
@@ -5432,10 +5443,10 @@ body:not(.photo-admin-on) #heroAdminToggle.unified-admin-toggle:focus-visible{co
       if(json&&json.data){
         if(Number.isFinite(Number(json.data.x)))x=clamp(Number(json.data.x),0,100);
         if(Number.isFinite(Number(json.data.y)))y=clamp(Number(json.data.y),0,100);
-        if(Number.isFinite(Number(json.data.zoom)))zoom=clamp(Number(json.data.zoom),100,180);
-        apply();
+        if(Number.isFinite(Number(json.data.zoom)))zoom=clamp(Number(json.data.zoom),100,220);
       }
     }catch(error){}
+    apply();
   })();
 })();
 </script>
