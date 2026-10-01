@@ -145,7 +145,19 @@
   }
 
   async function load(){
-    try{await window.boardAccessReady;const accessPassword=sessionStorage.getItem('yachiyoAttendancePass')||'';const response=await fetch(API,{cache:'no-store',headers:{'x-access-password':accessPassword}});if(!response.ok)throw new Error('load failed');const body=await response.json();const normalized=normalize(body.data);images=normalized.images;changes=normalized.changes;requests=normalized.requests;const cleaned=cleanupExpiredImages();saveCache();render();syncPendingRequestCount();if(cleaned&&panel.dataset.adminPassword){persist('','期限切れの当番表原本を整理しました',false).catch(function(){})}}catch(e){render();syncPendingRequestCount()}
+    try{
+      await window.boardAccessReady;
+      const accessPassword=sessionStorage.getItem('yachiyoAttendancePass')||'';
+      const adminPassword=panel.dataset.adminPassword||'';
+      const headers={'x-access-password':accessPassword};
+      if(adminPassword)headers['x-admin-password']=adminPassword;
+      const response=await fetch(API,{cache:'no-store',headers:headers});
+      if(!response.ok)throw new Error('load failed');
+      const body=await response.json(),normalized=normalize(body.data);
+      images=normalized.images;changes=normalized.changes;requests=normalized.requests;
+      const cleaned=cleanupExpiredImages();saveCache();render();syncPendingRequestCount();
+      if(cleaned&&panel.dataset.adminPassword){persist('','期限切れの当番表原本を整理しました',false).catch(function(){})}
+    }catch(e){render();syncPendingRequestCount()}
   }
 
   function readAsDataUrl(file){return new Promise(function(resolve,reject){const reader=new FileReader();reader.onload=function(){resolve(String(reader.result||''))};reader.onerror=reject;reader.readAsDataURL(file)})}
@@ -378,5 +390,13 @@
   if(requestStatusToggle&&requestStatusList)requestStatusToggle.addEventListener('click',function(){const open=requestStatusList.hidden;requestStatusList.hidden=!open;requestStatusToggle.setAttribute('aria-expanded',String(open));const pending=requests.filter(function(item){return item.status==='pending'}).length;requestStatusToggle.textContent=open?'申請内容を閉じる':(pending?'申請内容を見る（申請中 '+pending+'件）':'申請内容を見る')});
   document.getElementById('dutyRequestRosterDate')?.addEventListener('change',populateRequestForm);document.getElementById('submitDutyRequest')?.addEventListener('click',submitRequest);
   if(hasLegacyChangeForm)pasteChangeBtn.addEventListener('click',pasteChangeText);
-  if(hasLegacyChangeForm)saveChangesBtn.addEventListener('click',saveChanges);saveBtn.addEventListener('click',addImages);document.addEventListener('visibilitychange',function(){if(!document.hidden)syncPendingRequestCount()});window.addEventListener('focus',syncPendingRequestCount);loadCache();render();syncPendingRequestCount();load();
+  if(hasLegacyChangeForm)saveChangesBtn.addEventListener('click',saveChanges);saveBtn.addEventListener('click',addImages);
+  document.addEventListener('visibilitychange',function(){if(!document.hidden){syncPendingRequestCount();if(panel.dataset.adminPassword)load();}});
+  window.addEventListener('focus',function(){syncPendingRequestCount();if(panel.dataset.adminPassword)load();});
+  try{
+    new MutationObserver(function(mutations){
+      if(mutations.some(function(m){return m.attributeName==='data-admin-password'})&&panel.dataset.adminPassword)load();
+    }).observe(panel,{attributes:true,attributeFilter:['data-admin-password']});
+  }catch(e){}
+  loadCache();render();syncPendingRequestCount();load();
 })();
