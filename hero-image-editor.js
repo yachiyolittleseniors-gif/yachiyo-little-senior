@@ -80,14 +80,9 @@
   }
 
   function applyHero(){
-    const heroRatio=Math.max(hero.clientWidth,1)/Math.max(hero.clientHeight,1);
-    const imgRatio=image.naturalWidth/image.naturalHeight;
-    hero.style.setProperty('background-position',saved.x+'% '+saved.y+'%','important');
-    if(imgRatio>=heroRatio){
-      hero.style.setProperty('background-size','auto '+saved.zoom+'%','important');
-    }else{
-      hero.style.setProperty('background-size',saved.zoom+'% auto','important');
-    }
+    hero.style.setProperty('--hero-edit-x',saved.x+'%');
+    hero.style.setProperty('--hero-edit-y',saved.y+'%');
+    hero.style.setProperty('--hero-edit-zoom',saved.zoom+'%');
   }
 
   function openModal(){
@@ -225,5 +220,6 @@
         }
       }
     }catch(error){}
+    applyHero();
   })();
 })();
