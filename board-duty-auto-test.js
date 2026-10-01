@@ -124,7 +124,7 @@ function init(){
       var g1=active[0]||'2',g2=active[1]||'1';
       ctx.fillText(g1+'年',(x[3]+x[5])/2,top+headerH/2);ctx.fillText(g2+'年',(x[5]+x[7])/2,top+headerH/2);
       // 月ごとの行数に合わせて行高を自動調整。注記まで含めてA4横1枚に自然に収める。
-      var noteBlockH=180,bottomMargin=30,availableRowsH=canvas.height-top-headerH-noteBlockH-bottomMargin;
+      var noteBlockH=215,bottomMargin=25,availableRowsH=canvas.height-top-headerH-noteBlockH-bottomMargin;
       var rowTop=top+headerH,rowH=Math.max(36,Math.min(60,Math.floor(availableRowsH/Math.max(rows.length,1)))),monthBottom=rowTop+rows.length*rowH;
       ctx.fillStyle='#fff';ctx.fillRect(left,rowTop,monthW,rows.length*rowH);ctx.strokeRect(left,rowTop,monthW,rows.length*rowH);
       ctx.fillStyle='#071426';ctx.font='700 30px sans-serif';ctx.fillText(mo+'月',left+monthW/2,rowTop+rows.length*rowH/2);
@@ -138,10 +138,10 @@ function init(){
           else{ctx.fillStyle='#071426';var cx=x[i+1]+(x[i+2]-x[i+1])/2;ctx.fillText(String(t),cx,yy+rowH/2);}
         });
       });
-      var noteY=monthBottom+32;ctx.textAlign='left';ctx.textBaseline='alphabetic';ctx.fillStyle='#071426';ctx.font='700 20px sans-serif';
+      var noteY=monthBottom+28;ctx.textAlign='left';ctx.textBaseline='alphabetic';ctx.fillStyle='#071426';ctx.font='700 20px sans-serif';
       ctx.fillText('☆　都合によりお当番の交代は可能です。その際は、下記のご対応をお願いいたします。',left+25,noteY);
-      ctx.font='600 18px sans-serif';ctx.fillText('① サイト内の「当番変更申請」より申請してください。',left+100,noteY+34);ctx.fillText('② 申請後は、全体LINEでの共有も併せてお願いいたします。',left+100,noteY+66);
-      ctx.font='700 20px sans-serif';ctx.fillText('☆　黄色の日は里山活動日になります。車の駐車場所に必ず気を付けてください。',left+25,noteY+120);
+      ctx.font='600 18px sans-serif';ctx.fillText('① サイト内の「当番変更申請」より申請してください。',left+100,noteY+32);ctx.fillText('② 申請後は、全体LINEでの共有も併せてお願いいたします。',left+100,noteY+62);ctx.fillText('③ 母小屋のドア裏に提示されている、紙の当番表を赤字で修正する',left+100,noteY+92);
+      ctx.font='700 20px sans-serif';ctx.fillText('☆　黄色の日は里山活動日になります。車の駐車場所に必ず気を付けてください。',left+25,noteY+148);
       var src=canvas.toDataURL('image/png');
       async function createA4PdfBlob(){
         var jpegBlob=await new Promise(function(resolve,reject){canvas.toBlob(function(b){b?resolve(b):reject(new Error('PDF用画像の変換に失敗しました'));},'image/jpeg',0.96);});
