@@ -4033,7 +4033,7 @@ function openProtectedArea(type){
 <button data-nosnippet="" id="heroAdminToggle" type="button">管理</button>
 <label data-nosnippet="" for="heroPhotoInput" id="heroPhotoChange">トップの写真を変更</label>
 <button class="hero-announcement-admin" data-nosnippet="" id="heroAnnouncementEdit" type="button">トップお知らせ編集</button>
-<input id="heroPhotoEditToggle" type="checkbox" autocomplete="off"/><label data-nosnippet="" for="heroPhotoEditToggle" id="heroPhotoEdit"><span class="hero-edit-off">画像を編集</span><span class="hero-edit-on">編集を終了</span></label>
+<button data-nosnippet="" id="heroPhotoEdit" type="button">画像を編集</button>
 <label data-nosnippet="" id="heroOverlayControl"><input id="heroOverlayWeak" type="checkbox" autocomplete="off"/><span>オーバーレイを弱める</span></label>
 <input accept="image/*" id="heroPhotoInput" type="file"/>
 </div>
@@ -5291,9 +5291,7 @@ body:not(.photo-admin-on) #heroAdminToggle.unified-admin-toggle:focus-visible{co
 </style>
 
 <style id="hero-position-zoom-style">
-#heroPhotoEditToggle{position:absolute!important;width:1px!important;height:1px!important;opacity:0!important;pointer-events:none!important}
 #heroPhotoEdit{display:none!important}
-#heroPhotoEdit .hero-edit-on{display:none!important}
 @media(max-width:600px){
   body.photo-admin-on #heroPhotoEdit{
     display:flex!important;
@@ -5401,13 +5399,13 @@ body:not(.photo-admin-on) #heroAdminToggle.unified-admin-toggle:focus-visible{co
 <script id="hero-position-zoom-controller">
 (function(){
   const hero=document.querySelector('#home > .hero');
-  const toggle=document.getElementById('heroPhotoEditToggle');
+  const editBtn=document.getElementById('heroPhotoEdit');
   const modal=document.getElementById('heroImageEditModal');
   const preview=document.getElementById('heroEditPreview');
   const photo=document.getElementById('heroEditPreviewPhoto');
   const cancel=document.getElementById('heroImageEditCancel');
   const saveBtn=document.getElementById('heroImageEditSave');
-  if(!hero||!toggle||!modal||!preview||!photo||!cancel||!saveBtn)return;
+  if(!hero||!editBtn||!modal||!preview||!photo||!cancel||!saveBtn)return;
 
   const api='/.netlify/functions/site-data?section=hero-position-settings';
   let saved={x:58,y:50,zoom:100};
@@ -5439,14 +5437,11 @@ body:not(.photo-admin-on) #heroAdminToggle.unified-admin-toggle:focus-visible{co
     modal.setAttribute('aria-hidden','true');
     document.documentElement.style.overflow='';
     document.body.style.overflow='';
-    toggle.checked=false;
     drag=null;pinch=null;
   }
   function flash(msg){if(window.showSaveNotice)window.showSaveNotice(msg)}
 
-  toggle.addEventListener('change',function(){
-    if(toggle.checked)openModal();
-  });
+  editBtn.addEventListener('click',function(event){ event.preventDefault(); event.stopPropagation(); openModal(); });
 
   cancel.addEventListener('click',function(){
     closeModal();
