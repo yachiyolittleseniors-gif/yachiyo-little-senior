@@ -2200,6 +2200,25 @@ body:has(#heroOverlayWeak:checked) .hero{
   }
 }
 </style>
+<style id="hero-admin-grid-order-fix">
+@media(max-width:600px){
+  body.photo-admin-on #heroPhotoChange{
+    grid-column:1!important;grid-row:1!important;order:1!important;
+  }
+  body.photo-admin-on #heroAnnouncementEdit{
+    grid-column:2!important;grid-row:1!important;order:2!important;
+  }
+  body.photo-admin-on #heroPhotoEdit{
+    grid-column:1!important;grid-row:2!important;order:3!important;display:flex!important;
+  }
+  body.photo-admin-on #heroOverlayControl{
+    grid-column:2!important;grid-row:2!important;order:4!important;display:flex!important;
+  }
+  body.photo-admin-on #heroAdminToggle.unified-admin-toggle{
+    grid-column:2!important;grid-row:3!important;order:5!important;
+  }
+}
+</style>
 <style id="hero-announcement-style">
 .hero-announcement{display:none;position:relative;isolation:isolate;overflow:hidden;width:100%;box-sizing:border-box;margin:0 0 26px;padding:12px 22px;border:1px solid rgba(226,189,103,.9);background:transparent;color:#f4d98f;line-height:1.45;text-shadow:0 2px 8px rgba(0,0,0,.72);box-shadow:none;overflow-wrap:anywhere}
 .hero-announcement.has-details{cursor:pointer;-webkit-tap-highlight-color:transparent}
@@ -5284,15 +5303,13 @@ body:not(.photo-admin-on) #heroAdminToggle.unified-admin-toggle:focus-visible{co
   #heroPhotoEdit{display:none!important}
   body.photo-admin-on #heroPhotoEdit{display:flex!important}
   body.hero-photo-editing #home > .hero{
-    touch-action:none;
-    cursor:grab;
-    -webkit-user-select:none;
-    user-select:none;
-    -webkit-tap-highlight-color:transparent;
+    touch-action:none!important;
+    -webkit-user-select:none!important;
+    user-select:none!important;
+    -webkit-tap-highlight-color:transparent!important;
   }
-  body.hero-photo-editing #home > .hero.is-photo-gesturing{
-    cursor:grabbing;
-    transition:none!important;
+  body.hero-photo-editing #home > .hero .hero-inner{
+    pointer-events:none!important;
   }
   body.hero-photo-editing #heroPhotoEdit{
     background:#c79a3b!important;
@@ -5312,21 +5329,19 @@ body:not(.photo-admin-on) #heroAdminToggle.unified-admin-toggle:focus-visible{co
   const api='/.netlify/functions/site-data?section=hero-position-settings';
   let x=58,y=50,zoom=100;
   let editMode=false;
-  let pointers=new Map();
-  let dragStart=null;
-  let pinchStart=null;
+  let start=null;
   let saveTimer=0;
 
-  function clamp(value,min,max){return Math.max(min,Math.min(max,value))}
-  function apply(animated=true){
-    hero.classList.toggle('is-photo-gesturing',!animated);
+  const clamp=(v,min,max)=>Math.max(min,Math.min(max,v));
+  const distance=(a,b)=>Math.hypot(b.clientX-a.clientX,b.clientY-a.clientY);
+
+  function apply(){
     hero.style.setProperty('--hero-mobile-x',x+'%');
     hero.style.setProperty('--hero-mobile-y',y+'%');
     hero.style.setProperty('--hero-mobile-zoom',String(zoom));
-    if(animated) requestAnimationFrame(()=>hero.classList.remove('is-photo-gesturing'));
   }
   function flash(message){
-    if(window.showSaveNotice) window.showSaveNotice(message);
+    if(window.showSaveNotice)window.showSaveNotice(message);
   }
   async function save(){
     const password=sessionStorage.getItem('yachiyoAdminPassword')||'';
@@ -5345,16 +5360,14 @@ body:not(.photo-admin-on) #heroAdminToggle.unified-admin-toggle:focus-visible{co
   }
   function queueSave(){
     clearTimeout(saveTimer);
-    saveTimer=setTimeout(save,450);
+    saveTimer=setTimeout(save,350);
   }
   function setEditMode(on){
     editMode=on;
     document.body.classList.toggle('hero-photo-editing',on);
     editBtn.textContent=on?'編集を終了':'画像を編集';
-    pointers.clear();
-    dragStart=null;
-    pinchStart=null;
-    if(on) flash('ドラッグで移動・2本指で拡大縮小');
+    start=null;
+    if(on)flash('写真を指で動かせます。2本指で拡大・縮小');
     else queueSave();
   }
 
@@ -5365,59 +5378,51 @@ body:not(.photo-admin-on) #heroAdminToggle.unified-admin-toggle:focus-visible{co
     setEditMode(!editMode);
   });
 
-  hero.addEventListener('pointerdown',function(event){
+  hero.addEventListener('touchstart',function(event){
     if(!editMode||!window.matchMedia('(max-width:600px)').matches)return;
-    if(event.target.closest('a,button,label,input,select,textarea'))return;
     event.preventDefault();
-    hero.setPointerCapture?.(event.pointerId);
-    pointers.set(event.pointerId,{x:event.clientX,y:event.clientY});
-
-    if(pointers.size===1){
-      dragStart={px:event.clientX,py:event.clientY,x,y};
-    }else if(pointers.size===2){
-      const pts=[...pointers.values()];
-      const dx=pts[1].x-pts[0].x,dy=pts[1].y-pts[0].y;
-      pinchStart={distance:Math.hypot(dx,dy),zoom};
-      dragStart=null;
+    const touches=event.touches;
+    if(touches.length===1){
+      start={type:'drag',sx:touches[0].clientX,sy:touches[0].clientY,x,y};
+    }else if(touches.length===2){
+      start={type:'pinch',distance:distance(touches[0],touches[1]),zoom};
     }
   },{passive:false});
 
-  hero.addEventListener('pointermove',function(event){
-    if(!editMode||!pointers.has(event.pointerId))return;
+  hero.addEventListener('touchmove',function(event){
+    if(!editMode||!start)return;
     event.preventDefault();
-    pointers.set(event.pointerId,{x:event.clientX,y:event.clientY});
-
-    if(pointers.size===1&&dragStart){
-      const dx=event.clientX-dragStart.px;
-      const dy=event.clientY-dragStart.py;
-      x=clamp(dragStart.x-(dx/hero.clientWidth)*100,0,100);
-      y=clamp(dragStart.y-(dy/hero.clientHeight)*100,0,100);
-      apply(false);
-    }else if(pointers.size===2&&pinchStart){
-      const pts=[...pointers.values()];
-      const dx=pts[1].x-pts[0].x,dy=pts[1].y-pts[0].y;
-      const distance=Math.hypot(dx,dy);
-      zoom=clamp(pinchStart.zoom*(distance/pinchStart.distance),100,180);
-      apply(false);
+    const touches=event.touches;
+    if(touches.length===1&&start.type==='drag'){
+      const dx=touches[0].clientX-start.sx;
+      const dy=touches[0].clientY-start.sy;
+      x=clamp(start.x-(dx/hero.clientWidth)*100,0,100);
+      y=clamp(start.y-(dy/hero.clientHeight)*100,0,100);
+      apply();
+    }else if(touches.length===2){
+      if(start.type!=='pinch'){
+        start={type:'pinch',distance:distance(touches[0],touches[1]),zoom};
+      }
+      const d=distance(touches[0],touches[1]);
+      zoom=clamp(start.zoom*(d/start.distance),100,180);
+      apply();
     }
   },{passive:false});
 
-  function endPointer(event){
-    if(!pointers.has(event.pointerId))return;
-    pointers.delete(event.pointerId);
-    if(pointers.size===1){
-      const remaining=[...pointers.values()][0];
-      dragStart={px:remaining.x,py:remaining.y,x,y};
-      pinchStart=null;
-    }else if(pointers.size===0){
-      dragStart=null;
-      pinchStart=null;
-      apply(true);
+  hero.addEventListener('touchend',function(event){
+    if(!editMode)return;
+    if(event.touches.length===1){
+      start={type:'drag',sx:event.touches[0].clientX,sy:event.touches[0].clientY,x,y};
+    }else if(event.touches.length===0){
+      start=null;
       queueSave();
     }
-  }
-  hero.addEventListener('pointerup',endPointer);
-  hero.addEventListener('pointercancel',endPointer);
+  },{passive:false});
+  hero.addEventListener('touchcancel',function(){
+    if(!editMode)return;
+    start=null;
+    queueSave();
+  },{passive:false});
 
   (async function load(){
     try{
