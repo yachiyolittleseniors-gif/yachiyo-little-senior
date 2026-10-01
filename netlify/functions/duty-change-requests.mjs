@@ -23,6 +23,7 @@ function json(body,status=200,headers={}){
   });
 }
 function cleanName(value){return String(value||"").trim().replace(/[　\s]+/g," ")}
+function nameKey(value){return cleanName(value).replace(/[（）()]/g,"")}
 function validGrade(value){return ["1","2","3"].includes(String(value||""))}
 function validDate(value){return /^\d{4}-\d{2}-\d{2}$/.test(String(value||""))}
 function normalizeStatus(value){return ["pending","approved","rejected"].includes(String(value))?String(value):"pending"}
@@ -150,6 +151,7 @@ function publicData(data){
 function requestMatchesRoster(roster,date,fromGrade,fromName){
   const selected=new Date(`${date}T00:00:00`);
   const images=Array.isArray(roster?.images)?roster.images:[];
+  const changes=Array.isArray(roster?.changes)?roster.changes:[];
   return images.some(image=>{
     const table=image?.table;
     if(!table||!Array.isArray(table.rows))return false;
@@ -158,7 +160,18 @@ function requestMatchesRoster(roster,date,fromGrade,fromName){
     const grades=Array.isArray(table.grades)&&table.grades.length?table.grades:[2,1];
     return table.rows.some(row=>{
       if(!Array.isArray(row)||Number(String(row[0]||"").replace(/\D/g,""))!==day)return false;
-      return row.slice(2,6).some((name,index)=>String(grades[Math.floor(index/2)])===fromGrade&&cleanName(name)===fromName);
+      return row.slice(2,6).some((name,index)=>{
+        const grade=String(grades[Math.floor(index/2)]);
+        if(grade!==String(fromGrade))return false;
+        let current=cleanName(name);
+        changes.forEach(change=>{
+          if(!change||String(change.status||"active")==="cancelled")return;
+          if(String(change.date||"")!==date||String(change.grade||"")!==grade)return;
+          if(nameKey(current)!==nameKey(change.from))return;
+          if(cleanName(change.to))current=cleanName(change.to);
+        });
+        return nameKey(current)===nameKey(fromName);
+      });
     });
   });
 }
