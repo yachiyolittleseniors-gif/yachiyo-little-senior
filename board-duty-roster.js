@@ -51,6 +51,20 @@
     return result.replace(/\(/g,'（').replace(/\)/g,'）');
   }
 
+  function octoberDisplayName(value,grade,dateOrTable){
+    let name=displayName(value,grade);
+    let isOctober=false;
+    if(dateOrTable&&typeof dateOrTable==='object'){
+      isOctober=Number(dateOrTable.year)===2026&&Number(dateOrTable.month)===10;
+    }else{
+      isOctober=/^2026-10-/.test(String(dateOrTable||''));
+    }
+    if(!isOctober)return name;
+    name=name.replace(/[（）()]/g,'');
+    if(String(grade)==='1'&&name==='石川')name='石川晃';
+    return name;
+  }
+
   function normalize(raw){
     const imageList=raw&&raw.initialized===true&&Array.isArray(raw.images)?raw.images:[];
     const changeItems=raw&&raw.initialized===true&&Array.isArray(raw.changes)?raw.changes:[];
@@ -81,12 +95,12 @@
     return'<time class="duty-change-updated" datetime="'+date.toISOString()+'">更新：'+label+'</time>';
   }
 
-  function changeMarkup(item){return'<span class="duty-change-date">'+displayDate(item.date)+'</span><span class="duty-change-grade">'+item.grade+'年生</span><span class="duty-change-names"><span class="duty-change-before">'+escapeHtml(displayName(item.from,item.grade))+'</span><b class="duty-change-arrow">→</b><span class="duty-change-after">'+escapeHtml(displayName(item.to,item.grade))+'</span></span>'}
+  function changeMarkup(item){return'<span class="duty-change-date">'+displayDate(item.date)+'</span><span class="duty-change-grade">'+item.grade+'年生</span><span class="duty-change-names"><span class="duty-change-before">'+escapeHtml(octoberDisplayName(item.from,item.grade,item.date))+'</span><b class="duty-change-arrow">→</b><span class="duty-change-after">'+escapeHtml(octoberDisplayName(item.to,item.toGrade||item.grade,item.date))+'</span></span>'}
 
   function tableDate(table,day){return table.year+'-'+String(table.month).padStart(2,'0')+'-'+String(day).padStart(2,'0')}
   function appliedCell(table,row,grade,column,name){
     const result=window.DutyRosterData.applyChanges(table,row[0],grade,name,changes);
-    return{value:displayName(result.value,grade),changed:result.changed,original:displayName(result.original,grade),column:column};
+    return{value:octoberDisplayName(result.value,grade,table),changed:result.changed,original:octoberDisplayName(result.original,grade,table),column:column};
   }
   function isPublicRosterActive(item,now=new Date()){
     const table=item&&item.table;if(!table||!Number(table.year)||!Number(table.month)||!Array.isArray(table.rows)||!table.rows.length)return true;
@@ -128,7 +142,7 @@
     // 当番表の最終日を過ぎて公開表示から消えた月（例：9月）は履歴も同時に非表示にする。
     const activeRosterMonths=new Set(images.filter(function(item){return item.table&&isPublicRosterActive(item)}).map(function(item){return item.table.year+'-'+String(item.table.month).padStart(2,'0')}));
     const adminOrdered=ordered.filter(function(item){return activeRosterMonths.has(String(item.date||'').slice(0,7))});
-    changeAdminList.innerHTML=adminOrdered.length?adminOrdered.map(function(item){const cancelled=item.status==='cancelled';return'<div class="duty-change-admin-item'+(cancelled?' is-cancelled':'')+'"><span>'+displayDate(item.date)+'・'+item.grade+'年生　'+escapeHtml(displayName(item.from,item.grade))+' → <b>'+escapeHtml(displayName(item.to,item.grade))+'</b>'+(cancelled?'<em class="duty-change-cancelled">取消済み</em>':'')+changeUpdatedMarkup(item)+'</span><div class="duty-change-admin-buttons">'+(!cancelled?'<button type="button" data-cancel-duty-change="'+escapeHtml(item.id)+'">取消</button>':'')+'<button type="button" class="delete" data-delete-duty-change="'+escapeHtml(item.id)+'">削除</button></div></div>'}).join(''):'<div class="duty-change-preview">登録済みの当番変更はありません。</div>';
+    changeAdminList.innerHTML=adminOrdered.length?adminOrdered.map(function(item){const cancelled=item.status==='cancelled';return'<div class="duty-change-admin-item'+(cancelled?' is-cancelled':'')+'"><span>'+displayDate(item.date)+'・'+item.grade+'年生　'+escapeHtml(octoberDisplayName(item.from,item.grade,item.date))+' → <b>'+escapeHtml(octoberDisplayName(item.to,item.toGrade||item.grade,item.date))+'</b>'+(cancelled?'<em class="duty-change-cancelled">取消済み</em>':'')+changeUpdatedMarkup(item)+'</span><div class="duty-change-admin-buttons">'+(!cancelled?'<button type="button" data-cancel-duty-change="'+escapeHtml(item.id)+'">取消</button>':'')+'<button type="button" class="delete" data-delete-duty-change="'+escapeHtml(item.id)+'">削除</button></div></div>'}).join(''):'<div class="duty-change-preview">登録済みの当番変更はありません。</div>';
     changeAdminList.querySelectorAll('[data-cancel-duty-change]').forEach(function(button){button.addEventListener('click',function(){cancelChange(button.dataset.cancelDutyChange)})});
     changeAdminList.querySelectorAll('[data-delete-duty-change]').forEach(function(button){button.addEventListener('click',function(){deleteChange(button.dataset.deleteDutyChange)})});
   }
@@ -290,7 +304,7 @@
   function requestPersonLabel(item,side){
     const grade=String(item[side+'Grade']||'');
     const name=String(item[side+'Name']||'');
-    return (grade?grade+'年・':'')+displayName(name,grade);
+    return (grade?grade+'年・':'')+octoberDisplayName(name,grade,item.date);
   }
   function requestHeaders(includeAdmin){
     const headers={'content-type':'application/json'};
@@ -371,7 +385,7 @@
   function populateRequestForm(){
     const dateSel=document.getElementById('dutyRequestRosterDate'),fromSel=document.getElementById('dutyRequestFrom'),toSel=document.getElementById('dutyRequestTo');if(!dateSel||!fromSel||!toSel)return;
     const current=dateSel.value;dateSel.innerHTML='<option value="">日付を選択してください</option>'+rosterDates().map(function(x){return'<option value="'+x.date+'">'+x.label+'</option>'}).join('');if(Array.from(dateSel.options).some(function(o){return o.value===current}))dateSel.value=current;
-    const names=rosterNamesForDate(dateSel.value);let opts='<option value="">選択してください</option>';['3','2','1'].forEach(function(g){const group=names.filter(function(x){return x.grade===g});if(!group.length)return;opts+='<optgroup label="'+g+'年生">'+group.map(function(x){return'<option value="'+escapeHtml(personOptionValue(x))+'">'+g+'年・'+escapeHtml(displayName(x.name,g))+'</option>'}).join('')+'</optgroup>'});
+    const names=rosterNamesForDate(dateSel.value);let opts='<option value="">選択してください</option>';['3','2','1'].forEach(function(g){const group=names.filter(function(x){return x.grade===g});if(!group.length)return;opts+='<optgroup label="'+g+'年生">'+group.map(function(x){return'<option value="'+escapeHtml(personOptionValue(x))+'">'+g+'年・'+escapeHtml(octoberDisplayName(x.name,g,dateSel.value))+'</option>'}).join('')+'</optgroup>'});
     const fv=fromSel.value,tv=toSel.value;fromSel.innerHTML=opts;toSel.innerHTML=opts;if(Array.from(fromSel.options).some(o=>o.value===fv))fromSel.value=fv;if(Array.from(toSel.options).some(o=>o.value===tv))toSel.value=tv;
   }
   async function submitRequest(){
@@ -386,7 +400,7 @@
       requests=normalizeRequestList(body.requests);requestsLoaded=true;renderRequests();syncPendingRequestCount();
       const submitted=requests.slice().sort(function(a,b){return String(b.updatedAt||b.createdAt).localeCompare(String(a.updatedAt||a.createdAt))}).find(function(x){return x.status==='pending'&&x.date===date&&x.fromGrade===fromPerson.grade&&x.fromName===fromPerson.name});
       const requestNo=submitted&&submitted.requestNo?submitted.requestNo:'';
-      const text='【当番変更申請'+(requestNo?' #'+requestNo:'')+'】\n'+displayDate(date)+'\n変更前：'+fromPerson.grade+'年・'+displayName(fromPerson.name,fromPerson.grade)+'\n変更後：'+toPerson.grade+'年・'+displayName(toPerson.name,toPerson.grade)+'\n当番変更を申請しました。';
+      const text='【当番変更申請'+(requestNo?' #'+requestNo:'')+'】\n'+displayDate(date)+'\n変更前：'+fromPerson.grade+'年・'+octoberDisplayName(fromPerson.name,fromPerson.grade,date)+'\n変更後：'+toPerson.grade+'年・'+octoberDisplayName(toPerson.name,toPerson.grade,date)+'\n当番変更を申請しました。';
       result.hidden=false;result.innerHTML='<div class="duty-request-complete"><b>変更申請を受け付けました</b><p>続けて、チームへの連絡のためLINEで変更内容を共有してください。</p><a id="dutyRequestLineShare" class="line-share" target="_blank" rel="noopener noreferrer" href="https://line.me/R/share?text='+encodeURIComponent(text)+'">LINEで共有する</a><small>※当番表への正式な反映は管理者確認後となります。</small></div>';
       const lineShare=document.getElementById('dutyRequestLineShare');if(lineShare)lineShare.addEventListener('click',function(){setTimeout(function(){const content=document.getElementById('dutyRequestContent'),toggle=document.getElementById('toggleDutyRequest');if(content)content.hidden=true;if(toggle){toggle.setAttribute('aria-expanded','false');toggle.textContent='申請する'}},0)});
     }catch(e){alert(e.message||'申請できませんでした.')}finally{btn.disabled=false;btn.textContent='変更申請を送信'}
