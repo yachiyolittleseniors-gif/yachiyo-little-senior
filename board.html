@@ -1022,6 +1022,14 @@ html,body{margin-bottom:0!important;padding-bottom:0!important}
 body:after{display:none!important;content:none!important}
 #admin-position-scroll-spacer{display:none!important;height:0!important;min-height:0!important}
 </style>
+<style id="duty-approval-setting-style">
+.duty-approval-setting{display:flex!important;align-items:flex-start!important;gap:10px!important;margin:10px 0 6px!important;padding:11px 12px!important;border:1px solid #d7cfbb!important;border-radius:10px!important;background:#faf8f2!important;color:#17202b!important;-webkit-text-fill-color:#17202b!important;cursor:pointer!important}
+.duty-approval-setting input{width:20px!important;height:20px!important;margin:1px 0 0!important;accent-color:#c79a3b!important;flex:0 0 auto!important}
+.duty-approval-setting span{display:block!important;min-width:0!important}
+.duty-approval-setting strong{display:block!important;font-size:13px!important;line-height:1.5!important;color:#17202b!important;-webkit-text-fill-color:#17202b!important}
+.duty-approval-setting small{display:block!important;margin-top:3px!important;font-size:11px!important;line-height:1.6!important;color:#66707c!important;-webkit-text-fill-color:#66707c!important}
+.duty-approval-setting-status{min-height:18px;margin:0 0 8px;font-size:11px;font-weight:700;color:#7a6424}
+</style>
 <style id="password-change-label-style">
 #accessPasswordAdminFields .password-change-heading,#coachPasswordAdminFields .password-change-heading{display:inline-block;font-size:.8em;margin-top:4px;color:#e2bd67}
 </style>
@@ -1480,6 +1488,11 @@ body:after{display:none!important;content:none!important}
       <div class="duty-request-admin-block">
         <b>当番変更申請</b>
         <p>一般画面から届いた申請です。</p>
+        <label class="duty-approval-setting" for="dutyPartnerApprovalToggle">
+          <input id="dutyPartnerApprovalToggle" type="checkbox">
+          <span><strong>交代相手の承認リンクを使用する</strong><small>ONにすると、申請後のLINEに専用承認リンクを追加し、相手の承認で当番表へ自動反映します。</small></span>
+        </label>
+        <div id="dutyPartnerApprovalStatus" class="duty-approval-setting-status" aria-live="polite"></div>
         <div id="dutyRequestAdminList" class="duty-change-admin-list"></div>
       </div>
     </div>
