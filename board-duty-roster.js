@@ -372,11 +372,10 @@
     if(admin){
       const pendingItems=ordered.filter(function(item){return item.status==='pending'});
       admin.innerHTML=pendingItems.length?pendingItems.map(function(item){
-        return '<div class="duty-request-admin-item">'+(item.requestNo?'<b>申請番号 #'+escapeHtml(item.requestNo)+'</b><br>':'')+'<b>'+displayDate(item.date)+'</b><br>'+escapeHtml(requestPersonLabel(item,'from'))+' → <b>'+escapeHtml(requestPersonLabel(item,'to'))+'</b><br><span class="duty-request-wait">確認待ち</span><div class="duty-request-admin-actions"><button type="button" data-approve-duty-request="'+escapeHtml(item.id)+'">当番表に反映</button><button class="reject" type="button" data-reject-duty-request="'+escapeHtml(item.id)+'">却下</button><button class="reject" type="button" data-delete-duty-request="'+escapeHtml(item.id)+'">削除</button></div></div>';
+        return '<div class="duty-request-admin-item">'+(item.requestNo?'<b>申請番号 #'+escapeHtml(item.requestNo)+'</b><br>':'')+'<b>'+displayDate(item.date)+'</b><br>'+escapeHtml(requestPersonLabel(item,'from'))+' → <b>'+escapeHtml(requestPersonLabel(item,'to'))+'</b><br><span class="duty-request-wait">確認待ち</span><div class="duty-request-admin-actions"><button type="button" data-approve-duty-request="'+escapeHtml(item.id)+'">当番表に反映</button><button class="reject" type="button" data-reject-duty-request="'+escapeHtml(item.id)+'">却下</button></div></div>';
       }).join(''):'<div class="duty-change-preview">確認待ちの当番変更申請はありません。</div>';
       admin.querySelectorAll('[data-approve-duty-request]').forEach(function(b){b.addEventListener('click',function(){decideRequest(b.dataset.approveDutyRequest,true)})});
       admin.querySelectorAll('[data-reject-duty-request]').forEach(function(b){b.addEventListener('click',function(){decideRequest(b.dataset.rejectDutyRequest,false)})});
-      admin.querySelectorAll('[data-delete-duty-request]').forEach(function(b){b.addEventListener('click',function(){deleteRequest(b.dataset.deleteDutyRequest)})});
     }
     populateRequestForm();
   }
@@ -411,10 +410,6 @@
     const body=await response.json().catch(function(){return{}});
     if(!response.ok)throw new Error(body.error||'処理できませんでした。');
     requests=normalizeRequestList(body.requests);requestsLoaded=true;renderRequests();syncPendingRequestCount();
-  }
-  async function deleteRequest(id){
-    const item=requests.find(function(x){return x.id===id});if(!item||!confirm('この申請を削除しますか？\n削除後は元に戻せません。'))return;
-    try{await requestAdminAction(id,'delete');showSaveNotice('申請を削除しました')}catch(e){alert(e.message||'申請を削除できませんでした。')}
   }
   async function decideRequest(id,approve){
     const item=requests.find(function(x){return x.id===id});if(!item)return;
