@@ -1,4 +1,4 @@
-(window.yachiyoTrackInitialLoad||(value=>value))((async function(){
+const runHomeLatest=()=> (window.yachiyoTrackInitialLoad||(value=>value))((async function(){
   const previous=window.yachiyoReadReloadData?.('home-latest');
   if(previous){for(const [id,html] of Object.entries(previous)){const el=document.querySelector('#'+id+' .latest-meta');if(el&&typeof html==='string')el.innerHTML=html;}}
   window.addEventListener('pagehide',()=>window.yachiyoRememberReloadData?.('home-latest',Object.fromEntries(['latestScheduleCard','latestResultCard'].map(id=>[id,document.querySelector('#'+id+' .latest-meta')?.innerHTML||'']))));
@@ -134,4 +134,4 @@
     document.querySelectorAll('.latest-meta').forEach(el=>el.textContent='最新情報を読み込めませんでした。');
   }
 })());
-
+if(window.yachiyoAfterFirstPaint)window.yachiyoAfterFirstPaint(runHomeLatest);else runHomeLatest();
