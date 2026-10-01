@@ -79,6 +79,36 @@ window.__yachiyoHeroImage=Promise.resolve(window.__yachiyoHeroUrl||'/.netlify/fu
 </script>
 <script src="./csp-event-handlers.js?v=20260929-logo-home"></script>
 <script src="./hero-position-prepaint.js?v=20261001-1"></script>
+<script id="hero-announcement-prepaint">
+(function(){
+  try{
+    var cached=JSON.parse(localStorage.getItem('yachiyoHeroAnnouncement')||'null');
+    if(cached&&cached.visible===true&&String(cached.text||'').trim()){
+      document.documentElement.classList.add('hero-announcement-prepaint');
+    }
+  }catch(e){}
+})();
+</script>
+<style id="hero-announcement-critical">
+@media(max-width:600px){
+  html.hero-announcement-prepaint #heroAnnouncement{
+    display:flex!important;
+    flex-direction:column;
+    align-items:flex-start;
+    gap:4px;
+    min-height:134px;
+    margin-left:-8px;
+    margin-right:-8px;
+    margin-bottom:32px;
+    padding:10px 14px;
+    border:1px solid rgba(226,189,103,.9);
+    box-sizing:border-box;
+  }
+  html.hero-announcement-prepaint #heroAnnouncement + .eyebrow{
+    margin-top:36px!important;
+  }
+}
+</style>
 <script id="hero-overlay-prepaint">
 (function(){
   try{
@@ -4746,6 +4776,7 @@ function openProtectedArea(type){
    banner.classList.toggle('has-details',hasDetails);
    banner.tabIndex=hasDetails?0:-1;
    detailHint.hidden=!hasDetails;
+   document.documentElement.classList.remove('hero-announcement-prepaint');
  }
  try{
    const cached=JSON.parse(localStorage.getItem(cacheKey)||'null');
