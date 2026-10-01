@@ -1960,10 +1960,9 @@ body.photo-admin-on .seniorcup-admin-control{display:block}
 <style>
 /* Photo-enhanced final version */
 .hero{background:linear-gradient(90deg,rgba(4,12,22,.9) 0%,rgba(4,12,22,.66) 42%,rgba(4,12,22,.25) 100%),var(--hero-photo) center 44%/cover no-repeat #071426 !important;}
-.hero.hero-overlay-soft{background:
-linear-gradient(90deg,rgba(4,12,22,.20) 0%,rgba(4,12,22,.08) 43%,rgba(4,12,22,0) 100%),
-var(--hero-photo) center 44%/cover no-repeat #071426 !important;}
-.hero.hero-overlay-soft .hero-inner{background:transparent!important}
+.hero.hero-overlay-soft{background-image:
+linear-gradient(90deg,rgba(4,12,22,.56) 0%,rgba(4,12,22,.34) 43%,rgba(4,12,22,.10) 100%),
+var(--hero-photo)!important;}
 .hero:after{display:none!important}
 .photo{background:url("./team-photo.jpg") center/cover no-repeat !important;min-height:340px;border:1px solid rgba(199,154,59,.28)}
 .photo:before{display:none!important}
@@ -2134,10 +2133,9 @@ img,video,iframe{max-width:100%}
 #heroOverlayControl input{width:18px;height:18px;margin:0;accent-color:#c79a3b;flex:0 0 auto}
 body.photo-admin-on #heroOverlayControl{display:flex!important}
 body:has(#heroOverlayWeak:checked) .hero{
-  background:var(--hero-photo) center 44%/cover no-repeat #071426!important;
-}
-body:has(#heroOverlayWeak:checked) .hero .hero-inner{
-  background:transparent!important;
+  background-image:
+    linear-gradient(90deg,rgba(4,12,22,.56) 0%,rgba(4,12,22,.34) 43%,rgba(4,12,22,.10) 100%),
+    var(--hero-photo)!important;
 }
 @media(max-width:600px){
   #heroPhotoAdmin{
@@ -4032,6 +4030,15 @@ function openProtectedArea(type){
   function apply(){
     checkbox.checked=weak;
     hero.classList.toggle('hero-overlay-soft',weak);
+    if(weak){
+      hero.style.setProperty(
+        'background-image',
+        'linear-gradient(90deg,rgba(4,12,22,.56) 0%,rgba(4,12,22,.34) 43%,rgba(4,12,22,.10) 100%),var(--hero-photo)',
+        'important'
+      );
+    }else{
+      hero.style.removeProperty('background-image');
+    }
     try{localStorage.setItem(cacheKey,weak?'true':'false')}catch(error){}
   }
 
