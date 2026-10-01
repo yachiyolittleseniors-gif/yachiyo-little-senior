@@ -2,14 +2,15 @@
   'use strict';
 
   function applyStandardCoachDefaults(){
-    const status=document.getElementById('status');
-    if(!status || status.textContent.trim()!=='変更内容は自動保存されます。') return;
-
     const coachCar=document.getElementById('coachCar');
     const manager=document.getElementById('coachManager');
     const managerDriver=document.getElementById('coachManagerDriver');
     const coachCount=document.getElementById('coachCount');
     if(!coachCar || !manager || !managerDriver || !coachCount) return;
+
+    // 保存済みの配車（0や1など値が入っている）は変更しない。
+    // 新規選択時は既存処理が coachCar を空文字に戻すため、その時だけ標準値を入れる。
+    if(String(coachCar.value||'').trim()!=='') return;
 
     coachCar.value='1';
     manager.checked=true;
@@ -23,17 +24,16 @@
     if(typeof window.saveDraft==='function') window.saveDraft();
   }
 
-  function scheduleApply(){
-    setTimeout(applyStandardCoachDefaults,0);
+  function queueDefaults(){
+    setTimeout(applyStandardCoachDefaults,30);
+    setTimeout(applyStandardCoachDefaults,180);
   }
 
   document.addEventListener('change',event=>{
-    if(event.target && (event.target.id==='eventDate' || event.target.classList?.contains('grade-btn'))){
-      scheduleApply();
-    }
+    if(event.target?.id==='eventDate') queueDefaults();
   },true);
 
   document.addEventListener('click',event=>{
-    if(event.target?.closest?.('.grade-btn')) scheduleApply();
+    if(event.target?.closest?.('.grade-btn')) queueDefaults();
   },true);
 })();
