@@ -15,10 +15,115 @@ try{
 if(performance.getEntriesByType('navigation')[0]?.type==='reload'&&!heroChanged&&!forceOpening){cover.remove();return;}
 cover.hidden=false;
 const openedAt=performance.now();
-let closed=false,stopMotion=()=>{},exitTimer=0,guardTimer=0;
+let closed=false,stopMotion=()=>{},stopDutySignal=()=>{},exitTimer=0,guardTimer=0;
 let leaving=false;
-function remove(){if(closed)return;closed=true;clearTimeout(exitTimer);clearTimeout(guardTimer);stopMotion();cover.remove();}
+function remove(){if(closed)return;closed=true;clearTimeout(exitTimer);clearTimeout(guardTimer);stopMotion();stopDutySignal();cover.remove();}
 function wait(ms){return new Promise(resolve=>setTimeout(resolve,ms));}
+
+function dutyRequestSignal(){
+  if(window.matchMedia('(prefers-reduced-motion: reduce)').matches)return;
+  let stopped=false,raf=0,canvas=null,observer=null;
+  stopDutySignal=()=>{stopped=true;cancelAnimationFrame(raf);if(observer)observer.disconnect();if(canvas)canvas.remove();};
+  fetch('/.netlify/functions/duty-request-alert',{cache:'no-store'})
+    .then(function(response){return response.ok?response.json():null;})
+    .then(function(data){
+      if(stopped||closed||!data||data.hasPending!==true)return;
+      const mode=Math.random()<.5?'sparkle':'stars';
+      cover.dataset.dutySignal=mode;
+      canvas=document.createElement('canvas');
+      canvas.setAttribute('aria-hidden','true');
+      Object.assign(canvas.style,{position:'absolute',inset:'0',width:'100%',height:'100%',pointerEvents:'none',zIndex:'8'});
+      cover.appendChild(canvas);
+      const ctx=canvas.getContext('2d');if(!ctx){canvas.remove();canvas=null;return;}
+      let width=0,height=0,dpr=1;
+      const started=performance.now();
+      const sparklePoints=Array.from({length:18},function(_,i){
+        const band=i%3;
+        return{
+          x:.16+Math.random()*.68,
+          y:(band===0?.24:band===1?.43:.61)+Math.random()*.16,
+          size:2.2+Math.random()*4.6,
+          phase:Math.random()*Math.PI*2
+        };
+      });
+      const flowingStars=[
+        {delay:0,sx:1.06,sy:.02,ex:-.08,ey:.74,size:6.0},
+        {delay:.10,sx:1.13,sy:.09,ex:-.02,ey:.86,size:4.8},
+        {delay:.22,sx:1.04,sy:.17,ex:-.12,ey:.98,size:5.5},
+        {delay:.34,sx:1.18,sy:-.04,ex:.08,ey:.69,size:4.2},
+        {delay:.46,sx:1.09,sy:.24,ex:-.08,ey:1.06,size:4.6}
+      ];
+      function resize(){
+        const r=cover.getBoundingClientRect();width=r.width;height=r.height;
+        dpr=Math.min(window.devicePixelRatio||1,2);
+        canvas.width=Math.max(1,Math.round(width*dpr));canvas.height=Math.max(1,Math.round(height*dpr));
+        ctx.setTransform(dpr,0,0,dpr,0,0);
+      }
+      function starPath(x,y,r,rotation){
+        ctx.beginPath();
+        for(let i=0;i<10;i++){
+          const rr=i%2===0?r:r*.42,angle=rotation-Math.PI/2+i*Math.PI/5;
+          const px=x+Math.cos(angle)*rr,py=y+Math.sin(angle)*rr;
+          if(i===0)ctx.moveTo(px,py);else ctx.lineTo(px,py);
+        }
+        ctx.closePath();
+      }
+      function drawSparkles(progress){
+        ctx.clearRect(0,0,width,height);
+        const envelope=Math.sin(Math.PI*Math.min(1,progress));
+        sparklePoints.forEach(function(point,i){
+          const pulse=.28+.72*(.5+.5*Math.sin(progress*20+point.phase+i*.37));
+          const alpha=Math.max(0,envelope*pulse);
+          const x=width*point.x,y=height*point.y,r=point.size*(.75+.45*pulse);
+          ctx.save();
+          ctx.translate(x,y);
+          ctx.rotate(Math.PI/4);
+          ctx.shadowColor='rgba(255,211,92,'+Math.min(.95,alpha)+')';
+          ctx.shadowBlur=12+r*1.7;
+          ctx.fillStyle='rgba(255,228,143,'+Math.min(.98,alpha)+')';
+          ctx.beginPath();
+          ctx.moveTo(0,-r*1.65);ctx.lineTo(r*.35,-r*.35);ctx.lineTo(r*1.65,0);ctx.lineTo(r*.35,r*.35);
+          ctx.lineTo(0,r*1.65);ctx.lineTo(-r*.35,r*.35);ctx.lineTo(-r*1.65,0);ctx.lineTo(-r*.35,-r*.35);ctx.closePath();
+          ctx.fill();
+          ctx.restore();
+        });
+      }
+      function drawFlowingStars(progress){
+        ctx.clearRect(0,0,width,height);
+        flowingStars.forEach(function(item,i){
+          const local=(progress-item.delay)/(1-item.delay);
+          if(local<=0||local>=1)return;
+          const eased=local*local*(3-2*local);
+          const x=width*(item.sx+(item.ex-item.sx)*eased),y=height*(item.sy+(item.ey-item.sy)*eased);
+          const prev=Math.max(0,eased-.11);
+          const tx=width*(item.sx+(item.ex-item.sx)*prev),ty=height*(item.sy+(item.ey-item.sy)*prev);
+          const fade=Math.sin(Math.PI*local);
+          ctx.save();
+          ctx.lineCap='round';
+          ctx.strokeStyle='rgba(232,182,67,'+(.58*fade)+')';
+          ctx.lineWidth=Math.max(1.2,item.size*.34);
+          ctx.shadowColor='rgba(255,215,108,'+(.8*fade)+')';ctx.shadowBlur=10;
+          ctx.beginPath();ctx.moveTo(tx,ty);ctx.lineTo(x,y);ctx.stroke();
+          starPath(x,y,item.size*(.85+.2*Math.sin(local*Math.PI)),i*.35);
+          ctx.fillStyle='rgba(255,230,151,'+Math.min(1,.92*fade+.08)+')';ctx.fill();
+          ctx.restore();
+        });
+      }
+      function tick(now){
+        if(stopped||closed)return;
+        const elapsed=now-started;
+        const remaining=Math.max(420,1250-(started-openedAt));
+        const progress=Math.min(1,elapsed/remaining);
+        if(mode==='stars')drawFlowingStars(progress);else drawSparkles(progress);
+        if(progress<1)raf=requestAnimationFrame(tick);
+      }
+      resize();
+      observer=new ResizeObserver(resize);observer.observe(cover);
+      raf=requestAnimationFrame(tick);
+    })
+    .catch(function(){});
+}
+
 function openingMotion(){
   if(window.matchMedia('(prefers-reduced-motion: reduce)').matches)return wait(1500);
   const source=cover.querySelector('img'),wrapper=cover.querySelector('.first-visit-logo');
@@ -344,6 +449,7 @@ function leave(){
 // Opening duration is fixed: do not block the transition on hero-image readiness.
 // The hero continues preloading behind the opening screen.
 guardTimer=setTimeout(leave,Math.max(0,1500-(performance.now()-openedAt)));
+dutyRequestSignal();
 openingMotion();
 window.addEventListener('pagehide',remove,{once:true});
 })();
