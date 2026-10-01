@@ -1,5 +1,6 @@
 (function(){
   const API='/.netlify/functions/site-data?section=duty-roster';
+  const REQUEST_API='/.netlify/functions/duty-change-requests';
   async function applyDutyRequestPublicSetting(){const box=document.getElementById('dutyRequestBox'),note=document.getElementById('dutyRequestPublicNote');try{const r=await fetch('/.netlify/functions/site-data?section=admin-visibility-settings',{cache:'no-store'}),j=await r.json();const enabled=!!(r.ok&&j&&j.data&&j.data.dutyRequestPublic===true);if(box)box.hidden=!enabled;if(note)note.hidden=!enabled}catch(e){if(box)box.hidden=true;if(note)note.hidden=true}}
   applyDutyRequestPublicSetting();
   const list=document.getElementById('dutyRosterList');
@@ -55,30 +56,16 @@
     const changeItems=raw&&raw.initialized===true&&Array.isArray(raw.changes)?raw.changes:[];
     return{
       images:imageList.filter(function(item){return item&&typeof item==='object'&&(item.data||item.src)}).slice(0,8).map(function(item,index){return{id:String(item.id||('duty-'+index)),name:String(item.name||('当番表 '+(index+1))),data:item.data?String(item.data):'',src:item.src?String(item.src):'',table:window.DutyRosterData.tableForImage(item)}}),
-      changes:changeItems.filter(function(item){return item&&/^\d{4}-\d{2}-\d{2}$/.test(String(item.date||''))&&['1','2','3'].includes(String(item.grade||''))&&cleanName(item.from)&&cleanName(item.to)&&!(String(item.date)==='2026-10-24'&&cleanName(item.from)==='齋藤'&&cleanName(item.to)==='荒木')}).slice(0,300).map(function(item,index){return{id:String(item.id||('change-'+index)),requestNo:String(item.requestNo||'').slice(0,20),date:String(item.date),grade:String(item.grade),from:cleanName(item.from),to:cleanName(item.to),toGrade:String(item.toGrade||item.grade||''),status:String(item.status||'active')==='cancelled'?'cancelled':'active',createdAt:String(item.createdAt||''),cancelledAt:String(item.cancelledAt||'')}}),
-      requests:dedupePendingRequests(Array.isArray(raw&&raw.requests)?raw.requests.filter(function(item){
-        const grade=String(item&&item.fromGrade||item&&item.grade||'');
-        return item&&/^\d{4}-\d{2}-\d{2}$/.test(String(item.date||''))&&['1','2','3'].includes(grade)&&cleanName(item.from)&&cleanName(item.to)&&!(String(item.date)==='2026-10-24'&&cleanName(item.from)==='齋藤'&&cleanName(item.to)==='荒木');
-      }).slice(0,200).map(function(item,index){
-        const fromGrade=String(item.fromGrade||item.grade||''),toGrade=String(item.toGrade||item.grade||fromGrade||'');
-        return{id:String(item.id||('request-'+index)),requestNo:String(item.requestNo||'').slice(0,20),date:String(item.date),grade:fromGrade,fromGrade:fromGrade,from:cleanName(item.from),toGrade:toGrade,to:cleanName(item.to),note:String(item.note||'').slice(0,200),status:['pending','approved','rejected'].includes(String(item.status))?String(item.status):'pending',createdAt:String(item.createdAt||''),updatedAt:String(item.updatedAt||'')};
-      }):[])
+      changes:changeItems.filter(function(item){return item&&/^\d{4}-\d{2}-\d{2}$/.test(String(item.date||''))&&['1','2','3'].includes(String(item.grade||''))&&cleanName(item.from)&&cleanName(item.to)&&!(String(item.date)==='2026-10-24'&&cleanName(item.from)==='齋藤'&&cleanName(item.to)==='荒木')}).slice(0,300).map(function(item,index){return{id:String(item.id||('change-'+index)),requestNo:String(item.requestNo||'').slice(0,20),date:String(item.date),grade:String(item.grade),from:cleanName(item.from),to:cleanName(item.to),toGrade:String(item.toGrade||item.grade||''),status:String(item.status||'active')==='cancelled'?'cancelled':'active',createdAt:String(item.createdAt||''),cancelledAt:String(item.cancelledAt||'')}})
     };
   }
 
-  function dedupePendingRequests(items){
-    const result=[],pendingIndex=new Map();
-    (Array.isArray(items)?items:[]).forEach(function(item){
-      if(!item){return}
-      if(item.status!=='pending'){result.push(item);return}
-      const key=[item.date,String(item.fromGrade||item.grade||''),cleanName(item.from)].join('|');
-      if(!pendingIndex.has(key)){pendingIndex.set(key,result.length);result.push(item);return}
-      const index=pendingIndex.get(key),current=result[index];
-      const currentTime=new Date(current.updatedAt||current.createdAt||0).getTime()||0;
-      const nextTime=new Date(item.updatedAt||item.createdAt||0).getTime()||0;
-      if(nextTime>=currentTime)result[index]=item;
+  function normalizeRequestList(items){
+    return (Array.isArray(items)?items:[]).filter(function(item){
+      return item&&/^\d{4}-\d{2}-\d{2}$/.test(String(item.date||''))&&['1','2','3'].includes(String(item.fromGrade||''))&&['1','2','3'].includes(String(item.toGrade||''))&&cleanName(item.fromName)&&cleanName(item.toName);
+    }).slice(0,300).map(function(item,index){
+      return{id:String(item.id||('request-'+index)),requestNo:String(item.requestNo||'').slice(0,20),date:String(item.date),fromGrade:String(item.fromGrade),fromName:cleanName(item.fromName),toGrade:String(item.toGrade),toName:cleanName(item.toName),status:['pending','approved','rejected'].includes(String(item.status))?String(item.status):'pending',createdAt:String(item.createdAt||''),updatedAt:String(item.updatedAt||'')};
     });
-    return result;
   }
 
   function imageSource(item){return item.data||item.src||''}
@@ -129,7 +116,7 @@
     });
     return images.length!==before;
   }
-  function saveCache(){try{const value=JSON.stringify({initialized:true,images:images,changes:changes,requests:requestsLoaded?requests:[]});if(value.length<=4*1024*1024)sessionStorage.setItem(CACHE_KEY,value);else sessionStorage.removeItem(CACHE_KEY)}catch(e){}}
+  function saveCache(){try{const value=JSON.stringify({initialized:true,images:images,changes:changes});if(value.length<=4*1024*1024)sessionStorage.setItem(CACHE_KEY,value);else sessionStorage.removeItem(CACHE_KEY)}catch(e){}}
   function loadCache(){try{const cached=normalize(JSON.parse(sessionStorage.getItem(CACHE_KEY)||'null'));if(cached.images.length||cached.changes.length){images=cached.images;changes=cached.changes;render()}}catch(e){sessionStorage.removeItem(CACHE_KEY)}}
 
   function renderChanges(){
@@ -177,22 +164,18 @@
       if(!response.ok)throw new Error('load failed');
       const body=await response.json(),normalized=normalize(body.data);
       images=normalized.images;changes=normalized.changes;
-      const cleaned=cleanupExpiredImages();saveCache();render();syncPendingRequestCount();
+      const cleaned=cleanupExpiredImages();saveCache();render();syncPendingRequestCount();loadRequests();
       if(cleaned&&panel.dataset.adminPassword){persist('','期限切れの当番表原本を整理しました',false).catch(function(){})}
-    }catch(e){render();syncPendingRequestCount()}
+    }catch(e){render();syncPendingRequestCount();loadRequests()}
   }
 
   function readAsDataUrl(file){return new Promise(function(resolve,reject){const reader=new FileReader();reader.onload=function(){resolve(String(reader.result||''))};reader.onerror=reject;reader.readAsDataURL(file)})}
 
   async function persist(successMessage,updateMessage,announceLatest){
     const adminPassword=panel.dataset.adminPassword||'';if(!adminPassword)throw new Error('管理画面を開き直してください。')
-    if(!requestsLoaded){
-      const loaded=await loadRequestDetails();
-      if(!loaded)throw new Error('申請データを確認できないため、保存を中止しました。再読み込みしてからお試しください。');
-    }
-    const payload={initialized:true,images:images,changes:changes,requests:requests};if(JSON.stringify(payload).length>7500000){throw new Error('画像の合計容量が大きすぎます。画像を減らしてください。')}
-    const response=await fetch(API,{method:'POST',headers:{'content-type':'application/json','x-admin-password':adminPassword},body:JSON.stringify({data:payload,updateMessage:updateMessage||'当番表を更新しました',announceLatest:announceLatest===true})});
-    const body=await response.json().catch(function(){return{}});if(!response.ok)throw new Error(body.error||'保存できませんでした。');saveCache();render();syncPendingRequestCount();showSaveNotice(successMessage||'保存しました');if(announceLatest)window.refreshBoardLatestUpdate?.();return true;
+    const payload={initialized:true,images:images,changes:changes};if(JSON.stringify(payload).length>7500000){throw new Error('画像の合計容量が大きすぎます。画像を減らしてください。')}
+    const response=await fetch(API,{method:'POST',credentials:'same-origin',headers:{'content-type':'application/json','x-admin-password':adminPassword},body:JSON.stringify({data:payload,updateMessage:updateMessage||'当番表を更新しました',announceLatest:announceLatest===true})});
+    const body=await response.json().catch(function(){return{}});if(!response.ok)throw new Error(body.error||'保存できませんでした。');saveCache();render();showSaveNotice(successMessage||'保存しました');if(announceLatest)window.refreshBoardLatestUpdate?.();return true;
   }
 
   function validDate(year,month,day){const date=new Date(year,month-1,day);return date.getFullYear()===year&&date.getMonth()===month-1&&date.getDate()===day}
@@ -289,46 +272,50 @@
   function todayYmd(){const d=new Date();return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0')}
   function rosterDates(){const today=todayYmd(),out=[];images.forEach(function(image){const table=image.table;if(!table)return;table.rows.forEach(function(row){const date=tableDate(table,row[0]);if(date>=today)out.push({date:date,label:table.year+'年'+table.month+'月'+row[0]+'日（'+row[1]+'）',table:table,row:row})})});return out.sort(function(a,b){return a.date.localeCompare(b.date)})}
   function rosterHasMonth(date){return images.some(function(image){return image.table&&date.startsWith(image.table.year+'-'+String(image.table.month).padStart(2,'0')+'-')})}
-  function requestStatusLabel(status,date){if(status==='approved')return'反映済み';return'確認待ち'}
-  function requestPersonLabel(item, side){
-    const grade=String(item[side+'Grade']||item.grade||'');
-    const name=String(item[side]||'');
+  function requestStatusLabel(status){if(status==='approved')return'反映済み';if(status==='rejected')return'却下済み';return'確認待ち'}
+  function requestPersonLabel(item,side){
+    const grade=String(item[side+'Grade']||'');
+    const name=String(item[side+'Name']||'');
     return (grade?grade+'年・':'')+displayName(name,grade);
   }
-  async function loadRequestDetails(){
+  function requestHeaders(includeAdmin){
+    const headers={'content-type':'application/json'};
+    const accessPassword=sessionStorage.getItem('yachiyoAttendancePass')||'';
+    if(accessPassword)headers['x-access-password']=accessPassword;
+    if(includeAdmin){
+      const adminPassword=panel.dataset.adminPassword||'';
+      if(adminPassword)headers['x-admin-password']=adminPassword;
+    }
+    return headers;
+  }
+  async function loadRequests(){
     try{
-      const accessPassword=sessionStorage.getItem('yachiyoAttendancePass')||'';
-      const response=await fetch('/.netlify/functions/duty-request-details',{
-        cache:'no-store',
-        credentials:'same-origin',
-        headers:{'x-access-password':accessPassword}
-      });
-      if(!response.ok)return false;
+      const response=await fetch(REQUEST_API,{cache:'no-store',credentials:'same-origin',headers:requestHeaders(false)});
+      if(!response.ok)throw new Error('load failed');
       const body=await response.json();
-      if(!Array.isArray(body&&body.requests))return false;
-      requests=normalize({requests:body.requests}).requests;
+      if(!Array.isArray(body&&body.requests))throw new Error('invalid data');
+      requests=normalizeRequestList(body.requests);
       requestsLoaded=true;
       renderRequests();
       return true;
-    }catch(e){return false}
+    }catch(e){
+      requestsLoaded=false;
+      const admin=document.getElementById('dutyRequestAdminList');
+      if(admin)admin.innerHTML='<div class="duty-change-preview">申請データを確認できません。再読み込みしてください。</div>';
+      return false;
+    }
   }
-
   async function syncPendingRequestCount(){
-    // 件数は公開用の専用API、一覧は認証付き専用API。通常の当番表読込には申請状態を触らせない。
     try{
       const response=await fetch('/.netlify/functions/duty-request-alert',{cache:'no-store'});
-      if(response.ok){
-        const body=await response.json();
-        const count=Math.max(0,Number(body&&body.pendingCount)||0);
-        const requestBadge=document.getElementById('dutyRequestPendingBadge');
-        if(requestBadge){requestBadge.hidden=false;requestBadge.textContent='申請中 '+count+'件'}
-        const statusToggle=document.getElementById('toggleDutyRequestStatus');
-        if(statusToggle&&statusToggle.getAttribute('aria-expanded')!=='true'){
-          statusToggle.textContent=count?'申請内容を見る（申請中 '+count+'件）':'申請内容を見る';
-        }
-      }
+      if(!response.ok)return;
+      const body=await response.json();
+      const count=Math.max(0,Number(body&&body.pendingCount)||0);
+      const requestBadge=document.getElementById('dutyRequestPendingBadge');
+      if(requestBadge){requestBadge.hidden=false;requestBadge.textContent='申請中 '+count+'件'}
+      const statusToggle=document.getElementById('toggleDutyRequestStatus');
+      if(statusToggle&&statusToggle.getAttribute('aria-expanded')!=='true')statusToggle.textContent=count?'申請内容を見る（申請中 '+count+'件）':'申請内容を見る';
     }catch(e){}
-    await loadRequestDetails();
   }
   function renderRequests(){
     const admin=document.getElementById('dutyRequestAdminList');
@@ -349,12 +336,20 @@
         return '<div class="duty-request-status-item">'+(item.requestNo?'<b>申請番号 #'+escapeHtml(item.requestNo)+'</b><br>':'')+
           '<b>'+displayDate(item.date)+'</b><br>'+
           escapeHtml(requestPersonLabel(item,'from'))+' → <b>'+escapeHtml(requestPersonLabel(item,'to'))+'</b><br>'+
-          '<b data-status="'+escapeHtml(item.status)+'">'+escapeHtml(requestStatusLabel(item.status,item.date))+'</b>'+
+          '<b data-status="'+escapeHtml(item.status)+'">'+escapeHtml(requestStatusLabel(item.status))+'</b>'+
           (item.createdAt?'<br><small>申請日時：'+escapeHtml(new Intl.DateTimeFormat('ja-JP',{timeZone:'Asia/Tokyo',year:'numeric',month:'numeric',day:'numeric',hour:'2-digit',minute:'2-digit',hourCycle:'h23'}).format(new Date(item.createdAt)))+'</small>':'')+
           '</div>';
       }).join(''):'';
     }
-    if(admin){admin.innerHTML=ordered.length?ordered.map(function(item){const pending=item.status==='pending';return'<div class="duty-request-admin-item">'+(item.requestNo?'<b>申請番号 #'+escapeHtml(item.requestNo)+'</b><br>':'')+'<b>'+displayDate(item.date)+'</b><br>'+escapeHtml(requestPersonLabel(item,'from'))+' → <b>'+escapeHtml(requestPersonLabel(item,'to'))+'</b><br><span class="duty-request-wait">'+escapeHtml(item.status==='approved'?'反映済み':item.status==='rejected'?'却下済み':'確認待ち')+'</span><div class="duty-request-admin-actions">'+(pending?'<button type="button" data-approve-duty-request="'+escapeHtml(item.id)+'">当番表に反映</button><button class="reject" type="button" data-reject-duty-request="'+escapeHtml(item.id)+'">却下</button>':'')+'<button class="reject" type="button" data-delete-duty-request="'+escapeHtml(item.id)+'">削除</button></div></div>'}).join(''):'<div class="duty-change-preview">当番変更申請はありません。</div>';admin.querySelectorAll('[data-approve-duty-request]').forEach(function(b){b.addEventListener('click',function(){decideRequest(b.dataset.approveDutyRequest,true)})});admin.querySelectorAll('[data-reject-duty-request]').forEach(function(b){b.addEventListener('click',function(){decideRequest(b.dataset.rejectDutyRequest,false)})});admin.querySelectorAll('[data-delete-duty-request]').forEach(function(b){b.addEventListener('click',function(){deleteRequest(b.dataset.deleteDutyRequest)})})}
+    if(admin){
+      admin.innerHTML=ordered.length?ordered.map(function(item){
+        const pending=item.status==='pending';
+        return '<div class="duty-request-admin-item">'+(item.requestNo?'<b>申請番号 #'+escapeHtml(item.requestNo)+'</b><br>':'')+'<b>'+displayDate(item.date)+'</b><br>'+escapeHtml(requestPersonLabel(item,'from'))+' → <b>'+escapeHtml(requestPersonLabel(item,'to'))+'</b><br><span class="duty-request-wait">'+escapeHtml(requestStatusLabel(item.status))+'</span><div class="duty-request-admin-actions">'+(pending?'<button type="button" data-approve-duty-request="'+escapeHtml(item.id)+'">当番表に反映</button><button class="reject" type="button" data-reject-duty-request="'+escapeHtml(item.id)+'">却下</button>':'')+'<button class="reject" type="button" data-delete-duty-request="'+escapeHtml(item.id)+'">削除</button></div></div>';
+      }).join(''):'<div class="duty-change-preview">当番変更申請はありません。</div>';
+      admin.querySelectorAll('[data-approve-duty-request]').forEach(function(b){b.addEventListener('click',function(){decideRequest(b.dataset.approveDutyRequest,true)})});
+      admin.querySelectorAll('[data-reject-duty-request]').forEach(function(b){b.addEventListener('click',function(){decideRequest(b.dataset.rejectDutyRequest,false)})});
+      admin.querySelectorAll('[data-delete-duty-request]').forEach(function(b){b.addEventListener('click',function(){deleteRequest(b.dataset.deleteDutyRequest)})});
+    }
     populateRequestForm();
   }
   function personOptionValue(x){return x.grade+'|'+x.name}
@@ -367,16 +362,39 @@
   }
   async function submitRequest(){
     const date=document.getElementById('dutyRequestRosterDate').value,fromPerson=parsePersonOption(document.getElementById('dutyRequestFrom').value),toPerson=parsePersonOption(document.getElementById('dutyRequestTo').value),btn=document.getElementById('submitDutyRequest'),result=document.getElementById('dutyRequestResult');
-    if(!/^\d{4}-\d{2}-\d{2}$/.test(date)||!rosterDates().some(function(x){return x.date===date})||!fromPerson||!toPerson)return alert('登録済みのお当番表から変更日・変更前・変更後を選択してください。');if(fromPerson.grade===toPerson.grade&&fromPerson.name===toPerson.name)return alert('変更前と変更後は別の方を選択してください。');
-    btn.disabled=true;btn.textContent='送信中…';try{const accessPassword=sessionStorage.getItem('yachiyoAttendancePass')||'';const response=await fetch(API,{method:'POST',headers:{'content-type':'application/json','x-access-password':accessPassword},body:JSON.stringify({action:'submitDutyChangeRequest',request:{date:date,fromGrade:fromPerson.grade,from:fromPerson.name,toGrade:toPerson.grade,to:toPerson.name}})});const body=await response.json().catch(function(){return{}});if(!response.ok)throw new Error(body.error||'申請できませんでした。');requests=normalize(body.data).requests;requestsLoaded=true;renderRequests();await syncPendingRequestCount();const submitted=requests.slice().sort(function(a,b){return String(b.createdAt).localeCompare(String(a.createdAt))}).find(function(x){return x.status==='pending'&&x.date===date&&x.from===fromPerson.name&&x.to===toPerson.name});const requestNo=submitted&&submitted.requestNo?submitted.requestNo:'';const text='【当番変更申請'+(requestNo?' #'+requestNo:'')+'】\n'+displayDate(date)+'\n変更前：'+fromPerson.grade+'年・'+displayName(fromPerson.name,fromPerson.grade)+'\n変更後：'+toPerson.grade+'年・'+displayName(toPerson.name,toPerson.grade)+'\n当番変更を申請しました。';result.hidden=false;result.innerHTML='<div class="duty-request-complete"><b>変更申請を受け付けました</b><p>続けて、チームへの連絡のためLINEで変更内容を共有してください。</p><a id="dutyRequestLineShare" class="line-share" target="_blank" rel="noopener noreferrer" href="https://line.me/R/share?text='+encodeURIComponent(text)+'">LINEで共有する</a><small>※当番表への正式な反映は管理者確認後となります。</small></div>';const lineShare=document.getElementById('dutyRequestLineShare');if(lineShare)lineShare.addEventListener('click',function(){setTimeout(function(){const content=document.getElementById('dutyRequestContent'),toggle=document.getElementById('toggleDutyRequest');if(content)content.hidden=true;if(toggle){toggle.setAttribute('aria-expanded','false');toggle.textContent='申請する'}},0)});}catch(e){alert(e.message||'申請できませんでした。')}finally{btn.disabled=false;btn.textContent='変更申請を送信'}
+    if(!/^\d{4}-\d{2}-\d{2}$/.test(date)||!rosterDates().some(function(x){return x.date===date})||!fromPerson||!toPerson)return alert('登録済みのお当番表から変更日・変更前・変更後を選択してください。');
+    if(fromPerson.grade===toPerson.grade&&fromPerson.name===toPerson.name)return alert('変更前と変更後は別の方を選択してください。');
+    btn.disabled=true;btn.textContent='送信中…';
+    try{
+      const response=await fetch(REQUEST_API,{method:'POST',credentials:'same-origin',headers:requestHeaders(false),body:JSON.stringify({action:'submit',request:{date:date,fromGrade:fromPerson.grade,fromName:fromPerson.name,toGrade:toPerson.grade,toName:toPerson.name}})});
+      const body=await response.json().catch(function(){return{}});
+      if(!response.ok)throw new Error(body.error||'申請できませんでした。');
+      requests=normalizeRequestList(body.requests);requestsLoaded=true;renderRequests();syncPendingRequestCount();
+      const submitted=requests.slice().sort(function(a,b){return String(b.updatedAt||b.createdAt).localeCompare(String(a.updatedAt||a.createdAt))}).find(function(x){return x.status==='pending'&&x.date===date&&x.fromGrade===fromPerson.grade&&x.fromName===fromPerson.name});
+      const requestNo=submitted&&submitted.requestNo?submitted.requestNo:'';
+      const text='【当番変更申請'+(requestNo?' #'+requestNo:'')+'】\n'+displayDate(date)+'\n変更前：'+fromPerson.grade+'年・'+displayName(fromPerson.name,fromPerson.grade)+'\n変更後：'+toPerson.grade+'年・'+displayName(toPerson.name,toPerson.grade)+'\n当番変更を申請しました。';
+      result.hidden=false;result.innerHTML='<div class="duty-request-complete"><b>変更申請を受け付けました</b><p>続けて、チームへの連絡のためLINEで変更内容を共有してください。</p><a id="dutyRequestLineShare" class="line-share" target="_blank" rel="noopener noreferrer" href="https://line.me/R/share?text='+encodeURIComponent(text)+'">LINEで共有する</a><small>※当番表への正式な反映は管理者確認後となります。</small></div>';
+      const lineShare=document.getElementById('dutyRequestLineShare');if(lineShare)lineShare.addEventListener('click',function(){setTimeout(function(){const content=document.getElementById('dutyRequestContent'),toggle=document.getElementById('toggleDutyRequest');if(content)content.hidden=true;if(toggle){toggle.setAttribute('aria-expanded','false');toggle.textContent='申請する'}},0)});
+    }catch(e){alert(e.message||'申請できませんでした.')}finally{btn.disabled=false;btn.textContent='変更申請を送信'}
+  }
+  async function requestAdminAction(id,action){
+    const adminPassword=panel.dataset.adminPassword||'';if(!adminPassword)throw new Error('管理画面を開き直してください。');
+    const response=await fetch(REQUEST_API,{method:'POST',credentials:'same-origin',headers:requestHeaders(true),body:JSON.stringify({action:action,id:id})});
+    const body=await response.json().catch(function(){return{}});
+    if(!response.ok)throw new Error(body.error||'処理できませんでした。');
+    requests=normalizeRequestList(body.requests);requestsLoaded=true;renderRequests();syncPendingRequestCount();
   }
   async function deleteRequest(id){
     const item=requests.find(function(x){return x.id===id});if(!item||!confirm('この申請を削除しますか？\n削除後は元に戻せません。'))return;
-    const previous=requests.slice();requests=requests.filter(function(x){return x.id!==id});render();
-    try{await persist('申請を削除しました','当番変更申請を削除しました')}catch(e){requests=previous;render();alert(e.message||'申請を削除できませんでした。')}
+    try{await requestAdminAction(id,'delete');showSaveNotice('申請を削除しました')}catch(e){alert(e.message||'申請を削除できませんでした。')}
   }
   async function decideRequest(id,approve){
-    const item=requests.find(function(x){return x.id===id});if(!item)return;if(!confirm(approve?'この申請を当番表に反映しますか？':'この申請を却下しますか？'))return;const previousReq=requests.slice(),previousChanges=changes.slice();item.status=approve?'approved':'rejected';item.updatedAt=new Date().toISOString();if(approve){const slotGrade=String(item.fromGrade||item.grade||'');const idx=changes.findIndex(function(x){return x.date===item.date&&x.grade===slotGrade&&x.from===item.from});const change={id:idx>=0?changes[idx].id:'change-'+Date.now().toString(36),requestNo:String(item.requestNo||''),date:item.date,grade:slotGrade,from:item.from,to:item.to,toGrade:String(item.toGrade||item.grade||slotGrade),status:'active',createdAt:new Date().toISOString()};if(idx>=0)changes[idx]=change;else changes.push(change)}render();try{await persist(approve?'申請を当番表に反映しました':'申請を却下しました',approve?'当番変更を反映しました':'当番変更申請を却下しました',approve)}catch(e){requests=previousReq;changes=previousChanges;render();alert(e.message||'処理できませんでした。')}
+    const item=requests.find(function(x){return x.id===id});if(!item)return;
+    if(!confirm(approve?'この申請を当番表に反映しますか？':'この申請を却下しますか？'))return;
+    try{
+      await requestAdminAction(id,approve?'approve':'reject');
+      if(approve){await load();showSaveNotice('申請を当番表に反映しました')}else showSaveNotice('申請を却下しました');
+    }catch(e){alert(e.message||'処理できませんでした。')}
   }
   async function removeImage(index){
     const target=images[index];if(!target)return;
@@ -442,12 +460,12 @@
   document.getElementById('dutyRequestRosterDate')?.addEventListener('change',populateRequestForm);document.getElementById('submitDutyRequest')?.addEventListener('click',submitRequest);
   if(hasLegacyChangeForm)pasteChangeBtn.addEventListener('click',pasteChangeText);
   if(hasLegacyChangeForm)saveChangesBtn.addEventListener('click',saveChanges);saveBtn.addEventListener('click',addImages);
-  document.addEventListener('visibilitychange',function(){if(!document.hidden){syncPendingRequestCount();if(panel.dataset.adminPassword)load();}});
-  window.addEventListener('focus',function(){syncPendingRequestCount();if(panel.dataset.adminPassword)load();});
+  document.addEventListener('visibilitychange',function(){if(!document.hidden){syncPendingRequestCount();loadRequests();if(panel.dataset.adminPassword)load();}});
+  window.addEventListener('focus',function(){syncPendingRequestCount();loadRequests();if(panel.dataset.adminPassword)load();});
   try{
     new MutationObserver(function(mutations){
       if(mutations.some(function(m){return m.attributeName==='data-admin-password'})&&panel.dataset.adminPassword)load();
     }).observe(panel,{attributes:true,attributeFilter:['data-admin-password']});
   }catch(e){}
-  loadCache();render();syncPendingRequestCount();load();
+  loadCache();render();syncPendingRequestCount();loadRequests();load();
 })();
