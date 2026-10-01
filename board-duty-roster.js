@@ -264,9 +264,23 @@
 
   async function move(index,direction){const next=index+direction;if(next<0||next>=images.length)return;const previous=images.slice();[images[index],images[next]]=[images[next],images[index]];render();try{await persist('並び順を保存しました','当番表の並び順を変更しました')}catch(e){images=previous;render();alert(e.message||'並び順を保存できませんでした。')}}
 
-  function allRosterNames(){
+  function rosterNamesForDate(date){
     const map=new Map();
-    images.forEach(function(image){const table=image.table;if(!table)return;const grades=table.grades||[2,1];table.rows.forEach(function(row){row.slice(2,6).forEach(function(name,index){const clean=cleanName(name);if(!clean)return;const grade=String(grades[Math.floor(index/2)]);map.set(grade+'|'+clean,{grade:grade,name:clean})})})});
+    if(!/^\d{4}-\d{2}-\d{2}$/.test(String(date||'')))return[];
+    images.forEach(function(image){
+      const table=image.table;if(!table)return;
+      const prefix=table.year+'-'+String(table.month).padStart(2,'0')+'-';
+      if(!String(date).startsWith(prefix))return;
+      const grades=table.grades||[2,1];
+      table.rows.forEach(function(row){
+        if(tableDate(table,row[0])!==date)return;
+        row.slice(2,6).forEach(function(name,index){
+          const clean=cleanName(name);if(!clean)return;
+          const grade=String(grades[Math.floor(index/2)]);
+          map.set(grade+'|'+clean,{grade:grade,name:clean});
+        });
+      });
+    });
     return Array.from(map.values()).sort(function(a,b){return Number(b.grade)-Number(a.grade)||a.name.localeCompare(b.name,'ja')});
   }
   function todayYmd(){const d=new Date();return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0')}
@@ -357,7 +371,7 @@
   function populateRequestForm(){
     const dateSel=document.getElementById('dutyRequestRosterDate'),fromSel=document.getElementById('dutyRequestFrom'),toSel=document.getElementById('dutyRequestTo');if(!dateSel||!fromSel||!toSel)return;
     const current=dateSel.value;dateSel.innerHTML='<option value="">日付を選択してください</option>'+rosterDates().map(function(x){return'<option value="'+x.date+'">'+x.label+'</option>'}).join('');if(Array.from(dateSel.options).some(function(o){return o.value===current}))dateSel.value=current;
-    const names=allRosterNames();let opts='<option value="">選択してください</option>';['3','2','1'].forEach(function(g){const group=names.filter(function(x){return x.grade===g});if(!group.length)return;opts+='<optgroup label="'+g+'年生">'+group.map(function(x){return'<option value="'+escapeHtml(personOptionValue(x))+'">'+g+'年・'+escapeHtml(displayName(x.name,g))+'</option>'}).join('')+'</optgroup>'});
+    const names=rosterNamesForDate(dateSel.value);let opts='<option value="">選択してください</option>';['3','2','1'].forEach(function(g){const group=names.filter(function(x){return x.grade===g});if(!group.length)return;opts+='<optgroup label="'+g+'年生">'+group.map(function(x){return'<option value="'+escapeHtml(personOptionValue(x))+'">'+g+'年・'+escapeHtml(displayName(x.name,g))+'</option>'}).join('')+'</optgroup>'});
     const fv=fromSel.value,tv=toSel.value;fromSel.innerHTML=opts;toSel.innerHTML=opts;if(Array.from(fromSel.options).some(o=>o.value===fv))fromSel.value=fv;if(Array.from(toSel.options).some(o=>o.value===tv))toSel.value=tv;
   }
   async function submitRequest(){
