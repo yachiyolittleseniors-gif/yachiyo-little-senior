@@ -5389,6 +5389,35 @@ body:has(#heroImageEditModal[aria-hidden="false"]) #heroPhotoAdmin{
   display:none!important;
 }
 </style>
+<script id="home-admin-modal-visibility-fix">
+(function(){
+  function modalIsOpen(){
+    return Array.from(document.querySelectorAll('.news-modal')).some(function(modal){return !modal.hidden;}) ||
+      (function(){
+        const modal=document.getElementById('heroImageEditModal');
+        return modal && modal.getAttribute('aria-hidden')==='false';
+      })();
+  }
+  function sync(){
+    const admin=document.getElementById('heroPhotoAdmin');
+    if(!admin)return;
+    if(modalIsOpen()){
+      admin.style.setProperty('display','none','important');
+    }else{
+      admin.style.removeProperty('display');
+    }
+  }
+  function boot(){
+    document.querySelectorAll('.news-modal').forEach(function(modal){
+      new MutationObserver(sync).observe(modal,{attributes:true,attributeFilter:['hidden']});
+    });
+    const imageModal=document.getElementById('heroImageEditModal');
+    if(imageModal)new MutationObserver(sync).observe(imageModal,{attributes:true,attributeFilter:['aria-hidden','style','class']});
+    sync();
+  }
+  if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',boot,{once:true});else boot();
+})();
+</script>
 <style id="home-admin-subtle-color">
 body:not(.photo-admin-on) #heroAdminToggle.unified-admin-toggle{color:rgba(199,154,59,.28)!important}
 body:not(.photo-admin-on) #heroAdminToggle.unified-admin-toggle:focus-visible{color:rgba(199,154,59,.72)!important}
