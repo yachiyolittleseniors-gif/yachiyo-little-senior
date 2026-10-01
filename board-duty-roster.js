@@ -22,6 +22,7 @@
   let changes=[];
   let parsedChanges=[];
   let requests=[];
+  let requestsLoaded=false;
 
 
   if(!list||!tableList||!adminList||!fileInput||!saveBtn||!panel||!changeSection||!changeList||!changeAdminList)return;
@@ -122,8 +123,8 @@
     });
     return images.length!==before;
   }
-  function saveCache(){try{const value=JSON.stringify({initialized:true,images:images,changes:changes,requests:requests});if(value.length<=4*1024*1024)sessionStorage.setItem(CACHE_KEY,value);else sessionStorage.removeItem(CACHE_KEY)}catch(e){}}
-  function loadCache(){try{const cached=normalize(JSON.parse(sessionStorage.getItem(CACHE_KEY)||'null'));if(cached.images.length||cached.changes.length){images=cached.images;changes=cached.changes;requests=cached.requests;render()}}catch(e){sessionStorage.removeItem(CACHE_KEY)}}
+  function saveCache(){try{const value=JSON.stringify({initialized:true,images:images,changes:changes,requests:requestsLoaded?requests:[]});if(value.length<=4*1024*1024)sessionStorage.setItem(CACHE_KEY,value);else sessionStorage.removeItem(CACHE_KEY)}catch(e){}}
+  function loadCache(){try{const cached=normalize(JSON.parse(sessionStorage.getItem(CACHE_KEY)||'null'));if(cached.images.length||cached.changes.length){images=cached.images;changes=cached.changes;render()}}catch(e){sessionStorage.removeItem(CACHE_KEY)}}
 
   function renderChanges(){
     // 通常表示は「今日以降」の変更だけにする。履歴データ自体は削除せず管理画面に保持する。
@@ -169,7 +170,7 @@
       const response=await fetch(API,{cache:'no-store',headers:headers});
       if(!response.ok)throw new Error('load failed');
       const body=await response.json(),normalized=normalize(body.data);
-      images=normalized.images;changes=normalized.changes;requests=normalized.requests;
+      images=normalized.images;changes=normalized.changes;
       const cleaned=cleanupExpiredImages();saveCache();render();syncPendingRequestCount();
       if(cleaned&&panel.dataset.adminPassword){persist('','期限切れの当番表原本を整理しました',false).catch(function(){})}
     }catch(e){render();syncPendingRequestCount()}
@@ -179,6 +180,10 @@
 
   async function persist(successMessage,updateMessage,announceLatest){
     const adminPassword=panel.dataset.adminPassword||'';if(!adminPassword)throw new Error('管理画面を開き直してください。')
+    if(!requestsLoaded){
+      const loaded=await loadRequestDetails();
+      if(!loaded)throw new Error('申請データを確認できないため、保存を中止しました。再読み込みしてからお試しください。');
+    }
     const payload={initialized:true,images:images,changes:changes,requests:requests};if(JSON.stringify(payload).length>7500000){throw new Error('画像の合計容量が大きすぎます。画像を減らしてください。')}
     const response=await fetch(API,{method:'POST',headers:{'content-type':'application/json','x-admin-password':adminPassword},body:JSON.stringify({data:payload,updateMessage:updateMessage||'当番表を更新しました',announceLatest:announceLatest===true})});
     const body=await response.json().catch(function(){return{}});if(!response.ok)throw new Error(body.error||'保存できませんでした。');saveCache();render();syncPendingRequestCount();showSaveNotice(successMessage||'保存しました');if(announceLatest)window.refreshBoardLatestUpdate?.();return true;
@@ -284,13 +289,31 @@
     const name=String(item[side]||'');
     return (grade?grade+'年・':'')+displayName(name,grade);
   }
-  async function syncPendingRequestCount(){
-    // 件数と一覧は別経路。どちらか一方の取得失敗で、もう一方を0件扱いにしない。
+  async function loadRequestDetails(){
     try{
-      const countResponse=await fetch('/.netlify/functions/duty-request-alert',{cache:'no-store'});
-      if(countResponse.ok){
-        const countBody=await countResponse.json();
-        const count=Math.max(0,Number(countBody&&countBody.pendingCount)||0);
+      const accessPassword=sessionStorage.getItem('yachiyoAttendancePass')||'';
+      const response=await fetch('/.netlify/functions/duty-request-details',{
+        cache:'no-store',
+        credentials:'same-origin',
+        headers:{'x-access-password':accessPassword}
+      });
+      if(!response.ok)return false;
+      const body=await response.json();
+      if(!Array.isArray(body&&body.requests))return false;
+      requests=normalize({requests:body.requests}).requests;
+      requestsLoaded=true;
+      renderRequests();
+      return true;
+    }catch(e){return false}
+  }
+
+  async function syncPendingRequestCount(){
+    // 件数は公開用の専用API、一覧は認証付き専用API。通常の当番表読込には申請状態を触らせない。
+    try{
+      const response=await fetch('/.netlify/functions/duty-request-alert',{cache:'no-store'});
+      if(response.ok){
+        const body=await response.json();
+        const count=Math.max(0,Number(body&&body.pendingCount)||0);
         const requestBadge=document.getElementById('dutyRequestPendingBadge');
         if(requestBadge){requestBadge.hidden=false;requestBadge.textContent='申請中 '+count+'件'}
         const statusToggle=document.getElementById('toggleDutyRequestStatus');
@@ -299,23 +322,14 @@
         }
       }
     }catch(e){}
-
-    try{
-      const accessPassword=sessionStorage.getItem('yachiyoAttendancePass')||'';
-      const detailResponse=await fetch('/.netlify/functions/duty-request-details',{
-        cache:'no-store',
-        credentials:'same-origin',
-        headers:{'x-access-password':accessPassword}
-      });
-      if(!detailResponse.ok)return;
-      const detailBody=await detailResponse.json();
-      if(!Array.isArray(detailBody&&detailBody.requests))return;
-      requests=normalize({requests:detailBody.requests}).requests;
-      renderRequests();
-    }catch(e){}
+    await loadRequestDetails();
   }
   function renderRequests(){
     const admin=document.getElementById('dutyRequestAdminList');
+    if(!requestsLoaded){
+      if(admin)admin.innerHTML='<div class="duty-change-preview">申請データを確認中です。</div>';
+      return;
+    }
     const ordered=requests.slice().sort(function(a,b){return String(b.createdAt).localeCompare(String(a.createdAt))});
     const pendingCount=ordered.filter(function(item){return item.status==='pending'}).length;
     const requestBadge=document.getElementById('dutyRequestPendingBadge');
@@ -348,7 +362,7 @@
   async function submitRequest(){
     const date=document.getElementById('dutyRequestRosterDate').value,fromPerson=parsePersonOption(document.getElementById('dutyRequestFrom').value),toPerson=parsePersonOption(document.getElementById('dutyRequestTo').value),btn=document.getElementById('submitDutyRequest'),result=document.getElementById('dutyRequestResult');
     if(!/^\d{4}-\d{2}-\d{2}$/.test(date)||!rosterDates().some(function(x){return x.date===date})||!fromPerson||!toPerson)return alert('登録済みのお当番表から変更日・変更前・変更後を選択してください。');if(fromPerson.grade===toPerson.grade&&fromPerson.name===toPerson.name)return alert('変更前と変更後は別の方を選択してください。');
-    btn.disabled=true;btn.textContent='送信中…';try{const accessPassword=sessionStorage.getItem('yachiyoAttendancePass')||'';const response=await fetch(API,{method:'POST',headers:{'content-type':'application/json','x-access-password':accessPassword},body:JSON.stringify({action:'submitDutyChangeRequest',request:{date:date,fromGrade:fromPerson.grade,from:fromPerson.name,toGrade:toPerson.grade,to:toPerson.name}})});const body=await response.json().catch(function(){return{}});if(!response.ok)throw new Error(body.error||'申請できませんでした。');requests=normalize(body.data).requests;renderRequests();await syncPendingRequestCount();const submitted=requests.slice().sort(function(a,b){return String(b.createdAt).localeCompare(String(a.createdAt))}).find(function(x){return x.status==='pending'&&x.date===date&&x.from===fromPerson.name&&x.to===toPerson.name});const requestNo=submitted&&submitted.requestNo?submitted.requestNo:'';const text='【当番変更申請'+(requestNo?' #'+requestNo:'')+'】\n'+displayDate(date)+'\n変更前：'+fromPerson.grade+'年・'+displayName(fromPerson.name,fromPerson.grade)+'\n変更後：'+toPerson.grade+'年・'+displayName(toPerson.name,toPerson.grade)+'\n当番変更を申請しました。';result.hidden=false;result.innerHTML='<div class="duty-request-complete"><b>変更申請を受け付けました</b><p>続けて、チームへの連絡のためLINEで変更内容を共有してください。</p><a id="dutyRequestLineShare" class="line-share" target="_blank" rel="noopener noreferrer" href="https://line.me/R/share?text='+encodeURIComponent(text)+'">LINEで共有する</a><small>※当番表への正式な反映は管理者確認後となります。</small></div>';const lineShare=document.getElementById('dutyRequestLineShare');if(lineShare)lineShare.addEventListener('click',function(){setTimeout(function(){const content=document.getElementById('dutyRequestContent'),toggle=document.getElementById('toggleDutyRequest');if(content)content.hidden=true;if(toggle){toggle.setAttribute('aria-expanded','false');toggle.textContent='申請する'}},0)});}catch(e){alert(e.message||'申請できませんでした。')}finally{btn.disabled=false;btn.textContent='変更申請を送信'}
+    btn.disabled=true;btn.textContent='送信中…';try{const accessPassword=sessionStorage.getItem('yachiyoAttendancePass')||'';const response=await fetch(API,{method:'POST',headers:{'content-type':'application/json','x-access-password':accessPassword},body:JSON.stringify({action:'submitDutyChangeRequest',request:{date:date,fromGrade:fromPerson.grade,from:fromPerson.name,toGrade:toPerson.grade,to:toPerson.name}})});const body=await response.json().catch(function(){return{}});if(!response.ok)throw new Error(body.error||'申請できませんでした。');requests=normalize(body.data).requests;requestsLoaded=true;renderRequests();await syncPendingRequestCount();const submitted=requests.slice().sort(function(a,b){return String(b.createdAt).localeCompare(String(a.createdAt))}).find(function(x){return x.status==='pending'&&x.date===date&&x.from===fromPerson.name&&x.to===toPerson.name});const requestNo=submitted&&submitted.requestNo?submitted.requestNo:'';const text='【当番変更申請'+(requestNo?' #'+requestNo:'')+'】\n'+displayDate(date)+'\n変更前：'+fromPerson.grade+'年・'+displayName(fromPerson.name,fromPerson.grade)+'\n変更後：'+toPerson.grade+'年・'+displayName(toPerson.name,toPerson.grade)+'\n当番変更を申請しました。';result.hidden=false;result.innerHTML='<div class="duty-request-complete"><b>変更申請を受け付けました</b><p>続けて、チームへの連絡のためLINEで変更内容を共有してください。</p><a id="dutyRequestLineShare" class="line-share" target="_blank" rel="noopener noreferrer" href="https://line.me/R/share?text='+encodeURIComponent(text)+'">LINEで共有する</a><small>※当番表への正式な反映は管理者確認後となります。</small></div>';const lineShare=document.getElementById('dutyRequestLineShare');if(lineShare)lineShare.addEventListener('click',function(){setTimeout(function(){const content=document.getElementById('dutyRequestContent'),toggle=document.getElementById('toggleDutyRequest');if(content)content.hidden=true;if(toggle){toggle.setAttribute('aria-expanded','false');toggle.textContent='申請する'}},0)});}catch(e){alert(e.message||'申請できませんでした。')}finally{btn.disabled=false;btn.textContent='変更申請を送信'}
   }
   async function deleteRequest(id){
     const item=requests.find(function(x){return x.id===id});if(!item||!confirm('この申請を削除しますか？\n削除後は元に戻せません。'))return;
