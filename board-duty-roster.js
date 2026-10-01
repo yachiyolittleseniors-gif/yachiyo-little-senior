@@ -286,16 +286,21 @@
   }
   async function syncPendingRequestCount(){
     try{
-      const response=await fetch('/.netlify/functions/duty-request-alert',{cache:'no-store'});
-      if(!response.ok)return;
-      const body=await response.json();
-      const count=Math.max(0,Number(body&&body.pendingCount)||0);
-      const requestBadge=document.getElementById('dutyRequestPendingBadge');
-      if(requestBadge){requestBadge.hidden=false;requestBadge.textContent='申請中 '+count+'件'}
-      const statusToggle=document.getElementById('toggleDutyRequestStatus');
-      if(statusToggle&&statusToggle.getAttribute('aria-expanded')!=='true'){
-        statusToggle.textContent=count?'申請内容を見る（申請中 '+count+'件）':'申請内容を見る';
+      const accessPassword=sessionStorage.getItem('yachiyoAttendancePass')||'';
+      const response=await fetch('/.netlify/functions/duty-request-alert?details=1',{cache:'no-store',headers:{'x-access-password':accessPassword}});
+      if(!response.ok){
+        const fallback=await fetch('/.netlify/functions/duty-request-alert',{cache:'no-store'});
+        if(!fallback.ok)return;
+        const basic=await fallback.json();
+        const count=Math.max(0,Number(basic&&basic.pendingCount)||0);
+        const requestBadge=document.getElementById('dutyRequestPendingBadge');
+        if(requestBadge){requestBadge.hidden=false;requestBadge.textContent='申請中 '+count+'件'}
+        return;
       }
+      const body=await response.json();
+      const normalized=normalize({requests:Array.isArray(body&&body.requests)?body.requests:[]});
+      requests=normalized.requests;
+      renderRequests();
     }catch(e){}
   }
   function renderRequests(){
