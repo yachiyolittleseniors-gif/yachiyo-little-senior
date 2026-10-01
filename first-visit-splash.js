@@ -341,25 +341,9 @@ function leave(){
   cover.classList.add('is-leaving');
   exitTimer=setTimeout(remove,300);
 }
-function awaitHero(){
-  const ready=window.__yachiyoHeroReady;
-  if(!ready||typeof ready.then!=='function')return;
-  Promise.resolve(ready).catch(()=>false).then(()=>{
-    if(closed||leaving)return;
-    clearTimeout(guardTimer);
-    // Allow the decoded background to paint behind the cover before fading.
-    requestAnimationFrame(()=>requestAnimationFrame(()=>{
-      if(closed||leaving)return;
-      exitTimer=setTimeout(leave,Math.max(0,1500-(performance.now()-openedAt)));
-    }));
-  });
-}
-// Never let a stalled hero request trap the visitor on the opening screen.
-guardTimer=setTimeout(leave,3500);
-if(window.__yachiyoHeroReady){awaitHero();}
-else if(document.readyState==='loading'){
-  document.addEventListener('DOMContentLoaded',awaitHero,{once:true});
-}else{awaitHero();}
+// Opening duration is fixed: do not block the transition on hero-image readiness.
+// The hero continues preloading behind the opening screen.
+guardTimer=setTimeout(leave,Math.max(0,1500-(performance.now()-openedAt)));
 openingMotion();
 window.addEventListener('pagehide',remove,{once:true});
 })();
