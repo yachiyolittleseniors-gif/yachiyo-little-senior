@@ -5293,6 +5293,14 @@ body:not(.photo-admin-on) #heroAdminToggle.unified-admin-toggle:focus-visible{co
 <style id="hero-position-zoom-style">
 #heroPhotoEdit{display:none!important;text-decoration:none!important}
 @media(max-width:600px){
+  #home > .hero{
+    --hero-edit-x:58%;
+    --hero-edit-y:50%;
+    --hero-edit-zoom:100%;
+    background-position:center center,var(--hero-edit-x) var(--hero-edit-y)!important;
+    background-size:auto,auto var(--hero-edit-zoom)!important;
+    background-repeat:no-repeat,no-repeat!important;
+  }
   body.photo-admin-on #heroPhotoEdit{
     display:flex!important;
     align-items:center!important;
@@ -5420,7 +5428,7 @@ body:not(.photo-admin-on) #heroAdminToggle.unified-admin-toggle:focus-visible{co
     </div>
   </div>
 </div>
-<script src="./hero-image-editor.js?v=20261001-2" defer></script>
+<script src="./hero-image-editor.js?v=20261001-3" defer></script>
 
 </body>
 </html>
