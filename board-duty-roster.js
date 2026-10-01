@@ -399,8 +399,10 @@
       requests=normalizeRequestList(body.requests);requestsLoaded=true;renderRequests();syncPendingRequestCount();
       const submitted=requests.slice().sort(function(a,b){return String(b.updatedAt||b.createdAt).localeCompare(String(a.updatedAt||a.createdAt))}).find(function(x){return x.status==='pending'&&x.date===date&&x.fromGrade===fromPerson.grade&&x.fromName===fromPerson.name});
       const requestNo=submitted&&submitted.requestNo?submitted.requestNo:'';
-      const text='【当番変更申請'+(requestNo?' #'+requestNo:'')+'】\n'+displayDate(date)+'\n変更前：'+fromPerson.grade+'年・'+octoberDisplayName(fromPerson.name,fromPerson.grade,date)+'\n変更後：'+toPerson.grade+'年・'+octoberDisplayName(toPerson.name,toPerson.grade,date)+'\n当番変更を申請しました。';
-      result.hidden=false;result.innerHTML='<div class="duty-request-complete"><b>変更申請を受け付けました</b><p>続けて、チームへの連絡のためLINEで変更内容を共有してください。</p><a id="dutyRequestLineShare" class="line-share" target="_blank" rel="noopener noreferrer" href="https://line.me/R/share?text='+encodeURIComponent(text)+'">LINEで共有する</a><small>※当番表への正式な反映は管理者確認後となります。</small></div>';
+      const approvalUrl=String(body.approvalUrl||'');
+      const text='【当番変更申請'+(requestNo?' #'+requestNo:'')+'】\n'+displayDate(date)+'\n変更前：'+fromPerson.grade+'年・'+octoberDisplayName(fromPerson.name,fromPerson.grade,date)+'\n変更後：'+toPerson.grade+'年・'+octoberDisplayName(toPerson.name,toPerson.grade,date)+'\n当番変更を申請しました。'+(approvalUrl?'\n\n【交代相手の方へ】\n下の専用リンクから内容を確認して承認してください。\n'+approvalUrl:'');
+      const note=approvalUrl?'※交代相手が専用リンクから承認すると、当番表へ自動反映されます。':'※当番表への正式な反映は管理者確認後となります。';
+      result.hidden=false;result.innerHTML='<div class="duty-request-complete"><b>変更申請を受け付けました</b><p>続けて、チームへの連絡のためLINEで変更内容を共有してください。</p><a id="dutyRequestLineShare" class="line-share" target="_blank" rel="noopener noreferrer" href="https://line.me/R/share?text='+encodeURIComponent(text)+'">LINEで共有する</a><small>'+escapeHtml(note)+'</small></div>';
       const lineShare=document.getElementById('dutyRequestLineShare');if(lineShare)lineShare.addEventListener('click',function(){setTimeout(function(){const content=document.getElementById('dutyRequestContent'),toggle=document.getElementById('toggleDutyRequest');if(content)content.hidden=true;if(toggle){toggle.setAttribute('aria-expanded','false');toggle.textContent='申請する'}},0)});
     }catch(e){alert(e.message||'申請できませんでした.')}finally{btn.disabled=false;btn.textContent='変更申請を送信'}
   }
