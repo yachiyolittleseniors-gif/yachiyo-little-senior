@@ -5310,6 +5310,44 @@ body:not(.photo-admin-on) #heroAdminToggle.unified-admin-toggle:focus-visible{co
   }
   #heroPhotoEditToggle:checked + #heroPhotoEdit .hero-edit-off{display:none!important}
   #heroPhotoEditToggle:checked + #heroPhotoEdit .hero-edit-on{display:inline!important}
+
+  /* Photo is its own layer so dragging/scaling cannot be cancelled by background shorthand rules */
+  #home > .hero{
+    --hero-shift-x:0%;
+    --hero-shift-y:0%;
+    --hero-scale:1;
+    background:#071426!important;
+    isolation:isolate!important;
+  }
+  #home > .hero::before{
+    content:""!important;
+    position:absolute!important;
+    inset:-8%!important;
+    z-index:0!important;
+    display:block!important;
+    background-image:var(--hero-photo)!important;
+    background-repeat:no-repeat!important;
+    background-position:center center!important;
+    background-size:cover!important;
+    transform:translate3d(var(--hero-shift-x),var(--hero-shift-y),0) scale(var(--hero-scale))!important;
+    transform-origin:center center!important;
+    will-change:transform!important;
+    pointer-events:none!important;
+  }
+  #home > .hero::after{
+    content:""!important;
+    position:absolute!important;
+    inset:0!important;
+    z-index:1!important;
+    display:block!important;
+    background:linear-gradient(90deg,rgba(4,12,22,.72) 0%,rgba(4,12,22,.47) 43%,rgba(4,12,22,.18) 100%)!important;
+    pointer-events:none!important;
+  }
+  #home > .hero.hero-overlay-soft::after{
+    background:linear-gradient(90deg,rgba(4,12,22,.48) 0%,rgba(4,12,22,.28) 43%,rgba(4,12,22,.08) 100%)!important;
+  }
+  #home > .hero .hero-inner{position:relative!important;z-index:2!important}
+
   body:has(#heroPhotoEditToggle:checked) #home > .hero{
     touch-action:none!important;
     -webkit-user-select:none!important;
@@ -5328,25 +5366,17 @@ body:not(.photo-admin-on) #heroAdminToggle.unified-admin-toggle:focus-visible{co
   if(!hero||!toggle)return;
 
   const api='/.netlify/functions/site-data?section=hero-position-settings';
-  let x=58,y=50,zoom=120;
-  let drag=null;
-  let pinch=null;
-  let saveTimer=0;
+  let shiftX=0,shiftY=0,scale=1;
+  let drag=null,pinch=null,saveTimer=0;
 
   const clamp=(v,min,max)=>Math.max(min,Math.min(max,v));
   const distance=(a,b)=>Math.hypot(b.clientX-a.clientX,b.clientY-a.clientY);
   const editing=()=>toggle.checked&&document.body.classList.contains('photo-admin-on');
 
-  function setPhotoLayer(){
-    // Keep the dark overlay fixed; move/scale only the actual photo layer.
-    hero.style.setProperty(
-      'background-image',
-      'linear-gradient(90deg,rgba(4,12,22,.56) 0%,rgba(4,12,22,.34) 43%,rgba(4,12,22,.10) 100%),var(--hero-photo)',
-      'important'
-    );
-    hero.style.setProperty('background-repeat','no-repeat,no-repeat','important');
-    hero.style.setProperty('background-position','center center,'+x+'% '+y+'%','important');
-    hero.style.setProperty('background-size','100% 100%,auto '+zoom+'%','important');
+  function apply(){
+    hero.style.setProperty('--hero-shift-x',shiftX+'%');
+    hero.style.setProperty('--hero-shift-y',shiftY+'%');
+    hero.style.setProperty('--hero-scale',String(scale));
   }
   function flash(msg){if(window.showSaveNotice)window.showSaveNotice(msg)}
   async function save(){
@@ -5356,7 +5386,7 @@ body:not(.photo-admin-on) #heroAdminToggle.unified-admin-toggle:focus-visible{co
       const r=await fetch(api,{
         method:'POST',
         headers:{'content-type':'application/json','x-admin-password':pw},
-        body:JSON.stringify({data:{x,y,zoom,updatedAt:new Date().toISOString()}})
+        body:JSON.stringify({data:{mode:'transform',shiftX,shiftY,scale,updatedAt:new Date().toISOString()}})
       });
       if(!r.ok)throw new Error();
       flash('画像位置を保存しました');
@@ -5366,25 +5396,20 @@ body:not(.photo-admin-on) #heroAdminToggle.unified-admin-toggle:focus-visible{co
 
   toggle.addEventListener('change',function(){
     drag=null;pinch=null;
-    if(toggle.checked){
-      // Start slightly enlarged so vertical dragging is immediately visible.
-      if(zoom<110)zoom=120;
-      setPhotoLayer();
-      flash('1本指で移動・2本指で拡大縮小');
-    }else{
-      queueSave();
-    }
+    if(toggle.checked)flash('1本指で移動・2本指で拡大縮小');
+    else queueSave();
   });
 
   hero.addEventListener('touchstart',function(e){
     if(!editing())return;
     e.preventDefault();
+    e.stopPropagation();
     if(e.touches.length===1){
       const t=e.touches[0];
-      drag={sx:t.clientX,sy:t.clientY,x,y};
+      drag={sx:t.clientX,sy:t.clientY,shiftX,shiftY};
       pinch=null;
     }else if(e.touches.length===2){
-      pinch={distance:distance(e.touches[0],e.touches[1]),zoom};
+      pinch={distance:distance(e.touches[0],e.touches[1]),scale};
       drag=null;
     }
   },{passive:false,capture:true});
@@ -5392,31 +5417,30 @@ body:not(.photo-admin-on) #heroAdminToggle.unified-admin-toggle:focus-visible{co
   hero.addEventListener('touchmove',function(e){
     if(!editing())return;
     e.preventDefault();
+    e.stopPropagation();
 
     if(e.touches.length===1){
       const t=e.touches[0];
-      if(!drag)drag={sx:t.clientX,sy:t.clientY,x,y};
-      const dx=t.clientX-drag.sx;
-      const dy=t.clientY-drag.sy;
-      x=clamp(drag.x-(dx/hero.clientWidth)*100,0,100);
-      y=clamp(drag.y-(dy/hero.clientHeight)*100,0,100);
-      setPhotoLayer();
+      if(!drag)drag={sx:t.clientX,sy:t.clientY,shiftX,shiftY};
+      shiftX=clamp(drag.shiftX+((t.clientX-drag.sx)/hero.clientWidth)*100,-35,35);
+      shiftY=clamp(drag.shiftY+((t.clientY-drag.sy)/hero.clientHeight)*100,-35,35);
+      apply();
     }else if(e.touches.length===2){
-      if(!pinch)pinch={distance:distance(e.touches[0],e.touches[1]),zoom};
-      zoom=clamp(pinch.zoom*(distance(e.touches[0],e.touches[1])/pinch.distance),105,240);
-      setPhotoLayer();
+      if(!pinch)pinch={distance:distance(e.touches[0],e.touches[1]),scale};
+      scale=clamp(pinch.scale*(distance(e.touches[0],e.touches[1])/pinch.distance),1,2.2);
+      apply();
     }
   },{passive:false,capture:true});
 
   hero.addEventListener('touchend',function(e){
     if(!editing())return;
     e.preventDefault();
-    if(e.touches.length===1){
-      const t=e.touches[0];
-      drag={sx:t.clientX,sy:t.clientY,x,y};
-      pinch=null;
-    }else{
+    if(e.touches.length===0){
       drag=null;pinch=null;queueSave();
+    }else if(e.touches.length===1){
+      const t=e.touches[0];
+      drag={sx:t.clientX,sy:t.clientY,shiftX,shiftY};
+      pinch=null;
     }
   },{passive:false,capture:true});
 
@@ -5430,14 +5454,15 @@ body:not(.photo-admin-on) #heroAdminToggle.unified-admin-toggle:focus-visible{co
       const r=await fetch(api,{cache:'no-store'});
       if(r.ok){
         const j=await r.json();
-        if(j&&j.data){
-          if(Number.isFinite(+j.data.x))x=clamp(+j.data.x,0,100);
-          if(Number.isFinite(+j.data.y))y=clamp(+j.data.y,0,100);
-          if(Number.isFinite(+j.data.zoom))zoom=clamp(+j.data.zoom,105,240);
+        const d=j&&j.data;
+        if(d&&d.mode==='transform'){
+          if(Number.isFinite(+d.shiftX))shiftX=clamp(+d.shiftX,-35,35);
+          if(Number.isFinite(+d.shiftY))shiftY=clamp(+d.shiftY,-35,35);
+          if(Number.isFinite(+d.scale))scale=clamp(+d.scale,1,2.2);
         }
       }
     }catch(e){}
-    setPhotoLayer();
+    apply();
   })();
 })();
 </script>
