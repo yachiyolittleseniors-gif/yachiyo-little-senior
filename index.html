@@ -2125,8 +2125,8 @@ img,video,iframe{max-width:100%}
 </script>
 <style>
 :root{--hero-photo:none}
-#heroPhotoAdmin{position:fixed;right:16px;bottom:16px;z-index:9998;display:none;gap:8px;align-items:center;justify-content:flex-end;flex-wrap:wrap;max-width:calc(100vw - 32px)}
-#heroPhotoAdmin button,#heroPhotoAdmin label{border:1px solid rgba(212,175,55,.75);background:#071426;color:#e2bd67;border-radius:999px;padding:10px 14px;font-size:12px;font-weight:700;box-shadow:0 5px 18px rgba(0,0,0,.22);cursor:pointer}
+#heroPhotoAdmin{position:fixed;right:16px;bottom:16px;z-index:40000;display:none;gap:8px;align-items:center;justify-content:flex-end;flex-wrap:wrap;max-width:calc(100vw - 32px)}
+#heroPhotoAdmin button,#heroPhotoAdmin label,#heroPhotoAdmin a{border:1px solid rgba(212,175,55,.75);background:#071426;color:#e2bd67;border-radius:999px;padding:10px 14px;font-size:12px;font-weight:700;box-shadow:0 5px 18px rgba(0,0,0,.22);cursor:pointer}
 #heroPhotoAdmin label{display:none;background:#b48a32;color:#fff}
 #heroPhotoInput{display:none}
 #heroOverlayControl{display:none!important;align-items:center;gap:8px;user-select:none}
@@ -4033,7 +4033,7 @@ function openProtectedArea(type){
 <button data-nosnippet="" id="heroAdminToggle" type="button">管理</button>
 <label data-nosnippet="" for="heroPhotoInput" id="heroPhotoChange">トップの写真を変更</label>
 <button class="hero-announcement-admin" data-nosnippet="" id="heroAnnouncementEdit" type="button">トップお知らせ編集</button>
-<button data-nosnippet="" id="heroPhotoEdit" type="button">画像を編集</button>
+<a data-nosnippet="" id="heroPhotoEdit" href="#heroImageEditModal">画像を編集</a>
 <label data-nosnippet="" id="heroOverlayControl"><input id="heroOverlayWeak" type="checkbox" autocomplete="off"/><span>オーバーレイを弱める</span></label>
 <input accept="image/*" id="heroPhotoInput" type="file"/>
 </div>
@@ -5291,7 +5291,7 @@ body:not(.photo-admin-on) #heroAdminToggle.unified-admin-toggle:focus-visible{co
 </style>
 
 <style id="hero-position-zoom-style">
-#heroPhotoEdit{display:none!important}
+#heroPhotoEdit{display:none!important;text-decoration:none!important}
 @media(max-width:600px){
   body.photo-admin-on #heroPhotoEdit{
     display:flex!important;
@@ -5315,7 +5315,7 @@ body:not(.photo-admin-on) #heroAdminToggle.unified-admin-toggle:focus-visible{co
   backdrop-filter:blur(8px);
   -webkit-backdrop-filter:blur(8px);
 }
-#heroImageEditModal.show{display:flex}
+#heroImageEditModal.show,#heroImageEditModal:target{display:flex}
 #heroImageEditCard{
   width:min(430px,100%);
   max-height:calc(100dvh - 36px);
@@ -5373,13 +5373,13 @@ body:not(.photo-admin-on) #heroAdminToggle.unified-admin-toggle:focus-visible{co
   grid-template-columns:1fr 1fr;
   gap:10px;
 }
-#heroImageEditActions button{
+#heroImageEditActions button,#heroImageEditActions a{
   min-height:46px;
   border-radius:999px;
   border:1px solid rgba(226,189,103,.78);
   font-weight:800;
 }
-#heroImageEditCancel{background:transparent;color:#e2bd67}
+#heroImageEditCancel{display:flex;align-items:center;justify-content:center;text-decoration:none;background:transparent;color:#e2bd67}
 #heroImageEditSave{background:#c79a3b;color:#071426}
 </style>
 <div id="heroImageEditModal" aria-hidden="true">
@@ -5391,7 +5391,7 @@ body:not(.photo-admin-on) #heroAdminToggle.unified-admin-toggle:focus-visible{co
     </div>
     <p id="heroImageEditHelp">1本指で位置を移動・2本指で拡大縮小</p>
     <div id="heroImageEditActions">
-      <button id="heroImageEditCancel" type="button">キャンセル</button>
+      <a id="heroImageEditCancel" href="#" role="button">キャンセル</a>
       <button id="heroImageEditSave" type="button">保存</button>
     </div>
   </div>
@@ -5441,10 +5441,23 @@ body:not(.photo-admin-on) #heroAdminToggle.unified-admin-toggle:focus-visible{co
   }
   function flash(msg){if(window.showSaveNotice)window.showSaveNotice(msg)}
 
-  editBtn.addEventListener('click',function(event){ event.preventDefault(); event.stopPropagation(); openModal(); });
+  editBtn.addEventListener('click',function(){
+    // href="#heroImageEditModal" opens natively; JS only synchronizes state.
+    draft={...saved};
+    applyPreview();
+    setTimeout(function(){
+      modal.classList.add('show');
+      modal.setAttribute('aria-hidden','false');
+      document.documentElement.style.overflow='hidden';
+      document.body.style.overflow='hidden';
+    },0);
+  });
 
   cancel.addEventListener('click',function(){
     closeModal();
+    if(location.hash==='#heroImageEditModal'){
+      history.replaceState(null,'',location.pathname+location.search);
+    }
   });
 
   saveBtn.addEventListener('click',async function(){
