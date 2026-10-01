@@ -48,6 +48,7 @@ const allowed = new Set([
   "ground-photos",
   "hero-announcement",
   "hero-overlay-settings",
+  "hero-position-settings",
   "recruitment-settings",
   "news",
   "rules",
