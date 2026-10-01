@@ -1598,14 +1598,44 @@ export default async (request, context) => {
         });
       });
       if (!dateMatchesRoster) return json({ error: "変更前の名前が現在の当番表と一致しません。当番表を確認してもう一度選択してください。" }, 400);
-      const requests = Array.isArray(current.requests) ? current.requests : [];
-      if (requests.length >= 200) return json({ error: "申請の保存上限に達しています。管理者へ連絡してください。" }, 400);
+      let requests = Array.isArray(current.requests) ? current.requests.slice() : [];
       const now = new Date().toISOString();
-      const usedRequestNos = new Set(requests.map((item) => String(item?.requestNo || "").toUpperCase()));
+      const samePendingIndexes = [];
+      requests.forEach((item,index) => {
+        if (
+          item &&
+          String(item.status || "pending") === "pending" &&
+          String(item.date || "") === date &&
+          String(item.fromGrade || item.grade || "") === fromGrade &&
+          cleanDutyName(item.from) === cleanDutyName(from)
+        ) samePendingIndexes.push(index);
+      });
       let requestSeq = Number(current.requestSeq || 0);
-      let requestNo = "";
-      do { requestSeq += 1; requestNo = `A${String(requestSeq).padStart(3, "0")}`; } while (usedRequestNos.has(requestNo));
-      requests.push({ id: `request-${crypto.randomUUID()}`, requestNo, date, grade:fromGrade, fromGrade, from, toGrade, to, note:"", status:"pending", createdAt:now, updatedAt:now });
+      if (samePendingIndexes.length) {
+        const keepIndex = samePendingIndexes[0];
+        const existing = requests[keepIndex] || {};
+        requests[keepIndex] = {
+          ...existing,
+          date,
+          grade:fromGrade,
+          fromGrade,
+          from,
+          toGrade,
+          to,
+          note:"",
+          status:"pending",
+          updatedAt:now,
+          createdAt:String(existing.createdAt || now)
+        };
+        const remove = new Set(samePendingIndexes.slice(1));
+        requests = requests.filter((_,index) => !remove.has(index));
+      } else {
+        if (requests.length >= 200) return json({ error: "申請の保存上限に達しています。管理者へ連絡してください。" }, 400);
+        const usedRequestNos = new Set(requests.map((item) => String(item?.requestNo || "").toUpperCase()));
+        let requestNo = "";
+        do { requestSeq += 1; requestNo = `A${String(requestSeq).padStart(3, "0")}`; } while (usedRequestNos.has(requestNo));
+        requests.push({ id: `request-${crypto.randomUUID()}`, requestNo, date, grade:fromGrade, fromGrade, from, toGrade, to, note:"", status:"pending", createdAt:now, updatedAt:now });
+      }
       const updated = { ...current, initialized:true, requestSeq, images:Array.isArray(current.images)?current.images:[], changes:Array.isArray(current.changes)?current.changes:[], requests };
       await store.setJSON(key, updated);
       return json({ ok:true, data:updated });
