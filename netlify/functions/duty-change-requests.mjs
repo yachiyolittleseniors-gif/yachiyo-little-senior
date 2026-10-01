@@ -65,23 +65,47 @@ function nextRequestNo(data){
   return{seq,value};
 }
 async function loadData(store){
+  let data;
   const existing=await store.get(KEY,{type:"json",consistency:"strong"});
   if(existing?.version===1&&Array.isArray(existing.requests)){
-    const requests=dedupePending(existing.requests.map(normalizeItem).filter(Boolean));
-    return{version:1,requestSeq:Math.max(0,Number(existing.requestSeq)||0),requests};
+    data={version:1,requestSeq:Math.max(0,Number(existing.requestSeq)||0),requests:dedupePending(existing.requests.map(normalizeItem).filter(Boolean))};
+  }else{
+    // One-time safe migration from the old combined duty-roster document.
+    const legacy=await store.get(LEGACY_KEY,{type:"json",consistency:"strong"});
+    const legacyRequests=Array.isArray(legacy?.requests)?legacy.requests:[];
+    const migrated=dedupePending(legacyRequests.map(normalizeItem).filter(Boolean));
+    let seq=Math.max(0,Number(legacy?.requestSeq)||0);
+    for(const item of migrated){
+      const m=/^A(\d+)$/.exec(String(item.requestNo||"").toUpperCase());
+      if(m)seq=Math.max(seq,Number(m[1])||0);
+    }
+    data={version:1,requestSeq:seq,requests:migrated,migratedAt:new Date().toISOString()};
+    await store.setJSON(KEY,data);
   }
 
-  // One-time safe migration from the old combined duty-roster document.
-  const legacy=await store.get(LEGACY_KEY,{type:"json",consistency:"strong"});
-  const legacyRequests=Array.isArray(legacy?.requests)?legacy.requests:[];
-  const migrated=dedupePending(legacyRequests.map(normalizeItem).filter(Boolean));
-  let seq=Math.max(0,Number(legacy?.requestSeq)||0);
-  for(const item of migrated){
-    const m=/^A(\d+)$/.exec(String(item.requestNo||"").toUpperCase());
-    if(m)seq=Math.max(seq,Number(m[1])||0);
-  }
-  const data={version:1,requestSeq:seq,requests:migrated,migratedAt:new Date().toISOString()};
-  await store.setJSON(KEY,data);
+  // "反映済み" は当番表側に実際の変更履歴が存在する時だけ成立する。
+  const roster=await store.get(LEGACY_KEY,{type:"json",consistency:"strong"})||{};
+  const changes=Array.isArray(roster.changes)?roster.changes:[];
+  let reconciled=false;
+  data.requests=data.requests.map(item=>{
+    if(item.status!=="approved")return item;
+    const reflected=changes.some(change=>
+      String(change?.status||"active")!=="cancelled" &&
+      (
+        (item.requestNo&&String(change?.requestNo||"")===item.requestNo) ||
+        (
+          String(change?.date||"")===item.date &&
+          String(change?.grade||"")===item.fromGrade &&
+          cleanName(change?.from)===item.fromName
+        )
+      )
+    );
+    if(reflected)return item;
+    reconciled=true;
+    return{...item,status:"pending",updatedAt:new Date().toISOString()};
+  });
+  data.requests=dedupePending(data.requests);
+  if(reconciled)await store.setJSON(KEY,data);
   return data;
 }
 async function boardAccess(store,request,context){
@@ -173,6 +197,9 @@ export default async (request,context)=>{
     if(action==="approve"){
       if(item.status!=="pending")return json({error:"この申請は処理済みです。"},409);
       const roster=await store.get(LEGACY_KEY,{type:"json",consistency:"strong"})||{initialized:true,images:[],changes:[]};
+      if(!requestMatchesRoster(roster,item.date,item.fromGrade,item.fromName)){
+        return json({error:"対象月の当番表が登録されていないか、変更前の担当者が一致しません。"},409);
+      }
       const changes=Array.isArray(roster.changes)?roster.changes.slice():[];
       const cidx=changes.findIndex(x=>String(x?.date||"")===item.date&&String(x?.grade||"")===item.fromGrade&&cleanName(x?.from)===item.fromName);
       const change={
@@ -190,12 +217,6 @@ export default async (request,context)=>{
     if(action==="reject"){
       if(item.status!=="pending")return json({error:"この申請は処理済みです。"},409);
       data.requests[idx]={...item,status:"rejected",updatedAt:new Date().toISOString()};
-      await store.setJSON(KEY,data);
-      return json({ok:true,...publicData(data)});
-    }
-
-    if(action==="delete"){
-      data.requests.splice(idx,1);
       await store.setJSON(KEY,data);
       return json({ok:true,...publicData(data)});
     }
