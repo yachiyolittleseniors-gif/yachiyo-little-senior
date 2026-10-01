@@ -7,6 +7,9 @@ const STORE_NAME="yachiyo-public-site";
 const KEY="content/duty-change-requests.json";
 const LEGACY_KEY="content/duty-roster.json";
 const MAX_REQUESTS=300;
+// 準備中機能。true にすると、申請時に交代相手向けの1回限り承認リンクを発行する。
+const PARTNER_APPROVAL_ENABLED=false;
+const APPROVAL_TTL_MS=24*60*60*1000;
 
 function json(body,status=200,headers={}){
   return new Response(JSON.stringify(body),{
@@ -25,6 +28,18 @@ function cleanName(value){return String(value||"").trim().replace(/[　\s]+/g," 
 function validGrade(value){return ["1","2","3"].includes(String(value||""))}
 function validDate(value){return /^\d{4}-\d{2}-\d{2}$/.test(String(value||""))}
 function normalizeStatus(value){return ["pending","approved","rejected"].includes(String(value))?String(value):"pending"}
+async function sha256(value){
+  const bytes=new TextEncoder().encode(String(value||""));
+  const digest=await crypto.subtle.digest("SHA-256",bytes);
+  return Array.from(new Uint8Array(digest)).map(b=>b.toString(16).padStart(2,"0")).join("");
+}
+function newApprovalToken(){
+  return crypto.randomUUID().replace(/-/g,"")+crypto.randomUUID().replace(/-/g,"");
+}
+function approvalUrl(request,token){
+  const url=new URL(request.url);
+  return `${url.origin}/duty-approve.html?t=${encodeURIComponent(token)}`;
+}
 function normalizeItem(item,index=0){
   const fromGrade=String(item?.fromGrade||item?.grade||"");
   const toGrade=String(item?.toGrade||item?.grade||fromGrade||"");
@@ -41,7 +56,10 @@ function normalizeItem(item,index=0){
     toName,
     status:normalizeStatus(item?.status),
     createdAt:String(item?.createdAt||"").slice(0,60),
-    updatedAt:String(item?.updatedAt||"").slice(0,60)
+    updatedAt:String(item?.updatedAt||"").slice(0,60),
+    approvalTokenHash:String(item?.approvalTokenHash||"").slice(0,128),
+    approvalExpiresAt:String(item?.approvalExpiresAt||"").slice(0,60),
+    partnerApprovedAt:String(item?.partnerApprovedAt||"").slice(0,60)
   };
 }
 function dedupePending(items){
@@ -116,9 +134,17 @@ async function boardAccess(store,request,context){
 async function adminAccess(store,request,context){
   return verifyAdminPassword({store,request,context,expectedPassword:process.env.ADMIN_PASSWORD||""});
 }
+function publicRequest(item){
+  return{
+    id:item.id,requestNo:item.requestNo,date:item.date,
+    fromGrade:item.fromGrade,fromName:item.fromName,toGrade:item.toGrade,toName:item.toName,
+    status:item.status,createdAt:item.createdAt,updatedAt:item.updatedAt,
+    partnerApprovedAt:item.partnerApprovedAt||""
+  };
+}
 function publicData(data){
   return{
-    requests:data.requests.map(item=>({...item})),
+    requests:data.requests.map(publicRequest),
     pendingCount:data.requests.filter(item=>item.status==="pending").length
   };
 }
@@ -138,6 +164,39 @@ function requestMatchesRoster(roster,date,fromGrade,fromName){
   });
 }
 
+
+async function applyRequestToRoster(store,item){
+  const roster=await store.get(LEGACY_KEY,{type:"json",consistency:"strong"})||{initialized:true,images:[],changes:[]};
+  if(!requestMatchesRoster(roster,item.date,item.fromGrade,item.fromName)){
+    return{ok:false,error:"対象月の当番表が登録されていないか、変更前の担当者が一致しません。"};
+  }
+  const changes=Array.isArray(roster.changes)?roster.changes.slice():[];
+  const cidx=changes.findIndex(x=>String(x?.date||"")===item.date&&String(x?.grade||"")===item.fromGrade&&cleanName(x?.from)===item.fromName);
+  const change={
+    id:cidx>=0?String(changes[cidx].id||`change-${crypto.randomUUID()}`):`change-${crypto.randomUUID()}`,
+    requestNo:item.requestNo,date:item.date,grade:item.fromGrade,from:item.fromName,to:item.toName,toGrade:item.toGrade,
+    status:"active",createdAt:new Date().toISOString()
+  };
+  if(cidx>=0)changes[cidx]=change;else changes.push(change);
+  await store.setJSON(LEGACY_KEY,{...roster,changes});
+  return{ok:true};
+}
+
+async function findRequestByApprovalToken(data,token){
+  if(!token||String(token).length<40)return null;
+  const hash=await sha256(token);
+  return data.requests.find(item=>item.status==="pending"&&item.approvalTokenHash&&item.approvalTokenHash===hash)||null;
+}
+
+function approvalPreview(item){
+  return{
+    requestNo:item.requestNo,date:item.date,
+    fromGrade:item.fromGrade,fromName:item.fromName,
+    toGrade:item.toGrade,toName:item.toName,
+    expiresAt:item.approvalExpiresAt
+  };
+}
+
 export default async (request,context)=>{
   const store=getStore({name:STORE_NAME,consistency:"strong"});
   try{
@@ -151,6 +210,24 @@ export default async (request,context)=>{
     let body;
     try{body=await request.json();}catch{return json({error:"invalid json"},400);}
     const action=String(body?.action||"");
+
+    if(action==="preview-partner-approval"||action==="partner-approve"){
+      if(!PARTNER_APPROVAL_ENABLED)return json({error:"この承認方式は現在準備中です。"},404);
+      const data=await loadData(store);
+      const token=String(body?.token||"");
+      const item=await findRequestByApprovalToken(data,token);
+      if(!item)return json({error:"承認リンクが無効、またはすでに使用済みです。"},404);
+      const expires=Date.parse(item.approvalExpiresAt||"");
+      if(!Number.isFinite(expires)||Date.now()>expires)return json({error:"承認リンクの有効期限が切れています。申請者に再申請を依頼してください。"},410);
+      if(action==="preview-partner-approval")return json({ok:true,request:approvalPreview(item)});
+      const applied=await applyRequestToRoster(store,item);
+      if(!applied.ok)return json({error:applied.error},409);
+      const idx=data.requests.findIndex(x=>x.id===item.id);
+      const now=new Date().toISOString();
+      data.requests[idx]={...item,status:"approved",partnerApprovedAt:now,updatedAt:now,approvalTokenHash:"",approvalExpiresAt:""};
+      await store.setJSON(KEY,data);
+      return json({ok:true,message:"承認しました。当番表へ反映されました。"});
+    }
 
     if(action==="submit"){
       if(!(await boardAccess(store,request,context)))return json({error:"unauthorized"},401);
@@ -170,19 +247,29 @@ export default async (request,context)=>{
       const data=await loadData(store);
       const now=new Date().toISOString();
       const idx=data.requests.findIndex(item=>item.status==="pending"&&item.date===date&&item.fromGrade===fromGrade&&item.fromName===fromName);
+      let issuedApprovalToken="";
+      let approvalTokenHash="";
+      let approvalExpiresAt="";
+      if(PARTNER_APPROVAL_ENABLED){
+        issuedApprovalToken=newApprovalToken();
+        approvalTokenHash=await sha256(issuedApprovalToken);
+        approvalExpiresAt=new Date(Date.now()+APPROVAL_TTL_MS).toISOString();
+      }
       if(idx>=0){
-        data.requests[idx]={...data.requests[idx],toGrade,toName,updatedAt:now};
+        data.requests[idx]={...data.requests[idx],toGrade,toName,updatedAt:now,approvalTokenHash,approvalExpiresAt,partnerApprovedAt:""};
       }else{
         if(data.requests.length>=MAX_REQUESTS)return json({error:"申請の保存上限に達しています。管理者へ連絡してください。"},400);
         const next=nextRequestNo(data);data.requestSeq=next.seq;
         data.requests.push({
           id:`request-${crypto.randomUUID()}`,requestNo:next.value,date,
-          fromGrade,fromName,toGrade,toName,status:"pending",createdAt:now,updatedAt:now
+          fromGrade,fromName,toGrade,toName,status:"pending",createdAt:now,updatedAt:now,
+          approvalTokenHash,approvalExpiresAt,partnerApprovedAt:""
         });
       }
       data.requests=dedupePending(data.requests);
       await store.setJSON(KEY,data);
-      return json({ok:true,...publicData(data)});
+      const extra=PARTNER_APPROVAL_ENABLED&&issuedApprovalToken?{approvalUrl:approvalUrl(request,issuedApprovalToken),approvalExpiresAt}:{};
+      return json({ok:true,...publicData(data),...extra});
     }
 
     const auth=await adminAccess(store,request,context);
@@ -196,27 +283,16 @@ export default async (request,context)=>{
 
     if(action==="approve"){
       if(item.status!=="pending")return json({error:"この申請は処理済みです。"},409);
-      const roster=await store.get(LEGACY_KEY,{type:"json",consistency:"strong"})||{initialized:true,images:[],changes:[]};
-      if(!requestMatchesRoster(roster,item.date,item.fromGrade,item.fromName)){
-        return json({error:"対象月の当番表が登録されていないか、変更前の担当者が一致しません。"},409);
-      }
-      const changes=Array.isArray(roster.changes)?roster.changes.slice():[];
-      const cidx=changes.findIndex(x=>String(x?.date||"")===item.date&&String(x?.grade||"")===item.fromGrade&&cleanName(x?.from)===item.fromName);
-      const change={
-        id:cidx>=0?String(changes[cidx].id||`change-${crypto.randomUUID()}`):`change-${crypto.randomUUID()}`,
-        requestNo:item.requestNo,date:item.date,grade:item.fromGrade,from:item.fromName,to:item.toName,toGrade:item.toGrade,
-        status:"active",createdAt:new Date().toISOString()
-      };
-      if(cidx>=0)changes[cidx]=change;else changes.push(change);
-      await store.setJSON(LEGACY_KEY,{...roster,changes});
-      data.requests[idx]={...item,status:"approved",updatedAt:new Date().toISOString()};
+      const applied=await applyRequestToRoster(store,item);
+      if(!applied.ok)return json({error:applied.error},409);
+      data.requests[idx]={...item,status:"approved",updatedAt:new Date().toISOString(),approvalTokenHash:"",approvalExpiresAt:""};
       await store.setJSON(KEY,data);
       return json({ok:true,...publicData(data)});
     }
 
     if(action==="reject"){
       if(item.status!=="pending")return json({error:"この申請は処理済みです。"},409);
-      data.requests[idx]={...item,status:"rejected",updatedAt:new Date().toISOString()};
+      data.requests[idx]={...item,status:"rejected",updatedAt:new Date().toISOString(),approvalTokenHash:"",approvalExpiresAt:""};
       await store.setJSON(KEY,data);
       return json({ok:true,...publicData(data)});
     }
