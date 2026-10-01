@@ -5323,7 +5323,7 @@ body:not(.photo-admin-on) #heroAdminToggle.unified-admin-toggle:focus-visible{co
   let editMode=false;
   let gesture=null;
   let saveTimer=0;
-  let lastToggleAt=0;
+  let suppressClickUntil=0;
 
   function clamp(v,min,max){return Math.max(min,Math.min(max,v))}
   function dist(a,b){return Math.hypot(b.clientX-a.clientX,b.clientY-a.clientY)}
@@ -5367,18 +5367,24 @@ body:not(.photo-admin-on) #heroAdminToggle.unified-admin-toggle:focus-visible{co
       event.preventDefault();
       event.stopPropagation();
     }
-    const now=Date.now();
-    if(now-lastToggleAt<350)return;
-    lastToggleAt=now;
     if(!document.body.classList.contains('photo-admin-on'))return;
     setEditMode(!editMode);
   }
 
-  // iPhone Safariでも確実に反応させる
-  editBtn.addEventListener('touchend',toggleEdit,{passive:false});
-  editBtn.addEventListener('click',toggleEdit,false);
-  editBtn.addEventListener('pointerup',function(event){
-    if(event.pointerType==='mouse')toggleEdit(event);
+  // iPhone Safari: touchendのあとに発生する合成clickで二重反転しないようにする
+  editBtn.addEventListener('touchend',function(event){
+    suppressClickUntil=Date.now()+1500;
+    toggleEdit(event);
+  },{passive:false});
+
+  // touchendが発生しない環境では通常のclickで動作
+  editBtn.addEventListener('click',function(event){
+    if(Date.now()<suppressClickUntil){
+      event.preventDefault();
+      event.stopPropagation();
+      return;
+    }
+    toggleEdit(event);
   },false);
 
   hero.addEventListener('touchstart',function(event){
