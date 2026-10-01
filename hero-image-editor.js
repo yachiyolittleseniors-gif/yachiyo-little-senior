@@ -12,6 +12,15 @@
   const api='/.netlify/functions/site-data?section=hero-position-settings';
   const cropCacheKey='yachiyoHeroCropV3';
   let saved={x:58,y:50,zoom:100};
+  try{
+    const cached=JSON.parse(localStorage.getItem(cropCacheKey)||'null');
+    if(cached){
+      const x=Number(cached.x),y=Number(cached.y),zoom=Number(cached.zoom);
+      if(Number.isFinite(x)&&Number.isFinite(y)&&Number.isFinite(zoom)){
+        saved={x:Math.max(0,Math.min(100,x)),y:Math.max(0,Math.min(100,y)),zoom:Math.max(100,Math.min(220,zoom))};
+      }
+    }
+  }catch(e){}
   let draft={...saved};
   let baseScale=1;
   let frameW=0,frameH=0;
@@ -81,6 +90,11 @@
   }
 
   function applyHero(){
+    const style=getComputedStyle(hero);
+    const currentX=parseFloat(style.getPropertyValue('--hero-edit-x'))||58;
+    const currentY=parseFloat(style.getPropertyValue('--hero-edit-y'))||50;
+    const currentZoom=parseFloat(style.getPropertyValue('--hero-edit-zoom'))||100;
+    if(Math.abs(currentX-saved.x)<0.01&&Math.abs(currentY-saved.y)<0.01&&Math.abs(currentZoom-saved.zoom)<0.01)return;
     hero.style.setProperty('--hero-edit-x',saved.x+'%');
     hero.style.setProperty('--hero-edit-y',saved.y+'%');
     hero.style.setProperty('--hero-edit-zoom',saved.zoom+'%');
