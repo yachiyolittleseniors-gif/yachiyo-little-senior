@@ -148,6 +148,10 @@ linear-gradient(90deg,rgba(4,12,22,.93) 0%,rgba(4,12,22,.70) 43%,rgba(4,12,22,.2
 radial-gradient(circle at 78% 40%,rgba(205,158,61,.35),transparent 24%),
 var(--hero-photo,linear-gradient(135deg,#1b324a 0%,#081321 60%,#17130c 100%));
 background-size:auto,auto,cover;background-position:center,center,center;background-repeat:no-repeat}
+.hero.hero-overlay-soft{background-image:
+linear-gradient(90deg,rgba(4,12,22,.72) 0%,rgba(4,12,22,.45) 43%,rgba(4,12,22,.12) 100%),
+radial-gradient(circle at 78% 40%,rgba(205,158,61,.18),transparent 24%),
+var(--hero-photo,linear-gradient(135deg,#1b324a 0%,#081321 60%,#17130c 100%))}
 .hero:after{content:"⚾";position:absolute;right:7%;bottom:-35px;font-size:210px;opacity:.05;transform:rotate(-18deg)}
 .hero-inner{max-width:1180px;width:100%;margin:auto;padding:80px 22px;position:relative;z-index:1}
 .eyebrow{color:var(--gold2);letter-spacing:.28em;font-size:14px;margin-bottom:20px}
@@ -2122,6 +2126,9 @@ img,video,iframe{max-width:100%}
 #heroPhotoAdmin button,#heroPhotoAdmin label{border:1px solid rgba(212,175,55,.75);background:#071426;color:#e2bd67;border-radius:999px;padding:10px 14px;font-size:12px;font-weight:700;box-shadow:0 5px 18px rgba(0,0,0,.22);cursor:pointer}
 #heroPhotoAdmin label{display:none;background:#b48a32;color:#fff}
 #heroPhotoInput{display:none}
+#heroOverlayControl{display:none!important;align-items:center;gap:8px;user-select:none}
+#heroOverlayControl input{width:18px;height:18px;margin:0;accent-color:#c79a3b;flex:0 0 auto}
+body.photo-admin-on #heroOverlayControl{display:flex!important}
 @media(max-width:600px){
   #heroPhotoAdmin{
     right:12px;
@@ -2159,6 +2166,7 @@ img,video,iframe{max-width:100%}
     display:flex!important;
   }
   body.photo-admin-on #heroAnnouncementEdit{order:2}
+  body.photo-admin-on #heroOverlayControl{order:3;display:flex!important}
   body.photo-admin-on #heroAdminToggle.unified-admin-toggle{
     order:4;
     position:static!important;
@@ -3998,8 +4006,78 @@ function openProtectedArea(type){
 <button data-nosnippet="" id="heroAdminToggle" type="button">管理</button>
 <label data-nosnippet="" for="heroPhotoInput" id="heroPhotoChange">トップの写真を変更</label>
 <button class="hero-announcement-admin" data-nosnippet="" id="heroAnnouncementEdit" type="button">トップお知らせ編集</button>
+<label data-nosnippet="" id="heroOverlayControl"><input id="heroOverlayWeak" type="checkbox"/><span>オーバーレイを弱める</span></label>
 <input accept="image/*" id="heroPhotoInput" type="file"/>
 </div>
+<script id="hero-overlay-controller">
+(function(){
+  const api='/.netlify/functions/site-data?section=hero-overlay-settings';
+  const hero=document.querySelector('.hero');
+  const checkbox=document.getElementById('heroOverlayWeak');
+  if(!hero)return;
+  const cacheKey='yachiyoHeroOverlayWeak';
+  let weak=false;
+
+  function apply(){
+    hero.classList.toggle('hero-overlay-soft',weak);
+    if(checkbox)checkbox.checked=weak;
+    try{localStorage.setItem(cacheKey,String(weak))}catch(error){}
+  }
+
+  try{
+    const cached=localStorage.getItem(cacheKey);
+    if(cached==='true'){weak=true;apply();}
+  }catch(error){}
+
+  async function load(){
+    try{
+      const response=await fetch(api,{cache:'no-store'});
+      if(!response.ok)return;
+      const json=await response.json();
+      weak=Boolean(json.data&&json.data.weak);
+      apply();
+    }catch(error){}
+  }
+
+  if(checkbox){
+    checkbox.addEventListener('change',async function(){
+      const previous=weak;
+      const next=checkbox.checked;
+      const password=sessionStorage.getItem('yachiyoAdminPassword')||'';
+      if(!password){
+        checkbox.checked=previous;
+        alert('管理画面に入り直してください。');
+        return;
+      }
+      weak=next;
+      apply();
+      checkbox.disabled=true;
+      try{
+        const response=await fetch(api,{
+          method:'POST',
+          headers:{'content-type':'application/json','x-admin-password':password},
+          body:JSON.stringify({data:{weak:next,updatedAt:new Date().toISOString()}})
+        });
+        if(response.status===429)throw new Error('LIMITED');
+        if(response.status===401)throw new Error('PASSWORD');
+        if(!response.ok)throw new Error('SAVE');
+        if(window.showSaveNotice)showSaveNotice('オーバーレイ設定を保存しました');
+      }catch(error){
+        weak=previous;
+        apply();
+        if(error.message==='LIMITED')alert('試行回数の上限です。15分後に再度お試しください。');
+        else if(error.message==='PASSWORD')alert('管理者パスワードが違います。');
+        else alert('オーバーレイ設定を保存できませんでした。');
+      }finally{
+        checkbox.disabled=false;
+      }
+    });
+  }
+
+  if(window.yachiyoTrackInitialLoad)window.yachiyoTrackInitialLoad(load());
+  else load();
+})();
+</script>
 <script>
 (async function(){
   const api='/.netlify/functions/site-data';
