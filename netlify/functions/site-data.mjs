@@ -13,25 +13,36 @@ import {
 } from "./admin-rate-limit.mjs";
 
 
-// Keep only manifest fields; validate against strong storage on every request.
+// Keep hero metadata separate from the large base64 payload so bootstrap stays cheap.
 let heroManifestSnapshot = null;
+const HERO_MANIFEST_KEY = "content/hero-manifest.json";
+const HERO_BINARY_KEY = "content/hero-current.bin";
+
+function heroManifestFromData(data) {
+  return Array.isArray(data) ? data.map(item => ({
+    key: item?.key,
+    image: Boolean(item?.image || item?.storageKey),
+    updatedAt: item?.updatedAt,
+    version: item?.version,
+    contentType: item?.contentType || ""
+  })) : [];
+}
+
 async function readHeroManifestData(store, key) {
-  const cached = heroManifestSnapshot;
+  if (heroManifestSnapshot) return heroManifestSnapshot;
   try {
-    const entry = await store.getWithMetadata(key, {
-      type: "json", consistency: "strong",
-      ...(cached?.etag ? { etag: cached.etag } : {})
-    });
-    if (!entry) { heroManifestSnapshot = null; return null; }
-    if (cached && entry.etag === cached.etag && entry.data === null) return cached.data;
-    const data = Array.isArray(entry.data) ? entry.data.map(item => ({
-      key: item?.key, image: Boolean(item?.image), updatedAt: item?.updatedAt, version: item?.version
-    })) : [];
-    heroManifestSnapshot = { etag: entry.etag, data };
-    return data;
-  } catch {
-    return store.get(key, { type: "json", consistency: "strong" });
-  }
+    const saved = await store.get(HERO_MANIFEST_KEY, { type: "json", consistency: "strong" });
+    if (Array.isArray(saved)) {
+      heroManifestSnapshot = saved;
+      return saved;
+    }
+  } catch {}
+
+  const legacy = await store.get(key, { type: "json", consistency: "strong" });
+  const manifest = heroManifestFromData(legacy);
+  heroManifestSnapshot = manifest;
+  try { await store.setJSON(HERO_MANIFEST_KEY, manifest); } catch {}
+  return manifest;
 }
 
 
@@ -1160,6 +1171,39 @@ export default async (request, context) => {
         }
 
         return json({ data: Array.isArray(documents) ? documents : [] });
+      }
+
+      if (section === "hero" && url.searchParams.get("current") === "1") {
+        const manifest = await readHeroManifestData(store, key);
+        const meta = Array.isArray(manifest) ? manifest[0] : null;
+        let blob = await store.get(HERO_BINARY_KEY, { type: "blob", consistency: "strong" });
+
+        if (!blob) {
+          const legacy = await store.get(key, { type: "json", consistency: "strong" });
+          const item = Array.isArray(legacy) ? legacy[0] : null;
+          const match = String(item?.image || "").match(/^data:([^;,]+)?(;base64)?,(.*)$/s);
+          if (!match) return new Response("Photo not found", { status: 404 });
+          const bytes = match[2]
+            ? Uint8Array.from(atob(match[3]), character => character.charCodeAt(0))
+            : new TextEncoder().encode(decodeURIComponent(match[3]));
+          const contentType = match[1] || "image/jpeg";
+          await store.set(HERO_BINARY_KEY, bytes.buffer, { metadata: { contentType } });
+          blob = new Blob([bytes], { type: contentType });
+        }
+
+        const contentType = blob.type || meta?.contentType || "image/jpeg";
+        const version = String(meta?.version || meta?.updatedAt || "");
+        return new Response(blob, {
+          status: 200,
+          headers: {
+            "content-type": contentType,
+            "content-length": String(blob.size),
+            "x-yachiyo-hero-version": version,
+            "cache-control": url.searchParams.has("v")
+              ? "public, max-age=31536000, immutable"
+              : "no-store, max-age=0, must-revalidate"
+          }
+        });
       }
 
       let data = section === "hero" && url.searchParams.get("manifest") === "1"
@@ -2350,6 +2394,19 @@ export default async (request, context) => {
     if (section === "hero" && Array.isArray(body.data)) {
       const version = randomUUID();
       body.data = body.data.map(item => ({ ...item, version }));
+      const heroItem = body.data[0];
+      const match = String(heroItem?.image || "").match(/^data:([^;,]+)?(;base64)?,(.*)$/s);
+      if (match) {
+        const bytes = match[2]
+          ? Uint8Array.from(atob(match[3]), character => character.charCodeAt(0))
+          : new TextEncoder().encode(decodeURIComponent(match[3]));
+        const contentType = match[1] || "image/jpeg";
+        await store.set(HERO_BINARY_KEY, bytes.buffer, { metadata: { contentType } });
+        heroItem.contentType = contentType;
+      }
+      const manifest = heroManifestFromData(body.data);
+      await store.setJSON(HERO_MANIFEST_KEY, manifest);
+      heroManifestSnapshot = manifest;
     }
     const serialized = JSON.stringify(body.data);
 
