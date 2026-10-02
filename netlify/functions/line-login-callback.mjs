@@ -1,5 +1,5 @@
 import {
-  lineChannelId,lineCallbackUrl,getLineFlow,sealLineValue,sessionCookie,
+  lineChannelId,lineCallbackUrl,getLineFlow,getLineFlowFromState,sealLineValue,sessionCookie,
   clearFlowCookie,safeReturnPath
 } from "./_line-login-auth.mjs";
 
@@ -17,9 +17,18 @@ export default async (request)=>{
     if(!channelId||!channelSecret)return html("LINEログイン設定が完了していません。",503);
 
     const url=new URL(request.url);
-    const flow=await getLineFlow(request);
-    if(!flow||Date.now()>Number(flow.exp||0))return html("LINE認証の有効時間が切れました。元の画面からもう一度お試しください。",400);
-    if(url.searchParams.get("state")!==flow.state)return html("LINE認証の確認情報が一致しません。元の画面からもう一度お試しください。",400);
+    const state=String(url.searchParams.get("state")||"");
+    const cookieFlow=await getLineFlow(request);
+    const stateFlow=await getLineFlowFromState(state);
+    const flow=cookieFlow||stateFlow;
+
+    if(!flow||!Number.isFinite(Number(flow.exp))||Date.now()>Number(flow.exp)){
+      return html("LINE認証の有効時間が切れました。元の画面からもう一度お試しください。",400);
+    }
+    if(cookieFlow){
+      const cookieState=await getLineFlowFromState(state);
+      if(!cookieState)return html("LINE認証の確認情報が一致しません。元の画面からもう一度お試しください。",400);
+    }
     if(url.searchParams.get("error"))return html("LINE認証がキャンセルされました。元の画面へ戻ってください。",400);
 
     const code=String(url.searchParams.get("code")||"");
