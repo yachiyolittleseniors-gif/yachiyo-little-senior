@@ -243,21 +243,22 @@ async function boardAccess(store,request,context){
 async function adminAccess(store,request,context){
   return verifyAdminPassword({store,request,context,expectedPassword:process.env.ADMIN_PASSWORD||""});
 }
-function publicRequest(item){
+function publicRequest(item,requesterHash=""){
   return{
     id:item.id,requestNo:item.requestNo,date:item.date,
     fromGrade:item.fromGrade,fromName:item.fromName,toGrade:item.toGrade,toName:item.toName,
     requestType:item.requestType||"replace",swapDate:item.swapDate||"",swapGrade:item.swapGrade||"",swapName:item.swapName||"",
     status:item.status,createdAt:item.createdAt,updatedAt:item.updatedAt,
     approvalExpiresAt:item.approvalExpiresAt||"",
-    partnerApprovedAt:item.partnerApprovedAt||""
+    partnerApprovedAt:item.partnerApprovedAt||"",
+    requesterCanCancel:item.status==="pending"&&!!requesterHash&&!!item.requesterLineHash&&requesterHash===item.requesterLineHash
   };
 }
-function publicData(data){
+function publicData(data,requesterHash=""){
   const now=new Date();
   const visibleRequests=data.requests.filter(item=>item.status!=="closed"&&!(item.status==="pending"&&requestIsPastMonth(item,now)));
   return{
-    requests:visibleRequests.map(publicRequest),
+    requests:visibleRequests.map(item=>publicRequest(item,requesterHash)),
     pendingCount:visibleRequests.filter(item=>item.status==="pending").length,
     partnerApprovalEnabled:data.partnerApprovalEnabled===true
   };
@@ -439,7 +440,9 @@ export default async (request,context)=>{
       }
       if(!(await boardAccess(store,request,context)))return json({error:"unauthorized"},401);
       const data=await loadData(store);
-      return json({ok:true,...publicData(data)});
+      const session=await getLineSession(request);
+      const requesterHash=session?await lineIdentityHash(session.sub):"";
+      return json({ok:true,...publicData(data,requesterHash)});
     }
     if(request.method!=="POST")return json({error:"method not allowed"},405);
 
@@ -653,6 +656,26 @@ export default async (request,context)=>{
       await store.setJSON(KEY,data);
       const extra=data.partnerApprovalEnabled===true&&issuedApprovalToken?{approvalUrl:approvalUrl(request,issuedApprovalToken),approvalExpiresAt}:{};
       return json({ok:true,...publicData(data),...extra});
+    }
+
+    if(action==="requester-cancel"){
+      if(!(await boardAccess(store,request,context)))return json({error:"unauthorized"},401);
+      const data=await loadData(store);
+      const id=String(body?.id||"");
+      const idx=data.requests.findIndex(item=>item.id===id);
+      if(idx<0)return json({error:"申請が見つかりません。"},404);
+      const item=data.requests[idx];
+      if(item.status!=="pending")return json({error:"この申請はすでに処理済みです。"},409);
+      const session=await getLineSession(request);
+      if(!session)return json({error:"申請したLINEアカウントで本人確認できませんでした。",code:"line_session_required"},401);
+      const requesterHash=await lineIdentityHash(session.sub);
+      if(!item.requesterLineHash||requesterHash!==item.requesterLineHash){
+        return json({error:"この申請は申請者本人のみ取り消せます。",code:"not_requester"},403);
+      }
+      data.requests[idx]={...item,status:"closed",updatedAt:new Date().toISOString(),approvalTokenHash:"",approvalExpiresAt:""};
+      pushMonitorEvent(data,{stage:"requester_cancelled",level:"ok",requestNo:item.requestNo,device:clientLabel(request),message:"申請者本人が確認待ち申請を取り消しました。"});
+      await store.setJSON(KEY,data);
+      return json({ok:true,...publicData(data,requesterHash)});
     }
 
     const auth=await adminAccess(store,request,context);
