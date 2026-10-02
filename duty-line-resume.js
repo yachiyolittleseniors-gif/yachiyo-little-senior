@@ -15,10 +15,16 @@
     const approvalUrl=String(body.approvalUrl||'');
     const text='【当番変更申請'+(q.requestNo?' #'+q.requestNo:'')+'】\n'+displayDate(q.date)+'\n変更前：'+q.fromGrade+'年・'+q.fromName+'\n変更後：'+q.toGrade+'年・'+q.toName+'\n当番変更を申請しました。\n\n【変更後のご家庭の方へ】\n下の専用リンクから内容を確認して承認してください。\n'+approvalUrl;
     const share='https://line.me/R/share?text='+encodeURIComponent(text);
-    out.innerHTML='<p class="msg"><b>変更申請を受け付けました。</b><br>続けて、変更後のご家庭へLINEで承認リンクを送ってください。</p>'+
-      '<div class="detail">'+esc(displayDate(q.date))+'<br>変更前：'+esc(q.fromGrade+'年・'+q.fromName)+'<br>変更後：'+esc(q.toGrade+'年・'+q.toName)+'</div>'+
-      '<a class="line" href="'+esc(share)+'">LINEで承認リンクを送る</a>'+
-      '<small class="small">承認リンクは1回限り・24時間有効です。LINE送信後はこの画面を閉じて構いません。</small>';
+    out.innerHTML='<p class="msg"><b>変更申請を受け付けました</b>変更後のご家庭へ、承認リンクをLINEで送ってください。</p>'+
+      '<div class="detail"><div class="flow">'+
+      '<span class="label">申請番号</span><span class="value">'+esc(q.requestNo?'#'+q.requestNo:'-')+'</span>'+
+      '<span class="label">日付</span><span class="value">'+esc(displayDate(q.date))+'</span>'+
+      '<span class="label">変更前</span><span class="value">'+esc(q.fromGrade+'年・'+q.fromName)+'</span>'+
+      '<span class="arrow">↓</span>'+
+      '<span class="label">変更後</span><span class="value">'+esc(q.toGrade+'年・'+q.toName)+'</span>'+
+      '</div></div>'+
+      '<a class="line" href="'+esc(share)+'">承認リンクを送る</a>'+
+      '<small class="small">承認リンクは1回限り・24時間有効です。送信後はこの画面を閉じて構いません。</small>';
     try{history.replaceState(null,'',location.pathname)}catch(_){}
   }).catch(e=>{
     out.innerHTML='<p class="error">'+esc(e.message||'申請を続行できませんでした。')+'</p><small class="small">元のチーム専用ページからもう一度申請してください。</small>';
