@@ -18,7 +18,7 @@
     '<div class="info-row"><span class="label">申請番号</span><span class="value">'+esc(q.requestNo?'#'+q.requestNo:'-')+'</span></div>'+
     '<div class="info-row"><span class="label">日付</span><span class="value">'+esc(displayDate(q.date))+'</span></div>'+
     '<div class="info-row"><span class="label">変更前</span><span class="value">'+esc(q.fromGrade+'年・'+q.fromName)+'</span></div>'+
-    '<div class="arrow-wrap"><span class="arrow">↓</span></div>'+
+    '+
     '<div class="info-row"><span class="label">変更後</span><span class="value">'+esc(q.toGrade+'年・'+q.toName)+'</span></div>'+
     '</div></div>'+
     '<a id="lineShareButton" class="line" href="'+esc(share)+'"><span class="line-badge">LINE</span>承認リンクを送る</a>'+
