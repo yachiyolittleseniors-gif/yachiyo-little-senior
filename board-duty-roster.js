@@ -478,12 +478,19 @@
     const issues=document.getElementById('dutyMonitorIssues');
     const issueList=document.getElementById('dutyMonitorIssueList');
     const recent=document.getElementById('dutyMonitorRecent');
+    const details=document.getElementById('dutyMonitorDetails');
+    const toggle=document.getElementById('dutyMonitorToggle');
     if(!monitor){
       if(badge){badge.className='duty-monitor-badge error';badge.textContent='確認失敗'}
       if(summary)summary.textContent='監視情報を取得できませんでした。再読み込みしてください。';
       return;
     }
     if(badge){badge.className='duty-monitor-badge '+monitor.status;badge.textContent=monitorStatusLabel(monitor.status)}
+    if(details&&toggle&&monitor.issueCount>0){
+      details.hidden=false;
+      toggle.setAttribute('aria-expanded','true');
+      toggle.textContent='詳細を隠す';
+    }
     if(summary){
       summary.textContent=monitor.partnerApprovalEnabled
         ?(monitor.issueCount?'申請フローに確認が必要な項目があります。':'申請・LINE認証・承認・当番表反映に異常は見つかっていません。')
@@ -519,10 +526,24 @@
       }
     }
   }
+  function setupDutyMonitorToggle(){
+    const toggle=document.getElementById('dutyMonitorToggle');
+    const details=document.getElementById('dutyMonitorDetails');
+    if(!toggle||!details||toggle.dataset.ready==='1')return;
+    toggle.dataset.ready='1';
+    toggle.addEventListener('click',function(){
+      const open=details.hidden;
+      details.hidden=!open;
+      toggle.setAttribute('aria-expanded',String(open));
+      toggle.textContent=open?'詳細を隠す':'詳細を表示';
+    });
+  }
+
   async function loadDutySystemMonitor(){
     const card=document.getElementById('dutySystemMonitor');
     if(!card||!isAdminViewing()){if(card)card.hidden=true;return}
     card.hidden=false;
+    setupDutyMonitorToggle();
     try{
       const response=await fetch(REQUEST_API,{
         method:'POST',credentials:'same-origin',headers:requestHeaders(true),
