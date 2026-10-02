@@ -19,10 +19,13 @@ function base64urlBytes(bytes){
 function base64urlText(value){
   return base64urlBytes(new TextEncoder().encode(String(value)));
 }
-function decodeBase64urlText(value){
+function decodeBase64urlBytes(value){
   const normalized=String(value||"").replace(/-/g,"+").replace(/_/g,"/");
   const padded=normalized+"=".repeat((4-normalized.length%4)%4);
-  return Buffer.from(padded,"base64").toString("utf8");
+  return new Uint8Array(Buffer.from(padded,"base64"));
+}
+function decodeBase64urlText(value){
+  return Buffer.from(decodeBase64urlBytes(value)).toString("utf8");
 }
 async function hmac(value){
   const key=await crypto.subtle.importKey(
@@ -34,6 +37,33 @@ async function hmac(value){
   );
   const sig=await crypto.subtle.sign("HMAC",key,new TextEncoder().encode(String(value)));
   return base64urlBytes(new Uint8Array(sig));
+}
+async function flowCryptoKey(){
+  const digest=await crypto.subtle.digest("SHA-256",new TextEncoder().encode("yls-line-flow:"+secret()));
+  return crypto.subtle.importKey("raw",digest,{name:"AES-GCM"},false,["encrypt","decrypt"]);
+}
+export async function sealLineFlow(data){
+  if(!secret())throw new Error("LINE login secret is not configured");
+  const iv=new Uint8Array(12);
+  crypto.getRandomValues(iv);
+  const key=await flowCryptoKey();
+  const plain=new TextEncoder().encode(JSON.stringify(data));
+  const encrypted=await crypto.subtle.encrypt({name:"AES-GCM",iv},key,plain);
+  return "v1."+base64urlBytes(iv)+"."+base64urlBytes(new Uint8Array(encrypted));
+}
+export async function unsealLineFlow(value){
+  try{
+    const [version,ivText,dataText,...extra]=String(value||"").split(".");
+    if(version!=="v1"||!ivText||!dataText||extra.length)return null;
+    const key=await flowCryptoKey();
+    const plain=await crypto.subtle.decrypt(
+      {name:"AES-GCM",iv:decodeBase64urlBytes(ivText)},
+      key,
+      decodeBase64urlBytes(dataText)
+    );
+    const data=JSON.parse(new TextDecoder().decode(plain));
+    return data&&typeof data==="object"?data:null;
+  }catch{return null}
 }
 export async function sealLineValue(data){
   if(!secret())throw new Error("LINE login secret is not configured");
@@ -68,7 +98,10 @@ export function flowCookie(value){return cookie(FLOW_COOKIE,value,FLOW_TTL_SECON
 export function clearFlowCookie(){return cookie(FLOW_COOKIE,"",0)}
 export function sessionCookie(value){return cookie(SESSION_COOKIE,value,SESSION_TTL_SECONDS)}
 export async function getLineFlow(request){
-  return unsealLineValue(parseCookies(request)[FLOW_COOKIE]||"");
+  return unsealLineFlow(parseCookies(request)[FLOW_COOKIE]||"");
+}
+export async function getLineFlowFromState(value){
+  return unsealLineFlow(value);
 }
 export async function getLineSession(request){
   const data=await unsealLineValue(parseCookies(request)[SESSION_COOKIE]||"");
