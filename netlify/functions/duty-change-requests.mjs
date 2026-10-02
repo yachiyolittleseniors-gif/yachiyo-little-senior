@@ -29,6 +29,18 @@ function cleanName(value){return String(value||"").trim().replace(/[　\s]+/g," 
 function nameKey(value){return cleanName(value).replace(/[（）()]/g,"")}
 function validGrade(value){return ["1","2","3"].includes(String(value||""))}
 function validDate(value){return /^\d{4}-\d{2}-\d{2}$/.test(String(value||""))}
+function clientLabel(request){
+  const ua=String(request?.headers?.get("user-agent")||"");
+  const os=/Android/i.test(ua)?"Android":(/iPhone|iPad|iPod/i.test(ua)?"iPhone/iPad":(/Windows/i.test(ua)?"Windows":(/Macintosh|Mac OS X/i.test(ua)?"Mac":"その他")));
+  let browser="ブラウザ";
+  if(/CriOS/i.test(ua))browser="Chrome";
+  else if(/EdgiOS|Edg\//i.test(ua))browser="Edge";
+  else if(/FxiOS|Firefox\//i.test(ua))browser="Firefox";
+  else if(/Chrome\//i.test(ua))browser="Chrome";
+  else if(/Safari\//i.test(ua))browser="Safari";
+  else if(/Line\//i.test(ua))browser="LINE";
+  return (os+" / "+browser).slice(0,80);
+}
 function normalizeStatus(value){return ["pending","approved","rejected","closed"].includes(String(value))?String(value):"pending"}
 function requestMonthEnd(date){
   const m=/^(\d{4})-(\d{2})-\d{2}$/.exec(String(date||""));
@@ -87,7 +99,9 @@ function normalizeItem(item,index=0){
     approvalTokenHash:String(item?.approvalTokenHash||"").slice(0,128),
     approvalExpiresAt:String(item?.approvalExpiresAt||"").slice(0,60),
     partnerApprovedAt:String(item?.partnerApprovedAt||"").slice(0,60),
-    requesterLineHash:String(item?.requesterLineHash||"").slice(0,128)
+    requesterLineHash:String(item?.requesterLineHash||"").slice(0,128),
+    requesterDevice:String(item?.requesterDevice||"").slice(0,80),
+    approverDevice:String(item?.approverDevice||"").slice(0,80)
   };
 }
 function dedupePending(items){
@@ -197,6 +211,43 @@ function publicData(data){
     requests:visibleRequests.map(publicRequest),
     pendingCount:visibleRequests.filter(item=>item.status==="pending").length,
     partnerApprovalEnabled:data.partnerApprovalEnabled===true
+  };
+}
+function monitorSnapshot(data,roster){
+  const now=Date.now();
+  const changes=Array.isArray(roster?.changes)?roster.changes:[];
+  const visible=data.requests.filter(item=>item.status!=="closed");
+  const expired=visible.filter(item=>item.status==="pending"&&Number.isFinite(Date.parse(item.approvalExpiresAt||""))&&Date.parse(item.approvalExpiresAt)<now);
+  const missingLine=visible.filter(item=>data.partnerApprovalEnabled===true&&item.status==="pending"&&!item.requesterLineHash);
+  const approvedMissingChange=visible.filter(item=>{
+    if(item.status!=="approved")return false;
+    return !changes.some(change=>
+      String(change?.status||"active")!=="cancelled" &&
+      ((item.requestNo&&String(change?.requestNo||"")===item.requestNo) ||
+       (String(change?.date||"")===item.date&&String(change?.grade||"")===item.fromGrade&&cleanName(change?.from)===item.fromName))
+    );
+  });
+  const issues=[
+    ...expired.map(item=>({type:"expired",requestNo:item.requestNo,message:"承認リンクの有効期限が切れています。"})),
+    ...missingLine.map(item=>({type:"line",requestNo:item.requestNo,message:"申請者のLINE識別情報がありません。"})),
+    ...approvedMissingChange.map(item=>({type:"reflection",requestNo:item.requestNo,message:"承認済みですが当番表への反映を確認できません。"}))
+  ];
+  const recent=visible.slice().sort((a,b)=>String(b.updatedAt||b.createdAt).localeCompare(String(a.updatedAt||a.createdAt))).slice(0,10).map(item=>({
+    requestNo:item.requestNo,date:item.date,status:item.status,
+    createdAt:item.createdAt,updatedAt:item.updatedAt,
+    requesterDevice:item.requesterDevice||"",
+    approverDevice:item.approverDevice||"",
+    lineAuthenticated:!!item.requesterLineHash,
+    approvalExpiresAt:item.approvalExpiresAt||""
+  }));
+  return{
+    partnerApprovalEnabled:data.partnerApprovalEnabled===true,
+    status:issues.some(x=>x.type==="reflection"||x.type==="line")?"error":(issues.length?"warning":"ok"),
+    pendingCount:visible.filter(item=>item.status==="pending").length,
+    approvedCount:visible.filter(item=>item.status==="approved").length,
+    issueCount:issues.length,
+    issues,recent,
+    checkedAt:new Date().toISOString()
   };
 }
 function requestMatchesRoster(roster,date,fromGrade,fromName){
@@ -346,7 +397,7 @@ export default async (request,context)=>{
       const approvalExpiresAt=new Date(Date.now()+APPROVAL_TTL_MS).toISOString();
       let item;
       if(idx>=0){
-        item={...data.requests[idx],toGrade,toName,updatedAt:now,approvalTokenHash,approvalExpiresAt,partnerApprovedAt:"",requesterLineHash};
+        item={...data.requests[idx],toGrade,toName,updatedAt:now,approvalTokenHash,approvalExpiresAt,partnerApprovedAt:"",requesterLineHash,requesterDevice:clientLabel(request)};
         data.requests[idx]=item;
       }else{
         if(data.requests.length>=MAX_REQUESTS)return json({error:"申請の保存上限に達しています。管理者へ連絡してください。"},400);
@@ -354,7 +405,7 @@ export default async (request,context)=>{
         item={
           id:`request-${crypto.randomUUID()}`,requestNo:next.value,date,
           fromGrade,fromName,toGrade,toName,status:"pending",createdAt:now,updatedAt:now,
-          approvalTokenHash,approvalExpiresAt,partnerApprovedAt:"",requesterLineHash
+          approvalTokenHash,approvalExpiresAt,partnerApprovedAt:"",requesterLineHash,requesterDevice:clientLabel(request),approverDevice:""
         };
         data.requests.push(item);
       }
@@ -385,7 +436,7 @@ export default async (request,context)=>{
       if(!applied.ok)return json({error:applied.error},409);
       const idx=data.requests.findIndex(x=>x.id===item.id);
       const now=new Date().toISOString();
-      data.requests[idx]={...item,status:"approved",partnerApprovedAt:now,updatedAt:now,approvalTokenHash:"",approvalExpiresAt:""};
+      data.requests[idx]={...item,status:"approved",partnerApprovedAt:now,updatedAt:now,approvalTokenHash:"",approvalExpiresAt:"",approverDevice:clientLabel(request)};
       await store.setJSON(KEY,data);
       return json({ok:true,message:"承認しました。\n当番表へ反映されました。"});
     }
@@ -467,14 +518,14 @@ export default async (request,context)=>{
         approvalExpiresAt=new Date(Date.now()+APPROVAL_TTL_MS).toISOString();
       }
       if(idx>=0){
-        data.requests[idx]={...data.requests[idx],toGrade,toName,updatedAt:now,approvalTokenHash,approvalExpiresAt,partnerApprovedAt:"",requesterLineHash:requesterLineHash||data.requests[idx].requesterLineHash||""};
+        data.requests[idx]={...data.requests[idx],toGrade,toName,updatedAt:now,approvalTokenHash,approvalExpiresAt,partnerApprovedAt:"",requesterLineHash:requesterLineHash||data.requests[idx].requesterLineHash||"",requesterDevice:data.partnerApprovalEnabled===true?clientLabel(request):(data.requests[idx].requesterDevice||"")};
       }else{
         if(data.requests.length>=MAX_REQUESTS)return json({error:"申請の保存上限に達しています。管理者へ連絡してください。"},400);
         const next=nextRequestNo(data);data.requestSeq=next.seq;
         data.requests.push({
           id:`request-${crypto.randomUUID()}`,requestNo:next.value,date,
           fromGrade,fromName,toGrade,toName,status:"pending",createdAt:now,updatedAt:now,
-          approvalTokenHash,approvalExpiresAt,partnerApprovedAt:"",requesterLineHash
+          approvalTokenHash,approvalExpiresAt,partnerApprovedAt:"",requesterLineHash,requesterDevice:data.partnerApprovalEnabled===true?clientLabel(request):"",approverDevice:""
         });
       }
       data.requests=dedupePending(data.requests);
@@ -487,6 +538,11 @@ export default async (request,context)=>{
     if(!auth.ok)return adminAuthError(json,auth);
 
     const data=await loadData(store);
+
+    if(action==="monitor"){
+      const roster=await store.get(LEGACY_KEY,{type:"json",consistency:"strong"})||{};
+      return json({ok:true,monitor:monitorSnapshot(data,roster)});
+    }
 
     if(action==="set-partner-approval"){
       data.partnerApprovalEnabled=body?.enabled===true;
