@@ -275,7 +275,7 @@ export default async (request,context)=>{
       const now=new Date().toISOString();
       data.requests[idx]={...item,status:"approved",partnerApprovedAt:now,updatedAt:now,approvalTokenHash:"",approvalExpiresAt:""};
       await store.setJSON(KEY,data);
-      return json({ok:true,message:"承認しました。当番表へ反映されました。"});
+      return json({ok:true,message:"承認しました。\n当番表へ反映されました。"});
     }
 
     if(action==="submit"){
