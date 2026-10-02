@@ -391,7 +391,13 @@ export default async (request,context)=>{
       const data=await loadData(store);
       let requesterLineHash="";
       if(data.partnerApprovalEnabled===true&&requestDateIsTestMode(roster,date)){
-        const line=await lineIdentityForTest(request,roster,date,"/board.html?line_resume=duty-submit");
+        const resumePath="/board.html?line_resume=duty-submit"+
+          "&d="+encodeURIComponent(date)+
+          "&fg="+encodeURIComponent(fromGrade)+
+          "&fn="+encodeURIComponent(fromName)+
+          "&tg="+encodeURIComponent(toGrade)+
+          "&tn="+encodeURIComponent(toName);
+        const line=await lineIdentityForTest(request,roster,date,resumePath);
         if(line.response)return line.response;
         requesterLineHash=line.hash;
       }
