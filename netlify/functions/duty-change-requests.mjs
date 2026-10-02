@@ -8,7 +8,8 @@ const KEY="content/duty-change-requests.json";
 const LEGACY_KEY="content/duty-roster.json";
 const MAX_REQUESTS=300;
 const APPROVAL_TTL_MS=24*60*60*1000;
-const EXPIRED_RETENTION_MONTHS=3;
+const PENDING_RETENTION_MONTHS=3;
+const PROCESSED_RETENTION_MONTHS=12;
 
 function json(body,status=200,headers={}){
   return new Response(JSON.stringify(body),{
@@ -42,10 +43,16 @@ function requestIsPastMonth(item,now=new Date()){
   return !!(end&&now>end);
 }
 function requestShouldDelete(item,now=new Date()){
-  if(!["pending","closed"].includes(String(item?.status||"")))return false;
+  const status=String(item?.status||"");
   const end=requestMonthEnd(item?.date);
   if(!end)return false;
-  return now>addUtcMonths(end,EXPIRED_RETENTION_MONTHS);
+  if(["pending","closed"].includes(status)){
+    return now>addUtcMonths(end,PENDING_RETENTION_MONTHS);
+  }
+  if(["approved","rejected"].includes(status)){
+    return now>addUtcMonths(end,PROCESSED_RETENTION_MONTHS);
+  }
+  return false;
 }
 async function sha256(value){
   const bytes=new TextEncoder().encode(String(value||""));
