@@ -1750,7 +1750,7 @@ body:after{display:none!important;content:none!important}
 <script src="./duty-image-reader.js?v=20260918-1"></script>
 <script src="./duty-roster-data.js?v=20260918-1"></script>
 <script src="./board-duty-roster.js?v=20261003-approvalmode1"></script>
-<script src="./board-duty-auto-test.js?v=20261003-temporarylayout2"></script>
+<script src="./board-duty-auto-test.js?v=20261003-temporarydate1"></script>
 <script src="./board-rules.js?v=20261003-listcollapse1"></script>
 <script src="./board-archive.js?v=20261003-listcollapse1"></script>
 
@@ -2174,6 +2174,51 @@ body.photo-admin-on #accessPasswordChange{
 #temporaryDutyBuilder #temporaryDutyPreview{
   min-height:48px!important;
   border-radius:10px!important;
+}
+</style>
+<style id="temporary-duty-date-fix">
+#temporaryDutyRows .tmp-date-field{
+  display:grid!important;
+  grid-template-columns:70px minmax(0,1fr)!important;
+  align-items:center!important;
+  gap:10px!important;
+  width:100%!important;
+  max-width:100%!important;
+  box-sizing:border-box!important;
+  margin:0!important;
+}
+#temporaryDutyRows .tmp-date-field>span{
+  color:#fff!important;
+  -webkit-text-fill-color:#fff!important;
+  font-size:14px!important;
+  font-weight:900!important;
+  line-height:1.2!important;
+}
+#temporaryDutyRows .tmp-date-field .tmp-date{
+  width:100%!important;
+  min-width:0!important;
+  max-width:100%!important;
+  height:48px!important;
+  min-height:48px!important;
+  max-height:48px!important;
+  margin:0!important;
+  padding:0 12px!important;
+  box-sizing:border-box!important;
+  border-radius:10px!important;
+  font-size:16px!important;
+  line-height:48px!important;
+  background:#fff!important;
+  color:#17202b!important;
+  -webkit-text-fill-color:#17202b!important;
+}
+#temporaryDutyRows .tmp-date-field .tmp-date::-webkit-date-and-time-value{
+  text-align:left!important;
+}
+@media(max-width:420px){
+  #temporaryDutyRows .tmp-date-field{
+    grid-template-columns:1fr!important;
+    gap:6px!important;
+  }
 }
 </style>
 <style id="compact-rules-archive-admin-style">
