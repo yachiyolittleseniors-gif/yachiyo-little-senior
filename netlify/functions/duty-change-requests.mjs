@@ -101,11 +101,27 @@ function dedupePending(items){
   }
   return out;
 }
+function requestPrefixFromIndex(index){
+  let n=Math.max(0,Number(index)||0)+1;
+  let out="";
+  while(n>0){
+    n-=1;
+    out=String.fromCharCode(65+(n%26))+out;
+    n=Math.floor(n/26);
+  }
+  return out;
+}
+function requestNoForSeq(seq){
+  const n=Math.max(1,Math.floor(Number(seq)||1));
+  const block=Math.floor((n-1)/999);
+  const within=((n-1)%999)+1;
+  return requestPrefixFromIndex(block)+String(within).padStart(3,"0");
+}
 function nextRequestNo(data){
   let seq=Math.max(0,Number(data?.requestSeq)||0);
   const used=new Set((data?.requests||[]).map(item=>String(item?.requestNo||"").toUpperCase()));
   let value="";
-  do{seq+=1;value=`A${String(seq).padStart(3,"0")}`;}while(used.has(value));
+  do{seq+=1;value=requestNoForSeq(seq);}while(used.has(value));
   return{seq,value};
 }
 async function loadData(store){
