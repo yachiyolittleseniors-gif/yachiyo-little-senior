@@ -88,7 +88,7 @@ export default async (request)=>{
         sub:String(verified.sub),
         exp:Date.now()+5*60*1000
       });
-      locationValue="/.netlify/functions/duty-line-page?t="+encodeURIComponent(resumeToken);
+      locationValue="/duty-line-resume.html?t="+encodeURIComponent(resumeToken);
     }else{
       target.searchParams.set("line_login","ok");
       locationValue=target.pathname+target.search+target.hash;
