@@ -12,13 +12,15 @@
 
   if(!textView||!pdfList||!fields||!reveal||!fileInput||!saveBtn||!adminList||!panel)return;
 
-  function setAdminVisible(visible){
-    fields.hidden=!visible;
+  function setItemEditing(visible){
+    fields.classList.toggle('is-item-editing',visible);
     reveal.setAttribute('aria-expanded',String(visible));
-    reveal.textContent=visible?'チーム規約の編集を隠す':'チーム規約の編集を表示';
+    reveal.textContent=visible?'編集を隠す':'編集を表示';
   }
-  setAdminVisible(false);
-  reveal.addEventListener('click',function(){setAdminVisible(fields.hidden)});
+  setItemEditing(false);
+  reveal.addEventListener('click',function(){
+    setItemEditing(!fields.classList.contains('is-item-editing'));
+  });
 
   function normalize(raw){
     const out={text:(raw&&raw.text)||'',pdfs:[]};
@@ -47,7 +49,7 @@
     rules.pdfs.forEach(function(pdf,index){
       const adminItem=document.createElement('div');adminItem.className='rules-admin-item';
       const adminName=document.createElement('span');adminName.textContent=pdf.name||('チーム規約資料 '+(index+1));
-      const remove=document.createElement('button');remove.type='button';remove.textContent='削除';remove.addEventListener('click',function(){removePdf(index)});
+      const remove=document.createElement('button');remove.type='button';remove.className='rules-admin-delete';remove.textContent='削除';remove.addEventListener('click',function(){removePdf(index)});
       adminItem.append(adminName,remove);adminList.appendChild(adminItem);
     });
     if(!hasPdfs){const empty=document.createElement('div');empty.className='note';empty.textContent='現在掲載中の資料はありません。';adminList.appendChild(empty)}
