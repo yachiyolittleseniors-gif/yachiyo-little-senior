@@ -79,6 +79,26 @@ function approvalUrl(request,token){
   const url=new URL(request.url);
   return `${url.origin}/duty-approve.html?t=${encodeURIComponent(token)}`;
 }
+function normalizeMonitorEvent(item,index=0){
+  const at=String(item?.at||"");
+  const stage=String(item?.stage||"").slice(0,40);
+  if(!at||!stage)return null;
+  return{
+    id:String(item?.id||`event-${index}`).slice(0,100),
+    at:at.slice(0,60),
+    stage,
+    level:["info","warning","error","ok"].includes(String(item?.level))?String(item.level):"info",
+    requestNo:String(item?.requestNo||"").slice(0,20),
+    flowKey:String(item?.flowKey||"").slice(0,180),
+    device:String(item?.device||"").slice(0,80),
+    message:String(item?.message||"").slice(0,180)
+  };
+}
+function pushMonitorEvent(data,event){
+  const list=Array.isArray(data.monitorEvents)?data.monitorEvents:[];
+  list.push(normalizeMonitorEvent({id:`event-${crypto.randomUUID()}`,at:new Date().toISOString(),...event},list.length));
+  data.monitorEvents=list.filter(Boolean).slice(-120);
+}
 function normalizeItem(item,index=0){
   const fromGrade=String(item?.fromGrade||item?.grade||"");
   const toGrade=String(item?.toGrade||item?.grade||fromGrade||"");
@@ -144,7 +164,7 @@ async function loadData(store){
   let data;
   const existing=await store.get(KEY,{type:"json",consistency:"strong"});
   if(existing?.version===1&&Array.isArray(existing.requests)){
-    data={version:1,requestSeq:Math.max(0,Number(existing.requestSeq)||0),partnerApprovalEnabled:existing.partnerApprovalEnabled===true,requests:dedupePending(existing.requests.map(normalizeItem).filter(Boolean))};
+    data={version:1,requestSeq:Math.max(0,Number(existing.requestSeq)||0),partnerApprovalEnabled:existing.partnerApprovalEnabled===true,requests:dedupePending(existing.requests.map(normalizeItem).filter(Boolean)),monitorEvents:(Array.isArray(existing.monitorEvents)?existing.monitorEvents:[]).map(normalizeMonitorEvent).filter(Boolean).slice(-120)};
   }else{
     // One-time safe migration from the old combined duty-roster document.
     const legacy=await store.get(LEGACY_KEY,{type:"json",consistency:"strong"});
@@ -155,7 +175,7 @@ async function loadData(store){
       const m=/^A(\d+)$/.exec(String(item.requestNo||"").toUpperCase());
       if(m)seq=Math.max(seq,Number(m[1])||0);
     }
-    data={version:1,requestSeq:seq,partnerApprovalEnabled:false,requests:migrated,migratedAt:new Date().toISOString()};
+    data={version:1,requestSeq:seq,partnerApprovalEnabled:false,requests:migrated,monitorEvents:[],migratedAt:new Date().toISOString()};
     await store.setJSON(KEY,data);
   }
 
@@ -227,10 +247,15 @@ function monitorSnapshot(data,roster){
        (String(change?.date||"")===item.date&&String(change?.grade||"")===item.fromGrade&&cleanName(change?.from)===item.fromName))
     );
   });
+  const events=Array.isArray(data.monitorEvents)?data.monitorEvents.slice():[];
+  const latestByFlow=new Map();
+  events.forEach(event=>{if(event.flowKey)latestByFlow.set(event.flowKey,event)});
+  const stalledLine=[...latestByFlow.values()].filter(event=>event.stage==="line_start"&&(now-(Date.parse(event.at)||now))>10*60*1000);
   const issues=[
     ...expired.map(item=>({type:"expired",requestNo:item.requestNo,message:"承認リンクの有効期限が切れています。"})),
     ...missingLine.map(item=>({type:"line",requestNo:item.requestNo,message:"申請者のLINE識別情報がありません。"})),
-    ...approvedMissingChange.map(item=>({type:"reflection",requestNo:item.requestNo,message:"承認済みですが当番表への反映を確認できません。"}))
+    ...approvedMissingChange.map(item=>({type:"reflection",requestNo:item.requestNo,message:"承認済みですが当番表への反映を確認できません。"})),
+    ...stalledLine.map(item=>({type:"line_stalled",requestNo:item.requestNo,message:"LINE認証開始後、申請完了まで到達していません。"}))
   ];
   const recent=visible.slice().sort((a,b)=>String(b.updatedAt||b.createdAt).localeCompare(String(a.updatedAt||a.createdAt))).slice(0,10).map(item=>({
     requestNo:item.requestNo,date:item.date,status:item.status,
@@ -240,13 +265,14 @@ function monitorSnapshot(data,roster){
     lineAuthenticated:!!item.requesterLineHash,
     approvalExpiresAt:item.approvalExpiresAt||""
   }));
+  const recentEvents=events.slice().sort((a,b)=>String(b.at).localeCompare(String(a.at))).slice(0,12);
   return{
     partnerApprovalEnabled:data.partnerApprovalEnabled===true,
-    status:issues.some(x=>x.type==="reflection"||x.type==="line")?"error":(issues.length?"warning":"ok"),
+    status:issues.some(x=>x.type==="reflection"||x.type==="line"||x.type==="line_stalled")?"error":(issues.length?"warning":"ok"),
     pendingCount:visible.filter(item=>item.status==="pending").length,
     approvedCount:visible.filter(item=>item.status==="approved").length,
     issueCount:issues.length,
-    issues,recent,
+    issues,recent,recentEvents,
     checkedAt:new Date().toISOString()
   };
 }
@@ -410,6 +436,12 @@ export default async (request,context)=>{
         data.requests.push(item);
       }
       data.requests=dedupePending(data.requests);
+      pushMonitorEvent(data,{
+        stage:"request_created",level:"ok",requestNo:item.requestNo,
+        flowKey:[date,fromGrade,fromName].join("|"),
+        device:clientLabel(request),
+        message:"LINE認証完了・承認リンクを発行しました。"
+      });
       await store.setJSON(KEY,data);
       return json({
         ok:true,
@@ -431,12 +463,21 @@ export default async (request,context)=>{
       const currentHash=session?await lineIdentityHash(session.sub):"";
       const selfApprovalBlocked=!!item.requesterLineHash&&!!currentHash&&currentHash===item.requesterLineHash;
       if(action==="preview-partner-approval")return json({ok:true,request:approvalPreview(item),lineAuthRequired:false,selfApprovalBlocked});
-      if(selfApprovalBlocked)return json({error:"申請したLINEアカウントでは承認できません。変更後のご家庭へ承認を依頼してください。",code:"self_approval_blocked"},403);
+      if(selfApprovalBlocked){
+        pushMonitorEvent(data,{stage:"self_approval_blocked",level:"warning",requestNo:item.requestNo,device:clientLabel(request),message:"申請者本人による承認をブロックしました。"});
+        await store.setJSON(KEY,data);
+        return json({error:"申請したLINEアカウントでは承認できません。変更後のご家庭へ承認を依頼してください。",code:"self_approval_blocked"},403);
+      }
       const applied=await applyRequestToRoster(store,item);
-      if(!applied.ok)return json({error:applied.error},409);
+      if(!applied.ok){
+        pushMonitorEvent(data,{stage:"reflection_error",level:"error",requestNo:item.requestNo,device:clientLabel(request),message:"承認後の当番表反映に失敗しました。"});
+        await store.setJSON(KEY,data);
+        return json({error:applied.error},409);
+      }
       const idx=data.requests.findIndex(x=>x.id===item.id);
       const now=new Date().toISOString();
       data.requests[idx]={...item,status:"approved",partnerApprovedAt:now,updatedAt:now,approvalTokenHash:"",approvalExpiresAt:"",approverDevice:clientLabel(request)};
+      pushMonitorEvent(data,{stage:"approved_reflected",level:"ok",requestNo:item.requestNo,device:clientLabel(request),message:"交代相手の承認・当番表反映が完了しました。"});
       await store.setJSON(KEY,data);
       return json({ok:true,message:"承認しました。\n当番表へ反映されました。"});
     }
@@ -499,6 +540,13 @@ export default async (request,context)=>{
           "&tn="+encodeURIComponent(toName);
         const submitSession=await getLineSession(request);
         if(!submitSession){
+          pushMonitorEvent(data,{
+            stage:"line_start",level:"info",
+            flowKey:[date,fromGrade,fromName].join("|"),
+            device:clientLabel(request),
+            message:"申請者のLINE認証を開始しました。"
+          });
+          await store.setJSON(KEY,data);
           return json({
             error:"LINE認証が必要です。",
             code:"line_login_required",
