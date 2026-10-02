@@ -199,6 +199,17 @@ async function loadData(store){
   const activeRequestChanges=item=>requestChanges(item).filter(change=>String(change?.status||"active")!=="cancelled");
   let reconciled=false;
   data.requests=data.requests.map(item=>{
+    // 過去の不具合で「取消済み変更」が確認待ちへ戻ってしまった既存申請も、
+    // 読み込み時に終了扱いへ補正する。
+    if(item.status==="pending"){
+      const cancelled=requestChanges(item).some(change=>String(change?.status||"active")==="cancelled");
+      const active=activeRequestChanges(item).length>0;
+      if(cancelled&&!active){
+        reconciled=true;
+        return{...item,status:"closed",updatedAt:new Date().toISOString(),approvalTokenHash:"",approvalExpiresAt:""};
+      }
+      return item;
+    }
     if(item.status!=="approved")return item;
     const matched=activeRequestChanges(item);
     const reflected=item.requestType==="swap"
