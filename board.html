@@ -1508,43 +1508,30 @@ body:after{display:none!important;content:none!important}
   </div>
   <div id="dutyRosterAdminFields">
     <strong>当番表</strong>
-    <div class="duty-auto-test-admin" id="dutyAutoTestAdmin">
-  <b>当番表 自動作成</b>
-  <p>対象月の当番表（案）を自動作成します。内容を確認後、「この案で確定」を押すと正式な当番表として登録されます。</p>
-  <div class="duty-auto-test-controls">
-    <label>対象月 <span class="duty-auto-test-month-row"><button id="dutyAutoPrevMonth" type="button" aria-label="前の月">‹</button><strong id="dutyAutoMonthLabel" style="display:grid!important;place-items:center!important;visibility:visible!important;opacity:1!important;color:#17202b!important;-webkit-text-fill-color:#17202b!important;background:#fff!important;font-size:16px!important;font-weight:900!important">2026年 10月</strong><button id="dutyAutoNextMonth" type="button" aria-label="次の月">›</button></span></label>
-    <label class="duty-test-mode-toggle"><input id="dutyRosterTestMode" type="checkbox"><span><b>テストモードで登録</b><small>管理者だけに表示して、申請・承認・自動反映を本番同様に確認できます。</small></span></label>
-    <button id="dutyAutoTestCreate" type="button">当番表（案）を作成</button>
-  </div>
-  <div class="duty-auto-test-note">保護者出欠の登録情報を使い、家庭単位・50音順で当番表（案）を作成します。確定するまでは公開中の当番表には影響しません。</div>
-  <div id="dutyAutoTestPreview" class="duty-auto-test-preview" hidden></div>
-</div>
 
-      <details class="duty-manual-register">
-        <summary>手動・臨時当番表を登録／作成</summary>
-        <div class="duty-manual-register-body">
-          <button id="temporaryDutyCreateBtn" type="button">臨時当番表を作成</button>
-          <div id="temporaryDutyBuilder" class="temporary-duty-builder" hidden>
-            <b>臨時当番表</b>
-            <p>複数日を追加できます。対象学年・午前／午後／終日・担当者を日ごとに設定します。</p>
-            <div id="temporaryDutyRows"></div>
-            <button id="temporaryDutyAddDate" type="button">＋ 日付を追加</button>
-            <button id="temporaryDutyPreview" type="button">臨時当番表（案）を作成</button>
-            <div id="temporaryDutyResult" hidden></div>
-          </div>
-          <details class="duty-manual-upload">
-            <summary>画像を手動登録</summary>
-            <label for="dutyRosterImageInput">画像ファイル（複数選択可）</label>
-            <input id="dutyRosterImageInput" type="file" accept="image/jpeg,image/png,image/webp,.jpg,.jpeg,.png,.webp" multiple>
-            <p id="dutyRosterAdminHelp">自動作成できない特殊な当番表を登録する場合に使用します。</p>
-            <button id="saveDutyRosterBtn" type="button">画像から表を作成</button>
-            <div id="dutyImageReview" hidden></div>
-          </details>
+    <div class="duty-request-admin-block duty-monitor-admin-block">
+      <div id="dutySystemMonitor" class="duty-monitor-card" hidden>
+        <div class="duty-monitor-head"><strong>当番変更システム監視</strong><span id="dutyMonitorBadge" class="duty-monitor-badge">確認中</span></div>
+        <p id="dutyMonitorSummary" class="duty-monitor-summary">申請・LINE認証・承認・当番表反映を確認しています。</p>
+        <div class="duty-monitor-metrics">
+          <div class="duty-monitor-metric"><b id="dutyMonitorPending">0</b><small>確認待ち</small></div>
+          <div class="duty-monitor-metric"><b id="dutyMonitorApproved">0</b><small>反映済み</small></div>
+          <div class="duty-monitor-metric"><b id="dutyMonitorIssues">0</b><small>要確認</small></div>
         </div>
-      </details>
+        <button id="dutyMonitorToggle" class="duty-monitor-toggle" type="button" aria-expanded="false" aria-controls="dutyMonitorDetails">詳細を表示</button>
+        <div id="dutyMonitorDetails" hidden>
+          <ul id="dutyMonitorIssueList" class="duty-monitor-issues" hidden></ul>
+          <div id="dutyMonitorRecent" class="duty-monitor-recent"></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="duty-image-admin">
+      <b>保存済み原本</b>
+      <div id="dutyRosterAdminList"></div>
+    </div>
+
     <div class="duty-change-admin">
-      <div class="duty-change-heading"><b>登録済み変更履歴</b><button id="toggleDutyAdminHistory" type="button" aria-expanded="false">表示 ▼</button></div>
-      <div id="dutyChangeAdminList" class="duty-change-admin-list" hidden></div>
       <div class="duty-request-admin-block">
         <b>当番変更申請</b>
         <p>一般画面から届いた申請です。</p>
@@ -1553,26 +1540,48 @@ body:after{display:none!important;content:none!important}
           <span><strong>交代相手の承認リンクを使用する</strong><small>ONにすると、申請後のLINEに専用承認リンクを追加し、相手の承認で当番表へ自動反映します。</small></span>
         </label>
         <div id="dutyPartnerApprovalStatus" class="duty-approval-setting-status" aria-live="polite"></div>
-        <div id="dutySystemMonitor" class="duty-monitor-card" hidden>
-          <div class="duty-monitor-head"><strong>当番変更システム監視</strong><span id="dutyMonitorBadge" class="duty-monitor-badge">確認中</span></div>
-          <p id="dutyMonitorSummary" class="duty-monitor-summary">申請・LINE認証・承認・当番表反映を確認しています。</p>
-          <div class="duty-monitor-metrics">
-            <div class="duty-monitor-metric"><b id="dutyMonitorPending">0</b><small>確認待ち</small></div>
-            <div class="duty-monitor-metric"><b id="dutyMonitorApproved">0</b><small>反映済み</small></div>
-            <div class="duty-monitor-metric"><b id="dutyMonitorIssues">0</b><small>要確認</small></div>
-          </div>
-          <button id="dutyMonitorToggle" class="duty-monitor-toggle" type="button" aria-expanded="false" aria-controls="dutyMonitorDetails">詳細を表示</button>
-          <div id="dutyMonitorDetails" hidden>
-            <ul id="dutyMonitorIssueList" class="duty-monitor-issues" hidden></ul>
-            <div id="dutyMonitorRecent" class="duty-monitor-recent"></div>
-          </div>
-        </div>
         <div id="dutyRequestAdminList" class="duty-change-admin-list"></div>
       </div>
     </div>
-    <div class="duty-image-admin">
-      <b>保存済み原本</b>
-      <div id="dutyRosterAdminList"></div>
+
+    <div class="duty-auto-test-admin" id="dutyAutoTestAdmin">
+      <b>当番表 自動作成</b>
+      <p>対象月の当番表（案）を自動作成します。内容を確認後、「この案で確定」を押すと正式な当番表として登録されます。</p>
+      <div class="duty-auto-test-controls">
+        <label>対象月 <span class="duty-auto-test-month-row"><button id="dutyAutoPrevMonth" type="button" aria-label="前の月">‹</button><strong id="dutyAutoMonthLabel" style="display:grid!important;place-items:center!important;visibility:visible!important;opacity:1!important;color:#17202b!important;-webkit-text-fill-color:#17202b!important;background:#fff!important;font-size:16px!important;font-weight:900!important">2026年 10月</strong><button id="dutyAutoNextMonth" type="button" aria-label="次の月">›</button></span></label>
+        <label class="duty-test-mode-toggle"><input id="dutyRosterTestMode" type="checkbox"><span><b>テストモードで登録</b><small>管理者だけに表示して、申請・承認・自動反映を本番同様に確認できます。</small></span></label>
+        <button id="dutyAutoTestCreate" type="button">当番表（案）を作成</button>
+      </div>
+      <div class="duty-auto-test-note">保護者出欠の登録情報を使い、家庭単位・50音順で当番表（案）を作成します。確定するまでは公開中の当番表には影響しません。</div>
+      <div id="dutyAutoTestPreview" class="duty-auto-test-preview" hidden></div>
+    </div>
+
+    <details class="duty-manual-register">
+      <summary>手動・臨時当番表を登録／作成</summary>
+      <div class="duty-manual-register-body">
+        <button id="temporaryDutyCreateBtn" type="button">臨時当番表を作成</button>
+        <div id="temporaryDutyBuilder" class="temporary-duty-builder" hidden>
+          <b>臨時当番表</b>
+          <p>複数日を追加できます。対象学年・午前／午後／終日・担当者を日ごとに設定します。</p>
+          <div id="temporaryDutyRows"></div>
+          <button id="temporaryDutyAddDate" type="button">＋ 日付を追加</button>
+          <button id="temporaryDutyPreview" type="button">臨時当番表（案）を作成</button>
+          <div id="temporaryDutyResult" hidden></div>
+        </div>
+        <details class="duty-manual-upload">
+          <summary>画像を手動登録</summary>
+          <label for="dutyRosterImageInput">画像ファイル（複数選択可）</label>
+          <input id="dutyRosterImageInput" type="file" accept="image/jpeg,image/png,image/webp,.jpg,.jpeg,.png,.webp" multiple>
+          <p id="dutyRosterAdminHelp">自動作成できない特殊な当番表を登録する場合に使用します。</p>
+          <button id="saveDutyRosterBtn" type="button">画像から表を作成</button>
+          <div id="dutyImageReview" hidden></div>
+        </details>
+      </div>
+    </details>
+
+    <div class="duty-change-admin">
+      <div class="duty-change-heading"><b>登録済み変更履歴</b><button id="toggleDutyAdminHistory" type="button" aria-expanded="false">表示 ▼</button></div>
+      <div id="dutyChangeAdminList" class="duty-change-admin-list" hidden></div>
     </div>
   </div>
   <div id="rulesAdminFields">
