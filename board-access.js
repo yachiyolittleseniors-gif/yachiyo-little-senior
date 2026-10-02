@@ -74,9 +74,10 @@ window.boardAccessReady=(async function requireBoardPassword(){
   const historyFocus=searchParams.get('focus');
   const returningFromProtectedPage=['documents','coach','attendance','player'].includes(returnSource);
   const returningFromUpdateHistory=['schedule','duty-roster','rules'].includes(historyFocus);
+  const returningFromLineLogin=searchParams.get('line_login')==='ok'&&/^duty-(submit|resend)$/.test(searchParams.get('line_resume')||'');
   const navigationEntry=performance.getEntriesByType&&performance.getEntriesByType('navigation')[0];
   const isPageReload=navigationEntry&&navigationEntry.type==='reload';
-  if(returningFromProtectedPage||returningFromUpdateHistory||isPageReload){
+  if(returningFromProtectedPage||returningFromUpdateHistory||returningFromLineLogin||isPageReload){
     try{
       const saved=sessionStorage.getItem(accessKey)||readReloadAccess();
       if(saved&&await verify(saved)){
