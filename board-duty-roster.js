@@ -974,6 +974,23 @@
     }
   }
 
+  function setupDutyAdminMenu(){
+    const toggle=document.getElementById('dutyAdminMenuToggle');
+    const body=document.getElementById('dutyAdminMenuBody');
+    if(!toggle||!body||toggle.dataset.ready==='1')return;
+    toggle.dataset.ready='1';
+    const setOpen=function(open){
+      body.hidden=!open;
+      body.style.setProperty('display',open?'block':'none','important');
+      toggle.setAttribute('aria-expanded',String(open));
+    };
+    setOpen(false);
+    toggle.addEventListener('click',function(){
+      setOpen(toggle.getAttribute('aria-expanded')!=='true');
+    });
+  }
+  setupDutyAdminMenu();
+
   const hasLegacyChangeForm=!!(changeYear&&changeGrade&&changeText&&pasteChangeBtn&&changePreview&&saveChangesBtn);
   if(hasLegacyChangeForm)changeYear.value=String(new Date().getFullYear());
   const adminHistoryToggle=document.getElementById('toggleDutyAdminHistory');
