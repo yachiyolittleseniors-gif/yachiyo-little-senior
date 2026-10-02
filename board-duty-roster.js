@@ -455,7 +455,9 @@
       if(!response.ok){
         if(body.code==='line_login_required'&&body.loginUrl){
           if(shareWindow&&!shareWindow.closed)shareWindow.close();
-          sessionStorage.setItem('ylsDutyLineResume',JSON.stringify({mode:'resend',id:item.id,expires:Date.now()+10*60*1000}));
+          const resumePayload=JSON.stringify({mode:'resend',id:item.id,expires:Date.now()+10*60*1000});
+          try{sessionStorage.setItem('ylsDutyLineResume',resumePayload)}catch(_){}
+          try{localStorage.setItem('ylsDutyLineResume',resumePayload)}catch(_){}
           location.href=body.loginUrl;
           return;
         }
@@ -483,9 +485,11 @@
       const body=await response.json().catch(function(){return{}});
       if(!response.ok){
         if(body.code==='line_login_required'&&body.loginUrl){
-          sessionStorage.setItem('ylsDutyLineResume',JSON.stringify({
+          const resumePayload=JSON.stringify({
             mode:'submit',date:date,from:personOptionValue(fromPerson),to:personOptionValue(toPerson),expires:Date.now()+10*60*1000
-          }));
+          });
+          try{sessionStorage.setItem('ylsDutyLineResume',resumePayload)}catch(_){}
+          try{localStorage.setItem('ylsDutyLineResume',resumePayload)}catch(_){}
           location.href=body.loginUrl;
           return;
         }
@@ -593,9 +597,10 @@
     const params=new URLSearchParams(location.search);
     if(params.get('line_login')!=='ok')return;
     let saved=null;
-    try{saved=JSON.parse(sessionStorage.getItem('ylsDutyLineResume')||'null')}catch(e){}
+    try{saved=JSON.parse(sessionStorage.getItem('ylsDutyLineResume')||localStorage.getItem('ylsDutyLineResume')||'null')}catch(e){}
     if(!saved||Date.now()>Number(saved.expires||0)){
-      sessionStorage.removeItem('ylsDutyLineResume');
+      try{sessionStorage.removeItem('ylsDutyLineResume')}catch(_){}
+      try{localStorage.removeItem('ylsDutyLineResume')}catch(_){}
       lineResumeHandled=true;cleanLineResumeUrl();return;
     }
     const mode=String(saved.mode||'');
@@ -607,7 +612,8 @@
       dateSel.value=saved.date;populateRequestForm();
       if(Array.from(fromSel.options).some(function(o){return o.value===saved.from}))fromSel.value=saved.from;
       if(Array.from(toSel.options).some(function(o){return o.value===saved.to}))toSel.value=saved.to;
-      sessionStorage.removeItem('ylsDutyLineResume');
+      try{sessionStorage.removeItem('ylsDutyLineResume')}catch(_){}
+      try{localStorage.removeItem('ylsDutyLineResume')}catch(_){}
       lineResumeHandled=true;cleanLineResumeUrl();
       const result=document.getElementById('dutyRequestResult');
       if(result){result.hidden=false;result.innerHTML='<div class="duty-request-complete"><b>LINE認証が完了しました</b><p>申請を続行してLINEを開いています。</p></div>'}
@@ -619,7 +625,8 @@
       if(!box||!list||!toggle)return;
       box.hidden=false;list.hidden=false;toggle.setAttribute('aria-expanded','true');toggle.textContent='申請内容を閉じる';
       if(window.showSaveNotice)showSaveNotice('LINE認証が完了しました。「確認待ち」をタップしてLINEを再送してください。');
-      sessionStorage.removeItem('ylsDutyLineResume');
+      try{sessionStorage.removeItem('ylsDutyLineResume')}catch(_){}
+      try{localStorage.removeItem('ylsDutyLineResume')}catch(_){}
       lineResumeHandled=true;cleanLineResumeUrl();
     }
   }
