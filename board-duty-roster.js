@@ -647,10 +647,32 @@
     if(parts.length<3)return null;
     return{date:parts[0],grade:parts[1],name:cleanName(parts.slice(2).join('|'))};
   }
+  function rosterDutySlotsForDate(date){
+    const slots=[];
+    if(!/^\d{4}-\d{2}-\d{2}$/.test(String(date||'')))return slots;
+    images.forEach(function(image){
+      if(!canViewRoster(image))return;
+      const table=image.table;if(!table)return;
+      const prefix=table.year+'-'+String(table.month).padStart(2,'0')+'-';
+      if(!String(date).startsWith(prefix))return;
+      const day=Number(String(date).slice(-2));
+      const row=table.rows.find(function(r){return Number(r&&r[0])===day});
+      if(!row)return;
+      const grades=table.grades||[2,1];
+      row.slice(2,6).forEach(function(name,index){
+        const original=cleanName(name);if(!original)return;
+        const grade=String(grades[Math.floor(index/2)]);
+        const applied=window.DutyRosterData.applyChanges(table,row[0],grade,original,changes);
+        const current=cleanName(applied&&applied.value)||original;
+        slots.push({grade:grade,name:current});
+      });
+    });
+    return slots;
+  }
   function dutySlotOptions(excludeValue){
     let html='<option value="">選択してください</option>';
     rosterDates().forEach(function(d){
-      rosterNamesForDate(d.date).forEach(function(person){
+      rosterDutySlotsForDate(d.date).forEach(function(person){
         const value=dutySlotValue(d.date,person);
         if(value===excludeValue)return;
         html+='<option value="'+escapeHtml(value)+'">'+escapeHtml(displayDate(d.date)+'　'+person.grade+'年・'+octoberDisplayName(person.name,person.grade,d.date))+'</option>';
