@@ -239,6 +239,17 @@ export default async (request,context)=>{
   const store=getStore({name:STORE_NAME,consistency:"strong"});
   try{
     if(request.method==="GET"){
+      const url=new URL(request.url);
+      if(url.searchParams.get("action")==="preview-partner-approval"){
+        const data=await loadData(store);
+        if(data.partnerApprovalEnabled!==true)return json({error:"交代相手の承認リンクは現在使用されていません。"},404);
+        const token=String(url.searchParams.get("t")||"");
+        const item=await findRequestByApprovalToken(data,token);
+        if(!item)return json({error:"承認リンクが無効、またはすでに使用済みです。"},404);
+        const expires=Date.parse(item.approvalExpiresAt||"");
+        if(!Number.isFinite(expires)||Date.now()>expires)return json({error:"承認リンクの有効期限が切れています。申請者に再申請を依頼してください。"},410);
+        return json({ok:true,request:approvalPreview(item)});
+      }
       if(!(await boardAccess(store,request,context)))return json({error:"unauthorized"},401);
       const data=await loadData(store);
       return json({ok:true,...publicData(data)});
