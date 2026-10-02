@@ -298,14 +298,14 @@ export default async (request,context)=>{
         if(!item)return json({error:"承認リンクが無効です。\nまたは、すでに使用済みです。"},404);
         const expires=Date.parse(item.approvalExpiresAt||"");
         if(!Number.isFinite(expires)||Date.now()>expires)return json({error:"承認リンクの有効期限が切れています。申請者に再申請を依頼してください。"},410);
-        const roster=await store.get(LEGACY_KEY,{type:"json",consistency:"strong"})||{};
-        if(requestDateIsTestMode(roster,item.date)){
-          if(!item.requesterLineHash)return json({error:"この申請はLINE認証前に作成されています。申請者に「確認待ち」からLINEを再送してもらってください。"},409);
-          const session=await getLineSession(request);
-          const currentHash=session?await lineIdentityHash(session.sub):"";
-          return json({ok:true,request:approvalPreview(item),lineAuthRequired:false,selfApprovalBlocked:!!currentHash&&currentHash===item.requesterLineHash});
-        }
-        return json({ok:true,request:approvalPreview(item)});
+        const session=await getLineSession(request);
+        const currentHash=session?await lineIdentityHash(session.sub):"";
+        return json({
+          ok:true,
+          request:approvalPreview(item),
+          lineAuthRequired:false,
+          selfApprovalBlocked:!!item.requesterLineHash&&!!currentHash&&currentHash===item.requesterLineHash
+        });
       }
       if(!(await boardAccess(store,request,context)))return json({error:"unauthorized"},401);
       const data=await loadData(store);
@@ -376,17 +376,11 @@ export default async (request,context)=>{
       if(!item)return json({error:"承認リンクが無効です。\nまたは、すでに使用済みです。"},404);
       const expires=Date.parse(item.approvalExpiresAt||"");
       if(!Number.isFinite(expires)||Date.now()>expires)return json({error:"承認リンクの有効期限が切れています。申請者に再申請を依頼してください。"},410);
-      const roster=await store.get(LEGACY_KEY,{type:"json",consistency:"strong"})||{};
-      if(requestDateIsTestMode(roster,item.date)){
-        if(!item.requesterLineHash)return json({error:"この申請はLINE認証前に作成されています。申請者に「確認待ち」からLINEを再送してもらってください。"},409);
-        const session=await getLineSession(request);
-        const currentHash=session?await lineIdentityHash(session.sub):"";
-        const selfApprovalBlocked=!!currentHash&&currentHash===item.requesterLineHash;
-        if(action==="preview-partner-approval")return json({ok:true,request:approvalPreview(item),lineAuthRequired:false,selfApprovalBlocked});
-        if(selfApprovalBlocked)return json({error:"申請したLINEアカウントでは承認できません。変更後のご家庭へ承認を依頼してください。",code:"self_approval_blocked"},403);
-      }else if(action==="preview-partner-approval"){
-        return json({ok:true,request:approvalPreview(item)});
-      }
+      const session=await getLineSession(request);
+      const currentHash=session?await lineIdentityHash(session.sub):"";
+      const selfApprovalBlocked=!!item.requesterLineHash&&!!currentHash&&currentHash===item.requesterLineHash;
+      if(action==="preview-partner-approval")return json({ok:true,request:approvalPreview(item),lineAuthRequired:false,selfApprovalBlocked});
+      if(selfApprovalBlocked)return json({error:"申請したLINEアカウントでは承認できません。変更後のご家庭へ承認を依頼してください。",code:"self_approval_blocked"},403);
       const applied=await applyRequestToRoster(store,item);
       if(!applied.ok)return json({error:applied.error},409);
       const idx=data.requests.findIndex(x=>x.id===item.id);
@@ -407,14 +401,18 @@ export default async (request,context)=>{
       const item=data.requests[idx];
       const expires=Date.parse(item.approvalExpiresAt||"");
       if(Number.isFinite(expires)&&Date.now()>expires)return json({error:"承認リンクの有効期限が切れています。再度「当番変更申請」から申請してください。"},410);
-      const roster=await store.get(LEGACY_KEY,{type:"json",consistency:"strong"})||{};
       let requesterLineHash=item.requesterLineHash||"";
-      if(requestDateIsTestMode(roster,item.date)){
-        const line=await lineIdentityForTest(request,roster,item.date,"/board.html?line_resume=duty-resend");
-        if(line.response)return line.response;
-        if(requesterLineHash&&requesterLineHash!==line.hash)return json({error:"この申請のLINE再送は、申請した方のLINEアカウントから行ってください。",code:"requester_line_mismatch"},403);
-        requesterLineHash=line.hash;
+      const resendSession=await getLineSession(request);
+      if(!resendSession){
+        return json({
+          error:"LINE認証が必要です。",
+          code:"line_login_required",
+          loginUrl:lineLoginStartUrl(request,"/board.html?line_resume=duty-resend")
+        },401);
       }
+      const resendHash=await lineIdentityHash(resendSession.sub);
+      if(requesterLineHash&&requesterLineHash!==resendHash)return json({error:"この申請のLINE再送は、申請した方のLINEアカウントから行ってください。",code:"requester_line_mismatch"},403);
+      requesterLineHash=resendHash;
       const issuedApprovalToken=newApprovalToken();
       const approvalTokenHash=await sha256(issuedApprovalToken);
       const approvalExpiresAt=new Date(Date.now()+APPROVAL_TTL_MS).toISOString();
@@ -441,16 +439,22 @@ export default async (request,context)=>{
 
       const data=await loadData(store);
       let requesterLineHash="";
-      if(data.partnerApprovalEnabled===true&&requestDateIsTestMode(roster,date)){
+      if(data.partnerApprovalEnabled===true){
         const resumePath="/board.html?line_resume=duty-submit"+
           "&d="+encodeURIComponent(date)+
           "&fg="+encodeURIComponent(fromGrade)+
           "&fn="+encodeURIComponent(fromName)+
           "&tg="+encodeURIComponent(toGrade)+
           "&tn="+encodeURIComponent(toName);
-        const line=await lineIdentityForTest(request,roster,date,resumePath);
-        if(line.response)return line.response;
-        requesterLineHash=line.hash;
+        const submitSession=await getLineSession(request);
+        if(!submitSession){
+          return json({
+            error:"LINE認証が必要です。",
+            code:"line_login_required",
+            loginUrl:lineLoginStartUrl(request,resumePath)
+          },401);
+        }
+        requesterLineHash=await lineIdentityHash(submitSession.sub);
       }
       const now=new Date().toISOString();
       const idx=data.requests.findIndex(item=>item.status==="pending"&&item.date===date&&item.fromGrade===fromGrade&&item.fromName===fromName);
