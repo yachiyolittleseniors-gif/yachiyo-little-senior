@@ -587,7 +587,7 @@
       const approvalToggle=document.getElementById('dutyPartnerApprovalToggle');
       const approvalStatus=document.getElementById('dutyPartnerApprovalStatus');
       if(approvalToggle)approvalToggle.checked=partnerApprovalEnabled;
-      if(approvalStatus)approvalStatus.textContent=partnerApprovalEnabled?'承認リンク：使用中':'承認リンク：未使用';
+      if(approvalStatus)approvalStatus.textContent=partnerApprovalEnabled?'ご家族承認モード':'管理者承認モード';
       syncDutyRequestOperationNote();
       requestsLoaded=true;
       renderRequests();
@@ -966,12 +966,12 @@
         partnerApprovalEnabled=body.partnerApprovalEnabled===true;
         partnerApprovalToggle.checked=partnerApprovalEnabled;
         if(isAdminViewing())loadDutySystemMonitor();
-        if(partnerApprovalStatus)partnerApprovalStatus.textContent=partnerApprovalEnabled?'承認リンク：使用中':'承認リンク：未使用';
+        if(partnerApprovalStatus)partnerApprovalStatus.textContent=partnerApprovalEnabled?'ご家族承認モード':'管理者承認モード';
         syncDutyRequestOperationNote();
-        if(window.showSaveNotice)showSaveNotice(partnerApprovalEnabled?'承認リンクをONにしました':'承認リンクをOFFにしました');
+        if(window.showSaveNotice)showSaveNotice(partnerApprovalEnabled?'ご家族承認モードに切り替えました':'管理者承認モードに切り替えました');
       }catch(e){
         partnerApprovalToggle.checked=partnerApprovalEnabled;
-        if(partnerApprovalStatus)partnerApprovalStatus.textContent=partnerApprovalEnabled?'承認リンク：使用中':'承認リンク：未使用';
+        if(partnerApprovalStatus)partnerApprovalStatus.textContent=partnerApprovalEnabled?'ご家族承認モード':'管理者承認モード';
         alert(e.message||'設定を変更できませんでした。');
       }finally{
         partnerApprovalToggle.disabled=false;
