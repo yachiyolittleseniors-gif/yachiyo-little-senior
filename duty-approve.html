@@ -40,8 +40,12 @@ button:disabled{opacity:.55}
 <div class="arrow">↓</div>
 <div class="row"><span>変更後</span><b id="to"></b></div>
 </div>
-<button id="approve" type="button">この変更を承認する</button>
-<p class="note">交代相手の方が内容を確認したうえで承認してください。承認すると当番表へ自動反映され、このリンクは使用できなくなります。</p>
+<label style="display:flex;gap:10px;align-items:flex-start;margin-top:18px;padding:12px;border:1px solid #ddd5c4;border-radius:12px;background:#faf8f2;line-height:1.6">
+<input id="familyConfirm" type="checkbox" style="width:20px;height:20px;margin-top:2px;accent-color:#c79a3b;flex:0 0 auto">
+<span style="font-size:13px;font-weight:700;color:#17202b">私は変更後のご家庭の者で、内容を確認しました。</span>
+</label>
+<button id="approve" type="button" disabled>この変更を承認する</button>
+<p class="note">この変更は、変更後のご家庭の方が内容を確認して承認してください。父・母など、ご家庭の方であれば承認できます。承認すると当番表へ自動反映され、このリンクは使用できなくなります。</p>
 </div>
 <div id="message" class="status" hidden></div>
 </section>
@@ -54,6 +58,7 @@ button:disabled{opacity:.55}
   const content=document.getElementById('content');
   const message=document.getElementById('message');
   const approve=document.getElementById('approve');
+  const familyConfirm=document.getElementById('familyConfirm');
   function showMessage(text,ok){
     loading.hidden=true;content.hidden=true;message.hidden=false;
     message.textContent=text;message.className='status '+(ok?'ok':'error');
@@ -81,7 +86,9 @@ button:disabled{opacity:.55}
       loading.hidden=true;content.hidden=false;
     }catch(e){showMessage(e.message||'申請内容を確認できませんでした。',false)}
   }
+  familyConfirm.addEventListener('change',function(){approve.disabled=!familyConfirm.checked});
   approve.addEventListener('click',async function(){
+    if(!familyConfirm.checked)return;
     if(!confirm('この当番変更を承認しますか？'))return;
     approve.disabled=true;approve.textContent='承認中…';
     try{
