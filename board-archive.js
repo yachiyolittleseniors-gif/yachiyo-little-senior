@@ -13,14 +13,14 @@
 
   if(!panel||!fields||!reveal||!input||!saveBtn||!list)return;
 
-  function setItemEditing(visible){
-    fields.classList.toggle('is-item-editing',visible);
+  function setAdminListVisible(visible){
+    list.hidden=!visible;
     reveal.setAttribute('aria-expanded',String(visible));
-    reveal.textContent=visible?'編集を隠す':'編集を表示';
+    reveal.textContent=visible?'保存済み資料を隠す':'保存済み資料を表示';
   }
-  setItemEditing(false);
+  setAdminListVisible(false);
   reveal.addEventListener('click',function(){
-    setItemEditing(!fields.classList.contains('is-item-editing'));
+    setAdminListVisible(list.hidden);
   });
 
   function password(){return panel.dataset.adminPassword||''}
@@ -72,10 +72,10 @@
       download.type='button';download.textContent='ダウンロード';
       download.addEventListener('click',function(){downloadDocument(item,download)});
       const rename=document.createElement('button');
-      rename.type='button';rename.className='document-archive-manage';rename.textContent='名前変更';
+      rename.type='button';rename.textContent='名前変更';
       rename.addEventListener('click',function(){renameDocument(item)});
       const remove=document.createElement('button');
-      remove.type='button';remove.className='document-archive-delete document-archive-manage';remove.textContent='削除';
+      remove.type='button';remove.className='document-archive-delete';remove.textContent='削除';
       remove.addEventListener('click',function(){deleteDocument(item)});
       const isPdf=/application\/pdf/i.test(String(item.contentType||''))||/\.pdf$/i.test(String(item.fileName||''));
       if(isPdf){
