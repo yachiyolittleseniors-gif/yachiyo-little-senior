@@ -61,17 +61,17 @@
   }
 
   function octoberDisplayName(value,grade,dateOrTable){
-    let name=displayName(value,grade);
+    let name=displayName(value,grade).replace(/[（）()]/g,'');
     let isOctober=false;
     if(dateOrTable&&typeof dateOrTable==='object'){
       isOctober=Number(dateOrTable.year)===2026&&Number(dateOrTable.month)===10;
     }else{
       isOctober=/^2026-10-/.test(String(dateOrTable||''));
     }
-    if(!isOctober)return name;
-    name=name.replace(/[（）()]/g,'');
-    if(String(grade)==='1'&&name==='石川')name='石川晃';
-    if(String(grade)==='2'&&name==='石川圭')name='石川';
+    if(isOctober){
+      if(String(grade)==='1'&&name==='石川')name='石川晃';
+      if(String(grade)==='2'&&name==='石川圭')name='石川';
+    }
     return name;
   }
 
