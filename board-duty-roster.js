@@ -329,13 +329,23 @@
   async function cancelChange(id){
     const target=changes.find(function(item){return item.id===id});
     if(!target||target.status==='cancelled')return;
+    const linked=target.requestNo
+      ?changes.filter(function(item){return item.requestNo===target.requestNo&&item.status!=='cancelled'})
+      :[target];
     dutyChangeMutationInFlight=true;
-    const confirmed=confirm(displayDate(target.date)+'「'+target.from+' → '+target.to+'」を取り消しますか？\n当番表は変更前の状態に戻ります。');
+    const isSwap=linked.length>1;
+    const confirmed=confirm(
+      isSwap
+        ?'この当番日の入れ替えを取り消しますか？\n2つの当番日を変更前の状態に戻します。'
+        :displayDate(target.date)+'「'+target.from+' → '+target.to+'」を取り消しますか？\n当番表は変更前の状態に戻ります。'
+    );
     if(!confirmed){dutyChangeMutationInFlight=false;return}
     const previous=changes.map(function(item){return Object.assign({},item)});
-    target.status='cancelled';target.cancelledAt=new Date().toISOString();render();
+    const now=new Date().toISOString();
+    linked.forEach(function(item){item.status='cancelled';item.cancelledAt=now});
+    render();
     try{
-      await persist('当番変更を取り消しました','当番変更を取り消しました',true);
+      await persist(isSwap?'当番日の入れ替えを取り消しました':'当番変更を取り消しました',isSwap?'当番日の入れ替えを取り消しました':'当番変更を取り消しました',true);
     }catch(e){
       changes=previous;render();alert(e.message||'当番変更を取り消せませんでした。');
     }finally{
