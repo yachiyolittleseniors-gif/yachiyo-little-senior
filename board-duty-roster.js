@@ -678,17 +678,49 @@
   }
 
   async function submitRequest(){
-    const date=document.getElementById('dutyRequestRosterDate').value,fromPerson=parsePersonOption(document.getElementById('dutyRequestFrom').value),toPerson=parsePersonOption(document.getElementById('dutyRequestTo').value),btn=document.getElementById('submitDutyRequest'),result=document.getElementById('dutyRequestResult');
-    if(!/^\d{4}-\d{2}-\d{2}$/.test(date)||!rosterDates().some(function(x){return x.date===date})||!fromPerson||!toPerson)return alert('登録済みのお当番表から変更日・変更前・変更後を選択してください。');
-    if(fromPerson.grade===toPerson.grade&&fromPerson.name===toPerson.name)return alert('変更前と変更後は別の方を選択してください。');
+    const typeSel=document.getElementById('dutyRequestType');
+    const requestType=typeSel&&typeSel.value==='swap'?'swap':'replace';
+    const date=document.getElementById('dutyRequestRosterDate').value;
+    const fromPerson=parsePersonOption(document.getElementById('dutyRequestFrom').value);
+    const normalTo=parsePersonOption(document.getElementById('dutyRequestTo').value);
+    const swapDate=document.getElementById('dutyRequestSwapDate')?.value||'';
+    const swapPerson=parsePersonOption(document.getElementById('dutyRequestSwapPerson')?.value||'');
+    const toPerson=requestType==='swap'?swapPerson:normalTo;
+    const btn=document.getElementById('submitDutyRequest'),result=document.getElementById('dutyRequestResult');
+
+    if(!/^\d{4}-\d{2}-\d{2}$/.test(date)||!rosterDates().some(function(x){return x.date===date})||!fromPerson){
+      return alert('登録済みのお当番表から日付と担当者を選択してください。');
+    }
+    if(requestType==='swap'){
+      if(!/^\d{4}-\d{2}-\d{2}$/.test(swapDate)||!rosterDates().some(function(x){return x.date===swapDate})||!swapPerson){
+        return alert('入れ替える相手の当番日と担当者を選択してください。');
+      }
+      if(date===swapDate)return alert('入れ替える相手は別の当番日を選択してください。');
+      if(fromPerson.grade===swapPerson.grade&&fromPerson.name===swapPerson.name)return alert('自分とは別の方を選択してください。');
+    }else{
+      if(!normalTo)return alert('変更後の担当者を選択してください。');
+      if(fromPerson.grade===normalTo.grade&&fromPerson.name===normalTo.name)return alert('変更前と変更後は別の方を選択してください。');
+    }
+
+    const requestPayload={
+      date:date,fromGrade:fromPerson.grade,fromName:fromPerson.name,
+      toGrade:toPerson.grade,toName:toPerson.name,
+      requestType:requestType,
+      swapDate:requestType==='swap'?swapDate:'',
+      swapGrade:requestType==='swap'?swapPerson.grade:'',
+      swapName:requestType==='swap'?swapPerson.name:''
+    };
+
     btn.disabled=true;btn.textContent='送信中…';
     try{
-      const response=await fetch(REQUEST_API,{method:'POST',credentials:'same-origin',headers:requestHeaders(false),body:JSON.stringify({action:'submit',request:{date:date,fromGrade:fromPerson.grade,fromName:fromPerson.name,toGrade:toPerson.grade,toName:toPerson.name}})});
+      const response=await fetch(REQUEST_API,{method:'POST',credentials:'same-origin',headers:requestHeaders(false),body:JSON.stringify({action:'submit',request:requestPayload})});
       const body=await response.json().catch(function(){return{}});
       if(!response.ok){
         if(body.code==='line_login_required'&&body.loginUrl){
           const resumePayload=JSON.stringify({
-            mode:'submit',date:date,from:personOptionValue(fromPerson),to:personOptionValue(toPerson),expires:Date.now()+10*60*1000
+            mode:'submit',requestType:requestType,date:date,from:personOptionValue(fromPerson),to:personOptionValue(toPerson),
+            swapDate:requestType==='swap'?swapDate:'',swapPerson:requestType==='swap'?personOptionValue(swapPerson):'',
+            expires:Date.now()+10*60*1000
           });
           try{sessionStorage.setItem('ylsDutyLineResume',resumePayload)}catch(_){}
           try{localStorage.setItem('ylsDutyLineResume',resumePayload)}catch(_){}
@@ -698,11 +730,19 @@
         throw new Error(body.error||'申請できませんでした。');
       }
       requests=normalizeRequestList(body.requests);requestsLoaded=true;renderRequests();syncPendingRequestCount();
-      const submitted=requests.slice().sort(function(a,b){return String(b.updatedAt||b.createdAt).localeCompare(String(a.updatedAt||a.createdAt))}).find(function(x){return x.status==='pending'&&x.date===date&&x.fromGrade===fromPerson.grade&&x.fromName===fromPerson.name});
+      const submitted=requests.slice().sort(function(a,b){return String(b.updatedAt||b.createdAt).localeCompare(String(a.updatedAt||a.createdAt))}).find(function(x){
+        return x.status==='pending'&&x.date===date&&x.fromGrade===fromPerson.grade&&x.fromName===fromPerson.name&&x.requestType===requestType&&(requestType!=='swap'||x.swapDate===swapDate);
+      });
       const requestNo=submitted&&submitted.requestNo?submitted.requestNo:'';
       const approvalUrl=String(body.approvalUrl||'');
-      const shareItem=submitted||{requestNo:requestNo,date:date,fromGrade:fromPerson.grade,fromName:fromPerson.name,toGrade:toPerson.grade,toName:toPerson.name};
-      const text=approvalUrl?approvalLineText(shareItem,approvalUrl):'【当番変更申請'+(requestNo?' #'+requestNo:'')+'】\n'+displayDate(date)+'\n変更前：'+fromPerson.grade+'年・'+octoberDisplayName(fromPerson.name,fromPerson.grade,date)+'\n変更後：'+toPerson.grade+'年・'+octoberDisplayName(toPerson.name,toPerson.grade,date)+'\n当番変更を申請しました。';
+      const shareItem=submitted||{
+        requestNo:requestNo,date:date,fromGrade:fromPerson.grade,fromName:fromPerson.name,toGrade:toPerson.grade,toName:toPerson.name,
+        requestType:requestType,swapDate:requestType==='swap'?swapDate:'',swapGrade:requestType==='swap'?swapPerson.grade:'',swapName:requestType==='swap'?swapPerson.name:''
+      };
+      const text=approvalUrl?approvalLineText(shareItem,approvalUrl):
+        (requestType==='swap'
+          ?'【当番日入れ替え申請'+(requestNo?' #'+requestNo:'')+'】\n'+displayDate(date)+' '+fromPerson.grade+'年・'+octoberDisplayName(fromPerson.name,fromPerson.grade,date)+'\n↕\n'+displayDate(swapDate)+' '+swapPerson.grade+'年・'+octoberDisplayName(swapPerson.name,swapPerson.grade,swapDate)+'\n当番日を入れ替える申請です。'
+          :'【当番変更申請'+(requestNo?' #'+requestNo:'')+'】\n'+displayDate(date)+'\n変更前：'+fromPerson.grade+'年・'+octoberDisplayName(fromPerson.name,fromPerson.grade,date)+'\n変更後：'+toPerson.grade+'年・'+octoberDisplayName(toPerson.name,toPerson.grade,date)+'\n当番変更を申請しました。');
       const note=approvalUrl?'※承認リンクは1回限り・24時間有効です。期限を過ぎた場合は、再度「当番変更申請」から申請してください。承認後、当番表へ自動反映されます。':'※当番表への正式な反映は管理者確認後となります。';
       if(approvalUrl){
         try{
@@ -711,7 +751,11 @@
             request:{
               requestNo:requestNo,date:date,
               fromGrade:fromPerson.grade,fromName:octoberDisplayName(fromPerson.name,fromPerson.grade,date),
-              toGrade:toPerson.grade,toName:octoberDisplayName(toPerson.name,toPerson.grade,date)
+              toGrade:toPerson.grade,toName:octoberDisplayName(toPerson.name,toPerson.grade,date),
+              requestType:requestType,
+              swapDate:requestType==='swap'?swapDate:'',
+              swapGrade:requestType==='swap'?swapPerson.grade:'',
+              swapName:requestType==='swap'?octoberDisplayName(swapPerson.name,swapPerson.grade,swapDate):''
             }
           }));
           window.location.assign('/duty-line-complete.html');
@@ -722,7 +766,7 @@
       result.hidden=false;result.innerHTML='<div class="duty-request-complete"><b>変更申請を受け付けました</b><p>下のボタンを押すと、LINEの送信先選択画面が開きます。</p><a id="dutyRequestLineShare" class="line-share" href="'+shareUrl+'">LINEで共有する</a><small>'+escapeHtml(note)+'</small></div>';
       const lineShare=document.getElementById('dutyRequestLineShare');
       if(lineShare)lineShare.addEventListener('click',function(event){event.preventDefault();window.location.assign(shareUrl)});
-    }catch(e){alert(e.message||'申請できませんでした.')}finally{btn.disabled=false;btn.textContent='変更申請を送信'}
+    }catch(e){alert(e.message||'申請できませんでした。')}finally{btn.disabled=false;btn.textContent='変更申請を送信'}
   }
   async function requestAdminAction(id,action){
     const adminPassword=panel.dataset.adminPassword||'';if(!adminPassword)throw new Error('管理画面を開き直してください。');
@@ -902,7 +946,10 @@
   if(requestToggle&&requestContent)requestToggle.addEventListener('click',function(){const open=requestContent.hidden;requestContent.hidden=!open;requestToggle.setAttribute('aria-expanded',String(open));requestToggle.textContent=open?'閉じる':'申請する';populateRequestForm()});
   const requestStatusToggle=document.getElementById('toggleDutyRequestStatus'),requestStatusList=document.getElementById('dutyRequestStatusList');
   if(requestStatusToggle&&requestStatusList)requestStatusToggle.addEventListener('click',function(){const open=requestStatusList.hidden;requestStatusList.hidden=!open;requestStatusToggle.setAttribute('aria-expanded',String(open));const pending=requests.filter(function(item){return item.status==='pending'}).length;requestStatusToggle.textContent=open?'申請内容を閉じる':(pending?'申請内容を見る（申請中 '+pending+'件）':'申請内容を見る')});
-  document.getElementById('dutyRequestRosterDate')?.addEventListener('change',populateRequestForm);document.getElementById('submitDutyRequest')?.addEventListener('click',submitRequest);
+  document.getElementById('dutyRequestType')?.addEventListener('change',populateRequestForm);
+  document.getElementById('dutyRequestRosterDate')?.addEventListener('change',populateRequestForm);
+  document.getElementById('dutyRequestSwapDate')?.addEventListener('change',populateRequestForm);
+  document.getElementById('submitDutyRequest')?.addEventListener('click',submitRequest);
   if(hasLegacyChangeForm)pasteChangeBtn.addEventListener('click',pasteChangeText);
   if(hasLegacyChangeForm)saveChangesBtn.addEventListener('click',saveChanges);saveBtn.addEventListener('click',addImages);
   document.addEventListener('visibilitychange',function(){if(!document.hidden){syncPendingRequestCount();loadRequests();if(isAdminViewing()&&!dutyChangeMutationInFlight)load();}});
