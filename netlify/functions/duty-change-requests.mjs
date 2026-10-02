@@ -2,6 +2,7 @@ import { getStore } from "@netlify/blobs";
 import { verifyAccessPassword } from "./_access-password.mjs";
 import { boardSessionIsValid } from "./_board-session.mjs";
 import { verifyAdminPassword, adminAuthError } from "./admin-rate-limit.mjs";
+import { getLineSession, lineIdentityHash, lineLoginStartUrl } from "./_line-login-auth.mjs";
 
 const STORE_NAME="yachiyo-public-site";
 const KEY="content/duty-change-requests.json";
@@ -85,7 +86,8 @@ function normalizeItem(item,index=0){
     updatedAt:String(item?.updatedAt||"").slice(0,60),
     approvalTokenHash:String(item?.approvalTokenHash||"").slice(0,128),
     approvalExpiresAt:String(item?.approvalExpiresAt||"").slice(0,60),
-    partnerApprovedAt:String(item?.partnerApprovedAt||"").slice(0,60)
+    partnerApprovedAt:String(item?.partnerApprovedAt||"").slice(0,60),
+    requesterLineHash:String(item?.requesterLineHash||"").slice(0,128)
   };
 }
 function dedupePending(items){
@@ -226,6 +228,30 @@ function requestMatchesRoster(roster,date,fromGrade,fromName){
 }
 
 
+function requestDateIsTestMode(roster,date){
+  const match=/^(\\d{4})-(\\d{2})-\\d{2}$/.exec(String(date||""));
+  if(!match)return false;
+  const year=Number(match[1]),month=Number(match[2]);
+  const images=Array.isArray(roster?.images)?roster.images:[];
+  return images.some(image=>
+    image?.testMode===true &&
+    Number(image?.table?.year)===year &&
+    Number(image?.table?.month)===month
+  );
+}
+async function lineIdentityForTest(request,roster,date,returnPath){
+  if(!requestDateIsTestMode(roster,date))return{required:false,hash:""};
+  const session=await getLineSession(request);
+  if(!session){
+    return{required:true,response:json({
+      error:"LINE認証が必要です。",
+      code:"line_login_required",
+      loginUrl:lineLoginStartUrl(request,returnPath)
+    },401)};
+  }
+  return{required:true,hash:await lineIdentityHash(session.sub)};
+}
+
 async function applyRequestToRoster(store,item){
   const roster=await store.get(LEGACY_KEY,{type:"json",consistency:"strong"})||{initialized:true,images:[],changes:[]};
   if(!requestMatchesRoster(roster,item.date,item.fromGrade,item.fromName)){
@@ -272,6 +298,13 @@ export default async (request,context)=>{
         if(!item)return json({error:"承認リンクが無効です。\nまたは、すでに使用済みです。"},404);
         const expires=Date.parse(item.approvalExpiresAt||"");
         if(!Number.isFinite(expires)||Date.now()>expires)return json({error:"承認リンクの有効期限が切れています。申請者に再申請を依頼してください。"},410);
+        const roster=await store.get(LEGACY_KEY,{type:"json",consistency:"strong"})||{};
+        if(requestDateIsTestMode(roster,item.date)){
+          if(!item.requesterLineHash)return json({error:"この申請はLINE認証前に作成されています。申請者に「確認待ち」からLINEを再送してもらってください。"},409);
+          const line=await lineIdentityForTest(request,roster,item.date,"/duty-approve.html?t="+encodeURIComponent(token));
+          if(line.response)return line.response;
+          return json({ok:true,request:approvalPreview(item),lineAuthRequired:true,selfApprovalBlocked:line.hash===item.requesterLineHash});
+        }
         return json({ok:true,request:approvalPreview(item)});
       }
       if(!(await boardAccess(store,request,context)))return json({error:"unauthorized"},401);
@@ -292,7 +325,17 @@ export default async (request,context)=>{
       if(!item)return json({error:"承認リンクが無効です。\nまたは、すでに使用済みです。"},404);
       const expires=Date.parse(item.approvalExpiresAt||"");
       if(!Number.isFinite(expires)||Date.now()>expires)return json({error:"承認リンクの有効期限が切れています。申請者に再申請を依頼してください。"},410);
-      if(action==="preview-partner-approval")return json({ok:true,request:approvalPreview(item)});
+      const roster=await store.get(LEGACY_KEY,{type:"json",consistency:"strong"})||{};
+      if(requestDateIsTestMode(roster,item.date)){
+        if(!item.requesterLineHash)return json({error:"この申請はLINE認証前に作成されています。申請者に「確認待ち」からLINEを再送してもらってください。"},409);
+        const line=await lineIdentityForTest(request,roster,item.date,"/duty-approve.html?t="+encodeURIComponent(token));
+        if(line.response)return line.response;
+        const selfApprovalBlocked=line.hash===item.requesterLineHash;
+        if(action==="preview-partner-approval")return json({ok:true,request:approvalPreview(item),lineAuthRequired:true,selfApprovalBlocked});
+        if(selfApprovalBlocked)return json({error:"申請したLINEアカウントでは承認できません。変更後のご家庭へ承認を依頼してください。",code:"self_approval_blocked"},403);
+      }else if(action==="preview-partner-approval"){
+        return json({ok:true,request:approvalPreview(item)});
+      }
       const applied=await applyRequestToRoster(store,item);
       if(!applied.ok)return json({error:applied.error},409);
       const idx=data.requests.findIndex(x=>x.id===item.id);
@@ -313,11 +356,19 @@ export default async (request,context)=>{
       const item=data.requests[idx];
       const expires=Date.parse(item.approvalExpiresAt||"");
       if(Number.isFinite(expires)&&Date.now()>expires)return json({error:"承認リンクの有効期限が切れています。再度「当番変更申請」から申請してください。"},410);
+      const roster=await store.get(LEGACY_KEY,{type:"json",consistency:"strong"})||{};
+      let requesterLineHash=item.requesterLineHash||"";
+      if(requestDateIsTestMode(roster,item.date)){
+        const line=await lineIdentityForTest(request,roster,item.date,"/board.html?line_resume=duty-resend");
+        if(line.response)return line.response;
+        if(requesterLineHash&&requesterLineHash!==line.hash)return json({error:"この申請のLINE再送は、申請した方のLINEアカウントから行ってください。",code:"requester_line_mismatch"},403);
+        requesterLineHash=line.hash;
+      }
       const issuedApprovalToken=newApprovalToken();
       const approvalTokenHash=await sha256(issuedApprovalToken);
       const approvalExpiresAt=new Date(Date.now()+APPROVAL_TTL_MS).toISOString();
       const now=new Date().toISOString();
-      data.requests[idx]={...item,approvalTokenHash,approvalExpiresAt,updatedAt:now};
+      data.requests[idx]={...item,requesterLineHash,approvalTokenHash,approvalExpiresAt,updatedAt:now};
       await store.setJSON(KEY,data);
       return json({ok:true,...publicData(data),approvalUrl:approvalUrl(request,issuedApprovalToken),approvalExpiresAt});
     }
@@ -338,6 +389,12 @@ export default async (request,context)=>{
       }
 
       const data=await loadData(store);
+      let requesterLineHash="";
+      if(data.partnerApprovalEnabled===true&&requestDateIsTestMode(roster,date)){
+        const line=await lineIdentityForTest(request,roster,date,"/board.html?line_resume=duty-submit");
+        if(line.response)return line.response;
+        requesterLineHash=line.hash;
+      }
       const now=new Date().toISOString();
       const idx=data.requests.findIndex(item=>item.status==="pending"&&item.date===date&&item.fromGrade===fromGrade&&item.fromName===fromName);
       let issuedApprovalToken="";
@@ -349,14 +406,14 @@ export default async (request,context)=>{
         approvalExpiresAt=new Date(Date.now()+APPROVAL_TTL_MS).toISOString();
       }
       if(idx>=0){
-        data.requests[idx]={...data.requests[idx],toGrade,toName,updatedAt:now,approvalTokenHash,approvalExpiresAt,partnerApprovedAt:""};
+        data.requests[idx]={...data.requests[idx],toGrade,toName,updatedAt:now,approvalTokenHash,approvalExpiresAt,partnerApprovedAt:"",requesterLineHash:requesterLineHash||data.requests[idx].requesterLineHash||""};
       }else{
         if(data.requests.length>=MAX_REQUESTS)return json({error:"申請の保存上限に達しています。管理者へ連絡してください。"},400);
         const next=nextRequestNo(data);data.requestSeq=next.seq;
         data.requests.push({
           id:`request-${crypto.randomUUID()}`,requestNo:next.value,date,
           fromGrade,fromName,toGrade,toName,status:"pending",createdAt:now,updatedAt:now,
-          approvalTokenHash,approvalExpiresAt,partnerApprovedAt:""
+          approvalTokenHash,approvalExpiresAt,partnerApprovedAt:"",requesterLineHash
         });
       }
       data.requests=dedupePending(data.requests);
