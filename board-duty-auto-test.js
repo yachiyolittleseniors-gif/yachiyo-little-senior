@@ -187,7 +187,7 @@ function initTemporaryDuty(){
   if(!open||!box||!rows||!add||!make||!result||open.dataset.bound==='1')return;open.dataset.bound='1';
   function row(){
     var d=document.createElement('div');d.className='temporary-duty-row';
-    d.innerHTML='<input type="date" class="tmp-date"><select class="tmp-grade"><option value="3">3年</option><option value="2" selected>2年</option><option value="1">1年</option></select><select class="tmp-slot"><option value="午前">午前</option><option value="午後">午後</option><option value="終日">終日</option></select><input class="tmp-names" placeholder="担当者（例：石山・加藤）"><button type="button" class="tmp-remove">削除</button>';
+    d.innerHTML='<label class="tmp-date-field"><span>日付</span><input type="date" class="tmp-date"></label><select class="tmp-grade"><option value="3">3年</option><option value="2" selected>2年</option><option value="1">1年</option></select><select class="tmp-slot"><option value="午前">午前</option><option value="午後">午後</option><option value="終日">終日</option></select><input class="tmp-names" placeholder="担当者（例：石山・加藤）"><button type="button" class="tmp-remove">削除</button>';
     d.querySelector('.tmp-remove').onclick=function(){d.remove();};rows.appendChild(d);
   }
   open.onclick=function(){box.hidden=!box.hidden;if(!box.hidden&&!rows.children.length)row();};
