@@ -20,33 +20,6 @@
 <h1 class="title">当番変更申請</h1>
 <div id="content"><div class="spinner"></div><p class="msg">LINE認証を確認して申請を続行しています。</p></div>
 </main></div>
-<script>
-(function(){
-  const out=document.getElementById('content');
-  const token=new URLSearchParams(location.search).get('t')||'';
-  const esc=s=>String(s||'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
-  const displayDate=v=>{const m=/^(\d{4})-(\d{2})-(\d{2})$/.exec(String(v||''));return m?Number(m[2])+'月'+Number(m[3])+'日':String(v||'')};
-  if(!token){out.innerHTML='<p class="error">申請情報を確認できませんでした。元の画面からもう一度申請してください。</p>';return}
-  fetch('/.netlify/functions/duty-change-requests',{
-    method:'POST',credentials:'same-origin',
-    headers:{'content-type':'application/json'},
-    body:JSON.stringify({action:'submit-line-resume',token})
-  }).then(async r=>{
-    const body=await r.json().catch(()=>({}));
-    if(!r.ok)throw new Error(body.error||'申請を続行できませんでした。');
-    const q=body.request||{};
-    const approvalUrl=String(body.approvalUrl||'');
-    const text='【当番変更申請'+(q.requestNo?' #'+q.requestNo:'')+'】\n'+displayDate(q.date)+'\n変更前：'+q.fromGrade+'年・'+q.fromName+'\n変更後：'+q.toGrade+'年・'+q.toName+'\n当番変更を申請しました。\n\n【変更後のご家庭の方へ】\n下の専用リンクから内容を確認して承認してください。\n'+approvalUrl;
-    const share='https://line.me/R/share?text='+encodeURIComponent(text);
-    out.innerHTML='<p class="msg"><b>変更申請を受け付けました。</b><br>続けて、変更後のご家庭へLINEで承認リンクを送ってください。</p>'+
-      '<div class="detail">'+esc(displayDate(q.date))+'<br>変更前：'+esc(q.fromGrade+'年・'+q.fromName)+'<br>変更後：'+esc(q.toGrade+'年・'+q.toName)+'</div>'+
-      '<a class="line" href="'+esc(share)+'">LINEで承認リンクを送る</a>'+
-      '<small class="small">承認リンクは1回限り・24時間有効です。LINE送信後はこの画面を閉じて構いません。</small>';
-    try{history.replaceState(null,'',location.pathname)}catch(_){}
-  }).catch(e=>{
-    out.innerHTML='<p class="error">'+esc(e.message||'申請を続行できませんでした。')+'</p><small class="small">元のチーム専用ページからもう一度申請してください。</small>';
-  });
-})();
-</script>
+<script src="./duty-line-resume.js?v=20261002-1"></script>
 </body>
 </html>
