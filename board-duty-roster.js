@@ -25,6 +25,7 @@
   let requests=[];
   let requestsLoaded=false;
   let partnerApprovalEnabled=false;
+  let dutyChangeMutationInFlight=false;
   function syncDutyRequestOperationNote(){
     const note=document.getElementById('dutyRequestOperationNote');
     if(!note)return;
@@ -188,6 +189,7 @@
   }
 
   async function load(){
+    if(dutyChangeMutationInFlight)return;
     try{
       await window.boardAccessReady;
       const accessPassword=sessionStorage.getItem('yachiyoAttendancePass')||'';
@@ -256,9 +258,20 @@
   }
 
   async function cancelChange(id){
-    const target=changes.find(function(item){return item.id===id});if(!target||target.status==='cancelled'||!confirm(displayDate(target.date)+'「'+target.from+' → '+target.to+'」を取り消しますか？\n当番表は変更前の状態に戻ります。'))return;
-    const previous=changes.map(function(item){return Object.assign({},item)});target.status='cancelled';target.cancelledAt=new Date().toISOString();render();
-    try{await persist('当番変更を取り消しました','当番変更を取り消しました',true)}catch(e){changes=previous;render();alert(e.message||'当番変更を取り消せませんでした。')}
+    const target=changes.find(function(item){return item.id===id});
+    if(!target||target.status==='cancelled')return;
+    dutyChangeMutationInFlight=true;
+    const confirmed=confirm(displayDate(target.date)+'「'+target.from+' → '+target.to+'」を取り消しますか？\n当番表は変更前の状態に戻ります。');
+    if(!confirmed){dutyChangeMutationInFlight=false;return}
+    const previous=changes.map(function(item){return Object.assign({},item)});
+    target.status='cancelled';target.cancelledAt=new Date().toISOString();render();
+    try{
+      await persist('当番変更を取り消しました','当番変更を取り消しました',true);
+    }catch(e){
+      changes=previous;render();alert(e.message||'当番変更を取り消せませんでした。');
+    }finally{
+      dutyChangeMutationInFlight=false;
+    }
   }
 
   async function deleteChange(id){
@@ -687,8 +700,8 @@
   document.getElementById('dutyRequestRosterDate')?.addEventListener('change',populateRequestForm);document.getElementById('submitDutyRequest')?.addEventListener('click',submitRequest);
   if(hasLegacyChangeForm)pasteChangeBtn.addEventListener('click',pasteChangeText);
   if(hasLegacyChangeForm)saveChangesBtn.addEventListener('click',saveChanges);saveBtn.addEventListener('click',addImages);
-  document.addEventListener('visibilitychange',function(){if(!document.hidden){syncPendingRequestCount();loadRequests();if(isAdminViewing())load();}});
-  window.addEventListener('focus',function(){syncPendingRequestCount();loadRequests();if(isAdminViewing())load();});
+  document.addEventListener('visibilitychange',function(){if(!document.hidden){syncPendingRequestCount();loadRequests();if(isAdminViewing()&&!dutyChangeMutationInFlight)load();}});
+  window.addEventListener('focus',function(){syncPendingRequestCount();loadRequests();if(isAdminViewing()&&!dutyChangeMutationInFlight)load();});
   document.addEventListener('yachiyo:admin-session-active',function(){load();});
   document.addEventListener('yachiyo:admin-session-expired',function(){render();syncPendingRequestCount();});
   try{
