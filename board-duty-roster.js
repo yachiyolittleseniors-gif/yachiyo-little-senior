@@ -475,13 +475,25 @@
       issueList.innerHTML=list.map(function(item){return'<li>'+(item.requestNo?'#'+escapeHtml(item.requestNo)+' ':'')+escapeHtml(item.message||'確認が必要です。')+'</li>'}).join('');
     }
     if(recent){
-      const items=Array.isArray(monitor.recent)?monitor.recent:[];
-      recent.innerHTML=items.length?items.map(function(item){
-        const status=item.status==='approved'?'反映済み':(item.status==='pending'?'確認待ち':item.status);
-        const device=item.requesterDevice?('申請：'+escapeHtml(item.requesterDevice)):'申請端末：記録なし';
-        const approver=item.approverDevice?(' / 承認：'+escapeHtml(item.approverDevice)):'';
-        return '<div class="duty-monitor-recent-item"><b>'+(item.requestNo?'#'+escapeHtml(item.requestNo)+' ':'')+escapeHtml(status)+'</b>　'+escapeHtml(displayDate(item.date))+'<br><span>'+device+approver+'</span>'+(item.updatedAt?'<br><small>最終更新：'+escapeHtml(formatMonitorTime(item.updatedAt))+'</small>':'')+'</div>';
-      }).join(''):'<div class="duty-monitor-recent-item">まだ監視対象の申請はありません。</div>';
+      const events=Array.isArray(monitor.recentEvents)?monitor.recentEvents:[];
+      const stageLabel={line_start:'LINE認証開始',request_created:'申請・リンク発行',self_approval_blocked:'自己承認を防止',reflection_error:'当番表反映エラー',approved_reflected:'承認・反映完了'};
+      if(events.length){
+        recent.innerHTML=events.map(function(item){
+          return '<div class="duty-monitor-recent-item"><b>'+(item.requestNo?'#'+escapeHtml(item.requestNo)+' ':'')+escapeHtml(stageLabel[item.stage]||item.stage||'処理')+'</b>'+
+            (item.message?'<br>'+escapeHtml(item.message):'')+
+            (item.device?'<br><span>'+escapeHtml(item.device)+'</span>':'')+
+            (item.at?'<br><small>'+escapeHtml(formatMonitorTime(item.at))+'</small>':'')+
+            '</div>';
+        }).join('');
+      }else{
+        const items=Array.isArray(monitor.recent)?monitor.recent:[];
+        recent.innerHTML=items.length?items.map(function(item){
+          const status=item.status==='approved'?'反映済み':(item.status==='pending'?'確認待ち':item.status);
+          const device=item.requesterDevice?('申請：'+escapeHtml(item.requesterDevice)):'申請端末：記録なし';
+          const approver=item.approverDevice?(' / 承認：'+escapeHtml(item.approverDevice)):'';
+          return '<div class="duty-monitor-recent-item"><b>'+(item.requestNo?'#'+escapeHtml(item.requestNo)+' ':'')+escapeHtml(status)+'</b>　'+escapeHtml(displayDate(item.date))+'<br><span>'+device+approver+'</span>'+(item.updatedAt?'<br><small>最終更新：'+escapeHtml(formatMonitorTime(item.updatedAt))+'</small>':'')+'</div>';
+        }).join(''):'<div class="duty-monitor-recent-item">まだ監視対象の申請はありません。</div>';
+      }
     }
   }
   async function loadDutySystemMonitor(){
