@@ -4,27 +4,18 @@
   const esc=s=>String(s||'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
   const displayDate=v=>{const m=/^(\d{4})-(\d{2})-(\d{2})$/.exec(String(v||''));return m?Number(m[2])+'月'+Number(m[3])+'日':String(v||'')};
 
-  function showError(message){
-    out.innerHTML='<p class="error">'+esc(message||'申請を続行できませんでした。')+'</p><small class="small">元のチーム専用ページからもう一度申請してください。</small>';
-  }
-
   if(!token){
-    showError('申請情報を確認できませんでした。');
+    out.innerHTML='<p class="error">申請情報を確認できませんでした。元の画面からもう一度申請してください。</p>';
     return;
   }
-
-  const controller=new AbortController();
-  const timer=setTimeout(()=>controller.abort(),12000);
 
   fetch('/.netlify/functions/duty-change-requests',{
     method:'POST',
     credentials:'same-origin',
     cache:'no-store',
     headers:{'content-type':'application/json'},
-    body:JSON.stringify({action:'submit-line-resume',token}),
-    signal:controller.signal
+    body:JSON.stringify({action:'submit-line-resume',token})
   }).then(async r=>{
-    clearTimeout(timer);
     const body=await r.json().catch(()=>({}));
     if(!r.ok)throw new Error(body.error||'申請を続行できませんでした。');
 
@@ -76,11 +67,6 @@
 
     try{history.replaceState(null,'',location.pathname)}catch(_){}
   }).catch(e=>{
-    clearTimeout(timer);
-    if(e&&e.name==='AbortError'){
-      showError('通信に時間がかかっています。もう一度申請してください。');
-      return;
-    }
-    showError(e&&e.message?e.message:'申請を続行できませんでした。');
+    out.innerHTML='<p class="error">'+esc(e&&e.message?e.message:'申請を続行できませんでした。')+'</p><small class="small">元のチーム専用ページからもう一度申請してください。</small>';
   });
 })();
