@@ -301,9 +301,9 @@ export default async (request,context)=>{
         const roster=await store.get(LEGACY_KEY,{type:"json",consistency:"strong"})||{};
         if(requestDateIsTestMode(roster,item.date)){
           if(!item.requesterLineHash)return json({error:"この申請はLINE認証前に作成されています。申請者に「確認待ち」からLINEを再送してもらってください。"},409);
-          const line=await lineIdentityForTest(request,roster,item.date,"/duty-approve.html?t="+encodeURIComponent(token));
-          if(line.response)return line.response;
-          return json({ok:true,request:approvalPreview(item),lineAuthRequired:true,selfApprovalBlocked:line.hash===item.requesterLineHash});
+          const session=await getLineSession(request);
+          const currentHash=session?await lineIdentityHash(session.sub):"";
+          return json({ok:true,request:approvalPreview(item),lineAuthRequired:false,selfApprovalBlocked:!!currentHash&&currentHash===item.requesterLineHash});
         }
         return json({ok:true,request:approvalPreview(item)});
       }
@@ -379,10 +379,10 @@ export default async (request,context)=>{
       const roster=await store.get(LEGACY_KEY,{type:"json",consistency:"strong"})||{};
       if(requestDateIsTestMode(roster,item.date)){
         if(!item.requesterLineHash)return json({error:"この申請はLINE認証前に作成されています。申請者に「確認待ち」からLINEを再送してもらってください。"},409);
-        const line=await lineIdentityForTest(request,roster,item.date,"/duty-approve.html?t="+encodeURIComponent(token));
-        if(line.response)return line.response;
-        const selfApprovalBlocked=line.hash===item.requesterLineHash;
-        if(action==="preview-partner-approval")return json({ok:true,request:approvalPreview(item),lineAuthRequired:true,selfApprovalBlocked});
+        const session=await getLineSession(request);
+        const currentHash=session?await lineIdentityHash(session.sub):"";
+        const selfApprovalBlocked=!!currentHash&&currentHash===item.requesterLineHash;
+        if(action==="preview-partner-approval")return json({ok:true,request:approvalPreview(item),lineAuthRequired:false,selfApprovalBlocked});
         if(selfApprovalBlocked)return json({error:"申請したLINEアカウントでは承認できません。変更後のご家庭へ承認を依頼してください。",code:"self_approval_blocked"},403);
       }else if(action==="preview-partner-approval"){
         return json({ok:true,request:approvalPreview(item)});
