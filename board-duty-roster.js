@@ -89,7 +89,7 @@
     return (Array.isArray(items)?items:[]).filter(function(item){
       return item&&/^\d{4}-\d{2}-\d{2}$/.test(String(item.date||''))&&['1','2','3'].includes(String(item.fromGrade||''))&&['1','2','3'].includes(String(item.toGrade||''))&&cleanName(item.fromName)&&cleanName(item.toName);
     }).slice(0,300).map(function(item,index){
-      return{id:String(item.id||('request-'+index)),requestNo:String(item.requestNo||'').slice(0,20),date:String(item.date),fromGrade:String(item.fromGrade),fromName:cleanName(item.fromName),toGrade:String(item.toGrade),toName:cleanName(item.toName),requestType:String(item.requestType||'replace')==='swap'?'swap':'replace',swapDate:String(item.swapDate||''),swapGrade:String(item.swapGrade||''),swapName:cleanName(item.swapName||''),status:['pending','approved','rejected'].includes(String(item.status))?String(item.status):'pending',createdAt:String(item.createdAt||''),updatedAt:String(item.updatedAt||''),approvalExpiresAt:String(item.approvalExpiresAt||'')};
+      return{id:String(item.id||('request-'+index)),requestNo:String(item.requestNo||'').slice(0,20),date:String(item.date),fromGrade:String(item.fromGrade),fromName:cleanName(item.fromName),toGrade:String(item.toGrade),toName:cleanName(item.toName),requestType:String(item.requestType||'replace')==='swap'?'swap':'replace',swapDate:String(item.swapDate||''),swapGrade:String(item.swapGrade||''),swapName:cleanName(item.swapName||''),status:['pending','approved','rejected'].includes(String(item.status))?String(item.status):'pending',createdAt:String(item.createdAt||''),updatedAt:String(item.updatedAt||''),approvalExpiresAt:String(item.approvalExpiresAt||''),requesterCanCancel:item.requesterCanCancel===true};
     });
   }
 
@@ -632,13 +632,16 @@
         return '<div class="duty-request-status-item">'+(item.requestNo?'<b>申請番号 #'+escapeHtml(item.requestNo)+'</b><br>':'')+
           requestSummaryHtml(item)+'<br>'+
           (item.status==='pending'&&partnerApprovalEnabled&&!requestExpired(item)
-            ?'<button type="button" class="duty-request-resend" data-resend-duty-request="'+escapeHtml(item.id)+'" data-status="pending">'+escapeHtml(requestStatusLabel(item.status,item))+'<small>タップでLINEを再送</small></button>'
+            ?'<span class="duty-request-pending-actions"><button type="button" class="duty-request-resend" data-resend-duty-request="'+escapeHtml(item.id)+'" data-status="pending">'+escapeHtml(requestStatusLabel(item.status,item))+'<small>タップでLINEを再送</small></button>'+(item.requesterCanCancel?'<button type="button" class="duty-request-self-cancel" data-cancel-own-duty-request="'+escapeHtml(item.id)+'">申請を取り消す</button>':'')+'</span>'
             :'<b data-status="'+escapeHtml(item.status)+'">'+escapeHtml(requestStatusLabel(item.status,item))+'</b>')+
           (item.createdAt?'<br><small>申請日時：'+escapeHtml(new Intl.DateTimeFormat('ja-JP',{timeZone:'Asia/Tokyo',year:'numeric',month:'numeric',day:'numeric',hour:'2-digit',minute:'2-digit',hourCycle:'h23'}).format(new Date(item.createdAt)))+'</small>':'')+
           '</div>';
       }).join(''):'';
       statusList.querySelectorAll('[data-resend-duty-request]').forEach(function(button){
         button.addEventListener('click',function(){resendPendingRequestToLine(button.dataset.resendDutyRequest,button)});
+      });
+      statusList.querySelectorAll('[data-cancel-own-duty-request]').forEach(function(button){
+        button.addEventListener('click',function(){cancelOwnPendingRequest(button.dataset.cancelOwnDutyRequest,button)});
       });
     }
     if(admin){
@@ -786,6 +789,23 @@
       if(shareWindow&&!shareWindow.closed)shareWindow.close();
       alert(e.message||'LINEを開けませんでした。');
       if(button){button.disabled=false;button.innerHTML=original;}
+    }
+  }
+
+  async function cancelOwnPendingRequest(id,button){
+    const item=requests.find(function(x){return x.id===id&&x.status==='pending'});
+    if(!item)return;
+    if(!confirm('この当番変更申請を取り消しますか？\n承認リンクも使用できなくなります。'))return;
+    const original=button?button.textContent:'';
+    if(button){button.disabled=true;button.textContent='取消中…';}
+    try{
+      const response=await fetch(REQUEST_API,{method:'POST',credentials:'same-origin',headers:requestHeaders(false),body:JSON.stringify({action:'requester-cancel',id:item.id})});
+      const body=await response.json().catch(function(){return{}});
+      if(!response.ok)throw new Error(body.error||'申請を取り消せませんでした。');
+      requests=normalizeRequestList(body.requests);requestsLoaded=true;renderRequests();syncPendingRequestCount();
+    }catch(e){
+      alert(e.message||'申請を取り消せませんでした。');
+      if(button){button.disabled=false;button.textContent=original;}
     }
   }
 
