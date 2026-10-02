@@ -2319,14 +2319,20 @@ export default async (request, context) => {
       const validChanges = changes.every(item => {
         const date = String(item?.date || "");
         const grade = String(item?.grade || "");
+        const toGrade = String(item?.toGrade || grade);
         const from = String(item?.from || "").trim();
         const to = String(item?.to || "").trim();
+        const status = String(item?.status || "active");
         const createdAt = String(item?.createdAt || "");
+        const cancelledAt = String(item?.cancelledAt || "");
         return /^\d{4}-\d{2}-\d{2}$/.test(date) &&
           ["1", "2", "3"].includes(grade) &&
+          ["1", "2", "3"].includes(toGrade) &&
+          ["active", "cancelled"].includes(status) &&
           from.length > 0 && from.length <= 60 &&
           to.length > 0 && to.length <= 60 &&
-          createdAt.length <= 60;
+          createdAt.length <= 60 &&
+          cancelledAt.length <= 60;
       });
 
       if (!validChanges) {
@@ -2348,7 +2354,10 @@ export default async (request, context) => {
         grade: String(item.grade),
         from: String(item.from).trim(),
         to: String(item.to).trim(),
+        toGrade: String(item?.toGrade || item?.grade || ""),
+        status: String(item?.status || "active") === "cancelled" ? "cancelled" : "active",
         createdAt: String(item?.createdAt || "").slice(0, 60),
+        cancelledAt: String(item?.cancelledAt || "").slice(0, 60),
       }));
 
       if (body?.announceLatest === true) {
