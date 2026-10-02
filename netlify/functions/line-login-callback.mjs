@@ -85,6 +85,10 @@ export default async (request)=>{
         fromName:String(target.searchParams.get("fn")||""),
         toGrade:String(target.searchParams.get("tg")||""),
         toName:String(target.searchParams.get("tn")||""),
+        requestType:String(target.searchParams.get("rt")||"replace"),
+        swapDate:String(target.searchParams.get("sd")||""),
+        swapGrade:String(target.searchParams.get("sg")||""),
+        swapName:String(target.searchParams.get("sn")||""),
         sub:String(verified.sub),
         exp:Date.now()+5*60*1000
       });
