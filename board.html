@@ -246,6 +246,12 @@ html{scroll-padding-top:var(--compact-header-height)}
   }
 }
 </style>
+<style id="duty-swap-simple-style">
+#dutyRequestReplaceFields[hidden],#dutyRequestSwapFields[hidden]{display:none!important}
+.duty-swap-guide{margin:4px 0 14px;padding:12px 14px;border:1px solid rgba(199,154,59,.35);border-radius:12px;background:#fff8e8;color:#071426}
+.duty-swap-guide b{display:block;margin-bottom:3px;font-size:14px}.duty-swap-guide span{display:block;color:#6f7884;font-size:11px;font-weight:700;line-height:1.5}
+.duty-swap-arrow{text-align:center;color:#b58a31;font-size:24px;font-weight:900;line-height:1;margin:6px 0}
+</style>
 <style id="duty-monitor-style">
 .duty-monitor-card{margin:14px 0 12px;padding:14px 15px;border:1px solid rgba(199,154,59,.42);border-radius:14px;background:#fffdf8}
 .duty-monitor-head{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:8px}
@@ -1318,12 +1324,16 @@ body:after{display:none!important;content:none!important}
               <option value="swap">当番日を入れ替える</option>
             </select>
           </label>
-          <label><span id="dutyRequestDateLabel">変更日</span><select id="dutyRequestRosterDate"></select><input id="dutyRequestDirectDate" type="date" hidden disabled></label>
-          <label><span id="dutyRequestFromLabel">変更前</span><select id="dutyRequestFrom"><option value="">選択してください</option></select></label>
-          <label id="dutyRequestReplaceToRow">変更後<select id="dutyRequestTo"><option value="">選択してください</option></select></label>
+          <div id="dutyRequestReplaceFields">
+            <label>変更日<select id="dutyRequestRosterDate"></select><input id="dutyRequestDirectDate" type="date" hidden disabled></label>
+            <label>変更前<select id="dutyRequestFrom"><option value="">選択してください</option></select></label>
+            <label id="dutyRequestReplaceToRow">変更後<select id="dutyRequestTo"><option value="">選択してください</option></select></label>
+          </div>
           <div id="dutyRequestSwapFields" hidden>
-            <label>入れ替える相手の当番日<select id="dutyRequestSwapDate"></select></label>
-            <label>入れ替える相手<select id="dutyRequestSwapPerson"><option value="">選択してください</option></select></label>
+            <div class="duty-swap-guide"><b>2つのお当番を選ぶだけです</b><span>①あなたのお当番 → ②入れ替える相手のお当番</span></div>
+            <label>① あなたのお当番<select id="dutyRequestSwapFromSlot"><option value="">自分のお当番を選択してください</option></select></label>
+            <div class="duty-swap-arrow" aria-hidden="true">↕</div>
+            <label>② 入れ替える相手のお当番<select id="dutyRequestSwapToSlot"><option value="">相手のお当番を選択してください</option></select></label>
           </div>
           <button id="submitDutyRequest" class="duty-request-submit" type="button">変更申請を送信</button>
           <div id="dutyRequestResult" class="duty-request-result" hidden></div>
@@ -1698,7 +1708,7 @@ body:after{display:none!important;content:none!important}
 <script src="./board-meetings.js?v=20260927-0030"></script>
 <script src="./duty-image-reader.js?v=20260918-1"></script>
 <script src="./duty-roster-data.js?v=20260918-1"></script>
-<script src="./board-duty-roster.js?v=20261002-swap2"></script>
+<script src="./board-duty-roster.js?v=20261002-swap3"></script>
 <script src="./board-duty-auto-test.js?v=20261002-testmode-end2"></script>
 <script src="./board-rules.js?v=20260914-4"></script>
 <script src="./board-archive.js?v=20260914-3"></script>
