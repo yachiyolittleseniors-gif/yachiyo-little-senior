@@ -55,7 +55,6 @@
   familyConfirm.addEventListener('change',function(){approve.disabled=!familyConfirm.checked});
   approve.addEventListener('click',async function(){
     if(!familyConfirm.checked)return;
-    if(!confirm('この当番変更を承認しますか？'))return;
     approve.disabled=true;approve.textContent='承認中…';
     try{
       const j=await call('partner-approve');
