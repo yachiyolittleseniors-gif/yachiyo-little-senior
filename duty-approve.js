@@ -50,7 +50,11 @@
       document.getElementById('from').textContent=x.fromGrade+'年・'+x.fromName;
       document.getElementById('to').textContent=x.toGrade+'年・'+x.toName;
       loading.hidden=true;content.hidden=false;
-    }catch(e){showMessage(e.message||'申請内容を確認できませんでした。',false,true)}
+    }catch(e){
+      const msg=e&&e.message?e.message:'申請内容を確認できませんでした。';
+      const retry=/通信|時間がかかっています|処理できませんでした|確認できませんでした/.test(msg);
+      showMessage(msg,false,retry);
+    }
   }
   familyConfirm.addEventListener('change',function(){approve.disabled=!familyConfirm.checked});
   approve.addEventListener('click',async function(){
