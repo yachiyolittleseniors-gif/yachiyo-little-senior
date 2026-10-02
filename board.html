@@ -1507,14 +1507,15 @@ body:after{display:none!important;content:none!important}
     <div id="tournamentAdminList"></div>
   </div>
   <div id="dutyRosterAdminFields">
-    <div class="duty-admin-brand">
+    <button id="dutyAdminMenuToggle" class="duty-admin-brand" type="button" aria-expanded="false" aria-controls="dutyAdminMenuBody">
       <div class="duty-admin-brand-icon" aria-hidden="true">📋</div>
       <div class="duty-admin-brand-copy">
         <small>DUTY ROSTER ADMINISTRATION</small>
         <strong>当番表管理</strong>
         <span><i></i> TEAM MANAGEMENT SYSTEM <i></i></span>
       </div>
-    </div>
+      <div class="duty-admin-brand-chevron" aria-hidden="true">⌄</div>
+    </button>
 
     <div class="duty-request-admin-block duty-monitor-admin-block duty-admin-section-card">
       <div class="duty-admin-section-label"><small>STATUS</small><b>システム監視</b></div>
@@ -1534,6 +1535,7 @@ body:after{display:none!important;content:none!important}
       </div>
     </div>
 
+    <div id="dutyAdminMenuBody" class="duty-admin-menu-body" hidden>
     <div class="duty-image-admin duty-admin-section-card">
       <div class="duty-admin-section-label"><small>ORIGINALS</small><b>保存済み原本</b></div>
       <div id="dutyRosterAdminList"></div>
@@ -1592,6 +1594,7 @@ body:after{display:none!important;content:none!important}
       <div class="duty-admin-section-label"><small>HISTORY</small><b>登録済み変更履歴</b></div>
       <div class="duty-change-heading"><b class="duty-history-hidden-title">登録済み変更履歴</b><button id="toggleDutyAdminHistory" type="button" aria-expanded="false">表示 ▼</button></div>
       <div id="dutyChangeAdminList" class="duty-change-admin-list" hidden></div>
+    </div>
     </div>
   </div>
   <div id="rulesAdminFields">
@@ -1745,6 +1748,19 @@ body:after{display:none!important;content:none!important}
 <script src="./board-meetings.js?v=20261002-hide-save1"></script>
 <script src="./duty-image-reader.js?v=20260918-1"></script>
 <script src="./duty-roster-data.js?v=20260918-1"></script>
+<script>
+(()=>{
+  const toggle=document.getElementById('dutyAdminMenuToggle');
+  const body=document.getElementById('dutyAdminMenuBody');
+  if(!toggle||!body)return;
+  const setOpen=open=>{
+    body.hidden=!open;
+    toggle.setAttribute('aria-expanded',String(open));
+  };
+  setOpen(false);
+  toggle.addEventListener('click',()=>setOpen(body.hidden));
+})();
+</script>
 <script src="./board-duty-roster.js?v=20261002-monitorcompact1"></script>
 <script src="./board-duty-auto-test.js?v=20261002-testmode-end2"></script>
 <script src="./board-rules.js?v=20260914-4"></script>
@@ -1931,8 +1947,12 @@ body.photo-admin-on #accessPasswordChange{
 }
 #densukeAdminPanel #dutyRosterAdminFields>strong{display:none!important}
 .duty-admin-brand{
+  appearance:none;
+  width:100%;
+  text-align:left;
+  cursor:pointer;
   display:grid;
-  grid-template-columns:72px 1fr;
+  grid-template-columns:72px 1fr 28px;
   align-items:center;
   gap:16px;
   margin:0 0 18px;
@@ -1963,6 +1983,13 @@ body.photo-admin-on #accessPasswordChange{
   color:#d9b45c;font-size:9px;font-weight:900;letter-spacing:.17em;white-space:nowrap
 }
 .duty-admin-brand-copy span i{display:block;width:24px;height:1px;background:#d9b45c;opacity:.7}
+.duty-admin-brand-chevron{
+  align-self:center;justify-self:end;color:#d9b45c;font-size:28px;font-weight:900;
+  line-height:1;transform:rotate(0deg);transition:transform .2s ease
+}
+.duty-admin-brand[aria-expanded="true"] .duty-admin-brand-chevron{transform:rotate(180deg)}
+.duty-admin-menu-body[hidden]{display:none!important}
+.duty-admin-menu-body{margin-top:12px}
 .duty-admin-section-card{
   box-sizing:border-box;
   margin:12px 0!important;
@@ -2003,7 +2030,7 @@ body.photo-admin-on #accessPasswordChange{
   margin-left:auto!important;min-height:36px!important;padding:7px 12px!important;border-radius:999px!important
 }
 @media(max-width:520px){
-  .duty-admin-brand{grid-template-columns:56px 1fr;gap:12px;padding:14px}
+  .duty-admin-brand{grid-template-columns:56px 1fr 24px;gap:12px;padding:14px}
   .duty-admin-brand-icon{width:52px;height:52px;font-size:27px}
   .duty-admin-brand-copy strong{font-size:22px!important}
   .duty-admin-brand-copy span{font-size:8px;gap:6px;letter-spacing:.12em}
