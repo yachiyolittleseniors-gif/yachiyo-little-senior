@@ -1035,6 +1035,15 @@ body:after{display:none!important;content:none!important}
 </style>
 <script src="./back-to-top.js?v=20261001-visible-dialogs" defer></script>
 <script src="./mobile-navigation.js?v=20260930-menu1" defer></script>
+<style id="duty-test-mode-style">
+.duty-test-mode-toggle{display:flex!important;align-items:flex-start!important;gap:9px!important;grid-column:1/-1!important;margin:4px 0 2px!important;padding:10px 11px!important;border:1px solid rgba(199,154,59,.55)!important;border-radius:9px!important;background:#fffaf0!important;color:#17202b!important;-webkit-text-fill-color:#17202b!important}
+.duty-test-mode-toggle input{width:20px!important;height:20px!important;min-width:20px!important;margin:1px 0 0!important;accent-color:#c79a3b!important}
+.duty-test-mode-toggle span{display:block!important;min-width:0!important}
+.duty-test-mode-toggle b{display:block!important;font-size:13px!important;line-height:1.45!important}
+.duty-test-mode-toggle small{display:block!important;margin-top:2px!important;font-size:11px!important;line-height:1.55!important;color:#69727d!important;-webkit-text-fill-color:#69727d!important}
+.duty-roster-admin-item.is-test-mode{border-color:#c79a3b!important;background:#fffaf0!important}
+.duty-test-badge{display:inline-block;margin-left:6px;padding:2px 6px;border-radius:999px;background:#c79a3b;color:#fff!important;-webkit-text-fill-color:#fff!important;font-size:10px;font-weight:900}
+</style>
 <style id="duty-exclusion-style">
 #dutyExclusionFields[hidden]{display:none!important}
 .duty-exclusion-heading{grid-column:1/-1;display:flex;align-items:center;justify-content:space-between;gap:10px;margin:8px 0 4px}
@@ -1454,6 +1463,7 @@ body:after{display:none!important;content:none!important}
   <p>対象月の当番表（案）を自動作成します。内容を確認後、「この案で確定」を押すと正式な当番表として登録されます。</p>
   <div class="duty-auto-test-controls">
     <label>対象月 <span class="duty-auto-test-month-row"><button id="dutyAutoPrevMonth" type="button" aria-label="前の月">‹</button><strong id="dutyAutoMonthLabel" style="display:grid!important;place-items:center!important;visibility:visible!important;opacity:1!important;color:#17202b!important;-webkit-text-fill-color:#17202b!important;background:#fff!important;font-size:16px!important;font-weight:900!important">2026年 10月</strong><button id="dutyAutoNextMonth" type="button" aria-label="次の月">›</button></span></label>
+    <label class="duty-test-mode-toggle"><input id="dutyRosterTestMode" type="checkbox"><span><b>テストモードで登録</b><small>管理者だけに表示して、申請・承認・自動反映を本番同様に確認できます。</small></span></label>
     <button id="dutyAutoTestCreate" type="button">当番表（案）を作成</button>
   </div>
   <div class="duty-auto-test-note">保護者出欠の登録情報を使い、家庭単位・50音順で当番表（案）を作成します。確定するまでは公開中の当番表には影響しません。</div>
