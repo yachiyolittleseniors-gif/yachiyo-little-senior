@@ -50,9 +50,23 @@
     try{
       const j=await call('preview-partner-approval'),x=j.request||{};
       document.getElementById('requestNo').textContent=x.requestNo?'#'+x.requestNo:'-';
-      document.getElementById('date').textContent=formatDate(x.date);
-      document.getElementById('from').textContent=x.fromGrade+'年・'+x.fromName;
-      document.getElementById('to').textContent=x.toGrade+'年・'+x.toName;
+      const isSwap=x.requestType==='swap';
+      const dateLabel=document.getElementById('dateLabel'),fromLabel=document.getElementById('fromLabel'),toLabel=document.getElementById('toLabel');
+      const confirmText=document.getElementById('confirmText'),approvalNote=document.getElementById('approvalNote');
+      if(isSwap){
+        if(dateLabel)dateLabel.textContent='内容';
+        if(fromLabel)fromLabel.textContent='自分';
+        if(toLabel)toLabel.textContent='相手';
+        document.getElementById('date').textContent='当番日を入れ替える';
+        document.getElementById('from').textContent=formatDate(x.date)+'　'+x.fromGrade+'年・'+x.fromName;
+        document.getElementById('to').textContent=formatDate(x.swapDate)+'　'+x.swapGrade+'年・'+x.swapName;
+        if(confirmText)confirmText.innerHTML='申請内容を確認しました。<br>当番日の入れ替えを了承します。';
+        if(approvalNote)approvalNote.textContent='入れ替える相手のご家庭が内容を確認して承認してください。承認すると2つの当番日が同時に入れ替わり、このリンクは使用できなくなります。承認リンクは24時間有効です。';
+      }else{
+        document.getElementById('date').textContent=formatDate(x.date);
+        document.getElementById('from').textContent=x.fromGrade+'年・'+x.fromName;
+        document.getElementById('to').textContent=x.toGrade+'年・'+x.toName;
+      }
       if(j.selfApprovalBlocked){
         lineAuthNotice.hidden=false;
         lineAuthNotice.textContent='この申請を行ったLINEアカウントでは承認できません。変更後のご家庭へ承認を依頼してください。';
