@@ -144,7 +144,7 @@ function init(){
       ctx.font='600 18px sans-serif';
       ctx.fillText('① サイト内の「当番変更申請」より申請してください。',left+100,noteY+32);
       if(tokenMode){
-        ctx.fillText('② 申請後は、必ず全体LINEで変更内容と承認リンクを共有してください。',left+100,noteY+62);
+        ctx.fillText('② 申請後は、変更後のご家庭へ個別LINEで承認リンクを送ってください。',left+100,noteY+62);
         ctx.fillText('③ 変更後のご家庭の方が承認リンクから承認すると、当番表へ自動反映されます。',left+100,noteY+92);
         ctx.fillText('④ 母小屋のドア裏に提示されている紙の当番表を、赤字で修正をお願いいたします。',left+100,noteY+122);
         ctx.font='700 20px sans-serif';ctx.fillText('☆　黄色の日は里山活動日になります。車の駐車場所に必ず気を付けてください。',left+25,noteY+174);
