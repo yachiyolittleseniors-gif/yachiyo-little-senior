@@ -1,6 +1,6 @@
 import {
   lineChannelId,lineCallbackUrl,safeReturnPath,randomBase64url,sha256Base64url,
-  sealLineValue,flowCookie
+  sealLineFlow,flowCookie
 } from "./_line-login-auth.mjs";
 
 function response(body,status=200,headers={}){
@@ -15,12 +15,11 @@ export default async (request)=>{
 
     const url=new URL(request.url);
     const returnPath=safeReturnPath(url.searchParams.get("return")||"/board.html");
-    const state=randomBase64url(24);
     const nonce=randomBase64url(24);
     const verifier=randomBase64url(48);
     const challenge=await sha256Base64url(verifier);
-    const flow=await sealLineValue({
-      state,nonce,verifier,returnPath,
+    const flow=await sealLineFlow({
+      nonce,verifier,returnPath,
       exp:Date.now()+10*60*1000
     });
 
@@ -28,7 +27,7 @@ export default async (request)=>{
     auth.searchParams.set("response_type","code");
     auth.searchParams.set("client_id",channelId);
     auth.searchParams.set("redirect_uri",lineCallbackUrl());
-    auth.searchParams.set("state",state);
+    auth.searchParams.set("state",flow);
     auth.searchParams.set("scope","openid");
     auth.searchParams.set("nonce",nonce);
     auth.searchParams.set("code_challenge",challenge);
