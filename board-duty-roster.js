@@ -89,7 +89,7 @@
     return (Array.isArray(items)?items:[]).filter(function(item){
       return item&&/^\d{4}-\d{2}-\d{2}$/.test(String(item.date||''))&&['1','2','3'].includes(String(item.fromGrade||''))&&['1','2','3'].includes(String(item.toGrade||''))&&cleanName(item.fromName)&&cleanName(item.toName);
     }).slice(0,300).map(function(item,index){
-      return{id:String(item.id||('request-'+index)),requestNo:String(item.requestNo||'').slice(0,20),date:String(item.date),fromGrade:String(item.fromGrade),fromName:cleanName(item.fromName),toGrade:String(item.toGrade),toName:cleanName(item.toName),status:['pending','approved','rejected'].includes(String(item.status))?String(item.status):'pending',createdAt:String(item.createdAt||''),updatedAt:String(item.updatedAt||''),approvalExpiresAt:String(item.approvalExpiresAt||'')};
+      return{id:String(item.id||('request-'+index)),requestNo:String(item.requestNo||'').slice(0,20),date:String(item.date),fromGrade:String(item.fromGrade),fromName:cleanName(item.fromName),toGrade:String(item.toGrade),toName:cleanName(item.toName),requestType:String(item.requestType||'replace')==='swap'?'swap':'replace',swapDate:String(item.swapDate||''),swapGrade:String(item.swapGrade||''),swapName:cleanName(item.swapName||''),status:['pending','approved','rejected'].includes(String(item.status))?String(item.status):'pending',createdAt:String(item.createdAt||''),updatedAt:String(item.updatedAt||''),approvalExpiresAt:String(item.approvalExpiresAt||'')};
     });
   }
 
@@ -426,6 +426,19 @@
     const name=String(item[side+'Name']||'');
     return (grade?grade+'年・':'')+octoberDisplayName(name,grade,item.date);
   }
+  function requestSummaryHtml(item){
+    if(item&&item.requestType==='swap'){
+      return '<b>'+escapeHtml(displayDate(item.date))+'</b>　'+escapeHtml(requestPersonLabel(item,'from'))+
+        ' ↔ <b>'+escapeHtml(displayDate(item.swapDate))+'</b>　'+escapeHtml((item.swapGrade?item.swapGrade+'年・':'')+octoberDisplayName(item.swapName,item.swapGrade,item.swapDate));
+    }
+    return '<b>'+escapeHtml(displayDate(item.date))+'</b><br>'+escapeHtml(requestPersonLabel(item,'from'))+' → <b>'+escapeHtml(requestPersonLabel(item,'to'))+'</b>';
+  }
+  function requestSummaryText(item){
+    if(item&&item.requestType==='swap'){
+      return displayDate(item.date)+' '+requestPersonLabel(item,'from')+' ↔ '+displayDate(item.swapDate)+' '+(item.swapGrade?item.swapGrade+'年・':'')+octoberDisplayName(item.swapName,item.swapGrade,item.swapDate);
+    }
+    return displayDate(item.date)+'\n変更前：'+requestPersonLabel(item,'from')+'\n変更後：'+requestPersonLabel(item,'to')
+  }
   function requestHeaders(includeAdmin){
     const headers={'content-type':'application/json'};
     const accessPassword=sessionStorage.getItem('yachiyoAttendancePass')||'';
@@ -565,8 +578,7 @@
       statusToggle.textContent=pendingCount?'申請内容を見る（申請中 '+pendingCount+'件）':'申請内容を見る';
       statusList.innerHTML=publicItems.length?publicItems.map(function(item){
         return '<div class="duty-request-status-item">'+(item.requestNo?'<b>申請番号 #'+escapeHtml(item.requestNo)+'</b><br>':'')+
-          '<b>'+displayDate(item.date)+'</b><br>'+
-          escapeHtml(requestPersonLabel(item,'from'))+' → <b>'+escapeHtml(requestPersonLabel(item,'to'))+'</b><br>'+
+          requestSummaryHtml(item)+'<br>'+
           (item.status==='pending'&&partnerApprovalEnabled&&!requestExpired(item)
             ?'<button type="button" class="duty-request-resend" data-resend-duty-request="'+escapeHtml(item.id)+'" data-status="pending">'+escapeHtml(requestStatusLabel(item.status,item))+'<small>タップでLINEを再送</small></button>'
             :'<b data-status="'+escapeHtml(item.status)+'">'+escapeHtml(requestStatusLabel(item.status,item))+'</b>')+
@@ -580,7 +592,7 @@
     if(admin){
       const pendingItems=ordered.filter(function(item){return item.status==='pending'});
       admin.innerHTML=pendingItems.length?pendingItems.map(function(item){
-        return '<div class="duty-request-admin-item">'+(item.requestNo?'<b>申請番号 #'+escapeHtml(item.requestNo)+'</b><br>':'')+'<b>'+displayDate(item.date)+'</b><br>'+escapeHtml(requestPersonLabel(item,'from'))+' → <b>'+escapeHtml(requestPersonLabel(item,'to'))+'</b><br><span class="duty-request-wait'+(requestExpired(item)?' is-expired':'')+'">'+escapeHtml(requestExpired(item)?'承認期限切れ・再申請待ち':'確認待ち')+'</span><div class="duty-request-admin-actions"><button type="button" data-approve-duty-request="'+escapeHtml(item.id)+'">当番表に反映</button><button class="reject" type="button" data-reject-duty-request="'+escapeHtml(item.id)+'">却下</button></div></div>';
+        return '<div class="duty-request-admin-item">'+(item.requestNo?'<b>申請番号 #'+escapeHtml(item.requestNo)+'</b><br>':'')+requestSummaryHtml(item)+'<br><span class="duty-request-wait'+(requestExpired(item)?' is-expired':'')+'">'+escapeHtml(requestExpired(item)?'承認期限切れ・再申請待ち':'確認待ち')+'</span><div class="duty-request-admin-actions"><button type="button" data-approve-duty-request="'+escapeHtml(item.id)+'">当番表に反映</button><button class="reject" type="button" data-reject-duty-request="'+escapeHtml(item.id)+'">却下</button></div></div>';
       }).join(''):'<div class="duty-change-preview">確認待ちの当番変更申請はありません。</div>';
       admin.querySelectorAll('[data-approve-duty-request]').forEach(function(b){b.addEventListener('click',function(){decideRequest(b.dataset.approveDutyRequest,true)})});
       admin.querySelectorAll('[data-reject-duty-request]').forEach(function(b){b.addEventListener('click',function(){decideRequest(b.dataset.rejectDutyRequest,false)})});
@@ -590,13 +602,46 @@
   }
   function personOptionValue(x){return x.grade+'|'+x.name}
   function parsePersonOption(value){const i=String(value||'').indexOf('|');return i<1?null:{grade:String(value).slice(0,i),name:cleanName(String(value).slice(i+1))}}
+  function requestPersonOptions(date){
+    const names=rosterNamesForDate(date);let opts='<option value="">選択してください</option>';
+    ['3','2','1'].forEach(function(g){
+      const group=names.filter(function(x){return x.grade===g});if(!group.length)return;
+      opts+='<optgroup label="'+g+'年生">'+group.map(function(x){return'<option value="'+escapeHtml(personOptionValue(x))+'">'+g+'年・'+escapeHtml(octoberDisplayName(x.name,g,date))+'</option>'}).join('')+'</optgroup>';
+    });
+    return opts;
+  }
   function populateRequestForm(){
-    const dateSel=document.getElementById('dutyRequestRosterDate'),fromSel=document.getElementById('dutyRequestFrom'),toSel=document.getElementById('dutyRequestTo');if(!dateSel||!fromSel||!toSel)return;
-    const current=dateSel.value;dateSel.innerHTML='<option value="">日付を選択してください</option>'+rosterDates().map(function(x){return'<option value="'+x.date+'">'+x.label+'</option>'}).join('');if(Array.from(dateSel.options).some(function(o){return o.value===current}))dateSel.value=current;
-    const names=rosterNamesForDate(dateSel.value);let opts='<option value="">選択してください</option>';['3','2','1'].forEach(function(g){const group=names.filter(function(x){return x.grade===g});if(!group.length)return;opts+='<optgroup label="'+g+'年生">'+group.map(function(x){return'<option value="'+escapeHtml(personOptionValue(x))+'">'+g+'年・'+escapeHtml(octoberDisplayName(x.name,g,dateSel.value))+'</option>'}).join('')+'</optgroup>'});
-    const fv=fromSel.value,tv=toSel.value;fromSel.innerHTML=opts;toSel.innerHTML=opts;if(Array.from(fromSel.options).some(o=>o.value===fv))fromSel.value=fv;if(Array.from(toSel.options).some(o=>o.value===tv))toSel.value=tv;
+    const typeSel=document.getElementById('dutyRequestType'),dateSel=document.getElementById('dutyRequestRosterDate'),fromSel=document.getElementById('dutyRequestFrom'),toSel=document.getElementById('dutyRequestTo');
+    const replaceRow=document.getElementById('dutyRequestReplaceToRow'),swapFields=document.getElementById('dutyRequestSwapFields'),swapDateSel=document.getElementById('dutyRequestSwapDate'),swapPersonSel=document.getElementById('dutyRequestSwapPerson');
+    const dateLabel=document.getElementById('dutyRequestDateLabel'),fromLabel=document.getElementById('dutyRequestFromLabel');
+    if(!dateSel||!fromSel||!toSel)return;
+    const requestType=typeSel&&typeSel.value==='swap'?'swap':'replace';
+    const current=dateSel.value,fromValue=fromSel.value,toValue=toSel.value,swapDateValue=swapDateSel?swapDateSel.value:'',swapPersonValue=swapPersonSel?swapPersonSel.value:'';
+    const dates=rosterDates();
+    dateSel.innerHTML='<option value="">日付を選択してください</option>'+dates.map(function(x){return'<option value="'+x.date+'">'+x.label+'</option>'}).join('');
+    if(Array.from(dateSel.options).some(function(o){return o.value===current}))dateSel.value=current;
+    const opts=requestPersonOptions(dateSel.value);
+    fromSel.innerHTML=opts;toSel.innerHTML=opts;
+    if(Array.from(fromSel.options).some(function(o){return o.value===fromValue}))fromSel.value=fromValue;
+    if(Array.from(toSel.options).some(function(o){return o.value===toValue}))toSel.value=toValue;
+    if(replaceRow)replaceRow.hidden=requestType==='swap';
+    if(swapFields)swapFields.hidden=requestType!=='swap';
+    if(dateLabel)dateLabel.textContent=requestType==='swap'?'自分の当番日':'変更日';
+    if(fromLabel)fromLabel.textContent=requestType==='swap'?'自分':'変更前';
+    if(requestType==='swap'&&swapDateSel&&swapPersonSel){
+      swapDateSel.innerHTML='<option value="">相手の当番日を選択してください</option>'+dates.filter(function(x){return x.date!==dateSel.value}).map(function(x){return'<option value="'+x.date+'">'+x.label+'</option>'}).join('');
+      if(Array.from(swapDateSel.options).some(function(o){return o.value===swapDateValue}))swapDateSel.value=swapDateValue;
+      swapPersonSel.innerHTML=requestPersonOptions(swapDateSel.value);
+      if(Array.from(swapPersonSel.options).some(function(o){return o.value===swapPersonValue}))swapPersonSel.value=swapPersonValue;
+    }
   }
   function approvalLineText(item,url){
+    if(item&&item.requestType==='swap'){
+      return '【当番日入れ替え申請'+(item.requestNo?' #'+item.requestNo:'')+'】\n'+
+        displayDate(item.date)+' '+requestPersonLabel(item,'from')+'\n↕\n'+
+        displayDate(item.swapDate)+' '+(item.swapGrade?item.swapGrade+'年・':'')+octoberDisplayName(item.swapName,item.swapGrade,item.swapDate)+
+        '\n当番日を入れ替える申請です。\n\n【入れ替える相手のご家庭へ】\n下の専用リンクから内容を確認して承認してください。\n'+url;
+    }
     return '【当番変更申請'+(item.requestNo?' #'+item.requestNo:'')+'】\n'+displayDate(item.date)+'\n変更前：'+requestPersonLabel(item,'from')+'\n変更後：'+requestPersonLabel(item,'to')+'\n当番変更を申請しました。\n\n【変更後のご家庭の方へ】\n下の専用リンクから内容を確認して承認してください。\n'+url;
   }
   async function resendPendingRequestToLine(id,button){
