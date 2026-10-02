@@ -3,6 +3,7 @@
   const COACH_AUTH_API='/.netlify/functions/coach-attendance-data';
   const documentList=document.getElementById('refereeDocumentList');
   const adminOpen=document.getElementById('refereeAdminOpen');
+  const adminReveal=document.getElementById('refereeAdminReveal');
   const adminPanel=document.getElementById('refereeAdminPanel');
   const adminDocumentList=document.getElementById('refereeAdminDocumentList');
   const fileInput=document.getElementById('refereeFileInput');
@@ -11,7 +12,7 @@
   let documents=[];
   let documentCoachPassword='';
 
-  if(!documentList||!adminOpen||!adminPanel||!adminDocumentList||!fileInput||!fileSave||!fileCancel)return;
+  if(!documentList||!adminOpen||!adminReveal||!adminPanel||!adminDocumentList||!fileInput||!fileSave||!fileCancel)return;
 
   function accessHeaders(json,coachPassword){
     const headers={'x-access-password':sessionStorage.getItem('yachiyoAttendancePass')||''};
@@ -136,6 +137,22 @@
     }catch(e){render()}
   }
 
+  function setSaveControlsVisible(visible){
+    adminOpen.hidden=!visible;
+    adminReveal.setAttribute('aria-expanded',String(visible));
+    adminReveal.textContent=visible?'資料保存を隠す':'資料保存を表示';
+    if(!visible){
+      adminPanel.hidden=true;
+      documentCoachPassword='';
+      fileInput.value='';
+    }
+  }
+  setSaveControlsVisible(false);
+
+  adminReveal.addEventListener('click',function(){
+    setSaveControlsVisible(adminOpen.hidden);
+  });
+
   adminOpen.addEventListener('click',async function(){
     const password=await requireCoachPassword();
     if(!password)return;
@@ -146,10 +163,7 @@
   });
 
   fileCancel.addEventListener('click',function(){
-    fileInput.value='';
-    documentCoachPassword='';
-    adminPanel.hidden=true;
-    adminOpen.hidden=false;
+    setSaveControlsVisible(false);
   });
 
   documentList.addEventListener('click',function(event){
