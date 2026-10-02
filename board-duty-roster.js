@@ -99,6 +99,8 @@
     );
   }
   function testMonthKey(item){const t=item&&item.table;return t&&Number(t.year)&&Number(t.month)?t.year+'-'+String(t.month).padStart(2,'0'):''}
+  function isTestMonth(year,month){const key=Number(year)+'-'+String(Number(month)).padStart(2,'0');return images.some(function(item){return item.testMode===true&&testMonthKey(item)===key})}
+  window.getDutyRosterTestModeForMonth=function(year,month){return isTestMonth(year,month)};
   function isTestDate(date){const key=String(date||'').slice(0,7);return images.some(function(item){return item.testMode===true&&testMonthKey(item)===key})}
   function canViewRoster(item){return !item.testMode||isAdminViewing()}
   function imageSource(item){return item.data||item.src||''}
