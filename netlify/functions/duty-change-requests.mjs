@@ -8,6 +8,7 @@ const KEY="content/duty-change-requests.json";
 const LEGACY_KEY="content/duty-roster.json";
 const MAX_REQUESTS=300;
 const APPROVAL_TTL_MS=24*60*60*1000;
+const EXPIRED_RETENTION_MONTHS=3;
 
 function json(body,status=200,headers={}){
   return new Response(JSON.stringify(body),{
@@ -27,6 +28,25 @@ function nameKey(value){return cleanName(value).replace(/[（）()]/g,"")}
 function validGrade(value){return ["1","2","3"].includes(String(value||""))}
 function validDate(value){return /^\d{4}-\d{2}-\d{2}$/.test(String(value||""))}
 function normalizeStatus(value){return ["pending","approved","rejected"].includes(String(value))?String(value):"pending"}
+function requestMonthEnd(date){
+  const m=/^(\d{4})-(\d{2})-\d{2}$/.exec(String(date||""));
+  if(!m)return null;
+  const y=Number(m[1]),mo=Number(m[2]);
+  return new Date(Date.UTC(y,mo,0,23,59,59,999));
+}
+function addUtcMonths(date,months){
+  return new Date(Date.UTC(date.getUTCFullYear(),date.getUTCMonth()+months,date.getUTCDate(),date.getUTCHours(),date.getUTCMinutes(),date.getUTCSeconds(),date.getUTCMilliseconds()));
+}
+function requestIsPastMonth(item,now=new Date()){
+  const end=requestMonthEnd(item?.date);
+  return !!(end&&now>end);
+}
+function requestShouldDelete(item,now=new Date()){
+  if(item?.status!=="pending")return false;
+  const end=requestMonthEnd(item?.date);
+  if(!end)return false;
+  return now>addUtcMonths(end,EXPIRED_RETENTION_MONTHS);
+}
 async function sha256(value){
   const bytes=new TextEncoder().encode(String(value||""));
   const digest=await crypto.subtle.digest("SHA-256",bytes);
@@ -121,8 +141,11 @@ async function loadData(store){
     reconciled=true;
     return{...item,status:"pending",updatedAt:new Date().toISOString()};
   });
+  const now=new Date();
+  const beforeCleanup=data.requests.length;
+  data.requests=data.requests.filter(item=>!requestShouldDelete(item,now));
   data.requests=dedupePending(data.requests);
-  if(reconciled)await store.setJSON(KEY,data);
+  if(reconciled||data.requests.length!==beforeCleanup)await store.setJSON(KEY,data);
   return data;
 }
 async function boardAccess(store,request,context){
@@ -142,9 +165,11 @@ function publicRequest(item){
   };
 }
 function publicData(data){
+  const now=new Date();
+  const visibleRequests=data.requests.filter(item=>!(item.status==="pending"&&requestIsPastMonth(item,now)));
   return{
-    requests:data.requests.map(publicRequest),
-    pendingCount:data.requests.filter(item=>item.status==="pending").length,
+    requests:visibleRequests.map(publicRequest),
+    pendingCount:visibleRequests.filter(item=>item.status==="pending").length,
     partnerApprovalEnabled:data.partnerApprovalEnabled===true
   };
 }
