@@ -438,12 +438,20 @@ export default async (request,context)=>{
       const toGrade=String(resume.toGrade||"");
       const fromName=cleanName(resume.fromName);
       const toName=cleanName(resume.toName);
-      if(!validDate(date)||!validGrade(fromGrade)||!validGrade(toGrade)||!fromName||!toName||(fromGrade===toGrade&&fromName===toName)||!resume.sub){
+      const requestType=String(resume.requestType||"replace")==="swap"?"swap":"replace";
+      const swapDate=String(resume.swapDate||"");
+      const swapGrade=String(resume.swapGrade||"");
+      const swapName=cleanName(resume.swapName);
+      const swapInvalid=requestType==="swap"&&(!validDate(swapDate)||!validGrade(swapGrade)||!swapName);
+      if(!validDate(date)||!validGrade(fromGrade)||!validGrade(toGrade)||!fromName||!toName||(fromGrade===toGrade&&fromName===toName)||swapInvalid||!resume.sub){
         return json({error:"申請内容を確認できませんでした。もう一度申請してください。"},400);
       }
       const roster=await store.get(LEGACY_KEY,{type:"json",consistency:"strong"});
       if(!requestMatchesRoster(roster,date,fromGrade,fromName)){
         return json({error:"変更前の名前が現在の当番表と一致しません。当番表を確認してもう一度申請してください。"},400);
+      }
+      if(requestType==="swap"&&!requestMatchesRoster(roster,swapDate,swapGrade,swapName)){
+        return json({error:"入れ替える相手のお当番日と担当者が一致しません。"},400);
       }
       const data=await loadData(store);
       if(data.partnerApprovalEnabled!==true){
@@ -451,20 +459,20 @@ export default async (request,context)=>{
       }
       const requesterLineHash=await lineIdentityHash(String(resume.sub));
       const now=new Date().toISOString();
-      const idx=data.requests.findIndex(item=>item.status==="pending"&&item.date===date&&item.fromGrade===fromGrade&&item.fromName===fromName);
+      const idx=data.requests.findIndex(item=>item.status==="pending"&&item.date===date&&item.fromGrade===fromGrade&&item.fromName===fromName&&String(item.requestType||"replace")===requestType&&String(item.swapDate||"")===swapDate);
       const issuedApprovalToken=newApprovalToken();
       const approvalTokenHash=await sha256(issuedApprovalToken);
       const approvalExpiresAt=new Date(Date.now()+APPROVAL_TTL_MS).toISOString();
       let item;
       if(idx>=0){
-        item={...data.requests[idx],toGrade,toName,updatedAt:now,approvalTokenHash,approvalExpiresAt,partnerApprovedAt:"",requesterLineHash,requesterDevice:clientLabel(request)};
+        item={...data.requests[idx],toGrade,toName,requestType,swapDate,swapGrade,swapName,updatedAt:now,approvalTokenHash,approvalExpiresAt,partnerApprovedAt:"",requesterLineHash,requesterDevice:clientLabel(request)};
         data.requests[idx]=item;
       }else{
         if(data.requests.length>=MAX_REQUESTS)return json({error:"申請の保存上限に達しています。管理者へ連絡してください。"},400);
         const next=nextRequestNo(data);data.requestSeq=next.seq;
         item={
           id:`request-${crypto.randomUUID()}`,requestNo:next.value,date,
-          fromGrade,fromName,toGrade,toName,status:"pending",createdAt:now,updatedAt:now,
+          fromGrade,fromName,toGrade,toName,requestType,swapDate,swapGrade,swapName,status:"pending",createdAt:now,updatedAt:now,
           approvalTokenHash,approvalExpiresAt,partnerApprovedAt:"",requesterLineHash,requesterDevice:clientLabel(request),approverDevice:""
         };
         data.requests.push(item);
@@ -555,12 +563,20 @@ export default async (request,context)=>{
       const toGrade=String(body?.request?.toGrade||"");
       const fromName=cleanName(body?.request?.fromName);
       const toName=cleanName(body?.request?.toName);
-      if(!validDate(date)||!validGrade(fromGrade)||!validGrade(toGrade)||!fromName||!toName||(fromGrade===toGrade&&fromName===toName)){
+      const requestType=String(body?.request?.requestType||"replace")==="swap"?"swap":"replace";
+      const swapDate=String(body?.request?.swapDate||"");
+      const swapGrade=String(body?.request?.swapGrade||"");
+      const swapName=cleanName(body?.request?.swapName);
+      const swapInvalid=requestType==="swap"&&(!validDate(swapDate)||!validGrade(swapGrade)||!swapName);
+      if(!validDate(date)||!validGrade(fromGrade)||!validGrade(toGrade)||!fromName||!toName||(fromGrade===toGrade&&fromName===toName)||swapInvalid){
         return json({error:"申請内容を確認してください。"},400);
       }
       const roster=await store.get(LEGACY_KEY,{type:"json",consistency:"strong"});
       if(!requestMatchesRoster(roster,date,fromGrade,fromName)){
         return json({error:"変更前の名前が現在の当番表と一致しません。当番表を確認してもう一度選択してください。"},400);
+      }
+      if(requestType==="swap"&&!requestMatchesRoster(roster,swapDate,swapGrade,swapName)){
+        return json({error:"入れ替える相手のお当番日と担当者が一致しません。"},400);
       }
 
       const data=await loadData(store);
@@ -571,7 +587,11 @@ export default async (request,context)=>{
           "&fg="+encodeURIComponent(fromGrade)+
           "&fn="+encodeURIComponent(fromName)+
           "&tg="+encodeURIComponent(toGrade)+
-          "&tn="+encodeURIComponent(toName);
+          "&tn="+encodeURIComponent(toName)+
+          "&rt="+encodeURIComponent(requestType)+
+          "&sd="+encodeURIComponent(swapDate)+
+          "&sg="+encodeURIComponent(swapGrade)+
+          "&sn="+encodeURIComponent(swapName);
         const submitSession=await getLineSession(request);
         if(!submitSession){
           pushMonitorEvent(data,{
@@ -590,7 +610,7 @@ export default async (request,context)=>{
         requesterLineHash=await lineIdentityHash(submitSession.sub);
       }
       const now=new Date().toISOString();
-      const idx=data.requests.findIndex(item=>item.status==="pending"&&item.date===date&&item.fromGrade===fromGrade&&item.fromName===fromName);
+      const idx=data.requests.findIndex(item=>item.status==="pending"&&item.date===date&&item.fromGrade===fromGrade&&item.fromName===fromName&&String(item.requestType||"replace")===requestType&&String(item.swapDate||"")===swapDate);
       let issuedApprovalToken="";
       let approvalTokenHash="";
       let approvalExpiresAt="";
@@ -600,13 +620,13 @@ export default async (request,context)=>{
         approvalExpiresAt=new Date(Date.now()+APPROVAL_TTL_MS).toISOString();
       }
       if(idx>=0){
-        data.requests[idx]={...data.requests[idx],toGrade,toName,updatedAt:now,approvalTokenHash,approvalExpiresAt,partnerApprovedAt:"",requesterLineHash:requesterLineHash||data.requests[idx].requesterLineHash||"",requesterDevice:data.partnerApprovalEnabled===true?clientLabel(request):(data.requests[idx].requesterDevice||"")};
+        data.requests[idx]={...data.requests[idx],toGrade,toName,requestType,swapDate,swapGrade,swapName,updatedAt:now,approvalTokenHash,approvalExpiresAt,partnerApprovedAt:"",requesterLineHash:requesterLineHash||data.requests[idx].requesterLineHash||"",requesterDevice:data.partnerApprovalEnabled===true?clientLabel(request):(data.requests[idx].requesterDevice||"")};
       }else{
         if(data.requests.length>=MAX_REQUESTS)return json({error:"申請の保存上限に達しています。管理者へ連絡してください。"},400);
         const next=nextRequestNo(data);data.requestSeq=next.seq;
         data.requests.push({
           id:`request-${crypto.randomUUID()}`,requestNo:next.value,date,
-          fromGrade,fromName,toGrade,toName,status:"pending",createdAt:now,updatedAt:now,
+          fromGrade,fromName,toGrade,toName,requestType,swapDate,swapGrade,swapName,status:"pending",createdAt:now,updatedAt:now,
           approvalTokenHash,approvalExpiresAt,partnerApprovedAt:"",requesterLineHash,requesterDevice:data.partnerApprovalEnabled===true?clientLabel(request):"",approverDevice:""
         });
       }
