@@ -1,6 +1,6 @@
 (function(){'use strict';
 function init(){
-  var prev=document.getElementById('dutyAutoPrevMonth'),next=document.getElementById('dutyAutoNextMonth'),label=document.getElementById('dutyAutoMonthLabel'),create=document.getElementById('dutyAutoTestCreate'),preview=document.getElementById('dutyAutoTestPreview'),testToggle=document.getElementById('dutyRosterTestMode');
+  var prev=document.getElementById('dutyAutoPrevMonth'),next=document.getElementById('dutyAutoNextMonth'),label=document.getElementById('dutyAutoMonthLabel'),create=document.getElementById('dutyAutoTestCreate'),preview=document.getElementById('dutyAutoTestPreview');
   if(!prev||!next||!label||!create||!preview||create.dataset.dutySimpleBound==='1')return;
   create.dataset.dutySimpleBound='1';
   var now=new Date(),target=new Date(now.getFullYear(),now.getMonth()+1,1);
@@ -12,46 +12,10 @@ function init(){
     known.sort(function(a,b){return a.year-b.year||a.month-b.month;});
     var latest=known[known.length-1];if(latest)target=new Date(latest.year,latest.month,1);
   }catch(e){}
-  function savedTestModeForTarget(){
-    try{return typeof window.getDutyRosterTestModeForMonth==='function'&&window.getDutyRosterTestModeForMonth(target.getFullYear(),target.getMonth()+1)===true}catch(e){return false}
-  }
-  function syncSavedTestMode(forceOff){
-    if(!testToggle)return;
-    if(savedTestModeForTarget()){
-      testToggle.checked=true;
-      testToggle.dataset.savedTestMode='1';
-    }else if(forceOff||testToggle.dataset.savedTestMode==='1'){
-      testToggle.checked=false;
-      delete testToggle.dataset.savedTestMode;
-    }
-  }
-  function paint(forceSync){label.textContent=target.getFullYear()+'年 '+(target.getMonth()+1)+'月';syncSavedTestMode(forceSync===true);}
-  if(testToggle){
-    testToggle.addEventListener('change',async function(){
-      if(testToggle.checked||!savedTestModeForTarget())return;
-      testToggle.disabled=true;
-      try{
-        if(typeof window.setDutyRosterTestModeForMonth!=='function')throw new Error('切り替え機能を読み込めませんでした。');
-        const ok=await window.setDutyRosterTestModeForMonth(target.getFullYear(),target.getMonth()+1,false);
-        if(ok){
-          delete testToggle.dataset.savedTestMode;
-          testToggle.checked=false;
-        }else{
-          testToggle.checked=true;
-        }
-      }catch(err){
-        testToggle.checked=true;
-        alert(err&&err.message?err.message:'テストモードを終了できませんでした。');
-      }finally{
-        testToggle.disabled=false;
-      }
-    });
-  }
-  paint(false);
-  prev.onclick=function(e){e.preventDefault();target=new Date(target.getFullYear(),target.getMonth()-1,1);paint(true);};
-  next.onclick=function(e){e.preventDefault();target=new Date(target.getFullYear(),target.getMonth()+1,1);paint(true);};
-  setTimeout(function(){syncSavedTestMode(false);},300);
-  setTimeout(function(){syncSavedTestMode(false);},1000);
+  function paint(){label.textContent=target.getFullYear()+'年 '+(target.getMonth()+1)+'月';}
+  paint();
+  prev.onclick=function(e){e.preventDefault();target=new Date(target.getFullYear(),target.getMonth()-1,1);paint();};
+  next.onclick=function(e){e.preventDefault();target=new Date(target.getFullYear(),target.getMonth()+1,1);paint();};
   function familyKey(v){return String(v||'').normalize('NFKC').trim().split(/[\s　（(]/)[0].replace(/[父母]$/,'');}
   function displayName(v){var s=String(v||'').replace(/[父母]$/,'').trim();return s.replace(/^([^\s　（(]+)[\s　]+(.+)$/,function(_,a,b){return a+'（'+b.replace(/[（）()]/g,'')+'）';});}
   function disambiguateDuplicateFamilies(groups){Object.keys(groups).forEach(function(g){var items=Array.from(groups[g].values()),byFamily=new Map();items.forEach(function(item){var kana=String(item.kana||'').normalize('NFKC').replace(/[父母]$/,'').trim(),raw=String(item.rawName||item.name||'').replace(/[父母]$/,'').trim(),fam=String(item.family||familyKey(raw));var key=fam;if(!key&&kana)key=kana.split(/[\s　]/)[0];var arr=byFamily.get(key)||[];arr.push(item);byFamily.set(key,arr);});byFamily.forEach(function(arr,fam){if(arr.length<2)return;arr.forEach(function(item,index){var raw=String(item.rawName||item.name||'').replace(/[父母]$/,'').trim(),kana=String(item.kana||'').normalize('NFKC').replace(/[父母]$/,'').trim(),rest=raw.replace(String(fam),'').replace(/[（）()\s　]/g,'');if(!rest){var parts=kana.split(/[\s　]+/).filter(Boolean);rest=parts.length>1?parts.slice(1).join(''):'';}if(!rest)rest=String(index+1);item.name=String(fam)+'（'+rest+'）';});});});}
@@ -208,7 +172,7 @@ function init(){
         if(!confirm(y+'年'+mo+'月の当番表をこの案で確定・登録しますか？'))return;
         confirmBtn.disabled=true;confirmBtn.textContent='登録中…';
         try{
-          var ok=await window.confirmGeneratedDutyRoster({name:'当番表_'+y+'年'+String(mo).padStart(2,'0')+'月.png',data:src,testMode:document.getElementById('dutyRosterTestMode')?.checked===true,table:{year:y,month:mo,grades:active.map(Number),activityDays:Array.from(satoyama),rows:rows}});
+          var ok=await window.confirmGeneratedDutyRoster({name:'当番表_'+y+'年'+String(mo).padStart(2,'0')+'月.png',data:src,testMode:false,table:{year:y,month:mo,grades:active.map(Number),activityDays:Array.from(satoyama),rows:rows}});
           if(ok){confirmBtn.textContent='確定済み';confirmBtn.disabled=true;}
           else{confirmBtn.textContent='この案で確定';confirmBtn.disabled=false;}
         }catch(err){confirmBtn.textContent='この案で確定';confirmBtn.disabled=false;alert(err?.message||'当番表を登録できませんでした。');}
