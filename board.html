@@ -246,6 +246,21 @@ html{scroll-padding-top:var(--compact-header-height)}
   }
 }
 </style>
+<style id="duty-monitor-style">
+.duty-monitor-card{margin:14px 0 12px;padding:14px 15px;border:1px solid rgba(199,154,59,.42);border-radius:14px;background:#fffdf8}
+.duty-monitor-head{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:8px}
+.duty-monitor-head strong{color:#071426;font-size:15px}
+.duty-monitor-badge{display:inline-flex;align-items:center;justify-content:center;min-width:72px;padding:5px 9px;border-radius:999px;font-size:12px;font-weight:900;background:#eef2f6;color:#596273}
+.duty-monitor-badge.ok{background:#eaf7ee;color:#23753b}.duty-monitor-badge.warning{background:#fff4d8;color:#9a6500}.duty-monitor-badge.error{background:#fdeaea;color:#a52a2a}
+.duty-monitor-summary{margin:0;color:#566173;font-size:13px;font-weight:700;line-height:1.6}
+.duty-monitor-metrics{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px;margin:12px 0}
+.duty-monitor-metric{padding:9px 8px;border-radius:10px;background:#f4f6f8;text-align:center}.duty-monitor-metric b{display:block;color:#071426;font-size:18px}.duty-monitor-metric small{color:#6b7482;font-weight:800}
+.duty-monitor-issues{margin:8px 0 0;padding-left:18px;color:#a52a2a;font-size:12px;font-weight:800;line-height:1.55}
+.duty-monitor-recent{margin-top:10px;border-top:1px solid rgba(7,20,38,.08);padding-top:8px}
+.duty-monitor-recent-item{padding:8px 0;border-bottom:1px solid rgba(7,20,38,.07);font-size:12px;line-height:1.55;color:#4f5967}
+.duty-monitor-recent-item:last-child{border-bottom:0}.duty-monitor-recent-item b{color:#071426}
+@media(max-width:520px){.duty-monitor-metrics{grid-template-columns:repeat(3,1fr)}.duty-monitor-card{padding:12px}}
+</style>
 <style id="passkey-setup-style">
 .passkey-setup{margin:0 0 18px}.passkey-setup[hidden]{display:none}
 .passkey-setup-summary{display:none;width:100%;padding:12px 2px;border:0;background:transparent;color:#071426;font:inherit;font-size:16px;font-weight:900;text-align:left;cursor:pointer}
@@ -1503,6 +1518,17 @@ body:after{display:none!important;content:none!important}
           <span><strong>交代相手の承認リンクを使用する</strong><small>ONにすると、申請後のLINEに専用承認リンクを追加し、相手の承認で当番表へ自動反映します。</small></span>
         </label>
         <div id="dutyPartnerApprovalStatus" class="duty-approval-setting-status" aria-live="polite"></div>
+        <div id="dutySystemMonitor" class="duty-monitor-card" hidden>
+          <div class="duty-monitor-head"><strong>当番変更システム監視</strong><span id="dutyMonitorBadge" class="duty-monitor-badge">確認中</span></div>
+          <p id="dutyMonitorSummary" class="duty-monitor-summary">申請・LINE認証・承認・当番表反映を確認しています。</p>
+          <div class="duty-monitor-metrics">
+            <div class="duty-monitor-metric"><b id="dutyMonitorPending">0</b><small>確認待ち</small></div>
+            <div class="duty-monitor-metric"><b id="dutyMonitorApproved">0</b><small>反映済み</small></div>
+            <div class="duty-monitor-metric"><b id="dutyMonitorIssues">0</b><small>要確認</small></div>
+          </div>
+          <ul id="dutyMonitorIssueList" class="duty-monitor-issues" hidden></ul>
+          <div id="dutyMonitorRecent" class="duty-monitor-recent"></div>
+        </div>
         <div id="dutyRequestAdminList" class="duty-change-admin-list"></div>
       </div>
     </div>
@@ -1662,7 +1688,7 @@ body:after{display:none!important;content:none!important}
 <script src="./board-meetings.js?v=20260927-0030"></script>
 <script src="./duty-image-reader.js?v=20260918-1"></script>
 <script src="./duty-roster-data.js?v=20260918-1"></script>
-<script src="./board-duty-roster.js?v=20261002-testmode-end3"></script>
+<script src="./board-duty-roster.js?v=20261002-monitor1"></script>
 <script src="./board-duty-auto-test.js?v=20261002-testmode-end2"></script>
 <script src="./board-rules.js?v=20260914-4"></script>
 <script src="./board-archive.js?v=20260914-3"></script>
