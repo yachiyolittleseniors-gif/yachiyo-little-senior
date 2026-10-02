@@ -57,22 +57,22 @@ button:disabled{border-color:#cfd3d8;background:#8a929d;color:#f2ddb0;box-shadow
   <div id="content" hidden>
     <div class="detail">
       <div class="row"><span>申請番号</span><b id="requestNo"></b></div>
-      <div class="row"><span>日付</span><b id="date"></b></div>
-      <div class="row"><span>変更前</span><b id="from"></b></div>
+      <div class="row"><span id="dateLabel">日付</span><b id="date"></b></div>
+      <div class="row"><span id="fromLabel">変更前</span><b id="from"></b></div>
       <div class="arrow">↓</div>
-      <div class="row"><span>変更後</span><b id="to"></b></div>
+      <div class="row"><span id="toLabel">変更後</span><b id="to"></b></div>
     </div>
     <div id="lineAuthNotice" class="line-auth-notice" hidden></div>
     <label class="confirm">
       <input id="familyConfirm" type="checkbox">
-      <span>申請内容を確認しました。<br>お当番の変更を了承します。</span>
+      <span id="confirmText">申請内容を確認しました。<br>お当番の変更を了承します。</span>
     </label>
     <button id="approve" type="button" disabled>この変更を承認する</button>
-    <p class="note">変更後のご家庭の方が内容を確認して承認してください。承認すると当番表へ自動反映され、このリンクは使用できなくなります。承認リンクは24時間有効です。</p>
+    <p id="approvalNote" class="note">変更後のご家庭の方が内容を確認して承認してください。承認すると当番表へ自動反映され、このリンクは使用できなくなります。承認リンクは24時間有効です。</p>
   </div>
   <div id="message" class="status" hidden></div>
 </section>
 </main>
-<script src="./duty-approve.js?v=20261002-ui2" defer></script>
+<script src="./duty-approve.js?v=20261002-swap1" defer></script>
 </body>
 </html>
