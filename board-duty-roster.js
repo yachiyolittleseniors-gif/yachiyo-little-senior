@@ -310,6 +310,7 @@
     const map=new Map();
     if(!/^\d{4}-\d{2}-\d{2}$/.test(String(date||'')))return[];
     images.forEach(function(image){
+      if(!canViewRoster(image))return;
       const table=image.table;if(!table)return;
       const prefix=table.year+'-'+String(table.month).padStart(2,'0')+'-';
       if(!String(date).startsWith(prefix))return;
