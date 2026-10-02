@@ -279,6 +279,26 @@ export default async (request,context)=>{
       return json({ok:true,message:"承認しました。\n当番表へ反映されました。"});
     }
 
+    if(action==="reissue-partner-approval"){
+      if(!(await boardAccess(store,request,context)))return json({error:"unauthorized"},401);
+      const data=await loadData(store);
+      if(data.partnerApprovalEnabled!==true)return json({error:"交代相手の承認リンクは現在使用されていません。"},404);
+      const id=String(body?.id||"");
+      const requestNo=String(body?.requestNo||"");
+      const idx=data.requests.findIndex(item=>item.status==="pending"&&((id&&item.id===id)||(requestNo&&item.requestNo===requestNo)));
+      if(idx<0)return json({error:"確認待ちの申請が見つかりません。"},404);
+      const item=data.requests[idx];
+      const expires=Date.parse(item.approvalExpiresAt||"");
+      if(Number.isFinite(expires)&&Date.now()>expires)return json({error:"承認リンクの有効期限が切れています。再度「当番変更申請」から申請してください。"},410);
+      const issuedApprovalToken=newApprovalToken();
+      const approvalTokenHash=await sha256(issuedApprovalToken);
+      const approvalExpiresAt=new Date(Date.now()+APPROVAL_TTL_MS).toISOString();
+      const now=new Date().toISOString();
+      data.requests[idx]={...item,approvalTokenHash,approvalExpiresAt,updatedAt:now};
+      await store.setJSON(KEY,data);
+      return json({ok:true,...publicData(data),approvalUrl:approvalUrl(request,issuedApprovalToken),approvalExpiresAt});
+    }
+
     if(action==="submit"){
       if(!(await boardAccess(store,request,context)))return json({error:"unauthorized"},401);
       const date=String(body?.request?.date||"");
