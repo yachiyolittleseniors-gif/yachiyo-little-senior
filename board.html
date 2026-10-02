@@ -1312,9 +1312,19 @@ body:after{display:none!important;content:none!important}
         <div class="duty-request-head"><div><span class="duty-request-kicker">CHANGE REQUEST</span><h3>当番変更を申請</h3><span id="dutyRequestPendingBadge" class="duty-request-pending-badge" hidden></span></div><button id="toggleDutyRequest" type="button" aria-expanded="false" aria-controls="dutyRequestContent">申請する</button></div>
         <div id="dutyRequestContent" hidden>
           <p class="duty-request-help">当番表が登録されている月のみ変更申請ができます。変更内容を選択して申請してください。</p>
-          <label>変更日<select id="dutyRequestRosterDate"></select><input id="dutyRequestDirectDate" type="date" hidden disabled></label>
-          <label>変更前<select id="dutyRequestFrom"><option value="">選択してください</option></select></label>
-          <label>変更後<select id="dutyRequestTo"><option value="">選択してください</option></select></label>
+          <label>変更方法
+            <select id="dutyRequestType">
+              <option value="replace">交代してもらう</option>
+              <option value="swap">当番日を入れ替える</option>
+            </select>
+          </label>
+          <label><span id="dutyRequestDateLabel">変更日</span><select id="dutyRequestRosterDate"></select><input id="dutyRequestDirectDate" type="date" hidden disabled></label>
+          <label><span id="dutyRequestFromLabel">変更前</span><select id="dutyRequestFrom"><option value="">選択してください</option></select></label>
+          <label id="dutyRequestReplaceToRow">変更後<select id="dutyRequestTo"><option value="">選択してください</option></select></label>
+          <div id="dutyRequestSwapFields" hidden>
+            <label>入れ替える相手の当番日<select id="dutyRequestSwapDate"></select></label>
+            <label>入れ替える相手<select id="dutyRequestSwapPerson"><option value="">選択してください</option></select></label>
+          </div>
           <button id="submitDutyRequest" class="duty-request-submit" type="button">変更申請を送信</button>
           <div id="dutyRequestResult" class="duty-request-result" hidden></div>
         </div>
@@ -1688,7 +1698,7 @@ body:after{display:none!important;content:none!important}
 <script src="./board-meetings.js?v=20260927-0030"></script>
 <script src="./duty-image-reader.js?v=20260918-1"></script>
 <script src="./duty-roster-data.js?v=20260918-1"></script>
-<script src="./board-duty-roster.js?v=20261002-monitor1"></script>
+<script src="./board-duty-roster.js?v=20261002-swap1"></script>
 <script src="./board-duty-auto-test.js?v=20261002-testmode-end2"></script>
 <script src="./board-rules.js?v=20260914-4"></script>
 <script src="./board-archive.js?v=20260914-3"></script>
