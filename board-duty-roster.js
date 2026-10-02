@@ -92,7 +92,12 @@
     });
   }
 
-  function isAdminViewing(){return !!(panel&&panel.dataset&&panel.dataset.adminPassword)}
+  function isAdminViewing(){
+    return !!(
+      (window.YLSAdminSession&&typeof window.YLSAdminSession.isActive==='function'&&window.YLSAdminSession.isActive()) ||
+      (panel&&panel.dataset&&panel.dataset.adminPassword)
+    );
+  }
   function testMonthKey(item){const t=item&&item.table;return t&&Number(t.year)&&Number(t.month)?t.year+'-'+String(t.month).padStart(2,'0'):''}
   function isTestDate(date){const key=String(date||'').slice(0,7);return images.some(function(item){return item.testMode===true&&testMonthKey(item)===key})}
   function canViewRoster(item){return !item.testMode||isAdminViewing()}
@@ -555,12 +560,14 @@
   document.getElementById('dutyRequestRosterDate')?.addEventListener('change',populateRequestForm);document.getElementById('submitDutyRequest')?.addEventListener('click',submitRequest);
   if(hasLegacyChangeForm)pasteChangeBtn.addEventListener('click',pasteChangeText);
   if(hasLegacyChangeForm)saveChangesBtn.addEventListener('click',saveChanges);saveBtn.addEventListener('click',addImages);
-  document.addEventListener('visibilitychange',function(){if(!document.hidden){syncPendingRequestCount();loadRequests();if(panel.dataset.adminPassword)load();}});
-  window.addEventListener('focus',function(){syncPendingRequestCount();loadRequests();if(panel.dataset.adminPassword)load();});
+  document.addEventListener('visibilitychange',function(){if(!document.hidden){syncPendingRequestCount();loadRequests();if(isAdminViewing())load();}});
+  window.addEventListener('focus',function(){syncPendingRequestCount();loadRequests();if(isAdminViewing())load();});
+  document.addEventListener('yachiyo:admin-session-active',function(){load();});
+  document.addEventListener('yachiyo:admin-session-expired',function(){render();syncPendingRequestCount();});
   try{
     new MutationObserver(function(mutations){
       if(!mutations.some(function(m){return m.attributeName==='data-admin-password'}))return;
-      if(panel.dataset.adminPassword)load();else{render();syncPendingRequestCount();}
+      if(isAdminViewing())load();else{render();syncPendingRequestCount();}
     }).observe(panel,{attributes:true,attributeFilter:['data-admin-password']});
   }catch(e){}
   loadCache();render();syncPendingRequestCount();loadRequests();load();
