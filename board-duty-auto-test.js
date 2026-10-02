@@ -171,7 +171,7 @@ function init(){
         if(!confirm(y+'年'+mo+'月の当番表をこの案で確定・登録しますか？'))return;
         confirmBtn.disabled=true;confirmBtn.textContent='登録中…';
         try{
-          var ok=await window.confirmGeneratedDutyRoster({name:'当番表_'+y+'年'+String(mo).padStart(2,'0')+'月.png',data:src,table:{year:y,month:mo,grades:active.map(Number),activityDays:Array.from(satoyama),rows:rows}});
+          var ok=await window.confirmGeneratedDutyRoster({name:'当番表_'+y+'年'+String(mo).padStart(2,'0')+'月.png',data:src,testMode:document.getElementById('dutyRosterTestMode')?.checked===true,table:{year:y,month:mo,grades:active.map(Number),activityDays:Array.from(satoyama),rows:rows}});
           if(ok){confirmBtn.textContent='確定済み';confirmBtn.disabled=true;}
           else{confirmBtn.textContent='この案で確定';confirmBtn.disabled=false;}
         }catch(err){confirmBtn.textContent='この案で確定';confirmBtn.disabled=false;alert(err?.message||'当番表を登録できませんでした。');}
