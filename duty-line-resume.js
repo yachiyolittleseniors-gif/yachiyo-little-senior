@@ -23,8 +23,30 @@
       '<span class="arrow">↓</span>'+
       '<span class="label">変更後</span><span class="value">'+esc(q.toGrade+'年・'+q.toName)+'</span>'+
       '</div></div>'+
-      '<a class="line" href="'+esc(share)+'">承認リンクを送る</a>'+
-      '<small class="small">承認リンクは1回限り・24時間有効です。送信後はこの画面を閉じて構いません。</small>';
+      '<a id="lineShareButton" class="line" href="'+esc(share)+'"><span class="line-badge">LINE</span>承認リンクを送る</a>'+
+      '<small class="small">承認リンクは1回限り・24時間有効です。</small>';
+    const shareButton=document.getElementById('lineShareButton');
+    if(shareButton){
+      shareButton.addEventListener('click',function(event){
+        event.preventDefault();
+        out.innerHTML='<div class="sent">LINEの送信画面を開きました</div><small class="small">この画面は自動で閉じます。</small>';
+        const target=window.open(share,'_blank');
+        setTimeout(function(){
+          try{window.close()}catch(_){}
+          setTimeout(function(){
+            try{
+              if(!document.hidden){
+                if(history.length>1)history.back();
+                else location.replace('about:blank');
+              }
+            }catch(_){}
+          },250);
+        },120);
+        if(!target){
+          location.href=share;
+        }
+      },{once:true});
+    }
     try{history.replaceState(null,'',location.pathname)}catch(_){}
   }).catch(e=>{
     out.innerHTML='<p class="error">'+esc(e.message||'申請を続行できませんでした。')+'</p><small class="small">元のチーム専用ページからもう一度申請してください。</small>';
