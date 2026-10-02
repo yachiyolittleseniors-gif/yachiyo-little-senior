@@ -1587,21 +1587,21 @@ body:after{display:none!important;content:none!important}
     </div>
     </div>
   </div>
-  <div class="admin-compact-reveal-row"><button id="rulesAdminReveal" class="admin-compact-reveal" type="button" aria-expanded="false" aria-controls="rulesAdminFields">チーム規約の編集を表示</button></div>
-  <div id="rulesAdminFields" hidden>
+  <div id="rulesAdminFields">
     <strong>チーム規約</strong>
     <label for="rulesPdfInput">資料ファイル（PDF・画像／1ファイル5MB以下・複数選択可）</label>
     <input id="rulesPdfInput" type="file" accept="application/pdf,image/jpeg,image/png,image/webp,.pdf,.jpg,.jpeg,.png,.webp" multiple>
     <button id="saveRulesBtn" type="button">資料を追加</button>
+    <div class="admin-compact-reveal-row"><button id="rulesAdminReveal" class="admin-compact-reveal" type="button" aria-expanded="false">編集を表示</button></div>
     <div id="rulesAdminList"></div>
   </div>
-  <div class="admin-compact-reveal-row"><button id="archiveAdminReveal" class="admin-compact-reveal" type="button" aria-expanded="false" aria-controls="documentArchiveAdminFields">資料格納庫の編集を表示</button></div>
-  <div id="documentArchiveAdminFields" hidden>
+  <div id="documentArchiveAdminFields">
     <strong>資料格納庫</strong>
     <p class="document-archive-help">今後使うPDFや画像を保管できます。ここに保存した資料は、通常画面には公開されません。</p>
     <label for="documentArchiveInput">資料ファイル（PDF・画像／1ファイル6MB以下・複数選択可）</label>
     <input id="documentArchiveInput" type="file" accept="application/pdf,image/jpeg,image/png,image/webp,.pdf,.jpg,.jpeg,.png,.webp" multiple>
     <button id="saveDocumentArchiveBtn" type="button">格納庫に保存</button>
+    <div class="admin-compact-reveal-row"><button id="archiveAdminReveal" class="admin-compact-reveal" type="button" aria-expanded="false">編集を表示</button></div>
     <div id="documentArchiveList"></div>
   </div>
   <details id="systemAdminFields" class="system-admin-fields">
@@ -1742,8 +1742,8 @@ body:after{display:none!important;content:none!important}
 <script src="./duty-roster-data.js?v=20260918-1"></script>
 <script src="./board-duty-roster.js?v=20261003-adminmenu1"></script>
 <script src="./board-duty-auto-test.js?v=20261003-no-testmode1"></script>
-<script src="./board-rules.js?v=20261003-compact1"></script>
-<script src="./board-archive.js?v=20261003-compact1"></script>
+<script src="./board-rules.js?v=20261003-itemedit1"></script>
+<script src="./board-archive.js?v=20261003-itemedit1"></script>
 
 <style id="admin-visibility-settings-style">
 .admin-visibility-fields{margin:16px 0 18px;padding:15px;border:1px solid rgba(210,170,80,.28);border-radius:14px;background:rgba(255,255,255,.025)}.admin-visibility-toggle{width:100%;display:flex;align-items:center;justify-content:space-between;gap:12px;padding:0;border:0!important;background:transparent!important;box-shadow:none!important;text-align:left}.admin-visibility-toggle span{display:flex;flex-direction:column;gap:4px}.admin-visibility-toggle strong{color:#e4bd62;font-size:15px}.admin-visibility-toggle small{color:#aeb7c4;font-size:10.5px;line-height:1.35}.admin-visibility-toggle>b{color:#d8b65e;font-size:11px;white-space:nowrap}.admin-visibility-body{padding-top:10px}.admin-visibility-body[hidden]{display:none!important}
@@ -2063,8 +2063,10 @@ body.photo-admin-on #accessPasswordChange{
   opacity:.82;
 }
 .admin-compact-reveal:active{opacity:1}
-#rulesAdminFields[hidden],
-#documentArchiveAdminFields[hidden]{display:none!important}
+#rulesAdminFields .rules-admin-delete,
+#documentArchiveAdminFields .document-archive-manage{display:none!important}
+#rulesAdminFields.is-item-editing .rules-admin-delete,
+#documentArchiveAdminFields.is-item-editing .document-archive-manage{display:inline-flex!important}
 </style>
 <style id="admin-section-boundaries-20260929">
 #densukeAdminPanel{background:#071426!important}
