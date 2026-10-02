@@ -436,6 +436,69 @@
     }
     return headers;
   }
+  function monitorStatusLabel(status){
+    if(status==='error')return'要確認';
+    if(status==='warning')return'注意';
+    return'すべて正常';
+  }
+  function formatMonitorTime(value){
+    const d=new Date(value||'');if(Number.isNaN(d.getTime()))return'';
+    return new Intl.DateTimeFormat('ja-JP',{timeZone:'Asia/Tokyo',month:'numeric',day:'numeric',hour:'2-digit',minute:'2-digit',hourCycle:'h23'}).format(d);
+  }
+  function renderDutySystemMonitor(monitor){
+    const card=document.getElementById('dutySystemMonitor');if(!card)return;
+    card.hidden=!isAdminViewing();if(card.hidden)return;
+    const badge=document.getElementById('dutyMonitorBadge');
+    const summary=document.getElementById('dutyMonitorSummary');
+    const pending=document.getElementById('dutyMonitorPending');
+    const approved=document.getElementById('dutyMonitorApproved');
+    const issues=document.getElementById('dutyMonitorIssues');
+    const issueList=document.getElementById('dutyMonitorIssueList');
+    const recent=document.getElementById('dutyMonitorRecent');
+    if(!monitor){
+      if(badge){badge.className='duty-monitor-badge error';badge.textContent='確認失敗'}
+      if(summary)summary.textContent='監視情報を取得できませんでした。再読み込みしてください。';
+      return;
+    }
+    if(badge){badge.className='duty-monitor-badge '+monitor.status;badge.textContent=monitorStatusLabel(monitor.status)}
+    if(summary){
+      summary.textContent=monitor.partnerApprovalEnabled
+        ?(monitor.issueCount?'申請フローに確認が必要な項目があります。':'申請・LINE認証・承認・当番表反映に異常は見つかっていません。')
+        :'承認リンクは未使用です。監視は待機中です。';
+    }
+    if(pending)pending.textContent=String(monitor.pendingCount||0);
+    if(approved)approved.textContent=String(monitor.approvedCount||0);
+    if(issues)issues.textContent=String(monitor.issueCount||0);
+    if(issueList){
+      const list=Array.isArray(monitor.issues)?monitor.issues:[];
+      issueList.hidden=!list.length;
+      issueList.innerHTML=list.map(function(item){return'<li>'+(item.requestNo?'#'+escapeHtml(item.requestNo)+' ':'')+escapeHtml(item.message||'確認が必要です。')+'</li>'}).join('');
+    }
+    if(recent){
+      const items=Array.isArray(monitor.recent)?monitor.recent:[];
+      recent.innerHTML=items.length?items.map(function(item){
+        const status=item.status==='approved'?'反映済み':(item.status==='pending'?'確認待ち':item.status);
+        const device=item.requesterDevice?('申請：'+escapeHtml(item.requesterDevice)):'申請端末：記録なし';
+        const approver=item.approverDevice?(' / 承認：'+escapeHtml(item.approverDevice)):'';
+        return '<div class="duty-monitor-recent-item"><b>'+(item.requestNo?'#'+escapeHtml(item.requestNo)+' ':'')+escapeHtml(status)+'</b>　'+escapeHtml(displayDate(item.date))+'<br><span>'+device+approver+'</span>'+(item.updatedAt?'<br><small>最終更新：'+escapeHtml(formatMonitorTime(item.updatedAt))+'</small>':'')+'</div>';
+      }).join(''):'<div class="duty-monitor-recent-item">まだ監視対象の申請はありません。</div>';
+    }
+  }
+  async function loadDutySystemMonitor(){
+    const card=document.getElementById('dutySystemMonitor');
+    if(!card||!isAdminViewing()){if(card)card.hidden=true;return}
+    card.hidden=false;
+    try{
+      const response=await fetch(REQUEST_API,{
+        method:'POST',credentials:'same-origin',headers:requestHeaders(true),
+        body:JSON.stringify({action:'monitor'})
+      });
+      const body=await response.json().catch(function(){return{}});
+      if(!response.ok||!body.monitor)throw new Error(body.error||'monitor failed');
+      renderDutySystemMonitor(body.monitor);
+    }catch(e){renderDutySystemMonitor(null)}
+  }
+
   async function loadRequests(){
     try{
       const response=await fetch(REQUEST_API,{cache:'no-store',credentials:'same-origin',headers:requestHeaders(false)});
@@ -451,6 +514,7 @@
       syncDutyRequestOperationNote();
       requestsLoaded=true;
       renderRequests();
+      if(isAdminViewing())loadDutySystemMonitor();
       return true;
     }catch(e){
       requestsLoaded=false;
@@ -616,6 +680,7 @@
     try{
       await requestAdminAction(id,approve?'approve':'reject');
       if(approve){await load();showSaveNotice('申請を当番表に反映しました')}else showSaveNotice('申請を却下しました');
+      if(isAdminViewing())loadDutySystemMonitor();
     }catch(e){alert(e.message||'処理できませんでした。')}
   }
   async function removeImage(index){
@@ -659,6 +724,7 @@
         if(!response.ok)throw new Error(body.error||'設定を変更できませんでした。');
         partnerApprovalEnabled=body.partnerApprovalEnabled===true;
         partnerApprovalToggle.checked=partnerApprovalEnabled;
+        if(isAdminViewing())loadDutySystemMonitor();
         if(partnerApprovalStatus)partnerApprovalStatus.textContent=partnerApprovalEnabled?'承認リンク：使用中':'承認リンク：未使用';
         syncDutyRequestOperationNote();
         if(window.showSaveNotice)showSaveNotice(partnerApprovalEnabled?'承認リンクをONにしました':'承認リンクをOFFにしました');
