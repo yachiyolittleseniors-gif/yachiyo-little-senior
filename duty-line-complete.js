@@ -15,11 +15,11 @@
   const share='https://line.me/R/share?text='+encodeURIComponent(text);
   out.innerHTML='<p class="msg"><b>変更申請を受け付けました</b>変更後のご家庭へ、承認リンクをLINEで送ってください。</p>'+
     '<div class="detail"><div class="flow">'+
-    '<div class="info-row"><span class="label">申請番号</span><span class="value">'+esc(q.requestNo?'#'+q.requestNo:'-')+'</span></div>'+
-    '<div class="info-row"><span class="label">日付</span><span class="value">'+esc(displayDate(q.date))+'</span></div>'+
-    '<div class="info-row"><span class="label">変更前</span><span class="value">'+esc(q.fromGrade+'年・'+q.fromName)+'</span></div>'+
-    '+
-    '<div class="info-row"><span class="label">変更後</span><span class="value">'+esc(q.toGrade+'年・'+q.toName)+'</span></div>'+
+    '<span class="label">申請番号</span><span class="value">'+esc(q.requestNo?'#'+q.requestNo:'-')+'</span>'+
+    '<span class="label">日付</span><span class="value">'+esc(displayDate(q.date))+'</span>'+
+    '<span class="label">変更前</span><span class="value">'+esc(q.fromGrade+'年・'+q.fromName)+'</span>'+
+    '<span class="arrow">↓</span>'+
+    '<span class="label">変更後</span><span class="value">'+esc(q.toGrade+'年・'+q.toName)+'</span>'+
     '</div></div>'+
     '<a id="lineShareButton" class="line" href="'+esc(share)+'"><span class="line-badge">LINE</span>承認リンクを送る</a>'+
     '<small class="small">承認リンクは1回限り・24時間有効です。</small>';
