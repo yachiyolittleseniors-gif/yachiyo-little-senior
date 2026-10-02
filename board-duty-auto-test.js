@@ -1,6 +1,6 @@
 (function(){'use strict';
 function init(){
-  var prev=document.getElementById('dutyAutoPrevMonth'),next=document.getElementById('dutyAutoNextMonth'),label=document.getElementById('dutyAutoMonthLabel'),create=document.getElementById('dutyAutoTestCreate'),preview=document.getElementById('dutyAutoTestPreview');
+  var prev=document.getElementById('dutyAutoPrevMonth'),next=document.getElementById('dutyAutoNextMonth'),label=document.getElementById('dutyAutoMonthLabel'),create=document.getElementById('dutyAutoTestCreate'),preview=document.getElementById('dutyAutoTestPreview'),testToggle=document.getElementById('dutyRosterTestMode');
   if(!prev||!next||!label||!create||!preview||create.dataset.dutySimpleBound==='1')return;
   create.dataset.dutySimpleBound='1';
   var now=new Date(),target=new Date(now.getFullYear(),now.getMonth()+1,1);
@@ -12,10 +12,25 @@ function init(){
     known.sort(function(a,b){return a.year-b.year||a.month-b.month;});
     var latest=known[known.length-1];if(latest)target=new Date(latest.year,latest.month,1);
   }catch(e){}
-  function paint(){label.textContent=target.getFullYear()+'年 '+(target.getMonth()+1)+'月';}
-  paint();
-  prev.onclick=function(e){e.preventDefault();target=new Date(target.getFullYear(),target.getMonth()-1,1);paint();};
-  next.onclick=function(e){e.preventDefault();target=new Date(target.getFullYear(),target.getMonth()+1,1);paint();};
+  function savedTestModeForTarget(){
+    try{return typeof window.getDutyRosterTestModeForMonth==='function'&&window.getDutyRosterTestModeForMonth(target.getFullYear(),target.getMonth()+1)===true}catch(e){return false}
+  }
+  function syncSavedTestMode(forceOff){
+    if(!testToggle)return;
+    if(savedTestModeForTarget()){
+      testToggle.checked=true;
+      testToggle.dataset.savedTestMode='1';
+    }else if(forceOff||testToggle.dataset.savedTestMode==='1'){
+      testToggle.checked=false;
+      delete testToggle.dataset.savedTestMode;
+    }
+  }
+  function paint(forceSync){label.textContent=target.getFullYear()+'年 '+(target.getMonth()+1)+'月';syncSavedTestMode(forceSync===true);}
+  paint(false);
+  prev.onclick=function(e){e.preventDefault();target=new Date(target.getFullYear(),target.getMonth()-1,1);paint(true);};
+  next.onclick=function(e){e.preventDefault();target=new Date(target.getFullYear(),target.getMonth()+1,1);paint(true);};
+  setTimeout(function(){syncSavedTestMode(false);},300);
+  setTimeout(function(){syncSavedTestMode(false);},1000);
   function familyKey(v){return String(v||'').normalize('NFKC').trim().split(/[\s　（(]/)[0].replace(/[父母]$/,'');}
   function displayName(v){var s=String(v||'').replace(/[父母]$/,'').trim();return s.replace(/^([^\s　（(]+)[\s　]+(.+)$/,function(_,a,b){return a+'（'+b.replace(/[（）()]/g,'')+'）';});}
   function disambiguateDuplicateFamilies(groups){Object.keys(groups).forEach(function(g){var items=Array.from(groups[g].values()),byFamily=new Map();items.forEach(function(item){var kana=String(item.kana||'').normalize('NFKC').replace(/[父母]$/,'').trim(),raw=String(item.rawName||item.name||'').replace(/[父母]$/,'').trim(),fam=String(item.family||familyKey(raw));var key=fam;if(!key&&kana)key=kana.split(/[\s　]/)[0];var arr=byFamily.get(key)||[];arr.push(item);byFamily.set(key,arr);});byFamily.forEach(function(arr,fam){if(arr.length<2)return;arr.forEach(function(item,index){var raw=String(item.rawName||item.name||'').replace(/[父母]$/,'').trim(),kana=String(item.kana||'').normalize('NFKC').replace(/[父母]$/,'').trim(),rest=raw.replace(String(fam),'').replace(/[（）()\s　]/g,'');if(!rest){var parts=kana.split(/[\s　]+/).filter(Boolean);rest=parts.length>1?parts.slice(1).join(''):'';}if(!rest)rest=String(index+1);item.name=String(fam)+'（'+rest+'）';});});});}
