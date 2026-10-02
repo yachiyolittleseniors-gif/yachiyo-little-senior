@@ -15,11 +15,10 @@ body{margin:0;background:linear-gradient(180deg,#071426 0%,#0a1830 100%);color:v
 main{min-height:100dvh;display:grid;place-items:center;padding:22px 18px calc(22px + env(safe-area-inset-bottom))}
 .card{position:relative;overflow:hidden;width:min(520px,100%);background:#fff;border:1px solid rgba(199,154,59,.72);border-radius:26px;padding:0 22px 26px;box-shadow:0 26px 70px rgba(0,0,0,.32)}
 .card:before{content:"";display:block;height:5px;margin:0 -22px 22px;background:linear-gradient(90deg,#8f671b,var(--gold2),#8f671b)}
-.brand{display:flex;align-items:center;gap:12px;margin-bottom:18px}
-.brand img{width:58px;height:58px;object-fit:contain}
-.brand-name{font-size:14px;font-weight:900;color:var(--navy)}
-.brand-sub{margin-top:2px;font-size:9px;font-weight:800;letter-spacing:.15em;color:#9a7429}
-.kicker{font-size:10px;letter-spacing:.2em;font-weight:900;color:#a87b23}
+.brand{display:flex;justify-content:center;align-items:center;margin:2px 0 14px}
+.brand img{display:block;width:min(300px,86%);height:auto;max-height:74px;object-fit:contain}
+.section-head{padding-top:4px;border-top:1px solid #eee7d9}
+.kicker{margin-top:14px;font-size:10px;letter-spacing:.2em;font-weight:900;color:#a87b23}
 h1{margin:5px 0 18px;color:var(--navy);font-size:28px;line-height:1.25}
 .detail{display:grid;gap:12px;padding:18px;border:1px solid var(--line);border-radius:18px;background:var(--soft)}
 .row{display:grid;grid-template-columns:88px 1fr;gap:12px;align-items:center}
@@ -41,7 +40,7 @@ button:disabled{border-color:#cfd3d8;background:#8a929d;color:#f2ddb0;box-shadow
 .loading{display:grid;place-items:center;padding:22px 0 6px;color:#667180;font-weight:800}
 .loading:before{content:"";width:30px;height:30px;margin-bottom:14px;border:3px solid #e5e7eb;border-top-color:var(--gold);border-radius:50%;animation:r .85s linear infinite}
 @keyframes r{to{transform:rotate(360deg)}}
-@media(max-width:390px){.card{padding:0 18px 22px}.card:before{margin:0 -18px 18px}h1{font-size:25px}.brand img{width:52px;height:52px}.row{grid-template-columns:78px 1fr}}
+@media(max-width:390px){.card{padding:0 18px 22px}.card:before{margin:0 -18px 18px}h1{font-size:25px}.brand img{width:min(275px,90%)}.row{grid-template-columns:78px 1fr}}
 </style>
 </head>
 <body>
@@ -49,10 +48,11 @@ button:disabled{border-color:#cfd3d8;background:#8a929d;color:#f2ddb0;box-shadow
 <section class="card">
   <div class="brand">
     <img src="./official-logo-crisp-final.png" alt="八千代リトルシニア">
-    <div><div class="brand-name">八千代リトルシニア</div><div class="brand-sub">TEAM MANAGEMENT SYSTEM</div></div>
   </div>
-  <div class="kicker">DUTY CHANGE APPROVAL</div>
-  <h1>当番変更の確認</h1>
+  <div class="section-head">
+    <div class="kicker">DUTY CHANGE APPROVAL</div>
+    <h1>当番変更の確認</h1>
+  </div>
   <div id="loading" class="loading">申請内容を確認しています</div>
   <div id="content" hidden>
     <div class="detail">
