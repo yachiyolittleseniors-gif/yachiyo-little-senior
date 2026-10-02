@@ -1,6 +1,24 @@
 (function(){
   const API='/.netlify/functions/duty-change-requests';
   const token=new URLSearchParams(location.search).get('t')||'';
+  function dutyDeviceId(){
+    const key='yachiyoDutyDeviceId';
+    try{
+      let value=localStorage.getItem(key)||'';
+      if(!value){
+        value=(crypto.randomUUID?crypto.randomUUID():(Date.now().toString(36)+'-'+Math.random().toString(36).slice(2)))+'-'+Math.random().toString(36).slice(2);
+        localStorage.setItem(key,value);
+      }
+      return value;
+    }catch(e){
+      try{
+        let value=sessionStorage.getItem(key)||'';
+        if(!value){value=(Date.now().toString(36)+'-'+Math.random().toString(36).slice(2));sessionStorage.setItem(key,value)}
+        return value;
+      }catch(_){return''}
+    }
+  }
+  const deviceId=dutyDeviceId();
   const loading=document.getElementById('loading');
   const content=document.getElementById('content');
   const message=document.getElementById('message');
@@ -37,9 +55,9 @@
   }
   async function call(action){
     if(action==='preview-partner-approval'){
-      return fetchJson(API+'?action=preview-partner-approval&t='+encodeURIComponent(token),{method:'GET'});
+      return fetchJson(API+'?action=preview-partner-approval&t='+encodeURIComponent(token)+'&d='+encodeURIComponent(deviceId),{method:'GET'});
     }
-    return fetchJson(API,{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({action,token})});
+    return fetchJson(API,{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({action,token,deviceId})});
   }
   async function init(){
     if(!token)return showMessage('承認リンクが正しくありません。',false);
