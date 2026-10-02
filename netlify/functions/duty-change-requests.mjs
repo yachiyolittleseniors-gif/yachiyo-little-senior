@@ -2,7 +2,7 @@ import { getStore } from "@netlify/blobs";
 import { verifyAccessPassword } from "./_access-password.mjs";
 import { boardSessionIsValid } from "./_board-session.mjs";
 import { verifyAdminPassword, adminAuthError } from "./admin-rate-limit.mjs";
-import { getLineSession, lineIdentityHash, lineLoginStartUrl } from "./_line-login-auth.mjs";
+import { getLineSession, lineIdentityHash, lineLoginStartUrl, unsealLineFlow } from "./_line-login-auth.mjs";
 
 const STORE_NAME="yachiyo-public-site";
 const KEY="content/duty-change-requests.json";
@@ -316,6 +316,57 @@ export default async (request,context)=>{
     let body;
     try{body=await request.json();}catch{return json({error:"invalid json"},400);}
     const action=String(body?.action||"");
+
+    if(action==="submit-line-resume"){
+      const resume=await unsealLineFlow(String(body?.token||""));
+      if(!resume||resume.purpose!=="duty-submit"||!Number.isFinite(Number(resume.exp))||Date.now()>Number(resume.exp)){
+        return json({error:"LINE認証の引き継ぎ情報が無効、または期限切れです。もう一度申請してください。"},400);
+      }
+      const date=String(resume.date||"");
+      const fromGrade=String(resume.fromGrade||"");
+      const toGrade=String(resume.toGrade||"");
+      const fromName=cleanName(resume.fromName);
+      const toName=cleanName(resume.toName);
+      if(!validDate(date)||!validGrade(fromGrade)||!validGrade(toGrade)||!fromName||!toName||(fromGrade===toGrade&&fromName===toName)||!resume.sub){
+        return json({error:"申請内容を確認できませんでした。もう一度申請してください。"},400);
+      }
+      const roster=await store.get(LEGACY_KEY,{type:"json",consistency:"strong"});
+      if(!requestMatchesRoster(roster,date,fromGrade,fromName)){
+        return json({error:"変更前の名前が現在の当番表と一致しません。当番表を確認してもう一度申請してください。"},400);
+      }
+      const data=await loadData(store);
+      if(data.partnerApprovalEnabled!==true){
+        return json({error:"交代相手の承認リンクは現在使用されていません。"},409);
+      }
+      const requesterLineHash=await lineIdentityHash(String(resume.sub));
+      const now=new Date().toISOString();
+      const idx=data.requests.findIndex(item=>item.status==="pending"&&item.date===date&&item.fromGrade===fromGrade&&item.fromName===fromName);
+      const issuedApprovalToken=newApprovalToken();
+      const approvalTokenHash=await sha256(issuedApprovalToken);
+      const approvalExpiresAt=new Date(Date.now()+APPROVAL_TTL_MS).toISOString();
+      let item;
+      if(idx>=0){
+        item={...data.requests[idx],toGrade,toName,updatedAt:now,approvalTokenHash,approvalExpiresAt,partnerApprovedAt:"",requesterLineHash};
+        data.requests[idx]=item;
+      }else{
+        if(data.requests.length>=MAX_REQUESTS)return json({error:"申請の保存上限に達しています。管理者へ連絡してください。"},400);
+        const next=nextRequestNo(data);data.requestSeq=next.seq;
+        item={
+          id:`request-${crypto.randomUUID()}`,requestNo:next.value,date,
+          fromGrade,fromName,toGrade,toName,status:"pending",createdAt:now,updatedAt:now,
+          approvalTokenHash,approvalExpiresAt,partnerApprovedAt:"",requesterLineHash
+        };
+        data.requests.push(item);
+      }
+      data.requests=dedupePending(data.requests);
+      await store.setJSON(KEY,data);
+      return json({
+        ok:true,
+        request:publicRequest(item),
+        approvalUrl:approvalUrl(request,issuedApprovalToken),
+        approvalExpiresAt
+      });
+    }
 
     if(action==="preview-partner-approval"||action==="partner-approve"){
       const data=await loadData(store);
