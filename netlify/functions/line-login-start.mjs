@@ -30,6 +30,12 @@ export default async (request)=>{
     auth.searchParams.set("state",flow);
     auth.searchParams.set("scope","openid");
     auth.searchParams.set("nonce",nonce);
+    // Approval links are often opened from LINE into an external browser on iPhone.
+    // LINE documents that automatic login can fail in some browser/privacy contexts;
+    // use the explicit login flow here so the approver can reliably authenticate.
+    if(returnPath.startsWith("/duty-approve.html")){
+      auth.searchParams.set("disable_auto_login","true");
+    }
     auth.searchParams.set("code_challenge",challenge);
     auth.searchParams.set("code_challenge_method","S256");
 
