@@ -26,6 +26,27 @@ function init(){
     }
   }
   function paint(forceSync){label.textContent=target.getFullYear()+'年 '+(target.getMonth()+1)+'月';syncSavedTestMode(forceSync===true);}
+  if(testToggle){
+    testToggle.addEventListener('change',async function(){
+      if(testToggle.checked||!savedTestModeForTarget())return;
+      testToggle.disabled=true;
+      try{
+        if(typeof window.setDutyRosterTestModeForMonth!=='function')throw new Error('切り替え機能を読み込めませんでした。');
+        const ok=await window.setDutyRosterTestModeForMonth(target.getFullYear(),target.getMonth()+1,false);
+        if(ok){
+          delete testToggle.dataset.savedTestMode;
+          testToggle.checked=false;
+        }else{
+          testToggle.checked=true;
+        }
+      }catch(err){
+        testToggle.checked=true;
+        alert(err&&err.message?err.message:'テストモードを終了できませんでした。');
+      }finally{
+        testToggle.disabled=false;
+      }
+    });
+  }
   paint(false);
   prev.onclick=function(e){e.preventDefault();target=new Date(target.getFullYear(),target.getMonth()-1,1);paint(true);};
   next.onclick=function(e){e.preventDefault();target=new Date(target.getFullYear(),target.getMonth()+1,1);paint(true);};
