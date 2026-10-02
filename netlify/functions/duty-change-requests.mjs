@@ -245,7 +245,7 @@ export default async (request,context)=>{
         if(data.partnerApprovalEnabled!==true)return json({error:"交代相手の承認リンクは現在使用されていません。"},404);
         const token=String(url.searchParams.get("t")||"");
         const item=await findRequestByApprovalToken(data,token);
-        if(!item)return json({error:"承認リンクが無効、またはすでに使用済みです。"},404);
+        if(!item)return json({error:"承認リンクが無効です。\nまたは、すでに使用済みです。"},404);
         const expires=Date.parse(item.approvalExpiresAt||"");
         if(!Number.isFinite(expires)||Date.now()>expires)return json({error:"承認リンクの有効期限が切れています。申請者に再申請を依頼してください。"},410);
         return json({ok:true,request:approvalPreview(item)});
@@ -265,7 +265,7 @@ export default async (request,context)=>{
       if(data.partnerApprovalEnabled!==true)return json({error:"交代相手の承認リンクは現在使用されていません。"},404);
       const token=String(body?.token||"");
       const item=await findRequestByApprovalToken(data,token);
-      if(!item)return json({error:"承認リンクが無効、またはすでに使用済みです。"},404);
+      if(!item)return json({error:"承認リンクが無効です。\nまたは、すでに使用済みです。"},404);
       const expires=Date.parse(item.approvalExpiresAt||"");
       if(!Number.isFinite(expires)||Date.now()>expires)return json({error:"承認リンクの有効期限が切れています。申請者に再申請を依頼してください。"},410);
       if(action==="preview-partner-approval")return json({ok:true,request:approvalPreview(item)});
