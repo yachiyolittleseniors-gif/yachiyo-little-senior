@@ -8,7 +8,7 @@
   const familyConfirm=document.getElementById('familyConfirm');
   const lineAuthNotice=document.getElementById('lineAuthNotice');
   function showMessage(text,ok,retry){
-    loading.hidden=true;content.hidden=true;message.hidden=false;
+    loading.hidden=true;loading.style.display='none';content.hidden=true;message.hidden=false;
     message.textContent=text;message.className='status '+(ok?'ok':'error');
     if(retry){
       const btn=document.createElement('button');
@@ -61,7 +61,7 @@
         lineAuthNotice.hidden=true;
         familyConfirm.disabled=false;
       }
-      loading.hidden=true;content.hidden=false;
+      loading.hidden=true;loading.style.display='none';content.hidden=false;
     }catch(e){
       if(e&&e.status===401&&e.body&&e.body.code==='line_login_required'&&e.body.loginUrl){
         location.replace(e.body.loginUrl);return;
