@@ -489,7 +489,7 @@
     if(details&&toggle&&monitor.issueCount>0){
       details.hidden=false;
       toggle.setAttribute('aria-expanded','true');
-      toggle.textContent='詳細を隠す';
+      toggle.textContent='システム処理履歴を隠す';
     }
     if(summary){
       summary.textContent=monitor.partnerApprovalEnabled
@@ -535,7 +535,7 @@
       const open=details.hidden;
       details.hidden=!open;
       toggle.setAttribute('aria-expanded',String(open));
-      toggle.textContent=open?'詳細を隠す':'詳細を表示';
+      toggle.textContent=open?'システム処理履歴を隠す':'システム処理履歴を表示';
     });
   }
 
