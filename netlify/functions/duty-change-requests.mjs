@@ -33,12 +33,12 @@ function clientLabel(request){
   const ua=String(request?.headers?.get("user-agent")||"");
   const os=/Android/i.test(ua)?"Android":(/iPhone|iPad|iPod/i.test(ua)?"iPhone/iPad":(/Windows/i.test(ua)?"Windows":(/Macintosh|Mac OS X/i.test(ua)?"Mac":"その他")));
   let browser="ブラウザ";
-  if(/CriOS/i.test(ua))browser="Chrome";
+  if(/Line\//i.test(ua))browser="LINE";
+  else if(/CriOS/i.test(ua))browser="Chrome";
   else if(/EdgiOS|Edg\//i.test(ua))browser="Edge";
   else if(/FxiOS|Firefox\//i.test(ua))browser="Firefox";
   else if(/Chrome\//i.test(ua))browser="Chrome";
   else if(/Safari\//i.test(ua))browser="Safari";
-  else if(/Line\//i.test(ua))browser="LINE";
   return (os+" / "+browser).slice(0,80);
 }
 function normalizeStatus(value){return ["pending","approved","rejected","closed"].includes(String(value))?String(value):"pending"}
