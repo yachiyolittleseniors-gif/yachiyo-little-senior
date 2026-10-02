@@ -78,7 +78,8 @@ function normalizeItem(item,index=0){
     updatedAt:String(item?.updatedAt||"").slice(0,60),
     approvalTokenHash:String(item?.approvalTokenHash||"").slice(0,128),
     approvalExpiresAt:String(item?.approvalExpiresAt||"").slice(0,60),
-    partnerApprovedAt:String(item?.partnerApprovedAt||"").slice(0,60)
+    partnerApprovedAt:String(item?.partnerApprovedAt||"").slice(0,60),
+    applicantDeviceHash:String(item?.applicantDeviceHash||"").slice(0,128)
   };
 }
 function dedupePending(items){
@@ -234,6 +235,11 @@ function approvalPreview(item){
     expiresAt:item.approvalExpiresAt
   };
 }
+async function sameApplicantDevice(item,deviceId){
+  if(!item?.applicantDeviceHash||!deviceId)return false;
+  return (await sha256(String(deviceId)))===item.applicantDeviceHash;
+}
+
 
 export default async (request,context)=>{
   const store=getStore({name:STORE_NAME,consistency:"strong"});
@@ -248,6 +254,8 @@ export default async (request,context)=>{
         if(!item)return json({error:"承認リンクが無効です。\nまたは、すでに使用済みです。"},404);
         const expires=Date.parse(item.approvalExpiresAt||"");
         if(!Number.isFinite(expires)||Date.now()>expires)return json({error:"承認リンクの有効期限が切れています。申請者に再申請を依頼してください。"},410);
+        const deviceId=String(url.searchParams.get("d")||"");
+        if(await sameApplicantDevice(item,deviceId))return json({error:"この申請は、変更後のご家庭で承認してください。\n申請した端末からは承認できません。"},403);
         return json({ok:true,request:approvalPreview(item)});
       }
       if(!(await boardAccess(store,request,context)))return json({error:"unauthorized"},401);
@@ -268,6 +276,8 @@ export default async (request,context)=>{
       if(!item)return json({error:"承認リンクが無効です。\nまたは、すでに使用済みです。"},404);
       const expires=Date.parse(item.approvalExpiresAt||"");
       if(!Number.isFinite(expires)||Date.now()>expires)return json({error:"承認リンクの有効期限が切れています。申請者に再申請を依頼してください。"},410);
+      const deviceId=String(body?.deviceId||"");
+      if(await sameApplicantDevice(item,deviceId))return json({error:"この申請は、変更後のご家庭で承認してください。\n申請した端末からは承認できません。"},403);
       if(action==="preview-partner-approval")return json({ok:true,request:approvalPreview(item)});
       const applied=await applyRequestToRoster(store,item);
       if(!applied.ok)return json({error:applied.error},409);
@@ -285,6 +295,7 @@ export default async (request,context)=>{
       const toGrade=String(body?.request?.toGrade||"");
       const fromName=cleanName(body?.request?.fromName);
       const toName=cleanName(body?.request?.toName);
+      const applicantDeviceId=String(body?.request?.applicantDeviceId||"").slice(0,200);
       if(!validDate(date)||!validGrade(fromGrade)||!validGrade(toGrade)||!fromName||!toName||(fromGrade===toGrade&&fromName===toName)){
         return json({error:"申請内容を確認してください。"},400);
       }
@@ -299,20 +310,22 @@ export default async (request,context)=>{
       let issuedApprovalToken="";
       let approvalTokenHash="";
       let approvalExpiresAt="";
+      let applicantDeviceHash="";
       if(data.partnerApprovalEnabled===true){
         issuedApprovalToken=newApprovalToken();
         approvalTokenHash=await sha256(issuedApprovalToken);
         approvalExpiresAt=new Date(Date.now()+APPROVAL_TTL_MS).toISOString();
+        applicantDeviceHash=applicantDeviceId?await sha256(applicantDeviceId):"";
       }
       if(idx>=0){
-        data.requests[idx]={...data.requests[idx],toGrade,toName,updatedAt:now,approvalTokenHash,approvalExpiresAt,partnerApprovedAt:""};
+        data.requests[idx]={...data.requests[idx],toGrade,toName,updatedAt:now,approvalTokenHash,approvalExpiresAt,partnerApprovedAt:"",applicantDeviceHash};
       }else{
         if(data.requests.length>=MAX_REQUESTS)return json({error:"申請の保存上限に達しています。管理者へ連絡してください。"},400);
         const next=nextRequestNo(data);data.requestSeq=next.seq;
         data.requests.push({
           id:`request-${crypto.randomUUID()}`,requestNo:next.value,date,
           fromGrade,fromName,toGrade,toName,status:"pending",createdAt:now,updatedAt:now,
-          approvalTokenHash,approvalExpiresAt,partnerApprovedAt:""
+          approvalTokenHash,approvalExpiresAt,partnerApprovedAt:"",applicantDeviceHash
         });
       }
       data.requests=dedupePending(data.requests);
