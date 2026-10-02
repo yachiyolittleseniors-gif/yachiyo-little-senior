@@ -47,8 +47,14 @@ export async function verifyAdminPassword({
     return { ok: false, notConfigured: true };
   }
 
-  if (requireSession && !(await adminSession(request))) {
-    return { ok: false, sessionExpired: true };
+  if (requireSession) {
+    const session = await adminSession(request);
+    if (!session) {
+      return { ok: false, sessionExpired: true };
+    }
+    // The admin password is verified once when the 30-minute admin session is created.
+    // Requests made during a valid session must not be counted as password attempts.
+    return { ok: true };
   }
 
   const key = await clientKey(request, context);
