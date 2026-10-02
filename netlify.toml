@@ -6,6 +6,14 @@
 [functions]
   node_bundler = "esbuild"
 
+# LINE当番変更申請の旧中継ページは、必ずサーバー処理へ転送する。
+# 既存ファイルがあっても force=true で優先し、クエリ文字列(t)はNetlifyが引き継ぐ。
+[[redirects]]
+  from = "/duty-line-resume.html"
+  to = "/.netlify/functions/duty-line-page"
+  status = 302
+  force = true
+
 # Server sources and test fixtures are not public site assets.
 # The deployed API remains available under /.netlify/functions/.
 [[redirects]]
