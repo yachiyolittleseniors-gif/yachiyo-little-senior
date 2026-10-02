@@ -622,10 +622,23 @@
     const target=images[index];if(!target)return;
     const key=target.table?target.table.year+'-'+String(target.table.month).padStart(2,'0'):null;
     const deleteHistory=key&&!images.some((item,i)=>i!==index&&item.table&&item.table.year===target.table.year&&item.table.month===target.table.month);
-    if(!confirm('「'+target.name+'」を削除しますか？'+(deleteHistory?' '+key+'の表と変更履歴も削除します。':'')))return;
-    const previous=images.slice(),previousChanges=changes.slice();images.splice(index,1);
+
+    dutyChangeMutationInFlight=true;
+    const confirmed=confirm('「'+target.name+'」を削除しますか？'+(deleteHistory?' '+key+'の表と変更履歴も削除します。':''));
+    if(!confirmed){dutyChangeMutationInFlight=false;return}
+
+    const previous=images.slice(),previousChanges=changes.slice();
+    images.splice(index,1);
     if(deleteHistory)changes=changes.filter(item=>!item.date.startsWith(key+'-'));
-    try{await persist('当番表と関連する変更履歴を削除しました','当番表を削除しました')}catch(e){images=previous;changes=previousChanges;render();alert(e.message)}
+    render();
+
+    try{
+      await persist('当番表と関連する変更履歴を削除しました','当番表を削除しました');
+    }catch(e){
+      images=previous;changes=previousChanges;render();alert(e.message||'当番表を削除できませんでした。');
+    }finally{
+      dutyChangeMutationInFlight=false;
+    }
   }
 
   const partnerApprovalToggle=document.getElementById('dutyPartnerApprovalToggle');
