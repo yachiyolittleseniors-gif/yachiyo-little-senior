@@ -429,6 +429,7 @@
       admin.querySelectorAll('[data-reject-duty-request]').forEach(function(b){b.addEventListener('click',function(){decideRequest(b.dataset.rejectDutyRequest,false)})});
     }
     populateRequestForm();
+    restoreLineLoginResume();
   }
   function personOptionValue(x){return x.grade+'|'+x.name}
   function parsePersonOption(value){const i=String(value||'').indexOf('|');return i<1?null:{grade:String(value).slice(0,i),name:cleanName(String(value).slice(i+1))}}
@@ -451,7 +452,15 @@
       shareWindow=window.open('about:blank','_blank');
       const response=await fetch(REQUEST_API,{method:'POST',credentials:'same-origin',headers:requestHeaders(false),body:JSON.stringify({action:'reissue-partner-approval',id:item.id})});
       const body=await response.json().catch(function(){return{}});
-      if(!response.ok)throw new Error(body.error||'承認リンクを再発行できませんでした。');
+      if(!response.ok){
+        if(body.code==='line_login_required'&&body.loginUrl){
+          if(shareWindow&&!shareWindow.closed)shareWindow.close();
+          sessionStorage.setItem('ylsDutyLineResume',JSON.stringify({mode:'resend',id:item.id,expires:Date.now()+10*60*1000}));
+          location.href=body.loginUrl;
+          return;
+        }
+        throw new Error(body.error||'承認リンクを再発行できませんでした。');
+      }
       requests=normalizeRequestList(body.requests);requestsLoaded=true;renderRequests();syncPendingRequestCount();
       const url=String(body.approvalUrl||'');
       if(!url)throw new Error('承認リンクを取得できませんでした。');
@@ -472,7 +481,16 @@
     try{
       const response=await fetch(REQUEST_API,{method:'POST',credentials:'same-origin',headers:requestHeaders(false),body:JSON.stringify({action:'submit',request:{date:date,fromGrade:fromPerson.grade,fromName:fromPerson.name,toGrade:toPerson.grade,toName:toPerson.name}})});
       const body=await response.json().catch(function(){return{}});
-      if(!response.ok)throw new Error(body.error||'申請できませんでした。');
+      if(!response.ok){
+        if(body.code==='line_login_required'&&body.loginUrl){
+          sessionStorage.setItem('ylsDutyLineResume',JSON.stringify({
+            mode:'submit',date:date,from:personOptionValue(fromPerson),to:personOptionValue(toPerson),expires:Date.now()+10*60*1000
+          }));
+          location.href=body.loginUrl;
+          return;
+        }
+        throw new Error(body.error||'申請できませんでした。');
+      }
       requests=normalizeRequestList(body.requests);requestsLoaded=true;renderRequests();syncPendingRequestCount();
       const submitted=requests.slice().sort(function(a,b){return String(b.updatedAt||b.createdAt).localeCompare(String(a.updatedAt||a.createdAt))}).find(function(x){return x.status==='pending'&&x.date===date&&x.fromGrade===fromPerson.grade&&x.fromName===fromPerson.name});
       const requestNo=submitted&&submitted.requestNo?submitted.requestNo:'';
@@ -551,6 +569,50 @@
       legacyLineToggle.setAttribute('aria-expanded',String(open));
       legacyLineToggle.textContent=open?'非表示 ▲':'表示 ▼';
     });
+  }
+
+  let lineResumeHandled=false;
+  function cleanLineResumeUrl(){
+    try{
+      const u=new URL(location.href);
+      u.searchParams.delete('line_login');
+      u.searchParams.delete('line_resume');
+      history.replaceState(null,'',u.pathname+u.search+u.hash);
+    }catch(e){}
+  }
+  function restoreLineLoginResume(){
+    if(lineResumeHandled)return;
+    const params=new URLSearchParams(location.search);
+    if(params.get('line_login')!=='ok')return;
+    let saved=null;
+    try{saved=JSON.parse(sessionStorage.getItem('ylsDutyLineResume')||'null')}catch(e){}
+    if(!saved||Date.now()>Number(saved.expires||0)){
+      sessionStorage.removeItem('ylsDutyLineResume');
+      lineResumeHandled=true;cleanLineResumeUrl();return;
+    }
+    const mode=String(saved.mode||'');
+    if(mode==='submit'&&params.get('line_resume')==='duty-submit'){
+      const dateSel=document.getElementById('dutyRequestRosterDate'),fromSel=document.getElementById('dutyRequestFrom'),toSel=document.getElementById('dutyRequestTo');
+      if(!dateSel||!fromSel||!toSel||!Array.from(dateSel.options).some(function(o){return o.value===saved.date}))return;
+      if(requestContent){requestContent.hidden=false}
+      if(requestToggle){requestToggle.setAttribute('aria-expanded','true');requestToggle.textContent='閉じる'}
+      dateSel.value=saved.date;populateRequestForm();
+      if(Array.from(fromSel.options).some(function(o){return o.value===saved.from}))fromSel.value=saved.from;
+      if(Array.from(toSel.options).some(function(o){return o.value===saved.to}))toSel.value=saved.to;
+      const result=document.getElementById('dutyRequestResult');
+      if(result){result.hidden=false;result.innerHTML='<div class="duty-request-complete"><b>LINE認証が完了しました</b><p>申請内容を確認して、もう一度「変更申請を送信」を押してください。</p></div>'}
+      sessionStorage.removeItem('ylsDutyLineResume');
+      lineResumeHandled=true;cleanLineResumeUrl();
+      return;
+    }
+    if(mode==='resend'&&params.get('line_resume')==='duty-resend'){
+      const box=document.getElementById('dutyRequestStatus'),list=document.getElementById('dutyRequestStatusList'),toggle=document.getElementById('toggleDutyRequestStatus');
+      if(!box||!list||!toggle)return;
+      box.hidden=false;list.hidden=false;toggle.setAttribute('aria-expanded','true');toggle.textContent='申請内容を閉じる';
+      if(window.showSaveNotice)showSaveNotice('LINE認証が完了しました。「確認待ち」をタップしてLINEを再送してください。');
+      sessionStorage.removeItem('ylsDutyLineResume');
+      lineResumeHandled=true;cleanLineResumeUrl();
+    }
   }
 
   const hasLegacyChangeForm=!!(changeYear&&changeGrade&&changeText&&pasteChangeBtn&&changePreview&&saveChangesBtn);
