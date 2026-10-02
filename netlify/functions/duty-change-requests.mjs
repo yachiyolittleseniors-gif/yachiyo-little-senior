@@ -186,8 +186,7 @@ async function loadData(store){
   // "反映済み" は当番表側に実際の変更履歴が存在する時だけ成立する。
   const roster=await store.get(LEGACY_KEY,{type:"json",consistency:"strong"})||{};
   const changes=Array.isArray(roster.changes)?roster.changes:[];
-  const activeRequestChanges=item=>changes.filter(change=>
-    String(change?.status||"active")!=="cancelled" &&
+  const requestChanges=item=>changes.filter(change=>
     (
       (item.requestNo&&String(change?.requestNo||"")===item.requestNo) ||
       (
@@ -197,6 +196,7 @@ async function loadData(store){
       )
     )
   );
+  const activeRequestChanges=item=>requestChanges(item).filter(change=>String(change?.status||"active")!=="cancelled");
   let reconciled=false;
   data.requests=data.requests.map(item=>{
     if(item.status!=="approved")return item;
@@ -206,7 +206,15 @@ async function loadData(store){
         matched.some(change=>String(change?.date||"")===item.swapDate&&cleanName(change?.from)===item.swapName)
       : matched.length>0;
     if(reflected)return item;
+
+    // 管理画面で反映済み変更を取消した場合は「確認待ち」へ戻さず、
+    // 申請自体も終了扱いにする。これにより取消済み申請がLINE再送可能な状態で復活しない。
+    const cancelled=requestChanges(item).some(change=>String(change?.status||"active")==="cancelled");
     reconciled=true;
+    if(cancelled){
+      return{...item,status:"closed",updatedAt:new Date().toISOString(),approvalTokenHash:"",approvalExpiresAt:""};
+    }
+    // 取消ではなく反映データだけが欠けた場合は、監視対象として確認待ちへ戻す。
     return{...item,status:"pending",updatedAt:new Date().toISOString()};
   });
   const now=new Date();
