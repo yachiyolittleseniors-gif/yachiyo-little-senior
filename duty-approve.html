@@ -4,55 +4,74 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <meta name="robots" content="noindex,nofollow">
+<meta name="theme-color" content="#071426">
 <title>当番変更の承認｜八千代リトルシニア</title>
 <style>
-:root{color-scheme:light}
+:root{color-scheme:light;--navy:#071426;--gold:#c79a3b;--gold2:#e2bd67;--ink:#142033;--muted:#707987;--paper:#fffdf8;--soft:#f7f3e8;--line:#e5dcc8;--ok:#197447;--warn:#8a5d0b}
 *{box-sizing:border-box}
-body{margin:0;background:#071426;color:#17202b;font-family:-apple-system,BlinkMacSystemFont,"Hiragino Sans","Yu Gothic",sans-serif}
-main{min-height:100svh;display:grid;place-items:center;padding:24px}
-.card{width:min(520px,100%);background:#fff;border-radius:18px;padding:24px;box-shadow:0 18px 48px rgba(0,0,0,.3);border-top:5px solid #c79a3b}
-.kicker{font-size:11px;letter-spacing:.18em;font-weight:900;color:#a67d27}
-h1{margin:6px 0 18px;color:#071426;font-size:24px}
-.detail{display:grid;gap:10px;padding:16px;border-radius:14px;background:#f5f3ed}
-.row{display:flex;justify-content:space-between;gap:16px}
-.row span:first-child{color:#6b7280;font-size:13px}
-.row b{text-align:right}
-.arrow{padding:2px 0;text-align:center;color:#a67d27;font-weight:900}
-button{width:100%;margin-top:18px;border:0;border-radius:12px;padding:14px;background:#071426;color:#e2bd67;font-weight:900;font-size:16px}
-button:disabled{opacity:.55}
-.note{margin:14px 0 0;color:#6b7280;font-size:12px;line-height:1.7}
-.status{padding:18px 0 2px;text-align:center;font-weight:800;line-height:1.7;white-space:pre-line}
-.status.error{color:#9b2c2c}
-.status.ok{color:#176b3a}
-.retry{display:block;width:100%;margin-top:14px;border:1px solid #c79a3b;border-radius:12px;padding:12px;background:#fff;color:#8a651d;font-weight:900;font-size:14px}
-.line-auth-notice{margin-top:16px;padding:12px;border:1px solid #e5bf73;border-radius:12px;background:#fff8e8;color:#7a5310;font-size:13px;font-weight:800;line-height:1.65}
+html,body{min-height:100%}
+body{margin:0;background:linear-gradient(180deg,#071426 0%,#0a1830 100%);color:var(--ink);font-family:-apple-system,BlinkMacSystemFont,"Hiragino Sans","Yu Gothic",sans-serif}
+main{min-height:100dvh;display:grid;place-items:center;padding:22px 18px calc(22px + env(safe-area-inset-bottom))}
+.card{position:relative;overflow:hidden;width:min(520px,100%);background:#fff;border:1px solid rgba(199,154,59,.72);border-radius:26px;padding:0 22px 26px;box-shadow:0 26px 70px rgba(0,0,0,.32)}
+.card:before{content:"";display:block;height:5px;margin:0 -22px 22px;background:linear-gradient(90deg,#8f671b,var(--gold2),#8f671b)}
+.brand{display:flex;align-items:center;gap:12px;margin-bottom:18px}
+.brand img{width:58px;height:58px;object-fit:contain}
+.brand-name{font-size:14px;font-weight:900;color:var(--navy)}
+.brand-sub{margin-top:2px;font-size:9px;font-weight:800;letter-spacing:.15em;color:#9a7429}
+.kicker{font-size:10px;letter-spacing:.2em;font-weight:900;color:#a87b23}
+h1{margin:5px 0 18px;color:var(--navy);font-size:28px;line-height:1.25}
+.detail{display:grid;gap:12px;padding:18px;border:1px solid var(--line);border-radius:18px;background:var(--soft)}
+.row{display:grid;grid-template-columns:88px 1fr;gap:12px;align-items:center}
+.row span:first-child{color:#777f8b;font-size:12px;font-weight:800}
+.row b{text-align:right;color:var(--ink);font-size:15px;line-height:1.5}
+.arrow{padding:0;text-align:center;color:var(--gold);font-size:22px;font-weight:900;line-height:1}
+.confirm{display:flex;gap:12px;align-items:flex-start;margin-top:18px;padding:15px;border:1px solid var(--line);border-radius:16px;background:#fffdf9;line-height:1.65;cursor:pointer}
+.confirm input{width:23px;height:23px;margin:1px 0 0;accent-color:var(--gold);flex:0 0 auto}
+.confirm span{font-size:13px;font-weight:800;color:var(--ink)}
+button{width:100%;margin-top:18px;border:1px solid var(--gold);border-radius:16px;padding:15px 16px;background:var(--navy);color:var(--gold2);font-weight:900;font-size:16px;box-shadow:0 8px 18px rgba(7,20,38,.14)}
+button:disabled{border-color:#cfd3d8;background:#8a929d;color:#f2ddb0;box-shadow:none;opacity:1}
+.note{margin:15px 2px 0;color:#7a8390;font-size:11px;line-height:1.8}
+.status{padding:22px 2px 4px;text-align:center;font-weight:850;line-height:1.75;white-space:pre-line}
+.status.error{color:#a2362c}
+.status.ok{color:var(--ok);font-size:18px}
+.status.ok:before{content:"✓";display:grid;place-items:center;width:58px;height:58px;margin:0 auto 14px;border:2px solid #2a9b64;border-radius:50%;font-size:30px;font-weight:900}
+.retry{display:block;width:100%;margin-top:16px;border:1px solid var(--gold);border-radius:14px;padding:13px;background:#fff;color:#8a651d;font-weight:900;font-size:14px;box-shadow:none}
+.line-auth-notice{margin-top:16px;padding:14px 15px;border:1px solid #e5bf73;border-radius:15px;background:#fff8e8;color:#7a5310;font-size:13px;font-weight:850;line-height:1.7}
+.loading{display:grid;place-items:center;padding:22px 0 6px;color:#667180;font-weight:800}
+.loading:before{content:"";width:30px;height:30px;margin-bottom:14px;border:3px solid #e5e7eb;border-top-color:var(--gold);border-radius:50%;animation:r .85s linear infinite}
+@keyframes r{to{transform:rotate(360deg)}}
+@media(max-width:390px){.card{padding:0 18px 22px}.card:before{margin:0 -18px 18px}h1{font-size:25px}.brand img{width:52px;height:52px}.row{grid-template-columns:78px 1fr}}
 </style>
 </head>
 <body>
 <main>
 <section class="card">
-<div class="kicker">DUTY CHANGE APPROVAL</div>
-<h1>当番変更の確認</h1>
-<div id="loading" class="status">申請内容を確認しています…</div>
-<div id="content" hidden>
-<div class="detail">
-<div class="row"><span>申請番号</span><b id="requestNo"></b></div>
-<div class="row"><span>日付</span><b id="date"></b></div>
-<div class="row"><span>変更前</span><b id="from"></b></div>
-<div class="arrow">↓</div>
-<div class="row"><span>変更後</span><b id="to"></b></div>
-</div>
-<div id="lineAuthNotice" class="line-auth-notice" hidden></div>
-<label style="display:flex;gap:10px;align-items:flex-start;margin-top:18px;padding:12px;border:1px solid #ddd5c4;border-radius:12px;background:#faf8f2;line-height:1.6">
-<input id="familyConfirm" type="checkbox" style="width:20px;height:20px;margin-top:2px;accent-color:#c79a3b;flex:0 0 auto">
-<span style="font-size:13px;font-weight:700;color:#17202b">申請内容を確認しました。<br>お当番の変更を了承しております。</span>
-</label>
-<button id="approve" type="button" disabled>この変更を承認する</button>
-<p class="note">この変更は、変更後のご家庭の方が内容を確認して承認してください。父・母など、ご家庭の方であれば承認できます。承認リンクは24時間有効で、承認前は何度でも内容を確認できます。承認は1回限りです。期限を過ぎた場合は、再度「当番変更申請」から申請してください。承認すると当番表へ自動反映され、このリンクは使用できなくなります。</p>
-</div>
-<div id="message" class="status" hidden></div>
+  <div class="brand">
+    <img src="./official-logo-crisp-final.png" alt="八千代リトルシニア">
+    <div><div class="brand-name">八千代リトルシニア</div><div class="brand-sub">TEAM MANAGEMENT SYSTEM</div></div>
+  </div>
+  <div class="kicker">DUTY CHANGE APPROVAL</div>
+  <h1>当番変更の確認</h1>
+  <div id="loading" class="loading">申請内容を確認しています</div>
+  <div id="content" hidden>
+    <div class="detail">
+      <div class="row"><span>申請番号</span><b id="requestNo"></b></div>
+      <div class="row"><span>日付</span><b id="date"></b></div>
+      <div class="row"><span>変更前</span><b id="from"></b></div>
+      <div class="arrow">↓</div>
+      <div class="row"><span>変更後</span><b id="to"></b></div>
+    </div>
+    <div id="lineAuthNotice" class="line-auth-notice" hidden></div>
+    <label class="confirm">
+      <input id="familyConfirm" type="checkbox">
+      <span>申請内容を確認しました。<br>お当番の変更を了承します。</span>
+    </label>
+    <button id="approve" type="button" disabled>この変更を承認する</button>
+    <p class="note">変更後のご家庭の方が内容を確認して承認してください。承認すると当番表へ自動反映され、このリンクは使用できなくなります。承認リンクは24時間有効です。</p>
+  </div>
+  <div id="message" class="status" hidden></div>
 </section>
 </main>
-<script src="./duty-approve.js?v=20261002-line-auth1" defer></script>
+<script src="./duty-approve.js?v=20261002-ui2" defer></script>
 </body>
 </html>
