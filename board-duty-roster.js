@@ -102,6 +102,27 @@
   function testMonthKey(item){const t=item&&item.table;return t&&Number(t.year)&&Number(t.month)?t.year+'-'+String(t.month).padStart(2,'0'):''}
   function isTestMonth(year,month){const key=Number(year)+'-'+String(Number(month)).padStart(2,'0');return images.some(function(item){return item.testMode===true&&testMonthKey(item)===key})}
   window.getDutyRosterTestModeForMonth=function(year,month){return isTestMonth(year,month)};
+  window.setDutyRosterTestModeForMonth=async function(year,month,enabled){
+    const y=Number(year),m=Number(month),next=enabled===true;
+    const index=images.findIndex(function(item){
+      return item&&item.table&&Number(item.table.year)===y&&Number(item.table.month)===m;
+    });
+    if(index<0)return false;
+    const previous=images.map(function(item){return Object.assign({},item)});
+    images[index]={...images[index],testMode:next};
+    render();
+    try{
+      await persist(
+        next?'テストモードに切り替えました':'テストモードを終了しました',
+        next?'当番表をテストモードに切り替えました':'当番表のテストモードを終了しました',
+        !next
+      );
+      return true;
+    }catch(e){
+      images=previous;render();
+      throw e;
+    }
+  };
   function isTestDate(date){const key=String(date||'').slice(0,7);return images.some(function(item){return item.testMode===true&&testMonthKey(item)===key})}
   function canViewRoster(item){return !item.testMode||isAdminViewing()}
   function imageSource(item){return item.data||item.src||''}
