@@ -27,7 +27,7 @@ function cleanName(value){return String(value||"").trim().replace(/[　\s]+/g," 
 function nameKey(value){return cleanName(value).replace(/[（）()]/g,"")}
 function validGrade(value){return ["1","2","3"].includes(String(value||""))}
 function validDate(value){return /^\d{4}-\d{2}-\d{2}$/.test(String(value||""))}
-function normalizeStatus(value){return ["pending","approved","rejected"].includes(String(value))?String(value):"pending"}
+function normalizeStatus(value){return ["pending","approved","rejected","closed"].includes(String(value))?String(value):"pending"}
 function requestMonthEnd(date){
   const m=/^(\d{4})-(\d{2})-\d{2}$/.exec(String(date||""));
   if(!m)return null;
@@ -42,7 +42,7 @@ function requestIsPastMonth(item,now=new Date()){
   return !!(end&&now>end);
 }
 function requestShouldDelete(item,now=new Date()){
-  if(item?.status!=="pending")return false;
+  if(!["pending","closed"].includes(String(item?.status||"")))return false;
   const end=requestMonthEnd(item?.date);
   if(!end)return false;
   return now>addUtcMonths(end,EXPIRED_RETENTION_MONTHS);
@@ -167,7 +167,7 @@ function publicRequest(item){
 }
 function publicData(data){
   const now=new Date();
-  const visibleRequests=data.requests.filter(item=>!(item.status==="pending"&&requestIsPastMonth(item,now)));
+  const visibleRequests=data.requests.filter(item=>item.status!=="closed"&&!(item.status==="pending"&&requestIsPastMonth(item,now)));
   return{
     requests:visibleRequests.map(publicRequest),
     pendingCount:visibleRequests.filter(item=>item.status==="pending").length,
@@ -317,6 +317,17 @@ export default async (request,context)=>{
 
     if(action==="set-partner-approval"){
       data.partnerApprovalEnabled=body?.enabled===true;
+      await store.setJSON(KEY,data);
+      return json({ok:true,...publicData(data)});
+    }
+
+    if(action==="close"){
+      const requestNo=String(body?.requestNo||"");
+      const id=String(body?.id||"");
+      const idx=data.requests.findIndex(item=>(id&&item.id===id)||(requestNo&&item.requestNo===requestNo));
+      if(idx<0)return json({error:"申請が見つかりません。"},404);
+      const item=data.requests[idx];
+      data.requests[idx]={...item,status:"closed",updatedAt:new Date().toISOString(),approvalTokenHash:"",approvalExpiresAt:""};
       await store.setJSON(KEY,data);
       return json({ok:true,...publicData(data)});
     }
