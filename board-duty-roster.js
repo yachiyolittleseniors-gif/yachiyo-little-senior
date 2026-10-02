@@ -790,6 +790,13 @@
       if(fromPerson.grade===toPerson.grade&&fromPerson.name===toPerson.name)return alert('変更前と変更後は別の方を選択してください。');
     }
 
+    if(fromPerson.grade!==toPerson.grade){
+      const message=requestType==='swap'
+        ?fromPerson.grade+'年生と'+toPerson.grade+'年生のお当番を入れ替える変更になります。内容に間違いありませんか？'
+        :fromPerson.grade+'年生 → '+toPerson.grade+'年生の変更になります。内容に間違いありませんか？';
+      if(!confirm(message))return;
+    }
+
     const requestPayload={
       date:date,fromGrade:fromPerson.grade,fromName:fromPerson.name,
       toGrade:toPerson.grade,toName:toPerson.name,
