@@ -162,8 +162,8 @@
     // 管理画面の「登録済み変更履歴」も、公開中の当番表が存在する月だけ表示する。
     // 当番表の最終日を過ぎて公開表示から消えた月（例：9月）は履歴も同時に非表示にする。
     const activeRosterMonths=new Set(images.filter(function(item){return item.table&&isPublicRosterActive(item)}).map(function(item){return item.table.year+'-'+String(item.table.month).padStart(2,'0')}));
-    const adminOrdered=ordered.filter(function(item){return activeRosterMonths.has(String(item.date||'').slice(0,7))});
-    changeAdminList.innerHTML=adminOrdered.length?adminOrdered.map(function(item){const cancelled=item.status==='cancelled';return'<div class="duty-change-admin-item'+(cancelled?' is-cancelled':'')+'"><span>'+displayDate(item.date)+'・'+item.grade+'年生　'+escapeHtml(octoberDisplayName(item.from,item.grade,item.date))+' → <b>'+escapeHtml(octoberDisplayName(item.to,item.toGrade||item.grade,item.date))+'</b>'+(cancelled?'<em class="duty-change-cancelled">取消済み</em>':'')+changeUpdatedMarkup(item)+'</span><div class="duty-change-admin-buttons">'+(!cancelled?'<button type="button" data-cancel-duty-change="'+escapeHtml(item.id)+'">取消</button>':'')+'</div></div>'}).join(''):'<div class="duty-change-preview">登録済みの当番変更はありません。</div>';
+    const adminOrdered=ordered.filter(function(item){return item.status!=='cancelled'&&activeRosterMonths.has(String(item.date||'').slice(0,7))});
+    changeAdminList.innerHTML=adminOrdered.length?adminOrdered.map(function(item){return'<div class="duty-change-admin-item"><span>'+displayDate(item.date)+'・'+item.grade+'年生　'+escapeHtml(octoberDisplayName(item.from,item.grade,item.date))+' → <b>'+escapeHtml(octoberDisplayName(item.to,item.toGrade||item.grade,item.date))+'</b>'+changeUpdatedMarkup(item)+'</span><div class="duty-change-admin-buttons"><button type="button" data-cancel-duty-change="'+escapeHtml(item.id)+'">取消</button></div></div>'}).join(''):'<div class="duty-change-preview">登録済みの当番変更はありません。</div>';
     changeAdminList.querySelectorAll('[data-cancel-duty-change]').forEach(function(button){button.addEventListener('click',function(){cancelChange(button.dataset.cancelDutyChange)})});
   }
 
