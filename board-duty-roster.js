@@ -343,23 +343,6 @@
     const name=String(item[side+'Name']||'');
     return (grade?grade+'年・':'')+octoberDisplayName(name,grade,item.date);
   }
-  function dutyDeviceId(){
-    const key='yachiyoDutyDeviceId';
-    try{
-      let value=localStorage.getItem(key)||'';
-      if(!value){
-        value=(crypto.randomUUID?crypto.randomUUID():(Date.now().toString(36)+'-'+Math.random().toString(36).slice(2)))+'-'+Math.random().toString(36).slice(2);
-        localStorage.setItem(key,value);
-      }
-      return value;
-    }catch(e){
-      try{
-        let value=sessionStorage.getItem(key)||'';
-        if(!value){value=(Date.now().toString(36)+'-'+Math.random().toString(36).slice(2));sessionStorage.setItem(key,value)}
-        return value;
-      }catch(_){return''}
-    }
-  }
   function requestHeaders(includeAdmin){
     const headers={'content-type':'application/json'};
     const accessPassword=sessionStorage.getItem('yachiyoAttendancePass')||'';
@@ -454,7 +437,7 @@
     if(fromPerson.grade===toPerson.grade&&fromPerson.name===toPerson.name)return alert('変更前と変更後は別の方を選択してください。');
     btn.disabled=true;btn.textContent='送信中…';
     try{
-      const response=await fetch(REQUEST_API,{method:'POST',credentials:'same-origin',headers:requestHeaders(false),body:JSON.stringify({action:'submit',request:{date:date,fromGrade:fromPerson.grade,fromName:fromPerson.name,toGrade:toPerson.grade,toName:toPerson.name,applicantDeviceId:dutyDeviceId()}})});
+      const response=await fetch(REQUEST_API,{method:'POST',credentials:'same-origin',headers:requestHeaders(false),body:JSON.stringify({action:'submit',request:{date:date,fromGrade:fromPerson.grade,fromName:fromPerson.name,toGrade:toPerson.grade,toName:toPerson.name}})});
       const body=await response.json().catch(function(){return{}});
       if(!response.ok)throw new Error(body.error||'申請できませんでした。');
       requests=normalizeRequestList(body.requests);requestsLoaded=true;renderRequests();syncPendingRequestCount();
