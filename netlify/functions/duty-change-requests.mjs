@@ -113,6 +113,10 @@ function normalizeItem(item,index=0){
     fromName,
     toGrade,
     toName,
+    requestType:String(item?.requestType||"replace")==="swap"?"swap":"replace",
+    swapDate:String(item?.swapDate||"").slice(0,10),
+    swapGrade:String(item?.swapGrade||"").slice(0,2),
+    swapName:cleanName(item?.swapName||"").slice(0,60),
     status:normalizeStatus(item?.status),
     createdAt:String(item?.createdAt||"").slice(0,60),
     updatedAt:String(item?.updatedAt||"").slice(0,60),
@@ -128,7 +132,7 @@ function dedupePending(items){
   const out=[],pending=new Map();
   for(const item of items){
     if(item.status!=="pending"){out.push(item);continue;}
-    const key=[item.date,item.fromGrade,item.fromName].join("|");
+    const key=[item.requestType||"replace",item.date,item.fromGrade,item.fromName,item.swapDate||""].join("|");
     if(!pending.has(key)){pending.set(key,out.length);out.push(item);continue;}
     const idx=pending.get(key),current=out[idx];
     const a=Date.parse(current.updatedAt||current.createdAt||"")||0;
@@ -182,20 +186,25 @@ async function loadData(store){
   // "反映済み" は当番表側に実際の変更履歴が存在する時だけ成立する。
   const roster=await store.get(LEGACY_KEY,{type:"json",consistency:"strong"})||{};
   const changes=Array.isArray(roster.changes)?roster.changes:[];
+  const activeRequestChanges=item=>changes.filter(change=>
+    String(change?.status||"active")!=="cancelled" &&
+    (
+      (item.requestNo&&String(change?.requestNo||"")===item.requestNo) ||
+      (
+        String(change?.date||"")===item.date &&
+        String(change?.grade||"")===item.fromGrade &&
+        cleanName(change?.from)===item.fromName
+      )
+    )
+  );
   let reconciled=false;
   data.requests=data.requests.map(item=>{
     if(item.status!=="approved")return item;
-    const reflected=changes.some(change=>
-      String(change?.status||"active")!=="cancelled" &&
-      (
-        (item.requestNo&&String(change?.requestNo||"")===item.requestNo) ||
-        (
-          String(change?.date||"")===item.date &&
-          String(change?.grade||"")===item.fromGrade &&
-          cleanName(change?.from)===item.fromName
-        )
-      )
-    );
+    const matched=activeRequestChanges(item);
+    const reflected=item.requestType==="swap"
+      ? matched.some(change=>String(change?.date||"")===item.date&&cleanName(change?.from)===item.fromName) &&
+        matched.some(change=>String(change?.date||"")===item.swapDate&&cleanName(change?.from)===item.swapName)
+      : matched.length>0;
     if(reflected)return item;
     reconciled=true;
     return{...item,status:"pending",updatedAt:new Date().toISOString()};
@@ -219,6 +228,7 @@ function publicRequest(item){
   return{
     id:item.id,requestNo:item.requestNo,date:item.date,
     fromGrade:item.fromGrade,fromName:item.fromName,toGrade:item.toGrade,toName:item.toName,
+    requestType:item.requestType||"replace",swapDate:item.swapDate||"",swapGrade:item.swapGrade||"",swapName:item.swapName||"",
     status:item.status,createdAt:item.createdAt,updatedAt:item.updatedAt,
     approvalExpiresAt:item.approvalExpiresAt||"",
     partnerApprovedAt:item.partnerApprovedAt||""
@@ -241,11 +251,16 @@ function monitorSnapshot(data,roster){
   const missingLine=visible.filter(item=>data.partnerApprovalEnabled===true&&item.status==="pending"&&!item.requesterLineHash);
   const approvedMissingChange=visible.filter(item=>{
     if(item.status!=="approved")return false;
-    return !changes.some(change=>
+    const matched=changes.filter(change=>
       String(change?.status||"active")!=="cancelled" &&
       ((item.requestNo&&String(change?.requestNo||"")===item.requestNo) ||
        (String(change?.date||"")===item.date&&String(change?.grade||"")===item.fromGrade&&cleanName(change?.from)===item.fromName))
     );
+    if(item.requestType==="swap"){
+      return !(matched.some(change=>String(change?.date||"")===item.date&&cleanName(change?.from)===item.fromName) &&
+        matched.some(change=>String(change?.date||"")===item.swapDate&&cleanName(change?.from)===item.swapName));
+    }
+    return !matched.length;
   });
   const events=Array.isArray(data.monitorEvents)?data.monitorEvents.slice():[];
   const latestByFlow=new Map();
@@ -334,14 +349,32 @@ async function applyRequestToRoster(store,item){
   if(!requestMatchesRoster(roster,item.date,item.fromGrade,item.fromName)){
     return{ok:false,error:"対象月の当番表が登録されていないか、変更前の担当者が一致しません。"};
   }
+  const isSwap=item.requestType==="swap";
+  if(isSwap){
+    if(!validDate(item.swapDate)||!validGrade(item.swapGrade)||!cleanName(item.swapName)){
+      return{ok:false,error:"入れ替える相手のお当番日を確認できません。"};
+    }
+    if(item.swapDate===item.date&&item.swapGrade===item.fromGrade&&cleanName(item.swapName)===cleanName(item.fromName)){
+      return{ok:false,error:"同じ当番枠同士は入れ替えできません。"};
+    }
+    if(!requestMatchesRoster(roster,item.swapDate,item.swapGrade,item.swapName)){
+      return{ok:false,error:"入れ替える相手が選択した日のお当番表と一致しません。"};
+    }
+  }
   const changes=Array.isArray(roster.changes)?roster.changes.slice():[];
-  const cidx=changes.findIndex(x=>String(x?.date||"")===item.date&&String(x?.grade||"")===item.fromGrade&&cleanName(x?.from)===item.fromName);
-  const change={
-    id:cidx>=0?String(changes[cidx].id||`change-${crypto.randomUUID()}`):`change-${crypto.randomUUID()}`,
-    requestNo:item.requestNo,date:item.date,grade:item.fromGrade,from:item.fromName,to:item.toName,toGrade:item.toGrade,
-    status:"active",createdAt:new Date().toISOString()
+  const upsert=(date,fromGrade,fromName,toGrade,toName,suffix)=>{
+    const idx=changes.findIndex(x=>String(x?.date||"")===date&&String(x?.grade||"")===fromGrade&&cleanName(x?.from)===fromName);
+    const change={
+      id:idx>=0?String(changes[idx].id||`change-${crypto.randomUUID()}`):`change-${crypto.randomUUID()}-${suffix}`,
+      requestNo:item.requestNo,date,grade:fromGrade,from:fromName,to:toName,toGrade,
+      status:"active",createdAt:new Date().toISOString()
+    };
+    if(idx>=0)changes[idx]=change;else changes.push(change);
   };
-  if(cidx>=0)changes[cidx]=change;else changes.push(change);
+  upsert(item.date,item.fromGrade,item.fromName,item.toGrade,item.toName,"a");
+  if(isSwap){
+    upsert(item.swapDate,item.swapGrade,item.swapName,item.fromGrade,item.fromName,"b");
+  }
   await store.setJSON(LEGACY_KEY,{...roster,changes});
   return{ok:true};
 }
@@ -357,6 +390,7 @@ function approvalPreview(item){
     requestNo:item.requestNo,date:item.date,
     fromGrade:item.fromGrade,fromName:item.fromName,
     toGrade:item.toGrade,toName:item.toName,
+    requestType:item.requestType||"replace",swapDate:item.swapDate||"",swapGrade:item.swapGrade||"",swapName:item.swapName||"",
     expiresAt:item.approvalExpiresAt
   };
 }
