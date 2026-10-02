@@ -426,6 +426,27 @@
     });
     return Array.from(map.values()).sort(function(a,b){return Number(b.grade)-Number(a.grade)||a.name.localeCompare(b.name,'ja')});
   }
+  function rosterReplacementCandidates(date){
+    const map=new Map();
+    if(!/^\d{4}-\d{2}-\d{2}$/.test(String(date||'')))return[];
+    images.forEach(function(image){
+      if(!canViewRoster(image))return;
+      const table=image.table;if(!table)return;
+      const prefix=table.year+'-'+String(table.month).padStart(2,'0')+'-';
+      if(!String(date).startsWith(prefix))return;
+      const grades=table.grades||[2,1];
+      table.rows.forEach(function(row){
+        row.slice(2,6).forEach(function(name,index){
+          const clean=cleanName(name);if(!clean)return;
+          const grade=String(grades[Math.floor(index/2)]);
+          const current=window.DutyRosterData.applyChanges(table,row[0],grade,clean,changes);
+          const currentName=cleanName(current&&current.value)||clean;
+          map.set(grade+'|'+currentName,{grade:grade,name:currentName});
+        });
+      });
+    });
+    return Array.from(map.values()).sort(function(a,b){return Number(b.grade)-Number(a.grade)||a.name.localeCompare(b.name,'ja')});
+  }
   function todayYmd(){const d=new Date();return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0')}
   function rosterDates(){const today=todayYmd(),out=[];images.forEach(function(image){if(!canViewRoster(image))return;const table=image.table;if(!table)return;table.rows.forEach(function(row){const date=tableDate(table,row[0]);if(date>=today)out.push({date:date,label:table.year+'年'+table.month+'月'+row[0]+'日（'+row[1]+'）',table:table,row:row})})});return out.sort(function(a,b){return a.date.localeCompare(b.date)})}
   function rosterHasMonth(date){return images.some(function(image){return image.table&&date.startsWith(image.table.year+'-'+String(image.table.month).padStart(2,'0')+'-')})}
@@ -633,10 +654,11 @@
   }
   function personOptionValue(x){return x.grade+'|'+x.name}
   function parsePersonOption(value){const i=String(value||'').indexOf('|');return i<1?null:{grade:String(value).slice(0,i),name:cleanName(String(value).slice(i+1))}}
-  function requestPersonOptions(date){
-    const names=rosterNamesForDate(date);let opts='<option value="">選択してください</option>';
+  function requestPersonOptions(date,names,excludeValue){
+    names=Array.isArray(names)?names:rosterNamesForDate(date);
+    let opts='<option value="">選択してください</option>';
     ['3','2','1'].forEach(function(g){
-      const group=names.filter(function(x){return x.grade===g});if(!group.length)return;
+      const group=names.filter(function(x){return x.grade===g&&personOptionValue(x)!==excludeValue});if(!group.length)return;
       opts+='<optgroup label="'+g+'年生">'+group.map(function(x){return'<option value="'+escapeHtml(personOptionValue(x))+'">'+g+'年・'+escapeHtml(octoberDisplayName(x.name,g,date))+'</option>'}).join('')+'</optgroup>';
     });
     return opts;
@@ -717,9 +739,12 @@
     const dates=rosterDates();
     dateSel.innerHTML='<option value="">日付を選択してください</option>'+dates.map(function(x){return'<option value="'+x.date+'">'+x.label+'</option>'}).join('');
     if(Array.from(dateSel.options).some(function(o){return o.value===current}))dateSel.value=current;
-    const opts=requestPersonOptions(dateSel.value);
-    fromSel.innerHTML=opts;toSel.innerHTML=opts;
+    const fromOptions=requestPersonOptions(dateSel.value,rosterNamesForDate(dateSel.value),'');
+    fromSel.innerHTML=fromOptions;
     if(Array.from(fromSel.options).some(function(o){return o.value===fromValue}))fromSel.value=fromValue;
+    const selectedFrom=fromSel.value;
+    const toOptions=requestPersonOptions(dateSel.value,rosterReplacementCandidates(dateSel.value),selectedFrom);
+    toSel.innerHTML=toOptions;
     if(Array.from(toSel.options).some(function(o){return o.value===toValue}))toSel.value=toValue;
   }
   function approvalLineText(item,url){
@@ -1060,6 +1085,7 @@
   if(requestStatusToggle&&requestStatusList)requestStatusToggle.addEventListener('click',function(){const open=requestStatusList.hidden;requestStatusList.hidden=!open;requestStatusToggle.setAttribute('aria-expanded',String(open));const pending=requests.filter(function(item){return item.status==='pending'}).length;requestStatusToggle.textContent=open?'申請内容を閉じる':(pending?'申請内容を見る（申請中 '+pending+'件）':'申請内容を見る')});
   document.getElementById('dutyRequestType')?.addEventListener('change',populateRequestForm);
   document.getElementById('dutyRequestRosterDate')?.addEventListener('change',populateRequestForm);
+  document.getElementById('dutyRequestFrom')?.addEventListener('change',populateRequestForm);
   document.getElementById('dutyRequestSwapFromSlot')?.addEventListener('change',populateRequestForm);
   document.getElementById('submitDutyRequest')?.addEventListener('click',submitRequest);
   if(hasLegacyChangeForm)pasteChangeBtn.addEventListener('click',pasteChangeText);
