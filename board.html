@@ -272,6 +272,8 @@ html{scroll-padding-top:var(--compact-header-height)}
 .duty-monitor-summary{margin:0;color:#566173;font-size:13px;font-weight:700;line-height:1.6}
 .duty-monitor-metrics{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px;margin:12px 0}
 .duty-monitor-metric{padding:9px 8px;border-radius:10px;background:#f4f6f8;text-align:center}.duty-monitor-metric b{display:block;color:#071426;font-size:18px}.duty-monitor-metric small{color:#6b7482;font-weight:800}
+.duty-monitor-toggle{display:block;margin:2px 0 0 auto;padding:5px 2px;border:0;background:transparent;color:#9b7a2e;font:inherit;font-size:11px;font-weight:900;text-decoration:underline;text-underline-offset:3px;cursor:pointer}
+#dutyMonitorDetails[hidden]{display:none!important}
 .duty-monitor-issues{margin:8px 0 0;padding-left:18px;color:#a52a2a;font-size:12px;font-weight:800;line-height:1.55}
 .duty-monitor-recent{margin-top:10px;border-top:1px solid rgba(7,20,38,.08);padding-top:8px}
 .duty-monitor-recent-item{padding:8px 0;border-bottom:1px solid rgba(7,20,38,.07);font-size:12px;line-height:1.55;color:#4f5967}
@@ -1559,8 +1561,11 @@ body:after{display:none!important;content:none!important}
             <div class="duty-monitor-metric"><b id="dutyMonitorApproved">0</b><small>反映済み</small></div>
             <div class="duty-monitor-metric"><b id="dutyMonitorIssues">0</b><small>要確認</small></div>
           </div>
-          <ul id="dutyMonitorIssueList" class="duty-monitor-issues" hidden></ul>
-          <div id="dutyMonitorRecent" class="duty-monitor-recent"></div>
+          <button id="dutyMonitorToggle" class="duty-monitor-toggle" type="button" aria-expanded="false" aria-controls="dutyMonitorDetails">詳細を表示</button>
+          <div id="dutyMonitorDetails" hidden>
+            <ul id="dutyMonitorIssueList" class="duty-monitor-issues" hidden></ul>
+            <div id="dutyMonitorRecent" class="duty-monitor-recent"></div>
+          </div>
         </div>
         <div id="dutyRequestAdminList" class="duty-change-admin-list"></div>
       </div>
@@ -1721,7 +1726,7 @@ body:after{display:none!important;content:none!important}
 <script src="./board-meetings.js?v=20261002-hide-save1"></script>
 <script src="./duty-image-reader.js?v=20260918-1"></script>
 <script src="./duty-roster-data.js?v=20260918-1"></script>
-<script src="./board-duty-roster.js?v=20261002-swap4"></script>
+<script src="./board-duty-roster.js?v=20261002-monitorcompact1"></script>
 <script src="./board-duty-auto-test.js?v=20261002-testmode-end2"></script>
 <script src="./board-rules.js?v=20260914-4"></script>
 <script src="./board-archive.js?v=20260914-3"></script>
