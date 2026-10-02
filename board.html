@@ -246,6 +246,17 @@ html{scroll-padding-top:var(--compact-header-height)}
   }
 }
 </style>
+<style id="meeting-save-reveal-style">
+.meeting-save-reveal-wrap{display:flex;justify-content:flex-end;margin:-2px 0 8px}
+.meeting-save-reveal{
+  appearance:none;border:0;background:transparent;color:#9b7a2e;
+  padding:5px 2px;font:inherit;font-size:11px;font-weight:800;
+  line-height:1.2;text-decoration:underline;text-underline-offset:3px;
+  cursor:pointer;opacity:.78
+}
+.meeting-save-reveal:active{opacity:1}
+.meeting-admin-open[hidden]{display:none!important}
+</style>
 <style id="duty-swap-simple-style">
 #dutyRequestReplaceFields[hidden],#dutyRequestSwapFields[hidden]{display:none!important}
 .duty-swap-guide{margin:4px 0 14px;padding:12px 14px;border:1px solid rgba(199,154,59,.35);border-radius:12px;background:#fff8e8;color:#071426}
@@ -1353,8 +1364,9 @@ body:after{display:none!important;content:none!important}
       <div class="board-meeting-section">
         <h3 class="board-meeting-heading">審判部からのお知らせ</h3>
         <p class="board-meeting-help"><span>審判部からのお知らせは「保存済み資料を見る」からご覧頂けます。</span><span>資料保存と削除はパスワードが必要です。</span></p>
+        <div class="meeting-save-reveal-wrap"><button id="refereeAdminReveal" class="meeting-save-reveal" type="button" aria-expanded="false">資料保存を表示</button></div>
         <div class="meeting-admin">
-          <button id="refereeAdminOpen" class="meeting-action meeting-admin-open" type="button">資料を保存</button>
+          <button id="refereeAdminOpen" class="meeting-action meeting-admin-open" type="button" hidden>資料を保存</button>
           <div id="refereeAdminPanel" class="meeting-admin-panel" hidden>
             <div class="meeting-upload">
               <input id="refereeFileInput" type="file" accept="application/pdf,image/jpeg,image/png,image/webp,.pdf,.jpg,.jpeg,.png,.webp" aria-label="審判部からのお知らせ PDF・画像">
@@ -1377,8 +1389,9 @@ body:after{display:none!important;content:none!important}
       <div class="board-meeting-section">
         <h3 class="board-meeting-heading">事務局からのお知らせ</h3>
         <p class="board-meeting-help"><span>事務局からのお知らせは「保存済み資料を見る」からご覧頂けます。</span><span>資料保存と削除はパスワードが必要です。</span></p>
+        <div class="meeting-save-reveal-wrap"><button id="meetingAdminReveal" class="meeting-save-reveal" type="button" aria-expanded="false">資料保存を表示</button></div>
         <div class="meeting-admin">
-          <button id="meetingAdminOpen" class="meeting-action meeting-admin-open" type="button">資料を保存</button>
+          <button id="meetingAdminOpen" class="meeting-action meeting-admin-open" type="button" hidden>資料を保存</button>
           <div id="meetingAdminPanel" class="meeting-admin-panel" hidden>
             <div class="meeting-upload">
               <input id="meetingPdfInput" type="file" accept="application/pdf,image/jpeg,image/png,image/webp,.pdf,.jpg,.jpeg,.png,.webp" aria-label="事務局からのお知らせ PDF・画像">
@@ -1703,9 +1716,9 @@ body:after{display:none!important;content:none!important}
 </style>
 <script src="./board-live-score.js?v=20260924-reset1"></script>
 <script src="./board-updates.js?v=20260930-session1"></script>
-<script src="./board-referee-documents.js?v=20260927-0030"></script>
+<script src="./board-referee-documents.js?v=20261002-hide-save1"></script>
 <script src="./board-tournaments.js?v=20260914-1"></script>
-<script src="./board-meetings.js?v=20260927-0030"></script>
+<script src="./board-meetings.js?v=20261002-hide-save1"></script>
 <script src="./duty-image-reader.js?v=20260918-1"></script>
 <script src="./duty-roster-data.js?v=20260918-1"></script>
 <script src="./board-duty-roster.js?v=20261002-swap4"></script>
