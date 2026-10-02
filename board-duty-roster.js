@@ -251,9 +251,23 @@
   }
 
   async function deleteChange(id){
-    const target=changes.find(function(item){return item.id===id});if(!target||!confirm('この変更履歴を完全に削除しますか？\n削除後は元に戻せません。'))return;
-    const previous=changes.slice();changes=changes.filter(function(item){return item.id!==id});render();
-    try{await persist('変更履歴を削除しました','当番変更履歴を削除しました')}catch(e){changes=previous;render();alert(e.message||'変更履歴を削除できませんでした。')}
+    const target=changes.find(function(item){return item.id===id});if(!target||!confirm('この変更履歴を完全に削除しますか？\n当番表は変更前の状態に戻り、この申請は完了扱いで閉じます。'))return;
+    const previous=changes.slice();
+    try{
+      if(target.requestNo){
+        const adminPassword=panel.dataset.adminPassword||'';
+        if(!adminPassword)throw new Error('管理画面を開き直してください。');
+        const response=await fetch(REQUEST_API,{method:'POST',credentials:'same-origin',headers:requestHeaders(true),body:JSON.stringify({action:'close',requestNo:target.requestNo})});
+        const body=await response.json().catch(function(){return{}});
+        if(!response.ok)throw new Error(body.error||'関連する申請を完了扱いにできませんでした。');
+        requests=normalizeRequestList(body.requests);requestsLoaded=true;
+      }
+      changes=changes.filter(function(item){return item.id!==id});render();
+      await persist('変更履歴を削除しました','当番変更履歴を削除しました');
+      renderRequests();syncPendingRequestCount();
+    }catch(e){
+      changes=previous;render();alert(e.message||'変更履歴を削除できませんでした。');
+    }
   }
 
   async function confirmGeneratedDutyRoster(detail){
