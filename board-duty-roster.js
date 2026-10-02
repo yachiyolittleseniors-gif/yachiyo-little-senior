@@ -620,13 +620,49 @@
     });
     return opts;
   }
+  function dutySlotValue(date,person){return [date,person.grade,person.name].join('|')}
+  function parseDutySlot(value){
+    const parts=String(value||'').split('|');
+    if(parts.length<3)return null;
+    return{date:parts[0],grade:parts[1],name:cleanName(parts.slice(2).join('|'))};
+  }
+  function dutySlotOptions(excludeValue){
+    let html='<option value="">選択してください</option>';
+    rosterDates().forEach(function(d){
+      rosterNamesForDate(d.date).forEach(function(person){
+        const value=dutySlotValue(d.date,person);
+        if(value===excludeValue)return;
+        html+='<option value="'+escapeHtml(value)+'">'+escapeHtml(displayDate(d.date)+'　'+person.grade+'年・'+octoberDisplayName(person.name,person.grade,d.date))+'</option>';
+      });
+    });
+    return html;
+  }
   function populateRequestForm(){
-    const typeSel=document.getElementById('dutyRequestType'),dateSel=document.getElementById('dutyRequestRosterDate'),fromSel=document.getElementById('dutyRequestFrom'),toSel=document.getElementById('dutyRequestTo');
-    const replaceRow=document.getElementById('dutyRequestReplaceToRow'),swapFields=document.getElementById('dutyRequestSwapFields'),swapDateSel=document.getElementById('dutyRequestSwapDate'),swapPersonSel=document.getElementById('dutyRequestSwapPerson');
-    const dateLabel=document.getElementById('dutyRequestDateLabel'),fromLabel=document.getElementById('dutyRequestFromLabel');
+    const typeSel=document.getElementById('dutyRequestType');
+    const replaceFields=document.getElementById('dutyRequestReplaceFields');
+    const swapFields=document.getElementById('dutyRequestSwapFields');
+    const dateSel=document.getElementById('dutyRequestRosterDate');
+    const fromSel=document.getElementById('dutyRequestFrom');
+    const toSel=document.getElementById('dutyRequestTo');
+    const swapFrom=document.getElementById('dutyRequestSwapFromSlot');
+    const swapTo=document.getElementById('dutyRequestSwapToSlot');
     if(!dateSel||!fromSel||!toSel)return;
+
     const requestType=typeSel&&typeSel.value==='swap'?'swap':'replace';
-    const current=dateSel.value,fromValue=fromSel.value,toValue=toSel.value,swapDateValue=swapDateSel?swapDateSel.value:'',swapPersonValue=swapPersonSel?swapPersonSel.value:'';
+    if(replaceFields)replaceFields.hidden=requestType==='swap';
+    if(swapFields)swapFields.hidden=requestType!=='swap';
+
+    if(requestType==='swap'){
+      if(!swapFrom||!swapTo)return;
+      const fromValue=swapFrom.value,toValue=swapTo.value;
+      swapFrom.innerHTML=dutySlotOptions('');
+      if(Array.from(swapFrom.options).some(function(o){return o.value===fromValue}))swapFrom.value=fromValue;
+      swapTo.innerHTML=dutySlotOptions(swapFrom.value);
+      if(Array.from(swapTo.options).some(function(o){return o.value===toValue}))swapTo.value=toValue;
+      return;
+    }
+
+    const current=dateSel.value,fromValue=fromSel.value,toValue=toSel.value;
     const dates=rosterDates();
     dateSel.innerHTML='<option value="">日付を選択してください</option>'+dates.map(function(x){return'<option value="'+x.date+'">'+x.label+'</option>'}).join('');
     if(Array.from(dateSel.options).some(function(o){return o.value===current}))dateSel.value=current;
@@ -634,16 +670,6 @@
     fromSel.innerHTML=opts;toSel.innerHTML=opts;
     if(Array.from(fromSel.options).some(function(o){return o.value===fromValue}))fromSel.value=fromValue;
     if(Array.from(toSel.options).some(function(o){return o.value===toValue}))toSel.value=toValue;
-    if(replaceRow)replaceRow.hidden=requestType==='swap';
-    if(swapFields)swapFields.hidden=requestType!=='swap';
-    if(dateLabel)dateLabel.textContent=requestType==='swap'?'自分の当番日':'変更日';
-    if(fromLabel)fromLabel.textContent=requestType==='swap'?'自分':'変更前';
-    if(requestType==='swap'&&swapDateSel&&swapPersonSel){
-      swapDateSel.innerHTML='<option value="">相手の当番日を選択してください</option>'+dates.filter(function(x){return x.date!==dateSel.value}).map(function(x){return'<option value="'+x.date+'">'+x.label+'</option>'}).join('');
-      if(Array.from(swapDateSel.options).some(function(o){return o.value===swapDateValue}))swapDateSel.value=swapDateValue;
-      swapPersonSel.innerHTML=requestPersonOptions(swapDateSel.value);
-      if(Array.from(swapPersonSel.options).some(function(o){return o.value===swapPersonValue}))swapPersonSel.value=swapPersonValue;
-    }
   }
   function approvalLineText(item,url){
     if(item&&item.requestType==='swap'){
@@ -690,26 +716,27 @@
   async function submitRequest(){
     const typeSel=document.getElementById('dutyRequestType');
     const requestType=typeSel&&typeSel.value==='swap'?'swap':'replace';
-    const date=document.getElementById('dutyRequestRosterDate').value;
-    const fromPerson=parsePersonOption(document.getElementById('dutyRequestFrom').value);
-    const normalTo=parsePersonOption(document.getElementById('dutyRequestTo').value);
-    const swapDate=document.getElementById('dutyRequestSwapDate')?.value||'';
-    const swapPerson=parsePersonOption(document.getElementById('dutyRequestSwapPerson')?.value||'');
-    const toPerson=requestType==='swap'?swapPerson:normalTo;
     const btn=document.getElementById('submitDutyRequest'),result=document.getElementById('dutyRequestResult');
+    let date='',fromPerson=null,toPerson=null,swapDate='',swapPerson=null;
 
-    if(!/^\d{4}-\d{2}-\d{2}$/.test(date)||!rosterDates().some(function(x){return x.date===date})||!fromPerson){
-      return alert('登録済みのお当番表から日付と担当者を選択してください。');
-    }
     if(requestType==='swap'){
-      if(!/^\d{4}-\d{2}-\d{2}$/.test(swapDate)||!rosterDates().some(function(x){return x.date===swapDate})||!swapPerson){
-        return alert('入れ替える相手の当番日と担当者を選択してください。');
-      }
-      if(date===swapDate)return alert('入れ替える相手は別の当番日を選択してください。');
-      if(fromPerson.grade===swapPerson.grade&&fromPerson.name===swapPerson.name)return alert('自分とは別の方を選択してください。');
+      const fromSlot=parseDutySlot(document.getElementById('dutyRequestSwapFromSlot')?.value||'');
+      const toSlot=parseDutySlot(document.getElementById('dutyRequestSwapToSlot')?.value||'');
+      if(!fromSlot||!toSlot)return alert('①あなたのお当番と②入れ替える相手のお当番を選択してください。');
+      if(fromSlot.date===toSlot.date&&fromSlot.grade===toSlot.grade&&fromSlot.name===toSlot.name)return alert('別のお当番を選択してください。');
+      date=fromSlot.date;
+      fromPerson={grade:fromSlot.grade,name:fromSlot.name};
+      swapDate=toSlot.date;
+      swapPerson={grade:toSlot.grade,name:toSlot.name};
+      toPerson=swapPerson;
     }else{
-      if(!normalTo)return alert('変更後の担当者を選択してください。');
-      if(fromPerson.grade===normalTo.grade&&fromPerson.name===normalTo.name)return alert('変更前と変更後は別の方を選択してください。');
+      date=document.getElementById('dutyRequestRosterDate').value;
+      fromPerson=parsePersonOption(document.getElementById('dutyRequestFrom').value);
+      toPerson=parsePersonOption(document.getElementById('dutyRequestTo').value);
+      if(!/^\d{4}-\d{2}-\d{2}$/.test(date)||!rosterDates().some(function(x){return x.date===date})||!fromPerson||!toPerson){
+        return alert('登録済みのお当番表から変更日・変更前・変更後を選択してください。');
+      }
+      if(fromPerson.grade===toPerson.grade&&fromPerson.name===toPerson.name)return alert('変更前と変更後は別の方を選択してください。');
     }
 
     const requestPayload={
@@ -958,7 +985,7 @@
   if(requestStatusToggle&&requestStatusList)requestStatusToggle.addEventListener('click',function(){const open=requestStatusList.hidden;requestStatusList.hidden=!open;requestStatusToggle.setAttribute('aria-expanded',String(open));const pending=requests.filter(function(item){return item.status==='pending'}).length;requestStatusToggle.textContent=open?'申請内容を閉じる':(pending?'申請内容を見る（申請中 '+pending+'件）':'申請内容を見る')});
   document.getElementById('dutyRequestType')?.addEventListener('change',populateRequestForm);
   document.getElementById('dutyRequestRosterDate')?.addEventListener('change',populateRequestForm);
-  document.getElementById('dutyRequestSwapDate')?.addEventListener('change',populateRequestForm);
+  document.getElementById('dutyRequestSwapFromSlot')?.addEventListener('change',populateRequestForm);
   document.getElementById('submitDutyRequest')?.addEventListener('click',submitRequest);
   if(hasLegacyChangeForm)pasteChangeBtn.addEventListener('click',pasteChangeText);
   if(hasLegacyChangeForm)saveChangesBtn.addEventListener('click',saveChanges);saveBtn.addEventListener('click',addImages);
