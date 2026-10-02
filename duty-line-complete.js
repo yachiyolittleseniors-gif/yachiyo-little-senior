@@ -11,15 +11,21 @@
   }
   const q=data.request||{};
   const approvalUrl=String(data.approvalUrl||'');
-  const text='【当番変更申請'+(q.requestNo?' #'+q.requestNo:'')+'】\n'+displayDate(q.date)+'\n変更前：'+q.fromGrade+'年・'+q.fromName+'\n変更後：'+q.toGrade+'年・'+q.toName+'\n当番変更を申請しました。\n\n【変更後のご家庭の方へ】\n下の専用リンクから内容を確認して承認してください。\n'+approvalUrl;
+  const isSwap=q.requestType==='swap';
+  const text=isSwap
+    ?'【当番日入れ替え申請'+(q.requestNo?' #'+q.requestNo:'')+'】\n'+displayDate(q.date)+' '+q.fromGrade+'年・'+q.fromName+'\n↕\n'+displayDate(q.swapDate)+' '+q.swapGrade+'年・'+q.swapName+'\n当番日を入れ替える申請です。\n\n【入れ替える相手のご家庭へ】\n下の専用リンクから内容を確認して承認してください。\n'+approvalUrl
+    :'【当番変更申請'+(q.requestNo?' #'+q.requestNo:'')+'】\n'+displayDate(q.date)+'\n変更前：'+q.fromGrade+'年・'+q.fromName+'\n変更後：'+q.toGrade+'年・'+q.toName+'\n当番変更を申請しました。\n\n【変更後のご家庭の方へ】\n下の専用リンクから内容を確認して承認してください。\n'+approvalUrl;
   const share='https://line.me/R/share?text='+encodeURIComponent(text);
-  out.innerHTML='<p class="msg"><b>変更申請を受け付けました</b>変更後のご家庭へ、承認リンクをLINEで送ってください。</p>'+
+  out.innerHTML='<p class="msg"><b>変更申請を受け付けました</b>'+(isSwap?'入れ替える相手':'変更後のご家庭')+'へ、承認リンクをLINEで送ってください。</p>'+
     '<div class="detail"><div class="flow">'+
     '<span class="label">申請番号</span><span class="value">'+esc(q.requestNo?'#'+q.requestNo:'-')+'</span>'+
-    '<span class="label">日付</span><span class="value">'+esc(displayDate(q.date))+'</span>'+
-    '<span class="label">変更前</span><span class="value">'+esc(q.fromGrade+'年・'+q.fromName)+'</span>'+
-    '<span class="arrow">↓</span>'+
-    '<span class="label">変更後</span><span class="value">'+esc(q.toGrade+'年・'+q.toName)+'</span>'+
+    (isSwap
+      ?'<span class="label">自分</span><span class="value">'+esc(displayDate(q.date)+'　'+q.fromGrade+'年・'+q.fromName)+'</span>'+
+       '<span class="label">相手</span><span class="value">'+esc(displayDate(q.swapDate)+'　'+q.swapGrade+'年・'+q.swapName)+'</span>'
+      :'<span class="label">日付</span><span class="value">'+esc(displayDate(q.date))+'</span>'+
+       '<span class="label">変更前</span><span class="value">'+esc(q.fromGrade+'年・'+q.fromName)+'</span>'+
+       '<span class="arrow">↓</span>'+
+       '<span class="label">変更後</span><span class="value">'+esc(q.toGrade+'年・'+q.toName)+'</span>')+
     '</div></div>'+
     '<a id="lineShareButton" class="line" href="'+esc(share)+'"><span class="line-badge">LINE</span>承認リンクを送る</a>'+
     '<small class="small">承認リンクは1回限り・24時間有効です。</small>';
