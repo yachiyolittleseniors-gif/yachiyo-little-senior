@@ -1750,7 +1750,7 @@ body:after{display:none!important;content:none!important}
 <script src="./duty-image-reader.js?v=20260918-1"></script>
 <script src="./duty-roster-data.js?v=20260918-1"></script>
 <script src="./board-duty-roster.js?v=20261003-approvalmode1"></script>
-<script src="./board-duty-auto-test.js?v=20261003-temporarylayout1"></script>
+<script src="./board-duty-auto-test.js?v=20261003-temporarylayout2"></script>
 <script src="./board-rules.js?v=20261003-listcollapse1"></script>
 <script src="./board-archive.js?v=20261003-listcollapse1"></script>
 
@@ -2126,6 +2126,54 @@ body.photo-admin-on #accessPasswordChange{
   #temporaryDutyRows .temporary-duty-row .tmp-remove{
     grid-column:1!important;
   }
+}
+</style>
+<style id="temporary-duty-unified-widths">
+#temporaryDutyBuilder{
+  padding:14px!important;
+}
+#temporaryDutyBuilder,
+#temporaryDutyRows,
+#temporaryDutyRows .temporary-duty-row{
+  box-sizing:border-box!important;
+  width:100%!important;
+  max-width:100%!important;
+}
+#temporaryDutyRows .temporary-duty-row{
+  display:grid!important;
+  grid-template-columns:1fr!important;
+  gap:10px!important;
+  margin-top:10px!important;
+}
+#temporaryDutyRows .temporary-duty-row>*{
+  box-sizing:border-box!important;
+  width:100%!important;
+  max-width:100%!important;
+  min-width:0!important;
+  margin:0!important;
+}
+#temporaryDutyRows .temporary-duty-row .tmp-date,
+#temporaryDutyRows .temporary-duty-row .tmp-grade,
+#temporaryDutyRows .temporary-duty-row .tmp-slot,
+#temporaryDutyRows .temporary-duty-row .tmp-names,
+#temporaryDutyRows .temporary-duty-row .tmp-remove{
+  grid-column:1!important;
+  grid-row:auto!important;
+}
+#temporaryDutyBuilder #temporaryDutyAddDate,
+#temporaryDutyBuilder #temporaryDutyPreview{
+  box-sizing:border-box!important;
+  width:100%!important;
+  max-width:100%!important;
+  margin:10px 0 0!important;
+}
+#temporaryDutyRows .temporary-duty-row input,
+#temporaryDutyRows .temporary-duty-row select,
+#temporaryDutyRows .temporary-duty-row button,
+#temporaryDutyBuilder #temporaryDutyAddDate,
+#temporaryDutyBuilder #temporaryDutyPreview{
+  min-height:48px!important;
+  border-radius:10px!important;
 }
 </style>
 <style id="compact-rules-archive-admin-style">
