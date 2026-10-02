@@ -85,10 +85,11 @@ function init(){
       var results=await Promise.all([
         fetch('/.netlify/functions/attendance-data',{cache:'no-store',credentials:'same-origin',headers:headers}),
         fetch('/.netlify/functions/site-data?section=players',{cache:'no-store',credentials:'same-origin'}),
-        fetch('/.netlify/functions/site-data?section=schedule',{cache:'no-store',credentials:'same-origin'})
+        fetch('/.netlify/functions/site-data?section=schedule',{cache:'no-store',credentials:'same-origin'}),
+        fetch('/.netlify/functions/duty-change-requests',{cache:'no-store',credentials:'same-origin',headers:headers})
       ]);
-      if(results.some(r=>!r.ok))throw new Error('必要なデータを取得できませんでした。');
-      var att=await results[0].json(),pj=await results[1].json(),sj=await results[2].json(),members=att?.data?.members||[],players=Array.isArray(pj?.data)?pj.data:[],schedule=Array.isArray(sj?.data)?sj.data:[];
+      if(results.slice(0,3).some(r=>!r.ok))throw new Error('必要なデータを取得できませんでした。');
+      var att=await results[0].json(),pj=await results[1].json(),sj=await results[2].json(),requestSettings=results[3].ok?await results[3].json():{},members=att?.data?.members||[],players=Array.isArray(pj?.data)?pj.data:[],schedule=Array.isArray(sj?.data)?sj.data:[];
       var groups=collectFamilies(members),pc={'1':0,'2':0,'3':0};
       players.forEach(function(p){var m=String(p?.grade||'').match(/^([123])年/);if(m)pc[m[1]]++;});
       disambiguateDuplicateFamilies(groups);
@@ -138,10 +139,20 @@ function init(){
           else{ctx.fillStyle='#071426';var cx=x[i+1]+(x[i+2]-x[i+1])/2;ctx.fillText(String(t),cx,yy+rowH/2);}
         });
       });
-      var noteY=monthBottom+28;ctx.textAlign='left';ctx.textBaseline='alphabetic';ctx.fillStyle='#071426';ctx.font='700 20px sans-serif';
+      var noteY=monthBottom+28,tokenMode=(requestSettings&&requestSettings.partnerApprovalEnabled===true&&(y>2026||(y===2026&&mo>=11)));ctx.textAlign='left';ctx.textBaseline='alphabetic';ctx.fillStyle='#071426';ctx.font='700 20px sans-serif';
       ctx.fillText('☆　都合によりお当番の交代は可能です。その際は、下記のご対応をお願いいたします。',left+25,noteY);
-      ctx.font='600 18px sans-serif';ctx.fillText('① サイト内の「当番変更申請」より申請してください。',left+100,noteY+32);ctx.fillText('② 申請後は、全体LINEでの共有も併せてお願いいたします。',left+100,noteY+62);ctx.fillText('③ 母小屋のドア裏に提示されている紙の当番表を、赤字で修正をお願いいたします。',left+100,noteY+92);
-      ctx.font='700 20px sans-serif';ctx.fillText('☆　黄色の日は里山活動日になります。車の駐車場所に必ず気を付けてください。',left+25,noteY+148);
+      ctx.font='600 18px sans-serif';
+      ctx.fillText('① サイト内の「当番変更申請」より申請してください。',left+100,noteY+32);
+      if(tokenMode){
+        ctx.fillText('② 申請後は、必ず全体LINEで変更内容と承認リンクを共有してください。',left+100,noteY+62);
+        ctx.fillText('③ 変更後のご家庭の方が承認リンクから承認すると、当番表へ自動反映されます。',left+100,noteY+92);
+        ctx.fillText('④ 母小屋のドア裏に提示されている紙の当番表を、赤字で修正をお願いいたします。',left+100,noteY+122);
+        ctx.font='700 20px sans-serif';ctx.fillText('☆　黄色の日は里山活動日になります。車の駐車場所に必ず気を付けてください。',left+25,noteY+174);
+      }else{
+        ctx.fillText('② 申請後は、全体LINEでの共有も併せてお願いいたします。',left+100,noteY+62);
+        ctx.fillText('③ 母小屋のドア裏に提示されている紙の当番表を、赤字で修正をお願いいたします。',left+100,noteY+92);
+        ctx.font='700 20px sans-serif';ctx.fillText('☆　黄色の日は里山活動日になります。車の駐車場所に必ず気を付けてください。',left+25,noteY+148);
+      }
       var src=canvas.toDataURL('image/png');
       preview.innerHTML='';var title=document.createElement('b');title.textContent=y+'年'+mo+'月 当番表（案）';var img=document.createElement('img');img.className='duty-simple-image';img.src=src;img.alt=title.textContent;var actions=document.createElement('div');actions.className='duty-simple-actions';var dl=document.createElement('button');dl.type='button';dl.textContent='画像を保存';dl.onclick=async function(){
         var filename='当番表_'+y+'年'+String(mo).padStart(2,'0')+'月_案.png';
