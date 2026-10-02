@@ -25,6 +25,7 @@ button:disabled{opacity:.55}
 .status.error{color:#9b2c2c}
 .status.ok{color:#176b3a}
 .retry{display:block;width:100%;margin-top:14px;border:1px solid #c79a3b;border-radius:12px;padding:12px;background:#fff;color:#8a651d;font-weight:900;font-size:14px}
+.line-auth-notice{margin-top:16px;padding:12px;border:1px solid #e5bf73;border-radius:12px;background:#fff8e8;color:#7a5310;font-size:13px;font-weight:800;line-height:1.65}
 </style>
 </head>
 <body>
@@ -41,16 +42,17 @@ button:disabled{opacity:.55}
 <div class="arrow">↓</div>
 <div class="row"><span>変更後</span><b id="to"></b></div>
 </div>
+<div id="lineAuthNotice" class="line-auth-notice" hidden></div>
 <label style="display:flex;gap:10px;align-items:flex-start;margin-top:18px;padding:12px;border:1px solid #ddd5c4;border-radius:12px;background:#faf8f2;line-height:1.6">
 <input id="familyConfirm" type="checkbox" style="width:20px;height:20px;margin-top:2px;accent-color:#c79a3b;flex:0 0 auto">
 <span style="font-size:13px;font-weight:700;color:#17202b">申請内容を確認しました。<br>お当番の変更を了承しております。</span>
 </label>
 <button id="approve" type="button" disabled>この変更を承認する</button>
-<p class="note">この変更は、変更後のご家庭の方が内容を確認して承認してください。父・母など、ご家庭の方であれば承認できます。承認リンクは1回限り・24時間有効です。期限を過ぎた場合は、再度「当番変更申請」から申請してください。承認すると当番表へ自動反映され、このリンクは使用できなくなります。</p>
+<p class="note">この変更は、変更後のご家庭の方が内容を確認して承認してください。父・母など、ご家庭の方であれば承認できます。承認リンクは24時間有効で、承認前は何度でも内容を確認できます。承認は1回限りです。期限を過ぎた場合は、再度「当番変更申請」から申請してください。承認すると当番表へ自動反映され、このリンクは使用できなくなります。</p>
 </div>
 <div id="message" class="status" hidden></div>
 </section>
 </main>
-<script src="./duty-approve.js?v=20261002-approval-fix1" defer></script>
+<script src="./duty-approve.js?v=20261002-line-auth1" defer></script>
 </body>
 </html>
