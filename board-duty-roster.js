@@ -598,6 +598,14 @@
     if(params.get('line_login')!=='ok')return;
     let saved=null;
     try{saved=JSON.parse(sessionStorage.getItem('ylsDutyLineResume')||localStorage.getItem('ylsDutyLineResume')||'null')}catch(e){}
+    const urlResume=params.get('line_resume')==='duty-submit'?{
+      mode:'submit',
+      date:params.get('d')||'',
+      from:(params.get('fg')&&params.get('fn'))?(params.get('fg')+'|'+params.get('fn')):'',
+      to:(params.get('tg')&&params.get('tn'))?(params.get('tg')+'|'+params.get('tn')):'',
+      expires:Date.now()+60*1000
+    }:null;
+    if(!saved||Date.now()>Number(saved.expires||0))saved=urlResume;
     if(!saved||Date.now()>Number(saved.expires||0)){
       try{sessionStorage.removeItem('ylsDutyLineResume')}catch(_){}
       try{localStorage.removeItem('ylsDutyLineResume')}catch(_){}
@@ -616,7 +624,7 @@
       try{localStorage.removeItem('ylsDutyLineResume')}catch(_){}
       lineResumeHandled=true;cleanLineResumeUrl();
       const result=document.getElementById('dutyRequestResult');
-      if(result){result.hidden=false;result.innerHTML='<div class="duty-request-complete"><b>LINE認証が完了しました</b><p>申請を続行してLINEを開いています。</p></div>'}
+      if(result){result.hidden=false;result.innerHTML='<div class="duty-request-complete"><b>LINE認証が完了しました</b><p>申請を続行しています。</p></div>'}
       setTimeout(function(){submitRequest()},80);
       return;
     }
