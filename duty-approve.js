@@ -6,6 +6,7 @@
   const message=document.getElementById('message');
   const approve=document.getElementById('approve');
   const familyConfirm=document.getElementById('familyConfirm');
+  const lineAuthNotice=document.getElementById('lineAuthNotice');
   function showMessage(text,ok,retry){
     loading.hidden=true;content.hidden=true;message.hidden=false;
     message.textContent=text;message.className='status '+(ok?'ok':'error');
@@ -26,9 +27,12 @@
     const controller=new AbortController();
     const timer=setTimeout(()=>controller.abort(),12000);
     try{
-      const r=await fetch(url,{...options,cache:'no-store',signal:controller.signal});
+      const r=await fetch(url,{...options,credentials:'same-origin',cache:'no-store',signal:controller.signal});
       const j=await r.json().catch(()=>({}));
-      if(!r.ok)throw new Error(j.error||'処理できませんでした。');
+      if(!r.ok){
+        const error=new Error(j.error||'処理できませんでした。');
+        error.status=r.status;error.body=j;throw error;
+      }
       return j;
     }catch(e){
       if(e&&e.name==='AbortError')throw new Error('通信に時間がかかっています。もう一度お試しください。');
@@ -49,8 +53,19 @@
       document.getElementById('date').textContent=formatDate(x.date);
       document.getElementById('from').textContent=x.fromGrade+'年・'+x.fromName;
       document.getElementById('to').textContent=x.toGrade+'年・'+x.toName;
+      if(j.selfApprovalBlocked){
+        lineAuthNotice.hidden=false;
+        lineAuthNotice.textContent='この申請を行ったLINEアカウントでは承認できません。変更後のご家庭へ承認を依頼してください。';
+        familyConfirm.checked=false;familyConfirm.disabled=true;approve.disabled=true;
+      }else{
+        lineAuthNotice.hidden=true;
+        familyConfirm.disabled=false;
+      }
       loading.hidden=true;content.hidden=false;
     }catch(e){
+      if(e&&e.status===401&&e.body&&e.body.code==='line_login_required'&&e.body.loginUrl){
+        location.replace(e.body.loginUrl);return;
+      }
       const msg=e&&e.message?e.message:'申請内容を確認できませんでした。';
       const retry=/通信|時間がかかっています|処理できませんでした|確認できませんでした/.test(msg);
       showMessage(msg,false,retry);
@@ -64,6 +79,9 @@
       const j=await call('partner-approve');
       showMessage(j.message||'承認しました。当番表へ反映されました。',true);
     }catch(e){
+      if(e&&e.status===401&&e.body&&e.body.code==='line_login_required'&&e.body.loginUrl){
+        location.replace(e.body.loginUrl);return;
+      }
       approve.disabled=false;approve.textContent='この変更を承認する';
       showMessage(e.message||'承認できませんでした。',false);
     }
