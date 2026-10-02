@@ -649,8 +649,16 @@
     if(!dateSel||!fromSel||!toSel)return;
 
     const requestType=typeSel&&typeSel.value==='swap'?'swap':'replace';
-    if(replaceFields)replaceFields.hidden=requestType==='swap';
-    if(swapFields)swapFields.hidden=requestType!=='swap';
+    if(replaceFields){
+      replaceFields.hidden=requestType==='swap';
+      replaceFields.style.setProperty('display',requestType==='swap'?'none':'block','important');
+    }
+    if(swapFields){
+      swapFields.hidden=requestType!=='swap';
+      swapFields.style.setProperty('display',requestType==='swap'?'block':'none','important');
+    }
+    const submitButton=document.getElementById('submitDutyRequest');
+    if(submitButton)submitButton.textContent=requestType==='swap'?'この2つを入れ替えて申請':'変更申請を送信';
 
     if(requestType==='swap'){
       if(!swapFrom||!swapTo)return;
