@@ -1,0 +1,52 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="robots" content="noindex,nofollow">
+<meta name="theme-color" content="#071426">
+<title>当番変更申請｜八千代リトルシニア</title>
+<style>
+*{box-sizing:border-box}body{margin:0;background:#071426;color:#17202b;font-family:-apple-system,BlinkMacSystemFont,"Hiragino Sans","Yu Gothic",sans-serif}
+.wrap{min-height:100dvh;display:grid;place-items:center;padding:24px}.card{width:min(520px,100%);background:#fff;border:1px solid #c79a3b;border-radius:20px;padding:26px 22px;box-shadow:0 18px 48px rgba(0,0,0,.28)}
+.kicker{font-size:11px;font-weight:900;letter-spacing:.14em;color:#b58a31}.title{margin:6px 0 14px;font-size:23px;color:#071426}.msg{line-height:1.8;font-weight:700;color:#4d5869}
+.detail{margin:16px 0;padding:15px;border-radius:14px;background:#f7f3e8;line-height:1.8;font-weight:700}.line{display:block;width:100%;margin-top:18px;padding:15px 16px;border-radius:14px;background:#06c755;color:#fff;text-align:center;text-decoration:none;font-weight:900;font-size:16px}
+.small{display:block;margin-top:12px;color:#697384;font-size:12px;line-height:1.7}.error{color:#b42318;font-weight:800}.spinner{width:28px;height:28px;border:3px solid #ddd;border-top-color:#b58a31;border-radius:50%;animation:r 1s linear infinite;margin:18px auto}@keyframes r{to{transform:rotate(360deg)}}
+</style>
+</head>
+<body>
+<div class="wrap"><main class="card">
+<div class="kicker">CHANGE REQUEST</div>
+<h1 class="title">当番変更申請</h1>
+<div id="content"><div class="spinner"></div><p class="msg">LINE認証を確認して申請を続行しています。</p></div>
+</main></div>
+<script>
+(function(){
+  const out=document.getElementById('content');
+  const token=new URLSearchParams(location.search).get('t')||'';
+  const esc=s=>String(s||'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+  const displayDate=v=>{const m=/^(\d{4})-(\d{2})-(\d{2})$/.exec(String(v||''));return m?Number(m[2])+'月'+Number(m[3])+'日':String(v||'')};
+  if(!token){out.innerHTML='<p class="error">申請情報を確認できませんでした。元の画面からもう一度申請してください。</p>';return}
+  fetch('/.netlify/functions/duty-change-requests',{
+    method:'POST',credentials:'same-origin',
+    headers:{'content-type':'application/json'},
+    body:JSON.stringify({action:'submit-line-resume',token})
+  }).then(async r=>{
+    const body=await r.json().catch(()=>({}));
+    if(!r.ok)throw new Error(body.error||'申請を続行できませんでした。');
+    const q=body.request||{};
+    const approvalUrl=String(body.approvalUrl||'');
+    const text='【当番変更申請'+(q.requestNo?' #'+q.requestNo:'')+'】\n'+displayDate(q.date)+'\n変更前：'+q.fromGrade+'年・'+q.fromName+'\n変更後：'+q.toGrade+'年・'+q.toName+'\n当番変更を申請しました。\n\n【変更後のご家庭の方へ】\n下の専用リンクから内容を確認して承認してください。\n'+approvalUrl;
+    const share='https://line.me/R/share?text='+encodeURIComponent(text);
+    out.innerHTML='<p class="msg"><b>変更申請を受け付けました。</b><br>続けて、変更後のご家庭へLINEで承認リンクを送ってください。</p>'+
+      '<div class="detail">'+esc(displayDate(q.date))+'<br>変更前：'+esc(q.fromGrade+'年・'+q.fromName)+'<br>変更後：'+esc(q.toGrade+'年・'+q.toName)+'</div>'+
+      '<a class="line" href="'+esc(share)+'">LINEで承認リンクを送る</a>'+
+      '<small class="small">承認リンクは1回限り・24時間有効です。LINE送信後はこの画面を閉じて構いません。</small>';
+    try{history.replaceState(null,'',location.pathname)}catch(_){}
+  }).catch(e=>{
+    out.innerHTML='<p class="error">'+esc(e.message||'申請を続行できませんでした。')+'</p><small class="small">元のチーム専用ページからもう一度申請してください。</small>';
+  });
+})();
+</script>
+</body>
+</html>
