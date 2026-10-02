@@ -1,5 +1,5 @@
 import {
-  lineChannelId,lineCallbackUrl,getLineFlow,getLineFlowFromState,sealLineValue,sessionCookie,
+  lineChannelId,lineCallbackUrl,getLineFlow,getLineFlowFromState,sealLineValue,sealLineFlow,sessionCookie,
   clearFlowCookie,safeReturnPath
 } from "./_line-login-auth.mjs";
 
@@ -76,10 +76,26 @@ export default async (request)=>{
     });
     const returnPath=safeReturnPath(flow.returnPath||"/board.html");
     const target=new URL(returnPath,"https://local.invalid");
-    target.searchParams.set("line_login","ok");
+    let locationValue="";
+    if(target.searchParams.get("line_resume")==="duty-submit"){
+      const resumeToken=await sealLineFlow({
+        purpose:"duty-submit",
+        date:String(target.searchParams.get("d")||""),
+        fromGrade:String(target.searchParams.get("fg")||""),
+        fromName:String(target.searchParams.get("fn")||""),
+        toGrade:String(target.searchParams.get("tg")||""),
+        toName:String(target.searchParams.get("tn")||""),
+        sub:String(verified.sub),
+        exp:Date.now()+5*60*1000
+      });
+      locationValue="/duty-line-resume.html?t="+encodeURIComponent(resumeToken);
+    }else{
+      target.searchParams.set("line_login","ok");
+      locationValue=target.pathname+target.search+target.hash;
+    }
 
     const headers=new Headers({
-      "location":target.pathname+target.search+target.hash,
+      "location":locationValue,
       "cache-control":"no-store",
       "x-content-type-options":"nosniff"
     });
