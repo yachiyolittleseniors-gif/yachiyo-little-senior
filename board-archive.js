@@ -2,6 +2,7 @@
   const API='/.netlify/functions/site-data?section=document-archive';
   const panel=document.getElementById('densukeAdminPanel');
   const fields=document.getElementById('documentArchiveAdminFields');
+  const reveal=document.getElementById('archiveAdminReveal');
   const input=document.getElementById('documentArchiveInput');
   const saveBtn=document.getElementById('saveDocumentArchiveBtn');
   const list=document.getElementById('documentArchiveList');
@@ -10,7 +11,15 @@
   let previewUrl='';
   let previewHistoryActive=false;
 
-  if(!panel||!fields||!input||!saveBtn||!list)return;
+  if(!panel||!fields||!reveal||!input||!saveBtn||!list)return;
+
+  function setAdminVisible(visible){
+    fields.hidden=!visible;
+    reveal.setAttribute('aria-expanded',String(visible));
+    reveal.textContent=visible?'資料格納庫の編集を隠す':'資料格納庫の編集を表示';
+  }
+  setAdminVisible(false);
+  reveal.addEventListener('click',function(){setAdminVisible(fields.hidden)});
 
   function password(){return panel.dataset.adminPassword||''}
   function headers(json){
