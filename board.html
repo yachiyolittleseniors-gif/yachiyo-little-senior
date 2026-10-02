@@ -1507,9 +1507,17 @@ body:after{display:none!important;content:none!important}
     <div id="tournamentAdminList"></div>
   </div>
   <div id="dutyRosterAdminFields">
-    <strong>当番表</strong>
+    <div class="duty-admin-brand">
+      <div class="duty-admin-brand-icon" aria-hidden="true">📋</div>
+      <div class="duty-admin-brand-copy">
+        <small>DUTY ROSTER ADMINISTRATION</small>
+        <strong>当番表管理</strong>
+        <span><i></i> TEAM MANAGEMENT SYSTEM <i></i></span>
+      </div>
+    </div>
 
-    <div class="duty-request-admin-block duty-monitor-admin-block">
+    <div class="duty-request-admin-block duty-monitor-admin-block duty-admin-section-card">
+      <div class="duty-admin-section-label"><small>STATUS</small><b>システム監視</b></div>
       <div id="dutySystemMonitor" class="duty-monitor-card" hidden>
         <div class="duty-monitor-head"><strong>当番変更システム監視</strong><span id="dutyMonitorBadge" class="duty-monitor-badge">確認中</span></div>
         <p id="dutyMonitorSummary" class="duty-monitor-summary">申請・LINE認証・承認・当番表反映を確認しています。</p>
@@ -1526,12 +1534,13 @@ body:after{display:none!important;content:none!important}
       </div>
     </div>
 
-    <div class="duty-image-admin">
-      <b>保存済み原本</b>
+    <div class="duty-image-admin duty-admin-section-card">
+      <div class="duty-admin-section-label"><small>ORIGINALS</small><b>保存済み原本</b></div>
       <div id="dutyRosterAdminList"></div>
     </div>
 
-    <div class="duty-change-admin">
+    <div class="duty-change-admin duty-admin-section-card">
+      <div class="duty-admin-section-label"><small>REQUESTS</small><b>当番変更申請</b></div>
       <div class="duty-request-admin-block">
         <b>当番変更申請</b>
         <p>一般画面から届いた申請です。</p>
@@ -1544,8 +1553,8 @@ body:after{display:none!important;content:none!important}
       </div>
     </div>
 
-    <div class="duty-auto-test-admin" id="dutyAutoTestAdmin">
-      <b>当番表 自動作成</b>
+    <div class="duty-auto-test-admin duty-admin-section-card" id="dutyAutoTestAdmin">
+      <div class="duty-admin-section-label"><small>CREATE</small><b>当番表 自動作成</b></div>
       <p>対象月の当番表（案）を自動作成します。内容を確認後、「この案で確定」を押すと正式な当番表として登録されます。</p>
       <div class="duty-auto-test-controls">
         <label>対象月 <span class="duty-auto-test-month-row"><button id="dutyAutoPrevMonth" type="button" aria-label="前の月">‹</button><strong id="dutyAutoMonthLabel" style="display:grid!important;place-items:center!important;visibility:visible!important;opacity:1!important;color:#17202b!important;-webkit-text-fill-color:#17202b!important;background:#fff!important;font-size:16px!important;font-weight:900!important">2026年 10月</strong><button id="dutyAutoNextMonth" type="button" aria-label="次の月">›</button></span></label>
@@ -1556,7 +1565,7 @@ body:after{display:none!important;content:none!important}
       <div id="dutyAutoTestPreview" class="duty-auto-test-preview" hidden></div>
     </div>
 
-    <details class="duty-manual-register">
+    <details class="duty-manual-register duty-admin-section-card">
       <summary>手動・臨時当番表を登録／作成</summary>
       <div class="duty-manual-register-body">
         <button id="temporaryDutyCreateBtn" type="button">臨時当番表を作成</button>
@@ -1579,8 +1588,9 @@ body:after{display:none!important;content:none!important}
       </div>
     </details>
 
-    <div class="duty-change-admin">
-      <div class="duty-change-heading"><b>登録済み変更履歴</b><button id="toggleDutyAdminHistory" type="button" aria-expanded="false">表示 ▼</button></div>
+    <div class="duty-change-admin duty-admin-section-card">
+      <div class="duty-admin-section-label"><small>HISTORY</small><b>登録済み変更履歴</b></div>
+      <div class="duty-change-heading"><b class="duty-history-hidden-title">登録済み変更履歴</b><button id="toggleDutyAdminHistory" type="button" aria-expanded="false">表示 ▼</button></div>
       <div id="dutyChangeAdminList" class="duty-change-admin-list" hidden></div>
     </div>
   </div>
@@ -1910,6 +1920,97 @@ body.photo-admin-on #accessPasswordChange{
 #dutyAutoTestCreate::before,#dutyAutoTestCreate::after{content:none!important;display:none!important}
 </style>
 
+<style id="duty-admin-dashboard-style">
+#densukeAdminPanel #dutyRosterAdminFields{
+  padding:18px!important;
+  background:linear-gradient(180deg,#0b1d33 0%,#071426 100%)!important;
+  border:1px solid rgba(199,154,59,.68)!important;
+  border-top:3px solid #c79a3b!important;
+  border-radius:18px!important;
+  box-shadow:0 16px 38px rgba(0,0,0,.18);
+}
+#densukeAdminPanel #dutyRosterAdminFields>strong{display:none!important}
+.duty-admin-brand{
+  display:grid;
+  grid-template-columns:72px 1fr;
+  align-items:center;
+  gap:16px;
+  margin:0 0 18px;
+  padding:16px 18px;
+  border:1px solid rgba(226,189,103,.5);
+  border-radius:18px;
+  background:linear-gradient(135deg,#0a1d35,#112a46);
+  box-shadow:inset 0 0 0 1px rgba(255,255,255,.025);
+}
+.duty-admin-brand-icon{
+  display:grid;place-items:center;
+  width:66px;height:66px;
+  border:2px solid #c79a3b;border-radius:50%;
+  background:#0a1830;
+  font-size:34px;
+}
+.duty-admin-brand-copy{min-width:0}
+.duty-admin-brand-copy small{
+  display:block;color:#d9b45c;font-size:10px;font-weight:900;
+  letter-spacing:.20em;line-height:1.2;margin-bottom:5px
+}
+.duty-admin-brand-copy strong{
+  display:block!important;margin:0!important;padding:0!important;border:0!important;
+  color:#fff!important;font-size:26px!important;line-height:1.25!important
+}
+.duty-admin-brand-copy span{
+  display:flex;align-items:center;gap:8px;margin-top:7px;
+  color:#d9b45c;font-size:9px;font-weight:900;letter-spacing:.17em;white-space:nowrap
+}
+.duty-admin-brand-copy span i{display:block;width:24px;height:1px;background:#d9b45c;opacity:.7}
+.duty-admin-section-card{
+  box-sizing:border-box;
+  margin:12px 0!important;
+  padding:14px!important;
+  border:1px solid rgba(199,154,59,.4)!important;
+  border-radius:14px!important;
+  background:#102036!important;
+  box-shadow:none!important;
+}
+.duty-admin-section-label{
+  display:flex;align-items:baseline;justify-content:space-between;gap:10px;
+  margin:0 0 12px;padding:0 0 9px;
+  border-bottom:1px solid rgba(226,189,103,.24)
+}
+.duty-admin-section-label small{color:#aeb7c4;font-size:9px;font-weight:900;letter-spacing:.18em}
+.duty-admin-section-label b{color:#e2bd67!important;font-size:15px!important;line-height:1.25}
+.duty-monitor-admin-block .duty-monitor-card{
+  margin:0!important;padding:14px!important;border-radius:12px!important
+}
+.duty-admin-section-card.duty-image-admin>b{display:none!important}
+.duty-admin-section-card .duty-request-admin-block{
+  margin:0!important;padding:0!important;border:0!important;background:transparent!important
+}
+.duty-admin-section-card .duty-request-admin-block>b{display:none!important}
+.duty-admin-section-card .duty-request-admin-block>p{margin-top:0!important}
+.duty-auto-test-admin>.duty-admin-section-label + p{margin-top:0!important}
+.duty-manual-register.duty-admin-section-card>summary{
+  margin:0!important;padding:4px 2px!important;border:0!important;background:transparent!important;
+  color:#e2bd67!important;font-weight:900!important
+}
+.duty-manual-register.duty-admin-section-card>summary::before{
+  content:"MANUAL";display:block;margin-bottom:4px;color:#aeb7c4;font-size:9px;
+  font-weight:900;letter-spacing:.18em
+}
+.duty-history-hidden-title{display:none!important}
+#dutyRosterAdminFields .duty-change-heading{margin:0!important}
+#dutyRosterAdminFields .duty-change-heading button{
+  margin-left:auto!important;min-height:36px!important;padding:7px 12px!important;border-radius:999px!important
+}
+@media(max-width:520px){
+  .duty-admin-brand{grid-template-columns:56px 1fr;gap:12px;padding:14px}
+  .duty-admin-brand-icon{width:52px;height:52px;font-size:27px}
+  .duty-admin-brand-copy strong{font-size:22px!important}
+  .duty-admin-brand-copy span{font-size:8px;gap:6px;letter-spacing:.12em}
+  .duty-admin-brand-copy span i{width:18px}
+  .duty-admin-section-card{padding:12px!important}
+}
+</style>
 <style id="admin-section-boundaries-20260929">
 #densukeAdminPanel{background:#071426!important}
 #densukeAdminPanel #dutyRosterAdminFields,
