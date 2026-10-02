@@ -25,6 +25,13 @@
   let requests=[];
   let requestsLoaded=false;
   let partnerApprovalEnabled=false;
+  function syncDutyRequestOperationNote(){
+    const note=document.getElementById('dutyRequestOperationNote');
+    if(!note)return;
+    note.textContent=partnerApprovalEnabled
+      ? '※当番表が登録されている月のみ変更申請ができます。申請後は必ず全体LINEで共有し、変更後のご家庭の方が承認リンクから承認してください。承認後、当番表へ自動反映されます。'
+      : '※当番表が登録されている月のみ変更申請ができます。申請後は、必ず全体LINEでご連絡ください。全体LINEでの連絡がない場合、変更は完了しません。';
+  }
 
 
   if(!list||!tableList||!adminList||!fileInput||!saveBtn||!panel||!changeSection||!changeList||!changeAdminList)return;
@@ -332,6 +339,7 @@
       const approvalStatus=document.getElementById('dutyPartnerApprovalStatus');
       if(approvalToggle)approvalToggle.checked=partnerApprovalEnabled;
       if(approvalStatus)approvalStatus.textContent=partnerApprovalEnabled?'承認リンク：使用中':'承認リンク：未使用';
+      syncDutyRequestOperationNote();
       requestsLoaded=true;
       renderRequests();
       return true;
@@ -459,6 +467,7 @@
         partnerApprovalEnabled=body.partnerApprovalEnabled===true;
         partnerApprovalToggle.checked=partnerApprovalEnabled;
         if(partnerApprovalStatus)partnerApprovalStatus.textContent=partnerApprovalEnabled?'承認リンク：使用中':'承認リンク：未使用';
+        syncDutyRequestOperationNote();
         if(window.showSaveNotice)showSaveNotice(partnerApprovalEnabled?'承認リンクをONにしました':'承認リンクをOFFにしました');
       }catch(e){
         partnerApprovalToggle.checked=partnerApprovalEnabled;
