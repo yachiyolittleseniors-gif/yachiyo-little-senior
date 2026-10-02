@@ -77,7 +77,7 @@
     approve.disabled=true;approve.textContent='承認中…';
     try{
       const j=await call('partner-approve');
-      showMessage(j.message||'承認しました。当番表へ反映されました。',true);
+      showMessage('承認しました\n当番表へ反映されました',true);
     }catch(e){
       if(e&&e.status===401&&e.body&&e.body.code==='line_login_required'&&e.body.loginUrl){
         location.replace(e.body.loginUrl);return;
