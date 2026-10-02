@@ -7,55 +7,51 @@
 <meta name="theme-color" content="#071426">
 <title>当番変更申請｜八千代リトルシニア</title>
 <style>
-:root{color-scheme:light;--navy:#071426;--gold:#c79a3b;--gold2:#e2bd67;--ink:#142033;--muted:#6d7582;--paper:#fffdf8;--line:#e5dcc8;--soft:#f7f3e8;--green:#06c755}
+:root{color-scheme:light;--navy:#071426;--gold:#c79a3b;--gold2:#e2bd67;--ink:#142033;--muted:#6f7885;--soft:#f7f3e8;--line:#e4dccb;--green:#06c755}
 *{box-sizing:border-box}
 html,body{min-height:100%}
-body{margin:0;background:linear-gradient(180deg,#071426 0%,#0a1830 100%);color:var(--ink);font-family:-apple-system,BlinkMacSystemFont,"Hiragino Sans","Yu Gothic",sans-serif}
-.wrap{min-height:100dvh;display:grid;place-items:center;padding:22px 18px calc(22px + env(safe-area-inset-bottom))}
-.card{position:relative;overflow:hidden;width:min(520px,100%);background:#fff;border:1px solid rgba(199,154,59,.72);border-radius:26px;padding:0 22px 26px;box-shadow:0 26px 70px rgba(0,0,0,.32)}
-.card:before{content:"";display:block;height:5px;margin:0 -22px 22px;background:linear-gradient(90deg,#8f671b,var(--gold2),#8f671b)}
-.brand{display:flex;align-items:center;gap:12px;margin-bottom:18px}
-.brand img{width:58px;height:58px;object-fit:contain}
-.brand-copy{min-width:0}
-.brand-name{font-size:14px;font-weight:900;color:var(--navy);letter-spacing:.02em}
-.brand-sub{margin-top:2px;font-size:9px;font-weight:800;letter-spacing:.15em;color:#9a7429}
-.kicker{font-size:10px;font-weight:900;letter-spacing:.2em;color:#a87b23}
-.title{margin:5px 0 18px;font-size:28px;line-height:1.25;color:var(--navy);letter-spacing:.01em}
-.msg{margin:0;color:#4f5968;font-size:15px;line-height:1.85;font-weight:750}
-.msg b{display:block;margin-bottom:5px;color:var(--navy);font-size:18px}
-.detail{margin:18px 0 0;padding:17px 18px;border:1px solid var(--line);border-radius:17px;background:var(--soft);line-height:1.9;font-weight:800}
-.detail .flow{display:grid;grid-template-columns:72px 1fr;gap:6px 14px;align-items:center}
-.detail .label{color:#747b86;font-size:12px;font-weight:800}
-.detail .value{text-align:right;color:var(--ink);font-size:15px}
-.detail .arrow{grid-column:1/-1;text-align:center;color:var(--gold);font-size:20px;line-height:1}
-.line{display:flex;align-items:center;justify-content:center;gap:8px;width:100%;margin-top:20px;padding:16px;border:0;border-radius:16px;background:var(--green);color:#fff;text-align:center;text-decoration:none;font-weight:900;font-size:16px;box-shadow:0 8px 20px rgba(6,199,85,.22)}
-.line:before{content:"LINE";display:inline-grid;place-items:center;width:38px;height:24px;border:2px solid rgba(255,255,255,.82);border-radius:7px;font-size:9px;letter-spacing:.04em}
-.small{display:block;margin-top:13px;color:#7b8491;font-size:11px;line-height:1.75;text-align:center}
+body{margin:0;background:linear-gradient(180deg,#071426 0%,#0b1930 100%);color:var(--ink);font-family:-apple-system,BlinkMacSystemFont,"Hiragino Sans","Yu Gothic",sans-serif}
+.wrap{min-height:100dvh;display:grid;place-items:center;padding:18px 16px calc(18px + env(safe-area-inset-bottom))}
+.card{position:relative;overflow:hidden;width:min(500px,100%);background:#fff;border:1px solid rgba(199,154,59,.78);border-radius:24px;padding:0 20px 22px;box-shadow:0 24px 64px rgba(0,0,0,.3)}
+.card:before{content:"";display:block;height:4px;margin:0 -20px 16px;background:linear-gradient(90deg,#8f671b,#e2bd67,#8f671b)}
+.brand{display:flex;justify-content:center;align-items:center;margin:2px 0 14px}
+.brand img{display:block;width:min(300px,86%);height:auto;max-height:74px;object-fit:contain}
+.section-head{padding-top:4px;border-top:1px solid #eee7d9}
+.kicker{margin-top:14px;font-size:10px;font-weight:900;letter-spacing:.18em;color:#a87b23}
+.title{margin:5px 0 16px;font-size:26px;line-height:1.2;color:var(--navy);letter-spacing:.01em}
+.msg{margin:0;color:#56606d;font-size:14px;line-height:1.8;font-weight:750}
+.msg b{display:block;margin-bottom:4px;color:var(--navy);font-size:17px}
+.detail{margin:16px 0 0;padding:16px;border:1px solid var(--line);border-radius:16px;background:var(--soft)}
+.flow{display:grid;grid-template-columns:72px 1fr;gap:8px 12px;align-items:center}
+.label{color:#7a818c;font-size:12px;font-weight:800}
+.value{text-align:right;color:var(--ink);font-size:15px;font-weight:900}
+.arrow{grid-column:1/-1;text-align:center;color:var(--gold);font-size:20px;font-weight:900;line-height:1}
+.line{display:flex;align-items:center;justify-content:center;width:100%;margin-top:18px;padding:16px;border:0;border-radius:15px;background:var(--green);color:#fff;text-decoration:none;font-weight:900;font-size:16px;box-shadow:0 8px 20px rgba(6,199,85,.2)}
+.line-badge{display:inline-grid;place-items:center;margin-right:9px;padding:2px 7px;border:2px solid rgba(255,255,255,.9);border-radius:7px;font-size:10px;line-height:1.6}
+.small{display:block;margin-top:12px;color:#7c8591;font-size:11px;line-height:1.7;text-align:center}
 .error{margin:10px 0 0;padding:14px 15px;border:1px solid #e8b5ae;border-radius:14px;background:#fff5f3;color:#a2362c;font-weight:850;line-height:1.7}
-.spinner-wrap{padding:10px 0 2px;text-align:center}
-.spinner{width:30px;height:30px;border:3px solid #e5e7eb;border-top-color:var(--gold);border-radius:50%;animation:r .85s linear infinite;margin:2px auto 16px}
-.loading-copy{color:#5e6775;font-size:14px;font-weight:800;line-height:1.8}
+.spinner-wrap{padding:14px 0 6px;text-align:center}
+.spinner{width:30px;height:30px;border:3px solid #e5e7eb;border-top-color:var(--gold);border-radius:50%;animation:r .85s linear infinite;margin:2px auto 14px}
+.loading-copy{color:#5f6875;font-size:14px;font-weight:800;line-height:1.8}
+.sent{padding:18px 2px 4px;text-align:center;color:#1f7a4d;font-size:18px;font-weight:900;line-height:1.7}
+.sent:before{content:"✓";display:grid;place-items:center;width:54px;height:54px;margin:0 auto 12px;border:2px solid #2a9b64;border-radius:50%;font-size:28px}
 @keyframes r{to{transform:rotate(360deg)}}
-@media(max-width:390px){.card{padding:0 18px 22px}.card:before{margin:0 -18px 18px}.title{font-size:25px}.brand img{width:52px;height:52px}}
+@media(max-width:390px){.card{padding:0 17px 20px}.card:before{margin:0 -17px 15px}.brand img{width:min(275px,90%)}.title{font-size:24px}}
 </style>
 </head>
 <body>
 <div class="wrap">
 <main class="card">
-  <div class="brand">
-    <img src="./official-logo-crisp-final.png" alt="八千代リトルシニア">
-    <div class="brand-copy">
-      <div class="brand-name">八千代リトルシニア</div>
-      <div class="brand-sub">TEAM MANAGEMENT SYSTEM</div>
-    </div>
+  <div class="brand"><img src="./official-logo-crisp-final.png" alt="八千代リトルシニア"></div>
+  <div class="section-head">
+    <div class="kicker">DUTY CHANGE REQUEST</div>
+    <h1 class="title">当番変更申請</h1>
   </div>
-  <div class="kicker">DUTY CHANGE REQUEST</div>
-  <h1 class="title">当番変更申請</h1>
   <div id="content">
     <div class="spinner-wrap"><div class="spinner"></div><div class="loading-copy">LINE認証を確認しています<br>申請を続行します</div></div>
   </div>
 </main>
 </div>
-<script src="./duty-line-resume.js?v=20261002-ui2"></script>
+<script src="./duty-line-resume.js?v=20261002-ui3"></script>
 </body>
 </html>
