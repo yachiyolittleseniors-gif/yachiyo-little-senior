@@ -1330,10 +1330,10 @@ body:after{display:none!important;content:none!important}
             <label id="dutyRequestReplaceToRow">変更後<select id="dutyRequestTo"><option value="">選択してください</option></select></label>
           </div>
           <div id="dutyRequestSwapFields" hidden>
-            <div class="duty-swap-guide"><b>2つのお当番を選ぶだけです</b><span>①あなたのお当番 → ②入れ替える相手のお当番</span></div>
-            <label>① あなたのお当番<select id="dutyRequestSwapFromSlot"><option value="">自分のお当番を選択してください</option></select></label>
+            <div class="duty-swap-guide"><b>入れ替えたい2つのお当番を選んでください</b><span>例：10/3 高橋さん と 10/10 藤澤さん を入れ替える</span></div>
+            <label>① 入れ替えたいお当番<select id="dutyRequestSwapFromSlot"><option value="">1つ目のお当番を選択してください</option></select></label>
             <div class="duty-swap-arrow" aria-hidden="true">↕</div>
-            <label>② 入れ替える相手のお当番<select id="dutyRequestSwapToSlot"><option value="">相手のお当番を選択してください</option></select></label>
+            <label>② もう一方のお当番<select id="dutyRequestSwapToSlot"><option value="">2つ目のお当番を選択してください</option></select></label>
           </div>
           <button id="submitDutyRequest" class="duty-request-submit" type="button">変更申請を送信</button>
           <div id="dutyRequestResult" class="duty-request-result" hidden></div>
@@ -1708,7 +1708,7 @@ body:after{display:none!important;content:none!important}
 <script src="./board-meetings.js?v=20260927-0030"></script>
 <script src="./duty-image-reader.js?v=20260918-1"></script>
 <script src="./duty-roster-data.js?v=20260918-1"></script>
-<script src="./board-duty-roster.js?v=20261002-swap3"></script>
+<script src="./board-duty-roster.js?v=20261002-swap4"></script>
 <script src="./board-duty-auto-test.js?v=20261002-testmode-end2"></script>
 <script src="./board-rules.js?v=20260914-4"></script>
 <script src="./board-archive.js?v=20260914-3"></script>
