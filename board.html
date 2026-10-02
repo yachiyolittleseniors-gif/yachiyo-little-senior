@@ -1750,7 +1750,7 @@ body:after{display:none!important;content:none!important}
 <script src="./duty-image-reader.js?v=20260918-1"></script>
 <script src="./duty-roster-data.js?v=20260918-1"></script>
 <script src="./board-duty-roster.js?v=20261003-approvalmode1"></script>
-<script src="./board-duty-auto-test.js?v=20261003-no-testmode1"></script>
+<script src="./board-duty-auto-test.js?v=20261003-temporarylayout1"></script>
 <script src="./board-rules.js?v=20261003-listcollapse1"></script>
 <script src="./board-archive.js?v=20261003-listcollapse1"></script>
 
@@ -2066,6 +2066,67 @@ body.photo-admin-on #accessPasswordChange{
   cursor:pointer;
 }
 .duty-request-self-cancel:disabled{opacity:.55;cursor:default}
+</style>
+<style id="temporary-duty-responsive-fix">
+#temporaryDutyBuilder{
+  box-sizing:border-box!important;
+  width:100%!important;
+  max-width:100%!important;
+  overflow:hidden!important;
+}
+#temporaryDutyRows{
+  width:100%!important;
+  max-width:100%!important;
+}
+#temporaryDutyRows .temporary-duty-row{
+  display:grid!important;
+  grid-template-columns:minmax(0,1fr) minmax(0,1fr)!important;
+  gap:8px!important;
+  width:100%!important;
+  max-width:100%!important;
+  box-sizing:border-box!important;
+  margin-top:10px!important;
+}
+#temporaryDutyRows .temporary-duty-row .tmp-date{
+  grid-column:1/-1!important;
+  width:100%!important;
+}
+#temporaryDutyRows .temporary-duty-row .tmp-grade,
+#temporaryDutyRows .temporary-duty-row .tmp-slot{
+  grid-column:auto!important;
+  width:100%!important;
+  min-width:0!important;
+}
+#temporaryDutyRows .temporary-duty-row .tmp-names{
+  grid-column:1/-1!important;
+  width:100%!important;
+  min-width:0!important;
+}
+#temporaryDutyRows .temporary-duty-row .tmp-remove{
+  grid-column:1/-1!important;
+  grid-row:auto!important;
+  width:100%!important;
+  min-width:0!important;
+  min-height:40px!important;
+  margin:0!important;
+}
+#temporaryDutyRows .temporary-duty-row input,
+#temporaryDutyRows .temporary-duty-row select{
+  box-sizing:border-box!important;
+  max-width:100%!important;
+}
+@media(max-width:420px){
+  #temporaryDutyRows .temporary-duty-row{
+    grid-template-columns:1fr!important;
+  }
+  #temporaryDutyRows .temporary-duty-row .tmp-date,
+  #temporaryDutyRows .temporary-duty-row .tmp-grade,
+  #temporaryDutyRows .temporary-duty-row .tmp-slot,
+  #temporaryDutyRows .temporary-duty-row .tmp-names,
+  #temporaryDutyRows .temporary-duty-row .tmp-remove{
+    grid-column:1!important;
+  }
+}
 </style>
 <style id="compact-rules-archive-admin-style">
 .admin-compact-reveal-row{
