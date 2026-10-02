@@ -2002,7 +2002,31 @@ body.photo-admin-on #accessPasswordChange{
   font-weight:900;letter-spacing:.18em
 }
 .duty-history-hidden-title{display:none!important}
-#dutyRosterAdminFields .duty-change-heading{margin:0!important}
+#dutyRosterAdminFields .duty-change-heading{
+  display:flex!important;
+  align-items:center!important;
+  justify-content:flex-end!important;
+  min-height:0!important;
+  margin:0 0 12px!important;
+  padding:0!important;
+  color:#fff!important;
+  -webkit-text-fill-color:#fff!important;
+}
+#dutyRosterAdminFields .duty-change-heading,
+#dutyRosterAdminFields .duty-change-heading *,
+#dutyRosterAdminFields #dutyChangeAdminList,
+#dutyRosterAdminFields #dutyChangeAdminList .duty-change-admin-item,
+#dutyRosterAdminFields #dutyChangeAdminList .duty-change-admin-item span,
+#dutyRosterAdminFields #dutyChangeAdminList .duty-change-admin-item b,
+#dutyRosterAdminFields #dutyChangeAdminList .duty-change-updated,
+#dutyRosterAdminFields #dutyChangeAdminList .duty-change-preview{
+  color:#fff!important;
+  -webkit-text-fill-color:#fff!important;
+}
+#dutyRosterAdminFields #dutyChangeAdminList .duty-change-updated{
+  color:rgba(255,255,255,.78)!important;
+  -webkit-text-fill-color:rgba(255,255,255,.78)!important;
+}
 #dutyRosterAdminFields .duty-change-heading button{
   margin-left:auto!important;min-height:36px!important;padding:7px 12px!important;border-radius:999px!important
 }
