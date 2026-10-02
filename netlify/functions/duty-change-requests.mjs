@@ -161,6 +161,7 @@ function publicRequest(item){
     id:item.id,requestNo:item.requestNo,date:item.date,
     fromGrade:item.fromGrade,fromName:item.fromName,toGrade:item.toGrade,toName:item.toName,
     status:item.status,createdAt:item.createdAt,updatedAt:item.updatedAt,
+    approvalExpiresAt:item.approvalExpiresAt||"",
     partnerApprovedAt:item.partnerApprovedAt||""
   };
 }
