@@ -2,13 +2,23 @@
   const API='/.netlify/functions/site-data?section=rules';
   const textView=document.getElementById('rulesText');
   const pdfList=document.getElementById('rulesPdfList');
+  const fields=document.getElementById('rulesAdminFields');
+  const reveal=document.getElementById('rulesAdminReveal');
   const fileInput=document.getElementById('rulesPdfInput');
   const saveBtn=document.getElementById('saveRulesBtn');
   const adminList=document.getElementById('rulesAdminList');
   const panel=document.getElementById('densukeAdminPanel');
   let rules={text:'',pdfs:[]};
 
-  if(!textView||!pdfList||!fileInput||!saveBtn||!adminList||!panel)return;
+  if(!textView||!pdfList||!fields||!reveal||!fileInput||!saveBtn||!adminList||!panel)return;
+
+  function setAdminVisible(visible){
+    fields.hidden=!visible;
+    reveal.setAttribute('aria-expanded',String(visible));
+    reveal.textContent=visible?'チーム規約の編集を隠す':'チーム規約の編集を表示';
+  }
+  setAdminVisible(false);
+  reveal.addEventListener('click',function(){setAdminVisible(fields.hidden)});
 
   function normalize(raw){
     const out={text:(raw&&raw.text)||'',pdfs:[]};
