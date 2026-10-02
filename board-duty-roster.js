@@ -412,16 +412,16 @@
       const table=image.table;if(!table)return;
       const prefix=table.year+'-'+String(table.month).padStart(2,'0')+'-';
       if(!String(date).startsWith(prefix))return;
+      const day=Number(String(date).slice(-2));
+      const row=table.rows.find(function(r){return Number(r&&r[0])===day});
+      if(!row)return;
       const grades=table.grades||[2,1];
-      table.rows.forEach(function(row){
-        row.slice(2,6).forEach(function(name,index){
-          const clean=cleanName(name);if(!clean)return;
-          const grade=String(grades[Math.floor(index/2)]);
-          map.set(grade+'|'+clean,{grade:grade,name:clean});
-          const current=window.DutyRosterData.applyChanges(table,row[0],grade,clean,changes);
-          const currentName=cleanName(current&&current.value);
-          if(currentName)map.set(grade+'|'+currentName,{grade:grade,name:currentName});
-        });
+      row.slice(2,6).forEach(function(name,index){
+        const clean=cleanName(name);if(!clean)return;
+        const grade=String(grades[Math.floor(index/2)]);
+        const current=window.DutyRosterData.applyChanges(table,row[0],grade,clean,changes);
+        const currentName=cleanName(current&&current.value)||clean;
+        map.set(grade+'|'+currentName,{grade:grade,name:currentName});
       });
     });
     return Array.from(map.values()).sort(function(a,b){return Number(b.grade)-Number(a.grade)||a.name.localeCompare(b.name,'ja')});
