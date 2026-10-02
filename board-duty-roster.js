@@ -410,10 +410,15 @@
         return '<div class="duty-request-status-item">'+(item.requestNo?'<b>申請番号 #'+escapeHtml(item.requestNo)+'</b><br>':'')+
           '<b>'+displayDate(item.date)+'</b><br>'+
           escapeHtml(requestPersonLabel(item,'from'))+' → <b>'+escapeHtml(requestPersonLabel(item,'to'))+'</b><br>'+
-          '<b data-status="'+escapeHtml(item.status)+'">'+escapeHtml(requestStatusLabel(item.status,item))+'</b>'+
+          (item.status==='pending'&&partnerApprovalEnabled&&!requestExpired(item)
+            ?'<button type="button" class="duty-request-resend" data-resend-duty-request="'+escapeHtml(item.id)+'" data-status="pending">'+escapeHtml(requestStatusLabel(item.status,item))+'<small>タップでLINEを再送</small></button>'
+            :'<b data-status="'+escapeHtml(item.status)+'">'+escapeHtml(requestStatusLabel(item.status,item))+'</b>')+
           (item.createdAt?'<br><small>申請日時：'+escapeHtml(new Intl.DateTimeFormat('ja-JP',{timeZone:'Asia/Tokyo',year:'numeric',month:'numeric',day:'numeric',hour:'2-digit',minute:'2-digit',hourCycle:'h23'}).format(new Date(item.createdAt)))+'</small>':'')+
           '</div>';
       }).join(''):'';
+      statusList.querySelectorAll('[data-resend-duty-request]').forEach(function(button){
+        button.addEventListener('click',function(){resendPendingRequestToLine(button.dataset.resendDutyRequest,button)});
+      });
     }
     if(admin){
       const pendingItems=ordered.filter(function(item){return item.status==='pending'});
@@ -433,6 +438,32 @@
     const names=rosterNamesForDate(dateSel.value);let opts='<option value="">選択してください</option>';['3','2','1'].forEach(function(g){const group=names.filter(function(x){return x.grade===g});if(!group.length)return;opts+='<optgroup label="'+g+'年生">'+group.map(function(x){return'<option value="'+escapeHtml(personOptionValue(x))+'">'+g+'年・'+escapeHtml(octoberDisplayName(x.name,g,dateSel.value))+'</option>'}).join('')+'</optgroup>'});
     const fv=fromSel.value,tv=toSel.value;fromSel.innerHTML=opts;toSel.innerHTML=opts;if(Array.from(fromSel.options).some(o=>o.value===fv))fromSel.value=fv;if(Array.from(toSel.options).some(o=>o.value===tv))toSel.value=tv;
   }
+  function approvalLineText(item,url){
+    return '【当番変更申請'+(item.requestNo?' #'+item.requestNo:'')+'】\n'+displayDate(item.date)+'\n変更前：'+requestPersonLabel(item,'from')+'\n変更後：'+requestPersonLabel(item,'to')+'\n当番変更を申請しました。\n\n【変更後のご家庭の方へ】\n下の専用リンクから内容を確認して承認してください。\n'+url;
+  }
+  async function resendPendingRequestToLine(id,button){
+    const item=requests.find(function(x){return x.id===id&&x.status==='pending'});
+    if(!item)return;
+    const original=button?button.innerHTML:'';
+    if(button){button.disabled=true;button.textContent='LINEを準備中…';}
+    let shareWindow=null;
+    try{
+      shareWindow=window.open('about:blank','_blank');
+      const response=await fetch(REQUEST_API,{method:'POST',credentials:'same-origin',headers:requestHeaders(false),body:JSON.stringify({action:'reissue-partner-approval',id:item.id})});
+      const body=await response.json().catch(function(){return{}});
+      if(!response.ok)throw new Error(body.error||'承認リンクを再発行できませんでした。');
+      requests=normalizeRequestList(body.requests);requestsLoaded=true;renderRequests();syncPendingRequestCount();
+      const url=String(body.approvalUrl||'');
+      if(!url)throw new Error('承認リンクを取得できませんでした。');
+      const shareUrl='https://line.me/R/share?text='+encodeURIComponent(approvalLineText(item,url));
+      if(shareWindow&&!shareWindow.closed){shareWindow.location.href=shareUrl}else{window.location.href=shareUrl}
+    }catch(e){
+      if(shareWindow&&!shareWindow.closed)shareWindow.close();
+      alert(e.message||'LINEを開けませんでした。');
+      if(button){button.disabled=false;button.innerHTML=original;}
+    }
+  }
+
   async function submitRequest(){
     const date=document.getElementById('dutyRequestRosterDate').value,fromPerson=parsePersonOption(document.getElementById('dutyRequestFrom').value),toPerson=parsePersonOption(document.getElementById('dutyRequestTo').value),btn=document.getElementById('submitDutyRequest'),result=document.getElementById('dutyRequestResult');
     if(!/^\d{4}-\d{2}-\d{2}$/.test(date)||!rosterDates().some(function(x){return x.date===date})||!fromPerson||!toPerson)return alert('登録済みのお当番表から変更日・変更前・変更後を選択してください。');
@@ -446,7 +477,8 @@
       const submitted=requests.slice().sort(function(a,b){return String(b.updatedAt||b.createdAt).localeCompare(String(a.updatedAt||a.createdAt))}).find(function(x){return x.status==='pending'&&x.date===date&&x.fromGrade===fromPerson.grade&&x.fromName===fromPerson.name});
       const requestNo=submitted&&submitted.requestNo?submitted.requestNo:'';
       const approvalUrl=String(body.approvalUrl||'');
-      const text='【当番変更申請'+(requestNo?' #'+requestNo:'')+'】\n'+displayDate(date)+'\n変更前：'+fromPerson.grade+'年・'+octoberDisplayName(fromPerson.name,fromPerson.grade,date)+'\n変更後：'+toPerson.grade+'年・'+octoberDisplayName(toPerson.name,toPerson.grade,date)+'\n当番変更を申請しました。'+(approvalUrl?'\n\n【変更後のご家庭の方へ】\n下の専用リンクから内容を確認して承認してください。\n'+approvalUrl:'');
+      const shareItem=submitted||{requestNo:requestNo,date:date,fromGrade:fromPerson.grade,fromName:fromPerson.name,toGrade:toPerson.grade,toName:toPerson.name};
+      const text=approvalUrl?approvalLineText(shareItem,approvalUrl):'【当番変更申請'+(requestNo?' #'+requestNo:'')+'】\n'+displayDate(date)+'\n変更前：'+fromPerson.grade+'年・'+octoberDisplayName(fromPerson.name,fromPerson.grade,date)+'\n変更後：'+toPerson.grade+'年・'+octoberDisplayName(toPerson.name,toPerson.grade,date)+'\n当番変更を申請しました。';
       const note=approvalUrl?'※承認リンクは1回限り・24時間有効です。期限を過ぎた場合は、再度「当番変更申請」から申請してください。承認後、当番表へ自動反映されます。':'※当番表への正式な反映は管理者確認後となります。';
       result.hidden=false;result.innerHTML='<div class="duty-request-complete"><b>変更申請を受け付けました</b><p>'+(approvalUrl?'変更後のご家庭へ、個別LINEで承認リンクを送ってください。':'続けて、LINEで変更内容を共有してください。')+'</p><a id="dutyRequestLineShare" class="line-share" target="_blank" rel="noopener noreferrer" href="https://line.me/R/share?text='+encodeURIComponent(text)+'">'+(approvalUrl?'個別LINEで承認リンクを送る':'LINEで共有する')+'</a><small>'+escapeHtml(note)+'</small></div>';
       const lineShare=document.getElementById('dutyRequestLineShare');if(lineShare)lineShare.addEventListener('click',function(){setTimeout(function(){const content=document.getElementById('dutyRequestContent'),toggle=document.getElementById('toggleDutyRequest');if(content)content.hidden=true;if(toggle){toggle.setAttribute('aria-expanded','false');toggle.textContent='申請する'}},0)});
