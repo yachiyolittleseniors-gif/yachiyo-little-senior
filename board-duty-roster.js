@@ -499,9 +499,15 @@
       const text=approvalUrl?approvalLineText(shareItem,approvalUrl):'【当番変更申請'+(requestNo?' #'+requestNo:'')+'】\n'+displayDate(date)+'\n変更前：'+fromPerson.grade+'年・'+octoberDisplayName(fromPerson.name,fromPerson.grade,date)+'\n変更後：'+toPerson.grade+'年・'+octoberDisplayName(toPerson.name,toPerson.grade,date)+'\n当番変更を申請しました。';
       const note=approvalUrl?'※承認リンクは1回限り・24時間有効です。期限を過ぎた場合は、再度「当番変更申請」から申請してください。承認後、当番表へ自動反映されます。':'※当番表への正式な反映は管理者確認後となります。';
       const shareUrl='https://line.me/R/share?text='+encodeURIComponent(text);
-      result.hidden=false;result.innerHTML='<div class="duty-request-complete"><b>変更申請を受け付けました</b><p>LINEの送信先選択画面を開いています。</p><a id="dutyRequestLineShare" class="line-share" target="_blank" rel="noopener noreferrer" href="'+shareUrl+'">'+(approvalUrl?'個別LINEで承認リンクを送る':'LINEで共有する')+'</a><small>'+escapeHtml(note)+'</small></div>';
-      const lineShare=document.getElementById('dutyRequestLineShare');if(lineShare)lineShare.addEventListener('click',function(){setTimeout(function(){const content=document.getElementById('dutyRequestContent'),toggle=document.getElementById('toggleDutyRequest');if(content)content.hidden=true;if(toggle){toggle.setAttribute('aria-expanded','false');toggle.textContent='申請する'}},0)});
-      setTimeout(function(){window.location.href=shareUrl},120);
+      result.hidden=false;result.innerHTML='<div class="duty-request-complete"><b>変更申請を受け付けました</b><p>下のボタンを押すと、LINEの送信先選択画面が開きます。</p><a id="dutyRequestLineShare" class="line-share" href="'+shareUrl+'">'+(approvalUrl?'LINEで承認リンクを送る':'LINEで共有する')+'</a><small>'+escapeHtml(note)+'</small></div>';
+      const lineShare=document.getElementById('dutyRequestLineShare');
+      if(lineShare)lineShare.addEventListener('click',function(event){
+        event.preventDefault();
+        const content=document.getElementById('dutyRequestContent'),toggle=document.getElementById('toggleDutyRequest');
+        if(content)content.hidden=true;
+        if(toggle){toggle.setAttribute('aria-expanded','false');toggle.textContent='申請する'}
+        window.location.assign(shareUrl);
+      });
     }catch(e){alert(e.message||'申請できませんでした.')}finally{btn.disabled=false;btn.textContent='変更申請を送信'}
   }
   async function requestAdminAction(id,action){
