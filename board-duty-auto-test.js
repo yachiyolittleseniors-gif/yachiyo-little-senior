@@ -110,10 +110,11 @@ function init(){
       disambiguateDuplicateFamilies(groups);
       var y=target.getFullYear(),mo=target.getMonth()+1,active=mo>=6?['2','1']:['3','2','1'],bad=active.filter(g=>groups[g].size!==pc[g]);
       if(bad.length){preview.innerHTML='<div class="duty-simple-error"><b>人数が一致しません</b><br>'+bad.map(g=>g+'年：選手'+pc[g]+'名／家庭'+groups[g].size+'家庭').join('<br>')+'</div>';return;}
-      // 保護者出欠の登録名を正として使用。末尾の「父／母」だけ外し、名前は加工しない。
+      // 保護者出欠の登録名を正として使用。末尾の「父／母」と表示用の括弧だけ外し、中の識別文字は残す。
       var lists={};active.forEach(function(g){
         lists[g]=Array.from(groups[g].values()).filter(function(item){return !isExcluded(item,excluded);}).map(function(item){
-          return Object.assign({},item,{name:String(item.rawName||item.name||'').replace(/[父母]$/,'').trim()});
+          var rosterName=String(item.rawName||item.name||'').replace(/[父母]$/,'').replace(/[（）()]/g,'').trim();
+          return Object.assign({},item,{name:rosterName});
         }).sort(function(a,b){return a.kana.localeCompare(b.kana,'ja')});
       });
       var empty=active.filter(function(g){return !lists[g].length;});if(empty.length)throw new Error(empty.join('・')+'年の当番対象が0家庭です。除外設定を確認してください。');
