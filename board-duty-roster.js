@@ -108,18 +108,66 @@
       return item&&item.table&&Number(item.table.year)===y&&Number(item.table.month)===m;
     });
     if(index<0)return false;
-    const previous=images.map(function(item){return Object.assign({},item)});
+
+    const previousImages=images.map(function(item){return Object.assign({},item)});
+    const previousChanges=changes.map(function(item){return Object.assign({},item)});
+    const monthKey=y+'-'+String(m).padStart(2,'0');
+
+    // A test roster is disposable test data. Turning the checkbox off ends the
+    // test and removes that month's test roster/changes instead of publishing it.
+    if(!next&&images[index].testMode===true){
+      dutyChangeMutationInFlight=true;
+      try{
+        images.splice(index,1);
+        changes=changes.filter(function(item){return !String(item.date||'').startsWith(monthKey+'-')});
+        render();
+        await persist('テストモードを終了しました','テスト用当番表を終了しました',false);
+
+        // Close test requests for the removed month so they cannot reappear later.
+        const monthRequests=requests.filter(function(item){return String(item.date||'').startsWith(monthKey+'-')});
+        for(const requestItem of monthRequests){
+          try{
+            const response=await fetch(REQUEST_API,{
+              method:'POST',
+              credentials:'same-origin',
+              headers:requestHeaders(true),
+              body:JSON.stringify({action:'close',id:requestItem.id})
+            });
+            const body=await response.json().catch(function(){return{}});
+            if(response.ok&&Array.isArray(body.requests)){
+              requests=normalizeRequestList(body.requests);
+            }
+          }catch(_){}
+        }
+        requests=requests.filter(function(item){return !String(item.date||'').startsWith(monthKey+'-')});
+        requestsLoaded=true;
+        renderRequests();
+        syncPendingRequestCount();
+        return true;
+      }catch(e){
+        images=previousImages;
+        changes=previousChanges;
+        render();
+        throw e;
+      }finally{
+        dutyChangeMutationInFlight=false;
+      }
+    }
+
+    // Checking the box for an already-saved month only changes it to test mode.
     images[index]={...images[index],testMode:next};
     render();
     try{
       await persist(
         next?'テストモードに切り替えました':'テストモードを終了しました',
         next?'当番表をテストモードに切り替えました':'当番表のテストモードを終了しました',
-        !next
+        false
       );
       return true;
     }catch(e){
-      images=previous;render();
+      images=previousImages;
+      changes=previousChanges;
+      render();
       throw e;
     }
   };
