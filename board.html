@@ -1539,7 +1539,7 @@ body:after{display:none!important;content:none!important}
         <p>一般画面から届いた申請です。</p>
         <label class="duty-approval-setting" for="dutyPartnerApprovalToggle">
           <input id="dutyPartnerApprovalToggle" type="checkbox">
-          <span><strong>交代相手の承認リンクを使用する</strong><small>ONにすると、申請後のLINEに専用承認リンクを追加し、相手の承認で当番表へ自動反映します。</small></span>
+          <span><strong>承認モードを切り替える</strong><small>OFF：管理者承認モード ／ ON：ご家族承認モード。ご家族承認モードでは、申請後に承認リンクを送り、ご家族の承認で当番表へ自動反映します。</small></span>
         </label>
         <div id="dutyPartnerApprovalStatus" class="duty-approval-setting-status" aria-live="polite"></div>
         <div id="dutyRequestAdminList" class="duty-change-admin-list"></div>
@@ -1740,7 +1740,7 @@ body:after{display:none!important;content:none!important}
 <script src="./board-meetings.js?v=20261002-hide-save1"></script>
 <script src="./duty-image-reader.js?v=20260918-1"></script>
 <script src="./duty-roster-data.js?v=20260918-1"></script>
-<script src="./board-duty-roster.js?v=20261003-requestercancel1"></script>
+<script src="./board-duty-roster.js?v=20261003-approvalmode1"></script>
 <script src="./board-duty-auto-test.js?v=20261003-no-testmode1"></script>
 <script src="./board-rules.js?v=20261003-listcollapse1"></script>
 <script src="./board-archive.js?v=20261003-listcollapse1"></script>
