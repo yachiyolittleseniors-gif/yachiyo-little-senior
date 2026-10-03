@@ -1944,10 +1944,6 @@ function openProtectedArea(type){
     adminBtn.style.display='none';
     adminBtn.addEventListener('click',enterAdmin);
   }
-;
-    footer.addEventListener('touchend',e=>{lastTouch=Date.now();e.preventDefault();count()},{passive:false});
-    footer.addEventListener('click',()=>{if(Date.now()-lastTouch<700)return;count()});
-  }
 
   if(saveBtn){
     saveBtn.addEventListener('click',async()=>{
