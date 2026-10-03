@@ -21,15 +21,42 @@
   }
   window.YLSAdminSession={activate,isActive:()=>verifiedUntil>Date.now(),expiresAt:()=>verifiedUntil};
   window.fetch=async(input,init)=>{
-    const response=await nativeFetch(input,init);
     try{
       const url=new URL(typeof input==='string'?input:input.url,location.href);
-      if(url.origin===location.origin&&url.pathname.startsWith('/.netlify/functions/')&&response.status===401){
-        const error=await response.clone().json();
-        if(error.code==='ADMIN_SESSION_EXPIRED')expire();
+      const method=String(init?.method||((typeof input!=='string'&&input?.method)||'GET')).toUpperCase();
+      if(
+        url.origin===location.origin &&
+        url.pathname==='/.netlify/functions/site-data' &&
+        url.searchParams.get('section')==='access-settings' &&
+        method==='POST'
+      ){
+        let body=null;
+        try{body=typeof init?.body==='string'?JSON.parse(init.body):null}catch(_){}
+        if(body?.action==='verifyAdminPassword'){
+          const response=await nativeFetch('/.netlify/functions/admin-session',{
+            ...(init||{}),
+            credentials:'same-origin'
+          });
+          if(response.ok){
+            try{
+              const data=await response.clone().json();
+              if(Number(data?.expiresAt)>Date.now())activate(Number(data.expiresAt));
+            }catch(_){}
+          }
+          return response;
+        }
       }
-    }catch(_){}
-    return response;
+      const response=await nativeFetch(input,init);
+      if(url.origin===location.origin&&url.pathname.startsWith('/.netlify/functions/')&&response.status===401){
+        try{
+          const error=await response.clone().json();
+          if(error.code==='ADMIN_SESSION_EXPIRED')expire();
+        }catch(_){}
+      }
+      return response;
+    }catch(_){
+      return nativeFetch(input,init);
+    }
   };
   async function verify(){
     try{
