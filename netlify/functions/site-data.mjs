@@ -123,6 +123,20 @@ function currentJapanYear() {
   );
 }
 
+function normalizeResultTournamentName(value) {
+  return String(value || "")
+    .trim()
+    .replace(/[\s\u3000]+/g, " ");
+}
+
+function normalizeResultTournamentKey(value) {
+  const raw = String(value || "").trim();
+  const separator = raw.indexOf("::");
+  if (separator < 0) return normalizeResultTournamentName(raw);
+  return raw.slice(0, separator + 2) +
+    normalizeResultTournamentName(raw.slice(separator + 2));
+}
+
 function resultIsExpired(item) {
   const normalized = String(item?.grade || "")
     .replace(/[１２３]/g, character =>
@@ -1316,6 +1330,44 @@ export default async (request, context) => {
           data = activeResults;
           await store.setJSON(key, data);
         }
+
+        // 大会名の半角/全角スペース・連続スペースを保存データ側で統一する。
+        // 表示ロジックには触れず、同じ大会名が別カードになる原因だけを除去する。
+        const beforeTournamentNormalize = Array.isArray(data) ? data : [];
+        let tournamentNamesChanged = false;
+        const normalizedResults = beforeTournamentNormalize.map(item => {
+          const currentName = String(item?.tournament || "");
+          const normalizedName = normalizeResultTournamentName(currentName);
+          if (normalizedName !== currentName) tournamentNamesChanged = true;
+          return normalizedName !== currentName
+            ? { ...item, tournament: normalizedName }
+            : item;
+        });
+        if (tournamentNamesChanged) {
+          data = normalizedResults;
+          await store.setJSON(key, data);
+        }
+
+        // 大会資料の紐付けキーも同じルールで揃える。
+        const resultDocumentKey = "content/result-documents.json";
+        const storedDocuments = await store.get(resultDocumentKey, {
+          type: "json",
+          consistency: "strong"
+        });
+        if (Array.isArray(storedDocuments)) {
+          let documentKeysChanged = false;
+          const normalizedDocuments = storedDocuments.map(item => {
+            const currentTournament = String(item?.tournament || "");
+            const normalizedTournament = normalizeResultTournamentKey(currentTournament);
+            if (normalizedTournament !== currentTournament) documentKeysChanged = true;
+            return normalizedTournament !== currentTournament
+              ? { ...item, tournament: normalizedTournament }
+              : item;
+          });
+          if (documentKeysChanged) {
+            await store.setJSON(resultDocumentKey, normalizedDocuments);
+          }
+        }
       }
 
       const photoSection =
@@ -2013,9 +2065,14 @@ export default async (request, context) => {
       section === "results" &&
       body?.action === "renameResultTournament"
     ) {
-      const fromTournament = String(body.fromTournament || "").trim();
-      const toTournament = String(body.toTournament || "").trim();
-      const nextResults = body.data;
+      const fromTournament = normalizeResultTournamentKey(body.fromTournament);
+      const toTournament = normalizeResultTournamentKey(body.toTournament);
+      const nextResults = Array.isArray(body.data)
+        ? body.data.map(item => ({
+            ...item,
+            tournament: normalizeResultTournamentName(item?.tournament)
+          }))
+        : body.data;
 
       if (
         !fromTournament ||
@@ -2040,11 +2097,14 @@ export default async (request, context) => {
       const documents = Array.isArray(currentDocuments)
         ? currentDocuments
         : [];
-      const updatedDocuments = documents.map(item =>
-        String(item?.tournament || "") === fromTournament
+      const updatedDocuments = documents.map(item => {
+        const currentTournament = normalizeResultTournamentKey(item?.tournament);
+        return currentTournament === fromTournament
           ? { ...item, tournament: toTournament }
-          : item
-      );
+          : (currentTournament !== String(item?.tournament || "")
+              ? { ...item, tournament: currentTournament }
+              : item);
+      });
 
       await store.setJSON(key, nextResults);
       if (JSON.stringify(updatedDocuments) !== JSON.stringify(documents)) {
@@ -2074,7 +2134,9 @@ export default async (request, context) => {
       (section === "result-documents" || section === "seniorcup-documents") &&
       body?.action === "uploadResultDocument"
     ) {
-      const tournament = String(body.tournament || "").trim();
+      const tournament = section === "result-documents"
+        ? normalizeResultTournamentKey(body.tournament)
+        : String(body.tournament || "").trim();
       const fileName = String(body.fileName || "").trim();
       const decoded = decodeBoardMeetingDataUrl(body.dataUrl);
 
@@ -2397,6 +2459,13 @@ export default async (request, context) => {
 
       const normalized = normalizeScheduleEntries(body.data);
       body.data = normalized.data;
+    }
+
+    if (section === "results" && Array.isArray(body.data)) {
+      body.data = body.data.map(item => ({
+        ...item,
+        tournament: normalizeResultTournamentName(item?.tournament)
+      }));
     }
 
     if (section === "hero" && Array.isArray(body.data)) {
