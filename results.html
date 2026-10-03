@@ -1240,9 +1240,7 @@ function gameYear(game){
   return String(game.date||game.year||'').slice(0,4);
 }
 function tournamentKey(game){
-  const name=tournamentParts(game.tournament).name;
-  const normalizedKey=String(name||'').replace(/[\s　]+/g,'');
-  return (gameYear(game)||'年不明')+'::'+normalizedKey;
+  return (gameYear(game)||'年不明')+'::'+tournamentParts(game.tournament).name;
 }
 function formatGameDate(value){
   const text=String(value||'');
