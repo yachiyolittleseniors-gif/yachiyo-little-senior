@@ -1348,6 +1348,10 @@ body:after{display:none!important;content:none!important}
             <div class="duty-swap-arrow" aria-hidden="true">↕</div>
             <label>② もう一方のお当番<select id="dutyRequestSwapToSlot"><option value="">2つ目のお当番を選択してください</option></select></label>
           </div>
+          <label id="dutyRequestNoLineOption" class="duty-no-line-option" hidden>
+            <input id="dutyRequestNoLine" type="checkbox">
+            <span><b>LINEを使用していない方はこちら</b><small>この申請のみ管理者承認に切り替わります。変更相手のご家庭へ直接ご連絡ください。</small></span>
+          </label>
           <button id="submitDutyRequest" class="duty-request-submit" type="button">変更申請を送信</button>
           <div id="dutyRequestResult" class="duty-request-result" hidden></div>
         </div>
@@ -1749,7 +1753,7 @@ body:after{display:none!important;content:none!important}
 <script src="./board-meetings.js?v=20261002-hide-save1"></script>
 <script src="./duty-image-reader.js?v=20260918-1"></script>
 <script src="./duty-roster-data.js?v=20260918-1"></script>
-<script src="./board-duty-roster.js?v=20261003-approvalmode1"></script>
+<script src="./board-duty-roster.js?v=20261003-nolinefallback1"></script>
 <script src="./board-duty-auto-test.js?v=20261003-temporarydate2"></script>
 <script src="./board-rules.js?v=20261003-listcollapse1"></script>
 <script src="./board-archive.js?v=20261003-listcollapse1"></script>
@@ -2048,6 +2052,41 @@ body.photo-admin-on #accessPasswordChange{
   .duty-admin-brand-copy span{font-size:8px;gap:6px;letter-spacing:.12em}
   .duty-admin-brand-copy span i{width:18px}
   .duty-admin-section-card{padding:12px!important}
+}
+</style>
+<style id="duty-no-line-fallback-style">
+.duty-no-line-option{
+  display:flex;
+  align-items:flex-start;
+  gap:9px;
+  margin:12px 0 4px;
+  padding:10px 11px;
+  border:1px solid rgba(199,154,59,.45);
+  border-radius:10px;
+  background:#fffaf0;
+  color:#17202b;
+  cursor:pointer;
+}
+.duty-no-line-option[hidden]{display:none!important}
+.duty-no-line-option input{
+  width:19px!important;
+  height:19px!important;
+  margin:1px 0 0!important;
+  flex:0 0 auto;
+  accent-color:#c79a3b;
+}
+.duty-no-line-option span{display:block;min-width:0}
+.duty-no-line-option b{display:block;font-size:12px;line-height:1.45}
+.duty-no-line-option small{display:block;margin-top:3px;color:#69727d;font-size:10.5px;line-height:1.55}
+.duty-request-admin-mode{
+  display:inline-block;
+  margin-left:6px;
+  padding:2px 7px;
+  border:1px solid rgba(199,154,59,.58);
+  border-radius:999px;
+  color:#8b671d;
+  font-size:10px;
+  font-weight:900;
 }
 </style>
 <style id="duty-request-self-cancel-style">
