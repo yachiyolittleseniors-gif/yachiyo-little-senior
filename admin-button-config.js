@@ -5,6 +5,7 @@
     grantLifetime:30*60*1000,
     tapLimit:5,
     tapWindow:2200,
+    labels:Object.freeze({idle:'管理',active:'管理終了'}),
     pages:Object.freeze({
       'index.html':Object.freeze({label:'HOME',button:'#heroAdminToggle',trigger:'.restored-footer-copy',container:'#heroPhotoAdmin',settings:true}),
       'team.html':Object.freeze({label:'チーム紹介',button:'#staffEditBtn',trigger:'.restored-footer-copy',settings:true}),
