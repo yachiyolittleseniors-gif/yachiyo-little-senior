@@ -6,6 +6,8 @@
   const GRANT_KEY=shared.grantKey||'yachiyoAdminRevealUntil';
   const TAP_LIMIT=Number(shared.tapLimit)||5;
   const TAP_WINDOW=Number(shared.tapWindow)||2200;
+  const IDLE_LABEL=shared.labels?.idle||'管理';
+  const ACTIVE_LABEL=shared.labels?.active||'管理終了';
   const SETTINGS_API='/.netlify/functions/site-data?section=admin-visibility-settings';
   const PAGES=shared.pages;
 
@@ -71,11 +73,32 @@
 
   function isEditing(){
     const text=(button.textContent||'').trim();
-    if(text==='管理終了')return true;
+    if(text===ACTIVE_LABEL||text==='管理終了')return true;
     const body=document.body;
     if(body&&(body.classList.contains('editing')||body.classList.contains('staff-editing')||body.classList.contains('admin-mode')||body.classList.contains('photo-admin-on')))return true;
     if(document.querySelector('#densukeAdminPanel.show,#cupAdminArea.show,#contactAdminPanel.show,#adminModal.show'))return true;
     return false;
+  }
+
+  function normalizeLabel(){
+    const text=(button.textContent||'').trim();
+    if(text==='管理終了'||text===ACTIVE_LABEL){
+      if(text!==ACTIVE_LABEL)button.textContent=ACTIVE_LABEL;
+      return;
+    }
+    if(text==='管理'||text===IDLE_LABEL){
+      if(text!==IDLE_LABEL)button.textContent=IDLE_LABEL;
+    }
+  }
+
+  if(typeof MutationObserver==='function'){
+    let labelSyncing=false;
+    const observer=new MutationObserver(()=>{
+      if(labelSyncing)return;
+      labelSyncing=true;
+      try{normalizeLabel()}finally{labelSyncing=false}
+    });
+    observer.observe(button,{childList:true,characterData:true,subtree:true});
   }
 
   function resetTaps(){
@@ -101,7 +124,8 @@
         const container=document.querySelector(cfg.container);
         if(container)container.style.removeProperty('display');
       }
-      if((button.textContent||'').trim()==='管理終了')button.textContent='管理';
+      const text=(button.textContent||'').trim();
+      if(text===ACTIVE_LABEL||text==='管理終了')button.textContent=IDLE_LABEL;
     }
   }
 
@@ -195,6 +219,7 @@
   }
 
   installCss();
+  normalizeLabel();
   setVisible(false);
 
   if(cfg.protected===true){
