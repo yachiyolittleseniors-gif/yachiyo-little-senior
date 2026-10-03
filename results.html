@@ -1294,10 +1294,11 @@ function renderResults(){
   data.forEach(game=>{
     const parts=tournamentParts(game.tournament);
     const key=tournamentKey(game);
-    if(!groups.has(key)){
-      groups.set(key,{key:key,name:parts.name,year:gameYear(game),games:[]});
+    const groupKey=(gameYear(game)||'年不明')+'::'+String(parts.name||'').replace(/[\\s　]+/g,'');
+    if(!groups.has(groupKey)){
+      groups.set(groupKey,{key:key,name:parts.name,year:gameYear(game),games:[]});
     }
-    groups.get(key).games.push({...game,roundName:String(game.round||parts.round)});
+    groups.get(groupKey).games.push({...game,roundName:String(game.round||parts.round)});
   });
 
   box.innerHTML=[...groups.values()].map(group=>{
