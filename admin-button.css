@@ -1,0 +1,100 @@
+/* Yachiyo Little Senior - unified management button */
+.yls-admin-reveal{
+  min-height:44px;
+  touch-action:manipulation!important;
+  -webkit-user-select:none!important;
+  user-select:none!important;
+  -webkit-touch-callout:none!important;
+  -webkit-tap-highlight-color:transparent!important;
+}
+
+html body #heroAdminToggle.yls-admin-button[data-yls-admin-button],
+html body #staffEditBtn.yls-admin-button[data-yls-admin-button],
+html body #adminModeToggle.yls-admin-button[data-yls-admin-button],
+html body #adminToggle.yls-admin-button[data-yls-admin-button],
+html body #adminBtn.yls-admin-button[data-yls-admin-button],
+html body #cupAdminBtn.yls-admin-button[data-yls-admin-button],
+html body #contactAdminBtn.yls-admin-button[data-yls-admin-button],
+html body #densukeToggleBtn.yls-admin-button[data-yls-admin-button]{
+  position:fixed!important;
+  right:max(12px,env(safe-area-inset-right))!important;
+  bottom:calc(12px + env(safe-area-inset-bottom))!important;
+  left:auto!important;
+  top:auto!important;
+  width:auto!important;
+  min-width:52px!important;
+  max-width:calc(100vw - 24px)!important;
+  height:auto!important;
+  min-height:44px!important;
+  margin:0!important;
+  padding:12px 14px!important;
+  transform:none!important;
+  z-index:20001!important;
+  border:0!important;
+  border-radius:0!important;
+  outline:0!important;
+  background:transparent!important;
+  background-image:none!important;
+  color:rgba(199,154,59,.46)!important;
+  -webkit-text-fill-color:rgba(199,154,59,.46)!important;
+  box-shadow:none!important;
+  text-shadow:none!important;
+  backdrop-filter:none!important;
+  -webkit-backdrop-filter:none!important;
+  font-size:11px!important;
+  font-weight:700!important;
+  line-height:1.25!important;
+  text-align:center!important;
+  white-space:nowrap!important;
+  touch-action:manipulation!important;
+  -webkit-tap-highlight-color:transparent!important;
+}
+
+html body #heroAdminToggle.yls-admin-button[data-yls-admin-button]:hover,
+html body #heroAdminToggle.yls-admin-button[data-yls-admin-button]:focus-visible,
+html body #staffEditBtn.yls-admin-button[data-yls-admin-button]:hover,
+html body #staffEditBtn.yls-admin-button[data-yls-admin-button]:focus-visible,
+html body #adminModeToggle.yls-admin-button[data-yls-admin-button]:hover,
+html body #adminModeToggle.yls-admin-button[data-yls-admin-button]:focus-visible,
+html body #adminToggle.yls-admin-button[data-yls-admin-button]:hover,
+html body #adminToggle.yls-admin-button[data-yls-admin-button]:focus-visible,
+html body #adminBtn.yls-admin-button[data-yls-admin-button]:hover,
+html body #adminBtn.yls-admin-button[data-yls-admin-button]:focus-visible,
+html body #cupAdminBtn.yls-admin-button[data-yls-admin-button]:hover,
+html body #cupAdminBtn.yls-admin-button[data-yls-admin-button]:focus-visible,
+html body #contactAdminBtn.yls-admin-button[data-yls-admin-button]:hover,
+html body #contactAdminBtn.yls-admin-button[data-yls-admin-button]:focus-visible,
+html body #densukeToggleBtn.yls-admin-button[data-yls-admin-button]:hover,
+html body #densukeToggleBtn.yls-admin-button[data-yls-admin-button]:focus-visible{
+  color:rgba(199,154,59,.72)!important;
+  -webkit-text-fill-color:rgba(199,154,59,.72)!important;
+}
+
+#densukeAdminPanel.show{
+  top:calc(var(--fixed-header-height,66px) + 12px)!important;
+  bottom:auto!important;
+  max-height:calc(100dvh - var(--fixed-header-height,66px) - 76px)!important;
+}
+#adminModal.show{
+  align-items:flex-start!important;
+  padding-top:calc(var(--fixed-header-height,66px) + 12px)!important;
+}
+
+body.photo-admin-on #heroAdminToggle.yls-admin-button[data-yls-admin-button]{
+  position:static!important;
+  inset:auto!important;
+  width:100%!important;
+  min-width:0!important;
+  max-width:none!important;
+  height:44px!important;
+  min-height:44px!important;
+  margin:0!important;
+  padding:8px 6px!important;
+  font-size:11px!important;
+}
+body.photo-admin-on #heroPhotoChange{
+  display:flex!important;
+  align-items:center!important;
+  justify-content:center!important;
+  text-align:center!important;
+}
