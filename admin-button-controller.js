@@ -170,10 +170,22 @@
   },true);
 
   button.addEventListener('click',()=>{
+    const wasEditing=isEditing();
     setTimeout(()=>{
-      if(isEditing())setVisible(true);
-      else if(!eligible()){
+      const nowEditing=isEditing();
+      if(nowEditing){
+        setVisible(true);
+        return;
+      }
+      if(wasEditing){
         state.revealed=false;
+        resetTaps();
+        setVisible(false);
+        return;
+      }
+      if(!eligible()){
+        state.revealed=false;
+        resetTaps();
         setVisible(false);
       }
     },0);
