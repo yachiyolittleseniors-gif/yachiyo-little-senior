@@ -5,6 +5,11 @@ window.boardAccessReady=(async function requireBoardPassword(){
   const reloadExpiryKey='yachiyoAttendanceReloadPassExpires';
   const passkeyKey='yachiyoBoardPasskeyRegistered';
   const reloadLifetime=12*60*60*1000;
+  const adminRevealGrantKey='yachiyoAdminRevealUntil';
+  const adminRevealGrantLifetime=30*60*1000;
+  function grantAdminReveal(){
+    try{localStorage.setItem(adminRevealGrantKey,String(Date.now()+adminRevealGrantLifetime))}catch(e){}
+  }
   function saveAccess(value){
     try{sessionStorage.setItem(accessKey,value)}catch(e){}
     try{
@@ -41,6 +46,7 @@ window.boardAccessReady=(async function requireBoardPassword(){
     if(!response.ok)return false;
     const result=await response.json().catch(()=>({}));
     saveAccess(result.token||value);
+    grantAdminReveal();
     document.documentElement.style.visibility='';
     return true;
   }
@@ -56,6 +62,7 @@ window.boardAccessReady=(async function requireBoardPassword(){
         const result=await window.YLSPasskeys.authenticate();
         if(!result?.token)return false;
         saveAccess(result.token);
+        grantAdminReveal();
         try{sessionStorage.setItem('yachiyoBoardPasskeyJustVerified','1')}catch(_){}
         try{localStorage.setItem(passkeyKey,'1')}catch(_){}
         document.documentElement.style.visibility='';
