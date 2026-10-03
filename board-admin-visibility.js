@@ -4,9 +4,8 @@
  const GRANT_KEY='yachiyoAdminRevealUntil';
  let authenticatedUntil=0;
  function syncGrant(){
-   if(!state.autoEnableOnLogin){try{localStorage.removeItem(GRANT_KEY)}catch(e){}return;}
-   if(!authenticatedUntil||!document.getElementById('densukeAdminPanel')?.dataset.adminPassword)return;
-   try{localStorage.setItem(GRANT_KEY,String(authenticatedUntil))}catch(e){}
+   // The visibility grant now comes from successful team-page login.
+   // Do not delete or replace that grant here; this screen only controls whether it is used.
  }
  document.addEventListener('yachiyo:admin-authenticated',event=>{authenticatedUntil=Number(event.detail?.expiresAt)||0;syncGrant()});
  function renderMode(){
@@ -14,7 +13,7 @@
    const manual=document.getElementById('adminManualVisibilitySettings');
    if(manual)manual.hidden=on;
    const note=document.getElementById('adminVisibilityNote');
-   if(note)note.textContent=on?'普段は非表示。管理者認証後、この端末だけ30分間、5回タップで管理ボタンを表示できます。':'下のページ別設定で表示・非表示を決めます。管理者認証によって表示は切り替わりません。';
+   if(note)note.textContent=on?'普段は非表示。チーム専用ページへログイン後、この端末だけ30分間、5回タップで管理ボタンを表示できます。編集時は別途、管理者認証が必要です。':'下のページ別設定で表示・非表示を決めます。管理者認証によって表示は切り替わりません。';
  }
  autoAuth?.addEventListener('change',renderMode);
  const desktop=document.getElementById('adminDesktopEnabled');
@@ -22,14 +21,14 @@
  let state={pages:{},desktopEnabled:false,autoEnableOnLogin:false,dutyRequestPublic:false,dutyLinePasteVisible:false,dutyHistoryVisible:false};
  const normalize=d=>d&&d.pages&&typeof d.pages==='object'?{pages:d.pages,desktopEnabled:d.desktopEnabled===true,autoEnableOnLogin:d.autoEnableOnLogin===true,dutyRequestPublic:d.dutyRequestPublic===true,dutyLinePasteVisible:d.dutyLinePasteVisible===true,dutyHistoryVisible:d.dutyHistoryVisible===true}:{pages:(d&&typeof d==='object'?d:{}),desktopEnabled:false,autoEnableOnLogin:false,dutyRequestPublic:false,dutyLinePasteVisible:false,dutyHistoryVisible:false};
  const effective=k=>state.pages[k]!==false;
- function updateSummary(){if(!summary)return;const count=pages.filter(([k])=>effective(k)).length;if(state.autoEnableOnLogin){summary.textContent='管理者認証後、この端末だけ30分間ON';return;}summary.textContent=`ページ別設定：${count}ページがON`}
+ function updateSummary(){if(!summary)return;const count=pages.filter(([k])=>effective(k)).length;if(state.autoEnableOnLogin){summary.textContent='チーム専用ページログイン後、この端末だけ30分間ON';return;}summary.textContent=`ページ別設定：${count}ページがON`}
  function render(){if(autoAuth)autoAuth.checked=state.autoEnableOnLogin===true;renderMode();if(desktop)desktop.checked=state.desktopEnabled===true;const pub=document.getElementById('dutyRequestPublicEnabled');if(pub)pub.checked=state.dutyRequestPublic===true;const lineCard=document.getElementById('dutyLinePasteAdmin');if(lineCard)lineCard.hidden=state.dutyLinePasteVisible!==true;const histSection=document.getElementById('dutyChangeSection');if(histSection)histSection.hidden=state.dutyHistoryVisible!==true;list.innerHTML=pages.map(([k,n])=>`<label class="admin-visibility-item"><input type="checkbox" data-page="${k}" ${effective(k)?'checked':''}><span>${n}</span></label>`).join('');updateSummary()}
  async function load(){try{const r=await fetch('/.netlify/functions/site-data?section=admin-visibility-settings',{cache:'no-store'}),j=await r.json();state=normalize(j&&j.data);syncGrant();render()}catch(e){render();status.textContent='表示設定を読み込めませんでした。'}}
 
  if(toggle&&body){toggle.addEventListener('click',()=>{const open=body.hidden;body.hidden=!open;toggle.setAttribute('aria-expanded',String(open));if(toggleLabel)toggleLabel.textContent=open?'非表示 ▲':'表示 ▼'})}
  document.getElementById('adminVisibilityAllOn')?.addEventListener('click',()=>{list.querySelectorAll('input[data-page]').forEach(x=>x.checked=true);updateSummary()});
  document.getElementById('adminVisibilityAllOff')?.addEventListener('click',()=>{if(confirm('管理ボタンを一括で非表示にします。\nチーム専用ページのシステム管理は引き続き利用できます。'))list.querySelectorAll('input[data-page]').forEach(x=>x.checked=false);updateSummary()});
- save.addEventListener('click',async()=>{const pw=document.getElementById('densukeAdminPanel')?.dataset.adminPassword||'';if(!pw){status.textContent='管理認証後に保存してください。';return}const nextPages={};list.querySelectorAll('input[data-page]').forEach(x=>{nextPages[x.dataset.page]=x.checked});const data={pages:nextPages,desktopEnabled:desktop?.checked===true,autoEnableOnLogin:autoAuth?.checked===true,autoOffEnabled:false,expiresAt:{},dutyRequestPublic:state.dutyRequestPublic===true,dutyLinePasteVisible:state.dutyLinePasteVisible===true,dutyHistoryVisible:state.dutyHistoryVisible===true};save.disabled=true;status.textContent='保存中…';try{const r=await fetch('/.netlify/functions/site-data?section=admin-visibility-settings',{method:'POST',headers:{'content-type':'application/json','x-admin-password':pw},body:JSON.stringify({data})});if(!r.ok)throw new Error();state=data;syncGrant();render();status.textContent=data.autoEnableOnLogin?'保存しました。管理者認証後、この端末だけ30分間ONになります。':'ページ別の表示設定を保存しました。'}catch(e){status.textContent='保存できませんでした。'}finally{save.disabled=false}});
+ save.addEventListener('click',async()=>{const pw=document.getElementById('densukeAdminPanel')?.dataset.adminPassword||'';if(!pw){status.textContent='管理認証後に保存してください。';return}const nextPages={};list.querySelectorAll('input[data-page]').forEach(x=>{nextPages[x.dataset.page]=x.checked});const data={pages:nextPages,desktopEnabled:desktop?.checked===true,autoEnableOnLogin:autoAuth?.checked===true,autoOffEnabled:false,expiresAt:{},dutyRequestPublic:state.dutyRequestPublic===true,dutyLinePasteVisible:state.dutyLinePasteVisible===true,dutyHistoryVisible:state.dutyHistoryVisible===true};save.disabled=true;status.textContent='保存中…';try{const r=await fetch('/.netlify/functions/site-data?section=admin-visibility-settings',{method:'POST',headers:{'content-type':'application/json','x-admin-password':pw},body:JSON.stringify({data})});if(!r.ok)throw new Error();state=data;syncGrant();render();status.textContent=data.autoEnableOnLogin?'保存しました。チーム専用ページログイン後、この端末だけ30分間ONになります。':'ページ別の表示設定を保存しました。'}catch(e){status.textContent='保存できませんでした。'}finally{save.disabled=false}});
 
  const dutyStatus=document.getElementById('dutyVisibilityStatus');
  async function setDutyVisibility(key,value){const pw=document.getElementById('densukeAdminPanel')?.dataset.adminPassword||'';if(!pw){if(dutyStatus)dutyStatus.textContent='管理認証後に変更してください。';return}const data={pages:state.pages,desktopEnabled:state.desktopEnabled===true,autoEnableOnLogin:state.autoEnableOnLogin===true,autoOffEnabled:false,expiresAt:{},dutyRequestPublic:state.dutyRequestPublic===true,dutyLinePasteVisible:state.dutyLinePasteVisible===true,dutyHistoryVisible:state.dutyHistoryVisible===true};data[key]=value;if(dutyStatus)dutyStatus.textContent='変更中…';try{const r=await fetch('/.netlify/functions/site-data?section=admin-visibility-settings',{method:'POST',headers:{'content-type':'application/json','x-admin-password':pw},body:JSON.stringify({data})});if(!r.ok)throw new Error();state=data;render();if(dutyStatus)dutyStatus.textContent=value?'表示しました。':'非表示にしました。'}catch(e){render();if(dutyStatus)dutyStatus.textContent='変更できませんでした。'}}
