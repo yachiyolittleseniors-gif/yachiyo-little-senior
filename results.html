@@ -1291,19 +1291,13 @@ function renderResults(){
   if(!data.length){box.innerHTML='<div class="empty">まだ試合結果が登録されていません。</div>';return}
 
   const groups=new Map();
-  const tournamentCompareKey=game=>{
-    const parts=tournamentParts(game.tournament);
-    const normalizedName=String(parts.name||'').replace(/[\s　]+/g,'');
-    return (gameYear(game)||'年不明')+'::'+normalizedName;
-  };
   data.forEach(game=>{
     const parts=tournamentParts(game.tournament);
     const key=tournamentKey(game);
-    const compareKey=tournamentCompareKey(game);
-    if(!groups.has(compareKey)){
-      groups.set(compareKey,{key:key,name:parts.name,year:gameYear(game),games:[]});
+    if(!groups.has(key)){
+      groups.set(key,{key:key,name:parts.name,year:gameYear(game),games:[]});
     }
-    groups.get(compareKey).games.push({...game,roundName:String(game.round||parts.round)});
+    groups.get(key).games.push({...game,roundName:String(game.round||parts.round)});
   });
 
   box.innerHTML=[...groups.values()].map(group=>{
