@@ -30,7 +30,7 @@
     const note=document.getElementById('dutyRequestOperationNote');
     if(!note)return;
     note.textContent=partnerApprovalEnabled
-      ? '※当番表が登録されている月のみ変更申請ができます。申請後は、変更後のご家庭へ個別LINEで承認リンクを送ってください。承認リンクは1回限り・24時間有効です。期限を過ぎた場合は、再度「当番変更申請」から申請してください。変更後のご家庭の方が承認すると、当番表へ自動反映されます。'
+      ? '※当番表が登録されている月のみ変更申請ができます。通常は変更後のご家庭へ個別LINEで承認リンクを送ってください。LINEを使用していない方は、申請画面の「LINEを使用していない方はこちら」を選ぶと、その申請だけ管理者承認になります。'
       : '※当番表が登録されている月のみ変更申請ができます。申請後は、必ず全体LINEでご連絡ください。全体LINEでの連絡がない場合、変更は完了しません。';
   }
 
@@ -89,7 +89,7 @@
     return (Array.isArray(items)?items:[]).filter(function(item){
       return item&&/^\d{4}-\d{2}-\d{2}$/.test(String(item.date||''))&&['1','2','3'].includes(String(item.fromGrade||''))&&['1','2','3'].includes(String(item.toGrade||''))&&cleanName(item.fromName)&&cleanName(item.toName);
     }).slice(0,300).map(function(item,index){
-      return{id:String(item.id||('request-'+index)),requestNo:String(item.requestNo||'').slice(0,20),date:String(item.date),fromGrade:String(item.fromGrade),fromName:cleanName(item.fromName),toGrade:String(item.toGrade),toName:cleanName(item.toName),requestType:String(item.requestType||'replace')==='swap'?'swap':'replace',swapDate:String(item.swapDate||''),swapGrade:String(item.swapGrade||''),swapName:cleanName(item.swapName||''),status:['pending','approved','rejected'].includes(String(item.status))?String(item.status):'pending',createdAt:String(item.createdAt||''),updatedAt:String(item.updatedAt||''),approvalExpiresAt:String(item.approvalExpiresAt||''),requesterCanCancel:item.requesterCanCancel===true};
+      return{id:String(item.id||('request-'+index)),requestNo:String(item.requestNo||'').slice(0,20),date:String(item.date),fromGrade:String(item.fromGrade),fromName:cleanName(item.fromName),toGrade:String(item.toGrade),toName:cleanName(item.toName),requestType:String(item.requestType||'replace')==='swap'?'swap':'replace',swapDate:String(item.swapDate||''),swapGrade:String(item.swapGrade||''),swapName:cleanName(item.swapName||''),status:['pending','approved','rejected'].includes(String(item.status))?String(item.status):'pending',createdAt:String(item.createdAt||''),updatedAt:String(item.updatedAt||''),approvalExpiresAt:String(item.approvalExpiresAt||''),approvalMode:String(item.approvalMode||'admin')==='family'?'family':'admin',requesterCanCancel:item.requesterCanCancel===true};
     });
   }
 
@@ -588,6 +588,10 @@
       const approvalStatus=document.getElementById('dutyPartnerApprovalStatus');
       if(approvalToggle)approvalToggle.checked=partnerApprovalEnabled;
       if(approvalStatus)approvalStatus.textContent=partnerApprovalEnabled?'ご家族承認モード':'管理者承認モード';
+      const noLineOption=document.getElementById('dutyRequestNoLineOption');
+      const noLineInput=document.getElementById('dutyRequestNoLine');
+      if(noLineOption)noLineOption.hidden=!partnerApprovalEnabled;
+      if(noLineInput&&!partnerApprovalEnabled)noLineInput.checked=false;
       syncDutyRequestOperationNote();
       requestsLoaded=true;
       renderRequests();
@@ -631,9 +635,11 @@
       statusList.innerHTML=publicItems.length?publicItems.map(function(item){
         return '<div class="duty-request-status-item">'+(item.requestNo?'<b>申請番号 #'+escapeHtml(item.requestNo)+'</b><br>':'')+
           requestSummaryHtml(item)+'<br>'+
-          (item.status==='pending'&&partnerApprovalEnabled&&!requestExpired(item)
+          (item.status==='pending'&&item.approvalMode==='family'&&partnerApprovalEnabled&&!requestExpired(item)
             ?'<span class="duty-request-pending-actions"><button type="button" class="duty-request-resend" data-resend-duty-request="'+escapeHtml(item.id)+'" data-status="pending">'+escapeHtml(requestStatusLabel(item.status,item))+'<small>タップでLINEを再送</small></button>'+(item.requesterCanCancel?'<button type="button" class="duty-request-self-cancel" data-cancel-own-duty-request="'+escapeHtml(item.id)+'">申請を取り消す</button>':'')+'</span>'
-            :'<b data-status="'+escapeHtml(item.status)+'">'+escapeHtml(requestStatusLabel(item.status,item))+'</b>')+
+            :item.status==='pending'&&item.approvalMode==='admin'
+              ?'<b data-status="pending">確認待ち（管理者承認）</b>'
+              :'<b data-status="'+escapeHtml(item.status)+'">'+escapeHtml(requestStatusLabel(item.status,item))+'</b>')+
           (item.createdAt?'<br><small>申請日時：'+escapeHtml(new Intl.DateTimeFormat('ja-JP',{timeZone:'Asia/Tokyo',year:'numeric',month:'numeric',day:'numeric',hour:'2-digit',minute:'2-digit',hourCycle:'h23'}).format(new Date(item.createdAt)))+'</small>':'')+
           '</div>';
       }).join(''):'';
@@ -647,7 +653,7 @@
     if(admin){
       const pendingItems=ordered.filter(function(item){return item.status==='pending'});
       admin.innerHTML=pendingItems.length?pendingItems.map(function(item){
-        return '<div class="duty-request-admin-item">'+(item.requestNo?'<b>申請番号 #'+escapeHtml(item.requestNo)+'</b><br>':'')+requestSummaryHtml(item)+'<br><span class="duty-request-wait'+(requestExpired(item)?' is-expired':'')+'">'+escapeHtml(requestExpired(item)?'承認期限切れ・再申請待ち':'確認待ち')+'</span><div class="duty-request-admin-actions"><button type="button" data-approve-duty-request="'+escapeHtml(item.id)+'">当番表に反映</button><button class="reject" type="button" data-reject-duty-request="'+escapeHtml(item.id)+'">却下</button></div></div>';
+        return '<div class="duty-request-admin-item">'+(item.requestNo?'<b>申請番号 #'+escapeHtml(item.requestNo)+'</b><br>':'')+requestSummaryHtml(item)+'<br><span class="duty-request-wait'+(requestExpired(item)&&item.approvalMode==='family'?' is-expired':'')+'">'+escapeHtml(requestExpired(item)&&item.approvalMode==='family'?'承認期限切れ・再申請待ち':'確認待ち')+'</span><span class="duty-request-admin-mode">'+escapeHtml(item.approvalMode==='family'?'ご家族承認':'管理者承認')+'</span><div class="duty-request-admin-actions"><button type="button" data-approve-duty-request="'+escapeHtml(item.id)+'">当番表に反映</button><button class="reject" type="button" data-reject-duty-request="'+escapeHtml(item.id)+'">却下</button></div></div>';
       }).join(''):'<div class="duty-change-preview">確認待ちの当番変更申請はありません。</div>';
       admin.querySelectorAll('[data-approve-duty-request]').forEach(function(b){b.addEventListener('click',function(){decideRequest(b.dataset.approveDutyRequest,true)})});
       admin.querySelectorAll('[data-reject-duty-request]').forEach(function(b){b.addEventListener('click',function(){decideRequest(b.dataset.rejectDutyRequest,false)})});
@@ -842,13 +848,17 @@
       if(!confirm(message))return;
     }
 
+    const noLineFallback=partnerApprovalEnabled===true&&document.getElementById('dutyRequestNoLine')?.checked===true;
+    if(noLineFallback&&!confirm('この申請は管理者承認になります。\n変更相手のご家庭へ直接ご連絡ください。\nこの内容で申請しますか？'))return;
+
     const requestPayload={
       date:date,fromGrade:fromPerson.grade,fromName:fromPerson.name,
       toGrade:toPerson.grade,toName:toPerson.name,
       requestType:requestType,
       swapDate:requestType==='swap'?swapDate:'',
       swapGrade:requestType==='swap'?swapPerson.grade:'',
-      swapName:requestType==='swap'?swapPerson.name:''
+      swapName:requestType==='swap'?swapPerson.name:'',
+      noLineFallback:noLineFallback
     };
 
     btn.disabled=true;btn.textContent='送信中…';
@@ -901,6 +911,13 @@
           window.location.assign('/duty-line-complete.html');
           return;
         }catch(_){}
+      }
+      if(noLineFallback){
+        result.hidden=false;
+        result.innerHTML='<div class="duty-request-complete"><b>変更申請を受け付けました</b><p>この申請は管理者承認待ちです。変更相手のご家庭へ直接ご連絡ください。</p><small>管理者が確認後、当番表へ反映します。</small></div>';
+        const noLineInput=document.getElementById('dutyRequestNoLine');
+        if(noLineInput)noLineInput.checked=false;
+        return;
       }
       const shareUrl='https://line.me/R/share?text='+encodeURIComponent(text);
       result.hidden=false;result.innerHTML='<div class="duty-request-complete"><b>変更申請を受け付けました</b><p>下のボタンを押すと、LINEの送信先選択画面が開きます。</p><a id="dutyRequestLineShare" class="line-share" href="'+shareUrl+'">LINEで共有する</a><small>'+escapeHtml(note)+'</small></div>';
@@ -967,6 +984,10 @@
         partnerApprovalToggle.checked=partnerApprovalEnabled;
         if(isAdminViewing())loadDutySystemMonitor();
         if(partnerApprovalStatus)partnerApprovalStatus.textContent=partnerApprovalEnabled?'ご家族承認モード':'管理者承認モード';
+        const noLineOption=document.getElementById('dutyRequestNoLineOption');
+        const noLineInput=document.getElementById('dutyRequestNoLine');
+        if(noLineOption)noLineOption.hidden=!partnerApprovalEnabled;
+        if(noLineInput&&!partnerApprovalEnabled)noLineInput.checked=false;
         syncDutyRequestOperationNote();
         if(window.showSaveNotice)showSaveNotice(partnerApprovalEnabled?'ご家族承認モードに切り替えました':'管理者承認モードに切り替えました');
       }catch(e){
