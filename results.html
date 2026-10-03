@@ -1175,10 +1175,11 @@ let squadSettings={
 };
 
 function tournamentParts(value){
-  const text=String(value||'大会名未設定').trim();
-  const match=text.match(/^(.*?)[\s　]*(敗者復活(?:戦)?(?:第?[0-9０-９一二三四五六七八九十]+(?:回戦|試合目|試合))?|敗者交流戦|第?[0-9０-９一二三四五六七八九十]+回戦|準々決勝|準決勝|決勝|順位決定戦|第?[0-9０-９一二三四五六七八九十]+(?:試合目|試合))$/);
+  const raw=String(value||'大会名未設定').normalize('NFKC').trim();
+  const text=raw.replace(/[\s　]+/g,' ');
+  const match=text.match(/^(.*?)[\s　]*(敗者復活(?:戦)?(?:第?[0-9一二三四五六七八九十]+(?:回戦|試合目|試合))?|敗者交流戦|第?[0-9一二三四五六七八九十]+回戦|準々決勝|準決勝|決勝|順位決定戦|第?[0-9一二三四五六七八九十]+(?:試合目|試合))$/);
   if(match&&match[1].trim()){
-    return {name:match[1].trim(),round:match[2].replace(/\s/g,'')};
+    return {name:match[1].trim().replace(/[\s　]+/g,' '),round:match[2].replace(/\s/g,'')};
   }
   return {name:text,round:''};
 }
@@ -1240,7 +1241,9 @@ function gameYear(game){
   return String(game.date||game.year||'').slice(0,4);
 }
 function tournamentKey(game){
-  return (gameYear(game)||'年不明')+'::'+tournamentParts(game.tournament).name;
+  const name=tournamentParts(game.tournament).name;
+  const normalizedKey=name.normalize('NFKC').replace(/[\s　]+/g,'');
+  return (gameYear(game)||'年不明')+'::'+normalizedKey;
 }
 function formatGameDate(value){
   const text=String(value||'');
