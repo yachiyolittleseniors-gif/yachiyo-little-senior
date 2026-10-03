@@ -11,24 +11,45 @@
   let timer=null;
   let grantTimer=null;
   let lastTouchAt=0;
+  let boardAccessConfirmed=false;
+  let revealedByLogin=false;
+  let revealedByTap=false;
 
   function grantUntil(){
     try{return Number(localStorage.getItem(GRANT_KEY))||0}catch(e){return 0}
   }
   function syncTeamLoginGrant(){
+    if(grantTimer)clearTimeout(grantTimer);
+    grantTimer=null;
     const until=grantUntil();
-    const active=until>Date.now();
+    const active=boardAccessConfirmed&&until>Date.now();
     if(active){
       button.style.setProperty('display','block','important');
       button.removeAttribute('aria-hidden');
-      if(grantTimer)clearTimeout(grantTimer);
+      revealedByLogin=true;
       grantTimer=setTimeout(syncTeamLoginGrant,Math.min(Math.max(0,until-Date.now()),2147483647));
+    }else if(revealedByLogin&&!revealedByTap&&window.YLSAdminSession?.isActive?.()!==true){
+      button.style.setProperty('display','none','important');
+      button.setAttribute('aria-hidden','true');
+      revealedByLogin=false;
     }
   }
-  syncTeamLoginGrant();
+  // The password/passkey check is asynchronous. localStorage's storage event
+  // does not fire in the tab that writes the grant, so wait for login explicitly.
+  if(window.boardAccessReady&&typeof window.boardAccessReady.then==='function'){
+    window.boardAccessReady.then(function(ok){
+      boardAccessConfirmed=ok===true;
+      syncTeamLoginGrant();
+    },function(){
+      boardAccessConfirmed=false;
+      syncTeamLoginGrant();
+    });
+  }
   window.addEventListener('storage',event=>{if(event.key===GRANT_KEY)syncTeamLoginGrant()});
   window.addEventListener('focus',syncTeamLoginGrant);
+  window.addEventListener('pageshow',syncTeamLoginGrant);
   document.addEventListener('visibilitychange',()=>{if(!document.hidden)syncTeamLoginGrant()});
+  document.addEventListener('yachiyo:admin-session-expired',syncTeamLoginGrant);
   function reset(){
     taps=0;
     clearTimeout(timer);
@@ -40,7 +61,9 @@
     timer=setTimeout(reset,2200);
     if(taps>=5){
       reset();
+      revealedByTap=true;
       button.style.setProperty('display','block','important');
+      button.removeAttribute('aria-hidden');
     }
   }
   trigger.addEventListener('pointerup',function(event){
