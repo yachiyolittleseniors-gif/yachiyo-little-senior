@@ -11,6 +11,7 @@ import {
   adminAuthError,
   verifyAdminPassword,
 } from "./admin-rate-limit.mjs";
+import { adminSessionCookie, createAdminSession } from "./_admin-session.mjs";
 
 
 // Keep only manifest fields; validate against strong storage on every request.
