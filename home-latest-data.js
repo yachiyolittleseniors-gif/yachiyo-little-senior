@@ -86,28 +86,73 @@ const runHomeLatest=()=> (window.yachiyoTrackInitialLoad||(value=>value))((async
     }
 
     // SEO: mirror visible current data into machine-readable structured data.
+    const SEO_IMAGE='https://yachiyo-little-senior.netlify.app/team-hero.jpg';
+    const venueAddress=name=>{
+      const value=String(name||'').replace(/\s/g,'');
+      if(/浦安.*運動公園.*野球場|運動公園野球場|クラシモスタジアム浦安/.test(value)){
+        return {
+          '@type':'PostalAddress',
+          postalCode:'279-0031',
+          streetAddress:'舞浜2番地27',
+          addressLocality:'浦安市',
+          addressRegion:'千葉県',
+          addressCountry:'JP'
+        };
+      }
+      return undefined;
+    };
+    const eventLocation=name=>{
+      if(!name)return undefined;
+      const address=venueAddress(name);
+      return {
+        '@type':'Place',
+        name:String(name),
+        address
+      };
+    };
+    const structuredGrades=item=>{
+      const grades=Array.isArray(item&&item.grades)?[...new Set(item.grades.map(String).filter(v=>['1','2','3'].includes(v)))]:[];
+      if(grades.length===3)return '全学年';
+      return grades.map(v=>v+'年生').join('・');
+    };
     const graph=[];
     if(upcoming){
+      const title=String(upcoming.title||'活動予定');
+      const gradeText=structuredGrades(upcoming);
+      const startDate=String(upcoming.date||'')+(upcoming.time&&/^\\d{1,2}:\\d{2}/.test(upcoming.time)?'T'+upcoming.time.match(/^\\d{1,2}:\\d{2}/)[0]+':00+09:00':'');
+      const endDate=scheduleDateKey(upcoming.date)||undefined;
       graph.push({
         '@type':'SportsEvent',
-        name:'八千代リトルシニア '+String(upcoming.title||'活動予定'),
-        startDate:String(upcoming.date||'')+(upcoming.time&&/^\\d{1,2}:\\d{2}/.test(upcoming.time)?'T'+upcoming.time.match(/^\\d{1,2}:\\d{2}/)[0]+':00+09:00':''),
-        location:upcoming.place?{'@type':'Place',name:String(upcoming.place)}:undefined,
+        name:'八千代リトルシニア '+title,
+        description:['八千代リトルシニアの活動予定',title,gradeText,upcoming.place?String(upcoming.place):''].filter(Boolean).join('。'),
+        startDate,
+        endDate,
+        eventStatus:'https://schema.org/EventScheduled',
+        eventAttendanceMode:'https://schema.org/OfflineEventAttendanceMode',
+        image:[SEO_IMAGE],
+        location:eventLocation(upcoming.place),
         organizer:{'@id':'https://yachiyo-little-senior.netlify.app/#organization'},
         url:'https://yachiyo-little-senior.netlify.app/schedule'
       });
     }
     if(latestR){
+      const eventName=String(latestR.tournament||'試合')+' 八千代リトルシニア vs '+String(latestR.opponent||'対戦相手');
+      const resultDate=dateKey(latestR.date)||undefined;
       graph.push({
         '@type':'SportsEvent',
-        name:String(latestR.tournament||'試合')+' 八千代リトルシニア vs '+String(latestR.opponent||'対戦相手'),
+        name:eventName,
+        description:'試合結果：八千代 '+String(latestR.ourScore)+' - '+String(latestR.oppScore)+' '+String(latestR.opponent||''),
         startDate:String(latestR.date||''),
-        location:latestR.venue?{'@type':'Place',name:String(latestR.venue)}:undefined,
+        endDate:resultDate,
+        eventStatus:'https://schema.org/EventCompleted',
+        eventAttendanceMode:'https://schema.org/OfflineEventAttendanceMode',
+        image:[SEO_IMAGE],
+        location:eventLocation(latestR.venue),
+        organizer:{'@id':'https://yachiyo-little-senior.netlify.app/#organization'},
         competitor:[
           {'@type':'SportsTeam','name':'八千代リトルシニア'},
           {'@type':'SportsTeam','name':String(latestR.opponent||'対戦相手')}
         ],
-        description:'試合結果：八千代 '+String(latestR.ourScore)+' - '+String(latestR.oppScore)+' '+String(latestR.opponent||''),
         url:'https://yachiyo-little-senior.netlify.app/results'
       });
     }
