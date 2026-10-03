@@ -26,7 +26,10 @@
  }
  function showAdminUi(){
    document.documentElement.classList.remove(HIDE_CLASS);
-   selectors.forEach(sel=>document.querySelectorAll(sel).forEach(el=>{el.style.removeProperty('display');el.removeAttribute('aria-hidden')}));
+   selectors.forEach(sel=>document.querySelectorAll(sel).forEach(el=>{
+     el.style.setProperty('display','block','important');
+     el.removeAttribute('aria-hidden');
+   }));
  }
  function apply(d){
    currentSettings=d;
