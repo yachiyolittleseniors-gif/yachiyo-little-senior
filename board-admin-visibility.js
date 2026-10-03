@@ -1,5 +1,6 @@
 (()=>{
- const pages=[['index.html','HOME'],['team.html','チーム紹介'],['schedule.html','スケジュール'],['results.html','試合結果'],['players.html','選手紹介'],['links.html','リンク集'],['seniorcup.html','シニア杯'],['contact.html','お問い合わせ']];
+ const shared=window.YLSAdminButtonConfig;
+ const pages=Object.entries(shared?.pages||{}).filter(([,cfg])=>cfg?.settings!==false).map(([key,cfg])=>[key,cfg.label||key]);
  const desktop=document.getElementById('adminDesktopEnabled');
  const list=document.getElementById('adminVisibilityList'),save=document.getElementById('adminVisibilitySave'),status=document.getElementById('adminVisibilityStatus'),toggle=document.getElementById('adminVisibilityToggle'),body=document.getElementById('adminVisibilityBody'),toggleLabel=document.getElementById('adminVisibilityToggleLabel'),summary=document.getElementById('adminVisibilitySummary'); if(!list||!save)return;
  let state={pages:{},desktopEnabled:false,autoEnableOnLogin:true,dutyRequestPublic:false,dutyLinePasteVisible:false,dutyHistoryVisible:false};
