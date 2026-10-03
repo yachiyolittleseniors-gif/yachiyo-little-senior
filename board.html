@@ -1615,9 +1615,8 @@ body:after{display:none!important;content:none!important}
         <b id="adminVisibilityToggleLabel">表示 ▼</b>
       </button>
       <div id="adminVisibilityBody" class="admin-visibility-body" hidden>
-        <p id="adminVisibilityNote" class="backup-note">下のページ別設定で表示・非表示を決めます。管理者認証によって表示は切り替わりません。</p>
-        <label class="admin-autooff-row"><input id="adminDesktopEnabled" type="checkbox"><span><b>PC版でも管理ボタンを表示する</b><small>チェックを外すとPC版の管理ボタンを非表示にします（チーム専用ページは対象外）。</small></span></label>
-        <label class="admin-autooff-row"><input id="adminAutoEnableOnLogin" type="checkbox"><span><b>普段は管理ボタンを非表示にする</b><small>チーム専用ページへログインすると、この設定に関係なくその端末だけ30分間、管理ボタンを表示できます。ON：ログインしていない時は非表示。OFF：ログインしていない時は下のページ別設定に従います。編集時は別途、管理者認証が必要です。</small></span></label>
+        <p id="adminVisibilityNote" class="backup-note">チーム専用ページへログイン後30分間だけ、対象ページで5回タップすると管理ボタンを表示できます。ログインしただけでは表示されません。</p>
+        <label class="admin-autooff-row"><input id="adminDesktopEnabled" type="checkbox"><span><b>PC版でも管理ボタンを表示する</b><small>チェックを外すとPC版では5回タップしても管理ボタンを表示しません（チーム専用ページは対象外）。</small></span></label>
         <div id="adminManualVisibilitySettings">
         <div class="admin-visibility-actions"><button id="adminVisibilityAllOn" type="button">すべてON</button><button id="adminVisibilityAllOff" type="button">すべてOFF</button></div>
         <div id="adminVisibilityList" class="admin-visibility-list"></div>
