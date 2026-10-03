@@ -1,0 +1,21 @@
+(()=>{
+  'use strict';
+  window.YLSAdminButtonConfig=Object.freeze({
+    grantKey:'yachiyoAdminRevealUntil',
+    grantLifetime:30*60*1000,
+    tapLimit:5,
+    tapWindow:2200,
+    labels:Object.freeze({idle:'管理',active:'管理終了'}),
+    pages:Object.freeze({
+      'index.html':Object.freeze({label:'HOME',button:'#heroAdminToggle',trigger:'.restored-footer-copy',container:'#heroPhotoAdmin',settings:true}),
+      'team.html':Object.freeze({label:'チーム紹介',button:'#staffEditBtn',trigger:'.restored-footer-copy',settings:true}),
+      'schedule.html':Object.freeze({label:'スケジュール',button:'#adminModeToggle',trigger:'.restored-footer-copy',settings:true}),
+      'results.html':Object.freeze({label:'試合結果',button:'#adminModeToggle',trigger:'.restored-footer-copy',settings:true}),
+      'players.html':Object.freeze({label:'選手紹介',button:'#adminToggle',trigger:'.restored-footer-copy',settings:true}),
+      'links.html':Object.freeze({label:'リンク集',button:'#adminBtn',trigger:'.restored-footer-copy',settings:true}),
+      'seniorcup.html':Object.freeze({label:'シニア杯',button:'#cupAdminBtn',trigger:'.restored-footer-copy',settings:true}),
+      'contact.html':Object.freeze({label:'お問い合わせ',button:'#contactAdminBtn',trigger:'.restored-footer-copy',settings:true}),
+      'board.html':Object.freeze({label:'チーム専用ページ',button:'#densukeToggleBtn',trigger:'footer.footer',protected:true,settings:false})
+    })
+  });
+})();

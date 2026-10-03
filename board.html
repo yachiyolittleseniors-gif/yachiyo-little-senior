@@ -203,49 +203,6 @@ html{scroll-padding-top:var(--compact-header-height)}
 #rulesPdfList{margin-top:13px!important}
 </style>
 
-<style id="unified-admin-reveal-style">
-.unified-admin-reveal{
-  min-height:44px;
-  display:flex!important;
-  align-items:center;
-  justify-content:center;
-  touch-action:manipulation!important;
-  -webkit-user-select:none!important;
-  user-select:none!important;
-  -webkit-touch-callout:none!important;
-  -webkit-tap-highlight-color:transparent!important;
-}
-.unified-admin-toggle{
-  position:fixed!important;
-  right:16px!important;
-  bottom:calc(16px + env(safe-area-inset-bottom))!important;
-  left:auto!important;
-  width:auto!important;
-  min-width:0!important;
-  height:auto!important;
-  margin:0!important;
-  padding:9px 12px!important;
-  z-index:9998!important;
-  border:1px solid rgba(199,154,59,.72)!important;
-  border-radius:999px!important;
-  background:#071426!important;
-  color:#e2bd67!important;
-  box-shadow:0 8px 22px rgba(0,0,0,.24)!important;
-  font-size:12px!important;
-  font-weight:800!important;
-  line-height:1.3!important;
-  touch-action:manipulation!important;
-  -webkit-tap-highlight-color:transparent!important;
-}
-@media(max-width:600px){
-  .unified-admin-toggle{
-    right:12px!important;
-    bottom:calc(12px + env(safe-area-inset-bottom))!important;
-    padding:8px 10px!important;
-    font-size:11px!important;
-  }
-}
-</style>
 <style id="meeting-save-reveal-style">
 .meeting-save-reveal-wrap{display:flex;justify-content:flex-end;margin:-2px 0 8px}
 .meeting-save-reveal{
@@ -1658,9 +1615,8 @@ body:after{display:none!important;content:none!important}
         <b id="adminVisibilityToggleLabel">表示 ▼</b>
       </button>
       <div id="adminVisibilityBody" class="admin-visibility-body" hidden>
-        <p id="adminVisibilityNote" class="backup-note">下のページ別設定で表示・非表示を決めます。管理者認証によって表示は切り替わりません。</p>
-        <label class="admin-autooff-row"><input id="adminDesktopEnabled" type="checkbox"><span><b>PC版でも管理ボタンを表示する</b><small>チェックを外すとPC版の管理ボタンを非表示にします（チーム専用ページは対象外）。</small></span></label>
-        <label class="admin-autooff-row"><input id="adminAutoEnableOnLogin" type="checkbox"><span><b>普段は管理ボタンを非表示にする</b><small>チーム専用ページへログインすると、この設定に関係なくその端末だけ30分間、管理ボタンを表示できます。ON：ログインしていない時は非表示。OFF：ログインしていない時は下のページ別設定に従います。編集時は別途、管理者認証が必要です。</small></span></label>
+        <p id="adminVisibilityNote" class="backup-note">チーム専用ページへログイン後30分間だけ、対象ページで5回タップすると管理ボタンを表示できます。ログインしただけでは表示されません。</p>
+        <label class="admin-autooff-row"><input id="adminDesktopEnabled" type="checkbox"><span><b>PC版でも管理ボタンを表示する</b><small>チェックを外すとPC版では5回タップしても管理ボタンを表示しません（チーム専用ページは対象外）。</small></span></label>
         <div id="adminManualVisibilitySettings">
         <div class="admin-visibility-actions"><button id="adminVisibilityAllOn" type="button">すべてON</button><button id="adminVisibilityAllOff" type="button">すべてOFF</button></div>
         <div id="adminVisibilityList" class="admin-visibility-list"></div>
@@ -1762,6 +1718,7 @@ body:after{display:none!important;content:none!important}
 .admin-visibility-fields{margin:16px 0 18px;padding:15px;border:1px solid rgba(210,170,80,.28);border-radius:14px;background:rgba(255,255,255,.025)}.admin-visibility-toggle{width:100%;display:flex;align-items:center;justify-content:space-between;gap:12px;padding:0;border:0!important;background:transparent!important;box-shadow:none!important;text-align:left}.admin-visibility-toggle span{display:flex;flex-direction:column;gap:4px}.admin-visibility-toggle strong{color:#e4bd62;font-size:15px}.admin-visibility-toggle small{color:#aeb7c4;font-size:10.5px;line-height:1.35}.admin-visibility-toggle>b{color:#d8b65e;font-size:11px;white-space:nowrap}.admin-visibility-body{padding-top:10px}.admin-visibility-body[hidden]{display:none!important}
 .admin-visibility-fields>strong{display:block;color:#e4bd62;margin-bottom:7px}.admin-visibility-list{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;margin:12px 0}.admin-visibility-item{display:flex;align-items:center;gap:8px;padding:9px 10px;border:1px solid rgba(210,170,80,.22);border-radius:9px;background:rgba(255,255,255,.035);font-size:12px}.admin-visibility-item input{width:18px;height:18px;accent-color:#cda448}.admin-visibility-actions{display:flex;gap:8px;margin-top:10px}.admin-visibility-actions button{flex:1}.admin-visibility-fields #adminVisibilitySave{width:100%;margin-top:2px}.admin-autooff-row{display:flex;align-items:flex-start;gap:10px;margin:12px 0;padding:11px;border:1px solid rgba(210,170,80,.32);border-radius:10px;background:rgba(181,138,42,.08)}.admin-autooff-row input{width:19px;height:19px;margin-top:2px;accent-color:#cda448}.admin-autooff-row span{display:flex;flex-direction:column;gap:3px}.admin-autooff-row b{color:#f0cf7b;font-size:13px}.admin-autooff-row small{color:#b9c0ca;font-size:11px;line-height:1.45}.admin-visibility-remaining{margin-left:auto;color:#d8b65e;font-size:10px;white-space:nowrap}@media(max-width:520px){.admin-visibility-list{grid-template-columns:1fr}}
 </style>
+<script src="./admin-button-config.js?v=20261003-rebuild1"></script>
 <script src="./board-admin-visibility.js?v=20261003-teamlogin-direct1"></script>
 <style id="nonblocking-save-notice-style">
 .save-notice{
@@ -1791,102 +1748,6 @@ body:after{display:none!important;content:none!important}
 <script src="./board-save-notice.js?v=20260927-clean2"></script>
 <script src="./board-header.js?v=20260927-clean1"></script>
 
-<script src="./board-admin-reveal.js?v=20261003-teamlogin-direct1"></script>
-
-<style id="admin-position-final-unified">
-.unified-admin-toggle{
-  position:fixed!important;
-  right:max(12px,env(safe-area-inset-right))!important;
-  bottom:calc(12px + env(safe-area-inset-bottom))!important;
-  left:auto!important;
-  top:auto!important;
-  width:auto!important;
-  min-width:52px!important;
-  max-width:calc(100vw - 24px)!important;
-  height:auto!important;
-  min-height:44px!important;
-  margin:0!important;
-  padding:12px 14px!important;
-  transform:none!important;
-  z-index:20001!important;
-  border:0!important;
-  border-radius:0!important;
-  outline:0!important;
-  background:transparent!important;
-  background-image:none!important;
-  color:rgba(199,154,59,.46)!important;
-  box-shadow:none!important;
-  text-shadow:none!important;
-  font-size:11px!important;
-  font-weight:700!important;
-  line-height:1.25!important;
-  text-align:center!important;
-  white-space:nowrap!important;
-  touch-action:manipulation!important;
-  -webkit-tap-highlight-color:transparent!important;
-}
-
-#densukeToggleBtn.unified-admin-toggle{
-  border:0!important;
-  border-radius:0!important;
-  background:transparent!important;
-  background-image:none!important;
-  color:rgba(199,154,59,.46)!important;
-  box-shadow:none!important;
-  text-shadow:none!important;
-  backdrop-filter:none!important;
-  -webkit-backdrop-filter:none!important;
-}
-.unified-admin-toggle:hover,
-.unified-admin-toggle:focus-visible{
-  color:rgba(199,154,59,.72)!important;
-}
-#densukeAdminPanel.show{
-  top:calc(var(--fixed-header-height,66px) + 12px)!important;
-  bottom:auto!important;
-  max-height:calc(100dvh - var(--fixed-header-height,66px) - 76px)!important;
-}
-#adminModal.show{
-  align-items:flex-start!important;
-  padding-top:calc(var(--fixed-header-height,66px) + 12px)!important;
-}
-body.photo-admin-on #heroAdminToggle.unified-admin-toggle{
-  position:static!important;
-  inset:auto!important;
-  width:100%!important;
-  min-width:0!important;
-  max-width:none!important;
-  height:44px!important;
-  min-height:44px!important;
-  margin:0!important;
-  padding:8px 6px!important;
-  font-size:11px!important;
-  display:flex!important;
-  align-items:center!important;
-  justify-content:center!important;
-}
-body.photo-admin-on #heroPhotoChange{
-  display:flex!important;
-  align-items:center!important;
-  justify-content:center!important;
-  text-align:center!important;
-}
-body.photo-admin-on #accessPasswordChange{
-  white-space:normal!important;
-  font-size:10px!important;
-  line-height:1.15!important;
-}
-@media(max-width:600px){
-  .unified-admin-toggle{
-    right:max(12px,env(safe-area-inset-right))!important;
-    bottom:calc(12px + env(safe-area-inset-bottom))!important;
-    min-width:52px!important;
-    min-height:44px!important;
-    padding:12px 14px!important;
-    font-size:11px!important;
-  }
-}
-</style>
 <script src="./board-admin-position.js?v=20260930-editor-position"></script>
 <script src="./board-seniorcup-menu.js?v=20260927-clean1"></script>
 <script src="./board-passkey-setup.js?v=20260927-clean1"></script>
@@ -2312,6 +2173,7 @@ color:#e2bd67;font-size:18px;line-height:1.5;
 #densukeAdminPanel #dutyRosterAdminFields>.duty-image-admin{margin-top:16px;padding-top:14px;border-top:1px solid rgba(226,189,103,.5)}
 </style>
 
+<script src="./admin-button-controller.js?v=20261003-rebuild1"></script>
 </body>
 </html>
 <style id="live-score-grade-ground-final-fix">
