@@ -867,6 +867,45 @@ body.admin-mode .game-admin-actions{display:flex!important}
 </style>
 <script src="./admin-visibility.js?v=20260930-modes3" defer></script>
 <script src="./back-to-top.js?v=20260930-padding1" defer></script>
+<style id="results-date-mobile-fix">
+#resultForm .field:first-child{
+  min-width:0!important;
+}
+#resultForm #date{
+  -webkit-appearance:none!important;
+  appearance:none!important;
+  display:block!important;
+  width:100%!important;
+  max-width:100%!important;
+  height:48px!important;
+  min-height:48px!important;
+  max-height:48px!important;
+  margin:0!important;
+  padding:0 12px!important;
+  box-sizing:border-box!important;
+  border:1px solid #cfd6df!important;
+  border-radius:10px!important;
+  background:#fff!important;
+  color:#102033!important;
+  -webkit-text-fill-color:#102033!important;
+  font-size:16px!important;
+  line-height:48px!important;
+}
+#resultForm #date::-webkit-date-and-time-value{
+  min-height:0!important;
+  height:auto!important;
+  padding:0!important;
+  text-align:left!important;
+}
+#resultForm #date::-webkit-datetime-edit,
+#resultForm #date::-webkit-datetime-edit-fields-wrapper{
+  padding:0!important;
+  margin:0!important;
+}
+#resultForm #date::-webkit-calendar-picker-indicator{
+  margin:0!important;
+}
+</style>
 </head>
 <body id="page-top">
 <header class="header">
