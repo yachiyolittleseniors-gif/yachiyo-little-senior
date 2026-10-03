@@ -6,9 +6,29 @@
   trigger.classList.add('unified-admin-reveal');
   trigger.setAttribute('aria-label','管理ボタンを表示');
 
+  const GRANT_KEY='yachiyoAdminRevealUntil';
   let taps=0;
   let timer=null;
+  let grantTimer=null;
   let lastTouchAt=0;
+
+  function grantUntil(){
+    try{return Number(localStorage.getItem(GRANT_KEY))||0}catch(e){return 0}
+  }
+  function syncTeamLoginGrant(){
+    const until=grantUntil();
+    const active=until>Date.now();
+    if(active){
+      button.style.setProperty('display','block','important');
+      button.removeAttribute('aria-hidden');
+      if(grantTimer)clearTimeout(grantTimer);
+      grantTimer=setTimeout(syncTeamLoginGrant,Math.min(Math.max(0,until-Date.now()),2147483647));
+    }
+  }
+  syncTeamLoginGrant();
+  window.addEventListener('storage',event=>{if(event.key===GRANT_KEY)syncTeamLoginGrant()});
+  window.addEventListener('focus',syncTeamLoginGrant);
+  document.addEventListener('visibilitychange',()=>{if(!document.hidden)syncTeamLoginGrant()});
   function reset(){
     taps=0;
     clearTimeout(timer);
