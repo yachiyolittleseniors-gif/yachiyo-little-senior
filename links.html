@@ -158,49 +158,6 @@ html{scroll-padding-top:var(--compact-header-height)}
 }
 </style>
 <link href="./desktop-2026.css?v=20260908-pc2" rel="stylesheet"/>
-<style id="unified-admin-reveal-style">
-.unified-admin-reveal{
-  min-height:44px;
-  display:flex!important;
-  align-items:center;
-  justify-content:center;
-  touch-action:manipulation!important;
-  -webkit-user-select:none!important;
-  user-select:none!important;
-  -webkit-touch-callout:none!important;
-  -webkit-tap-highlight-color:transparent!important;
-}
-.unified-admin-toggle{
-  position:fixed!important;
-  right:16px!important;
-  bottom:calc(16px + env(safe-area-inset-bottom))!important;
-  left:auto!important;
-  width:auto!important;
-  min-width:0!important;
-  height:auto!important;
-  margin:0!important;
-  padding:9px 12px!important;
-  z-index:9998!important;
-  border:1px solid rgba(199,154,59,.72)!important;
-  border-radius:999px!important;
-  background:#071426!important;
-  color:#e2bd67!important;
-  box-shadow:0 8px 22px rgba(0,0,0,.24)!important;
-  font-size:12px!important;
-  font-weight:800!important;
-  line-height:1.3!important;
-  touch-action:manipulation!important;
-  -webkit-tap-highlight-color:transparent!important;
-}
-@media(max-width:600px){
-  .unified-admin-toggle{
-    right:12px!important;
-    bottom:calc(12px + env(safe-area-inset-bottom))!important;
-    padding:8px 10px!important;
-    font-size:11px!important;
-  }
-}
-</style>
 <meta content="https://yachiyo-little-senior.netlify.app/team-hero.jpg" property="og:image">
 <meta content="1179" property="og:image:width">
 <meta content="786" property="og:image:height"/>
@@ -208,8 +165,7 @@ html{scroll-padding-top:var(--compact-header-height)}
 <meta content="https://yachiyo-little-senior.netlify.app/team-hero.jpg" name="twitter:image"/>
 <meta content="index,follow,max-image-preview:large,max-snippet:-1,max-video-preview:-1" name="robots"/>
 <script type="application/ld+json">{"@context":"https://schema.org","@type":"BreadcrumbList","itemListElement":[{"@type":"ListItem","position":1,"name":"HOME","item":"https://yachiyo-little-senior.netlify.app/"},{"@type":"ListItem","position":2,"name":"リンク集","item":"https://yachiyo-little-senior.netlify.app/links"}]}</script>
-</meta></meta></meta></meta></meta><script src="./admin-visibility.js?v=20261003-teamlogin-direct1" defer></script>
-<script src="./back-to-top.js?v=20261001-visible-dialogs" defer></script>
+</meta></meta></meta></meta></meta><script src="./back-to-top.js?v=20261001-visible-dialogs" defer></script>
 </head>
 <body id="page-top">
 <header class="site-header">
@@ -361,10 +317,7 @@ html{scroll-padding-top:var(--compact-header-height)}
     try{const r=await fetch(API,{method:'POST',headers:{'content-type':'application/json','x-admin-password':p},body:JSON.stringify({data:next})});if(r.status===429){alert('試行回数の上限です。15分後に再度お試しください。');status.textContent='';return}if(r.status===401){alert('管理者パスワードが違います。');status.textContent='';return}if(!r.ok){alert('保存できませんでした。');status.textContent='';return}links=next;render();renderEditor();status.textContent='保存しました。'}catch(e){alert('保存できませんでした。');status.textContent=''}
   });
   sessionStorage.removeItem('yachiyoAdminPassword');
-  let taps=0,timer=null;
-  const copyright=document.querySelector('.footer-copy');
-  if(copyright)copyright.addEventListener('pointerup',e=>{if(e.target.closest('#adminBtn'))return;taps++;clearTimeout(timer);timer=setTimeout(()=>taps=0,2000);if(taps>=5){taps=0;adminBtn.style.display='block'}},{passive:true});
-  load();
+load();
 })();
 </script>
 <script id="compact-site-header-script">
@@ -394,155 +347,6 @@ html{scroll-padding-top:var(--compact-header-height)}
   });
 })();
 </script>
-<script id="unified-admin-reveal-script">
-(function(){
-  const button=document.getElementById("adminBtn");
-  const trigger=document.querySelector(".restored-footer-copy");
-  if(!button||!trigger)return;
-  button.classList.add('unified-admin-toggle');
-  trigger.classList.add('unified-admin-reveal');
-  trigger.setAttribute('aria-label','管理ボタンを表示');
-
-  let taps=0;
-  let timer=null;
-  let lastTouchAt=0;
-  function reset(){
-    taps=0;
-    clearTimeout(timer);
-    timer=null;
-  }
-  function countTap(){
-    taps++;
-    clearTimeout(timer);
-    timer=setTimeout(reset,2200);
-    if(taps>=5){
-      reset();
-      button.style.setProperty('display','block','important');
-    }
-  }
-  trigger.addEventListener('pointerup',function(event){
-    if(event.pointerType==='touch'){
-      event.stopImmediatePropagation();
-      return;
-    }
-    event.stopImmediatePropagation();
-    countTap();
-  },{capture:true,passive:true});
-  trigger.addEventListener('touchend',function(event){
-    lastTouchAt=Date.now();
-    event.preventDefault();
-    event.stopImmediatePropagation();
-    countTap();
-  },{capture:true,passive:false});
-  trigger.addEventListener('click',function(event){
-    if(Date.now()-lastTouchAt<800){
-      event.preventDefault();
-      event.stopImmediatePropagation();
-      return;
-    }
-    event.stopImmediatePropagation();
-    countTap();
-  },{capture:true,passive:false});
-  trigger.addEventListener('dblclick',function(event){
-    event.preventDefault();
-    event.stopImmediatePropagation();
-  },{capture:true,passive:false});
-})();
-</script>
-<style id="admin-position-final-unified">
-.unified-admin-toggle{
-  position:fixed!important;
-  right:max(12px,env(safe-area-inset-right))!important;
-  bottom:calc(12px + env(safe-area-inset-bottom))!important;
-  left:auto!important;
-  top:auto!important;
-  width:auto!important;
-  min-width:52px!important;
-  max-width:calc(100vw - 24px)!important;
-  height:auto!important;
-  min-height:44px!important;
-  margin:0!important;
-  padding:12px 14px!important;
-  transform:none!important;
-  z-index:20001!important;
-  border:0!important;
-  border-radius:0!important;
-  outline:0!important;
-  background:transparent!important;
-  background-image:none!important;
-  color:rgba(199,154,59,.46)!important;
-  box-shadow:none!important;
-  text-shadow:none!important;
-  font-size:11px!important;
-  font-weight:700!important;
-  line-height:1.25!important;
-  text-align:center!important;
-  white-space:nowrap!important;
-  touch-action:manipulation!important;
-  -webkit-tap-highlight-color:transparent!important;
-}
-
-#adminBtn.unified-admin-toggle{
-  border:0!important;
-  border-radius:0!important;
-  background:transparent!important;
-  background-image:none!important;
-  color:rgba(199,154,59,.46)!important;
-  box-shadow:none!important;
-  text-shadow:none!important;
-  backdrop-filter:none!important;
-  -webkit-backdrop-filter:none!important;
-}
-.unified-admin-toggle:hover,
-.unified-admin-toggle:focus-visible{
-  color:rgba(199,154,59,.72)!important;
-}
-#densukeAdminPanel.show{
-  top:calc(var(--fixed-header-height,66px) + 12px)!important;
-  bottom:auto!important;
-  max-height:calc(100dvh - var(--fixed-header-height,66px) - 76px)!important;
-}
-#adminModal.show{
-  align-items:flex-start!important;
-  padding-top:calc(var(--fixed-header-height,66px) + 12px)!important;
-}
-body.photo-admin-on #heroAdminToggle.unified-admin-toggle{
-  position:static!important;
-  inset:auto!important;
-  width:100%!important;
-  min-width:0!important;
-  max-width:none!important;
-  height:44px!important;
-  min-height:44px!important;
-  margin:0!important;
-  padding:8px 6px!important;
-  font-size:11px!important;
-  display:flex!important;
-  align-items:center!important;
-  justify-content:center!important;
-}
-body.photo-admin-on #heroPhotoChange{
-  display:flex!important;
-  align-items:center!important;
-  justify-content:center!important;
-  text-align:center!important;
-}
-body.photo-admin-on #accessPasswordChange{
-  white-space:normal!important;
-  font-size:10px!important;
-  line-height:1.15!important;
-}
-@media(max-width:600px){
-  .unified-admin-toggle{
-    right:max(12px,env(safe-area-inset-right))!important;
-    bottom:calc(12px + env(safe-area-inset-bottom))!important;
-    min-width:52px!important;
-    min-height:44px!important;
-    padding:12px 14px!important;
-    font-size:11px!important;
-  }
-}
-</style>
 <script id="admin-start-position-unified">
 (()=>{
   const watched=document.querySelector('body');
@@ -567,5 +371,6 @@ body.photo-admin-on #accessPasswordChange{
 })();
 </script>
 <script src="./mobile-navigation.js?v=20261003-unifiedmenu1" defer></script>
+<script src="./admin-button-controller.js?v=20261003-rebuild1"></script>
 </body>
 </html>
