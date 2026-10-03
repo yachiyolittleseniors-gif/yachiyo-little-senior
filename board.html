@@ -17,7 +17,7 @@
 <link rel="stylesheet" href="./board-live-score.css?v=20260919-finishoutline1">
 <script src="./board-passkey.js?v=20260930-existing-passkey1"></script>
 <script src="./operator-passkey.js?v=20260930-existing-passkey1"></script>
-<script src="./board-access.js?v=20260930-local-passkey1"></script>
+<script src="./board-access.js?v=20261003-teamlogin-grant1"></script>
 <link rel="preload" as="image" href="./official-logo-crisp-final.png">
 <style id="compact-site-header-style">
 :root{--compact-header-height:82px}
@@ -1656,7 +1656,7 @@ body:after{display:none!important;content:none!important}
       <div id="adminVisibilityBody" class="admin-visibility-body" hidden>
         <p id="adminVisibilityNote" class="backup-note">下のページ別設定で表示・非表示を決めます。管理者認証によって表示は切り替わりません。</p>
         <label class="admin-autooff-row"><input id="adminDesktopEnabled" type="checkbox"><span><b>PC版でも管理ボタンを表示する</b><small>チェックを外すとPC版の管理ボタンを非表示にします（チーム専用ページは対象外）。</small></span></label>
-        <label class="admin-autooff-row"><input id="adminAutoEnableOnLogin" type="checkbox"><span><b>管理者認証後、管理ボタンを自動でONにする</b><small>ON：普段は非表示。管理者認証後、その端末だけ30分間表示できます。OFF：下のページ別設定に従います。チーム専用ページは対象外です。</small></span></label>
+        <label class="admin-autooff-row"><input id="adminAutoEnableOnLogin" type="checkbox"><span><b>チーム専用ページログイン後、管理ボタン表示を有効にする</b><small>ON：普段は非表示。チーム専用ページへログイン後、その端末だけ30分間、5回タップで管理ボタンを表示できます。編集時は別途、管理者認証が必要です。OFF：下のページ別設定に従います。</small></span></label>
         <div id="adminManualVisibilitySettings">
         <div class="admin-visibility-actions"><button id="adminVisibilityAllOn" type="button">すべてON</button><button id="adminVisibilityAllOff" type="button">すべてOFF</button></div>
         <div id="adminVisibilityList" class="admin-visibility-list"></div>
@@ -1758,7 +1758,7 @@ body:after{display:none!important;content:none!important}
 .admin-visibility-fields{margin:16px 0 18px;padding:15px;border:1px solid rgba(210,170,80,.28);border-radius:14px;background:rgba(255,255,255,.025)}.admin-visibility-toggle{width:100%;display:flex;align-items:center;justify-content:space-between;gap:12px;padding:0;border:0!important;background:transparent!important;box-shadow:none!important;text-align:left}.admin-visibility-toggle span{display:flex;flex-direction:column;gap:4px}.admin-visibility-toggle strong{color:#e4bd62;font-size:15px}.admin-visibility-toggle small{color:#aeb7c4;font-size:10.5px;line-height:1.35}.admin-visibility-toggle>b{color:#d8b65e;font-size:11px;white-space:nowrap}.admin-visibility-body{padding-top:10px}.admin-visibility-body[hidden]{display:none!important}
 .admin-visibility-fields>strong{display:block;color:#e4bd62;margin-bottom:7px}.admin-visibility-list{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;margin:12px 0}.admin-visibility-item{display:flex;align-items:center;gap:8px;padding:9px 10px;border:1px solid rgba(210,170,80,.22);border-radius:9px;background:rgba(255,255,255,.035);font-size:12px}.admin-visibility-item input{width:18px;height:18px;accent-color:#cda448}.admin-visibility-actions{display:flex;gap:8px;margin-top:10px}.admin-visibility-actions button{flex:1}.admin-visibility-fields #adminVisibilitySave{width:100%;margin-top:2px}.admin-autooff-row{display:flex;align-items:flex-start;gap:10px;margin:12px 0;padding:11px;border:1px solid rgba(210,170,80,.32);border-radius:10px;background:rgba(181,138,42,.08)}.admin-autooff-row input{width:19px;height:19px;margin-top:2px;accent-color:#cda448}.admin-autooff-row span{display:flex;flex-direction:column;gap:3px}.admin-autooff-row b{color:#f0cf7b;font-size:13px}.admin-autooff-row small{color:#b9c0ca;font-size:11px;line-height:1.45}.admin-visibility-remaining{margin-left:auto;color:#d8b65e;font-size:10px;white-space:nowrap}@media(max-width:520px){.admin-visibility-list{grid-template-columns:1fr}}
 </style>
-<script src="./board-admin-visibility.js?v=20260930-modes3"></script>
+<script src="./board-admin-visibility.js?v=20261003-teamlogin-grant1"></script>
 <style id="nonblocking-save-notice-style">
 .save-notice{
   position:fixed;
