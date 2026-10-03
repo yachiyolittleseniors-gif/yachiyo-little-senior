@@ -1,22 +1,13 @@
 (()=>{
   'use strict';
 
-  const GRANT_KEY='yachiyoAdminRevealUntil';
-  const TAP_LIMIT=5;
-  const TAP_WINDOW=2200;
+  const shared=window.YLSAdminButtonConfig;
+  if(!shared||!shared.pages)return;
+  const GRANT_KEY=shared.grantKey||'yachiyoAdminRevealUntil';
+  const TAP_LIMIT=Number(shared.tapLimit)||5;
+  const TAP_WINDOW=Number(shared.tapWindow)||2200;
   const SETTINGS_API='/.netlify/functions/site-data?section=admin-visibility-settings';
-
-  const PAGES={
-    'index.html':{button:'#heroAdminToggle',trigger:'.restored-footer-copy',container:'#heroPhotoAdmin'},
-    'team.html':{button:'#staffEditBtn',trigger:'.restored-footer-copy'},
-    'schedule.html':{button:'#adminModeToggle',trigger:'.restored-footer-copy'},
-    'results.html':{button:'#adminModeToggle',trigger:'.restored-footer-copy'},
-    'players.html':{button:'#adminToggle',trigger:'.restored-footer-copy'},
-    'links.html':{button:'#adminBtn',trigger:'.restored-footer-copy'},
-    'seniorcup.html':{button:'#cupAdminBtn',trigger:'.restored-footer-copy'},
-    'contact.html':{button:'#contactAdminBtn',trigger:'.restored-footer-copy'},
-    'board.html':{button:'#densukeToggleBtn',trigger:'footer.footer',protected:true}
-  };
+  const PAGES=shared.pages;
 
   function pageKey(){
     let page=(location.pathname.split('/').pop()||'index.html').toLowerCase();
