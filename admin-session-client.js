@@ -6,7 +6,9 @@
     verifiedUntil=0;
     if(timer)clearTimeout(timer);
     timer=null;
-    try{localStorage.removeItem(key);localStorage.removeItem('yachiyoAdminRevealUntil');sessionStorage.removeItem('yachiyoAdminPassword')}catch(_){}
+    // Team-login visibility is independent of the administrator edit session.
+    // A missing/expired admin session must not revoke the 30-minute reveal grant.
+    try{localStorage.removeItem(key);sessionStorage.removeItem('yachiyoAdminPassword')}catch(_){}
     document.dispatchEvent(new Event('yachiyo:admin-session-expired'));
   }
   function activate(expiresAt){
