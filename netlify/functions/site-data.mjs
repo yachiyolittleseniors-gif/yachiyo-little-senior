@@ -1942,21 +1942,37 @@ export default async (request, context) => {
       return json({ error: "invalid action" }, 400);
     }
 
+    if (
+      section === "access-settings" &&
+      body?.action === "verifyAdminPassword"
+    ) {
+      if (!(await boardSessionIsValid(request))) {
+        return json({ error: "チーム専用ページに入り直してください。", code: "BOARD_SESSION_REQUIRED" }, 401);
+      }
+
+      const passwordAuth = await verifyAdminPassword({
+        store,
+        request,
+        context,
+        expectedPassword: process.env.ADMIN_PASSWORD || "",
+        requireSession: false,
+      });
+      if (!passwordAuth.ok) return adminAuthError(json, passwordAuth);
+
+      const session = await createAdminSession(request);
+      return json(
+        { ok: true, expiresAt: session.expiresAt },
+        200,
+        { "set-cookie": adminSessionCookie(session.token) }
+      );
+    }
+
     const adminAuth = await verifyAdminPassword({
       store,
       request,
       context,
       expectedPassword: process.env.ADMIN_PASSWORD || "",
     });
-
-    if (
-      section === "access-settings" &&
-      body?.action === "verifyAdminPassword"
-    ) {
-      return adminAuth.ok
-        ? json({ ok: true })
-        : adminAuthError(json, adminAuth);
-    }
 
     if (!adminAuth.ok) return adminAuthError(json, adminAuth);
 
