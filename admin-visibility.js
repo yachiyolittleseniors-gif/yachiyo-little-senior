@@ -32,16 +32,16 @@
    currentSettings=d;
    const cfg=d&&d.pages&&typeof d.pages==='object'?d:{pages:(d&&typeof d==='object'?d:{}),autoOffEnabled:true,expiresAt:{}};
    const loginMode=cfg.autoEnableOnLogin===true;
-   const exp=loginMode?grantUntil():0;
-   const allowed=loginMode?exp>Date.now():cfg.pages[KEY]!==false;
-   // Manual visibility follows page settings. Automatic reveal is unlocked only
-   // by a successful team-page login on this device; editing still requires admin auth.
+   const exp=grantUntil();
+   const loginGrantActive=exp>Date.now();
+   // A successful team-page login always unlocks admin-button visibility for 30 minutes.
+   // Outside that window, ON means hidden; OFF falls back to the per-page settings.
+   const allowed=loginGrantActive||(!loginMode&&cfg.pages[KEY]!==false);
    enabled=(!desktop.matches||cfg.desktopEnabled===true)&&allowed;
    ready=true;if(timer){clearTimeout(timer);timer=null}
    if(enabled){
      showAdminUi();
-     const until=loginMode?exp:0;
-     if(until)timer=setTimeout(()=>{enabled=false;clearAdminState()},Math.min(Math.max(0,until-Date.now()),2147483647));
+     if(loginGrantActive)timer=setTimeout(()=>apply(currentSettings),Math.min(Math.max(0,exp-Date.now()),2147483647));
    }
    else clearAdminState();
  }
@@ -56,10 +56,12 @@
  document.addEventListener('visibilitychange',()=>{if(!document.hidden&&ready)apply(currentSettings)});
  window.addEventListener('focus',()=>{if(ready)apply(currentSettings)});
  const blocked=()=>{
-   const loginMode=currentSettings?.autoEnableOnLogin===true;
-   const expired=loginMode&&grantUntil()<=Date.now();
-   if(enabled&&expired){enabled=false;clearAdminState()}
-   return !ready||!enabled;
+   const cfg=currentSettings&&currentSettings.pages&&typeof currentSettings.pages==='object'?currentSettings:{pages:(currentSettings&&typeof currentSettings==='object'?currentSettings:{}),autoEnableOnLogin:false};
+   const loginGrantActive=grantUntil()>Date.now();
+   const allowed=loginGrantActive||(cfg.autoEnableOnLogin!==true&&cfg.pages[KEY]!==false);
+   const shouldEnable=(!desktop.matches||cfg.desktopEnabled===true)&&allowed;
+   if(enabled!==shouldEnable)apply(currentSettings);
+   return !ready||!shouldEnable;
  };
  ['pointerdown','pointerup','touchstart','touchend','click','dblclick'].forEach(type=>document.addEventListener(type,e=>{
    if(!blocked())return; const t=e.target;
