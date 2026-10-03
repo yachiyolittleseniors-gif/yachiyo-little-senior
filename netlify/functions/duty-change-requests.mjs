@@ -124,6 +124,7 @@ function normalizeItem(item,index=0){
     approvalExpiresAt:String(item?.approvalExpiresAt||"").slice(0,60),
     partnerApprovedAt:String(item?.partnerApprovedAt||"").slice(0,60),
     requesterLineHash:String(item?.requesterLineHash||"").slice(0,128),
+    approvalMode:String(item?.approvalMode||"")==="admin"?"admin":((item?.requesterLineHash||item?.approvalTokenHash||item?.approvalExpiresAt)?"family":"admin"),
     requesterDevice:String(item?.requesterDevice||"").slice(0,80),
     approverDevice:String(item?.approverDevice||"").slice(0,80)
   };
@@ -251,7 +252,8 @@ function publicRequest(item,requesterHash=""){
     status:item.status,createdAt:item.createdAt,updatedAt:item.updatedAt,
     approvalExpiresAt:item.approvalExpiresAt||"",
     partnerApprovedAt:item.partnerApprovedAt||"",
-    requesterCanCancel:item.status==="pending"&&!!requesterHash&&!!item.requesterLineHash&&requesterHash===item.requesterLineHash
+    approvalMode:item.approvalMode||"admin",
+    requesterCanCancel:item.status==="pending"&&(item.approvalMode||"admin")==="family"&&!!requesterHash&&!!item.requesterLineHash&&requesterHash===item.requesterLineHash
   };
 }
 function publicData(data,requesterHash=""){
@@ -268,7 +270,7 @@ function monitorSnapshot(data,roster){
   const changes=Array.isArray(roster?.changes)?roster.changes:[];
   const visible=data.requests.filter(item=>item.status!=="closed");
   const expired=visible.filter(item=>item.status==="pending"&&Number.isFinite(Date.parse(item.approvalExpiresAt||""))&&Date.parse(item.approvalExpiresAt)<now);
-  const missingLine=visible.filter(item=>data.partnerApprovalEnabled===true&&item.status==="pending"&&!item.requesterLineHash);
+  const missingLine=visible.filter(item=>data.partnerApprovalEnabled===true&&item.status==="pending"&&(item.approvalMode||"admin")==="family"&&!item.requesterLineHash);
   const approvedMissingChange=visible.filter(item=>{
     if(item.status!=="approved")return false;
     const matched=changes.filter(change=>
@@ -487,14 +489,14 @@ export default async (request,context)=>{
       const approvalExpiresAt=new Date(Date.now()+APPROVAL_TTL_MS).toISOString();
       let item;
       if(idx>=0){
-        item={...data.requests[idx],toGrade,toName,requestType,swapDate,swapGrade,swapName,updatedAt:now,approvalTokenHash,approvalExpiresAt,partnerApprovedAt:"",requesterLineHash,requesterDevice:clientLabel(request)};
+        item={...data.requests[idx],toGrade,toName,requestType,swapDate,swapGrade,swapName,approvalMode:"family",updatedAt:now,approvalTokenHash,approvalExpiresAt,partnerApprovedAt:"",requesterLineHash,requesterDevice:clientLabel(request)};
         data.requests[idx]=item;
       }else{
         if(data.requests.length>=MAX_REQUESTS)return json({error:"申請の保存上限に達しています。管理者へ連絡してください。"},400);
         const next=nextRequestNo(data);data.requestSeq=next.seq;
         item={
           id:`request-${crypto.randomUUID()}`,requestNo:next.value,date,
-          fromGrade,fromName,toGrade,toName,requestType,swapDate,swapGrade,swapName,status:"pending",createdAt:now,updatedAt:now,
+          fromGrade,fromName,toGrade,toName,requestType,swapDate,swapGrade,swapName,approvalMode:"family",status:"pending",createdAt:now,updatedAt:now,
           approvalTokenHash,approvalExpiresAt,partnerApprovedAt:"",requesterLineHash,requesterDevice:clientLabel(request),approverDevice:""
         };
         data.requests.push(item);
@@ -555,6 +557,7 @@ export default async (request,context)=>{
       const idx=data.requests.findIndex(item=>item.status==="pending"&&((id&&item.id===id)||(requestNo&&item.requestNo===requestNo)));
       if(idx<0)return json({error:"確認待ちの申請が見つかりません。"},404);
       const item=data.requests[idx];
+      if((item.approvalMode||"admin")!=="family")return json({error:"この申請は管理者承認です。LINE承認リンクは使用しません。"},409);
       const expires=Date.parse(item.approvalExpiresAt||"");
       if(Number.isFinite(expires)&&Date.now()>expires)return json({error:"承認リンクの有効期限が切れています。再度「当番変更申請」から申請してください。"},410);
       let requesterLineHash=item.requesterLineHash||"";
@@ -589,6 +592,7 @@ export default async (request,context)=>{
       const swapDate=String(body?.request?.swapDate||"");
       const swapGrade=String(body?.request?.swapGrade||"");
       const swapName=cleanName(body?.request?.swapName);
+      const noLineFallback=body?.request?.noLineFallback===true;
       const swapInvalid=requestType==="swap"&&(!validDate(swapDate)||!validGrade(swapGrade)||!swapName);
       if(!validDate(date)||!validGrade(fromGrade)||!validGrade(toGrade)||!fromName||!toName||(fromGrade===toGrade&&fromName===toName)||swapInvalid){
         return json({error:"申請内容を確認してください。"},400);
@@ -602,8 +606,9 @@ export default async (request,context)=>{
       }
 
       const data=await loadData(store);
+      const approvalMode=data.partnerApprovalEnabled===true&&!noLineFallback?"family":"admin";
       let requesterLineHash="";
-      if(data.partnerApprovalEnabled===true){
+      if(approvalMode==="family"){
         const resumePath="/board.html?line_resume=duty-submit"+
           "&d="+encodeURIComponent(date)+
           "&fg="+encodeURIComponent(fromGrade)+
@@ -636,25 +641,35 @@ export default async (request,context)=>{
       let issuedApprovalToken="";
       let approvalTokenHash="";
       let approvalExpiresAt="";
-      if(data.partnerApprovalEnabled===true){
+      if(approvalMode==="family"){
         issuedApprovalToken=newApprovalToken();
         approvalTokenHash=await sha256(issuedApprovalToken);
         approvalExpiresAt=new Date(Date.now()+APPROVAL_TTL_MS).toISOString();
       }
       if(idx>=0){
-        data.requests[idx]={...data.requests[idx],toGrade,toName,requestType,swapDate,swapGrade,swapName,updatedAt:now,approvalTokenHash,approvalExpiresAt,partnerApprovedAt:"",requesterLineHash:requesterLineHash||data.requests[idx].requesterLineHash||"",requesterDevice:data.partnerApprovalEnabled===true?clientLabel(request):(data.requests[idx].requesterDevice||"")};
+        data.requests[idx]={...data.requests[idx],toGrade,toName,requestType,swapDate,swapGrade,swapName,approvalMode,updatedAt:now,approvalTokenHash,approvalExpiresAt,partnerApprovedAt:"",requesterLineHash:approvalMode==="family"?(requesterLineHash||data.requests[idx].requesterLineHash||""):"",requesterDevice:approvalMode==="family"?clientLabel(request):(data.requests[idx].requesterDevice||"")};
       }else{
         if(data.requests.length>=MAX_REQUESTS)return json({error:"申請の保存上限に達しています。管理者へ連絡してください。"},400);
         const next=nextRequestNo(data);data.requestSeq=next.seq;
         data.requests.push({
           id:`request-${crypto.randomUUID()}`,requestNo:next.value,date,
-          fromGrade,fromName,toGrade,toName,requestType,swapDate,swapGrade,swapName,status:"pending",createdAt:now,updatedAt:now,
-          approvalTokenHash,approvalExpiresAt,partnerApprovedAt:"",requesterLineHash,requesterDevice:data.partnerApprovalEnabled===true?clientLabel(request):"",approverDevice:""
+          fromGrade,fromName,toGrade,toName,requestType,swapDate,swapGrade,swapName,approvalMode,status:"pending",createdAt:now,updatedAt:now,
+          approvalTokenHash,approvalExpiresAt,partnerApprovedAt:"",requesterLineHash,requesterDevice:approvalMode==="family"?clientLabel(request):"",approverDevice:""
         });
       }
       data.requests=dedupePending(data.requests);
       await store.setJSON(KEY,data);
-      const extra=data.partnerApprovalEnabled===true&&issuedApprovalToken?{approvalUrl:approvalUrl(request,issuedApprovalToken),approvalExpiresAt}:{};
+      if(approvalMode==="admin"&&data.partnerApprovalEnabled===true){
+        const saved=data.requests.find(item=>item.status==="pending"&&item.date===date&&item.fromGrade===fromGrade&&item.fromName===fromName&&String(item.requestType||"replace")===requestType&&String(item.swapDate||"")===swapDate);
+        pushMonitorEvent(data,{
+          stage:"admin_fallback_created",level:"info",requestNo:saved?.requestNo||"",
+          flowKey:[date,fromGrade,fromName].join("|"),
+          device:clientLabel(request),
+          message:"LINE未使用のため管理者承認へ切り替えました。"
+        });
+        await store.setJSON(KEY,data);
+      }
+      const extra=approvalMode==="family"&&issuedApprovalToken?{approvalUrl:approvalUrl(request,issuedApprovalToken),approvalExpiresAt}:{};
       return json({ok:true,...publicData(data),...extra});
     }
 
