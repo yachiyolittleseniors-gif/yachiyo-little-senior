@@ -314,23 +314,7 @@
       setEndedUI(false);
     }
   }
-
-  // コピーライトを2秒以内に5回タップ -> 管理表示
-  const footer=document.querySelector('footer') || document.body;
-  let taps=0,timer=null;
-  footer.addEventListener('pointerup',function(e){
-    taps++;
-    clearTimeout(timer);
-    timer=setTimeout(()=>taps=0,2000);
-    if(taps>=5){
-      taps=0;
-      clearTimeout(timer);
-      adminBtn.textContent='管理';
-      adminBtn.style.setProperty('display','block','important');
-    }
-  },{passive:true});
-
-  adminBtn.addEventListener('click',async()=>{
+adminBtn.addEventListener('click',async()=>{
     if(panel.classList.contains('show')){
       panel.classList.remove('show');
       panel.dataset.adminPassword='';
