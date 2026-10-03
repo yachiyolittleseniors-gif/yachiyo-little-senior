@@ -34,14 +34,13 @@
    const loginMode=cfg.autoEnableOnLogin===true;
    const exp=loginMode?grantUntil():0;
    const allowed=loginMode?exp>Date.now():cfg.pages[KEY]!==false;
-   const session=window.YLSAdminSession;
-   const sessionUntil=session?.expiresAt?.()||0;
-   // Manual visibility follows page settings; only automatic reveal follows the login session.
-   enabled=(!loginMode||session?.isActive?.()===true)&&(!desktop.matches||cfg.desktopEnabled===true)&&allowed;
+   // Manual visibility follows page settings. Automatic reveal is unlocked only
+   // by a successful team-page login on this device; editing still requires admin auth.
+   enabled=(!desktop.matches||cfg.desktopEnabled===true)&&allowed;
    ready=true;if(timer){clearTimeout(timer);timer=null}
    if(enabled){
      showAdminUi();
-     const until=loginMode?Math.min(exp,sessionUntil):0;
+     const until=loginMode?exp:0;
      if(until)timer=setTimeout(()=>{enabled=false;clearAdminState()},Math.min(Math.max(0,until-Date.now()),2147483647));
    }
    else clearAdminState();
@@ -58,7 +57,7 @@
  window.addEventListener('focus',()=>{if(ready)apply(currentSettings)});
  const blocked=()=>{
    const loginMode=currentSettings?.autoEnableOnLogin===true;
-   const expired=loginMode&&(window.YLSAdminSession?.isActive?.()!==true||grantUntil()<=Date.now());
+   const expired=loginMode&&grantUntil()<=Date.now();
    if(enabled&&expired){enabled=false;clearAdminState()}
    return !ready||!enabled;
  };
