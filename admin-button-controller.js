@@ -250,6 +250,9 @@
       const guideline=document.querySelector('#guidelineAdminBox');
       if(area)area.classList.toggle('show',!!on);
       if(guideline)guideline.classList.toggle('show',!!on);
+      if(on&&typeof window.syncGuidelineEditorFromPublic==='function'){
+        window.syncGuidelineEditorFromPublic();
+      }
       button.classList.toggle('is-visible',!!on);
       if(on)button.dataset.active='1';
       else delete button.dataset.active;
