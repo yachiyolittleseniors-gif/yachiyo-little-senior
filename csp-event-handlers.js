@@ -93,6 +93,11 @@
     if (el && el.getAttribute) run(el.getAttribute('data-csp-onerror'), el, ev);
   }, true);
 
+  // Only the home page gets the standalone header lock. Shared event handlers
+  // above must stay active on every page.
+  var teamLockPath = String(location.pathname || '').toLowerCase();
+  if (teamLockPath !== '/' && teamLockPath !== '/index' && teamLockPath !== '/index.html') return;
+
   function ensureTeamLockShortcutStyle() {
     if (document.getElementById('team-lock-shortcut-style')) return;
     var style = document.createElement('style');
@@ -109,16 +114,13 @@
       '.header .nav,.site-header .site-nav{column-gap:8px!important}' +
       '}' +
       '@media(max-width:600px){' +
-      '.header .nav .team-lock-shortcut,.site-header .site-nav .team-lock-shortcut{flex-basis:42px;width:42px;height:42px;border-radius:9px}' +
-      '.header .nav .team-lock-shortcut svg,.site-header .site-nav .team-lock-shortcut svg{width:15px;height:15px}' +
+      '.header .nav .team-lock-shortcut,.site-header .site-nav .team-lock-shortcut{flex-basis:36px;width:36px;height:36px;border-radius:8px}' +
+      '.header .nav .team-lock-shortcut svg,.site-header .site-nav .team-lock-shortcut svg{width:14px;height:14px}' +
       '}';
     (document.head || document.documentElement).appendChild(style);
   }
 
   function installTeamLockShortcut() {
-    var path = String(location.pathname || '').toLowerCase();
-    if (path === '/board.html' || path === '/board') return true;
-
     var menu = document.querySelector('.header .nav .menu, .site-header .site-nav .menu');
     if (!menu) return false;
     if (document.querySelector('.team-lock-shortcut')) return true;
