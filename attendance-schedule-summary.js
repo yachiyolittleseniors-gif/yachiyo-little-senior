@@ -68,14 +68,15 @@
       '.attendance-schedule-meta,.attendance-report-schedule-meta{margin:8px 0 12px;padding:8px 10px;border-top:1px solid rgba(199,154,59,.35);border-bottom:1px solid rgba(199,154,59,.35);background:#fffdf7}' +
       '.attendance-schedule-meta-line{margin:0;color:#596474;font-size:11px;font-weight:800;line-height:1.55;overflow-wrap:anywhere}' +
       '.attendance-schedule-meta-line+.attendance-schedule-meta-line{margin-top:2px}' +
-      '.attendance-schedule-meta-line b{color:#8b671d}' +
+      '.attendance-schedule-meta-line b{color:#8b671d;white-space:nowrap}' +
+      '.attendance-schedule-meta-item{display:inline-block;white-space:nowrap}' +
       '.summary-dialog .attendance-schedule-meta{margin:0 0 10px;padding:8px 0;border-left:0;border-right:0}' +
       '.summary-dialog .attendance-schedule-meta-line{font-size:11px}' +
       '@media(max-width:420px){.attendance-schedule-meta-line{font-size:10.5px;line-height:1.5}}';
     document.head.appendChild(style);
   }
 
-  function compactScheduleLines(event,includeTitle){
+  function compactScheduleGroups(event,includeTitle){
     const title=String(event?.title||'').trim();
     const grade=gradeLabel(event);
     const time=String(event?.time||'').trim();
@@ -91,14 +92,17 @@
     if(place)second.push('場所：'+place);
     if(memo)second.push(detailLabel+'：'+memo);
 
-    return [first.join('　｜　'),second.join('　｜　')].filter(Boolean);
+    return [first,second].filter(group=>group.length);
   }
 
   function compactScheduleHtml(event,includeTitle){
-    const lines=compactScheduleLines(event,includeTitle);
-    return lines.map((line,index)=>
-      '<p class="attendance-schedule-meta-line">'+(index===0?'<b>予定情報　</b>':'')+esc(line)+'</p>'
-    ).join('');
+    const groups=compactScheduleGroups(event,includeTitle);
+    return groups.map((group,lineIndex)=>{
+      const items=group.map((item,index)=>
+        '<span class="attendance-schedule-meta-item">'+(index?'　｜　':'')+esc(item)+'</span>'
+      ).join('');
+      return '<p class="attendance-schedule-meta-line">'+(lineIndex===0?'<b>予定情報　</b>':'')+items+'</p>';
+    }).join('');
   }
 
   async function injectForButton(button){
