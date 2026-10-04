@@ -272,6 +272,7 @@ body{padding-top:var(--fixed-header-height)!important}
 #board.board-shell,
 #board.board-shell button{touch-action:manipulation!important}
 </style>
+<style id="hide-print-report-button-final">#printReportBtn{display:none!important}</style>
 </head><body id="page-top">
 <header class="header">
 <nav class="nav">
@@ -325,7 +326,7 @@ body{padding-top:var(--fixed-header-height)!important}
       <div class="report-dialog-frame">
         <div class="report-dialog-actions">
           <button class="report-close" id="closeReportBtn" type="button">出欠確認に戻る</button>
-          <button id="saveReportImageBtn" type="button">画像で保存</button>
+          <button id="saveReportImageBtn" type="button">画像で保存</button><button id="printReportBtn" type="button" hidden aria-hidden="true">印刷・PDF保存</button>
           
         </div>
         <article class="report-sheet" id="reportSheet">
@@ -636,6 +637,7 @@ function renderComments(){const byId=new Map(data.members.map(m=>[m.id,memberDis
 $('#openReportBtn').onclick=async()=>{const eventId=$('#reportEventSelect').value,event=visibleEvents().find(item=>String(item.id)===String(eventId));if(!event){alert('出力する日程を選択してください。');return}const button=$('#openReportBtn');button.disabled=true;button.textContent='保護者の帯同を照合中…';try{await loadParentEscortForReport(event.date);if(!renderReport(eventId))throw new Error('選手出席一覧を作成できませんでした。');$('#reportDialog').showModal();document.body.style.overflow='hidden'}catch(error){alert(error.name==='TimeoutError'?'帯同情報の取得に時間がかかっています。もう一度お試しください。':error.message||'帯同情報を確認できませんでした。もう一度お試しください。')}finally{button.disabled=false;button.textContent='選手出席一覧を出力'}};
 $('#closeReportBtn').onclick=()=>{$('#reportDialog').close();document.body.style.overflow=''};
 $('#saveReportImageBtn').onclick=saveReportImage;
+$('#printReportBtn').onclick=()=>window.print();
 
 $('#reportDialog').onclick=event=>{if(event.target===$('#reportDialog')){$('#reportDialog').close();document.body.style.overflow=''}};
 
