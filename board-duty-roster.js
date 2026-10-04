@@ -614,9 +614,11 @@
       const approvalStatus=document.getElementById('dutyPartnerApprovalStatus');
       if(approvalToggle)approvalToggle.checked=partnerApprovalEnabled;
       if(approvalStatus)approvalStatus.textContent=partnerApprovalEnabled?'ご家族承認モード':'管理者承認モード';
+      const noLineToggle=document.getElementById('toggleDutyNoLine');
       const noLineOption=document.getElementById('dutyRequestNoLineOption');
       const noLineInput=document.getElementById('dutyRequestNoLine');
-      if(noLineOption)noLineOption.hidden=!partnerApprovalEnabled;
+      if(noLineToggle){noLineToggle.hidden=!partnerApprovalEnabled;noLineToggle.setAttribute('aria-expanded','false');noLineToggle.textContent='LINE未利用の方';}
+      if(noLineOption)noLineOption.hidden=true;
       if(noLineInput&&!partnerApprovalEnabled)noLineInput.checked=false;
       syncDutyRequestOperationNote();
       requestsLoaded=true;
@@ -1030,9 +1032,11 @@
         partnerApprovalToggle.checked=partnerApprovalEnabled;
         if(isAdminViewing())loadDutySystemMonitor();
         if(partnerApprovalStatus)partnerApprovalStatus.textContent=partnerApprovalEnabled?'ご家族承認モード':'管理者承認モード';
+        const noLineToggle=document.getElementById('toggleDutyNoLine');
         const noLineOption=document.getElementById('dutyRequestNoLineOption');
         const noLineInput=document.getElementById('dutyRequestNoLine');
-        if(noLineOption)noLineOption.hidden=!partnerApprovalEnabled;
+        if(noLineToggle){noLineToggle.hidden=!partnerApprovalEnabled;noLineToggle.setAttribute('aria-expanded','false');noLineToggle.textContent='LINE未利用の方';}
+        if(noLineOption)noLineOption.hidden=true;
         if(noLineInput&&!partnerApprovalEnabled)noLineInput.checked=false;
         syncDutyRequestOperationNote();
         if(window.showSaveNotice)showSaveNotice(partnerApprovalEnabled?'ご家族承認モードに切り替えました':'管理者承認モードに切り替えました');
@@ -1174,6 +1178,15 @@
   document.getElementById('dutyRequestRosterDate')?.addEventListener('change',populateRequestForm);
   document.getElementById('dutyRequestFrom')?.addEventListener('change',populateRequestForm);
   document.getElementById('dutyRequestSwapFromSlot')?.addEventListener('change',populateRequestForm);
+  const noLineToggle=document.getElementById('toggleDutyNoLine');
+  const noLineOption=document.getElementById('dutyRequestNoLineOption');
+  if(noLineToggle&&noLineOption)noLineToggle.addEventListener('click',function(){
+    if(!partnerApprovalEnabled)return;
+    const open=noLineOption.hidden;
+    noLineOption.hidden=!open;
+    noLineToggle.setAttribute('aria-expanded',String(open));
+    noLineToggle.textContent=open?'LINE未利用の方を閉じる':'LINE未利用の方';
+  });
   document.getElementById('submitDutyRequest')?.addEventListener('click',submitRequest);
   if(hasLegacyChangeForm)pasteChangeBtn.addEventListener('click',pasteChangeText);
   if(hasLegacyChangeForm)saveChangesBtn.addEventListener('click',saveChanges);saveBtn.addEventListener('click',addImages);
