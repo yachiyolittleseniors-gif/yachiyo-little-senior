@@ -757,6 +757,19 @@ function renderReplyMode(){
   const guidelineEditor=document.getElementById('guidelineEditor');
   const guidelineSaveBtn=document.getElementById('guidelineSaveBtn');
 
+  function ensureGuidelineEditorValue(){
+    if(!guidelineEditor.value.trim()){
+      guidelineEditor.value=guidelineText.textContent.trim();
+    }
+  }
+
+  const guidelineBoxForSync=document.getElementById('guidelineAdminBox');
+  if(guidelineBoxForSync && typeof MutationObserver==='function'){
+    new MutationObserver(()=>{
+      if(guidelineBoxForSync.classList.contains('show'))ensureGuidelineEditorValue();
+    }).observe(guidelineBoxForSync,{attributes:true,attributeFilter:['class']});
+  }
+
   async function loadGuideline(){
     const fallback=guidelineText.textContent.trim();
     guidelineEditor.value=fallback;
@@ -803,7 +816,11 @@ function renderReplyMode(){
     }
   }
 
-  guidelineSaveBtn.addEventListener('click',saveGuideline);
+  guidelineEditor.addEventListener('focus',ensureGuidelineEditorValue);
+  guidelineSaveBtn.addEventListener('click',()=>{
+    ensureGuidelineEditorValue();
+    saveGuideline();
+  });
 
   function formatBytes(bytes){
     const value=Number(bytes);
