@@ -75,9 +75,16 @@ async function sha256(value){
 function newApprovalToken(){
   return crypto.randomUUID().replace(/-/g,"")+crypto.randomUUID().replace(/-/g,"");
 }
+function publicSiteOrigin(request){
+  const configured=String(process.env.URL||process.env.DEPLOY_PRIME_URL||"").trim();
+  try{
+    if(configured)return new URL(configured).origin;
+  }catch{}
+  try{return new URL(request.url).origin}catch{}
+  return "https://yachiyo-little-senior.netlify.app";
+}
 function approvalUrl(request,token){
-  const url=new URL(request.url);
-  return `${url.origin}/duty-approve.html?t=${encodeURIComponent(token)}`;
+  return `${publicSiteOrigin(request)}/duty-approve.html?t=${encodeURIComponent(token)}`;
 }
 function normalizeMonitorEvent(item,index=0){
   const at=String(item?.at||"");
@@ -121,10 +128,14 @@ function normalizeItem(item,index=0){
     createdAt:String(item?.createdAt||"").slice(0,60),
     updatedAt:String(item?.updatedAt||"").slice(0,60),
     approvalTokenHash:String(item?.approvalTokenHash||"").slice(0,128),
+    approvalTokenHashes:Array.from(new Set([
+      ...(Array.isArray(item?.approvalTokenHashes)?item.approvalTokenHashes:[]),
+      item?.approvalTokenHash||""
+    ].map(value=>String(value||"").slice(0,128)).filter(Boolean))).slice(-6),
     approvalExpiresAt:String(item?.approvalExpiresAt||"").slice(0,60),
     partnerApprovedAt:String(item?.partnerApprovedAt||"").slice(0,60),
     requesterLineHash:String(item?.requesterLineHash||"").slice(0,128),
-    approvalMode:String(item?.approvalMode||"")==="admin"?"admin":((item?.requesterLineHash||item?.approvalTokenHash||item?.approvalExpiresAt)?"family":"admin"),
+    approvalMode:String(item?.approvalMode||"")==="admin"?"admin":((item?.requesterLineHash||item?.approvalTokenHash||(Array.isArray(item?.approvalTokenHashes)&&item.approvalTokenHashes.length)||item?.approvalExpiresAt)?"family":"admin"),
     requesterDevice:String(item?.requesterDevice||"").slice(0,80),
     approverDevice:String(item?.approverDevice||"").slice(0,80)
   };
@@ -207,7 +218,7 @@ async function loadData(store){
       const active=activeRequestChanges(item).length>0;
       if(cancelled&&!active){
         reconciled=true;
-        return{...item,status:"closed",updatedAt:new Date().toISOString(),approvalTokenHash:"",approvalExpiresAt:""};
+        return{...item,status:"closed",updatedAt:new Date().toISOString(),approvalTokenHash:"",approvalTokenHashes:[],approvalExpiresAt:""};
       }
       return item;
     }
@@ -224,7 +235,7 @@ async function loadData(store){
     const cancelled=requestChanges(item).some(change=>String(change?.status||"active")==="cancelled");
     reconciled=true;
     if(cancelled){
-      return{...item,status:"closed",updatedAt:new Date().toISOString(),approvalTokenHash:"",approvalExpiresAt:""};
+      return{...item,status:"closed",updatedAt:new Date().toISOString(),approvalTokenHash:"",approvalTokenHashes:[],approvalExpiresAt:""};
     }
     // 取消ではなく反映データだけが欠けた場合は、監視対象として確認待ちへ戻す。
     return{...item,status:"pending",updatedAt:new Date().toISOString()};
@@ -404,7 +415,21 @@ async function applyRequestToRoster(store,item){
 async function findRequestByApprovalToken(data,token){
   if(!token||String(token).length<40)return null;
   const hash=await sha256(token);
-  return data.requests.find(item=>item.status==="pending"&&item.approvalTokenHash&&item.approvalTokenHash===hash)||null;
+  return data.requests.find(item=>{
+    if(item.status!=="pending")return false;
+    const hashes=Array.from(new Set([
+      ...(Array.isArray(item.approvalTokenHashes)?item.approvalTokenHashes:[]),
+      item.approvalTokenHash||""
+    ].filter(Boolean)));
+    return hashes.includes(hash);
+  })||null;
+}
+function appendApprovalHash(item,hash){
+  return Array.from(new Set([
+    ...(Array.isArray(item?.approvalTokenHashes)?item.approvalTokenHashes:[]),
+    item?.approvalTokenHash||"",
+    hash||""
+  ].filter(Boolean))).slice(-6);
 }
 
 function approvalPreview(item){
@@ -432,12 +457,19 @@ export default async (request,context)=>{
         const expires=Date.parse(item.approvalExpiresAt||"");
         if(!Number.isFinite(expires)||Date.now()>expires)return json({error:"承認リンクの有効期限が切れています。申請者に再申請を依頼してください。"},410);
         const session=await getLineSession(request);
-        const currentHash=session?await lineIdentityHash(session.sub):"";
+        if(!session){
+          return json({
+            error:"LINE認証が必要です。",
+            code:"line_login_required",
+            loginUrl:lineLoginStartUrl(request,`/duty-approve.html?t=${encodeURIComponent(token)}`)
+          },401);
+        }
+        const currentHash=await lineIdentityHash(session.sub);
         return json({
           ok:true,
           request:approvalPreview(item),
           lineAuthRequired:false,
-          selfApprovalBlocked:!!item.requesterLineHash&&!!currentHash&&currentHash===item.requesterLineHash
+          selfApprovalBlocked:!!item.requesterLineHash&&currentHash===item.requesterLineHash
         });
       }
       if(!(await boardAccess(store,request,context)))return json({error:"unauthorized"},401);
@@ -489,7 +521,7 @@ export default async (request,context)=>{
       const approvalExpiresAt=new Date(Date.now()+APPROVAL_TTL_MS).toISOString();
       let item;
       if(idx>=0){
-        item={...data.requests[idx],toGrade,toName,requestType,swapDate,swapGrade,swapName,approvalMode:"family",updatedAt:now,approvalTokenHash,approvalExpiresAt,partnerApprovedAt:"",requesterLineHash,requesterDevice:clientLabel(request)};
+        item={...data.requests[idx],toGrade,toName,requestType,swapDate,swapGrade,swapName,approvalMode:"family",updatedAt:now,approvalTokenHash,approvalTokenHashes:appendApprovalHash(data.requests[idx],approvalTokenHash),approvalExpiresAt,partnerApprovedAt:"",requesterLineHash,requesterDevice:clientLabel(request)};
         data.requests[idx]=item;
       }else{
         if(data.requests.length>=MAX_REQUESTS)return json({error:"申請の保存上限に達しています。管理者へ連絡してください。"},400);
@@ -497,7 +529,7 @@ export default async (request,context)=>{
         item={
           id:`request-${crypto.randomUUID()}`,requestNo:next.value,date,
           fromGrade,fromName,toGrade,toName,requestType,swapDate,swapGrade,swapName,approvalMode:"family",status:"pending",createdAt:now,updatedAt:now,
-          approvalTokenHash,approvalExpiresAt,partnerApprovedAt:"",requesterLineHash,requesterDevice:clientLabel(request),approverDevice:""
+          approvalTokenHash,approvalTokenHashes:approvalTokenHash?[approvalTokenHash]:[],approvalExpiresAt,partnerApprovedAt:"",requesterLineHash,requesterDevice:clientLabel(request),approverDevice:""
         };
         data.requests.push(item);
       }
@@ -526,8 +558,15 @@ export default async (request,context)=>{
       const expires=Date.parse(item.approvalExpiresAt||"");
       if(!Number.isFinite(expires)||Date.now()>expires)return json({error:"承認リンクの有効期限が切れています。申請者に再申請を依頼してください。"},410);
       const session=await getLineSession(request);
-      const currentHash=session?await lineIdentityHash(session.sub):"";
-      const selfApprovalBlocked=!!item.requesterLineHash&&!!currentHash&&currentHash===item.requesterLineHash;
+      if(!session){
+        return json({
+          error:"LINE認証が必要です。",
+          code:"line_login_required",
+          loginUrl:lineLoginStartUrl(request,`/duty-approve.html?t=${encodeURIComponent(token)}`)
+        },401);
+      }
+      const currentHash=await lineIdentityHash(session.sub);
+      const selfApprovalBlocked=!!item.requesterLineHash&&currentHash===item.requesterLineHash;
       if(action==="preview-partner-approval")return json({ok:true,request:approvalPreview(item),lineAuthRequired:false,selfApprovalBlocked});
       if(selfApprovalBlocked){
         pushMonitorEvent(data,{stage:"self_approval_blocked",level:"warning",requestNo:item.requestNo,device:clientLabel(request),message:"申請者本人による承認をブロックしました。"});
@@ -542,7 +581,7 @@ export default async (request,context)=>{
       }
       const idx=data.requests.findIndex(x=>x.id===item.id);
       const now=new Date().toISOString();
-      data.requests[idx]={...item,status:"approved",partnerApprovedAt:now,updatedAt:now,approvalTokenHash:"",approvalExpiresAt:"",approverDevice:clientLabel(request)};
+      data.requests[idx]={...item,status:"approved",partnerApprovedAt:now,updatedAt:now,approvalTokenHash:"",approvalTokenHashes:[],approvalExpiresAt:"",approverDevice:clientLabel(request)};
       pushMonitorEvent(data,{stage:"approved_reflected",level:"ok",requestNo:item.requestNo,device:clientLabel(request),message:"交代相手の承認・当番表反映が完了しました。"});
       await store.setJSON(KEY,data);
       return json({ok:true,message:"承認しました。\n当番表へ反映されました。"});
@@ -576,7 +615,7 @@ export default async (request,context)=>{
       const approvalTokenHash=await sha256(issuedApprovalToken);
       const approvalExpiresAt=new Date(Date.now()+APPROVAL_TTL_MS).toISOString();
       const now=new Date().toISOString();
-      data.requests[idx]={...item,requesterLineHash,approvalTokenHash,approvalExpiresAt,updatedAt:now};
+      data.requests[idx]={...item,requesterLineHash,approvalTokenHash,approvalTokenHashes:appendApprovalHash(item,approvalTokenHash),approvalExpiresAt,updatedAt:now};
       await store.setJSON(KEY,data);
       return json({ok:true,...publicData(data),approvalUrl:approvalUrl(request,issuedApprovalToken),approvalExpiresAt});
     }
@@ -647,14 +686,14 @@ export default async (request,context)=>{
         approvalExpiresAt=new Date(Date.now()+APPROVAL_TTL_MS).toISOString();
       }
       if(idx>=0){
-        data.requests[idx]={...data.requests[idx],toGrade,toName,requestType,swapDate,swapGrade,swapName,approvalMode,updatedAt:now,approvalTokenHash,approvalExpiresAt,partnerApprovedAt:"",requesterLineHash:approvalMode==="family"?(requesterLineHash||data.requests[idx].requesterLineHash||""):"",requesterDevice:approvalMode==="family"?clientLabel(request):(data.requests[idx].requesterDevice||"")};
+        data.requests[idx]={...data.requests[idx],toGrade,toName,requestType,swapDate,swapGrade,swapName,approvalMode,updatedAt:now,approvalTokenHash,approvalTokenHashes:approvalMode==="family"?appendApprovalHash(data.requests[idx],approvalTokenHash):[],approvalExpiresAt,partnerApprovedAt:"",requesterLineHash:approvalMode==="family"?(requesterLineHash||data.requests[idx].requesterLineHash||""):"",requesterDevice:approvalMode==="family"?clientLabel(request):(data.requests[idx].requesterDevice||"")};
       }else{
         if(data.requests.length>=MAX_REQUESTS)return json({error:"申請の保存上限に達しています。管理者へ連絡してください。"},400);
         const next=nextRequestNo(data);data.requestSeq=next.seq;
         data.requests.push({
           id:`request-${crypto.randomUUID()}`,requestNo:next.value,date,
           fromGrade,fromName,toGrade,toName,requestType,swapDate,swapGrade,swapName,approvalMode,status:"pending",createdAt:now,updatedAt:now,
-          approvalTokenHash,approvalExpiresAt,partnerApprovedAt:"",requesterLineHash,requesterDevice:approvalMode==="family"?clientLabel(request):"",approverDevice:""
+          approvalTokenHash,approvalTokenHashes:approvalTokenHash?[approvalTokenHash]:[],approvalExpiresAt,partnerApprovedAt:"",requesterLineHash,requesterDevice:approvalMode==="family"?clientLabel(request):"",approverDevice:""
         });
       }
       data.requests=dedupePending(data.requests);
@@ -687,7 +726,7 @@ export default async (request,context)=>{
       if(!item.requesterLineHash||requesterHash!==item.requesterLineHash){
         return json({error:"この申請は申請者本人のみ取り消せます。",code:"not_requester"},403);
       }
-      data.requests[idx]={...item,status:"closed",updatedAt:new Date().toISOString(),approvalTokenHash:"",approvalExpiresAt:""};
+      data.requests[idx]={...item,status:"closed",updatedAt:new Date().toISOString(),approvalTokenHash:"",approvalTokenHashes:[],approvalExpiresAt:""};
       pushMonitorEvent(data,{stage:"requester_cancelled",level:"ok",requestNo:item.requestNo,device:clientLabel(request),message:"申請者本人が確認待ち申請を取り消しました。"});
       await store.setJSON(KEY,data);
       return json({ok:true,...publicData(data,requesterHash)});
@@ -715,7 +754,7 @@ export default async (request,context)=>{
       const idx=data.requests.findIndex(item=>(id&&item.id===id)||(requestNo&&item.requestNo===requestNo));
       if(idx<0)return json({error:"申請が見つかりません。"},404);
       const item=data.requests[idx];
-      data.requests[idx]={...item,status:"closed",updatedAt:new Date().toISOString(),approvalTokenHash:"",approvalExpiresAt:""};
+      data.requests[idx]={...item,status:"closed",updatedAt:new Date().toISOString(),approvalTokenHash:"",approvalTokenHashes:[],approvalExpiresAt:""};
       await store.setJSON(KEY,data);
       return json({ok:true,...publicData(data)});
     }
@@ -729,14 +768,14 @@ export default async (request,context)=>{
       if(item.status!=="pending")return json({error:"この申請は処理済みです。"},409);
       const applied=await applyRequestToRoster(store,item);
       if(!applied.ok)return json({error:applied.error},409);
-      data.requests[idx]={...item,status:"approved",updatedAt:new Date().toISOString(),approvalTokenHash:"",approvalExpiresAt:""};
+      data.requests[idx]={...item,status:"approved",updatedAt:new Date().toISOString(),approvalTokenHash:"",approvalTokenHashes:[],approvalExpiresAt:""};
       await store.setJSON(KEY,data);
       return json({ok:true,...publicData(data)});
     }
 
     if(action==="reject"){
       if(item.status!=="pending")return json({error:"この申請は処理済みです。"},409);
-      data.requests[idx]={...item,status:"rejected",updatedAt:new Date().toISOString(),approvalTokenHash:"",approvalExpiresAt:""};
+      data.requests[idx]={...item,status:"rejected",updatedAt:new Date().toISOString(),approvalTokenHash:"",approvalTokenHashes:[],approvalExpiresAt:""};
       await store.setJSON(KEY,data);
       return json({ok:true,...publicData(data)});
     }
