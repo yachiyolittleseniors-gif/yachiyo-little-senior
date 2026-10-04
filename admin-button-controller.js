@@ -20,11 +20,17 @@
   const KEY=pageKey();
   const cfg=PAGES[KEY];
   if(!cfg)return;
-  if(KEY==='schedule.html'||KEY==='results.html')return;
 
   const button=document.querySelector(cfg.button);
   const trigger=document.querySelector(cfg.trigger);
   if(!button||!trigger)return;
+
+  if(cfg.portalToBody===true&&button.parentElement!==document.body){
+    document.body.appendChild(button);
+  }
+  if(cfg.directAdminMode===true){
+    button.removeAttribute('data-csp-onclick');
+  }
 
   const state={
     settings:{pages:{},desktopEnabled:false},
@@ -33,7 +39,8 @@
     taps:0,
     tapTimer:null,
     grantTimer:null,
-    lastPointerAt:0
+    lastPointerAt:0,
+    busy:false
   };
 
   button.classList.add('unified-admin-toggle','yls-admin-button');
@@ -46,7 +53,7 @@
     const link=document.createElement('link');
     link.id='yls-admin-button-css';
     link.rel='stylesheet';
-    link.href='./admin-button.css?v=20261003-rebuild1';
+    link.href='./admin-button.css?v=20261004-unified2';
     (document.body||document.documentElement).appendChild(link);
   }
 
@@ -207,16 +214,111 @@
     setVisible(false);
   }
 
+  async function verifyDirectAdminPassword(password){
+    try{
+      const response=await fetch('/.netlify/functions/site-data?section=access-settings',{
+        method:'POST',
+        credentials:'same-origin',
+        headers:{
+          'content-type':'application/json',
+          'x-admin-password':password
+        },
+        body:JSON.stringify({action:'verifyAdminPassword'})
+      });
+      let data={};
+      try{data=await response.clone().json()}catch(_){}
+      return {ok:response.ok,status:response.status,data};
+    }catch(_){
+      return {ok:false,status:0,data:{}};
+    }
+  }
+
+  function applyDirectAdminMode(on){
+    document.body.classList.toggle('admin-mode',!!on);
+    try{
+      if(on)sessionStorage.setItem('yachiyoAdminMode','1');
+      else sessionStorage.removeItem('yachiyoAdminMode');
+    }catch(_){}
+
+    if(cfg.annualButton){
+      const annual=document.querySelector(cfg.annualButton);
+      if(annual)annual.hidden=!on;
+    }
+
+    if(!on&&cfg.resultsMode===true){
+      try{if(typeof window.clearForm==='function')window.clearForm()}catch(_){}
+      try{if(typeof window.closeSquadSettings==='function')window.closeSquadSettings()}catch(_){}
+      document.querySelectorAll('details[open]').forEach(item=>item.removeAttribute('open'));
+    }
+
+    button.textContent=on?ACTIVE_LABEL:IDLE_LABEL;
+  }
+
+  async function runDirectAdminMode(){
+    if(isEditing()){
+      try{
+        sessionStorage.removeItem('yachiyoAdminPassword');
+      }catch(_){}
+      applyDirectAdminMode(false);
+      state.revealed=false;
+      resetTaps();
+      setVisible(false);
+      return;
+    }
+
+    const password=prompt('管理者パスワードを入力してください');
+    if(!password)return;
+
+    if(state.busy)return;
+    state.busy=true;
+    button.disabled=true;
+    button.textContent='確認中…';
+
+    try{
+      const auth=await verifyDirectAdminPassword(password);
+      if(!auth.ok){
+        try{
+          sessionStorage.removeItem('yachiyoAdminPassword');
+          sessionStorage.removeItem('yachiyoAdminMode');
+        }catch(_){}
+        applyDirectAdminMode(false);
+
+        if(auth.status===429)alert('試行回数の上限です。15分後に再度お試しください。');
+        else if(auth.status===401&&auth.data?.error)alert(auth.data.error);
+        else if(auth.status===503)alert('管理者認証を確認できませんでした。');
+        else if(auth.status===0)alert('管理者パスワードを確認できませんでした。通信状況を確認してください。');
+        else alert('管理者パスワードが違います。');
+        return;
+      }
+
+      try{sessionStorage.setItem('yachiyoAdminPassword',password)}catch(_){}
+      applyDirectAdminMode(true);
+      state.revealed=true;
+      setVisible(true);
+
+      if(cfg.resultsMode===true){
+        requestAnimationFrame(()=>requestAnimationFrame(()=>{
+          const target=document.querySelector('.results-admin-toolbar');
+          const header=document.querySelector('.header');
+          if(!target)return;
+          const top=target.getBoundingClientRect().top+window.scrollY-(header?header.offsetHeight:0)-12;
+          window.scrollTo({top:Math.max(0,top),behavior:'auto'});
+        }));
+      }
+    }finally{
+      state.busy=false;
+      button.disabled=false;
+      normalizeLabel();
+    }
+  }
+
   button.addEventListener('click',event=>{
     const wasEditing=isEditing();
 
-    // Schedule/results still use their page-specific, CSP-approved admin function.
-    // Invoke it directly here so the unified button never depends on delegated
-    // data-csp-onclick handling, which was the source of taps being ignored.
-    if((KEY==='schedule.html'||KEY==='results.html')&&typeof window.enableAdminMode==='function'){
+    if(cfg.directAdminMode===true){
       event.preventDefault();
       event.stopImmediatePropagation();
-      Promise.resolve(window.enableAdminMode())
+      runDirectAdminMode()
         .then(()=>settleButtonAfterAction(wasEditing))
         .catch(()=>settleButtonAfterAction(wasEditing));
       return;
