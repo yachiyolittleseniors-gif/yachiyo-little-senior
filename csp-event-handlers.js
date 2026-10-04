@@ -92,4 +92,53 @@
     var el = ev.target;
     if (el && el.getAttribute) run(el.getAttribute('data-csp-onerror'), el, ev);
   }, true);
+
+  function installTeamLockShortcut() {
+    var path = String(location.pathname || '').toLowerCase();
+    if (path === '/board.html' || path === '/board') return;
+
+    var menu = document.querySelector('.header .nav .menu, .site-header .site-nav .menu');
+    if (!menu || document.querySelector('.team-lock-shortcut')) return;
+
+    var link = document.createElement('a');
+    link.className = 'team-lock-shortcut';
+    link.href = '/board.html';
+    link.setAttribute('aria-label', 'チーム専用ページ');
+    link.setAttribute('title', 'チーム専用ページ');
+    link.innerHTML =
+      '<svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">' +
+      '<path d="M7.5 10V7a4.5 4.5 0 0 1 9 0v3" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round"/>' +
+      '<rect x="5.5" y="10" width="13" height="10" rx="2.2" fill="none" stroke="currentColor" stroke-width="1.9"/>' +
+      '<circle cx="12" cy="15" r="1.2" fill="currentColor"/>' +
+      '</svg>';
+
+    menu.parentNode.insertBefore(link, menu);
+
+    if (!document.getElementById('team-lock-shortcut-style')) {
+      var style = document.createElement('style');
+      style.id = 'team-lock-shortcut-style';
+      style.textContent =
+        '.team-lock-shortcut{display:none;text-decoration:none!important;-webkit-tap-highlight-color:transparent;touch-action:manipulation}' +
+        '@media(max-width:900px){' +
+        '.header .nav .team-lock-shortcut,.site-header .site-nav .team-lock-shortcut{' +
+        'display:flex!important;align-items:center;justify-content:center;flex:0 0 36px;width:36px;height:36px;' +
+        'margin-left:auto;border:1px solid rgba(199,154,59,.38);border-radius:8px;' +
+        'color:#e2bd67!important;background:rgba(7,20,38,.18);position:relative;z-index:10002}' +
+        '.header .nav .team-lock-shortcut svg,.site-header .site-nav .team-lock-shortcut svg{width:17px;height:17px;display:block}' +
+        '.header .nav .team-lock-shortcut + .menu,.site-header .site-nav .team-lock-shortcut + .menu{margin-left:0!important}' +
+        '.header .nav,.site-header .site-nav{column-gap:8px!important}' +
+        '}' +
+        '@media(max-width:600px){' +
+        '.header .nav .team-lock-shortcut,.site-header .site-nav .team-lock-shortcut{flex-basis:34px;width:34px;height:34px;border-radius:7px}' +
+        '.header .nav .team-lock-shortcut svg,.site-header .site-nav .team-lock-shortcut svg{width:15px;height:15px}' +
+        '}';
+      document.head.appendChild(style);
+    }
+  }
+
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', installTeamLockShortcut, { once: true });
+  } else {
+    installTeamLockShortcut();
+  }
 })();
