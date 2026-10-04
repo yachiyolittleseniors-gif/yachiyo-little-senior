@@ -67,21 +67,22 @@
     }
     idToken=window.liff.getIDToken()||'';
     if(!idToken){
-      // A user who previously authorized this LINE Login channel before the
-      // LIFF app gained the openid scope can have an old grant without an ID
-      // token. Ask LINE for the missing openid permission once, then init runs
-      // again after LINE returns.
+      // getIDToken() can be null even inside LIFF. For this flow we only need
+      // the stable LINE user ID, so fall back to the verified LIFF profile.
+      // The userId is sent to the server and hashed there before comparison.
       try{
-        if(window.liff.permission&&typeof window.liff.permission.query==='function'){
-          const permission=await window.liff.permission.query('openid');
-          if(permission&&permission.state==='prompt'&&typeof window.liff.permission.requestAll==='function'){
-            await window.liff.permission.requestAll();
-            return false;
+        if(typeof window.liff.getProfile==='function'){
+          const profile=await window.liff.getProfile();
+          if(profile&&profile.userId){
+            idToken='';
+            window.__ylsLiffUserId=String(profile.userId);
+            return true;
           }
         }
       }catch(_){}
       throw new Error('LINE本人確認情報を取得できませんでした。LINEから承認リンクを開き直してください。');
     }
+    window.__ylsLiffUserId='';
     return true;
   }
 
@@ -89,7 +90,7 @@
     return fetchJson(API,{
       method:'POST',
       headers:{'content-type':'application/json'},
-      body:JSON.stringify({action,token,idToken})
+      body:JSON.stringify({action,token,idToken,lineUserId:String(window.__ylsLiffUserId||'')})
     });
   }
 
