@@ -52,9 +52,11 @@
 
   async function ensureLiffIdentity(){
     if(!window.liff){
-      const sdkTag=document.querySelector('script[src*="line-scdn.net/liff"]');
-      throw new Error('LINE本人確認を読み込めませんでした。\nLIFF診断\nsdk='+(sdkTag?'タグあり':'タグなし')+'\nliff=未読込\nurl='+location.href);
+      // The LINE in-app browser can expose the page before the external SDK has
+      // finished evaluating. Give the SDK a short bounded wait before failing.
+      for(let i=0;i<20&&!window.liff;i++)await new Promise(resolve=>setTimeout(resolve,100));
     }
+    if(!window.liff)throw new Error('LINE本人確認を読み込めませんでした。LINEから承認リンクを開き直してください。');
 
     // LINE temporarily moves LIFF URL additions into liff.state on the primary
     // redirect. Do not inspect or rewrite the URL until liff.init() resolves.
