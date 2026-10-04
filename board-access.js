@@ -35,12 +35,14 @@ window.boardAccessReady=(async function requireBoardPassword(){
   function rememberPasskeyVerification(){
     try{sessionStorage.setItem(passkeyJustVerifiedKey,String(Date.now()))}catch(e){}
   }
-  function consumeFreshPasskeyVerification(){
+  function hasFreshPasskeyVerification(){
     try{
       const verifiedAt=Number(sessionStorage.getItem(passkeyJustVerifiedKey)||0);
-      sessionStorage.removeItem(passkeyJustVerifiedKey);
       return Number.isFinite(verifiedAt)&&verifiedAt>0&&(Date.now()-verifiedAt)<=passkeyJustVerifiedLifetime;
     }catch(e){return false}
+  }
+  function clearFreshPasskeyVerification(){
+    try{sessionStorage.removeItem(passkeyJustVerifiedKey)}catch(e){}
   }
   async function verify(value){
     const response=await fetch('/.netlify/functions/site-data?section=access-settings',{
@@ -97,13 +99,16 @@ window.boardAccessReady=(async function requireBoardPassword(){
   const navigationEntry=performance.getEntriesByType&&performance.getEntriesByType('navigation')[0];
   const isPageReload=navigationEntry&&navigationEntry.type==='reload';
 
-  // If a successful passkey login is immediately followed by a second board
-  // navigation/reload, reuse the server-verified access token instead of
-  // opening WebAuthn again. The marker is one-shot and expires in 20 seconds.
-  if(consumeFreshPasskeyVerification()){
+  // iPhone/Safari can immediately perform another board navigation after a
+  // successful WebAuthn ceremony. Reuse the just-issued board session instead
+  // of opening Face ID / passkey a second time.
+  if(hasFreshPasskeyVerification()){
     try{
       const saved=sessionStorage.getItem(accessKey)||readReloadAccess();
-      if(saved&&await verify(saved))return true;
+      if(saved&&await verify(saved)){
+        clearFreshPasskeyVerification();
+        return true;
+      }
       if(saved)clearAccess();
     }catch(e){
       clearAccess();
