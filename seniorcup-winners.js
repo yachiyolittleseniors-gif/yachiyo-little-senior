@@ -12,16 +12,40 @@
   const add=document.getElementById('winnerAddBtn');
   const save=document.getElementById('winnerSaveBtn');
   if(!list||!toggle||!editor||!admin||!add||!save)return;
+  const actions=admin.querySelector('.winners-admin-actions');
+  const note=admin.querySelector('.admin-note');
+  const editToggle=document.createElement('button');
+  editToggle.type='button';
+  editToggle.className='winner-edit-toggle';
+  editToggle.textContent='歴代優勝編集を表示';
+  editToggle.setAttribute('aria-pressed','false');
+  admin.insertBefore(editToggle,editor);
+
   const deleteToggle=document.createElement('button');
   deleteToggle.type='button';
   deleteToggle.className='winner-delete-toggle';
   deleteToggle.textContent='削除ボタンを表示';
   deleteToggle.setAttribute('aria-pressed','false');
-  const actions=admin.querySelector('.winners-admin-actions');
   if(actions) actions.insertBefore(deleteToggle,save);
+
   let data=defaults.map(x=>({...x}));
   let busy=false;
+  let editVisible=false;
   let deleteVisible=false;
+
+  function applyEditVisibility(){
+    editor.hidden=!editVisible;
+    if(actions) actions.hidden=!editVisible;
+    if(note) note.hidden=!editVisible;
+    editToggle.textContent=editVisible?'歴代優勝編集を閉じる':'歴代優勝編集を表示';
+    editToggle.setAttribute('aria-pressed',String(editVisible));
+    if(!editVisible){
+      deleteVisible=false;
+      deleteToggle.textContent='削除ボタンを表示';
+      deleteToggle.setAttribute('aria-pressed','false');
+      editor.querySelectorAll('.winner-delete-btn').forEach(btn=>btn.hidden=true);
+    }
+  }
   function setExpanded(open){list.classList.toggle('show',open);toggle.setAttribute('aria-expanded',String(open));toggle.textContent=open?'歴代優勝チームを閉じる':'歴代優勝チームを見る';}
   if(performance.getEntriesByType('navigation')[0]?.type==='reload'){try{setExpanded(sessionStorage.getItem('yachiyo:cup-winners-open')==='true')}catch(e){}}
   window.addEventListener('pagehide',()=>{try{sessionStorage.setItem('yachiyo:cup-winners-open',String(list.classList.contains('show')))}catch(e){}});
@@ -54,24 +78,69 @@
   function renderAll(){renderList();renderEditor();}
   toggle.addEventListener('click',()=>setExpanded(!list.classList.contains('show')));
   add.addEventListener('click',()=>{syncEditor();const maxEdition=Math.max(0,...data.map(x=>x.edition));const maxYear=Math.max(2025,...data.map(x=>x.year));const item={edition:maxEdition+1,year:maxYear+1,team:''};data.push(item);renderEditor();const row=[...editor.querySelectorAll('.winner-edit-row')].find(r=>Number(r.dataset.edition)===item.edition);const teamInput=row?.querySelector('input[type=\"text\"]');if(teamInput){teamInput.focus();teamInput.scrollIntoView({behavior:'smooth',block:'center'});}});
+  async function postWinners(password){
+    return fetch(API,{
+      method:'POST',
+      credentials:'same-origin',
+      headers:{'content-type':'application/json','x-admin-password':password},
+      body:JSON.stringify({data})
+    });
+  }
+
   save.addEventListener('click',async()=>{
-    if(busy)return;syncEditor();
+    if(busy)return;
+    syncEditor();
     if(!data.length){alert('歴代優勝データを入力してください。');return;}
-    const editions=data.map(x=>x.edition);if(new Set(editions).size!==editions.length){alert('大会回数が重複しています。');return;}
-    const password=sessionStorage.getItem('yachiyoAdminPassword')||'';if(!password){alert('管理画面を開き直してください。');return;}
-    busy=true;save.disabled=true;save.textContent='保存中...';
+    const editions=data.map(x=>x.edition);
+    if(new Set(editions).size!==editions.length){alert('大会回数が重複しています。');return;}
+
+    let password=sessionStorage.getItem('yachiyoAdminPassword')||'';
+    if(!password){
+      password=prompt('管理者パスワードを入力してください')||'';
+      if(!password)return;
+      sessionStorage.setItem('yachiyoAdminPassword',password);
+    }
+
+    busy=true;
+    save.disabled=true;
+    save.textContent='保存中...';
     try{
-      const res=await fetch(API,{method:'POST',headers:{'content-type':'application/json','x-admin-password':password},body:JSON.stringify({data})});
-      const json=await res.json().catch(()=>({}));if(!res.ok)throw new Error(json.error||'保存できませんでした。');
-      data=clean(json.data||data);renderAll();if(typeof showSaveNotice==='function')showSaveNotice('歴代優勝を保存しました');else alert('歴代優勝を保存しました。');
-    }catch(e){alert(e.message);}finally{busy=false;save.disabled=false;save.textContent='歴代優勝を保存';}
+      let res=await postWinners(password);
+      if(res.status===401){
+        const retry=prompt('管理者パスワードをもう一度入力してください')||'';
+        if(!retry)throw new Error('保存を中止しました。');
+        sessionStorage.setItem('yachiyoAdminPassword',retry);
+        res=await postWinners(retry);
+      }
+      const json=await res.json().catch(()=>({}));
+      if(res.status===429)throw new Error('試行回数の上限です。15分後に再度お試しください。');
+      if(!res.ok)throw new Error(json.error||'保存できませんでした。');
+      data=clean(json.data||data);
+      renderAll();
+      if(typeof showSaveNotice==='function')showSaveNotice('歴代優勝を保存しました');
+      else alert('歴代優勝を保存しました。');
+    }catch(e){
+      alert(e.message||'保存できませんでした。');
+    }finally{
+      busy=false;
+      save.disabled=false;
+      save.textContent='歴代優勝を保存';
+    }
   });
-  new MutationObserver(()=>{admin.classList.toggle('show',document.getElementById('cupAdminArea')?.classList.contains('show'));}).observe(document.getElementById('cupAdminArea'),{attributes:true,attributeFilter:['class']});
+  new MutationObserver(()=>{
+    const open=document.getElementById('cupAdminArea')?.classList.contains('show')===true;
+    admin.classList.toggle('show',open);
+    if(!open){
+      editVisible=false;
+      applyEditVisibility();
+    }
+  }).observe(document.getElementById('cupAdminArea'),{attributes:true,attributeFilter:['class']});
   (window.yachiyoTrackInitialLoad||(value=>value))(fetch(API,{cache:'no-store'}).then(r=>r.ok?r.json():Promise.reject()).then(j=>{const loaded=clean(j.data);if(loaded.length)data=loaded;renderAll();}).catch(()=>renderAll()));
   const previous=window.yachiyoReadReloadData?.('cup-winners');
   if(Array.isArray(previous)){data=previous;renderAll();}
   window.addEventListener('pagehide',()=>window.yachiyoRememberReloadData?.('cup-winners',data));
   renderAll();
+  applyEditVisibility();
 })();
 
 
