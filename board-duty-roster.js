@@ -867,6 +867,17 @@
       const body=await response.json().catch(function(){return{}});
       if(!response.ok){
         if(body.code==='line_login_required'&&body.loginUrl){
+          // The server has already persisted this request as pending.
+          // Reflect that response in the UI before navigating to LINE Login.
+          if(body.request){
+            const pending=normalizeRequestList([body.request])[0];
+            if(pending){
+              const existing=requests.findIndex(function(item){return item.id===pending.id});
+              if(existing>=0)requests[existing]=pending;else requests.unshift(pending);
+              requestsLoaded=true;
+              renderRequests();
+            }
+          }
           const resumePayload=JSON.stringify({
             mode:'submit',requestType:requestType,date:date,from:personOptionValue(fromPerson),to:personOptionValue(toPerson),
             swapDate:requestType==='swap'?swapDate:'',swapPerson:requestType==='swap'?personOptionValue(swapPerson):'',
