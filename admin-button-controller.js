@@ -53,7 +53,7 @@
     const link=document.createElement('link');
     link.id='yls-admin-button-css';
     link.rel='stylesheet';
-    link.href='./admin-button.css?v=20261004-unified2';
+    link.href='./admin-button.css?v=20261004-unified3';
     (document.body||document.documentElement).appendChild(link);
   }
 
