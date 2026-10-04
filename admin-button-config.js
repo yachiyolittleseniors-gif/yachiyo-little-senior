@@ -9,8 +9,8 @@
     pages:Object.freeze({
       'index.html':Object.freeze({label:'HOME',button:'#heroAdminToggle',trigger:'.restored-footer-copy',container:'#heroPhotoAdmin',settings:true}),
       'team.html':Object.freeze({label:'チーム紹介',button:'#staffEditBtn',trigger:'.restored-footer-copy',settings:true}),
-      'schedule.html':Object.freeze({label:'スケジュール',button:'#adminModeToggle',trigger:'.restored-footer-copy',settings:true}),
-      'results.html':Object.freeze({label:'試合結果',button:'#adminModeToggle',trigger:'.restored-footer-copy',settings:true}),
+      'schedule.html':Object.freeze({label:'スケジュール',button:'#adminModeToggle',trigger:'.restored-footer-copy',settings:true,portalToBody:true,directAdminMode:true,annualButton:'#annualAdminBtn'}),
+      'results.html':Object.freeze({label:'試合結果',button:'#adminModeToggle',trigger:'.restored-footer-copy',settings:true,portalToBody:true,directAdminMode:true,resultsMode:true}),
       'players.html':Object.freeze({label:'選手紹介',button:'#adminToggle',trigger:'.restored-footer-copy',settings:true}),
       'links.html':Object.freeze({label:'リンク集',button:'#adminBtn',trigger:'.restored-footer-copy',settings:true}),
       'seniorcup.html':Object.freeze({label:'シニア杯',button:'#cupAdminBtn',trigger:'.restored-footer-copy',settings:true}),
