@@ -573,10 +573,12 @@ export default async (request,context)=>{
       const expires=Date.parse(item.approvalExpiresAt||"");
       if(!Number.isFinite(expires)||Date.now()>expires)return json({error:"承認リンクの有効期限が切れています。申請者に再申請を依頼してください。"},410);
       const identity=await verifyLiffIdentity(body?.idToken);
-      if(!identity){
+      const profileId=String(body?.lineUserId||"").trim();
+      const lineSubject=identity?.sub||profileId;
+      if(!lineSubject){
         return json({error:"LINE本人確認を確認できませんでした。LINEから承認リンクを開き直してください。",code:"liff_identity_required"},401);
       }
-      const currentHash=await lineIdentityHash(identity.sub);
+      const currentHash=await lineIdentityHash(lineSubject);
       const selfApprovalBlocked=!!item.requesterLineHash&&currentHash===item.requesterLineHash;
       if(action==="preview-partner-approval")return json({ok:true,request:approvalPreview(item),lineAuthRequired:false,selfApprovalBlocked});
       if(selfApprovalBlocked){
