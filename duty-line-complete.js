@@ -30,16 +30,12 @@
     '<a id="lineShareButton" class="line" href="'+esc(share)+'"><span class="line-badge">LINE</span>承認リンクを送る</a>'+
     '<small class="small">承認リンクは1回限り・24時間有効です。</small>';
   const b=document.getElementById('lineShareButton');
-  if(b)b.addEventListener('click',function(event){
-    event.preventDefault();
-    const target=window.open(share,'_blank');
-    out.innerHTML='<div class="sent">LINEの送信画面を開きました</div><small class="small">この画面は自動で閉じます。</small>';
-    setTimeout(function(){
-      try{window.close()}catch(_){}
-      setTimeout(function(){
-        try{if(!document.hidden){if(history.length>1)history.back();else location.replace('about:blank')}}catch(_){}
-      },250);
-    },120);
-    if(!target)location.href=share;
-  },{once:true});
+  if(b){
+    b.setAttribute('rel','noopener');
+    b.addEventListener('click',function(){
+      // Let the browser follow the LINE share URL directly.
+      // Popup + immediate window.close is unreliable on iPhone/other devices.
+      b.textContent='LINEを開いています…';
+    },{once:true});
+  }
 })();
