@@ -66,7 +66,7 @@
     style.id='attendance-schedule-summary-style';
     style.textContent=
       '.attendance-schedule-meta,.attendance-report-schedule-meta{margin:8px 0 12px;padding:8px 10px;border-top:1px solid rgba(199,154,59,.35);border-bottom:1px solid rgba(199,154,59,.35);background:#fffdf7}' +
-      '.attendance-schedule-meta-line{margin:0;color:#596474;font-size:11px;font-weight:800;line-height:1.55;overflow-wrap:anywhere}' +
+      '.attendance-schedule-meta-line{display:flex;flex-wrap:wrap;align-items:baseline;gap:2px 14px;margin:0;color:#596474;font-size:11px;font-weight:800;line-height:1.55;overflow-wrap:anywhere}' +
       '.attendance-schedule-meta-line+.attendance-schedule-meta-line{margin-top:2px}' +
       '.attendance-schedule-meta-line b{color:#8b671d;white-space:nowrap}' +
       '.attendance-schedule-meta-item{display:inline-block;white-space:nowrap}' +
@@ -98,10 +98,10 @@
   function compactScheduleHtml(event,includeTitle){
     const groups=compactScheduleGroups(event,includeTitle);
     return groups.map((group,lineIndex)=>{
-      const items=group.map((item,index)=>
-        '<span class="attendance-schedule-meta-item">'+(index?'　｜　':'')+esc(item)+'</span>'
+      const items=group.map(item=>
+        '<span class="attendance-schedule-meta-item">'+esc(item)+'</span>'
       ).join('');
-      return '<p class="attendance-schedule-meta-line">'+(lineIndex===0?'<b>予定情報　</b>':'')+items+'</p>';
+      return '<p class="attendance-schedule-meta-line">'+(lineIndex===0?'<b>予定情報</b>':'')+items+'</p>';
     }).join('');
   }
 
