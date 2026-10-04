@@ -262,9 +262,13 @@ async function loadData(store){
     // 過去の不具合で「取消済み変更」が確認待ちへ戻ってしまった既存申請も、
     // 読み込み時に終了扱いへ補正する。
     if(item.status==="pending"){
-      const cancelled=requestChanges(item).some(change=>String(change?.status||"active")==="cancelled");
-      const active=activeRequestChanges(item).length>0;
-      if(cancelled&&!active){
+      // Never close a live request because an older change happens to have the
+      // same date/grade/name. Only a cancelled change carrying this exact
+      // request number may close it.
+      const exactChanges=changes.filter(change=>item.requestNo&&String(change?.requestNo||"")===item.requestNo);
+      const exactCancelled=exactChanges.some(change=>String(change?.status||"active")==="cancelled");
+      const exactActive=exactChanges.some(change=>String(change?.status||"active")!=="cancelled");
+      if(exactCancelled&&!exactActive){
         reconciled=true;
         return{...item,status:"closed",updatedAt:new Date().toISOString(),approvalTokenHash:"",approvalTokenHashes:[],approvalExpiresAt:""};
       }
