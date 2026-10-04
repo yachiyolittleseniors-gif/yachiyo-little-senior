@@ -316,6 +316,7 @@
     updated: $('#liveScoreUpdated'),
     sbo: $('#liveScoreSbo'),
     bases: $('#liveScoreDiamond'),
+    resetBs: $('#liveScoreResetBs'),
     resetStatus: $('#liveScoreResetStatus'),
     lockPanel: $('#liveScoreLockPanel'),
     lockText: $('#liveScoreLockText'),
@@ -851,6 +852,23 @@
     event.preventDefault();
     event.stopPropagation();
   });
+
+  if (elements.resetBs) {
+    elements.resetBs.addEventListener('click', () => {
+      if (!state.current || replayMode || !inputMode) return;
+      state.current.sbo = {
+        ...state.current.sbo,
+        strikes: 0,
+        balls: 0,
+      };
+      dirty = true;
+      changeVersion += 1;
+      renderSbo();
+      // BS-only reset keeps outs and runners exactly as they are.
+      save('', { quiet: true, renderAfter: false });
+      scheduleAutoSave();
+    });
+  }
 
   if (elements.resetStatus) {
     elements.resetStatus.addEventListener('click', () => {
