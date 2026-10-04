@@ -12,8 +12,16 @@
   const add=document.getElementById('winnerAddBtn');
   const save=document.getElementById('winnerSaveBtn');
   if(!list||!toggle||!editor||!admin||!add||!save)return;
+  const deleteToggle=document.createElement('button');
+  deleteToggle.type='button';
+  deleteToggle.className='winner-delete-toggle';
+  deleteToggle.textContent='削除ボタンを表示';
+  deleteToggle.setAttribute('aria-pressed','false');
+  const actions=admin.querySelector('.winners-admin-actions');
+  if(actions) actions.insertBefore(deleteToggle,save);
   let data=defaults.map(x=>({...x}));
   let busy=false;
+  let deleteVisible=false;
   function setExpanded(open){list.classList.toggle('show',open);toggle.setAttribute('aria-expanded',String(open));toggle.textContent=open?'歴代優勝チームを閉じる':'歴代優勝チームを見る';}
   if(performance.getEntriesByType('navigation')[0]?.type==='reload'){try{setExpanded(sessionStorage.getItem('yachiyo:cup-winners-open')==='true')}catch(e){}}
   window.addEventListener('pagehide',()=>{try{sessionStorage.setItem('yachiyo:cup-winners-open',String(list.classList.contains('show')))}catch(e){}});
@@ -35,7 +43,7 @@
       const ed=document.createElement('input');ed.type='number';ed.min='1';ed.value=item.edition;ed.setAttribute('aria-label','大会回数');
       const yr=document.createElement('input');yr.type='number';yr.min='1990';yr.max='2100';yr.value=item.year;yr.setAttribute('aria-label','開催年');
       const team=document.createElement('input');team.type='text';team.maxLength=100;team.value=item.team;team.placeholder='優勝チーム';team.setAttribute('aria-label','優勝チーム');
-      const del=document.createElement('button');del.type='button';del.textContent='削除';del.addEventListener('click',()=>{data=data.filter(x=>x!==item);renderAll();});
+      const del=document.createElement('button');del.type='button';del.textContent='削除';del.className='winner-delete-btn';del.hidden=!deleteVisible;del.addEventListener('click',()=>{data=data.filter(x=>x!==item);renderAll();});
       row.append(ed,yr,team,del);editor.append(row);
     });
   }
