@@ -3,6 +3,7 @@
 
   const API='/.netlify/functions/site-data?section=schedule';
   let schedulePromise=null;
+  let scheduleCache=[];
 
   function esc(value){
     return String(value??'').replace(/[&<>"']/g,ch=>({
@@ -14,8 +15,11 @@
     if(schedulePromise)return schedulePromise;
     schedulePromise=fetch(API,{cache:'no-store'})
       .then(response=>response.ok?response.json():Promise.reject(new Error('schedule')))
-      .then(body=>Array.isArray(body?.data)?body.data:[])
-      .catch(()=>[]);
+      .then(body=>{
+        scheduleCache=Array.isArray(body?.data)?body.data:[];
+        return scheduleCache;
+      })
+      .catch(()=>{scheduleCache=[];return[]});
     return schedulePromise;
   }
 
@@ -98,6 +102,68 @@
     ).join('');
     body.prepend(section);
   }
+
+  function fitCanvasText(ctx,text,maxWidth){
+    const value=String(text||'');
+    if(ctx.measureText(value).width<=maxWidth)return value;
+    let out=value;
+    while(out.length>1&&ctx.measureText(out+'…').width>maxWidth)out=out.slice(0,-1);
+    return out+'…';
+  }
+
+  function scheduleForDate(date){
+    return scheduleCache.find(item=>String(item?.date||'')===String(date||''))||null;
+  }
+
+  function installCanvasScheduleOverlay(){
+    const original=window.createReportCanvas;
+    if(typeof original!=='function'||original.__scheduleOverlayInstalled)return;
+
+    const wrapped=function(info){
+      const canvas=original(info);
+      try{
+        const event=scheduleForDate(info?.event?.date);
+        if(!event)return canvas;
+
+        const title=String(event.title||'').trim();
+        const grade=gradeLabel(event);
+        const time=String(event.time||'').trim();
+        const place=String(event.place||'').trim();
+        const memo=String(event.memo||'').trim();
+
+        const line1=[
+          title?'予定：'+title:'',
+          grade?'対象：'+grade:'',
+          time?'時間：'+time:''
+        ].filter(Boolean).join('　｜　');
+
+        const detailLabel=['official','friendly'].includes(String(event.category||''))?'対戦・詳細':'詳細';
+        const line2=[
+          place?'場所：'+place:'',
+          memo?detailLabel+'：'+memo:''
+        ].filter(Boolean).join('　｜　');
+
+        if(!line1&&!line2)return canvas;
+
+        const ctx=canvas.getContext('2d');
+        const x=690,maxWidth=canvas.width-x-64;
+        ctx.save();
+        ctx.font='bold 20px "Yu Gothic","Hiragino Kaku Gothic ProN",sans-serif';
+        ctx.fillStyle='#7a5b18';
+        if(line1)ctx.fillText(fitCanvasText(ctx,line1,maxWidth),x,151);
+        ctx.font='19px "Yu Gothic","Hiragino Kaku Gothic ProN",sans-serif';
+        ctx.fillStyle='#596474';
+        if(line2)ctx.fillText(fitCanvasText(ctx,line2,maxWidth),x,181);
+        ctx.restore();
+      }catch(_){}
+      return canvas;
+    };
+    wrapped.__scheduleOverlayInstalled=true;
+    window.createReportCanvas=wrapped;
+  }
+
+  // Prefetch only; failures never block attendance.
+  loadSchedule().finally(installCanvasScheduleOverlay);
 
   function monthDayFromText(text){
     const match=String(text||'').match(/(\d{1,2})\/(\d{1,2})/);
