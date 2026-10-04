@@ -1,22 +1,53 @@
 (()=>{
   'use strict';
 
-  const page=(location.pathname.split('/').pop()||'index.html').toLowerCase().replace(/^schedule$/,'schedule.html').replace(/^results$/,'results.html');
+  const raw=(location.pathname.split('/').pop()||'index.html').toLowerCase();
+  const page=raw==='schedule'?'schedule.html':raw==='results'?'results.html':raw;
   if(page!=='schedule.html'&&page!=='results.html')return;
 
   const KEY='yachiyoAdminMode';
+  const GRANT_KEY='yachiyoAdminRevealUntil';
+  const SETTINGS_API='/.netlify/functions/site-data?section=admin-visibility-settings';
+  const TAP_LIMIT=5;
+  const TAP_WINDOW=2200;
+
   let busy=false;
+  let taps=0;
+  let tapTimer=null;
+  let grantTimer=null;
+  let settings={pages:{},desktopEnabled:false};
+  let settingsReady=false;
+
+  function grantUntil(){
+    try{return Number(localStorage.getItem(GRANT_KEY))||0}catch(_){return 0}
+  }
+  function grantActive(){return grantUntil()>Date.now()}
+  function desktopAllowed(){
+    return !window.matchMedia('(min-width:901px)').matches||settings.desktopEnabled===true;
+  }
+  function pageAllowed(){
+    return settings.pages?.[page]!==false;
+  }
+  function eligible(){
+    return settingsReady&&grantActive()&&desktopAllowed()&&pageAllowed();
+  }
 
   function button(){
     return document.getElementById('adminModeToggle');
+  }
+  function trigger(){
+    return document.querySelector('.restored-footer-copy');
   }
 
   function normalizeButton(){
     const b=button();
     if(!b)return null;
 
-    // Keep the control out of footer stacking contexts so no fixed footer/overlay
-    // can sit above it on iOS.
+    // Remove the legacy delegated handler. This bridge owns the interaction.
+    b.removeAttribute('data-csp-onclick');
+
+    // Escape footer stacking contexts/overlays. On iOS this guarantees that the
+    // visible control is also the element that actually receives the tap.
     if(b.parentElement!==document.body)document.body.appendChild(b);
 
     b.style.setProperty('position','fixed','important');
@@ -27,7 +58,27 @@
     b.style.setProperty('z-index','2147483000','important');
     b.style.setProperty('pointer-events','auto','important');
     b.style.setProperty('touch-action','manipulation','important');
+    b.style.setProperty('-webkit-tap-highlight-color','transparent','important');
     return b;
+  }
+
+  function isEditing(){
+    return document.body.classList.contains('admin-mode');
+  }
+
+  function setVisible(show){
+    const b=normalizeButton();
+    if(!b)return;
+    if(show){
+      b.style.setProperty('display','block','important');
+      b.removeAttribute('aria-hidden');
+      b.dataset.ylsAdminVisible='1';
+    }else if(!isEditing()){
+      b.style.setProperty('display','none','important');
+      b.setAttribute('aria-hidden','true');
+      delete b.dataset.ylsAdminVisible;
+      b.textContent='管理';
+    }
   }
 
   function apply(on){
@@ -37,6 +88,7 @@
       b.textContent=on?'管理終了':'管理';
       b.disabled=false;
       b.removeAttribute('aria-disabled');
+      if(on)setVisible(true);
     }
     if(page==='schedule.html'){
       const annualBtn=document.getElementById('annualAdminBtn');
@@ -44,9 +96,45 @@
     }
   }
 
+  function resetTaps(){
+    taps=0;
+    if(tapTimer)clearTimeout(tapTimer);
+    tapTimer=null;
+  }
+
+  function armGrantExpiry(){
+    if(grantTimer)clearTimeout(grantTimer);
+    grantTimer=null;
+    const remaining=grantUntil()-Date.now();
+    if(remaining>0){
+      grantTimer=setTimeout(()=>{
+        resetTaps();
+        if(!isEditing())setVisible(false);
+      },Math.min(remaining,2147483647));
+    }else if(!isEditing()){
+      setVisible(false);
+    }
+  }
+
+  function revealFromTap(event){
+    if(event?.target?.closest?.('a,button,input,select,textarea,label,summary'))return;
+    if(!eligible()){
+      resetTaps();
+      setVisible(false);
+      return;
+    }
+    taps++;
+    if(tapTimer)clearTimeout(tapTimer);
+    tapTimer=setTimeout(resetTaps,TAP_WINDOW);
+    if(taps>=TAP_LIMIT){
+      resetTaps();
+      setVisible(true);
+    }
+  }
+
   async function verify(password){
     try{
-      const response=await fetch('/.netlify/functions/admin-session',{
+      const response=await fetch('/.netlify/functions/site-data?section=access-settings',{
         method:'POST',
         credentials:'same-origin',
         headers:{
@@ -67,7 +155,7 @@
     if(busy)return;
     const b=normalizeButton();
 
-    if(document.body.classList.contains('admin-mode')){
+    if(isEditing()){
       try{
         sessionStorage.removeItem(KEY);
         sessionStorage.removeItem('yachiyoAdminPassword');
@@ -78,7 +166,8 @@
         document.querySelectorAll('details[open]').forEach(item=>item.removeAttribute('open'));
       }
       apply(false);
-      if(window.YLSAdminButtonController)window.YLSAdminButtonController.hide();
+      resetTaps();
+      setVisible(false);
       return;
     }
 
@@ -131,40 +220,70 @@
 
   function bind(){
     const b=normalizeButton();
-    if(!b||b.dataset.ylsPublicAdminBridge==='1')return;
-    b.dataset.ylsPublicAdminBridge='1';
+    const t=trigger();
+    if(!b||!t)return;
 
-    // Capture first and own the interaction. This bypasses old delegated
-    // data-csp-onclick handlers and the shared controller's compatibility path.
-    b.addEventListener('click',event=>{
-      event.preventDefault();
-      event.stopImmediatePropagation();
-      toggle();
-    },true);
+    if(b.dataset.ylsPublicAdminBridge!=='1'){
+      b.dataset.ylsPublicAdminBridge='1';
+      b.addEventListener('click',event=>{
+        event.preventDefault();
+        event.stopImmediatePropagation();
+        toggle();
+      },true);
+    }
 
-    b.addEventListener('pointerup',event=>{
-      // iOS normally synthesizes click; do not run twice.
-      event.stopPropagation();
-    },true);
+    if(t.dataset.ylsPublicAdminReveal!=='1'){
+      t.dataset.ylsPublicAdminReveal='1';
+      let lastPointer=0;
+      t.addEventListener('pointerup',event=>{
+        lastPointer=Date.now();
+        revealFromTap(event);
+      },true);
+      t.addEventListener('click',event=>{
+        if(Date.now()-lastPointer<800)return;
+        revealFromTap(event);
+      },true);
+    }
   }
 
-  if(document.readyState==='loading'){
-    document.addEventListener('DOMContentLoaded',()=>{
-      try{
-        sessionStorage.removeItem(KEY);
-        sessionStorage.removeItem('yachiyoAdminPassword');
-      }catch(_){}
-      apply(false);
-      bind();
-    },{once:true});
-  }else{
+  async function loadSettings(){
+    try{
+      const r=await fetch(SETTINGS_API,{cache:'no-store'});
+      if(r.ok){
+        const j=await r.json();
+        const data=j&&j.data&&typeof j.data==='object'?j.data:{};
+        settings={
+          pages:data.pages&&typeof data.pages==='object'?data.pages:{},
+          desktopEnabled:data.desktopEnabled===true
+        };
+      }
+    }catch(_){}
+    settingsReady=true;
+    armGrantExpiry();
+    if(!isEditing())setVisible(false);
+  }
+
+  function start(){
     try{
       sessionStorage.removeItem(KEY);
       sessionStorage.removeItem('yachiyoAdminPassword');
     }catch(_){}
     apply(false);
+    setVisible(false);
     bind();
+    loadSettings();
   }
 
-  window.addEventListener('pageshow',()=>{normalizeButton();bind()});
+  if(document.readyState==='loading'){
+    document.addEventListener('DOMContentLoaded',start,{once:true});
+  }else start();
+
+  window.addEventListener('pageshow',()=>{bind();armGrantExpiry()});
+  window.addEventListener('focus',armGrantExpiry);
+  window.addEventListener('storage',event=>{
+    if(event.key===GRANT_KEY){
+      armGrantExpiry();
+      if(!grantActive()&&!isEditing())setVisible(false);
+    }
+  });
 })();
