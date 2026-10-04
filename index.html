@@ -5399,7 +5399,9 @@ body:not(.photo-admin-on) #heroAdminToggle.unified-admin-toggle:focus-visible{co
 
 <style id="home-admin-panel-collapsible-final">
 @media(max-width:600px){
-  #heroPhotoAdmin{
+  /* Do not override the normal 管理-button container before admin mode.
+     The unified admin controller owns its visibility/position. */
+  body.photo-admin-on #heroPhotoAdmin{
     position:fixed!important;
     right:50%!important;
     left:auto!important;
@@ -5407,15 +5409,13 @@ body:not(.photo-admin-on) #heroAdminToggle.unified-admin-toggle:focus-visible{co
     top:auto!important;
     bottom:calc(8px + env(safe-area-inset-bottom))!important;
     z-index:40000!important;
+    display:block!important;
     width:auto!important;
     max-width:calc(100vw - 24px)!important;
     margin:0!important;
     padding:0!important;
     background:transparent!important;
     box-shadow:none!important;
-  }
-  body.photo-admin-on #heroPhotoAdmin{
-    display:block!important;
   }
 
   #homeAdminQuickToggle{
