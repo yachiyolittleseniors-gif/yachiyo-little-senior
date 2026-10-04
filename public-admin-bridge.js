@@ -18,6 +18,15 @@
   let settings={pages:{},desktopEnabled:false};
   let settingsReady=false;
 
+  function installUnifiedAdminCss(){
+    if(document.getElementById('yls-admin-button-css'))return;
+    const link=document.createElement('link');
+    link.id='yls-admin-button-css';
+    link.rel='stylesheet';
+    link.href='./admin-button.css?v=20261004-urgent3';
+    (document.head||document.documentElement).appendChild(link);
+  }
+
   function grantUntil(){
     try{return Number(localStorage.getItem(GRANT_KEY))||0}catch(_){return 0}
   }
@@ -264,6 +273,7 @@
   }
 
   function start(){
+    installUnifiedAdminCss();
     try{
       sessionStorage.removeItem(KEY);
       sessionStorage.removeItem('yachiyoAdminPassword');
