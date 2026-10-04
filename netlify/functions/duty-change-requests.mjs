@@ -13,6 +13,37 @@ const PENDING_RETENTION_MONTHS=3;
 const PROCESSED_RETENTION_MONTHS=12;
 const DUTY_APPROVAL_LIFF_ID="2011836404-Htm3MsCI";
 
+// Keep server-side roster verification aligned with the browser's DutyRosterData.
+// The two original September/October roster images may not have table metadata
+// persisted in Blob storage, so the browser resolves them from these legacy IDs.
+const LEGACY_DUTY_TABLES={
+  "duty-mtwelqz2-e6tiec":{
+    year:2026,month:9,grades:[2,1],activityDays:[12,26],rows:[
+      [5,"土","草野","古賀","本吉","山澤"],[6,"日","齋藤","篠崎","山本（要）","山本（諒）"],
+      [12,"土","椙浦","高橋","赤羽","秋葉"],[13,"日","竹内","筒井","石川（晃）","井上（遙）"],
+      [19,"土","永井","藤澤","井上（竜）","宇山"],[20,"日","本村","森田","江見","加賀原"],
+      [21,"月","矢羽田","荒木","粕谷","亀井"],[22,"火","石川（圭）","石山","川村","小池"],
+      [23,"水","大谷部","加藤","高祖","小堀"],[26,"土","古賀","齋藤","紺野","内藤"],
+      [27,"日","篠崎","椙浦","中濱","長峰"]
+    ]
+  },
+  "duty-mtwelqz8-wzdvxy":{
+    year:2026,month:10,grades:[2,1],activityDays:[10,24],rows:[
+      [3,"土","高橋","竹内","松井","松浦"],[4,"日","筒井","永井","溝上","村山"],
+      [10,"土","藤澤","本村","本吉","山澤"],[11,"日","森田","矢羽田","山本（要）","山本（諒）"],
+      [12,"月","荒木","石川（圭）","赤羽","秋葉"],[17,"土","石山","大谷部","石川（晃）","井上（遙）"],
+      [18,"日","加藤","古賀","井上（竜）","宇山"],[24,"土","齋藤","篠崎","江見","加賀原"],
+      [25,"日","椙浦","高橋","粕谷","亀井"],[31,"土","竹内","筒井","川村","小池"]
+    ]
+  }
+};
+
+function rosterCanonicalName(value){
+  return String(value||"").normalize("NFKC").replace(/[\s　]+/g,"").replace(/(?:さん|様)$/,"").replace(/[。、,，]+$/,"").trim().slice(0,60).replace(/^桓浦(?=$|\()/,"椙浦");
+}
+function rosterNameKey(value){return rosterCanonicalName(value).replace(/[（）()]/g,"")}
+function rosterTableForImage(image){return image?.table||LEGACY_DUTY_TABLES[String(image?.id||"")]||null}
+
 function json(body,status=200,headers={}){
   return new Response(JSON.stringify(body),{
     status,
@@ -383,7 +414,7 @@ function requestMatchesRoster(roster,date,fromGrade,fromName){
   const images=Array.isArray(roster?.images)?roster.images:[];
   const changes=Array.isArray(roster?.changes)?roster.changes:[];
   return images.some(image=>{
-    const table=image?.table;
+    const table=rosterTableForImage(image);
     if(!table||!Array.isArray(table.rows))return false;
     if(Number(table.year)!==selected.getFullYear()||Number(table.month)!==selected.getMonth()+1)return false;
     const day=selected.getDate();
@@ -393,14 +424,15 @@ function requestMatchesRoster(roster,date,fromGrade,fromName){
       return row.slice(2,6).some((name,index)=>{
         const grade=String(grades[Math.floor(index/2)]);
         if(grade!==String(fromGrade))return false;
-        let current=cleanName(name);
+        let current=rosterCanonicalName(name);
         changes.forEach(change=>{
           if(!change||String(change.status||"active")==="cancelled")return;
           if(String(change.date||"")!==date||String(change.grade||"")!==grade)return;
-          if(nameKey(current)!==nameKey(change.from))return;
-          if(cleanName(change.to))current=cleanName(change.to);
+          if(rosterNameKey(current)!==rosterNameKey(change.from))return;
+          const next=rosterCanonicalName(change.to);
+          if(next)current=next;
         });
-        return nameKey(current)===nameKey(fromName);
+        return rosterNameKey(current)===rosterNameKey(fromName);
       });
     });
   });
