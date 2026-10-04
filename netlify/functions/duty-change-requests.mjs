@@ -2,7 +2,7 @@ import { getStore } from "@netlify/blobs";
 import { verifyAccessPassword } from "./_access-password.mjs";
 import { boardSessionIsValid } from "./_board-session.mjs";
 import { verifyAdminPassword, adminAuthError } from "./admin-rate-limit.mjs";
-import { getLineSession, lineIdentityHash, lineLoginStartUrl, lineChannelId, unsealLineFlow } from "./_line-login-auth.mjs";
+import { getLineSession, lineIdentityHash, lineLoginStartUrl, lineChannelId, sealLineFlow, unsealLineFlow } from "./_line-login-auth.mjs";
 
 const STORE_NAME="yachiyo-public-site";
 const KEY="content/duty-change-requests.json";
@@ -527,7 +527,10 @@ export default async (request,context)=>{
       }
       const requesterLineHash=await lineIdentityHash(String(resume.sub));
       const now=new Date().toISOString();
-      const idx=data.requests.findIndex(item=>item.status==="pending"&&item.date===date&&item.fromGrade===fromGrade&&item.fromName===fromName&&String(item.requestType||"replace")===requestType&&String(item.swapDate||"")===swapDate);
+      const idx=data.requests.findIndex(item=>item.status==="pending"&&(
+        (resume.requestId&&item.id===String(resume.requestId))||
+        (item.date===date&&item.fromGrade===fromGrade&&item.fromName===fromName&&String(item.requestType||"replace")===requestType&&String(item.swapDate||"")===swapDate)
+      ));
       const issuedApprovalToken=newApprovalToken();
       const approvalTokenHash=await sha256(issuedApprovalToken);
       const approvalExpiresAt=new Date(Date.now()+APPROVAL_TTL_MS).toISOString();
@@ -668,17 +671,48 @@ export default async (request,context)=>{
           "&sn="+encodeURIComponent(swapName);
         const submitSession=await getLineSession(request);
         if(!submitSession){
+          // Save the application as "pending" BEFORE leaving for LINE Login.
+          // This guarantees that the request list immediately shows 確認待ち,
+          // even while requester authentication / LINE sharing is unfinished.
+          const now=new Date().toISOString();
+          const existingIdx=data.requests.findIndex(item=>item.status==="pending"&&item.date===date&&item.fromGrade===fromGrade&&item.fromName===fromName&&String(item.requestType||"replace")===requestType&&String(item.swapDate||"")===swapDate);
+          let pendingItem;
+          if(existingIdx>=0){
+            pendingItem={...data.requests[existingIdx],toGrade,toName,requestType,swapDate,swapGrade,swapName,approvalMode:"family",updatedAt:now,partnerApprovedAt:"",requesterDevice:clientLabel(request)};
+            data.requests[existingIdx]=pendingItem;
+          }else{
+            if(data.requests.length>=MAX_REQUESTS)return json({error:"申請の保存上限に達しています。管理者へ連絡してください。"},400);
+            const next=nextRequestNo(data);data.requestSeq=next.seq;
+            pendingItem={
+              id:`request-${crypto.randomUUID()}`,requestNo:next.value,date,
+              fromGrade,fromName,toGrade,toName,requestType,swapDate,swapGrade,swapName,
+              approvalMode:"family",status:"pending",createdAt:now,updatedAt:now,
+              approvalTokenHash:"",approvalTokenHashes:[],approvalExpiresAt:"",partnerApprovedAt:"",
+              requesterLineHash:"",requesterDevice:clientLabel(request),approverDevice:""
+            };
+            data.requests.push(pendingItem);
+          }
+          data.requests=dedupePending(data.requests);
+
+          const resumeToken=await sealLineFlow({
+            purpose:"duty-submit",
+            requestId:pendingItem.id,
+            date,fromGrade,fromName,toGrade,toName,requestType,swapDate,swapGrade,swapName,
+            exp:Date.now()+10*60*1000
+          });
+
           pushMonitorEvent(data,{
-            stage:"line_start",level:"info",
+            stage:"request_pending_auth",level:"info",requestNo:pendingItem.requestNo,
             flowKey:[date,fromGrade,fromName].join("|"),
             device:clientLabel(request),
-            message:"申請者のLINE認証を開始しました。"
+            message:"確認待ちとして保存し、申請者のLINE認証を開始しました。"
           });
           await store.setJSON(KEY,data);
           return json({
             error:"LINE認証が必要です。",
             code:"line_login_required",
-            loginUrl:lineLoginStartUrl(request,resumePath)
+            request:publicRequest(pendingItem),
+            loginUrl:lineLoginStartUrl(request,`/duty-line-resume.html?token=${encodeURIComponent(resumeToken)}`)
           },401);
         }
         requesterLineHash=await lineIdentityHash(submitSession.sub);
