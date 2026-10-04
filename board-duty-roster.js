@@ -428,12 +428,22 @@
   }
   function rosterReplacementCandidates(date){
     const map=new Map();
-    if(!/^\d{4}-\d{2}-\d{2}$/.test(String(date||'')))return[];
+    const m=/^(\d{4})-(\d{2})-(\d{2})$/.exec(String(date||''));
+    if(!m)return[];
+
+    const selectedYear=Number(m[1]),selectedMonth=Number(m[2]);
+    const previous=new Date(selectedYear,selectedMonth-2,1);
+    const allowedMonths=new Set([
+      selectedYear+'-'+String(selectedMonth).padStart(2,'0'),
+      previous.getFullYear()+'-'+String(previous.getMonth()+1).padStart(2,'0')
+    ]);
+
     images.forEach(function(image){
       if(!canViewRoster(image))return;
       const table=image.table;if(!table)return;
-      const prefix=table.year+'-'+String(table.month).padStart(2,'0')+'-';
-      if(!String(date).startsWith(prefix))return;
+      const monthKey=Number(table.year)+'-'+String(Number(table.month)).padStart(2,'0');
+      if(!allowedMonths.has(monthKey))return;
+
       const grades=table.grades||[2,1];
       table.rows.forEach(function(row){
         row.slice(2,6).forEach(function(name,index){
@@ -445,7 +455,10 @@
         });
       });
     });
-    return Array.from(map.values()).sort(function(a,b){return Number(b.grade)-Number(a.grade)||a.name.localeCompare(b.name,'ja')});
+
+    return Array.from(map.values()).sort(function(a,b){
+      return Number(b.grade)-Number(a.grade)||a.name.localeCompare(b.name,'ja');
+    });
   }
   function todayYmd(){const d=new Date();return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0')}
   function rosterDates(){const today=todayYmd(),out=[];images.forEach(function(image){if(!canViewRoster(image))return;const table=image.table;if(!table)return;table.rows.forEach(function(row){const date=tableDate(table,row[0]);if(date>=today)out.push({date:date,label:table.year+'年'+table.month+'月'+row[0]+'日（'+row[1]+'）',table:table,row:row})})});return out.sort(function(a,b){return a.date.localeCompare(b.date)})}
