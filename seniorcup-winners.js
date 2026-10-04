@@ -77,6 +77,17 @@
   }
   function renderAll(){renderList();renderEditor();}
   toggle.addEventListener('click',()=>setExpanded(!list.classList.contains('show')));
+  editToggle.addEventListener('click',()=>{
+    editVisible=!editVisible;
+    applyEditVisibility();
+  });
+  deleteToggle.addEventListener('click',()=>{
+    if(!editVisible)return;
+    deleteVisible=!deleteVisible;
+    deleteToggle.textContent=deleteVisible?'削除ボタンを隠す':'削除ボタンを表示';
+    deleteToggle.setAttribute('aria-pressed',String(deleteVisible));
+    editor.querySelectorAll('.winner-delete-btn').forEach(button=>button.hidden=!deleteVisible);
+  });
   add.addEventListener('click',()=>{syncEditor();const maxEdition=Math.max(0,...data.map(x=>x.edition));const maxYear=Math.max(2025,...data.map(x=>x.year));const item={edition:maxEdition+1,year:maxYear+1,team:''};data.push(item);renderEditor();const row=[...editor.querySelectorAll('.winner-edit-row')].find(r=>Number(r.dataset.edition)===item.edition);const teamInput=row?.querySelector('input[type=\"text\"]');if(teamInput){teamInput.focus();teamInput.scrollIntoView({behavior:'smooth',block:'center'});}});
   async function postWinners(password){
     return fetch(API,{

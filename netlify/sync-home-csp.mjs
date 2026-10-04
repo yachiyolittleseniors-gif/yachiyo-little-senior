@@ -3,7 +3,7 @@ import { readFileSync, writeFileSync } from 'node:fs';
 import { dirname, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
-// Hash trusted home scripts without loosening CSP or changing other pages' permissions.
+// Hash trusted repository scripts without loosening CSP or dropping existing permissions.
 export function inlineScriptHashes(html) {
   const hashes = new Set();
   const source = html.replace(/\r\n?/g, '\n');
@@ -45,14 +45,33 @@ export function synchronizeHomeCsp(html, headers) {
   return { content, added, scripts: hashes.length };
 }
 
+export const CSP_PAGES = Object.freeze(['index.html', 'seniorcup.html']);
+
+// Senior Cup's inline application owns overview saving and partner rendering.
+// Its hash must be regenerated whenever that page changes, just like the home page.
+export function synchronizePageCsps(pages, headers) {
+  let content = headers;
+  let added = 0;
+  const reports = [];
+  for (const { name, html } of pages) {
+    const result = synchronizeHomeCsp(html, content);
+    content = result.content;
+    added += result.added;
+    reports.push({ name, scripts: result.scripts, added: result.added });
+  }
+  return { content, added, reports };
+}
+
 function main() {
   const root = resolve(dirname(fileURLToPath(import.meta.url)), '..');
   const headerPath = resolve(root, '_headers');
-  const html = readFileSync(resolve(root, 'index.html'), 'utf8');
+  const pages = CSP_PAGES.map(name => ({ name, html: readFileSync(resolve(root, name), 'utf8') }));
   const headers = readFileSync(headerPath, 'utf8');
-  const result = synchronizeHomeCsp(html, headers);
+  const result = synchronizePageCsps(pages, headers);
   if (result.content !== headers) writeFileSync(headerPath, result.content, 'utf8');
-  console.log(`Home CSP: ${result.scripts} inline scripts verified; ${result.added} missing hash permissions added.`);
+  for (const report of result.reports) {
+    console.log(`CSP ${report.name}: ${report.scripts} inline scripts verified; ${report.added} missing hash permissions added.`);
+  }
 }
 
 if (process.argv[1] && resolve(process.argv[1]) === fileURLToPath(import.meta.url)) main();
