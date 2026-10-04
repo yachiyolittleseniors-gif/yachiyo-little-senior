@@ -534,8 +534,12 @@ export default async (request,context)=>{
       const swapGrade=String(resume.swapGrade||"");
       const swapName=cleanName(resume.swapName);
       const swapInvalid=requestType==="swap"&&(!validDate(swapDate)||!validGrade(swapGrade)||!swapName);
-      if(!validDate(date)||!validGrade(fromGrade)||!validGrade(toGrade)||!fromName||!toName||(fromGrade===toGrade&&fromName===toName)||swapInvalid||!resume.sub){
+      if(!validDate(date)||!validGrade(fromGrade)||!validGrade(toGrade)||!fromName||!toName||(fromGrade===toGrade&&fromName===toName)||swapInvalid){
         return json({error:"申請内容を確認できませんでした。もう一度申請してください。"},400);
+      }
+      const resumeSession=await getLineSession(request);
+      if(!resumeSession?.sub){
+        return json({error:"LINE認証を確認できませんでした。元の画面からもう一度申請してください。",code:"line_session_required"},401);
       }
       const roster=await store.get(LEGACY_KEY,{type:"json",consistency:"strong"});
       if(!requestMatchesRoster(roster,date,fromGrade,fromName)){
@@ -548,7 +552,7 @@ export default async (request,context)=>{
       if(data.partnerApprovalEnabled!==true){
         return json({error:"交代相手の承認リンクは現在使用されていません。"},409);
       }
-      const requesterLineHash=await lineIdentityHash(String(resume.sub));
+      const requesterLineHash=await lineIdentityHash(String(resumeSession.sub));
       const now=new Date().toISOString();
       const idx=data.requests.findIndex(item=>item.status==="pending"&&(
         (resume.requestId&&item.id===String(resume.requestId))||
