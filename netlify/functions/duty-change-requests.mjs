@@ -691,21 +691,10 @@ export default async (request,context)=>{
       const approvalMode=data.partnerApprovalEnabled===true&&!noLineFallback?"family":"admin";
       let requesterLineHash="";
       if(approvalMode==="family"){
-        const resumePath="/board.html?line_resume=duty-submit"+
-          "&d="+encodeURIComponent(date)+
-          "&fg="+encodeURIComponent(fromGrade)+
-          "&fn="+encodeURIComponent(fromName)+
-          "&tg="+encodeURIComponent(toGrade)+
-          "&tn="+encodeURIComponent(toName)+
-          "&rt="+encodeURIComponent(requestType)+
-          "&sd="+encodeURIComponent(swapDate)+
-          "&sg="+encodeURIComponent(swapGrade)+
-          "&sn="+encodeURIComponent(swapName);
         const submitSession=await getLineSession(request);
         if(!submitSession){
-          // Save the application as "pending" BEFORE leaving for LINE Login.
-          // This guarantees that the request list immediately shows 確認待ち,
-          // even while requester authentication / LINE sharing is unfinished.
+          // Persist first, then authenticate. The sealed return path carries the
+          // exact pending request id so the callback cannot create/lose another copy.
           const now=new Date().toISOString();
           const existingIdx=data.requests.findIndex(item=>item.status==="pending"&&item.date===date&&item.fromGrade===fromGrade&&item.fromName===fromName&&String(item.requestType||"replace")===requestType&&String(item.swapDate||"")===swapDate);
           let pendingItem;
@@ -725,13 +714,17 @@ export default async (request,context)=>{
             data.requests.push(pendingItem);
           }
           data.requests=dedupePending(data.requests);
-
-          const resumeToken=await sealLineFlow({
-            purpose:"duty-submit",
-            requestId:pendingItem.id,
-            date,fromGrade,fromName,toGrade,toName,requestType,swapDate,swapGrade,swapName,
-            exp:Date.now()+10*60*1000
-          });
+          const resumePath="/board.html?line_resume=duty-submit"+
+            "&rid="+encodeURIComponent(pendingItem.id)+
+            "&d="+encodeURIComponent(date)+
+            "&fg="+encodeURIComponent(fromGrade)+
+            "&fn="+encodeURIComponent(fromName)+
+            "&tg="+encodeURIComponent(toGrade)+
+            "&tn="+encodeURIComponent(toName)+
+            "&rt="+encodeURIComponent(requestType)+
+            "&sd="+encodeURIComponent(swapDate)+
+            "&sg="+encodeURIComponent(swapGrade)+
+            "&sn="+encodeURIComponent(swapName);
 
           pushMonitorEvent(data,{
             stage:"request_pending_auth",level:"info",requestNo:pendingItem.requestNo,
@@ -741,10 +734,10 @@ export default async (request,context)=>{
           });
           await store.setJSON(KEY,data);
           return json({
-            error:"LINE認証が必要です。",
+            error:"LINE認証が必要です.",
             code:"line_login_required",
             request:publicRequest(pendingItem),
-            loginUrl:lineLoginStartUrl(request,`/duty-line-resume.html?token=${encodeURIComponent(resumeToken)}`)
+            loginUrl:lineLoginStartUrl(request,resumePath)
           },401);
         }
         requesterLineHash=await lineIdentityHash(submitSession.sub);
