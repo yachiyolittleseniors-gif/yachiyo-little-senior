@@ -770,14 +770,11 @@
     if(!item)return;
     const original=button?button.innerHTML:'';
     if(button){button.disabled=true;button.textContent='LINEを準備中…';}
-    let shareWindow=null;
     try{
-      shareWindow=window.open('about:blank','_blank');
       const response=await fetch(REQUEST_API,{method:'POST',credentials:'same-origin',headers:requestHeaders(false),body:JSON.stringify({action:'reissue-partner-approval',id:item.id})});
       const body=await response.json().catch(function(){return{}});
       if(!response.ok){
         if(body.code==='line_login_required'&&body.loginUrl){
-          if(shareWindow&&!shareWindow.closed)shareWindow.close();
           const resumePayload=JSON.stringify({mode:'resend',id:item.id,expires:Date.now()+10*60*1000});
           try{sessionStorage.setItem('ylsDutyLineResume',resumePayload)}catch(_){}
           try{localStorage.setItem('ylsDutyLineResume',resumePayload)}catch(_){}
@@ -790,9 +787,8 @@
       const url=String(body.approvalUrl||'');
       if(!url)throw new Error('承認リンクを取得できませんでした。');
       const shareUrl='https://line.me/R/share?text='+encodeURIComponent(approvalLineText(item,url));
-      if(shareWindow&&!shareWindow.closed){shareWindow.location.href=shareUrl}else{window.location.href=shareUrl}
+      window.location.assign(shareUrl);
     }catch(e){
-      if(shareWindow&&!shareWindow.closed)shareWindow.close();
       alert(e.message||'LINEを開けませんでした。');
       if(button){button.disabled=false;button.innerHTML=original;}
     }
