@@ -623,7 +623,11 @@
       if(admin)admin.innerHTML='<div class="duty-change-preview">申請データを確認中です。</div>';
       return;
     }
-    const ordered=requests.slice().filter(function(item){return !isTestDate(item.date)||isAdminViewing()}).sort(function(a,b){return String(b.createdAt).localeCompare(String(a.createdAt))});
+    const ordered=requests.slice().filter(function(item){
+      // Pending requests are always visible to the team until resolved.
+      // Test-mode filtering only applies to processed history.
+      return item.status==='pending'||!isTestDate(item.date)||isAdminViewing();
+    }).sort(function(a,b){return String(b.createdAt).localeCompare(String(a.createdAt))});
     const pendingCount=ordered.filter(function(item){return item.status==='pending'}).length;
     const requestBadge=document.getElementById('dutyRequestPendingBadge');
     if(requestBadge){requestBadge.hidden=false;requestBadge.textContent='申請中 '+pendingCount+'件'}
