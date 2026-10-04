@@ -5383,6 +5383,106 @@ body:not(.photo-admin-on) #heroAdminToggle.unified-admin-toggle:focus-visible{co
 
 <script src="./admin-button-config.js?v=20261003-rebuild1"></script>
 <script src="./admin-button-controller.js?v=20261004-unified3"></script>
+
+<style id="home-admin-panel-final-compact">
+/* Final mobile admin panel: compact fixed 2-column controls, independent from page content. */
+@media(max-width:600px){
+  body.photo-admin-on #heroPhotoAdmin{
+    position:fixed!important;
+    right:12px!important;
+    left:auto!important;
+    top:auto!important;
+    bottom:calc(12px + env(safe-area-inset-bottom))!important;
+    z-index:40000!important;
+    display:grid!important;
+    grid-template-columns:repeat(2,minmax(0,1fr))!important;
+    grid-auto-rows:minmax(44px,auto)!important;
+    gap:8px!important;
+    width:min(360px,calc(100vw - 24px))!important;
+    max-width:calc(100vw - 24px)!important;
+    margin:0!important;
+    padding:0!important;
+    align-items:stretch!important;
+    justify-content:stretch!important;
+    background:transparent!important;
+    box-shadow:none!important;
+  }
+  body.photo-admin-on #heroPhotoAdmin > button,
+  body.photo-admin-on #heroPhotoAdmin > label,
+  body.photo-admin-on #heroPhotoAdmin > a{
+    position:static!important;
+    inset:auto!important;
+    box-sizing:border-box!important;
+    width:100%!important;
+    min-width:0!important;
+    max-width:none!important;
+    min-height:44px!important;
+    height:auto!important;
+    margin:0!important;
+    padding:9px 8px!important;
+    display:flex!important;
+    align-items:center!important;
+    justify-content:center!important;
+    border:1px solid rgba(226,189,103,.82)!important;
+    border-radius:999px!important;
+    background:rgba(7,20,38,.92)!important;
+    color:#e2bd67!important;
+    -webkit-text-fill-color:#e2bd67!important;
+    box-shadow:0 5px 18px rgba(0,0,0,.18)!important;
+    font-size:11px!important;
+    font-weight:800!important;
+    line-height:1.2!important;
+    text-align:center!important;
+    text-decoration:none!important;
+    white-space:nowrap!important;
+    backdrop-filter:blur(8px)!important;
+    -webkit-backdrop-filter:blur(8px)!important;
+  }
+  body.photo-admin-on #heroPhotoChange{
+    grid-column:1!important;
+    grid-row:1!important;
+  }
+  body.photo-admin-on #heroAnnouncementEdit{
+    grid-column:2!important;
+    grid-row:1!important;
+  }
+  body.photo-admin-on #heroPhotoEdit{
+    grid-column:1!important;
+    grid-row:2!important;
+    z-index:auto!important;
+  }
+  body.photo-admin-on #heroOverlayControl{
+    grid-column:2!important;
+    grid-row:2!important;
+    gap:7px!important;
+  }
+  body.photo-admin-on #heroOverlayControl input{
+    flex:0 0 18px!important;
+    width:18px!important;
+    height:18px!important;
+    margin:0!important;
+  }
+  body.photo-admin-on #heroAdminToggle.unified-admin-toggle{
+    grid-column:2!important;
+    grid-row:3!important;
+    justify-self:end!important;
+    width:auto!important;
+    min-width:0!important;
+    min-height:28px!important;
+    height:auto!important;
+    padding:4px 2px!important;
+    border:0!important;
+    border-radius:0!important;
+    background:transparent!important;
+    box-shadow:none!important;
+    color:rgba(199,154,59,.46)!important;
+    -webkit-text-fill-color:rgba(199,154,59,.46)!important;
+    font-size:11px!important;
+    text-align:right!important;
+  }
+}
+</style>
+
 </body>
 </html>
 
