@@ -87,7 +87,7 @@ function publicSiteOrigin(request){
 function approvalUrl(request,token){
   // Send the approval through LIFF so the recipient's LINE identity is
   // available without the fragile browser auto-login flow.
-  return `https://liff.line.me/${DUTY_APPROVAL_LIFF_ID}?t=${encodeURIComponent(token)}`;
+  return `https://liff.line.me/${DUTY_APPROVAL_LIFF_ID}/?t=${encodeURIComponent(token)}`;
 }
 async function verifyLiffIdentity(idToken){
   const token=String(idToken||"").trim();
