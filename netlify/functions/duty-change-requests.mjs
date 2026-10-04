@@ -108,6 +108,29 @@ async function verifyLiffIdentity(idToken){
     return null;
   }
 }
+async function verifyLiffAccessIdentity(accessToken){
+  const token=String(accessToken||"").trim();
+  const clientId=lineChannelId();
+  if(!token||!clientId)return null;
+  try{
+    const verifyUrl=new URL("https://api.line.me/oauth2/v2.1/verify");
+    verifyUrl.searchParams.set("access_token",token);
+    const verified=await fetch(verifyUrl,{headers:{"cache-control":"no-store"}});
+    if(!verified.ok)return null;
+    const info=await verified.json().catch(()=>null);
+    if(!info||String(info.client_id||"")!==String(clientId)||Number(info.expires_in)<=0)return null;
+
+    const profileResponse=await fetch("https://api.line.me/v2/profile",{
+      headers:{authorization:`Bearer ${token}`,"cache-control":"no-store"}
+    });
+    if(!profileResponse.ok)return null;
+    const profile=await profileResponse.json().catch(()=>null);
+    if(!profile||!profile.userId)return null;
+    return{sub:String(profile.userId)};
+  }catch{
+    return null;
+  }
+}
 function normalizeMonitorEvent(item,index=0){
   const at=String(item?.at||"");
   const stage=String(item?.stage||"").slice(0,40);
@@ -572,13 +595,11 @@ export default async (request,context)=>{
       if(!item)return json({error:"承認リンクが無効です。\nまたは、すでに使用済みです。"},404);
       const expires=Date.parse(item.approvalExpiresAt||"");
       if(!Number.isFinite(expires)||Date.now()>expires)return json({error:"承認リンクの有効期限が切れています。申請者に再申請を依頼してください。"},410);
-      const identity=await verifyLiffIdentity(body?.idToken);
-      const profileId=String(body?.lineUserId||"").trim();
-      const lineSubject=identity?.sub||profileId;
-      if(!lineSubject){
+      const identity=(await verifyLiffIdentity(body?.idToken))||(await verifyLiffAccessIdentity(body?.accessToken));
+      if(!identity?.sub){
         return json({error:"LINE本人確認を確認できませんでした。LINEから承認リンクを開き直してください。",code:"liff_identity_required"},401);
       }
-      const currentHash=await lineIdentityHash(lineSubject);
+      const currentHash=await lineIdentityHash(identity.sub);
       const selfApprovalBlocked=!!item.requesterLineHash&&currentHash===item.requesterLineHash;
       if(action==="preview-partner-approval")return json({ok:true,request:approvalPreview(item),lineAuthRequired:false,selfApprovalBlocked});
       if(selfApprovalBlocked){
