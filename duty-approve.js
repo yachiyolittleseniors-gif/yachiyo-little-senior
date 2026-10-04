@@ -80,7 +80,15 @@
     idToken=typeof window.liff.getIDToken==='function'?(window.liff.getIDToken()||''):'';
     if(idToken)return true;
 
-    throw new Error('LINE本人確認情報を取得できませんでした。LINEから承認リンクを開き直してください。');
+    const diag=[
+      'LIFF診断',
+      'inClient='+(typeof window.liff.isInClient==='function'?String(window.liff.isInClient()):'unknown'),
+      'loggedIn='+(typeof window.liff.isLoggedIn==='function'?String(window.liff.isLoggedIn()):'unknown'),
+      'accessToken='+(accessToken?'あり':'なし'),
+      'idToken='+(idToken?'あり':'なし'),
+      'url='+location.href
+    ].join('\n');
+    throw new Error('LINE本人確認情報を取得できませんでした。\n'+diag);
   }
 
   async function call(action){
