@@ -1293,16 +1293,16 @@ body:after{display:none!important;content:none!important}
           <p class="duty-request-help">当番表が登録されている月のみ変更申請ができます。変更内容を選択して申請してください。</p>
           <label>変更方法
             <select id="dutyRequestType">
-              <option value="replace">交代してもらう</option>
               <option value="swap">当番日を入れ替える</option>
+              <option value="replace">交代してもらう</option>
             </select>
           </label>
-          <div id="dutyRequestReplaceFields">
+          <div id="dutyRequestReplaceFields" hidden>
             <label>変更日<select id="dutyRequestRosterDate"></select><input id="dutyRequestDirectDate" type="date" hidden disabled></label>
             <label>変更前<select id="dutyRequestFrom"><option value="">選択してください</option></select></label>
             <label id="dutyRequestReplaceToRow">変更後<select id="dutyRequestTo"><option value="">選択してください</option></select></label>
           </div>
-          <div id="dutyRequestSwapFields" hidden>
+          <div id="dutyRequestSwapFields">
             <div class="duty-swap-guide"><b>入れ替えたい2つのお当番を選んでください</b><span>例：10/3 高橋さん と 10/10 藤澤さん を入れ替える</span></div>
             <label>① 入れ替えたいお当番<select id="dutyRequestSwapFromSlot"><option value="">1つ目のお当番を選択してください</option></select></label>
             <div class="duty-swap-arrow" aria-hidden="true">↕</div>
