@@ -757,70 +757,13 @@ function renderReplyMode(){
   const guidelineEditor=document.getElementById('guidelineEditor');
   const guidelineSaveBtn=document.getElementById('guidelineSaveBtn');
 
-  function ensureGuidelineEditorValue(){
-    if(!guidelineEditor.value.trim()){
-      guidelineEditor.value=guidelineText.textContent.trim();
-    }
+  function syncGuidelineEditorFromPublic(){
+    const publicText=(guidelineText.textContent||'').trim();
+    if(publicText) guidelineEditor.value=publicText;
   }
+  window.syncGuidelineEditorFromPublic=syncGuidelineEditorFromPublic;
 
-  const guidelineBoxForSync=document.getElementById('guidelineAdminBox');
-  if(guidelineBoxForSync && typeof MutationObserver==='function'){
-    new MutationObserver(()=>{
-      if(guidelineBoxForSync.classList.contains('show'))ensureGuidelineEditorValue();
-    }).observe(guidelineBoxForSync,{attributes:true,attributeFilter:['class']});
-  }
-
-  async function loadGuideline(){
-    const fallback=guidelineText.textContent.trim();
-    guidelineEditor.value=fallback;
-    try{
-      const r=await fetch(API+'?section=seniorcup-guideline',{cache:'no-store',credentials:'same-origin'});
-      if(!r.ok)return;
-      const j=await r.json();
-      if(j.data && typeof j.data.text==='string' && j.data.text.trim()){
-        const value=stripLegacyReplyMarker(j.data.text);
-        guidelineText.textContent=value;
-        guidelineEditor.value=value;
-      }
-    }catch(e){}
-  }
-
-  async function saveGuideline(){
-    const value=guidelineEditor.value.trim();
-    if(!value){alert('大会概要を入力してください。');return}
-    const pw=sessionStorage.getItem('yachiyoAdminPassword')||'';
-    const old=guidelineSaveBtn.textContent;
-    guidelineSaveBtn.disabled=true;
-    guidelineSaveBtn.textContent='保存中...';
-    try{
-      const headers={'content-type':'application/json'};
-      if(pw)headers['x-admin-password']=pw;
-      const r=await fetch(API+'?section=seniorcup-guideline',{
-        method:'POST',
-        credentials:'same-origin',
-        headers,
-        body:JSON.stringify({data:{text:value,updatedAt:new Date().toISOString()}})
-      });
-      if(r.status===429)throw new Error('LIMITED');
-      if(r.status===401)throw new Error('SESSION');
-      if(!r.ok)throw new Error('SAVE');
-      guidelineText.textContent=value;
-      showSaveNotice('保存しました');
-    }catch(e){
-      if(e.message==='LIMITED')alert('試行回数の上限です。15分後に再度お試しください。');
-      else if(e.message==='SESSION')alert('管理権限が終了しました。チーム専用ページから管理を開き直してください。');
-      else alert('大会概要を保存できませんでした。');
-    }finally{
-      guidelineSaveBtn.disabled=false;
-      guidelineSaveBtn.textContent=old;
-    }
-  }
-
-  guidelineEditor.addEventListener('focus',ensureGuidelineEditorValue);
-  guidelineSaveBtn.addEventListener('click',()=>{
-    ensureGuidelineEditorValue();
-    saveGuideline();
-  });
+  guidelineSaveBtn.addEventListener('click',saveGuideline);
 
   function formatBytes(bytes){
     const value=Number(bytes);
