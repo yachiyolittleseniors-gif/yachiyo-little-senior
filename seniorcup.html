@@ -758,44 +758,44 @@ function renderReplyMode(){
   const guidelineSaveBtn=document.getElementById('guidelineSaveBtn');
 
   async function loadGuideline(){
+    const fallback=guidelineText.textContent.trim();
+    guidelineEditor.value=fallback;
     try{
-      const r=await fetch(API+'?section=seniorcup-guideline',{cache:'no-store'});
+      const r=await fetch(API+'?section=seniorcup-guideline',{cache:'no-store',credentials:'same-origin'});
       if(!r.ok)return;
       const j=await r.json();
       if(j.data && typeof j.data.text==='string' && j.data.text.trim()){
         const value=stripLegacyReplyMarker(j.data.text);
         guidelineText.textContent=value;
         guidelineEditor.value=value;
-      }else{
-        guidelineEditor.value=guidelineText.textContent.trim();
       }
-    }catch(e){
-      guidelineEditor.value=guidelineText.textContent.trim();
-    }
+    }catch(e){}
   }
 
   async function saveGuideline(){
     const value=guidelineEditor.value.trim();
     if(!value){alert('大会概要を入力してください。');return}
     const pw=sessionStorage.getItem('yachiyoAdminPassword')||'';
-    if(!pw){alert('管理者パスワードを入力し直してください。');return}
     const old=guidelineSaveBtn.textContent;
     guidelineSaveBtn.disabled=true;
     guidelineSaveBtn.textContent='保存中...';
     try{
+      const headers={'content-type':'application/json'};
+      if(pw)headers['x-admin-password']=pw;
       const r=await fetch(API+'?section=seniorcup-guideline',{
         method:'POST',
-        headers:{'content-type':'application/json','x-admin-password':pw},
+        credentials:'same-origin',
+        headers,
         body:JSON.stringify({data:{text:value,updatedAt:new Date().toISOString()}})
       });
       if(r.status===429)throw new Error('LIMITED');
-      if(r.status===401)throw new Error('PASSWORD');
+      if(r.status===401)throw new Error('SESSION');
       if(!r.ok)throw new Error('SAVE');
       guidelineText.textContent=value;
       showSaveNotice('保存しました');
     }catch(e){
       if(e.message==='LIMITED')alert('試行回数の上限です。15分後に再度お試しください。');
-      else if(e.message==='PASSWORD')alert('管理者パスワードが違います。');
+      else if(e.message==='SESSION')alert('管理権限が終了しました。チーム専用ページから管理を開き直してください。');
       else alert('大会概要を保存できませんでした。');
     }finally{
       guidelineSaveBtn.disabled=false;
@@ -934,36 +934,6 @@ function renderReplyMode(){
   sessionStorage.removeItem('yachiyoAdminMode');sessionStorage.removeItem('yachiyoAdminPassword');
   area.classList.remove('show');guidelineBox.classList.remove('show');btn.classList.remove('is-visible');btn.textContent='管理';
 
-  async function verifyAdminPassword(pw){
-    try{
-      const current=guidelineEditor.value.trim()||guidelineText.textContent.trim();
-      const r=await fetch(API+'?section=seniorcup-guideline',{
-        method:'POST',
-        headers:{'content-type':'application/json','x-admin-password':pw},
-        body:JSON.stringify({data:{text:current,updatedAt:new Date().toISOString()}})
-      });
-      return {ok:r.ok,status:r.status};
-    }catch(e){return {ok:false,status:0}}
-  }
-
-  btn.addEventListener('click',async()=>{
-    if(area.classList.contains('show')){
-      area.classList.remove('show');guidelineBox.classList.remove('show');btn.textContent='管理';btn.classList.remove('is-visible');
-      btn.style.setProperty('display','none','important');
-      sessionStorage.removeItem('yachiyoAdminMode');sessionStorage.removeItem('yachiyoAdminPassword');return;
-    }
-    const pw=prompt('管理者パスワードを入力してください');if(!pw)return;
-    const old=btn.textContent;btn.disabled=true;btn.textContent='確認中...';
-    const auth=await verifyAdminPassword(pw);
-    btn.disabled=false;
-    if(!auth.ok){
-      btn.textContent='管理';
-      sessionStorage.removeItem('yachiyoAdminMode');sessionStorage.removeItem('yachiyoAdminPassword');
-      alert(auth.status===429?'試行回数の上限です。15分後に再度お試しください。':'管理者パスワードが違います。');return;
-    }
-    sessionStorage.setItem('yachiyoAdminPassword',pw);sessionStorage.setItem('yachiyoAdminMode','1');
-    area.classList.add('show');guidelineBox.classList.add('show');btn.textContent='管理終了';btn.style.setProperty('display','block','important');btn.classList.add('is-visible');
-  });
 const previousCup=window.yachiyoReadReloadData('cup');
   if(previousCup){
     if(typeof previousCup.guideline==='string')guidelineText.textContent=previousCup.guideline;
