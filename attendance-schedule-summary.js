@@ -65,16 +65,40 @@
     const style=document.createElement('style');
     style.id='attendance-schedule-summary-style';
     style.textContent=
-      '.attendance-schedule-meta{border:1px solid rgba(199,154,59,.45)!important;background:#fffaf0!important}' +
-      '.attendance-schedule-meta h3{color:#8b671d!important}' +
-      '.attendance-schedule-meta-row{display:grid;grid-template-columns:82px minmax(0,1fr);gap:10px;padding:4px 0;font-size:12px;line-height:1.55}' +
-      '.attendance-schedule-meta-row b{color:#6f7885;font-weight:800}' +
-      '.attendance-schedule-meta-row span{color:#17202b;font-weight:800;overflow-wrap:anywhere}' +
-      '.attendance-report-schedule-meta{margin:18px 0 20px;padding:15px 16px;border:1px solid rgba(199,154,59,.45);border-radius:14px;background:#fffaf0}' +
-      '.attendance-report-schedule-meta h3{margin:0 0 9px;color:#8b671d;font-size:16px}' +
-      '.attendance-report-schedule-meta .attendance-schedule-meta-row{font-size:13px;padding:5px 0}' +
-      '@media(max-width:420px){.attendance-schedule-meta-row{grid-template-columns:74px minmax(0,1fr)}}';
+      '.attendance-schedule-meta,.attendance-report-schedule-meta{margin:8px 0 12px;padding:8px 10px;border-top:1px solid rgba(199,154,59,.35);border-bottom:1px solid rgba(199,154,59,.35);background:#fffdf7}' +
+      '.attendance-schedule-meta-line{margin:0;color:#596474;font-size:11px;font-weight:800;line-height:1.55;overflow-wrap:anywhere}' +
+      '.attendance-schedule-meta-line+.attendance-schedule-meta-line{margin-top:2px}' +
+      '.attendance-schedule-meta-line b{color:#8b671d}' +
+      '.summary-dialog .attendance-schedule-meta{margin:0 0 10px;padding:8px 0;border-left:0;border-right:0}' +
+      '.summary-dialog .attendance-schedule-meta-line{font-size:11px}' +
+      '@media(max-width:420px){.attendance-schedule-meta-line{font-size:10.5px;line-height:1.5}}';
     document.head.appendChild(style);
+  }
+
+  function compactScheduleLines(event,includeTitle){
+    const title=String(event?.title||'').trim();
+    const grade=gradeLabel(event);
+    const time=String(event?.time||'').trim();
+    const place=String(event?.place||'').trim();
+    const memo=String(event?.memo||'').trim();
+    const detailLabel=['official','friendly'].includes(String(event?.category||''))?'対戦・詳細':'詳細';
+
+    const first=[];
+    const second=[];
+    if(includeTitle&&title)first.push('予定：'+title);
+    if(grade)first.push('対象：'+grade);
+    if(time)first.push('時間：'+time);
+    if(place)second.push('場所：'+place);
+    if(memo)second.push(detailLabel+'：'+memo);
+
+    return [first.join('　｜　'),second.join('　｜　')].filter(Boolean);
+  }
+
+  function compactScheduleHtml(event,includeTitle){
+    const lines=compactScheduleLines(event,includeTitle);
+    return lines.map((line,index)=>
+      '<p class="attendance-schedule-meta-line">'+(index===0?'<b>予定情報　</b>':'')+esc(line)+'</p>'
+    ).join('');
   }
 
   async function injectForButton(button){
@@ -91,15 +115,13 @@
     const event=schedule.find(item=>formatDate(item?.date)===dateText);
     if(!event)return;
 
-    const rows=detailRows(event);
-    if(!rows.length)return;
+    const compact=compactScheduleHtml(event,false);
+    if(!compact)return;
 
     installStyle();
     const section=document.createElement('section');
-    section.className='breakdown-grade attendance-schedule-meta';
-    section.innerHTML='<h3>予定情報</h3>'+rows.map(([label,value])=>
-      '<div class="attendance-schedule-meta-row"><b>'+esc(label)+'</b><span>'+esc(value)+'</span></div>'
-    ).join('');
+    section.className='attendance-schedule-meta';
+    section.innerHTML=compact;
     body.prepend(section);
   }
 
@@ -190,15 +212,13 @@
 
     matches.sort((a,b)=>Math.abs(Date.parse(String(a.date)+'T00:00:00')-Date.now())-Math.abs(Date.parse(String(b.date)+'T00:00:00')-Date.now()));
     const event=matches[0];
-    const rows=detailRows(event);
-    if(!rows.length)return;
+    const compact=compactScheduleHtml(event,true);
+    if(!compact)return;
 
     installStyle();
     const section=document.createElement('section');
     section.className='attendance-report-schedule-meta';
-    section.innerHTML='<h3>当日のスケジュール</h3>'+rows.map(([label,value])=>
-      '<div class="attendance-schedule-meta-row"><b>'+esc(label)+'</b><span>'+esc(value)+'</span></div>'
-    ).join('');
+    section.innerHTML=compact;
     grades.parentNode.insertBefore(section,grades);
   }
 
