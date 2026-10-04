@@ -20,6 +20,7 @@
   const KEY=pageKey();
   const cfg=PAGES[KEY];
   if(!cfg)return;
+  if(KEY==='schedule.html'||KEY==='results.html')return;
 
   const button=document.querySelector(cfg.button);
   const trigger=document.querySelector(cfg.trigger);
