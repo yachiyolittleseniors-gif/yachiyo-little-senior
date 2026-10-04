@@ -904,7 +904,15 @@ export default async (request, context) => {
         const photos = await readHeroManifestData(store, key);
         const photo = Array.isArray(photos) ? photos[0] : null;
         const version = photo?.image ? String(photo.version || photo.updatedAt || "") : "";
-        return new Response("window.__yachiyoHeroVersion=" + JSON.stringify(version) + ";", {
+        const heroUrl = "/.netlify/functions/site-data?section=hero&current=1" + (version ? "&v=" + encodeURIComponent(version) : "");
+        const bootstrapScript =
+          "(()=>{const v=" + JSON.stringify(version) +
+          ",u=" + JSON.stringify(heroUrl) +
+          ";window.__yachiyoHeroVersion=v;window.__yachiyoHeroUrl=u;" +
+          "if(window.__yachiyoHeroRequest)window.__yachiyoHeroRequest.url=u;" +
+          "document.documentElement.style.setProperty('--hero-photo','url(\\\"'+u+'\\\")');" +
+          "if(v){const l=document.createElement('link');l.rel='preload';l.as='image';l.href=u;l.fetchPriority='high';document.head.appendChild(l);}})();";
+        return new Response(bootstrapScript, {
           status: 200,
           headers: {
             "content-type": "application/javascript; charset=utf-8",
@@ -1394,7 +1402,7 @@ export default async (request, context) => {
               image:
                 `/.netlify/functions/site-data?section=${encodeURIComponent(section)}` +
                 `&image=${encodeURIComponent(id)}` +
-                `&v=${encodeURIComponent(item.updatedAt || index)}`,
+                `&v=${encodeURIComponent(item.version || item.updatedAt || index)}`,
               updatedAt: item.updatedAt || ""
             };
           })
@@ -1439,9 +1447,13 @@ export default async (request, context) => {
             "content-type": match[1] || "image/jpeg",
             "content-length": String(bytes.byteLength),
             ...(section === "hero" ? {"x-yachiyo-hero-version": String(item.version || item.updatedAt || "")} : {}),
-            "cache-control": url.searchParams.has("v")
-              ? "public, max-age=31536000, immutable"
-              : "no-store, max-age=0, must-revalidate"
+            "cache-control": (() => {
+              const requestedVersion = String(url.searchParams.get("v") || "");
+              const currentVersion = String(item.version || item.updatedAt || "");
+              return requestedVersion && requestedVersion === currentVersion
+                ? "public, max-age=31536000, immutable"
+                : "no-store, max-age=0, must-revalidate";
+            })()
           }
         });
       }
@@ -2498,6 +2510,7 @@ export default async (request, context) => {
     }
 
     await store.setJSON(key, body.data);
+    if (section === "hero") heroManifestSnapshot = null;
 
     if (section === "duty-roster" && body?.announceLatest === true) {
       await saveBoardLatestUpdate(
