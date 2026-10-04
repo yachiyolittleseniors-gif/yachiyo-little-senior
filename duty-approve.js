@@ -50,57 +50,46 @@
     }finally{clearTimeout(timer)}
   }
 
-  function readLiffStateToken(params){
-    const direct=params.get('t')||'';
-    if(direct)return direct;
-    let state=params.get('liff.state')||params.get('liff_state')||'';
-    if(!state)return '';
-    for(let i=0;i<2;i++){
-      try{
-        const decoded=decodeURIComponent(state);
-        if(decoded===state)break;
-        state=decoded;
-      }catch(_){break}
-    }
-    const nested=new URLSearchParams(state.replace(/^\?/,''));
-    return nested.get('t')||'';
-  }
-
   async function ensureLiffIdentity(){
-    const params=new URLSearchParams(location.search);
+    if(!window.liff)throw new Error('LINE本人確認を読み込めませんでした。LINEから承認リンクを開き直してください。');
 
-    // LINE's LIFF redirect already supplies the verified-login ID token in the
-    // endpoint URL. Use that directly and verify it again on our server.
-    token=readLiffStateToken(params);
-    idToken=params.get('id_token')||'';
+    await window.liff.init({liffId:LIFF_ID});
+
+    token=new URLSearchParams(location.search).get('t')||'';
+    if(!token){
+      const params=new URLSearchParams(location.search);
+      let state=params.get('liff.state')||params.get('liff_state')||'';
+      for(let i=0;i<2&&state;i++){
+        try{
+          const decoded=decodeURIComponent(state);
+          if(decoded===state)break;
+          state=decoded;
+        }catch(_){break}
+      }
+      if(state){
+        const nested=new URLSearchParams(state.replace(/^\?/,''));
+        token=nested.get('t')||'';
+      }
+    }
+    if(!token)throw new Error('承認リンクの情報を確認できませんでした。申請者から届いたLINEの承認リンクを開き直してください。');
+
+    if(!window.liff.isLoggedIn()){
+      window.liff.login();
+      return false;
+    }
+
     window.__ylsLiffAccessToken='';
+    idToken='';
 
-    if(token&&idToken){
-      // Remove LINE auth material from the visible address bar after capture.
-      try{history.replaceState(null,'',location.pathname)}catch(_){}
+    const accessToken=typeof window.liff.getAccessToken==='function'?(window.liff.getAccessToken()||''):'';
+    if(accessToken){
+      window.__ylsLiffAccessToken=String(accessToken);
       return true;
     }
 
-    // Fallback only for environments where the SDK is actually available.
-    if(window.liff){
-      try{
-        await window.liff.init({liffId:LIFF_ID});
-        if(!window.liff.isLoggedIn()){
-          window.liff.login();
-          return false;
-        }
-        token=token||readLiffStateToken(new URLSearchParams(location.search));
-        const accessToken=typeof window.liff.getAccessToken==='function'?window.liff.getAccessToken():'';
-        if(accessToken){
-          window.__ylsLiffAccessToken=String(accessToken);
-          if(token)return true;
-        }
-        idToken=typeof window.liff.getIDToken==='function'?(window.liff.getIDToken()||''):'';
-        if(token&&idToken)return true;
-      }catch(_){}
-    }
+    idToken=typeof window.liff.getIDToken==='function'?(window.liff.getIDToken()||''):'';
+    if(idToken)return true;
 
-    if(!token)throw new Error('承認リンクの情報を確認できませんでした。申請者から届いたLINEの承認リンクを開き直してください。');
     throw new Error('LINE本人確認情報を取得できませんでした。LINEから承認リンクを開き直してください。');
   }
 
