@@ -35,8 +35,8 @@ html body #densukeToggleBtn.yls-admin-button[data-yls-admin-button]{
   outline:0!important;
   background:transparent!important;
   background-image:none!important;
-  color:rgba(199,154,59,.46)!important;
-  -webkit-text-fill-color:rgba(199,154,59,.46)!important;
+  color:rgba(199,154,59,.28)!important;
+  -webkit-text-fill-color:rgba(199,154,59,.28)!important;
   box-shadow:none!important;
   text-shadow:none!important;
   backdrop-filter:none!important;
@@ -51,24 +51,41 @@ html body #densukeToggleBtn.yls-admin-button[data-yls-admin-button]{
   -webkit-tap-highlight-color:transparent!important;
 }
 
+@media (hover:hover) and (pointer:fine){
 html body #heroAdminToggle.yls-admin-button[data-yls-admin-button]:hover,
-html body #heroAdminToggle.yls-admin-button[data-yls-admin-button]:focus-visible,
 html body #staffEditBtn.yls-admin-button[data-yls-admin-button]:hover,
-html body #staffEditBtn.yls-admin-button[data-yls-admin-button]:focus-visible,
 html body #adminModeToggle.yls-admin-button[data-yls-admin-button]:hover,
-html body #adminModeToggle.yls-admin-button[data-yls-admin-button]:focus-visible,
 html body #adminToggle.yls-admin-button[data-yls-admin-button]:hover,
-html body #adminToggle.yls-admin-button[data-yls-admin-button]:focus-visible,
 html body #adminBtn.yls-admin-button[data-yls-admin-button]:hover,
-html body #adminBtn.yls-admin-button[data-yls-admin-button]:focus-visible,
 html body #cupAdminBtn.yls-admin-button[data-yls-admin-button]:hover,
-html body #cupAdminBtn.yls-admin-button[data-yls-admin-button]:focus-visible,
 html body #contactAdminBtn.yls-admin-button[data-yls-admin-button]:hover,
+html body #densukeToggleBtn.yls-admin-button[data-yls-admin-button]:hover{
+  color:rgba(199,154,59,.42)!important;
+  -webkit-text-fill-color:rgba(199,154,59,.42)!important;
+}
+}
+html body #heroAdminToggle.yls-admin-button[data-yls-admin-button]:focus-visible,
+html body #staffEditBtn.yls-admin-button[data-yls-admin-button]:focus-visible,
+html body #adminModeToggle.yls-admin-button[data-yls-admin-button]:focus-visible,
+html body #adminToggle.yls-admin-button[data-yls-admin-button]:focus-visible,
+html body #adminBtn.yls-admin-button[data-yls-admin-button]:focus-visible,
+html body #cupAdminBtn.yls-admin-button[data-yls-admin-button]:focus-visible,
 html body #contactAdminBtn.yls-admin-button[data-yls-admin-button]:focus-visible,
-html body #densukeToggleBtn.yls-admin-button[data-yls-admin-button]:hover,
 html body #densukeToggleBtn.yls-admin-button[data-yls-admin-button]:focus-visible{
-  color:rgba(199,154,59,.72)!important;
-  -webkit-text-fill-color:rgba(199,154,59,.72)!important;
+  color:rgba(199,154,59,.46)!important;
+  -webkit-text-fill-color:rgba(199,154,59,.46)!important;
+}
+
+/* Editing state: still subdued, but slightly easier to distinguish from idle. */
+html body.admin-mode #adminModeToggle.yls-admin-button[data-yls-admin-button],
+html body.staff-editing #staffEditBtn.yls-admin-button[data-yls-admin-button],
+html body.editing #adminToggle.yls-admin-button[data-yls-admin-button],
+html body.photo-admin-on #heroAdminToggle.yls-admin-button[data-yls-admin-button],
+html body #cupAdminBtn.yls-admin-button[data-yls-admin-button][data-active="1"],
+html body #contactAdminBtn.yls-admin-button[data-yls-admin-button][data-active="1"],
+html body #densukeToggleBtn.yls-admin-button[data-yls-admin-button][data-active="1"]{
+  color:rgba(199,154,59,.40)!important;
+  -webkit-text-fill-color:rgba(199,154,59,.40)!important;
 }
 
 #densukeAdminPanel.show{
