@@ -498,11 +498,23 @@ html{scroll-padding-top:var(--fixed-header-height)}
 <div class="guideline">
 <strong><span class="current-year"></span>年 八千代リトルシニア杯</strong>
 <p id="guidelineText">【大会日程】
-10/18（日）1回戦：東邦① 9:30／東邦② 14:30／東邦③ 13:30／桑納川①／桑納川②
-10/25（日）準々決勝：麦丸①・麦丸②・桑納川①・桑納川③
-11/1（日）準決勝：東邦
+10/18（日）1回戦
+・東邦① 9:15
+・東邦② 11:30
+・東邦③ 13:30
+・桑納川① 9:00
+・桑納川② 11:00
+
+10/25（日）準々決勝
+・麦丸① 9:00
+・麦丸② 11:00
+・桑納川① 9:00
+・桑納川② 11:00
+
+11/1（日）準決勝：東邦 8:30
 11/8（日）決勝：東邦G 9:30
 予備日：11/14
+
 会場：東邦球場・多目的広場・桑納川公園球場・麦丸球場
 
 【投手ルール】
@@ -752,8 +764,13 @@ function renderReplyMode(){
       const j=await r.json();
       if(j.data && typeof j.data.text==='string' && j.data.text.trim()){
         const value=stripLegacyReplyMarker(j.data.text);
-        guidelineText.textContent=value;
-        guidelineEditor.value=value;
+        const isOldPlaceholder=value.trim()==='大会概要の詳細は準備ができ次第、こちらに掲載します。';
+        if(!isOldPlaceholder){
+          guidelineText.textContent=value;
+          guidelineEditor.value=value;
+        }else{
+          guidelineEditor.value=guidelineText.textContent.trim();
+        }
       }else{
         guidelineEditor.value=guidelineText.textContent.trim();
       }
