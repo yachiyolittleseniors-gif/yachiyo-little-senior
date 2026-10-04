@@ -1201,6 +1201,29 @@ export default async (request, context) => {
         ? await readHeroManifestData(store, key)
         : await store.get(key, { type: "json", consistency: "strong" });
 
+      if (section === "seniorcup-guideline") {
+        const migrationKey = "migrations/seniorcup-guideline-20261004-times.json";
+        const migrated = await store.get(migrationKey, {
+          type: "json",
+          consistency: "strong"
+        });
+        if (!migrated?.done) {
+          const currentText = String(data?.text || "").trim();
+          const oldPlaceholder = "大会概要の詳細は準備ができ次第、こちらに掲載します。";
+          if (!currentText || currentText === oldPlaceholder) {
+            data = {
+              text: "【大会日程】\n10/18（日）1回戦\n・東邦① 9:15\n・東邦② 11:30\n・東邦③ 13:30\n・桑納川① 9:00\n・桑納川② 11:00\n\n10/25（日）準々決勝\n・麦丸① 9:00\n・麦丸② 11:00\n・桑納川① 9:00\n・桑納川② 11:00\n\n11/1（日）準決勝：東邦 8:30\n11/8（日）決勝：東邦G 9:30\n予備日：11/14\n\n会場：東邦球場・多目的広場・桑納川公園球場・麦丸球場\n\n【投手ルール】\n準決勝・決勝が同日に重なる場合、投手は1試合4イニングまで、1日最大7イニングまで。\n投手は長袖、リストバンド、アームカバー／スリーブ、テーピングの着用禁止。\n\n【審判・運営】\n球場二試合：①⇔②\n球場三試合：通常規定通り\n決勝戦のみ：八千代シニア審判部\n同点時はタイブレークを2回行い、それでも決着しない場合のみくじ引き。\nG責任：新木戸グリーンモンスターズ／西高津クラブ",
+              updatedAt: new Date().toISOString()
+            };
+            await store.setJSON(key, data);
+          }
+          await store.setJSON(migrationKey, {
+            done: true,
+            migratedAt: new Date().toISOString()
+          });
+        }
+      }
+
       if (section === "staff" && Array.isArray(data)) {
         let changed = false;
         data = data.map(item => {
