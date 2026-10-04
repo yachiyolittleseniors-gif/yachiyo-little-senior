@@ -764,13 +764,8 @@ function renderReplyMode(){
       const j=await r.json();
       if(j.data && typeof j.data.text==='string' && j.data.text.trim()){
         const value=stripLegacyReplyMarker(j.data.text);
-        const isOldPlaceholder=value.trim()==='大会概要の詳細は準備ができ次第、こちらに掲載します。';
-        if(!isOldPlaceholder){
-          guidelineText.textContent=value;
-          guidelineEditor.value=value;
-        }else{
-          guidelineEditor.value=guidelineText.textContent.trim();
-        }
+        guidelineText.textContent=value;
+        guidelineEditor.value=value;
       }else{
         guidelineEditor.value=guidelineText.textContent.trim();
       }
