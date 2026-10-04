@@ -2008,7 +2008,15 @@ export default async (request, context) => {
       context,
       expectedPassword: process.env.ADMIN_PASSWORD || "",
       requireSession:
-        (section === "seniorcup-guideline" || section === "seniorcup-winners") &&
+        (
+          section === "seniorcup-guideline" ||
+          section === "seniorcup-winners" ||
+          section === "seniorcup-partners" ||
+          section === "seniorcup-reply-mode" ||
+          section === "seniorcup-registration" ||
+          section === "seniorcup-documents" ||
+          section === "downloads-roster"
+        ) &&
         Boolean(request.headers.get("x-admin-password"))
           ? false
           : true,
