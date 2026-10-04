@@ -33,24 +33,10 @@
       '<small class="small">承認リンクは1回限り・24時間有効です。</small>';
     const shareButton=document.getElementById('lineShareButton');
     if(shareButton){
-      shareButton.addEventListener('click',function(event){
-        event.preventDefault();
-        out.innerHTML='<div class="sent">LINEの送信画面を開きました</div><small class="small">この画面は自動で閉じます。</small>';
-        const target=window.open(share,'_blank');
-        setTimeout(function(){
-          try{window.close()}catch(_){}
-          setTimeout(function(){
-            try{
-              if(!document.hidden){
-                if(history.length>1)history.back();
-                else location.replace('about:blank');
-              }
-            }catch(_){}
-          },250);
-        },120);
-        if(!target){
-          location.href=share;
-        }
+      shareButton.setAttribute('rel','noopener');
+      shareButton.addEventListener('click',function(){
+        // Direct navigation is more reliable than window.open on iPhone/LINE browsers.
+        shareButton.textContent='LINEを開いています…';
       },{once:true});
     }
     try{history.replaceState(null,'',location.pathname)}catch(_){}
