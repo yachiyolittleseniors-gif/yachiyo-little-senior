@@ -65,19 +65,22 @@
       window.liff.login();
       return false;
     }
-    idToken=window.liff.getIDToken()||'';
+    // Always prefer a LIFF access token for this flow. It is available after
+    // LIFF login and can be verified server-side before fetching /v2/profile.
+    // This avoids device-specific getIDToken() null behavior.
+    idToken='';
     window.__ylsLiffAccessToken='';
-    if(!idToken){
-      // LINE's documented server-side fallback is the raw LIFF access token.
-      // The server verifies it with LINE, then obtains the profile from LINE.
-      const accessToken=typeof window.liff.getAccessToken==='function'?window.liff.getAccessToken():'';
-      if(accessToken){
-        window.__ylsLiffAccessToken=String(accessToken);
-        return true;
-      }
-      throw new Error('LINE本人確認情報を取得できませんでした。LINEから承認リンクを開き直してください。');
+    const accessToken=typeof window.liff.getAccessToken==='function'?window.liff.getAccessToken():'';
+    if(accessToken){
+      window.__ylsLiffAccessToken=String(accessToken);
+      return true;
     }
-    return true;
+
+    // Fallback for environments where only the ID token is exposed.
+    idToken=typeof window.liff.getIDToken==='function'?(window.liff.getIDToken()||''):'';
+    if(idToken)return true;
+
+    throw new Error('LINE本人確認情報を取得できませんでした。LINEから承認リンクを開き直してください。');
   }
 
   async function call(action){
