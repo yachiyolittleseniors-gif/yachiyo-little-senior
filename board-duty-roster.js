@@ -1,6 +1,17 @@
 (function(){
   const API='/.netlify/functions/site-data?section=duty-roster';
   const REQUEST_API='/.netlify/functions/duty-change-requests';
+  const REQUESTER_DEVICE_KEY='ylsDutyRequesterDeviceToken';
+  function requesterDeviceToken(){
+    try{
+      let token=localStorage.getItem(REQUESTER_DEVICE_KEY)||'';
+      if(!token){
+        token=(crypto.randomUUID?crypto.randomUUID():Date.now().toString(36)+'-'+Math.random().toString(36).slice(2));
+        localStorage.setItem(REQUESTER_DEVICE_KEY,token);
+      }
+      return token;
+    }catch(_){return''}
+  }
   async function applyDutyRequestPublicSetting(){const box=document.getElementById('dutyRequestBox'),note=document.getElementById('dutyRequestPublicNote');try{const r=await fetch('/.netlify/functions/site-data?section=admin-visibility-settings',{cache:'no-store'}),j=await r.json();const enabled=!!(r.ok&&j&&j.data&&j.data.dutyRequestPublic===true);if(box)box.hidden=!enabled;if(note)note.hidden=!enabled}catch(e){if(box)box.hidden=true;if(note)note.hidden=true}}
   applyDutyRequestPublicSetting();
   const list=document.getElementById('dutyRosterList');
@@ -487,6 +498,8 @@
     const headers={'content-type':'application/json'};
     const accessPassword=sessionStorage.getItem('yachiyoAttendancePass')||'';
     if(accessPassword)headers['x-access-password']=accessPassword;
+    const deviceToken=requesterDeviceToken();
+    if(deviceToken)headers['x-duty-requester-device']=deviceToken;
     if(includeAdmin){
       const adminPassword=panel.dataset.adminPassword||'';
       if(adminPassword)headers['x-admin-password']=adminPassword;
@@ -655,7 +668,7 @@
           (item.status==='pending'&&item.approvalMode==='family'&&partnerApprovalEnabled&&!requestExpired(item)
             ?'<span class="duty-request-pending-actions"><button type="button" class="duty-request-resend" data-resend-duty-request="'+escapeHtml(item.id)+'" data-status="pending">'+escapeHtml(requestStatusLabel(item.status,item))+'<small>タップでLINEを再送</small></button>'+(item.requesterCanCancel?'<button type="button" class="duty-request-self-cancel" data-cancel-own-duty-request="'+escapeHtml(item.id)+'">申請を取り消す</button>':'')+'</span>'
             :item.status==='pending'&&item.approvalMode==='admin'
-              ?'<b data-status="pending">確認待ち（管理者承認）</b>'
+              ?'<span class="duty-request-pending-actions"><b data-status="pending">確認待ち（管理者承認）</b>'+(item.requesterCanCancel?'<button type="button" class="duty-request-self-cancel" data-cancel-own-duty-request="'+escapeHtml(item.id)+'">申請を取り消す</button>':'')+'</span>'
               :'<b data-status="'+escapeHtml(item.status)+'">'+escapeHtml(requestStatusLabel(item.status,item))+'</b>')+
           (item.createdAt?'<br><small>申請日時：'+escapeHtml(new Intl.DateTimeFormat('ja-JP',{timeZone:'Asia/Tokyo',year:'numeric',month:'numeric',day:'numeric',hour:'2-digit',minute:'2-digit',hourCycle:'h23'}).format(new Date(item.createdAt)))+'</small>':'')+
           '</div>';
@@ -814,7 +827,10 @@
   async function cancelOwnPendingRequest(id,button){
     const item=requests.find(function(x){return x.id===id&&x.status==='pending'});
     if(!item)return;
-    if(!confirm('この当番変更申請を取り消しますか？\n承認リンクも使用できなくなります。'))return;
+    const cancelMessage=item.approvalMode==='family'
+      ?'この当番変更申請を取り消しますか？\n承認リンクも使用できなくなります。'
+      :'この当番変更申請を取り消しますか？';
+    if(!confirm(cancelMessage))return;
     const original=button?button.textContent:'';
     if(button){button.disabled=true;button.textContent='取消中…';}
     try{
