@@ -313,8 +313,10 @@ function publicRequest(item,requesterHash=""){
   };
 }
 function publicData(data,requesterHash=""){
-  const now=new Date();
-  const visibleRequests=data.requests.filter(item=>item.status!=="closed"&&!(item.status==="pending"&&requestIsPastMonth(item,now)));
+  // Pending requests must remain visible until they are approved/rejected/closed.
+  // Hiding them merely because their duty date is in an earlier month makes a
+  // newly submitted test/late request disappear immediately from "確認待ち".
+  const visibleRequests=data.requests.filter(item=>item.status!=="closed");
   return{
     requests:visibleRequests.map(item=>publicRequest(item,requesterHash)),
     pendingCount:visibleRequests.filter(item=>item.status==="pending").length,
