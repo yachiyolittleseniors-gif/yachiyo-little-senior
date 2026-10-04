@@ -66,7 +66,22 @@
       return false;
     }
     idToken=window.liff.getIDToken()||'';
-    if(!idToken)throw new Error('LINE本人確認情報を取得できませんでした。LINEから承認リンクを開き直してください。');
+    if(!idToken){
+      // A user who previously authorized this LINE Login channel before the
+      // LIFF app gained the openid scope can have an old grant without an ID
+      // token. Ask LINE for the missing openid permission once, then init runs
+      // again after LINE returns.
+      try{
+        if(window.liff.permission&&typeof window.liff.permission.query==='function'){
+          const permission=await window.liff.permission.query('openid');
+          if(permission&&permission.state==='prompt'&&typeof window.liff.permission.requestAll==='function'){
+            await window.liff.permission.requestAll();
+            return false;
+          }
+        }
+      }catch(_){}
+      throw new Error('LINE本人確認情報を取得できませんでした。LINEから承認リンクを開き直してください。');
+    }
     return true;
   }
 
