@@ -815,6 +815,20 @@
     }
   }
 
+  function showDutyRequestDiagnostic(info){
+    const result=document.getElementById('dutyRequestResult');
+    if(!result)return;
+    const request=info&&info.request||{};
+    const saved=info&&info.saved===true;
+    result.hidden=false;
+    result.innerHTML='<div class="duty-request-complete" style="border-color:#c79a3b">'+
+      '<b>申請保存確認</b>'+
+      '<p>'+(saved?'サーバー保存：OK':'サーバー保存：未確認')+
+      (request.requestNo?'<br>申請番号：#'+escapeHtml(request.requestNo):'')+
+      (request.status?'<br>状態：'+escapeHtml(request.status):'')+
+      '</p><small>この表示は申請フロー確認用です。</small></div>';
+  }
+
   async function submitRequest(){
     const typeSel=document.getElementById('dutyRequestType');
     const requestType=typeSel&&typeSel.value==='swap'?'swap':'replace';
@@ -868,7 +882,7 @@
       if(!response.ok){
         if(body.code==='line_login_required'&&body.loginUrl){
           // The server has already persisted this request as pending.
-          // Reflect that response in the UI before navigating to LINE Login.
+          // Show the exact server result before leaving for LINE Login.
           if(body.request){
             const pending=normalizeRequestList([body.request])[0];
             if(pending){
@@ -876,7 +890,12 @@
               if(existing>=0)requests[existing]=pending;else requests.unshift(pending);
               requestsLoaded=true;
               renderRequests();
+              showDutyRequestDiagnostic({saved:true,request:pending});
+            }else{
+              showDutyRequestDiagnostic({saved:false,request:body.request});
             }
+          }else{
+            showDutyRequestDiagnostic({saved:false});
           }
           const resumePayload=JSON.stringify({
             mode:'submit',requestType:requestType,date:date,from:personOptionValue(fromPerson),to:personOptionValue(toPerson),
