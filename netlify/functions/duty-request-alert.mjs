@@ -30,12 +30,11 @@ export default async (request)=>{
       const legacy=await store.get("content/duty-roster.json",{type:"json",consistency:"strong"});
       requests=Array.isArray(legacy?.requests)?legacy.requests:[];
     }
-    const roster=await store.get("content/duty-roster.json",{type:"json",consistency:"strong"})||{};
-    const testMonths=new Set((Array.isArray(roster.images)?roster.images:[]).filter(image=>image?.testMode===true&&image?.table).map(image=>String(image.table.year)+"-"+String(image.table.month).padStart(2,"0")));
     const unique=new Set();
     requests.forEach(item=>{
       if(!item||String(item.status||"pending")!=="pending")return;
-      if(testMonths.has(String(item.date||"").slice(0,7)))return;
+      // A pending request is a live workflow item. Count it regardless of
+      // whether its roster month is currently marked as test mode.
       unique.add(keyOf(item));
     });
     return json({ok:true,hasPending:unique.size>0,pendingCount:unique.size});
