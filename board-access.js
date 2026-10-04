@@ -91,6 +91,20 @@ window.boardAccessReady=(async function requireBoardPassword(){
     return passkeyAttempt;
   }
   const searchParams=new URLSearchParams(location.search);
+  const freshHomeEntry=searchParams.get('entry')==='home';
+  if(freshHomeEntry){
+    // A deliberate tap from Home must authenticate once every time.
+    // Strip the marker immediately so any iPhone/Safari follow-up navigation
+    // from the same successful login can reuse the fresh-auth marker instead
+    // of opening the passkey sheet a second time.
+    try{
+      const cleanUrl=new URL(location.href);
+      cleanUrl.searchParams.delete('entry');
+      history.replaceState(history.state,'',cleanUrl.pathname+cleanUrl.search+cleanUrl.hash);
+    }catch(_){}
+    clearAccess();
+    clearFreshPasskeyVerification();
+  }
   const returnSource=searchParams.get('from');
   const historyFocus=searchParams.get('focus');
   const returningFromProtectedPage=['documents','coach','attendance','player'].includes(returnSource);
@@ -102,7 +116,7 @@ window.boardAccessReady=(async function requireBoardPassword(){
   // iPhone/Safari can immediately perform another board navigation after a
   // successful WebAuthn ceremony. Reuse the just-issued board session instead
   // of opening Face ID / passkey a second time.
-  if(hasFreshPasskeyVerification()){
+  if(!freshHomeEntry&&hasFreshPasskeyVerification()){
     try{
       const saved=sessionStorage.getItem(accessKey)||readReloadAccess();
       if(saved&&await verify(saved)){
@@ -114,7 +128,7 @@ window.boardAccessReady=(async function requireBoardPassword(){
       clearAccess();
     }
   }
-  if(returningFromProtectedPage||returningFromUpdateHistory||returningFromLineLogin||isPageReload){
+  if(!freshHomeEntry&&(returningFromProtectedPage||returningFromUpdateHistory||returningFromLineLogin||isPageReload)){
     try{
       const saved=sessionStorage.getItem(accessKey)||readReloadAccess();
       if(saved&&await verify(saved)){
