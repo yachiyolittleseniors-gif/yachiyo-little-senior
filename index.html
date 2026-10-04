@@ -5495,7 +5495,6 @@ body:not(.photo-admin-on) #heroAdminToggle.unified-admin-toggle:focus-visible{co
     z-index:40000!important;
     width:auto!important;
     max-width:calc(100vw - 24px)!important;
-    display:none!important;
     margin:0!important;
     padding:0!important;
     background:transparent!important;
@@ -5529,6 +5528,31 @@ body:not(.photo-admin-on) #heroAdminToggle.unified-admin-toggle:focus-visible{co
 
   #heroPhotoAdmin.home-admin-expanded #homeAdminQuickToggle{
     display:none!important;
+  }
+  body:not(.photo-admin-on) #heroPhotoAdmin > #heroAdminToggle{
+    display:block!important;
+  }
+  body.photo-admin-on #heroPhotoAdmin > #heroAdminToggle{
+    display:none!important;
+  }
+  body.photo-admin-on #heroPhotoAdmin.home-admin-expanded > #heroAdminToggle{
+    display:block!important;
+    width:auto!important;
+    min-width:0!important;
+    min-height:28px!important;
+    height:auto!important;
+    margin:8px 0 0 auto!important;
+    padding:3px 2px!important;
+    position:static!important;
+    border:0!important;
+    border-radius:0!important;
+    background:transparent!important;
+    box-shadow:none!important;
+    color:rgba(226,189,103,.58)!important;
+    -webkit-text-fill-color:rgba(226,189,103,.58)!important;
+    font-size:10.5px!important;
+    font-weight:800!important;
+    text-align:right!important;
   }
 
   #homeAdminPanelBody{
@@ -5639,26 +5663,6 @@ body:not(.photo-admin-on) #heroAdminToggle.unified-admin-toggle:focus-visible{co
     margin:0!important;
   }
 
-  #homeAdminPanelBody #heroAdminToggle.unified-admin-toggle{
-    width:auto!important;
-    min-width:0!important;
-    min-height:28px!important;
-    height:auto!important;
-    margin:10px 0 0 auto!important;
-    padding:3px 2px!important;
-    display:block!important;
-    position:static!important;
-    inset:auto!important;
-    border:0!important;
-    border-radius:0!important;
-    background:transparent!important;
-    box-shadow:none!important;
-    color:rgba(226,189,103,.58)!important;
-    -webkit-text-fill-color:rgba(226,189,103,.58)!important;
-    font-size:10.5px!important;
-    font-weight:800!important;
-    text-align:right!important;
-  }
 }
 </style>
 
@@ -5702,9 +5706,8 @@ body:not(.photo-admin-on) #heroAdminToggle.unified-admin-toggle:focus-visible{co
 
     body.append(head,grid);
     if(overlay)body.appendChild(overlay);
-    body.appendChild(toggle);
 
-    admin.replaceChildren(quick,body);
+    admin.replaceChildren(quick,body,toggle);
 
     function setOpen(open){
       admin.classList.toggle('home-admin-expanded',open);
