@@ -1303,14 +1303,15 @@ body:after{display:none!important;content:none!important}
             <label id="dutyRequestReplaceToRow">変更後<select id="dutyRequestTo"><option value="">選択してください</option></select></label>
           </div>
           <div id="dutyRequestSwapFields">
-            <div class="duty-swap-guide"><b>入れ替えたい2つのお当番を選んでください</b><span>例：10/3 高橋さん と 10/10 藤澤さん を入れ替える</span></div>
+            <div class="duty-swap-guide"><b>入れ替えたい2つのお当番を選んでください</b><span>例：10/3 山田さん と 10/10 佐藤さん を入れ替える</span></div>
             <label>① 入れ替えたいお当番<select id="dutyRequestSwapFromSlot"><option value="">1つ目のお当番を選択してください</option></select></label>
             <div class="duty-swap-arrow" aria-hidden="true">↕</div>
             <label>② もう一方のお当番<select id="dutyRequestSwapToSlot"><option value="">2つ目のお当番を選択してください</option></select></label>
           </div>
+          <button id="toggleDutyNoLine" class="duty-no-line-toggle" type="button" aria-expanded="false" aria-controls="dutyRequestNoLineOption" hidden>LINE未利用の方</button>
           <label id="dutyRequestNoLineOption" class="duty-no-line-option" hidden>
             <input id="dutyRequestNoLine" type="checkbox">
-            <span><b>LINEを使用していない方はこちら</b><small>この申請のみ管理者承認に切り替わります。変更相手のご家庭へ直接ご連絡ください。</small></span>
+            <span><b>LINEを利用していない方はこちら</b><small>LINEを利用していない方はこちらにチェックいただき、申請をお願いします。<br>この申請のみ管理者承認に切り替わります。変更相手のご家庭へ直接ご連絡ください。</small></span>
           </label>
           <button id="submitDutyRequest" class="duty-request-submit" type="button">変更申請を送信</button>
           <div id="dutyRequestResult" class="duty-request-result" hidden></div>
@@ -1929,6 +1930,33 @@ body:after{display:none!important;content:none!important}
 }
 </style>
 <style id="duty-no-line-fallback-style">
+.duty-no-line-toggle{
+  display:block;
+  width:max-content;
+  max-width:100%;
+  margin:12px 0 4px;
+  padding:8px 12px;
+  border:1px solid rgba(7,20,38,.28);
+  border-radius:10px;
+  background:#fff;
+  color:#344154;
+  font:inherit;
+  font-size:11.5px;
+  font-weight:900;
+  line-height:1.25;
+  cursor:pointer;
+}
+.duty-no-line-toggle[hidden]{display:none!important}
+.duty-no-line-toggle[aria-expanded="true"]{border-color:rgba(199,154,59,.58);color:#8b671d;background:#fffaf0}
+.duty-request-submit{
+  width:100%!important;
+  min-height:64px!important;
+  margin-top:14px!important;
+  padding:17px 18px!important;
+  border-radius:16px!important;
+  font-size:17px!important;
+  font-weight:900!important;
+}
 .duty-no-line-option{
   display:flex;
   align-items:flex-start;
