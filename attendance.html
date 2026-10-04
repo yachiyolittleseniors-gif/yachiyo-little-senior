@@ -345,8 +345,8 @@ body{padding-top:var(--fixed-header-height)!important}
       <div class="report-dialog-frame">
         <div class="report-dialog-actions">
           <button class="report-close" id="closeReportBtn" type="button">出欠確認に戻る</button>
-          <button id="saveReportImageBtn" type="button">画像で保存</button><button id="printReportBtn" type="button" hidden aria-hidden="true">印刷・PDF保存</button>
-          
+          <button id="saveReportImageBtn" type="button">画像で保存</button>
+          <button id="printReportBtn" type="button">印刷・PDF保存</button>
         </div>
         <article class="report-sheet" id="reportSheet">
           <header class="report-head"><div><h2 id="reportTitle">保護者出席一覧</h2><p class="report-summary" id="reportSummary"></p></div></header>
@@ -669,7 +669,6 @@ $('#openReportBtn').onclick=()=>{const eventId=$('#reportEventSelect').value;if(
 $('#closeReportBtn').onclick=()=>{$('#reportDialog').close();document.body.style.overflow=''};
 $('#saveReportImageBtn').onclick=saveReportImage;
 $('#printReportBtn').onclick=()=>window.print();
-
 $('#reportDialog').onclick=event=>{if(event.target===$('#reportDialog')){$('#reportDialog').close();document.body.style.overflow=''}};
 
 let taps=0,timer;$('.footer').addEventListener('pointerup',event=>{if(event.target.closest('#manageBtn'))return;taps++;clearTimeout(timer);timer=setTimeout(()=>taps=0,2000);if(taps>=5){taps=0;clearTimeout(timer);$('#manageBtn').classList.add('show')}},{passive:true});
