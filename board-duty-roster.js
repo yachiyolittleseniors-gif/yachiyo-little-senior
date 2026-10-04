@@ -841,6 +841,12 @@
       if(fromPerson.grade===toPerson.grade&&fromPerson.name===toPerson.name)return alert('変更前と変更後は別の方を選択してください。');
     }
 
+    if(requestType==='swap'&&date.slice(0,7)!==swapDate.slice(0,7)){
+      const fromMonth=Number(date.slice(5,7));
+      const toMonth=Number(swapDate.slice(5,7));
+      if(!confirm(fromMonth+'月と'+toMonth+'月をまたぐ当番日の入れ替えになります。\n内容に間違いありませんか？'))return;
+    }
+
     if(fromPerson.grade!==toPerson.grade){
       const message=requestType==='swap'
         ?fromPerson.grade+'年生と'+toPerson.grade+'年生のお当番を入れ替える変更になります。内容に間違いありませんか？'
