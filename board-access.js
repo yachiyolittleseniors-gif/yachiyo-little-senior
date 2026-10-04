@@ -91,12 +91,16 @@ window.boardAccessReady=(async function requireBoardPassword(){
     return passkeyAttempt;
   }
   const searchParams=new URLSearchParams(location.search);
+  const navigationEntry=performance.getEntriesByType&&performance.getEntriesByType('navigation')[0];
+  const isPageReload=!!(navigationEntry&&navigationEntry.type==='reload');
   let cameFromHome=false;
   try{
     const ref=document.referrer?new URL(document.referrer):null;
     cameFromHome=!!ref&&ref.origin===location.origin&&(ref.pathname==='/'||/\/index\.html$/.test(ref.pathname));
   }catch(_){}
-  const freshHomeEntry=searchParams.get('entry')==='home'||cameFromHome;
+  // document.referrer can remain Home even after an iPhone/Safari refresh.
+  // Treat Home as a fresh entry only on a real navigation, never on reload.
+  const freshHomeEntry=searchParams.get('entry')==='home'||(!isPageReload&&cameFromHome);
   if(freshHomeEntry){
     // A deliberate tap from Home must authenticate once every time.
     // Strip the marker immediately so any iPhone/Safari follow-up navigation
@@ -115,8 +119,6 @@ window.boardAccessReady=(async function requireBoardPassword(){
   const returningFromProtectedPage=['documents','coach','attendance','player'].includes(returnSource);
   const returningFromUpdateHistory=['schedule','duty-roster','rules'].includes(historyFocus);
   const returningFromLineLogin=searchParams.get('line_login')==='ok'&&/^duty-(submit|resend)$/.test(searchParams.get('line_resume')||'');
-  const navigationEntry=performance.getEntriesByType&&performance.getEntriesByType('navigation')[0];
-  const isPageReload=navigationEntry&&navigationEntry.type==='reload';
 
   // iPhone/Safari can immediately perform another board navigation after a
   // successful WebAuthn ceremony. Reuse the just-issued board session instead
