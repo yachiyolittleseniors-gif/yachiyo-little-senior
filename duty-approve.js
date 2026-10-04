@@ -7,6 +7,20 @@
   const approve=document.getElementById('approve');
   const familyConfirm=document.getElementById('familyConfirm');
   const lineAuthNotice=document.getElementById('lineAuthNotice');
+  function showLineLogin(loginUrl){
+    loading.hidden=true;loading.style.display='none';content.hidden=true;message.hidden=false;
+    message.className='status';
+    message.innerHTML='';
+    const title=document.createElement('b');
+    title.textContent='LINEで本人確認が必要です';
+    const copy=document.createElement('p');
+    copy.textContent='下のボタンをタップするとLINEアプリで本人確認を開始します。';
+    const link=document.createElement('a');
+    link.className='line-login-button';
+    link.href=loginUrl;
+    link.textContent='LINEで本人確認する';
+    message.append(title,copy,link);
+  }
   function showMessage(text,ok,retry){
     loading.hidden=true;loading.style.display='none';content.hidden=true;message.hidden=false;
     message.textContent=text;message.className='status '+(ok?'ok':'error');
@@ -78,7 +92,7 @@
       loading.hidden=true;loading.style.display='none';content.hidden=false;
     }catch(e){
       if(e&&e.status===401&&e.body&&e.body.code==='line_login_required'&&e.body.loginUrl){
-        location.replace(e.body.loginUrl);return;
+        showLineLogin(e.body.loginUrl);return;
       }
       const msg=e&&e.message?e.message:'申請内容を確認できませんでした。';
       const retry=/通信|時間がかかっています|処理できませんでした|確認できませんでした/.test(msg);
@@ -94,7 +108,7 @@
       showMessage('承認しました\n当番表へ反映されました',true);
     }catch(e){
       if(e&&e.status===401&&e.body&&e.body.code==='line_login_required'&&e.body.loginUrl){
-        location.replace(e.body.loginUrl);return;
+        showLineLogin(e.body.loginUrl);return;
       }
       approve.disabled=false;approve.textContent='この変更を承認する';
       showMessage(e.message||'承認できませんでした。',false);
