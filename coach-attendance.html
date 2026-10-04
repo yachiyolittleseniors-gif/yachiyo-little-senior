@@ -280,6 +280,7 @@ document.addEventListener('DOMContentLoaded',()=>{
 #board.board-shell,
 #board.board-shell button{touch-action:manipulation!important}
 </style>
+<style id="hide-print-report-button-final">#printReportBtn{display:none!important}</style>
 </head><body id="page-top">
 <header class="header">
 <nav class="nav">
@@ -344,7 +345,7 @@ document.addEventListener('DOMContentLoaded',()=>{
       <div class="report-dialog-frame">
         <div class="report-dialog-actions">
           <button class="report-close" id="closeReportBtn" type="button">出欠確認に戻る</button>
-          <button id="saveReportImageBtn" type="button">画像で保存</button>
+          <button id="saveReportImageBtn" type="button">画像で保存</button><button id="printReportBtn" type="button" hidden aria-hidden="true">印刷・PDF保存</button>
           
         </div>
         <article class="report-sheet" id="reportSheet">
@@ -611,6 +612,7 @@ function renderComments(){const byId=new Map(data.members.map(m=>[m.id,memberDis
 $('#openReportBtn').onclick=()=>{const eventId=$('#reportEventSelect').value;if(!eventId||!renderReport(eventId)){alert('出力する日程を選択してください。');return}$('#reportDialog').showModal();document.body.style.overflow='hidden'};
 $('#closeReportBtn').onclick=()=>{$('#reportDialog').close();document.body.style.overflow=''};
 $('#saveReportImageBtn').onclick=saveReportImage;
+$('#printReportBtn').onclick=()=>window.print();
 
 $('#reportDialog').onclick=event=>{if(event.target===$('#reportDialog')){$('#reportDialog').close();document.body.style.overflow=''}};
 
