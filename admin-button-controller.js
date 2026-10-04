@@ -184,26 +184,44 @@
     countTap(event);
   },true);
 
-  button.addEventListener('click',()=>{
+  function settleButtonAfterAction(wasEditing){
+    const nowEditing=isEditing();
+    if(nowEditing){
+      setVisible(true);
+      return;
+    }
+    if(wasEditing){
+      state.revealed=false;
+      resetTaps();
+      setVisible(false);
+      return;
+    }
+    if(eligible()){
+      state.revealed=true;
+      setVisible(true);
+      return;
+    }
+    state.revealed=false;
+    resetTaps();
+    setVisible(false);
+  }
+
+  button.addEventListener('click',event=>{
     const wasEditing=isEditing();
-    setTimeout(()=>{
-      const nowEditing=isEditing();
-      if(nowEditing){
-        setVisible(true);
-        return;
-      }
-      if(wasEditing){
-        state.revealed=false;
-        resetTaps();
-        setVisible(false);
-        return;
-      }
-      if(!eligible()){
-        state.revealed=false;
-        resetTaps();
-        setVisible(false);
-      }
-    },0);
+
+    // Schedule/results still use their page-specific, CSP-approved admin function.
+    // Invoke it directly here so the unified button never depends on delegated
+    // data-csp-onclick handling, which was the source of taps being ignored.
+    if((KEY==='schedule.html'||KEY==='results.html')&&typeof window.enableAdminMode==='function'){
+      event.preventDefault();
+      event.stopImmediatePropagation();
+      Promise.resolve(window.enableAdminMode())
+        .then(()=>settleButtonAfterAction(wasEditing))
+        .catch(()=>settleButtonAfterAction(wasEditing));
+      return;
+    }
+
+    setTimeout(()=>settleButtonAfterAction(wasEditing),0);
   },true);
 
   window.addEventListener('storage',event=>{if(event.key===GRANT_KEY)sync()});
