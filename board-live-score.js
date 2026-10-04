@@ -628,11 +628,19 @@
     root.querySelectorAll('.live-score-editor input,.live-score-editor select,.live-score-segments button,.live-score-tb-actions button,.live-score-number').forEach(control => {
       control.disabled = viewOnly;
     });
-    // BSO / ダイヤモンドも閲覧モードでは必ず操作不可。ただし見た目は変えない。
-    root.querySelectorAll('.live-score-count,.live-score-base,.live-score-reset-status').forEach(control => {
+    // BSO / ダイヤモンドは閲覧モードでは操作不可。
+    root.querySelectorAll('.live-score-count,.live-score-base').forEach(control => {
       control.disabled = viewOnly;
       control.setAttribute('aria-disabled', String(viewOnly));
       if (viewOnly) control.tabIndex = -1;
+      else control.removeAttribute('tabindex');
+    });
+    // リセットボタンは閲覧中でも押せるようにして、必要なら押下時に入力権限を取得する。
+    root.querySelectorAll('.live-score-reset-status').forEach(control => {
+      const disabled = replayMode || !state.active || !state.current;
+      control.disabled = disabled;
+      control.setAttribute('aria-disabled', String(disabled));
+      if (disabled) control.tabIndex = -1;
       else control.removeAttribute('tabindex');
     });
     renderLock();
@@ -853,9 +861,18 @@
     event.stopPropagation();
   });
 
+  async function ensureInputForReset() {
+    if (!state.current || replayMode) return false;
+    if (inputMode) return true;
+    updateStatus('入力権限を取得しています…');
+    const ok = await claimInputLock();
+    if (!ok) return false;
+    return true;
+  }
+
   if (elements.resetBs) {
-    elements.resetBs.addEventListener('click', () => {
-      if (!state.current || replayMode || !inputMode) return;
+    elements.resetBs.addEventListener('click', async () => {
+      if (!await ensureInputForReset()) return;
       state.current.sbo = {
         ...state.current.sbo,
         strikes: 0,
@@ -863,24 +880,28 @@
       };
       dirty = true;
       changeVersion += 1;
+      rememberDraft(state.current);
       renderSbo();
+      updateStatus('B・Sをリセットしました。');
       // BS-only reset keeps outs and runners exactly as they are.
-      save('', { quiet: true, renderAfter: false });
+      await save('', { quiet: true, renderAfter: false });
       scheduleAutoSave();
     });
   }
 
   if (elements.resetStatus) {
-    elements.resetStatus.addEventListener('click', () => {
-      if (!state.current || replayMode || !inputMode) return;
+    elements.resetStatus.addEventListener('click', async () => {
+      if (!await ensureInputForReset()) return;
       state.current.sbo = { strikes: 0, balls: 0, outs: 0 };
       state.current.bases = { first: false, second: false, third: false };
       dirty = true;
       changeVersion += 1;
+      rememberDraft(state.current);
       renderSbo();
       renderBases();
+      updateStatus('BSO・ランナーをリセットしました。');
       // Reset is live shared state: save immediately and keep the normal retry/autosave path.
-      save('', { quiet: true, renderAfter: false });
+      await save('', { quiet: true, renderAfter: false });
       scheduleAutoSave();
     });
   }
