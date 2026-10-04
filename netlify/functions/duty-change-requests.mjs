@@ -58,9 +58,12 @@ function requestIsPastMonth(item,now=new Date()){
 }
 function requestShouldDelete(item,now=new Date()){
   const status=String(item?.status||"");
+  // Never purge a live confirmation request. Pending is workflow state, not
+  // historical archive data; it must survive until approved/rejected/closed.
+  if(status==="pending")return false;
   const end=requestMonthEnd(item?.date);
   if(!end)return false;
-  if(["pending","closed"].includes(status)){
+  if(status==="closed"){
     return now>addUtcMonths(end,PENDING_RETENTION_MONTHS);
   }
   if(["approved","rejected"].includes(status)){
