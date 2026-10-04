@@ -754,7 +754,9 @@ function renderReplyMode(){
       const r=await fetch(API+'?section=seniorcup-partners',{cache:'no-store'});
       if(r.ok){
         const j=await r.json();
-        if(j.data&&Array.isArray(j.data.partners)) partners=j.data.partners.map(normalizePartner);
+        if(j.data&&Array.isArray(j.data.partners)&&j.data.partners.length){
+          partners=j.data.partners.map(normalizePartner);
+        }
       }
     }catch(e){}
     renderPartners();renderPartnerEditor();
@@ -1082,7 +1084,7 @@ document.addEventListener('DOMContentLoaded',function(){
 </script>
 <script src="./mobile-navigation.js?v=20261003-unifiedmenu1" defer></script>
 <script src="./admin-button-config.js?v=20261004-unified4"></script>
-<script src="./admin-button-controller.js?v=20261004-unified6"></script>
+<script src="./admin-button-controller.js?v=20261004-unified7"></script>
 </body>
 </html>
 
