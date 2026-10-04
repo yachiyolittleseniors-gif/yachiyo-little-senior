@@ -1201,6 +1201,30 @@ export default async (request, context) => {
         ? await readHeroManifestData(store, key)
         : await store.get(key, { type: "json", consistency: "strong" });
 
+      // Senior Cup overview recovery:
+      // if the live overview blob was lost, restore the newest backed-up copy automatically.
+      if (
+        section === "seniorcup-guideline" &&
+        (!data || typeof data.text !== "string" || !data.text.trim())
+      ) {
+        try {
+          const { blobs = [] } = await store.list({ prefix: "backups/monthly/" });
+          const backupEntry = blobs
+            .filter(item => String(item.key || "").endsWith(`/data/${key}`))
+            .sort((a, b) => String(b.key || "").localeCompare(String(a.key || "")))[0];
+          if (backupEntry?.key) {
+            const backedUp = await store.get(backupEntry.key, {
+              type: "json",
+              consistency: "strong"
+            });
+            if (backedUp && typeof backedUp.text === "string" && backedUp.text.trim()) {
+              data = backedUp;
+              await store.setJSON(key, backedUp);
+            }
+          }
+        } catch {}
+      }
+
       if (section === "staff" && Array.isArray(data)) {
         let changed = false;
         data = data.map(item => {
