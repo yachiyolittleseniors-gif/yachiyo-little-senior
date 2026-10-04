@@ -245,6 +245,16 @@
       if(annual)annual.hidden=!on;
     }
 
+    if(cfg.cupMode===true){
+      const area=document.querySelector('#cupAdminArea');
+      const guideline=document.querySelector('#guidelineAdminBox');
+      if(area)area.classList.toggle('show',!!on);
+      if(guideline)guideline.classList.toggle('show',!!on);
+      button.classList.toggle('is-visible',!!on);
+      if(on)button.dataset.active='1';
+      else delete button.dataset.active;
+    }
+
     if(!on&&cfg.resultsMode===true){
       try{if(typeof window.clearForm==='function')window.clearForm()}catch(_){}
       try{if(typeof window.closeSquadSettings==='function')window.closeSquadSettings()}catch(_){}
@@ -260,6 +270,7 @@
         sessionStorage.removeItem('yachiyoAdminPassword');
       }catch(_){}
       applyDirectAdminMode(false);
+      delete button.dataset.active;
       state.revealed=false;
       resetTaps();
       setVisible(false);
