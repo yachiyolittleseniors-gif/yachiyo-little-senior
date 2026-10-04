@@ -2,7 +2,7 @@ import { getStore } from "@netlify/blobs";
 import { verifyAccessPassword } from "./_access-password.mjs";
 import { boardSessionIsValid } from "./_board-session.mjs";
 import { verifyAdminPassword, adminAuthError } from "./admin-rate-limit.mjs";
-import { getLineSession, lineIdentityHash, lineLoginStartUrl, unsealLineFlow } from "./_line-login-auth.mjs";
+import { getLineSession, lineIdentityHash, lineLoginStartUrl, lineChannelId, unsealLineFlow } from "./_line-login-auth.mjs";
 
 const STORE_NAME="yachiyo-public-site";
 const KEY="content/duty-change-requests.json";
@@ -11,6 +11,7 @@ const MAX_REQUESTS=300;
 const APPROVAL_TTL_MS=24*60*60*1000;
 const PENDING_RETENTION_MONTHS=3;
 const PROCESSED_RETENTION_MONTHS=12;
+const DUTY_APPROVAL_LIFF_ID="2011836404-Htm3MsCI";
 
 function json(body,status=200,headers={}){
   return new Response(JSON.stringify(body),{
@@ -84,7 +85,28 @@ function publicSiteOrigin(request){
   return "https://yachiyo-little-senior.netlify.app";
 }
 function approvalUrl(request,token){
-  return `${publicSiteOrigin(request)}/duty-approve.html?t=${encodeURIComponent(token)}`;
+  // Send the approval through LIFF so the recipient's LINE identity is
+  // available without the fragile browser auto-login flow.
+  return `https://liff.line.me/${DUTY_APPROVAL_LIFF_ID}?t=${encodeURIComponent(token)}`;
+}
+async function verifyLiffIdentity(idToken){
+  const token=String(idToken||"").trim();
+  const clientId=lineChannelId();
+  if(!token||!clientId)return null;
+  try{
+    const body=new URLSearchParams({id_token:token,client_id:clientId});
+    const response=await fetch("https://api.line.me/oauth2/v2.1/verify",{
+      method:"POST",
+      headers:{"content-type":"application/x-www-form-urlencoded"},
+      body
+    });
+    if(!response.ok)return null;
+    const data=await response.json().catch(()=>null);
+    if(!data||!data.sub||String(data.aud||"")!==String(clientId))return null;
+    return{...data,sub:String(data.sub)};
+  }catch{
+    return null;
+  }
 }
 function normalizeMonitorEvent(item,index=0){
   const at=String(item?.at||"");
@@ -456,20 +478,10 @@ export default async (request,context)=>{
         if(!item)return json({error:"承認リンクが無効です。\nまたは、すでに使用済みです。"},404);
         const expires=Date.parse(item.approvalExpiresAt||"");
         if(!Number.isFinite(expires)||Date.now()>expires)return json({error:"承認リンクの有効期限が切れています。申請者に再申請を依頼してください。"},410);
-        const session=await getLineSession(request);
-        if(!session){
-          return json({
-            error:"LINE認証が必要です。",
-            code:"line_login_required",
-            loginUrl:lineLoginStartUrl(request,`/duty-approve.html?t=${encodeURIComponent(token)}`)
-          },401);
-        }
-        const currentHash=await lineIdentityHash(session.sub);
         return json({
           ok:true,
           request:approvalPreview(item),
-          lineAuthRequired:false,
-          selfApprovalBlocked:!!item.requesterLineHash&&currentHash===item.requesterLineHash
+          liffRequired:true
         });
       }
       if(!(await boardAccess(store,request,context)))return json({error:"unauthorized"},401);
@@ -557,15 +569,11 @@ export default async (request,context)=>{
       if(!item)return json({error:"承認リンクが無効です。\nまたは、すでに使用済みです。"},404);
       const expires=Date.parse(item.approvalExpiresAt||"");
       if(!Number.isFinite(expires)||Date.now()>expires)return json({error:"承認リンクの有効期限が切れています。申請者に再申請を依頼してください。"},410);
-      const session=await getLineSession(request);
-      if(!session){
-        return json({
-          error:"LINE認証が必要です。",
-          code:"line_login_required",
-          loginUrl:lineLoginStartUrl(request,`/duty-approve.html?t=${encodeURIComponent(token)}`)
-        },401);
+      const identity=await verifyLiffIdentity(body?.idToken);
+      if(!identity){
+        return json({error:"LINE本人確認を確認できませんでした。LINEから承認リンクを開き直してください。",code:"liff_identity_required"},401);
       }
-      const currentHash=await lineIdentityHash(session.sub);
+      const currentHash=await lineIdentityHash(identity.sub);
       const selfApprovalBlocked=!!item.requesterLineHash&&currentHash===item.requesterLineHash;
       if(action==="preview-partner-approval")return json({ok:true,request:approvalPreview(item),lineAuthRequired:false,selfApprovalBlocked});
       if(selfApprovalBlocked){
