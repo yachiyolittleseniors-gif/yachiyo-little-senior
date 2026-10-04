@@ -4,6 +4,8 @@ window.boardAccessReady=(async function requireBoardPassword(){
   const reloadKey='yachiyoAttendanceReloadPass';
   const reloadExpiryKey='yachiyoAttendanceReloadPassExpires';
   const passkeyKey='yachiyoBoardPasskeyRegistered';
+  const passkeyJustVerifiedKey='yachiyoBoardPasskeyJustVerified';
+  const passkeyJustVerifiedLifetime=20*1000;
   const reloadLifetime=12*60*60*1000;
   const adminRevealGrantKey='yachiyoAdminRevealUntil';
   const adminRevealGrantLifetime=30*60*1000;
@@ -29,6 +31,16 @@ window.boardAccessReady=(async function requireBoardPassword(){
   function clearAccess(){
     try{sessionStorage.removeItem(accessKey)}catch(e){}
     try{localStorage.removeItem(reloadKey);localStorage.removeItem(reloadExpiryKey)}catch(e){}
+  }
+  function rememberPasskeyVerification(){
+    try{sessionStorage.setItem(passkeyJustVerifiedKey,String(Date.now()))}catch(e){}
+  }
+  function consumeFreshPasskeyVerification(){
+    try{
+      const verifiedAt=Number(sessionStorage.getItem(passkeyJustVerifiedKey)||0);
+      sessionStorage.removeItem(passkeyJustVerifiedKey);
+      return Number.isFinite(verifiedAt)&&verifiedAt>0&&(Date.now()-verifiedAt)<=passkeyJustVerifiedLifetime;
+    }catch(e){return false}
   }
   async function verify(value){
     const response=await fetch('/.netlify/functions/site-data?section=access-settings',{
@@ -63,7 +75,7 @@ window.boardAccessReady=(async function requireBoardPassword(){
         if(!result?.token)return false;
         saveAccess(result.token);
         grantAdminReveal();
-        try{sessionStorage.setItem('yachiyoBoardPasskeyJustVerified','1')}catch(_){}
+        rememberPasskeyVerification()
         try{localStorage.setItem(passkeyKey,'1')}catch(_){}
         document.documentElement.style.visibility='';
         return true;
@@ -84,6 +96,19 @@ window.boardAccessReady=(async function requireBoardPassword(){
   const returningFromLineLogin=searchParams.get('line_login')==='ok'&&/^duty-(submit|resend)$/.test(searchParams.get('line_resume')||'');
   const navigationEntry=performance.getEntriesByType&&performance.getEntriesByType('navigation')[0];
   const isPageReload=navigationEntry&&navigationEntry.type==='reload';
+
+  // If a successful passkey login is immediately followed by a second board
+  // navigation/reload, reuse the server-verified access token instead of
+  // opening WebAuthn again. The marker is one-shot and expires in 20 seconds.
+  if(consumeFreshPasskeyVerification()){
+    try{
+      const saved=sessionStorage.getItem(accessKey)||readReloadAccess();
+      if(saved&&await verify(saved))return true;
+      if(saved)clearAccess();
+    }catch(e){
+      clearAccess();
+    }
+  }
   if(returningFromProtectedPage||returningFromUpdateHistory||returningFromLineLogin||isPageReload){
     try{
       const saved=sessionStorage.getItem(accessKey)||readReloadAccess();
