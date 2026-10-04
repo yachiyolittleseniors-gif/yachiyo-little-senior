@@ -109,7 +109,7 @@
       '.header .nav,.site-header .site-nav{column-gap:8px!important}' +
       '}' +
       '@media(max-width:600px){' +
-      '.header .nav .team-lock-shortcut,.site-header .site-nav .team-lock-shortcut{flex-basis:34px;width:34px;height:34px;border-radius:7px}' +
+      '.header .nav .team-lock-shortcut,.site-header .site-nav .team-lock-shortcut{flex-basis:42px;width:42px;height:42px;border-radius:9px}' +
       '.header .nav .team-lock-shortcut svg,.site-header .site-nav .team-lock-shortcut svg{width:15px;height:15px}' +
       '}';
     (document.head || document.documentElement).appendChild(style);
