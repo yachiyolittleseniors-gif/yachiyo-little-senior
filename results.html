@@ -1016,7 +1016,7 @@ body.admin-mode .game-admin-actions{display:flex!important}
 <div class="ground-address"><div class="ground-access-address">アクセス：千葉県八千代市島田台775</div><a class="ground-map-link" href="https://www.google.com/maps/search/?api=1&amp;query=%E5%8D%83%E8%91%89%E7%9C%8C%E5%85%AB%E5%8D%83%E4%BB%A3%E5%B8%82%E5%B3%B6%E7%94%B0%E5%8F%B0%EF%BC%97%EF%BC%97%EF%BC%95" rel="noopener noreferrer" target="_blank">Googleマップで見る <span aria-hidden="true">↗</span></a></div>
 <div class="footer-privacy-link" style="text-align:center;margin-top:10px;font-size:11px;"><a href="./privacy" style="color:#8f9aa7;text-decoration:none;">プライバシーポリシー</a></div>
 <div class="restored-footer-copy">© YACHIYO LITTLE SENIOR. All Rights Reserved.</div>
-<button class="admin-toggle" data-nosnippet="" id="adminModeToggle" data-csp-onclick="enableAdminMode()" type="button">管理</button>
+<button class="admin-toggle" data-nosnippet="" id="adminModeToggle" type="button">管理</button>
 </div>
 </footer>
 <script>
@@ -1795,6 +1795,8 @@ function openProtectedArea(type){
 <script>
 (function(){
   const KEY='yachiyoAdminMode';
+  let busy=false;
+
   async function verifyAdminPassword(password){
     try{
       const r=await fetch(SHARED_API+'?section=access-settings',{
@@ -1810,59 +1812,82 @@ function openProtectedArea(type){
       return {ok:false,status:0};
     }
   }
-  function apply(){
-    const on=sessionStorage.getItem(KEY)==='1';
-    document.body.classList.toggle('admin-mode',on);
+
+  function apply(on){
+    document.body.classList.toggle('admin-mode',!!on);
     const b=document.getElementById('adminModeToggle');
     if(b){
       b.textContent=on?'管理終了':'管理';
-      b.style.display=on?'block':'none';
+      b.disabled=false;
+      b.removeAttribute('aria-disabled');
     }
   }
-  window.enableAdminMode=async function(){
+
+  async function toggleAdminMode(){
+    if(busy)return;
+    const b=document.getElementById('adminModeToggle');
+
     if(document.body.classList.contains('admin-mode')){
       sessionStorage.removeItem(KEY);
       sessionStorage.removeItem('yachiyoAdminPassword');
       if(typeof clearForm==='function')clearForm();
       if(typeof closeSquadSettings==='function')closeSquadSettings();
       document.querySelectorAll('details[open]').forEach(item=>item.removeAttribute('open'));
-      apply();
+      apply(false);
+      if(window.YLSAdminButtonController)window.YLSAdminButtonController.hide();
       return;
     }
+
     const p=prompt('管理者パスワードを入力してください');
     if(!p)return;
 
-    const b=document.getElementById('adminModeToggle');
-    if(b){b.disabled=true;b.textContent='確認中...'}
-    const auth=await verifyAdminPassword(p);
-    if(b)b.disabled=false;
-    if(!auth.ok){
-      sessionStorage.removeItem(KEY);
-      sessionStorage.removeItem('yachiyoAdminPassword');
-      apply();
-      if(auth.status===429)alert('試行回数の上限です。15分後に再度お試しください。');
-      else if(auth.status===503)alert('Netlifyの管理者パスワード設定を確認してください。');
-      else if(auth.status===0)alert('管理者パスワードを確認できませんでした。通信状況を確認してください。');
-      else alert('管理者パスワードが違います。');
-      return;
+    busy=true;
+    if(b){b.disabled=true;b.textContent='確認中…'}
+    try{
+      const auth=await verifyAdminPassword(p);
+      if(!auth.ok){
+        sessionStorage.removeItem(KEY);
+        sessionStorage.removeItem('yachiyoAdminPassword');
+        apply(false);
+        if(auth.status===429)alert('試行回数の上限です。15分後に再度お試しください。');
+        else if(auth.status===503)alert('Netlifyの管理者パスワード設定を確認してください。');
+        else if(auth.status===0)alert('管理者パスワードを確認できませんでした。通信状況を確認してください。');
+        else alert('管理者パスワードが違います。');
+        return;
+      }
+
+      sessionStorage.setItem('yachiyoAdminPassword',p);
+      sessionStorage.setItem(KEY,'1');
+      apply(true);
+      requestAnimationFrame(()=>requestAnimationFrame(()=>{
+        const target=document.querySelector('.results-admin-toolbar');
+        const header=document.querySelector('.header');
+        if(!target)return;
+        const top=target.getBoundingClientRect().top+window.scrollY-(header?header.offsetHeight:0)-12;
+        window.scrollTo({top:Math.max(0,top),behavior:'auto'});
+      }));
+    }finally{
+      busy=false;
+      if(b)b.disabled=false;
     }
-    sessionStorage.setItem('yachiyoAdminPassword',p);
-    sessionStorage.setItem(KEY,'1');
-    apply();
-    requestAnimationFrame(()=>requestAnimationFrame(()=>{
-      const target=document.querySelector('.results-admin-toolbar');
-      const header=document.querySelector('.header');
-      if(!target)return;
-      const top=target.getBoundingClientRect().top+window.scrollY-(header?header.offsetHeight:0)-12;
-      window.scrollTo({top:Math.max(0,top),behavior:'auto'});
-    }));
-  };
+  }
+
+  window.enableAdminMode=toggleAdminMode;
+
   document.addEventListener('DOMContentLoaded',function(){
-    // ページ更新・再読み込み時は必ず管理状態とパスワードを解除
     sessionStorage.removeItem(KEY);
     sessionStorage.removeItem('yachiyoAdminPassword');
-    apply();
-});
+    apply(false);
+    const b=document.getElementById('adminModeToggle');
+    if(b&&!b.dataset.adminClickBound){
+      b.dataset.adminClickBound='1';
+      b.addEventListener('click',function(event){
+        event.preventDefault();
+        event.stopPropagation();
+        toggleAdminMode();
+      });
+    }
+  });
 })();
 </script>
 <script>
