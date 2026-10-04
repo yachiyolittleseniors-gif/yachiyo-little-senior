@@ -4723,22 +4723,32 @@ function openProtectedArea(type){
  const detailsInput=document.getElementById('heroAnnouncementDetails');
  const visibleInput=document.getElementById('heroAnnouncementVisible');
  const detailHint=document.getElementById('heroAnnouncementDetailHint');
+ const updated=document.getElementById('heroAnnouncementUpdated');
  const detailModal=document.getElementById('heroAnnouncementDetailModal');
  const detailClose=document.getElementById('heroAnnouncementDetailClose');
  const detailBody=document.getElementById('heroAnnouncementDetailBody');
- if(!banner||!message||!edit||!modal||!close||!cancel||!save||!textInput||!detailsInput||!visibleInput||!detailHint||!detailModal||!detailClose||!detailBody)return;
+ if(!banner||!message||!updated||!edit||!modal||!close||!cancel||!save||!textInput||!detailsInput||!visibleInput||!detailHint||!detailModal||!detailClose||!detailBody)return;
 
  const cacheKey='yachiyoHeroAnnouncement';
- let state={text:'祝　関東大会出場 🎉',details:'',visible:false};
+ let state={text:'祝　関東大会出場 🎉',details:'',visible:false,updatedAt:'2026-10-04T00:00:00+09:00'};
  function normalizeAnnouncementText(value){
    return String(value||'').replace(/\r\n?/g,'\n').slice(0,100);
  }
  function normalize(value){
    if(!value||Array.isArray(value)||typeof value!=='object')return state;
-   return {text:normalizeAnnouncementText(value.text).trim(),details:String(value.details||'').replace(/\r\n?/g,'\n').trim().slice(0,1000),visible:value.visible===true};
+   return {text:normalizeAnnouncementText(value.text).trim(),details:String(value.details||'').replace(/\r\n?/g,'\n').trim().slice(0,1000),visible:value.visible===true,updatedAt:String(value.updatedAt||'2026-10-04T00:00:00+09:00')};
  }
  function render(){
    message.textContent=state.text;
+   const d=new Date(state.updatedAt||'2026-10-04T00:00:00+09:00');
+   let updatedText='';
+   if(!Number.isNaN(d.getTime())){
+     const parts=new Intl.DateTimeFormat('ja-JP',{timeZone:'Asia/Tokyo',year:'numeric',month:'numeric',day:'numeric'}).formatToParts(d);
+     const map={};
+     parts.forEach(part=>{if(part.type!=='literal')map[part.type]=part.value});
+     updatedText='更新：'+map.year+'年'+map.month+'月'+map.day+'日';
+   }
+   updated.textContent=updatedText;
    banner.classList.toggle('is-visible',Boolean(state.visible&&state.text));
    const hasDetails=Boolean(state.visible&&state.text&&state.details);
    banner.classList.toggle('has-details',hasDetails);
@@ -4802,7 +4812,7 @@ function openProtectedArea(type){
  cancel.addEventListener('click',closeEditor);
  modal.addEventListener('click',event=>{if(event.target===modal)closeEditor()});
  save.addEventListener('click',async function(){
-   const next={text:normalizeAnnouncementText(textInput.value).trim(),details:String(detailsInput.value||'').replace(/\r\n?/g,'\n').trim().slice(0,1000),visible:visibleInput.checked};
+   const next={text:normalizeAnnouncementText(textInput.value).trim(),details:String(detailsInput.value||'').replace(/\r\n?/g,'\n').trim().slice(0,1000),visible:visibleInput.checked,updatedAt:new Date().toISOString()};
    if(next.visible&&!next.text){alert('表示する文章を入力してください。');return}
    const password=sessionStorage.getItem('yachiyoAdminPassword')||'';
    if(!password){alert('管理画面に入り直してください。');return}
@@ -4812,7 +4822,7 @@ function openProtectedArea(type){
      const response=await fetch(api+'?section=hero-announcement',{
        method:'POST',
        headers:{'content-type':'application/json','x-admin-password':password},
-       body:JSON.stringify({data:{...next,updatedAt:new Date().toISOString()}})
+       body:JSON.stringify({data:next})
      });
      if(response.status===429){alert('試行回数の上限です。15分後に再度お試しください。');return}
      if(response.status===401){alert('管理者パスワードが違います。');return}
