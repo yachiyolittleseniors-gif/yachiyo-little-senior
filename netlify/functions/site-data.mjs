@@ -2002,25 +2002,38 @@ export default async (request, context) => {
       );
     }
 
-    const adminAuth = await verifyAdminPassword({
+    const seniorCupDirectPasswordSections = new Set([
+      "seniorcup-guideline",
+      "seniorcup-winners",
+      "seniorcup-partners",
+      "seniorcup-reply-mode",
+      "seniorcup-registration",
+      "seniorcup-documents",
+      "downloads-roster"
+    ]);
+
+    let adminAuth = await verifyAdminPassword({
       store,
       request,
       context,
       expectedPassword: process.env.ADMIN_PASSWORD || "",
-      requireSession:
-        (
-          section === "seniorcup-guideline" ||
-          section === "seniorcup-winners" ||
-          section === "seniorcup-partners" ||
-          section === "seniorcup-reply-mode" ||
-          section === "seniorcup-registration" ||
-          section === "seniorcup-documents" ||
-          section === "downloads-roster"
-        ) &&
-        Boolean(request.headers.get("x-admin-password"))
-          ? false
-          : true,
+      requireSession: true,
     });
+
+    if (
+      !adminAuth.ok &&
+      adminAuth.sessionExpired &&
+      seniorCupDirectPasswordSections.has(section) &&
+      Boolean(request.headers.get("x-admin-password"))
+    ) {
+      adminAuth = await verifyAdminPassword({
+        store,
+        request,
+        context,
+        expectedPassword: process.env.ADMIN_PASSWORD || "",
+        requireSession: false,
+      });
+    }
 
     if (!adminAuth.ok) return adminAuthError(json, adminAuth);
 
