@@ -2007,6 +2007,11 @@ export default async (request, context) => {
       request,
       context,
       expectedPassword: process.env.ADMIN_PASSWORD || "",
+      requireSession:
+        section === "seniorcup-guideline" &&
+        Boolean(request.headers.get("x-admin-password"))
+          ? false
+          : true,
     });
 
     if (!adminAuth.ok) return adminAuthError(json, adminAuth);
