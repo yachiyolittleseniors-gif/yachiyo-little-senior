@@ -5483,6 +5483,245 @@ body:not(.photo-admin-on) #heroAdminToggle.unified-admin-toggle:focus-visible{co
 }
 </style>
 
+
+<style id="home-admin-panel-collapsible-final">
+@media(max-width:600px){
+  #heroPhotoAdmin{
+    position:fixed!important;
+    right:12px!important;
+    left:auto!important;
+    top:auto!important;
+    bottom:calc(12px + env(safe-area-inset-bottom))!important;
+    z-index:40000!important;
+    width:auto!important;
+    max-width:calc(100vw - 24px)!important;
+    display:none!important;
+    margin:0!important;
+    padding:0!important;
+    background:transparent!important;
+    box-shadow:none!important;
+  }
+  body.photo-admin-on #heroPhotoAdmin{
+    display:block!important;
+  }
+
+  #homeAdminQuickToggle{
+    display:none;
+  }
+  body.photo-admin-on #homeAdminQuickToggle{
+    display:flex!important;
+    align-items:center!important;
+    justify-content:center!important;
+    min-width:74px!important;
+    min-height:42px!important;
+    padding:8px 14px!important;
+    border:1px solid rgba(226,189,103,.86)!important;
+    border-radius:999px!important;
+    background:rgba(7,20,38,.94)!important;
+    color:#e2bd67!important;
+    -webkit-text-fill-color:#e2bd67!important;
+    box-shadow:0 6px 20px rgba(0,0,0,.2)!important;
+    font-size:12px!important;
+    font-weight:900!important;
+    line-height:1!important;
+    cursor:pointer!important;
+  }
+
+  #heroPhotoAdmin.home-admin-expanded #homeAdminQuickToggle{
+    display:none!important;
+  }
+
+  #homeAdminPanelBody{
+    display:none;
+    width:min(330px,calc(100vw - 24px));
+    padding:12px;
+    border:1px solid rgba(226,189,103,.55);
+    border-radius:16px;
+    background:rgba(7,20,38,.97);
+    box-shadow:0 14px 32px rgba(0,0,0,.28);
+    backdrop-filter:blur(10px);
+    -webkit-backdrop-filter:blur(10px);
+  }
+  #heroPhotoAdmin.home-admin-expanded #homeAdminPanelBody{
+    display:block;
+  }
+
+  .home-admin-panel-head{
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    gap:10px;
+    margin:0 0 10px;
+    padding:0 2px 8px;
+    border-bottom:1px solid rgba(255,255,255,.1);
+  }
+  .home-admin-panel-title{
+    color:#f2d782;
+    font-size:13px;
+    font-weight:900;
+    letter-spacing:.04em;
+  }
+  #homeAdminClose{
+    width:32px!important;
+    min-width:32px!important;
+    height:32px!important;
+    min-height:32px!important;
+    padding:0!important;
+    border:0!important;
+    border-radius:50%!important;
+    background:rgba(255,255,255,.06)!important;
+    color:#fff!important;
+    -webkit-text-fill-color:#fff!important;
+    box-shadow:none!important;
+    font-size:16px!important;
+    line-height:1!important;
+  }
+
+  .home-admin-action-grid{
+    display:grid;
+    grid-template-columns:repeat(2,minmax(0,1fr));
+    gap:8px;
+  }
+  .home-admin-action-grid > #heroPhotoEdit{
+    grid-column:1 / -1;
+  }
+
+  #homeAdminPanelBody #heroPhotoChange,
+  #homeAdminPanelBody #heroAnnouncementEdit,
+  #homeAdminPanelBody #heroPhotoEdit{
+    box-sizing:border-box!important;
+    width:100%!important;
+    min-width:0!important;
+    min-height:42px!important;
+    margin:0!important;
+    padding:9px 10px!important;
+    display:flex!important;
+    align-items:center!important;
+    justify-content:center!important;
+    border:1px solid rgba(226,189,103,.7)!important;
+    border-radius:11px!important;
+    background:#0a1b30!important;
+    color:#e2bd67!important;
+    -webkit-text-fill-color:#e2bd67!important;
+    box-shadow:none!important;
+    font-size:11.5px!important;
+    font-weight:900!important;
+    line-height:1.2!important;
+    text-align:center!important;
+    text-decoration:none!important;
+    white-space:nowrap!important;
+  }
+
+  #homeAdminPanelBody #heroOverlayControl{
+    box-sizing:border-box!important;
+    width:100%!important;
+    min-height:42px!important;
+    margin:10px 0 0!important;
+    padding:9px 10px!important;
+    display:flex!important;
+    align-items:center!important;
+    justify-content:space-between!important;
+    gap:10px!important;
+    border:1px solid rgba(255,255,255,.12)!important;
+    border-radius:11px!important;
+    background:rgba(255,255,255,.035)!important;
+    color:#d8dee7!important;
+    -webkit-text-fill-color:#d8dee7!important;
+    box-shadow:none!important;
+    font-size:11.5px!important;
+    font-weight:800!important;
+    white-space:normal!important;
+  }
+  #homeAdminPanelBody #heroOverlayControl input{
+    flex:0 0 20px!important;
+    width:20px!important;
+    height:20px!important;
+    margin:0!important;
+  }
+
+  #homeAdminPanelBody #heroAdminToggle.unified-admin-toggle{
+    width:auto!important;
+    min-width:0!important;
+    min-height:28px!important;
+    height:auto!important;
+    margin:10px 0 0 auto!important;
+    padding:3px 2px!important;
+    display:block!important;
+    position:static!important;
+    inset:auto!important;
+    border:0!important;
+    border-radius:0!important;
+    background:transparent!important;
+    box-shadow:none!important;
+    color:rgba(226,189,103,.58)!important;
+    -webkit-text-fill-color:rgba(226,189,103,.58)!important;
+    font-size:10.5px!important;
+    font-weight:800!important;
+    text-align:right!important;
+  }
+}
+</style>
+
+<script id="home-admin-panel-collapsible-controller">
+(function(){
+  function setup(){
+    const admin=document.getElementById('heroPhotoAdmin');
+    const toggle=document.getElementById('heroAdminToggle');
+    const photo=document.getElementById('heroPhotoChange');
+    const notice=document.getElementById('heroAnnouncementEdit');
+    const edit=document.getElementById('heroPhotoEdit');
+    const overlay=document.getElementById('heroOverlayControl');
+    if(!admin||!toggle||admin.dataset.collapsibleReady==='1')return;
+    admin.dataset.collapsibleReady='1';
+
+    const quick=document.createElement('button');
+    quick.type='button';
+    quick.id='homeAdminQuickToggle';
+    quick.textContent='編集';
+    quick.setAttribute('aria-expanded','false');
+    quick.setAttribute('aria-controls','homeAdminPanelBody');
+
+    const body=document.createElement('div');
+    body.id='homeAdminPanelBody';
+
+    const head=document.createElement('div');
+    head.className='home-admin-panel-head';
+    const title=document.createElement('div');
+    title.className='home-admin-panel-title';
+    title.textContent='ホーム編集';
+    const close=document.createElement('button');
+    close.type='button';
+    close.id='homeAdminClose';
+    close.setAttribute('aria-label','編集メニューを閉じる');
+    close.textContent='×';
+    head.append(title,close);
+
+    const grid=document.createElement('div');
+    grid.className='home-admin-action-grid';
+    [photo,notice,edit].forEach(function(el){if(el)grid.appendChild(el)});
+
+    body.append(head,grid);
+    if(overlay)body.appendChild(overlay);
+    body.appendChild(toggle);
+
+    admin.replaceChildren(quick,body);
+
+    function setOpen(open){
+      admin.classList.toggle('home-admin-expanded',open);
+      quick.setAttribute('aria-expanded',open?'true':'false');
+    }
+    quick.addEventListener('click',function(){setOpen(true)});
+    close.addEventListener('click',function(){setOpen(false)});
+    toggle.addEventListener('click',function(){setOpen(false)});
+
+    new MutationObserver(function(){
+      if(!document.body.classList.contains('photo-admin-on'))setOpen(false);
+    }).observe(document.body,{attributes:true,attributeFilter:['class']});
+  }
+  if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',setup,{once:true});else setup();
+})();
+</script>
+
 </body>
 </html>
 
