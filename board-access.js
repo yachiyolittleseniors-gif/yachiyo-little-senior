@@ -142,7 +142,9 @@ window.boardAccessReady=(async function requireBoardPassword(){
       }
       if(saved)clearAccess();
     }catch(e){}
-  }else{clearAccess()}
+  }else if(!isPageReload){
+    clearAccess();
+  }
   if(await verifyPasskey())return true;
   const p=prompt('パスワードを入力してください。');
   if(p===null){
