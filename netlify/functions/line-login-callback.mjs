@@ -80,6 +80,7 @@ export default async (request)=>{
     if(target.searchParams.get("line_resume")==="duty-submit"){
       const resumeToken=await sealLineFlow({
         purpose:"duty-submit",
+        requestId:String(target.searchParams.get("rid")||""),
         date:String(target.searchParams.get("d")||""),
         fromGrade:String(target.searchParams.get("fg")||""),
         fromName:String(target.searchParams.get("fn")||""),
@@ -89,7 +90,6 @@ export default async (request)=>{
         swapDate:String(target.searchParams.get("sd")||""),
         swapGrade:String(target.searchParams.get("sg")||""),
         swapName:String(target.searchParams.get("sn")||""),
-        sub:String(verified.sub),
         exp:Date.now()+5*60*1000
       });
       locationValue="/duty-line-resume.html?t="+encodeURIComponent(resumeToken);
