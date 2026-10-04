@@ -93,12 +93,35 @@
     if (el && el.getAttribute) run(el.getAttribute('data-csp-onerror'), el, ev);
   }, true);
 
+  function ensureTeamLockShortcutStyle() {
+    if (document.getElementById('team-lock-shortcut-style')) return;
+    var style = document.createElement('style');
+    style.id = 'team-lock-shortcut-style';
+    style.textContent =
+      '.team-lock-shortcut{display:none;text-decoration:none!important;-webkit-tap-highlight-color:transparent;touch-action:manipulation}' +
+      '@media(max-width:900px){' +
+      '.header .nav .team-lock-shortcut,.site-header .site-nav .team-lock-shortcut{' +
+      'display:flex!important;align-items:center;justify-content:center;flex:0 0 36px;width:36px;height:36px;' +
+      'margin-left:auto;border:1px solid rgba(199,154,59,.38);border-radius:8px;' +
+      'color:#e2bd67!important;background:rgba(7,20,38,.18);position:relative;z-index:10002}' +
+      '.header .nav .team-lock-shortcut svg,.site-header .site-nav .team-lock-shortcut svg{width:17px;height:17px;display:block}' +
+      '.header .nav .team-lock-shortcut + .menu,.site-header .site-nav .team-lock-shortcut + .menu{margin-left:0!important}' +
+      '.header .nav,.site-header .site-nav{column-gap:8px!important}' +
+      '}' +
+      '@media(max-width:600px){' +
+      '.header .nav .team-lock-shortcut,.site-header .site-nav .team-lock-shortcut{flex-basis:34px;width:34px;height:34px;border-radius:7px}' +
+      '.header .nav .team-lock-shortcut svg,.site-header .site-nav .team-lock-shortcut svg{width:15px;height:15px}' +
+      '}';
+    (document.head || document.documentElement).appendChild(style);
+  }
+
   function installTeamLockShortcut() {
     var path = String(location.pathname || '').toLowerCase();
-    if (path === '/board.html' || path === '/board') return;
+    if (path === '/board.html' || path === '/board') return true;
 
     var menu = document.querySelector('.header .nav .menu, .site-header .site-nav .menu');
-    if (!menu || document.querySelector('.team-lock-shortcut')) return;
+    if (!menu) return false;
+    if (document.querySelector('.team-lock-shortcut')) return true;
 
     var link = document.createElement('a');
     link.className = 'team-lock-shortcut';
@@ -113,32 +136,18 @@
       '</svg>';
 
     menu.parentNode.insertBefore(link, menu);
-
-    if (!document.getElementById('team-lock-shortcut-style')) {
-      var style = document.createElement('style');
-      style.id = 'team-lock-shortcut-style';
-      style.textContent =
-        '.team-lock-shortcut{display:none;text-decoration:none!important;-webkit-tap-highlight-color:transparent;touch-action:manipulation}' +
-        '@media(max-width:900px){' +
-        '.header .nav .team-lock-shortcut,.site-header .site-nav .team-lock-shortcut{' +
-        'display:flex!important;align-items:center;justify-content:center;flex:0 0 36px;width:36px;height:36px;' +
-        'margin-left:auto;border:1px solid rgba(199,154,59,.38);border-radius:8px;' +
-        'color:#e2bd67!important;background:rgba(7,20,38,.18);position:relative;z-index:10002}' +
-        '.header .nav .team-lock-shortcut svg,.site-header .site-nav .team-lock-shortcut svg{width:17px;height:17px;display:block}' +
-        '.header .nav .team-lock-shortcut + .menu,.site-header .site-nav .team-lock-shortcut + .menu{margin-left:0!important}' +
-        '.header .nav,.site-header .site-nav{column-gap:8px!important}' +
-        '}' +
-        '@media(max-width:600px){' +
-        '.header .nav .team-lock-shortcut,.site-header .site-nav .team-lock-shortcut{flex-basis:34px;width:34px;height:34px;border-radius:7px}' +
-        '.header .nav .team-lock-shortcut svg,.site-header .site-nav .team-lock-shortcut svg{width:15px;height:15px}' +
-        '}';
-      document.head.appendChild(style);
-    }
+    return true;
   }
 
-  if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', installTeamLockShortcut, { once: true });
-  } else {
-    installTeamLockShortcut();
+  // Install CSS immediately while <head> is still parsing, then insert the
+  // shortcut as soon as the header/menu node appears. Waiting for DOMContentLoaded
+  // caused the lock to flash out briefly on refresh.
+  ensureTeamLockShortcutStyle();
+  if (!installTeamLockShortcut() && typeof MutationObserver !== 'undefined') {
+    var lockObserver = new MutationObserver(function () {
+      if (installTeamLockShortcut()) lockObserver.disconnect();
+    });
+    lockObserver.observe(document.documentElement, { childList: true, subtree: true });
+    window.addEventListener('load', function () { lockObserver.disconnect(); }, { once: true });
   }
 })();
