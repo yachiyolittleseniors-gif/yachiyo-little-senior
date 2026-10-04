@@ -58,6 +58,14 @@ h1{font-family:serif;font-weight:600;font-size:clamp(34px,6vw,58px);letter-spaci
 .section-title{margin:34px 0 15px;font-family:serif;font-size:26px;color:var(--navy)}
 .guideline{background:#fff;border:1px solid #ddd9cf;padding:20px 22px}
 .guideline strong{display:block;color:var(--navy);margin-bottom:7px}.guideline p{margin:0;color:#5d6875;line-height:1.8;font-size:14px}
+.cup-ops-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px;margin-top:14px}
+.cup-ops-card{background:#fff;border:1px solid #ddd9cf;border-top:3px solid var(--gold);padding:18px 20px}
+.cup-ops-card.schedule{grid-column:1/-1}
+.cup-ops-card h3{margin:0 0 10px;color:var(--navy);font-size:18px;font-weight:900}
+.cup-ops-card ul{margin:0;padding-left:1.25em;color:#4f5c6a;font-size:14px;line-height:1.85}
+.cup-ops-card li+li{margin-top:4px}
+.cup-ops-note{margin-top:10px;color:#7a6240;font-size:12px;font-weight:800}
+@media(max-width:600px){.cup-ops-grid{grid-template-columns:1fr}.cup-ops-card.schedule{grid-column:auto}.cup-ops-card{padding:16px}.cup-ops-card h3{font-size:17px}.cup-ops-card ul{font-size:13px}}
 .download-grid{display:grid;grid-template-columns:1fr;gap:16px}
 .download-card{background:#fff;border:1px solid #ddd9cf;border-top:3px solid var(--gold);padding:22px}
 .download-card h3{margin:0 0 8px;color:var(--navy);font-family:serif;font-size:21px}
@@ -504,6 +512,40 @@ html{scroll-padding-top:var(--fixed-header-height)}
 <textarea id="guidelineEditor" placeholder="大会概要を入力してください。" rows="12" style="width:100%;padding:12px;border:1px solid #cfd5dc;border-radius:6px;font:inherit;font-size:16px;line-height:1.8;resize:vertical"></textarea>
 <button id="guidelineSaveBtn" type="button">大会概要を保存</button>
 </div>
+
+<div class="cup-ops-grid" aria-label="大会日程・投手ルール・審判運営">
+  <section class="cup-ops-card schedule">
+    <h3>大会日程</h3>
+    <ul>
+      <li>10/18（日）1回戦：東邦① 9:30／東邦② 14:30／東邦③ 13:30／桑納川①／桑納川②</li>
+      <li>10/25（日）準々決勝：麦丸①・麦丸②・桑納川①・桑納川③</li>
+      <li>11/1（日）準決勝：東邦</li>
+      <li>11/8（日）決勝：東邦G 9:30</li>
+      <li>予備日：11/14</li>
+    </ul>
+    <div class="cup-ops-note">会場：東邦球場・多目的広場・桑納川公園球場・麦丸球場</div>
+  </section>
+
+  <section class="cup-ops-card">
+    <h3>投手ルール</h3>
+    <ul>
+      <li>準決勝・決勝が同日に重なる場合、投手は1試合4イニングまで、1日最大7イニングまで。</li>
+      <li>投手は長袖、リストバンド、アームカバー／スリーブ、テーピングの着用禁止。</li>
+    </ul>
+  </section>
+
+  <section class="cup-ops-card">
+    <h3>審判・運営</h3>
+    <ul>
+      <li>球場二試合：①⇔②</li>
+      <li>球場三試合：通常規定通り</li>
+      <li>決勝戦のみ：八千代シニア審判部</li>
+      <li>同点時はタイブレークを2回行い、それでも決着しない場合のみくじ引き。</li>
+      <li>G責任：新木戸グリーンモンスターズ／西高津クラブ</li>
+    </ul>
+  </section>
+</div>
+
 <h2 class="section-title">大会資料</h2>
 <div class="download-grid">
 <section aria-labelledby="cupDocumentsHeading" class="download-card">
