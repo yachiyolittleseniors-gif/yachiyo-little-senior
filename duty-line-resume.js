@@ -1,6 +1,7 @@
 (function(){
   const out=document.getElementById('content');
-  const token=new URLSearchParams(location.search).get('t')||'';
+  const params=new URLSearchParams(location.search);
+  const token=params.get('token')||params.get('t')||'';
   const esc=s=>String(s||'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
   const displayDate=v=>{const m=/^(\d{4})-(\d{2})-(\d{2})$/.exec(String(v||''));return m?Number(m[2])+'月'+Number(m[3])+'日':String(v||'')};
   if(!token){out.innerHTML='<p class="error">申請情報を確認できませんでした。元の画面からもう一度申請してください。</p>';return}
