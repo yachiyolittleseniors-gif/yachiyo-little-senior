@@ -91,7 +91,12 @@ window.boardAccessReady=(async function requireBoardPassword(){
     return passkeyAttempt;
   }
   const searchParams=new URLSearchParams(location.search);
-  const freshHomeEntry=searchParams.get('entry')==='home';
+  let cameFromHome=false;
+  try{
+    const ref=document.referrer?new URL(document.referrer):null;
+    cameFromHome=!!ref&&ref.origin===location.origin&&(ref.pathname==='/'||/\/index\.html$/.test(ref.pathname));
+  }catch(_){}
+  const freshHomeEntry=searchParams.get('entry')==='home'||cameFromHome;
   if(freshHomeEntry){
     // A deliberate tap from Home must authenticate once every time.
     // Strip the marker immediately so any iPhone/Safari follow-up navigation
