@@ -1,7 +1,7 @@
 (function(){
   const API='/.netlify/functions/duty-change-requests';
   const LIFF_ID='2011836404-Htm3MsCI';
-  const token=new URLSearchParams(location.search).get('t')||'';
+  let token='';
   const loading=document.getElementById('loading');
   const content=document.getElementById('content');
   const message=document.getElementById('message');
@@ -52,9 +52,17 @@
 
   async function ensureLiffIdentity(){
     if(!window.liff)throw new Error('LINE本人確認を読み込めませんでした。LINEから承認リンクを開き直してください。');
+
+    // LINE temporarily moves LIFF URL additions into liff.state on the primary
+    // redirect. Do not inspect or rewrite the URL until liff.init() resolves.
     await window.liff.init({liffId:LIFF_ID});
+
+    // After init, LINE restores the additional query parameters to the endpoint URL.
+    token=new URLSearchParams(location.search).get('t')||'';
+    if(!token)throw new Error('承認リンクの情報を確認できませんでした。申請者から届いたLINEの承認リンクを開き直してください。');
+
     if(!window.liff.isLoggedIn()){
-      window.liff.login({redirectUri:location.href});
+      window.liff.login();
       return false;
     }
     idToken=window.liff.getIDToken()||'';
@@ -103,7 +111,6 @@
   }
 
   async function init(){
-    if(!token)return showMessage('承認リンクが正しくありません。',false);
     try{
       const ready=await ensureLiffIdentity();
       if(!ready)return;
