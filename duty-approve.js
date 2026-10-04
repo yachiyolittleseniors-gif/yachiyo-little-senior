@@ -66,23 +66,17 @@
       return false;
     }
     idToken=window.liff.getIDToken()||'';
+    window.__ylsLiffAccessToken='';
     if(!idToken){
-      // getIDToken() can be null even inside LIFF. For this flow we only need
-      // the stable LINE user ID, so fall back to the verified LIFF profile.
-      // The userId is sent to the server and hashed there before comparison.
-      try{
-        if(typeof window.liff.getProfile==='function'){
-          const profile=await window.liff.getProfile();
-          if(profile&&profile.userId){
-            idToken='';
-            window.__ylsLiffUserId=String(profile.userId);
-            return true;
-          }
-        }
-      }catch(_){}
+      // LINE's documented server-side fallback is the raw LIFF access token.
+      // The server verifies it with LINE, then obtains the profile from LINE.
+      const accessToken=typeof window.liff.getAccessToken==='function'?window.liff.getAccessToken():'';
+      if(accessToken){
+        window.__ylsLiffAccessToken=String(accessToken);
+        return true;
+      }
       throw new Error('LINE本人確認情報を取得できませんでした。LINEから承認リンクを開き直してください。');
     }
-    window.__ylsLiffUserId='';
     return true;
   }
 
@@ -90,7 +84,7 @@
     return fetchJson(API,{
       method:'POST',
       headers:{'content-type':'application/json'},
-      body:JSON.stringify({action,token,idToken,lineUserId:String(window.__ylsLiffUserId||'')})
+      body:JSON.stringify({action,token,idToken,accessToken:String(window.__ylsLiffAccessToken||'')})
     });
   }
 
