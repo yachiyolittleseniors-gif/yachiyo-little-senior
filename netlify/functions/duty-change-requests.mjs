@@ -591,7 +591,7 @@ export default async (request,context)=>{
       const swapGrade=String(resume.swapGrade||"");
       const swapName=cleanName(resume.swapName);
       const swapInvalid=requestType==="swap"&&(!validDate(swapDate)||!validGrade(swapGrade)||!swapName);
-      if(!validDate(date)||!validGrade(fromGrade)||!validGrade(toGrade)||!fromName||!toName||(fromGrade===toGrade&&fromName===toName)||swapInvalid){
+      if(!validDate(date)||!validGrade(fromGrade)||!validGrade(toGrade)||!fromName||!toName||(fromGrade===toGrade&&rosterNameKey(fromName)===rosterNameKey(toName))||swapInvalid){
         return json({error:"申請内容を確認できませんでした。もう一度申請してください。"},400);
       }
       const resumeSession=await getLineSession(request);
@@ -733,7 +733,7 @@ export default async (request,context)=>{
       const requesterDeviceToken=String(request.headers.get("x-duty-requester-device")||"").trim();
       const requesterDeviceHash=requesterDeviceToken?await sha256(requesterDeviceToken):"";
       const swapInvalid=requestType==="swap"&&(!validDate(swapDate)||!validGrade(swapGrade)||!swapName);
-      if(!validDate(date)||!validGrade(fromGrade)||!validGrade(toGrade)||!fromName||!toName||(fromGrade===toGrade&&fromName===toName)||swapInvalid){
+      if(!validDate(date)||!validGrade(fromGrade)||!validGrade(toGrade)||!fromName||!toName||(fromGrade===toGrade&&rosterNameKey(fromName)===rosterNameKey(toName))||swapInvalid){
         return json({error:"申請内容を確認してください。"},400);
       }
       const roster=await store.get(LEGACY_KEY,{type:"json",consistency:"strong"});

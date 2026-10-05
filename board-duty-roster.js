@@ -676,7 +676,7 @@
     names=Array.isArray(names)?names:rosterNamesForDate(date);
     let opts='<option value="">選択してください</option>';
     ['3','2','1'].forEach(function(g){
-      const group=names.filter(function(x){return x.grade===g&&personOptionValue(x)!==excludeValue});if(!group.length)return;
+      const group=names.filter(function(x){return x.grade===g&&window.DutyRosterData.nameKey(personOptionValue(x))!==window.DutyRosterData.nameKey(excludeValue)});if(!group.length)return;
       opts+='<optgroup label="'+g+'年生">'+group.map(function(x){return'<option value="'+escapeHtml(personOptionValue(x))+'">'+g+'年・'+escapeHtml(octoberDisplayName(x.name,g,date))+'</option>'}).join('')+'</optgroup>';
     });
     return opts;

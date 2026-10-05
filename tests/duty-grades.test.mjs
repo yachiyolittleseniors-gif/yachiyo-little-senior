@@ -170,3 +170,16 @@ test('actual table renderer shows six names and three grade headers',{skip:!depl
   assert(!context.tableList.innerHTML.includes('has-three-grades'));
   assert(context.tableList.innerHTML.includes('<col span="4" style="width:18%">'));
 });
+
+test('same household is excluded despite parenthesized roster names',{skip:!deployed},()=>{
+  const source=read('board-duty-roster.js');
+  const key=v=>String(v||'').normalize('NFKC').replace(/[()\s]/g,'');
+  const context={window:{DutyRosterData:{nameKey:key}},cleanName:key,escapeHtml:v=>String(v||''),octoberDisplayName:v=>v};
+  vm.runInNewContext(section(source,'  function personOptionValue(','  function dutySlotValue('),context);
+  const options=context.requestPersonOptions('2027-07-01',[{grade:'1',name:'石川晃'},{grade:'1',name:'石川圭'}],'1|石川（晃）');
+  assert(!options.includes('value="1|石川晃"'));assert(options.includes('value="1|石川圭"'));
+});
+test('submit and LINE-resume submit both reject aliases of the same household',{skip:!deployed},()=>{
+  const source=read('netlify/functions/duty-change-requests.mjs');
+  assert.equal(source.split('fromGrade===toGrade&&rosterNameKey(fromName)===rosterNameKey(toName)').length-1,2);
+});
