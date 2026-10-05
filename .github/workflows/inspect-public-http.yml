@@ -1,0 +1,36 @@
+name: Inspect public HTTP response
+on:
+  push:
+    branches: [debug/http-response-20261005]
+permissions:
+  contents: read
+jobs:
+  inspect:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    steps:
+      - name: Probe root with multiple user agents
+        shell: bash
+        run: |
+          set -euo pipefail
+          URL='https://yachiyo-little-senior.netlify.app/'
+          probe () {
+            name="$1"
+            ua="$2"
+            echo "===== $name ====="
+            curl -sS -L --max-redirs 10 -A "$ua" -D "/tmp/$name.headers" -o "/tmp/$name.html" -w 'FINAL_URL=%{url_effective}\nHTTP=%{http_code}\nTYPE=%{content_type}\nTIME=%{time_total}\nSIZE=%{size_download}\n' "$URL"
+            echo "--- response chain ---"
+            grep -E '^(HTTP/|location:|content-type:|x-nf-request-id:|cache-control:|server:)' "/tmp/$name.headers" || true
+            echo "--- page identity ---"
+            grep -Eo '<title>[^<]+</title>|<h1[^>]*>[^<]+</h1>|ページが見つかりません|八千代リトルシニア【公式】' "/tmp/$name.html" | head -10 || true
+            echo
+          }
+          probe safari 'Mozilla/5.0 (iPhone; CPU iPhone OS 26_0 like Mac OS X) AppleWebKit/605.1.15 Version/26.0 Mobile/15E148 Safari/604.1'
+          probe googlebot 'Mozilla/5.0 (Linux; Android 10; K) AppleWebKit/537.36 Chrome/140.0.0.0 Mobile Safari/537.36 (compatible; Googlebot/2.1; +http://www.google.com/bot.html)'
+          probe lighthouse 'Mozilla/5.0 (Linux; Android 10; K) AppleWebKit/537.36 Chrome/140.0.0.0 Mobile Safari/537.36 Chrome-Lighthouse'
+          echo '===== direct files ====='
+          for path in / /index.html /404.html; do
+            echo "--- $path ---"
+            curl -sS -o /tmp/direct -D - -w 'FINAL=%{url_effective} HTTP=%{http_code}\n' "https://yachiyo-little-senior.netlify.app$path" | grep -E '^(HTTP/|location:|content-type:|FINAL=)' || true
+            grep -Eo '<title>[^<]+</title>|ページが見つかりません|八千代リトルシニア【公式】' /tmp/direct | head -5 || true
+          done
