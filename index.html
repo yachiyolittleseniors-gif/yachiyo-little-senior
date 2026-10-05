@@ -2,6 +2,7 @@
 
 <html lang="ja">
 <head>
+<link rel="preload" as="script" href="/.netlify/functions/site-data?section=hero&amp;bootstrap=1" fetchpriority="high">
 <script id="hero-image-early-fetch">
 (()=>{'use strict';
 let resolveReady;
@@ -25,7 +26,7 @@ const timeout=setTimeout(()=>request.finish(false),20000);
 window.__yachiyoHeroRequest=request;
 })();
 </script>
-<script src="/.netlify/functions/site-data?section=hero&amp;bootstrap=1"></script>
+<script src="/.netlify/functions/site-data?section=hero&amp;bootstrap=1" fetchpriority="high"></script>
 <script>
 (()=>{'use strict';
 const previewKey='yachiyo:hero-versioned-preview';
