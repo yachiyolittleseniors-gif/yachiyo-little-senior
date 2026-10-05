@@ -250,8 +250,8 @@
       '.attendance-date-picker-trigger-arrow{font-size:18px;line-height:1;color:#526173}' +
       '.attendance-date-picker-trigger-detail{display:block;margin:4px 0 0 44px;color:#748092;font-size:11px;font-weight:700;line-height:1.4;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}' +
       '.attendance-date-picker-badges{display:inline-flex;gap:4px;flex:0 0 auto}' +
-      '.attendance-date-badge{display:inline-flex;align-items:center;justify-content:center;min-width:34px;height:27px;padding:0 8px;border-radius:999px;color:#fff;font-size:12px;font-weight:900;line-height:1}' +
-      '.attendance-date-badge.grade-1{background:#d93643}.attendance-date-badge.grade-2{background:#24935d}.attendance-date-badge.grade-3{background:#246bc5}.attendance-date-badge.grade-all{background:#c79a24}.attendance-date-badge.grade-other{background:#666f7b}.attendance-date-badge.grade-plain{background:#8b94a0}' +
+      '.attendance-date-badge{display:inline-flex;align-items:center;justify-content:center;min-width:34px;height:27px;padding:0 8px;border:1px solid #cfd6df;border-radius:999px;background:#f5f7fa;color:#344255;font-size:12px;font-weight:900;line-height:1}' +
+      '.attendance-date-badge.grade-1,.attendance-date-badge.grade-2,.attendance-date-badge.grade-3,.attendance-date-badge.grade-all,.attendance-date-badge.grade-other,.attendance-date-badge.grade-plain{background:#f5f7fa;color:#344255;border-color:#cfd6df}' +
       '.attendance-date-picker-overlay[hidden]{display:none!important}' +
       '.attendance-date-picker-overlay{position:fixed;inset:0;z-index:2147482500;display:flex;align-items:flex-start;justify-content:center;padding:max(18px,env(safe-area-inset-top)) 12px max(18px,env(safe-area-inset-bottom));background:rgba(4,14,28,.56);backdrop-filter:blur(3px)}' +
       '.attendance-date-picker-panel{width:min(620px,100%);max-height:calc(100dvh - 36px);overflow:auto;background:#fff;border-radius:24px;box-shadow:0 24px 70px rgba(0,0,0,.28);overscroll-behavior:contain}' +
@@ -295,19 +295,25 @@
     ).join('');
   }
 
+  function pickerOpponent(event){
+    const memo=String(event?.memo||'').trim();
+    if(!memo)return'';
+    let text=memo.replace(/^[\s　]*(?:対戦相手|対戦|相手)[：:]?[\s　]*/,'').trim();
+    text=text.replace(/^[\s　]*vs[\s　]*/i,'').trim();
+    const stop=text.search(/[｜|／/\n]|(?:　{2,})|(?:\s{2,})|(?:G[：:])|(?:グラウンド[：:])|(?:場所[：:])|(?:\【)|(?:\[)/);
+    if(stop>0)text=text.slice(0,stop).trim();
+    return text;
+  }
+
   function pickerDetailText(event){
     if(!event)return'';
     const category=String(event.category||'');
+    if(category!=='official'&&category!=='friendly')return'';
+    const opponent=pickerOpponent(event);
     const place=String(event.place||'').trim();
-    const memo=String(event.memo||'').trim();
     const parts=[];
-    if(category==='official'||category==='friendly'){
-      if(memo)parts.push('対戦：'+memo);
-      if(place)parts.push('G：'+place);
-    }else{
-      if(place)parts.push('場所：'+place);
-      if(memo)parts.push(memo);
-    }
+    if(opponent)parts.push('vs '+opponent);
+    if(place)parts.push(place);
     return parts.join(' ｜ ');
   }
 
@@ -345,33 +351,8 @@
     });
   }
 
-  function pickerGroups(items,ownGrade,kind){
-    const groups=[];
-    if(kind==='coach'||!ownGrade){
-      const all=[],grade=[],other=[];
-      items.forEach(item=>{
-        const info=pickerGradeInfo(item.event);
-        if(info.isAll)all.push(item);
-        else if(info.isOtherOnly)other.push(item);
-        else grade.push(item);
-      });
-      if(all.length)groups.push({key:'all',title:'全学年の予定',items:all});
-      if(grade.length)groups.push({key:'grade',title:'学年別の予定',items:grade});
-      if(other.length)groups.push({key:'other',title:'その他の予定',items:other});
-      return groups;
-    }
-
-    const own=[],all=[],other=[];
-    items.forEach(item=>{
-      const info=pickerGradeInfo(item.event);
-      if(info.isAll)all.push(item);
-      else if(info.school.includes(ownGrade))own.push(item);
-      else other.push(item);
-    });
-    if(own.length)groups.push({key:'own',title:ownGrade+'年の予定（あなたの学年）',items:own});
-    if(all.length)groups.push({key:'all',title:'全学年の予定',items:all});
-    if(other.length)groups.push({key:'other',title:'他学年・その他（帯同も可能）',items:other});
-    return groups;
+  function pickerGroups(items){
+    return items.length?[{key:'flat',title:'',items}]:[];
   }
 
   function installCommentDatePicker(){
@@ -403,7 +384,7 @@
     overlay.setAttribute('aria-label','対象日を選択');
     overlay.innerHTML=
       '<div class="attendance-date-picker-panel">' +
-        '<div class="attendance-date-picker-head"><h3>対象日を選択</h3><span class="attendance-date-picker-pill">全予定</span><button class="attendance-date-picker-close" type="button" aria-label="閉じる">×</button></div>' +
+        '<div class="attendance-date-picker-head"><h3>対象日を選択</h3><span class="attendance-date-picker-pill">約1か月</span><button class="attendance-date-picker-close" type="button" aria-label="閉じる">×</button></div>' +
         '<div class="attendance-date-picker-body"></div>' +
         '<div class="attendance-date-picker-footer"><button class="attendance-date-picker-done" type="button">閉じる</button></div>' +
       '</div>';
@@ -433,10 +414,9 @@
         body.innerHTML='<div class="attendance-date-picker-empty">選択できる予定がありません。</div>';
         return;
       }
-      body.innerHTML=groups.map(group=>
-        '<section class="attendance-date-picker-group '+esc(group.key)+'">' +
-          '<h4 class="attendance-date-picker-group-title">'+esc(group.title)+'</h4>' +
-          group.items.map(item=>
+      body.innerHTML=
+        '<section class="attendance-date-picker-group flat">' +
+          groups[0].items.map(item=>
             '<button type="button" class="attendance-date-picker-row '+(item.date===select.value?'selected':'')+'" data-date="'+esc(item.date)+'">' +
               '<span class="attendance-date-picker-badges">'+pickerBadgeHtml(item.event)+'</span>' +
               '<span class="attendance-date-picker-row-main"><span class="attendance-date-picker-row-title">'+esc(item.title)+'</span>' +
@@ -444,8 +424,7 @@
               '</span><span class="attendance-date-picker-row-check">'+(item.date===select.value?'✓':'›')+'</span>' +
             '</button>'
           ).join('') +
-        '</section>'
-      ).join('');
+        '</section>';
       body.querySelectorAll('[data-date]').forEach(button=>button.addEventListener('click',()=>{
         const date=button.getAttribute('data-date')||'';
         if(!date)return;
