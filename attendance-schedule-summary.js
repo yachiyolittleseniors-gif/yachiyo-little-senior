@@ -483,20 +483,18 @@
     let text=String(value||'').trim();
     if(!text)return'';
 
-    // 八千代東邦グラウンド / 八千代東邦G は表示上「東邦」に統一。
-    text=text.replace(/八千代東邦(?:グラウンド|グランド|G)(?:\s*[（(][^）)]*[）)])?/g,'東邦');
-
-    // 「○○G(1年) ○○G(2年)」のように学年別の場所が並ぶ場合は、
-    // 選択中の本人の学年に該当する場所だけを優先して表示する。
+    // 学年別の場所が連結されている場合は、本人の学年に該当する場所だけを先に抜き出す。
     if(['1','2','3'].includes(String(grade||''))){
-      const parts=text.split(/\s{2,}|[｜|／/]|(?<=\))[ \t]+(?=[^\s])/).map(item=>item.trim()).filter(Boolean);
-      const tagged=parts.filter(item=>/[（(][123]年[）)]/.test(item));
-      if(tagged.length){
-        const own=tagged.find(item=>new RegExp('[（(]'+grade+'年[）)]').test(item));
-        if(own)text=own;
-      }
+      const chunks=text
+        .split(/(?<=[）)])[ \t]+(?=[^\s])/)
+        .map(item=>item.trim())
+        .filter(Boolean);
+      const own=chunks.find(item=>new RegExp('[（(]'+grade+'年[）)]').test(item));
+      if(own)text=own;
     }
 
+    // 表示上は八千代東邦グラウンド / 八千代東邦G を「東邦」に統一。
+    text=text.replace(/八千代東邦(?:グラウンド|グランド|G)/g,'東邦');
     text=text.replace(/[（(][123]年[）)]/g,'').replace(/\s{2,}/g,' ').trim();
     return text;
   }
@@ -532,51 +530,150 @@
     return parts.join(' ｜ ');
   }
 
-  function installNativeCommentDateSelect(){
+  function installInlineCommentDatePicker(){
     const select=document.getElementById('commentEventDate');
-    if(!select)return;
+    const label=select?.closest?.('.comment-date-field')||select?.parentElement;
+    if(!select||!label||document.getElementById('attendanceInlineDatePicker'))return;
 
-    // 以前のカスタム全画面ピッカーは使わず、元の対象日selectをそのまま利用する。
-    select.classList.remove('attendance-native-date-select');
+    // 元のselectは値保持・保存処理用として残す。見た目だけカスタム表示にする。
+    select.style.position='absolute';
+    select.style.width='1px';
+    select.style.height='1px';
+    select.style.opacity='0';
+    select.style.pointerEvents='none';
+    select.style.overflow='hidden';
 
-    let detail=document.getElementById('attendanceNativeDateDetail');
-    if(!detail){
-      detail=document.createElement('div');
-      detail.id='attendanceNativeDateDetail';
-      detail.style.cssText='margin:5px 8px 0;color:#7b8593;font-size:11px;font-weight:700;line-height:1.45;overflow-wrap:anywhere;';
-      const label=select.closest('.comment-date-field')||select.parentElement;
-      label?.insertAdjacentElement('afterend',detail);
+    const style=document.createElement('style');
+    style.id='attendance-inline-date-picker-style';
+    style.textContent=
+      '.attendance-inline-date-picker{position:relative;width:100%;margin-top:2px}' +
+      '.attendance-inline-date-button{width:100%;min-height:52px;border:2px solid #9fc3f3;border-radius:13px;background:#fff;padding:8px 42px 8px 12px;text-align:left;color:#071426;box-shadow:0 0 0 4px rgba(75,139,230,.10);font:inherit;cursor:pointer;position:relative}' +
+      '.attendance-inline-date-button:after{content:"⌄";position:absolute;right:14px;top:50%;transform:translateY(-50%);color:#526173;font-size:18px;font-weight:900}' +
+      '.attendance-inline-date-title{display:block;font-size:16px;font-weight:900;line-height:1.35;overflow-wrap:anywhere}' +
+      '.attendance-inline-date-detail{display:block;margin-top:4px;color:#7a8594;font-size:11px;font-weight:800;line-height:1.35;overflow-wrap:anywhere}' +
+      '.attendance-inline-date-menu{position:absolute;left:0;right:0;top:calc(100% + 6px);z-index:2147482000;max-height:min(430px,56vh);overflow:auto;border:1px solid #cfd6df;border-radius:14px;background:#fff;box-shadow:0 18px 44px rgba(7,20,38,.22);overscroll-behavior:contain}' +
+      '.attendance-inline-date-menu[hidden]{display:none!important}' +
+      '.attendance-inline-date-option{display:block;width:100%;border:0;border-bottom:1px solid #edf0f4;background:#fff;padding:11px 38px 11px 13px;text-align:left;color:#071426;font:inherit;cursor:pointer;position:relative}' +
+      '.attendance-inline-date-option:last-child{border-bottom:0}' +
+      '.attendance-inline-date-option.selected{background:#fffdf6}' +
+      '.attendance-inline-date-option.selected:after{content:"✓";position:absolute;right:14px;top:50%;transform:translateY(-50%);color:#b88717;font-size:18px;font-weight:900}' +
+      '.attendance-inline-date-option-title{display:block;font-size:15px;font-weight:900;line-height:1.35;overflow-wrap:anywhere}' +
+      '.attendance-inline-date-option-detail{display:block;margin-top:3px;color:#7a8594;font-size:11px;font-weight:800;line-height:1.35;overflow-wrap:anywhere}' +
+      '@media(max-width:420px){.attendance-inline-date-title{font-size:15px}.attendance-inline-date-option-title{font-size:14px}.attendance-inline-date-menu{max-height:52vh}}';
+    document.head.appendChild(style);
+
+    const wrap=document.createElement('div');
+    wrap.id='attendanceInlineDatePicker';
+    wrap.className='attendance-inline-date-picker';
+
+    const button=document.createElement('button');
+    button.type='button';
+    button.className='attendance-inline-date-button';
+    button.setAttribute('aria-haspopup','listbox');
+    button.setAttribute('aria-expanded','false');
+
+    const menu=document.createElement('div');
+    menu.className='attendance-inline-date-menu';
+    menu.hidden=true;
+    menu.setAttribute('role','listbox');
+
+    wrap.appendChild(button);
+    wrap.appendChild(menu);
+    label.appendChild(wrap);
+
+    function itemForDate(date){
+      return scheduleCache.find(item=>String(item?.date||'')===String(date||''))||null;
     }
 
-    function apply(){
+    function titleFor(date,event){
+      const grade=event?nativeGradeLabel(event):'';
+      const title=String(event?.title||'').trim();
+      return [grade,formatDate(date),title].filter(Boolean).join(' ');
+    }
+
+    function detailFor(event){
+      return nativeDetailText(event);
+    }
+
+    function syncButton(){
+      const date=String(select.value||'');
+      const event=itemForDate(date);
+      const fallback=Array.from(select.options).find(option=>String(option.value||'')===date)?.textContent?.trim()||'対象日を選択';
+      const title=event?titleFor(date,event):fallback;
+      const detail=event?detailFor(event):'';
+      button.innerHTML=
+        '<span class="attendance-inline-date-title">'+esc(title)+'</span>' +
+        (detail?'<span class="attendance-inline-date-detail">'+esc(detail)+'</span>':'');
+    }
+
+    function renderMenu(){
       const byDate=new Map(scheduleCache.map(item=>[String(item?.date||''),item]));
-
-      Array.from(select.options).forEach(option=>{
+      menu.innerHTML=Array.from(select.options).map(option=>{
         const date=String(option.value||'');
-        const event=byDate.get(date);
-        if(!event)return;
+        const event=byDate.get(date)||null;
+        const title=event?titleFor(date,event):String(option.textContent||'').trim();
+        const detail=event?detailFor(event):'';
+        const selected=date===String(select.value||'');
+        return '<button type="button" class="attendance-inline-date-option '+(selected?'selected':'')+'" data-date="'+esc(date)+'" role="option" aria-selected="'+String(selected)+'">' +
+          '<span class="attendance-inline-date-option-title">'+esc(title)+'</span>' +
+          (detail?'<span class="attendance-inline-date-option-detail">'+esc(detail)+'</span>':'') +
+        '</button>';
+      }).join('');
 
-        const grade=nativeGradeLabel(event);
-        const title=String(event.title||'').trim();
-        const label=[grade,formatDate(date),title].filter(Boolean).join(' ');
-        if(option.textContent!==label)option.textContent=label;
+      menu.querySelectorAll('[data-date]').forEach(optionButton=>{
+        optionButton.addEventListener('click',event=>{
+          event.preventDefault();
+          event.stopPropagation();
+          const date=optionButton.getAttribute('data-date')||'';
+          if(!date)return;
+          select.value=date;
+          select.dispatchEvent(new Event('change',{bubbles:true}));
+          syncButton();
+          closeMenu();
+        });
       });
-
-      const current=byDate.get(String(select.value||''));
-      const detailText=nativeDetailText(current);
-      detail.textContent=detailText;
-      detail.hidden=!detailText;
     }
 
-    select.addEventListener('change',apply);
-    const observer=new MutationObserver(()=>queueMicrotask(apply));
+    function openMenu(){
+      void loadSchedule().then(()=>{
+        renderMenu();
+        menu.hidden=false;
+        button.setAttribute('aria-expanded','true');
+        const selected=menu.querySelector('.selected');
+        if(selected)selected.scrollIntoView({block:'nearest'});
+      });
+    }
+
+    function closeMenu(){
+      menu.hidden=true;
+      button.setAttribute('aria-expanded','false');
+    }
+
+    button.addEventListener('click',event=>{
+      event.preventDefault();
+      event.stopPropagation();
+      if(menu.hidden)openMenu(); else closeMenu();
+    });
+
+    document.addEventListener('click',event=>{
+      if(!wrap.contains(event.target))closeMenu();
+    });
+    document.addEventListener('keydown',event=>{
+      if(event.key==='Escape')closeMenu();
+    });
+    select.addEventListener('change',syncButton);
+
+    const observer=new MutationObserver(()=>queueMicrotask(()=>{
+      syncButton();
+      if(!menu.hidden)renderMenu();
+    }));
     observer.observe(select,{childList:true,subtree:true});
 
-    loadSchedule().finally(apply);
-    setTimeout(apply,0);
+    loadSchedule().finally(syncButton);
+    setTimeout(syncButton,0);
   }
 
-  if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',installNativeCommentDateSelect,{once:true});
-  else installNativeCommentDateSelect();
+  if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',installInlineCommentDatePicker,{once:true});
+  else installInlineCommentDatePicker();
 
 })();
