@@ -2,6 +2,7 @@ import { randomUUID } from "node:crypto";
 import { verifyAccessPassword } from "./_access-password.mjs";
 import { accessRateLimitResponse } from "./_access-rate-limit.mjs";
 import { getStore } from "@netlify/blobs";
+import { readHeroBootstrapData } from "./_hero-bootstrap-cache.mjs";
 import {
   boardSessionCookie,
   boardSessionIsValid,
@@ -901,7 +902,7 @@ export default async (request, context) => {
 
     if (request.method === "GET") {
       if (section === "hero" && url.searchParams.get("bootstrap") === "1") {
-        const photos = await readHeroManifestData(store, key);
+        const photos = await readHeroBootstrapData(store, key, readHeroManifestData);
         const photo = Array.isArray(photos) ? photos[0] : null;
         const version = photo?.image ? String(photo.version || photo.updatedAt || "") : "";
         const heroUrl = "/.netlify/functions/site-data?section=hero&current=1" + (version ? "&v=" + encodeURIComponent(version) : "");
