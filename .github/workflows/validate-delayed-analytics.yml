@@ -1,0 +1,41 @@
+name: Validate delayed analytics
+on:
+  push:
+    branches: [perf/delay-ga-20261005]
+permissions:
+  contents: write
+jobs:
+  validate-and-publish:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 8
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: perf/delay-ga-20261005
+      - name: Validate home
+        shell: bash
+        run: |
+          set -euo pipefail
+          node --check ga-delayed.js
+          grep -q 'ga-delayed.js?v=20261005-1' index.html
+          grep -q "gtag('config','G-L8BMMSXDP9'" index.html
+          ! grep -q '<script async="" src="https://www.googletagmanager.com/gtag/js?id=G-L8BMMSXDP9"></script>' index.html
+          node --test tests/home-csp.test.mjs
+          node netlify/sync-home-csp.mjs
+          node --test tests/home-csp.test.mjs
+          git diff --check
+      - name: Publish validated files to main
+        shell: bash
+        run: |
+          set -euo pipefail
+          git fetch origin main
+          git checkout main
+          git pull --ff-only origin main
+          git checkout perf/delay-ga-20261005 -- index.html ga-delayed.js
+          node netlify/sync-home-csp.mjs
+          node --test tests/home-csp.test.mjs
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add index.html ga-delayed.js _headers
+          git commit -m 'perf(analytics): delay Google Analytics after initial render'
+          git push origin main
