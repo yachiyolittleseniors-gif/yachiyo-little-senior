@@ -749,7 +749,173 @@
     setTimeout(apply,0);
   }
 
-  if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',installSimpleNativeCommentDateSelect,{once:true});
-  else installSimpleNativeCommentDateSelect();
+
+  function cardDetailParts(event){
+    if(!event)return{opponent:'',place:'',note:''};
+    const category=String(event.category||'');
+    const memo=String(event.memo||'').trim();
+
+    if(category==='official'||category==='friendly'){
+      const opponent=nativeOpponent(event);
+      const place=shortAttendancePlace(event.place,pickerCurrentGrade());
+      return{
+        opponent:opponent?'vs '+opponent:'',
+        place,
+        note:''
+      };
+    }
+
+    return{
+      opponent:'',
+      place:'',
+      note:(category==='practice'||category==='other')&&memo?'備考：'+memo:''
+    };
+  }
+
+  function installSimpleCardDatePicker(){
+    const select=document.getElementById('commentEventDate');
+    const label=select?.closest?.('.comment-date-field')||select?.parentElement;
+    if(!select||!label||document.getElementById('attendanceCardDatePicker'))return;
+
+    // 保存処理は既存selectをそのまま使用。見た目だけカードUIにする。
+    select.style.position='absolute';
+    select.style.width='1px';
+    select.style.height='1px';
+    select.style.opacity='0';
+    select.style.pointerEvents='none';
+    select.style.overflow='hidden';
+
+    const style=document.createElement('style');
+    style.id='attendance-card-date-picker-style';
+    style.textContent=
+      '.attendance-card-date-picker{width:100%;margin-top:2px}' +
+      '.attendance-card-date-current{position:relative;width:100%;min-height:58px;border:2px solid #9fc3f3;border-radius:14px;background:#fff;padding:10px 44px 10px 13px;text-align:left;color:#071426;box-shadow:0 0 0 4px rgba(75,139,230,.10);font:inherit;cursor:pointer}' +
+      '.attendance-card-date-current:after{content:"⌄";position:absolute;right:15px;top:50%;transform:translateY(-50%);color:#536174;font-size:19px;font-weight:900}' +
+      '.attendance-card-date-head{display:block;font-size:16px;font-weight:900;line-height:1.35;overflow-wrap:anywhere}' +
+      '.attendance-card-date-sub{display:block;margin-top:3px;color:#7b8695;font-size:11px;font-weight:800;line-height:1.35;overflow-wrap:anywhere}' +
+      '.attendance-card-date-dialog{width:min(720px,calc(100% - 12px));max-width:none;height:auto;max-height:calc(100dvh - 20px);margin:auto;padding:0;border:0;border-radius:22px;background:#fff;color:#071426;box-shadow:0 24px 70px rgba(0,0,0,.30);overflow:hidden}' +
+      '.attendance-card-date-dialog::backdrop{background:rgba(3,12,24,.52);backdrop-filter:blur(2px)}' +
+      '.attendance-card-date-shell{display:flex;flex-direction:column;max-height:calc(100dvh - 20px)}' +
+      '.attendance-card-date-top{display:flex;align-items:center;gap:12px;padding:16px 17px 13px;border-bottom:1px solid #e6e9ee;background:#fff;flex:0 0 auto}' +
+      '.attendance-card-date-top h3{margin:0;flex:1;font-size:20px;line-height:1.3;color:#071426}' +
+      '.attendance-card-date-close{width:38px;height:38px;border:0;border-radius:50%;background:#f0f2f5;color:#26364d;font-size:22px;font-weight:800;cursor:pointer}' +
+      '.attendance-card-date-list{overflow-y:auto;-webkit-overflow-scrolling:touch;overscroll-behavior:contain;padding:10px 10px 14px}' +
+      '.attendance-card-date-item{display:block;width:100%;margin:0 0 8px;padding:13px 14px;border:1px solid #d8dde5;border-radius:14px;background:#fff;text-align:left;color:#071426;font:inherit;cursor:pointer}' +
+      '.attendance-card-date-item:last-child{margin-bottom:0}' +
+      '.attendance-card-date-item.selected{border:2px solid #c79a3b;background:#fffdf7;padding:12px 13px}' +
+      '.attendance-card-date-item-head{display:flex;align-items:flex-start;gap:8px}' +
+      '.attendance-card-date-item-title{min-width:0;flex:1;font-size:16px;font-weight:900;line-height:1.38;overflow-wrap:anywhere}' +
+      '.attendance-card-date-check{flex:0 0 auto;color:#b78616;font-size:20px;font-weight:900;line-height:1.25}' +
+      '.attendance-card-date-info{margin-top:5px;color:#7b8695;font-size:11px;font-weight:800;line-height:1.4;overflow-wrap:anywhere}' +
+      '.attendance-card-date-info+.attendance-card-date-info{margin-top:2px}' +
+      '@media(max-width:420px){.attendance-card-date-dialog{width:calc(100% - 8px);border-radius:18px}.attendance-card-date-top{padding:14px 13px 11px}.attendance-card-date-top h3{font-size:18px}.attendance-card-date-list{padding:8px}.attendance-card-date-item{padding:12px}.attendance-card-date-item.selected{padding:11px}.attendance-card-date-item-title{font-size:15px}.attendance-card-date-current{padding-left:11px}.attendance-card-date-head{font-size:15px}}';
+    document.head.appendChild(style);
+
+    const wrap=document.createElement('div');
+    wrap.id='attendanceCardDatePicker';
+    wrap.className='attendance-card-date-picker';
+
+    const current=document.createElement('button');
+    current.type='button';
+    current.className='attendance-card-date-current';
+    current.setAttribute('aria-haspopup','dialog');
+
+    wrap.appendChild(current);
+    label.appendChild(wrap);
+
+    const dialog=document.createElement('dialog');
+    dialog.className='attendance-card-date-dialog';
+    dialog.setAttribute('aria-label','対象日を選択');
+    dialog.innerHTML=
+      '<div class="attendance-card-date-shell">' +
+        '<div class="attendance-card-date-top"><h3>対象日を選択</h3><button type="button" class="attendance-card-date-close" aria-label="閉じる">×</button></div>' +
+        '<div class="attendance-card-date-list"></div>' +
+      '</div>';
+    document.body.appendChild(dialog);
+
+    const list=dialog.querySelector('.attendance-card-date-list');
+    const closeButton=dialog.querySelector('.attendance-card-date-close');
+
+    function eventForDate(date){
+      return scheduleCache.find(item=>String(item?.date||'')===String(date||''))||null;
+    }
+
+    function headText(date,event,optionText){
+      if(!event)return String(optionText||'').trim()||formatDate(date);
+      const grade=nativeGradeLabel(event);
+      const title=String(event.title||'').trim();
+      return [formatDate(date),grade,title].filter(Boolean).join(' ');
+    }
+
+    function currentHtml(){
+      const date=String(select.value||'');
+      const option=Array.from(select.options).find(item=>String(item.value||'')===date);
+      const event=eventForDate(date);
+      const parts=cardDetailParts(event);
+      const head=headText(date,event,option?.textContent||'');
+      current.innerHTML=
+        '<span class="attendance-card-date-head">'+esc(head||'対象日を選択')+'</span>' +
+        (parts.opponent?'<span class="attendance-card-date-sub">'+esc(parts.opponent)+'</span>':'') +
+        (parts.place?'<span class="attendance-card-date-sub">'+esc(parts.place)+'</span>':'') +
+        (parts.note?'<span class="attendance-card-date-sub">'+esc(parts.note)+'</span>':'');
+    }
+
+    function renderList(){
+      const currentDate=String(select.value||'');
+      list.innerHTML=Array.from(select.options).map(option=>{
+        const date=String(option.value||'');
+        const event=eventForDate(date);
+        const parts=cardDetailParts(event);
+        const selected=date===currentDate;
+        const head=headText(date,event,option.textContent||'');
+        return '<button type="button" class="attendance-card-date-item '+(selected?'selected':'')+'" data-date="'+esc(date)+'">' +
+          '<span class="attendance-card-date-item-head"><span class="attendance-card-date-item-title">'+esc(head)+'</span>' +
+          (selected?'<span class="attendance-card-date-check">✓</span>':'')+'</span>' +
+          (parts.opponent?'<span class="attendance-card-date-info">'+esc(parts.opponent)+'</span>':'') +
+          (parts.place?'<span class="attendance-card-date-info">'+esc(parts.place)+'</span>':'') +
+          (parts.note?'<span class="attendance-card-date-info">'+esc(parts.note)+'</span>':'') +
+        '</button>';
+      }).join('');
+
+      list.querySelectorAll('[data-date]').forEach(button=>{
+        button.addEventListener('click',()=>{
+          const date=button.getAttribute('data-date')||'';
+          if(!date)return;
+          select.value=date;
+          select.dispatchEvent(new Event('change',{bubbles:true}));
+          currentHtml();
+          dialog.close();
+        });
+      });
+    }
+
+    function openDialog(){
+      void loadSchedule().then(()=>{
+        renderList();
+        if(typeof dialog.showModal==='function')dialog.showModal();
+        else dialog.setAttribute('open','');
+        requestAnimationFrame(()=>{
+          const selected=list.querySelector('.selected');
+          if(selected)selected.scrollIntoView({block:'nearest'});
+        });
+      });
+    }
+
+    current.addEventListener('click',openDialog);
+    closeButton.addEventListener('click',()=>dialog.close());
+    dialog.addEventListener('click',event=>{
+      if(event.target===dialog)dialog.close();
+    });
+    select.addEventListener('change',currentHtml);
+
+    const observer=new MutationObserver(()=>queueMicrotask(currentHtml));
+    observer.observe(select,{childList:true,subtree:true});
+
+    loadSchedule().finally(currentHtml);
+    setTimeout(currentHtml,0);
+  }
+
+  if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',installSimpleCardDatePicker,{once:true});
+  else installSimpleCardDatePicker();
 
 })();
