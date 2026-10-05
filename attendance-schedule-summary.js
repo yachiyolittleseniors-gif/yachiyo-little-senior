@@ -517,14 +517,21 @@
   function nativeDetailText(event){
     if(!event)return'';
     const category=String(event.category||'');
-    if(category!=='official'&&category!=='friendly')return'';
+    const memo=String(event.memo||'').trim();
 
-    const opponent=nativeOpponent(event);
-    const place=shortAttendancePlace(event.place,pickerCurrentGrade());
-    const parts=[];
-    if(opponent)parts.push('vs '+opponent);
-    if(place)parts.push(place);
-    return parts.join(' ｜ ');
+    if(category==='official'||category==='friendly'){
+      const opponent=nativeOpponent(event);
+      const place=shortAttendancePlace(event.place,pickerCurrentGrade());
+      const parts=[];
+      if(opponent)parts.push('vs '+opponent);
+      if(place)parts.push(place);
+      return parts.join(' ｜ ');
+    }
+
+    if((category==='practice'||category==='other')&&memo){
+      return '備考：'+memo;
+    }
+    return'';
   }
 
   function installInlineCommentDatePicker(){
@@ -605,13 +612,20 @@
 
     function renderMenu(){
       const byDate=new Map(scheduleCache.map(item=>[String(item?.date||''),item]));
-      menu.innerHTML=Array.from(select.options).map(option=>{
+      const current=String(select.value||'');
+      const options=Array.from(select.options).filter(option=>String(option.value||'')!==current);
+
+      if(!options.length){
+        menu.innerHTML='<div style="padding:14px;text-align:center;color:#7a8594;font-size:12px;font-weight:700">ほかの日程はありません。</div>';
+        return;
+      }
+
+      menu.innerHTML='<div style="padding:8px 12px 6px;color:#7a8594;font-size:11px;font-weight:800">他の日程</div>'+options.map(option=>{
         const date=String(option.value||'');
         const event=byDate.get(date)||null;
         const title=event?titleFor(date,event):String(option.textContent||'').trim();
         const detail=event?detailFor(event):'';
-        const selected=date===String(select.value||'');
-        return '<button type="button" class="attendance-inline-date-option '+(selected?'selected':'')+'" data-date="'+esc(date)+'" role="option" aria-selected="'+String(selected)+'">' +
+        return '<button type="button" class="attendance-inline-date-option" data-date="'+esc(date)+'" role="option" aria-selected="false">' +
           '<span class="attendance-inline-date-option-title">'+esc(title)+'</span>' +
           (detail?'<span class="attendance-inline-date-option-detail">'+esc(detail)+'</span>':'') +
         '</button>';
