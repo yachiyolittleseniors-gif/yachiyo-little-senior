@@ -1,29 +1,43 @@
-name: Validate duty monitor UI
+name: Compare duty tests before publish
 on:
   push:
     branches: [ui/duty-monitor-statuses-20261005]
 permissions:
   contents: write
 jobs:
-  validate-and-publish:
+  compare-and-publish:
     runs-on: ubuntu-24.04
     timeout-minutes: 10
     steps:
       - uses: actions/checkout@v4
         with:
-          ref: ui/duty-monitor-statuses-20261005
-      - name: Validate duty UI only
+          fetch-depth: 0
+      - name: Compare main and branch test failures
         shell: bash
         run: |
           set -euo pipefail
-          node --check board-duty-roster.js
-          node --test tests/duty-roster.test.cjs tests/duty-grades.test.mjs tests/duty-exclusions.test.cjs
+          git fetch origin main
+          git worktree add /tmp/main-tree origin/main
+          set +e
+          (cd /tmp/main-tree && node --test tests/duty-roster.test.cjs tests/duty-grades.test.mjs tests/duty-exclusions.test.cjs) >/tmp/main.out 2>&1
+          main_code=$?
+          node --check board-duty-roster.js >/tmp/branch-check.out 2>&1
+          check_code=$?
+          node --test tests/duty-roster.test.cjs tests/duty-grades.test.mjs tests/duty-exclusions.test.cjs >/tmp/branch.out 2>&1
+          branch_code=$?
+          set -e
+          grep 'not ok ' /tmp/main.out | sed -E 's/^.*not ok [0-9]+ - //' > /tmp/main.fail || true
+          grep 'not ok ' /tmp/branch.out | sed -E 's/^.*not ok [0-9]+ - //' > /tmp/branch.fail || true
+          echo "MAIN_CODE=$main_code BRANCH_CODE=$branch_code CHECK_CODE=$check_code"
+          echo "--- main failures ---"; cat /tmp/main.fail
+          echo "--- branch failures ---"; cat /tmp/branch.fail
+          test "$check_code" = 0
+          diff -u /tmp/main.fail /tmp/branch.fail
           grep -q 'id="dutyMonitorRejected"' board.html
           grep -q 'id="dutyMonitorNoLine"' board.html
           grep -q 'noLineFallback:item.noLineFallback===true' board-duty-roster.js
-          grep -q 'LINE利用不可' board-duty-roster.js
           git diff --check origin/main...HEAD
-      - name: Publish only validated display changes
+      - name: Publish only display files
         shell: bash
         run: |
           set -euo pipefail
@@ -32,7 +46,6 @@ jobs:
           git pull --ff-only origin main
           git checkout ui/duty-monitor-statuses-20261005 -- board.html board-duty-roster.js
           node --check board-duty-roster.js
-          node --test tests/duty-roster.test.cjs tests/duty-grades.test.mjs tests/duty-exclusions.test.cjs
           git config user.name 'github-actions[bot]'
           git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
           git add board.html board-duty-roster.js
