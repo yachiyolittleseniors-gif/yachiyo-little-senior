@@ -73,3 +73,31 @@ jobs:
           },null,2));
           NODE
 
+      - name: Summarize Lighthouse bottlenecks
+        shell: bash
+        run: |
+          set -euo pipefail
+          node - <<'NODE'
+          const fs=require('fs');
+          const r=JSON.parse(fs.readFileSync('/tmp/lhr.json','utf8'));
+          const ids=[
+            'first-contentful-paint','largest-contentful-paint','speed-index',
+            'total-blocking-time','cumulative-layout-shift','interactive',
+            'render-blocking-resources','unused-javascript','unused-css-rules',
+            'uses-optimized-images','uses-responsive-images','modern-image-formats',
+            'network-dependency-tree-insight','render-blocking-insight','image-delivery-insight',
+            'forced-reflow-insight','lcp-breakdown-insight'
+          ];
+          for(const id of ids){
+            const a=r.audits?.[id];
+            if(!a) continue;
+            console.log('\n### '+id);
+            console.log('score=',a.score,'display=',a.displayValue||'');
+            if(a.details?.overallSavingsMs!=null) console.log('savingsMs=',a.details.overallSavingsMs);
+            if(a.details?.overallSavingsBytes!=null) console.log('savingsBytes=',a.details.overallSavingsBytes);
+            if(Array.isArray(a.details?.items)){
+              console.log(JSON.stringify(a.details.items.slice(0,12),null,2));
+            }
+          }
+          NODE
+
