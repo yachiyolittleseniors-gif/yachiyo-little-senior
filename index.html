@@ -2,18 +2,25 @@
 
 <html lang="ja">
 <head>
-<link rel="preload" as="script" href="/.netlify/functions/site-data?section=hero&amp;bootstrap=1" fetchpriority="high">
+
 <script id="hero-image-early-fetch">
 (()=>{'use strict';
 let resolveReady;
 window.__yachiyoHeroReady=new Promise(resolve=>{resolveReady=resolve;});
 const controller=new AbortController();
 let settled=false;
-const heroUrl='/.netlify/functions/site-data?section=hero&current=1';
+const heroSourceUrl='/.netlify/functions/site-data?section=hero&current=1';
+const heroUrl='/.netlify/images?url='+encodeURIComponent(heroSourceUrl)+'&w=1400&q=72&fm=webp';
 window.__yachiyoHeroUrl=heroUrl;
+window.__yachiyoHeroSourceUrl=heroSourceUrl;
+window.__yachiyoHeroInitialUrl=heroUrl;
+document.documentElement.style.setProperty('--hero-photo','url("'+heroUrl+'")');
+const preload=document.createElement('link');
+preload.rel='preload';preload.as='image';preload.href=heroUrl;preload.fetchPriority='high';
+document.head.appendChild(preload);
 const request={
   signal:controller.signal,
-  url:heroUrl,
+  url:heroSourceUrl,
   finish(ok){
     if(settled)return;
     settled=true;clearTimeout(timeout);
@@ -26,7 +33,7 @@ const timeout=setTimeout(()=>request.finish(false),20000);
 window.__yachiyoHeroRequest=request;
 })();
 </script>
-<script src="/.netlify/functions/site-data?section=hero&amp;bootstrap=1" fetchpriority="high"></script>
+<script async src="/.netlify/functions/site-data?section=hero&amp;bootstrap=1" fetchpriority="high"></script>
 <script>
 (()=>{'use strict';
 const previewKey='yachiyo:hero-versioned-preview';
@@ -61,7 +68,7 @@ window.__yachiyoRememberHeroImage=function(src,explicitVersion){
   if(current?.objectUrl===src&&current.blob){
     const reader=new FileReader();reader.onload=()=>save(reader.result);reader.readAsDataURL(current.blob);return;
   }
-  if(typeof src==='string'&&src.startsWith('/.netlify/functions/site-data?section=hero')){
+  if(typeof src==='string'&&(src.startsWith('/.netlify/functions/site-data?section=hero')||src.startsWith('/.netlify/images?'))){
     const cacheNetworkPreview=()=>fetch(src,{cache:'force-cache'})
       .then(r=>r.ok?r.blob():null)
       .then(blob=>{
