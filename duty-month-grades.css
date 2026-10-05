@@ -1,0 +1,7 @@
+/* Keep two-grade rosters unchanged; give six-name rows room on small screens. */
+.duty-digital-roster.has-three-grades .duty-table-scroll{overflow-x:auto;-webkit-overflow-scrolling:touch}
+.duty-digital-roster.has-three-grades table{min-width:600px}
+.duty-target-grade-field{display:block;margin:10px 0 6px;font-weight:700}
+.duty-target-grade-field select,#dutyImageReview select{box-sizing:border-box;width:100%;min-height:44px;margin-top:6px;padding:9px 12px;border:1px solid #cbd2da;border-radius:8px;background:#fff;color:#071426;font:inherit}
+.duty-target-grade-note{margin:6px 0 12px;color:#697381;font-size:12px;line-height:1.6}
+#dutyImageReview label[hidden]{display:none!important}
