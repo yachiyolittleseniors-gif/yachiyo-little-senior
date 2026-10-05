@@ -965,6 +965,7 @@ body.staff-editing .graduate-admin{display:block}
 }
 </style>
 <style id="team-action-policy-list-style">
+/* 行動方針・選手目標：グラウンドでのルールと同じ金色の縦線。 */
 #team-policy .team-action-policy-list{
   margin:0;
   padding:0;
@@ -973,29 +974,34 @@ body.staff-editing .graduate-admin{display:block}
   gap:12px;
 }
 #team-policy .team-action-policy-list li{
-  position:relative;
-  padding-left:22px;
   color:#55606d;
   font-size:15px;
   font-weight:600;
   line-height:1.9;
 }
 #team-policy .team-action-policy-list li::before{
-  content:"";
-  position:absolute;
-  left:0;
-  top:.78em;
-  width:6px;
-  height:6px;
-  border-radius:50%;
-  background:#c79a3b;
+  content:none;
+}
+#teamStandardsV2 .player-goal ul{
+  padding-left:0 !important;
+  list-style:none;
+  display:grid;
+  gap:8px;
+}
+#team-policy .team-action-policy-list li,
+#teamStandardsV2 .player-goal li{
+  border-left:3px solid #c99a35;
+  padding-left:18px;
 }
 @media(max-width:700px){
   #team-policy .team-action-policy-list{gap:10px}
   #team-policy .team-action-policy-list li{
     font-size:14px;
     line-height:1.9;
-    padding-left:20px;
+  }
+  #team-policy .team-action-policy-list li,
+  #teamStandardsV2 .player-goal li{
+    padding-left:14px;
   }
 }
 </style>
