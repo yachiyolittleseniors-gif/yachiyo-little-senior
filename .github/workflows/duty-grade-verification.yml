@@ -1,0 +1,40 @@
+name: Verify monthly duty grades
+on:
+  push:
+    branches: [fix/duty-month-grades-v1-20261005]
+  workflow_dispatch:
+permissions:
+  contents: write
+concurrency:
+  group: duty-grades-${{ github.ref }}
+  cancel-in-progress: true
+jobs:
+  verify:
+    if: github.ref == 'refs/heads/fix/duty-month-grades-v1-20261005'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: fix/duty-month-grades-v1-20261005
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Integrate the adapters and check syntax
+        run: node netlify/prepare-duty-grades.mjs
+      - name: Test duty-grade behavior and existing CSP checks
+        run: node --test tests/duty-grades.test.mjs tests/home-csp.test.mjs
+      - name: Keep the verified adapters as the canonical repository sources
+        run: |
+          node --input-type=module <<'JS'
+          import {readFileSync,writeFileSync} from 'node:fs';
+          const file='netlify.toml';
+          const source=readFileSync(file,'utf8');
+          writeFileSync(file,source.replace('node netlify/prepare-duty-grades.mjs && ',''));
+          JS
+          git diff --check
+          git add board.html board-duty-roster.js board-duty-auto-test.js netlify/functions/site-data.mjs netlify/functions/duty-change-requests.mjs duty-grade-policy.js netlify.toml
+          if git diff --cached --quiet; then exit 0; fi
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git commit -m 'Commit verified month-specific duty-grade adapters'
+          git push origin HEAD:fix/duty-month-grades-v1-20261005
