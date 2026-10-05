@@ -16,6 +16,7 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
+          git fetch origin main
           node --check board-duty-roster.js
           grep -q 'id="dutyMonitorNoLineAlert"' board.html
           grep -q 'id="dutyMonitorNoLineCount"' board.html
