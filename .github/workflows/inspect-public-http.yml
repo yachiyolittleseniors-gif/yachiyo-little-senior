@@ -34,3 +34,18 @@ jobs:
             curl -sS -o /tmp/direct -D - -w 'FINAL=%{url_effective} HTTP=%{http_code}\n' "https://yachiyo-little-senior.netlify.app$path" | grep -E '^(HTTP/|location:|content-type:|FINAL=)' || true
             grep -Eo '<title>[^<]+</title>|ページが見つかりません|八千代リトルシニア【公式】' /tmp/direct | head -5 || true
           done
+
+      - name: Execute page in headless Chrome
+        shell: bash
+        run: |
+          set -euo pipefail
+          CHROME=$(command -v google-chrome || command -v chromium || command -v chromium-browser || true)
+          echo "CHROME=$CHROME"
+          test -n "$CHROME"
+          "$CHROME" --headless=new --no-sandbox --disable-gpu --virtual-time-budget=8000 \
+            --user-agent='Mozilla/5.0 (Linux; Android 10; K) AppleWebKit/537.36 Chrome/140.0.0.0 Mobile Safari/537.36 Chrome-Lighthouse' \
+            --dump-dom 'https://yachiyo-little-senior.netlify.app/' > /tmp/dom.html
+          echo "--- executed DOM identity ---"
+          grep -Eo '<title>[^<]+</title>|<h1[^>]*>[^<]+</h1>|ページが見つかりません|八千代リトルシニア【公式】' /tmp/dom.html | head -20 || true
+          echo "--- 404 markers count ---"
+          grep -c 'ページが見つかりません' /tmp/dom.html || true
