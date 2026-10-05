@@ -1,0 +1,134 @@
+name: Home image delivery safe rollout
+on:
+  push:
+    branches: [perf/home-image-delivery-20261005]
+permissions:
+  contents: write
+jobs:
+  rollout:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: main
+      - name: Verify transformed public images
+        shell: bash
+        run: |
+          set -euo pipefail
+          check () {
+            label="$1"; url="$2"; min="$3"
+            code=$(curl -L -sS -o "/tmp/$label.img" -w '%{http_code}' "$url")
+            bytes=$(wc -c < "/tmp/$label.img")
+            echo "$label status=$code bytes=$bytes"
+            test "$code" = 200
+            test "$bytes" -gt "$min"
+            file "/tmp/$label.img" | grep -Eqi 'WebP|AVIF'
+          }
+          check logo 'https://yachiyo-little-senior.netlify.app/.netlify/images?url=%2Fofficial-logo-crisp-final.png&w=800&q=82&fm=webp' 5000
+          check game 'https://yachiyo-little-senior.netlify.app/.netlify/images?url=%2Factivity-game.jpg&w=900&q=75&fm=webp' 5000
+          check lineup 'https://yachiyo-little-senior.netlify.app/.netlify/images?url=%2Factivity-lineup.jpg&w=900&q=75&fm=webp' 5000
+          check meeting 'https://yachiyo-little-senior.netlify.app/.netlify/images?url=%2Factivity-meeting.jpg&w=900&q=75&fm=webp' 5000
+      - name: Patch only image delivery paths
+        shell: bash
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          p=Path('index.html')
+          s=p.read_text()
+          logo='/.netlify/images?url=%2Fofficial-logo-crisp-final.png&w=800&q=82&fm=webp'
+          # Preload + visible logo images + shine mask. Keep structured-data logo canonical unchanged.
+          replacements=[
+            ('<link as="image" fetchpriority="high" href="./official-logo-crisp-final.png" rel="preload"/>',
+             f'<link as="image" fetchpriority="high" href="{logo}" rel="preload" type="image/webp"/>'),
+            ('-webkit-mask-image:url("./official-logo-crisp-final.png");mask-image:url("./official-logo-crisp-final.png");',
+             f'-webkit-mask-image:url("{logo}");mask-image:url("{logo}");'),
+            ('<div class="first-visit-logo"><img src="./official-logo-crisp-final.png" alt="">',
+             f'<div class="first-visit-logo"><img src="{logo}" data-original-src="./official-logo-crisp-final.png" onerror="if(this.dataset.originalSrc&&this.src!==this.dataset.originalSrc)this.src=this.dataset.originalSrc" alt="">'),
+            ('src="./official-logo-crisp-final.png" style="-webkit-touch-callout:default!important;pointer-events:auto!important"',
+             f'src="{logo}" data-original-src="./official-logo-crisp-final.png" onerror="if(this.dataset.originalSrc&&this.src!==this.dataset.originalSrc)this.src=this.dataset.originalSrc" style="-webkit-touch-callout:default!important;pointer-events:auto!important"'),
+            ('src="./activity-game.jpg"', 'src="/.netlify/images?url=%2Factivity-game.jpg&w=900&q=75&fm=webp" data-original-src="./activity-game.jpg"'),
+            ('src="./activity-lineup.jpg"', 'src="/.netlify/images?url=%2Factivity-lineup.jpg&w=900&q=75&fm=webp" data-original-src="./activity-lineup.jpg"'),
+            ('src="./activity-meeting.jpg"', 'src="/.netlify/images?url=%2Factivity-meeting.jpg&w=900&q=75&fm=webp" data-original-src="./activity-meeting.jpg"'),
+          ]
+          for old,new in replacements:
+            assert s.count(old)==1, f'exact match failed: {old[:80]} count={s.count(old)}'
+            s=s.replace(old,new,1)
+
+          # Make all future same-origin activity photo replacements use Image CDN,
+          # with the original URL as the automatic fallback.
+          old='''  window.__replacePhotoAfterLoad=function(el,src,onReady){
+    if(!el||!src)return;
+    const requestId=(el.__yachiyoPhotoRequestId||0)+1;
+    el.__yachiyoPhotoRequestId=requestId;
+    const preload=new Image();
+    let finished=false;
+    const apply=function(){
+      if(finished||el.__yachiyoPhotoRequestId!==requestId)return;
+      finished=true;
+      el.src=src;
+      if(onReady)onReady();
+    };
+    preload.onload=function(){
+      if(preload.decode)preload.decode().then(apply,apply);
+      else apply();
+    };
+    preload.src=src;
+    if(preload.complete&&preload.naturalWidth)preload.onload();
+  };'''
+          new='''  window.__yachiyoPhotoCdnUrl=function(src,width){
+    if(!src||typeof src!=='string'||src.startsWith('data:')||src.startsWith('blob:'))return src;
+    try{
+      const u=new URL(src,location.href);
+      if(u.origin!==location.origin||u.pathname.startsWith('/.netlify/images'))return src;
+      return '/.netlify/images?url='+encodeURIComponent(u.pathname+u.search)+'&w='+(width||900)+'&q=75&fm=webp';
+    }catch(_){return src}
+  };
+  window.__replacePhotoAfterLoad=function(el,src,onReady){
+    if(!el||!src)return;
+    const requestId=(el.__yachiyoPhotoRequestId||0)+1;
+    el.__yachiyoPhotoRequestId=requestId;
+    const optimized=window.__yachiyoPhotoCdnUrl(src,900);
+    const preload=new Image();
+    let finished=false;
+    const apply=function(chosen){
+      if(finished||el.__yachiyoPhotoRequestId!==requestId)return;
+      finished=true;
+      el.src=chosen;
+      el.dataset.originalSrc=src;
+      el.onerror=function(){
+        if(this.dataset.originalSrc&&this.src!==this.dataset.originalSrc)this.src=this.dataset.originalSrc;
+      };
+      if(onReady)onReady();
+    };
+    preload.onload=function(){
+      const done=()=>apply(optimized);
+      if(preload.decode)preload.decode().then(done,done);
+      else done();
+    };
+    preload.onerror=function(){
+      const fallback=new Image();
+      fallback.onload=function(){apply(src)};
+      fallback.src=src;
+    };
+    preload.src=optimized;
+    if(preload.complete&&preload.naturalWidth)preload.onload();
+  };'''
+          assert s.count(old)==1, 'photo replacement helper changed'
+          s=s.replace(old,new,1)
+
+          p.write_text(s)
+          PY
+          git diff --check
+          test "$(git diff --name-only)" = index.html
+          node --test tests/home-csp.test.mjs
+          node netlify/sync-home-csp.mjs
+          node --test tests/home-csp.test.mjs
+      - name: Publish validated page
+        shell: bash
+        run: |
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add index.html _headers
+          git commit -m 'perf(home): optimize logo and activity image delivery'
+          git push origin HEAD:refs/heads/main
