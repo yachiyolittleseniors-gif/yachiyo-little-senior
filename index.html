@@ -203,6 +203,13 @@ window.__yachiyoHeroImage=Promise.resolve(window.__yachiyoHeroUrl||'/.netlify/fu
       '@media(max-width:600px){' +
       '.header .nav .team-lock-shortcut,.site-header .site-nav .team-lock-shortcut{flex-basis:36px;width:36px;height:36px;border-radius:8px}' +
       '.header .nav .team-lock-shortcut svg,.site-header .site-nav .team-lock-shortcut svg{width:14px;height:14px}' +
+      '}' +
+      '@media(max-width:390px){' +
+      '.header .nav .team-lock-shortcut,.site-header .site-nav .team-lock-shortcut{flex-basis:32px;width:32px;height:32px;border-radius:7px}' +
+      '.header .nav .team-lock-shortcut svg,.site-header .site-nav .team-lock-shortcut svg{width:12px;height:12px}' +
+      '.header .nav,.site-header .site-nav{column-gap:4px!important}' +
+      '.header .brand,.site-header .site-brand{min-width:0!important;overflow:hidden}' +
+      '.header .official-brand-wrap,.site-header .official-brand-wrap{width:min(360px,calc(100vw - 112px))!important;max-width:100%!important}' +
       '}';
     (document.head || document.documentElement).appendChild(style);
   }
