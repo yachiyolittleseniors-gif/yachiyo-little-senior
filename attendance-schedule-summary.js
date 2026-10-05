@@ -708,10 +708,10 @@
 
   function installSimpleNativeCommentDateSelect(){
     const select=document.getElementById('commentEventDate');
-    const label=select?.closest?.('.comment-date-field')||select?.parentElement;
-    if(!select||!label||document.getElementById('attendanceSimpleDateDetail'))return;
+    if(!select)return;
 
-    // iPhone標準のselectをそのまま使う。独自の「他の日程」一覧は作らない。
+    // iPhone標準のselectをそのまま使う。独自一覧は作らない。
+    // 各optionの中に予定名＋対戦相手＋グラウンド（または備考）まで入れる。
     select.style.position='';
     select.style.width='';
     select.style.height='';
@@ -719,10 +719,8 @@
     select.style.pointerEvents='';
     select.style.overflow='';
 
-    const detail=document.createElement('div');
-    detail.id='attendanceSimpleDateDetail';
-    detail.style.cssText='margin:5px 8px 0;color:#7a8594;font-size:11px;font-weight:800;line-height:1.4;overflow-wrap:anywhere;';
-    label.insertAdjacentElement('afterend',detail);
+    // 以前の外出し詳細表示が残っていたら使わない。
+    document.getElementById('attendanceSimpleDateDetail')?.remove();
 
     function apply(){
       const byDate=new Map(scheduleCache.map(item=>[String(item?.date||''),item]));
@@ -731,16 +729,16 @@
         const date=String(option.value||'');
         const event=byDate.get(date);
         if(!event)return;
+
         const grade=nativeGradeLabel(event);
         const title=String(event.title||'').trim();
-        const label=[formatDate(date),grade,title].filter(Boolean).join(' ');
+        const detail=nativeDetailText(event);
+
+        const head=[formatDate(date),grade,title].filter(Boolean).join(' ');
+        const label=detail ? head+'　｜　'+detail : head;
+
         if(option.textContent!==label)option.textContent=label;
       });
-
-      const current=byDate.get(String(select.value||''));
-      const text=current?nativeDetailText(current):'';
-      detail.textContent=text;
-      detail.hidden=!text;
     }
 
     select.addEventListener('change',apply);
