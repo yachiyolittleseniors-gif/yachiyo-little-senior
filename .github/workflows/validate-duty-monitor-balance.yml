@@ -1,0 +1,38 @@
+name: Validate duty monitor balance
+on:
+  push:
+    branches: [ui/duty-monitor-balance-20261005]
+permissions:
+  contents: write
+jobs:
+  validate-and-publish:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 8
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ui/duty-monitor-balance-20261005
+      - name: Validate display-only change
+        shell: bash
+        run: |
+          set -euo pipefail
+          node --check board-duty-roster.js
+          grep -q 'id="dutyMonitorNoLineAlert"' board.html
+          grep -q 'id="dutyMonitorNoLineCount"' board.html
+          ! grep -q 'id="dutyMonitorRejected"' board.html
+          ! grep -q "getElementById('dutyMonitorRejected')" board-duty-roster.js
+          git diff --check origin/main...HEAD
+      - name: Publish validated files
+        shell: bash
+        run: |
+          set -euo pipefail
+          git fetch origin main
+          git checkout main
+          git pull --ff-only origin main
+          git checkout ui/duty-monitor-balance-20261005 -- board.html board-duty-roster.js
+          node --check board-duty-roster.js
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add board.html board-duty-roster.js
+          git commit -m 'ui(duty): rebalance monitor and highlight no-LINE actions'
+          git push origin main
