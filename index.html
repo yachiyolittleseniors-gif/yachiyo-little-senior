@@ -5645,6 +5645,33 @@ body:not(.photo-admin-on) #heroAdminToggle.unified-admin-toggle:focus-visible{co
 })();
 </script>
 
+
+<style id="home-admin-panel-mobile-containment-fix">
+@media(max-width:600px){
+  body.photo-admin-on #heroPhotoAdmin.home-admin-expanded{
+    left:50%!important;
+    right:auto!important;
+    transform:translateX(-50%)!important;
+    width:min(330px,calc(100vw - 24px))!important;
+    max-width:calc(100vw - 24px)!important;
+    min-width:0!important;
+    box-sizing:border-box!important;
+  }
+  body.photo-admin-on #heroPhotoAdmin.home-admin-expanded #homeAdminPanelBody{
+    width:100%!important;
+    max-width:100%!important;
+    min-width:0!important;
+    box-sizing:border-box!important;
+    margin:0!important;
+  }
+  body.photo-admin-on #heroPhotoAdmin.home-admin-expanded .home-admin-action-grid{
+    width:100%!important;
+    min-width:0!important;
+    box-sizing:border-box!important;
+  }
+}
+</style>
+
 </body>
 </html>
 
