@@ -1,0 +1,59 @@
+name: Hero Image CDN safe rollout
+on:
+  push:
+    branches: [perf/hero-image-cdn-20261005]
+    paths: [.github/workflows/hero-image-cdn-safe.yml]
+permissions:
+  contents: write
+jobs:
+  rollout:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 8
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: main
+      - name: Preflight Netlify Image CDN against current live hero
+        run: |
+          set -euo pipefail
+          SRC='/.netlify/functions/site-data?section=hero&current=1'
+          ENC=$(python3 -c 'import urllib.parse,sys;print(urllib.parse.quote(sys.argv[1],safe=""))' "$SRC")
+          URL="https://yachiyo-little-senior.netlify.app/.netlify/images?url=$ENC&w=1400&q=72&fm=webp"
+          code=$(curl -L -sS -o /tmp/hero.webp -w '%{http_code}' "$URL")
+          test "$code" = "200"
+          file /tmp/hero.webp | grep -qi 'webp'
+          test $(wc -c < /tmp/hero.webp) -gt 10000
+          echo "Image CDN preflight OK: $(wc -c < /tmp/hero.webp) bytes"
+      - name: Apply exact scoped bootstrap change
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          p=Path('netlify/functions/site-data.mjs')
+          s=p.read_text()
+          old='''        const heroUrl = "/.netlify/functions/site-data?section=hero&current=1" + (version ? "&v=" + encodeURIComponent(version) : "");
+          const bootstrapScript =
+            "(()=>{const v=" + JSON.stringify(version) +
+            ",u=" + JSON.stringify(heroUrl) +
+            ";window.__yachiyoHeroVersion=v;window.__yachiyoHeroUrl=u;" +'''
+          new='''        const heroSourceUrl = "/.netlify/functions/site-data?section=hero&current=1" + (version ? "&v=" + encodeURIComponent(version) : "");
+        const heroUrl = "/.netlify/images?url=" + encodeURIComponent(heroSourceUrl) + "&w=1400&q=72&fm=webp";
+          const bootstrapScript =
+            "(()=>{const v=" + JSON.stringify(version) +
+            ",u=" + JSON.stringify(heroUrl) +
+            ",s=" + JSON.stringify(heroSourceUrl) +
+            ";window.__yachiyoHeroVersion=v;window.__yachiyoHeroUrl=u;window.__yachiyoHeroSourceUrl=s;" +'''
+          assert s.count(old)==1, 'bootstrap source changed; refusing to patch'
+          s=s.replace(old,new,1)
+          p.write_text(s)
+          PY
+          node --check netlify/functions/site-data.mjs
+          git diff --check
+          test "$(git diff --name-only)" = "netlify/functions/site-data.mjs"
+          node --test tests/hero-bootstrap-cache.test.mjs tests/home-csp.test.mjs
+      - name: Commit to main
+        run: |
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add netlify/functions/site-data.mjs
+          git commit -m 'perf(hero): serve LCP image through Netlify Image CDN'
+          git push origin HEAD:refs/heads/main
