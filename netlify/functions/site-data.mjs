@@ -913,8 +913,9 @@ export default async (request, context) => {
           ",u=" + JSON.stringify(heroUrl) +
           ",s=" + JSON.stringify(heroSourceUrl) +
           ";window.__yachiyoHeroVersion=v;window.__yachiyoHeroSourceUrl=s;" +
-          "if(window.__yachiyoHeroRequest){window.__yachiyoHeroRequest.url=s;window.__yachiyoHeroRequest.version=v;}" +
-          "if(!window.__yachiyoHeroInitialUrl){window.__yachiyoHeroUrl=u;document.documentElement.style.setProperty('--hero-photo','url(\\\"'+u+'\\\")');if(v){const l=document.createElement('link');l.rel='preload';l.as='image';l.href=u;l.fetchPriority='high';document.head.appendChild(l);}}})();";
+          "if(typeof window.__yachiyoOnHeroBootstrap==='function'){window.__yachiyoOnHeroBootstrap(v,u,s);}else{" +
+          "window.__yachiyoHeroUrl=u;if(window.__yachiyoHeroRequest){window.__yachiyoHeroRequest.url=s;window.__yachiyoHeroRequest.version=v;}" +
+          "if(!window.__yachiyoHeroInitialUrl){document.documentElement.style.setProperty('--hero-photo','url(\\\"'+u+'\\\")');if(v){const l=document.createElement('link');l.rel='preload';l.as='image';l.href=u;l.fetchPriority='high';document.head.appendChild(l);}}}})();";
         return new Response(bootstrapScript, {
           status: 200,
           headers: {
