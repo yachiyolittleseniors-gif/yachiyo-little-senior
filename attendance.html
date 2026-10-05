@@ -659,7 +659,26 @@ function saveAnswer(ev){
 }
 window.addEventListener('beforeunload',event=>{if(pendingAnswers.size){event.preventDefault();event.returnValue=''}});
 
-$('#commentSave').onclick=async()=>{const escortGrade=selectedEscortGrade,text=$('#commentText').value.trim()||(escortGrade?escortGrade+'年生に帯同します。':''),memberId=selectedMember,eventDate=$('#commentEventDate').value;if(!memberId||!text||!eventDate||savingMembers.has(memberId))return;savingMembers.add(memberId);$('#syncText').textContent='保存中…';render();try{const j=await api('POST',{action:'comment',memberId,text,eventDate,escortGrade});data=normalize(j.data);$('#commentText').value='';$('#syncText').textContent='コメント保存済み'}catch{showError('コメントを保存できませんでした。')}finally{savingMembers.delete(memberId);render()}};
+function findMismatchedCommentDate(text,eventDate){
+  const selected=String(eventDate||'').match(/^(\d{4})-(\d{2})-(\d{2})$/);
+  if(!selected)return '';
+  const selectedYear=Number(selected[1]),selectedMonth=Number(selected[2]),selectedDay=Number(selected[3]);
+  const found=[];
+  const add=(year,month,day,label)=>{
+    year=year?Number(year):null;month=Number(month);day=Number(day);
+    if(month<1||month>12||day<1||day>31)return;
+    const checkYear=year||selectedYear;
+    const d=new Date(checkYear,month-1,day);
+    if(d.getFullYear()!==checkYear||d.getMonth()!==month-1||d.getDate()!==day)return;
+    found.push({year,month,day,label});
+  };
+  const source=String(text||'');
+  source.replace(/(\d{4})\s*[\/年]\s*(\d{1,2})\s*[\/月]\s*(\d{1,2})\s*日?/g,(m,y,mo,d)=>{add(y,mo,d,m);return m});
+  source.replace(/(?<!\d)(\d{1,2})\s*[\/月]\s*(\d{1,2})\s*日?(?!\d)/g,(m,mo,d)=>{add(null,mo,d,m);return m});
+  const mismatch=found.find(x=>(x.year&&x.year!==selectedYear)||x.month!==selectedMonth||x.day!==selectedDay);
+  return mismatch?mismatch.label:'';
+}
+$('#commentSave').onclick=async()=>{const escortGrade=selectedEscortGrade,rawText=$('#commentText').value.trim(),text=rawText||(escortGrade?escortGrade+'年生に帯同します。':''),memberId=selectedMember,eventDate=$('#commentEventDate').value;if(!memberId||!text||!eventDate||savingMembers.has(memberId))return;const mismatch=findMismatchedCommentDate(rawText,eventDate);if(mismatch){const message='対象日と異なる日付（'+mismatch+'）がコメントに含まれています。\n複数日分は、対象日を切り替えて日付ごとに入力してください。';showError(message.replace('\n',' '));alert(message);return}savingMembers.add(memberId);$('#syncText').textContent='保存中…';render();try{const j=await api('POST',{action:'comment',memberId,text,eventDate,escortGrade});data=normalize(j.data);$('#commentText').value='';$('#syncText').textContent='コメント保存済み'}catch{showError('コメントを保存できませんでした。')}finally{savingMembers.delete(memberId);render()}};
 $('#editCancel').onclick=()=>{if(pendingAnswers.size){showAnswerWaitNotice();return;}selectedMember='';render()};
 function commentDateValue(comment){if(comment.eventDate){const value=new Date(comment.eventDate+'T00:00:00').getTime();if(Number.isFinite(value))return value}const match=String(comment.text||'').match(/(\d{1,2})\s*(?:\/|月)\s*(\d{1,2})(?:日)?/);if(match){const now=new Date(),dates=[-1,0,1].map(offset=>new Date(now.getFullYear()+offset,Number(match[1])-1,Number(match[2])).getTime());return dates.sort((a,b)=>Math.abs(a-now)-Math.abs(b-now))[0]}return new Date(comment.updatedAt||0).getTime()||0}
 function sortedComments(){const actualComments=new Set(data.comments.filter(comment=>comment&&!comment.escortSetting).map(comment=>String(comment.memberId)+'|'+String(comment.eventDate||'')));return [...data.comments].filter(comment=>comment&&(comment.text||comment.upperGrade)&&(!comment.escortSetting||!actualComments.has(String(comment.memberId)+'|'+String(comment.eventDate||'')))).sort((a,b)=>commentDateValue(b)-commentDateValue(a)||new Date(b.updatedAt||0)-new Date(a.updatedAt||0))}
