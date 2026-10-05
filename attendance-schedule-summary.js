@@ -683,7 +683,52 @@
     setTimeout(syncButton,0);
   }
 
-  if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',installInlineCommentDatePicker,{once:true});
-  else installInlineCommentDatePicker();
+
+  function installSimpleNativeCommentDateSelect(){
+    const select=document.getElementById('commentEventDate');
+    const label=select?.closest?.('.comment-date-field')||select?.parentElement;
+    if(!select||!label||document.getElementById('attendanceSimpleDateDetail'))return;
+
+    // iPhone標準のselectをそのまま使う。独自の「他の日程」一覧は作らない。
+    select.style.position='';
+    select.style.width='';
+    select.style.height='';
+    select.style.opacity='';
+    select.style.pointerEvents='';
+    select.style.overflow='';
+
+    const detail=document.createElement('div');
+    detail.id='attendanceSimpleDateDetail';
+    detail.style.cssText='margin:5px 8px 0;color:#7a8594;font-size:11px;font-weight:800;line-height:1.4;overflow-wrap:anywhere;';
+    label.insertAdjacentElement('afterend',detail);
+
+    function apply(){
+      const byDate=new Map(scheduleCache.map(item=>[String(item?.date||''),item]));
+
+      Array.from(select.options).forEach(option=>{
+        const date=String(option.value||'');
+        const event=byDate.get(date);
+        if(!event)return;
+        const grade=nativeGradeLabel(event);
+        const title=String(event.title||'').trim();
+        option.textContent=[formatDate(date),grade,title].filter(Boolean).join(' ');
+      });
+
+      const current=byDate.get(String(select.value||''));
+      const text=current?nativeDetailText(current):'';
+      detail.textContent=text;
+      detail.hidden=!text;
+    }
+
+    select.addEventListener('change',apply);
+    const observer=new MutationObserver(()=>queueMicrotask(apply));
+    observer.observe(select,{childList:true,subtree:true});
+
+    loadSchedule().finally(apply);
+    setTimeout(apply,0);
+  }
+
+  if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',installSimpleNativeCommentDateSelect,{once:true});
+  else installSimpleNativeCommentDateSelect();
 
 })();
