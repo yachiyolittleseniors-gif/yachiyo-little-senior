@@ -5526,10 +5526,6 @@ body:not(.photo-admin-on) #heroAdminToggle.unified-admin-toggle:focus-visible{co
     grid-template-columns:repeat(2,minmax(0,1fr));
     gap:8px;
   }
-  .home-admin-action-grid > #heroPhotoEdit{
-    grid-column:1 / -1;
-  }
-
   #homeAdminPanelBody #heroPhotoChange,
   #homeAdminPanelBody #heroAnnouncementEdit,
   #homeAdminPanelBody #heroPhotoEdit{
@@ -5559,27 +5555,30 @@ body:not(.photo-admin-on) #heroAdminToggle.unified-admin-toggle:focus-visible{co
   #homeAdminPanelBody #heroOverlayControl{
     box-sizing:border-box!important;
     width:100%!important;
+    min-width:0!important;
     min-height:42px!important;
-    margin:10px 0 0!important;
-    padding:9px 10px!important;
+    margin:0!important;
+    padding:8px 9px!important;
     display:flex!important;
     align-items:center!important;
-    justify-content:space-between!important;
-    gap:10px!important;
+    justify-content:center!important;
+    gap:7px!important;
     border:1px solid rgba(255,255,255,.12)!important;
     border-radius:11px!important;
     background:rgba(255,255,255,.035)!important;
     color:#d8dee7!important;
     -webkit-text-fill-color:#d8dee7!important;
     box-shadow:none!important;
-    font-size:11.5px!important;
+    font-size:10.5px!important;
     font-weight:800!important;
-    white-space:normal!important;
+    line-height:1.2!important;
+    text-align:center!important;
+    white-space:nowrap!important;
   }
   #homeAdminPanelBody #heroOverlayControl input{
-    flex:0 0 20px!important;
-    width:20px!important;
-    height:20px!important;
+    flex:0 0 18px!important;
+    width:18px!important;
+    height:18px!important;
     margin:0!important;
   }
 
@@ -5622,10 +5621,9 @@ body:not(.photo-admin-on) #heroAdminToggle.unified-admin-toggle:focus-visible{co
 
     const grid=document.createElement('div');
     grid.className='home-admin-action-grid';
-    [photo,notice,edit].forEach(function(el){if(el)grid.appendChild(el)});
+    [photo,notice,edit,overlay].forEach(function(el){if(el)grid.appendChild(el)});
 
     body.append(head,grid);
-    if(overlay)body.appendChild(overlay);
 
     admin.replaceChildren(quick,body,toggle);
 
