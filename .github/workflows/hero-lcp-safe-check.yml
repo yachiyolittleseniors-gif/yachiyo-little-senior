@@ -1,0 +1,27 @@
+name: Hero LCP safe check
+on:
+  push:
+    branches:
+      - fix/hero-lcp-safe-20261005
+    paths:
+      - .github/workflows/hero-lcp-safe-check.yml
+permissions:
+  contents: read
+jobs:
+  inspect:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - name: Existing regression checks
+        run: node --test tests/home-csp.test.mjs
+      - name: Export repository text for local regression testing
+        run: |
+          mkdir -p /tmp/hero-lcp-source
+          git archive HEAD | tar -x -C /tmp/hero-lcp-source
+      - uses: actions/upload-artifact@v4
+        with:
+          name: hero-lcp-source
+          path: /tmp/hero-lcp-source
+          retention-days: 1
+          include-hidden-files: true
