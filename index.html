@@ -5988,6 +5988,7 @@ body:not(.photo-admin-on) #heroAdminToggle.unified-admin-toggle:focus-visible{co
     const notice=document.getElementById('heroAnnouncementEdit');
     const edit=document.getElementById('heroPhotoEdit');
     const overlay=document.getElementById('heroOverlayControl');
+    const photoInput=document.getElementById('heroPhotoInput');
     if(!admin||!toggle||admin.dataset.collapsibleReady==='1')return;
     admin.dataset.collapsibleReady='1';
 
@@ -6020,6 +6021,7 @@ body:not(.photo-admin-on) #heroAdminToggle.unified-admin-toggle:focus-visible{co
     body.append(head,grid);
 
     admin.replaceChildren(quick,body,toggle);
+    if(photoInput)admin.appendChild(photoInput);
 
     function setOpen(open){
       admin.classList.toggle('home-admin-expanded',open);
