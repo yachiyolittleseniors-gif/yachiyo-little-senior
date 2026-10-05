@@ -751,7 +751,7 @@
     setTimeout(apply,0);
   }
 
-  if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',installInlineCommentDatePicker,{once:true});
-  else installInlineCommentDatePicker();
+  if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',installSimpleNativeCommentDateSelect,{once:true});
+  else installSimpleNativeCommentDateSelect();
 
 })();
