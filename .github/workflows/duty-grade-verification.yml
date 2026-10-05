@@ -19,22 +19,52 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: '22'
-      - name: Integrate the adapters and check syntax
-        run: node netlify/prepare-duty-grades.mjs
-      - name: Test duty-grade behavior and existing CSP checks
-        run: node --test tests/duty-grades.test.mjs tests/home-csp.test.mjs
-      - name: Keep the verified adapters as the canonical repository sources
+      - name: Preserve household identity across parent-name and roster-name formats
         run: |
           node --input-type=module <<'JS'
           import {readFileSync,writeFileSync} from 'node:fs';
-          const file='netlify.toml';
-          const source=readFileSync(file,'utf8');
-          writeFileSync(file,source.replace('node netlify/prepare-duty-grades.mjs && ',''));
+          function edit(file,oldText,newText,count=1){
+            let text=readFileSync(file,'utf8');
+            if(text.includes(newText))return;
+            if(text.split(oldText).length-1!==count)throw new Error('Unexpected source for '+file+': '+oldText);
+            writeFileSync(file,text.split(oldText).join(newText));
+          }
+          edit('board-duty-roster.js',
+            'personOptionValue(x)!==excludeValue',
+            'window.DutyRosterData.nameKey(personOptionValue(x))!==window.DutyRosterData.nameKey(excludeValue)');
+          edit('netlify/functions/duty-change-requests.mjs',
+            'fromGrade===toGrade&&fromName===toName',
+            'fromGrade===toGrade&&rosterNameKey(fromName)===rosterNameKey(toName)',2);
+          const tests='tests/duty-grades.test.mjs';
+          let text=readFileSync(tests,'utf8');
+          if(!text.includes('same household is excluded despite parenthesized roster names')){
+            text+=`
+          test('same household is excluded despite parenthesized roster names',{skip:!deployed},()=>{
+            const source=read('board-duty-roster.js');
+            const key=v=>String(v||'').normalize('NFKC').replace(/[()\\s]/g,'');
+            const context={window:{DutyRosterData:{nameKey:key}},cleanName:key,escapeHtml:v=>String(v||''),octoberDisplayName:v=>v};
+            vm.runInNewContext(section(source,'  function personOptionValue(','  function dutySlotValue('),context);
+            const options=context.requestPersonOptions('2027-07-01',[{grade:'1',name:'石川晃'},{grade:'1',name:'石川圭'}],'1|石川（晃）');
+            assert(!options.includes('value="1|石川晃"'));assert(options.includes('value="1|石川圭"'));
+          });
+          test('submit and LINE-resume submit both reject aliases of the same household',{skip:!deployed},()=>{
+            const source=read('netlify/functions/duty-change-requests.mjs');
+            assert.equal(source.split('fromGrade===toGrade&&rosterNameKey(fromName)===rosterNameKey(toName)').length-1,2);
+          });
+          `;
+            writeFileSync(tests,text);
+          }
           JS
+          node --check board-duty-roster.js
+          node --check netlify/functions/duty-change-requests.mjs
+      - name: Test duty-grade behavior and existing CSP checks
+        run: node --test tests/duty-grades.test.mjs tests/home-csp.test.mjs
+      - name: Commit only the verified household corrections to the isolated branch
+        run: |
           git diff --check
-          git add board.html board-duty-roster.js board-duty-auto-test.js netlify/functions/site-data.mjs netlify/functions/duty-change-requests.mjs duty-grade-policy.js netlify.toml
+          git add board-duty-roster.js netlify/functions/duty-change-requests.mjs tests/duty-grades.test.mjs
           if git diff --cached --quiet; then exit 0; fi
           git config user.name 'github-actions[bot]'
           git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
-          git commit -m 'Commit verified month-specific duty-grade adapters'
+          git commit -m 'Keep household identity consistent in duty replacement selections'
           git push origin HEAD:fix/duty-month-grades-v1-20261005
