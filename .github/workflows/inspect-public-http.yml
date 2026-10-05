@@ -49,3 +49,27 @@ jobs:
           grep -Eo '<title>[^<]+</title>|<h1[^>]*>[^<]+</h1>|ページが見つかりません|八千代リトルシニア【公式】' /tmp/dom.html | head -20 || true
           echo "--- 404 markers count ---"
           grep -c 'ページが見つかりません' /tmp/dom.html || true
+
+      - name: Run Lighthouse and inspect final URLs
+        shell: bash
+        run: |
+          set -euo pipefail
+          npm install -g lighthouse@latest >/dev/null 2>&1
+          lighthouse 'https://yachiyo-little-senior.netlify.app/'             --output=json             --output-path=/tmp/lhr.json             --chrome-flags='--headless=new --no-sandbox --disable-gpu'             --only-categories=performance,seo             --quiet
+          node - <<'NODE'
+          const fs=require('fs');
+          const r=JSON.parse(fs.readFileSync('/tmp/lhr.json','utf8'));
+          console.log(JSON.stringify({
+            requestedUrl:r.requestedUrl,
+            mainDocumentUrl:r.mainDocumentUrl,
+            finalDisplayedUrl:r.finalDisplayedUrl,
+            finalUrl:r.finalUrl,
+            fetchTime:r.fetchTime,
+            runtimeError:r.runtimeError,
+            performance:r.categories?.performance?.score,
+            seo:r.categories?.seo?.score,
+            finalScreenshot:r.audits?.['final-screenshot']?.details?.data ? 'present' : 'missing',
+            lcpNode:r.audits?.['largest-contentful-paint-element']?.details?.items?.[0]?.node?.snippet || null
+          },null,2));
+          NODE
+
