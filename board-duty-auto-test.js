@@ -1,3 +1,4 @@
+/* duty-month-grades-integration:20261005-1 */
 (function(){'use strict';
 function init(){
   var prev=document.getElementById('dutyAutoPrevMonth'),next=document.getElementById('dutyAutoNextMonth'),label=document.getElementById('dutyAutoMonthLabel'),create=document.getElementById('dutyAutoTestCreate'),preview=document.getElementById('dutyAutoTestPreview');
@@ -14,6 +15,17 @@ function init(){
   }catch(e){}
   function paint(){label.textContent=target.getFullYear()+'年 '+(target.getMonth()+1)+'月';}
   paint();
+  var gradeField=document.createElement('label');gradeField.className='duty-target-grade-field';
+  gradeField.textContent='対象学年';
+  var gradeSelect=document.createElement('select');gradeSelect.id='dutyAutoTargetGrades';
+  gradeSelect.add(new Option('登録済み当番表に合わせる','auto'));
+  gradeSelect.add(new Option('1・2年（2学年分）','2,1'));
+  gradeSelect.add(new Option('1・2・3年（3学年分）','3,2,1'));
+  gradeField.appendChild(gradeSelect);create.parentNode.insertBefore(gradeField,create);
+  var gradeNote=document.createElement('p');gradeNote.className='duty-target-grade-note';
+  gradeNote.textContent='切替月は固定しません。この案で確定した月から、変更後の候補もこの対象学年になります。';
+  create.parentNode.insertBefore(gradeNote,create);
+  gradeSelect.addEventListener('change',function(){preview.replaceChildren();preview.hidden=true;});
   prev.onclick=function(e){e.preventDefault();target=new Date(target.getFullYear(),target.getMonth()-1,1);paint();};
   next.onclick=function(e){e.preventDefault();target=new Date(target.getFullYear(),target.getMonth()+1,1);paint();};
   function familyKey(v){return String(v||'').normalize('NFKC').trim().split(/[\s　（(]/)[0].replace(/[父母]$/,'');}
@@ -93,7 +105,7 @@ function init(){
       var groups=collectFamilies(members),pc={'1':0,'2':0,'3':0};
       players.forEach(function(p){var m=String(p?.grade||'').match(/^([123])年/);if(m)pc[m[1]]++;});
       disambiguateDuplicateFamilies(groups);
-      var y=target.getFullYear(),mo=target.getMonth()+1,active=mo>=6?['2','1']:['3','2','1'],bad=active.filter(g=>groups[g].size!==pc[g]);
+      var y=target.getFullYear(),mo=target.getMonth()+1,active=(gradeSelect.value==='auto'?window.getDutyRosterGradesForMonth(y,mo):gradeSelect.value.split(',')).map(String),bad=active.filter(g=>groups[g].size!==pc[g]);
       if(bad.length){preview.innerHTML='<div class="duty-simple-error"><b>人数が一致しません</b><br>'+bad.map(g=>g+'年：選手'+pc[g]+'名／家庭'+groups[g].size+'家庭').join('<br>')+'</div>';return;}
       // 保護者出欠の登録名を正として使用。末尾の「父／母」と表示用の括弧だけ外し、中の識別文字は残す。
       var lists={};active.forEach(function(g){
@@ -113,18 +125,17 @@ function init(){
       // 保存画像はA4横（297:210）に近い比率で作成し、印刷時の余白を抑える。
       var canvas=document.createElement('canvas');canvas.width=1400;canvas.height=990;var ctx=canvas.getContext('2d');if(!ctx)throw new Error('画像を生成できませんでした。');
       ctx.fillStyle='#fff';ctx.fillRect(0,0,canvas.width,canvas.height);
-      var totalW=1310,left=Math.round((canvas.width-totalW)/2),top=30,monthW=125,dateW=90,dowW=90,dataW=(totalW-monthW-dateW-dowW)/4,headerH=56;
+      var totalW=1310,left=Math.round((canvas.width-totalW)/2),top=30,monthW=125,dateW=90,dowW=90,dataW=(totalW-monthW-dateW-dowW)/(active.length*2),headerH=56;
       var x=[left,left+monthW,left+monthW+dateW,left+monthW+dateW+dowW];
-      for(var ci=0;ci<4;ci++)x.push(x[3]+dataW*(ci+1));
+      for(var ci=0;ci<active.length*2;ci++)x.push(x[3]+dataW*(ci+1));
       ctx.strokeStyle='#20252b';ctx.lineWidth=2;
       ctx.fillStyle='#079b51';ctx.fillRect(left,top,totalW,headerH);
       ctx.strokeRect(left,top,totalW,headerH);
       // ヘッダーも本文と同じ列境界で罫線を入れる。
-      [x[1],x[2],x[3],x[5]].forEach(function(v){ctx.beginPath();ctx.moveTo(v,top);ctx.lineTo(v,top+headerH);ctx.stroke();});
+      [x[1],x[2],x[3],...active.slice(1).map(function(_,i){return x[5+i*2];})].forEach(function(v){ctx.beginPath();ctx.moveTo(v,top);ctx.lineTo(v,top+headerH);ctx.stroke();});
       ctx.fillStyle='#071426';ctx.font='700 26px sans-serif';ctx.textAlign='center';ctx.textBaseline='middle';
       ctx.fillText(y+'年',left+monthW/2,top+headerH/2);ctx.fillText('日付',x[1]+dateW/2,top+headerH/2);ctx.fillText('曜日',x[2]+dowW/2,top+headerH/2);
-      var g1=active[0]||'2',g2=active[1]||'1';
-      ctx.fillText(g1+'年',(x[3]+x[5])/2,top+headerH/2);ctx.fillText(g2+'年',(x[5]+x[7])/2,top+headerH/2);
+      active.forEach(function(g,i){ctx.fillText(g+'年',(x[3+i*2]+x[5+i*2])/2,top+headerH/2);});
       // 月ごとの行数に合わせて行高を自動調整。注記まで含めてA4横1枚に自然に収める。
       var noteBlockH=215,bottomMargin=25,availableRowsH=canvas.height-top-headerH-noteBlockH-bottomMargin;
       var rowTop=top+headerH,rowH=Math.max(36,Math.min(60,Math.floor(availableRowsH/Math.max(rows.length,1)))),monthBottom=rowTop+rows.length*rowH;
@@ -132,12 +143,12 @@ function init(){
       ctx.fillStyle='#071426';ctx.font='700 30px sans-serif';ctx.fillText(mo+'月',left+monthW/2,rowTop+rows.length*rowH/2);
       rows.forEach(function(r,ri){
         var yy=rowTop+ri*rowH;ctx.fillStyle=satoyama.has(r[0])?'#fff200':'#fff';ctx.fillRect(x[1],yy,totalW-monthW,rowH);
-        for(var cidx=1;cidx<7;cidx++)ctx.strokeRect(x[cidx],yy,x[cidx+1]-x[cidx],rowH);
+        for(var cidx=1;cidx<3+active.length*2;cidx++)ctx.strokeRect(x[cidx],yy,x[cidx+1]-x[cidx],rowH);
         ctx.font='700 '+Math.max(19,Math.min(25,Math.floor(rowH*.42)))+'px sans-serif';ctx.textAlign='center';ctx.textBaseline='middle';
         r.forEach(function(t,i){
           if(i===0){ctx.fillStyle=r[1]==='日'?'#c73535':r[1]==='土'?'#2c67a8':'#071426';ctx.fillText(String(t),x[1]+dateW/2,yy+rowH/2);}
           else if(i===1){ctx.fillStyle=t==='日'?'#c73535':t==='土'?'#2c67a8':'#071426';ctx.fillText(String(t),x[2]+dowW/2,yy+rowH/2);}
-          else{ctx.fillStyle='#071426';var cx=x[i+1]+(x[i+2]-x[i+1])/2;ctx.fillText(String(t),cx,yy+rowH/2);}
+          else{ctx.fillStyle='#071426';var cx=x[i+1]+(x[i+2]-x[i+1])/2;if(active.length===3)ctx.fillText(String(t),cx,yy+rowH/2,dataW-12);else ctx.fillText(String(t),cx,yy+rowH/2);}
         });
       });
       var noteY=monthBottom+28,tokenMode=(requestSettings&&requestSettings.partnerApprovalEnabled===true&&(y>2026||(y===2026&&mo>=11)));ctx.textAlign='left';ctx.textBaseline='alphabetic';ctx.fillStyle='#071426';ctx.font='700 20px sans-serif';

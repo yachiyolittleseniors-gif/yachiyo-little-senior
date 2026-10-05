@@ -1,3 +1,5 @@
+/* duty-month-grades-integration:20261005-1 */
+import DutyGradePolicy from "../duty-grade-policy.cjs";
 import { getStore } from "@netlify/blobs";
 import { verifyAccessPassword } from "./_access-password.mjs";
 import { boardSessionIsValid } from "./_board-session.mjs";
@@ -425,7 +427,7 @@ function requestMatchesRoster(roster,date,fromGrade,fromName){
     const grades=Array.isArray(table.grades)&&table.grades.length?table.grades:[2,1];
     return table.rows.some(row=>{
       if(!Array.isArray(row)||Number(String(row[0]||"").replace(/\D/g,""))!==day)return false;
-      return row.slice(2,6).some((name,index)=>{
+      return row.slice(2,2+grades.length*2).some((name,index)=>{
         const grade=String(grades[Math.floor(index/2)]);
         if(grade!==String(fromGrade))return false;
         let current=rosterCanonicalName(name);
@@ -473,6 +475,9 @@ async function applyRequestToRoster(store,item){
     return{ok:false,error:"対象月の当番表が登録されていないか、変更前の担当者が一致しません。"};
   }
   const isSwap=item.requestType==="swap";
+  if(!isSwap&&!DutyGradePolicy.gradesForDate(roster?.images,item.date,rosterTableForImage).includes(Number(item.toGrade))){
+    return{ok:false,error:"対象月の当番表の対象学年が変わっています。変更後の学年を確認してください。"};
+  }
   if(isSwap){
     if(!validDate(item.swapDate)||!validGrade(item.swapGrade)||!cleanName(item.swapName)){
       return{ok:false,error:"入れ替える相手のお当番日を確認できません。"};
@@ -558,7 +563,12 @@ export default async (request,context)=>{
       const requesterHash=session?await lineIdentityHash(session.sub):"";
       const requesterDeviceToken=String(request.headers.get("x-duty-requester-device")||"").trim();
       const requesterDeviceHash=requesterDeviceToken?await sha256(requesterDeviceToken):"";
-      return json({ok:true,...publicData(data,requesterHash,requesterDeviceHash)});
+      let replacementFamilies=null;
+      try{
+        const attendance=await store.get("content/attendance.json",{type:"json",consistency:"strong"});
+        if(Array.isArray(attendance?.members))replacementFamilies=DutyGradePolicy.collectFamilies(attendance.members).map(({grade,name})=>({grade,name}));
+      }catch{}
+      return json({ok:true,...publicData(data,requesterHash,requesterDeviceHash),replacementFamilies});
     }
     if(request.method!=="POST")return json({error:"method not allowed"},405);
 
@@ -591,6 +601,9 @@ export default async (request,context)=>{
       const roster=await store.get(LEGACY_KEY,{type:"json",consistency:"strong"});
       if(!requestMatchesRoster(roster,date,fromGrade,fromName)){
         return json({error:"変更前の名前が現在の当番表と一致しません。当番表を確認してもう一度申請してください。"},400);
+      }
+      if(requestType==="replace"&&!DutyGradePolicy.gradesForDate(roster?.images,date,rosterTableForImage).includes(Number(toGrade))){
+        return json({error:"変更後の学年が対象月の当番表と一致しません。対象月を確認して選び直してください。"},400);
       }
       if(requestType==="swap"&&!requestMatchesRoster(roster,swapDate,swapGrade,swapName)){
         return json({error:"入れ替える相手のお当番日と担当者が一致しません。"},400);
@@ -726,6 +739,9 @@ export default async (request,context)=>{
       const roster=await store.get(LEGACY_KEY,{type:"json",consistency:"strong"});
       if(!requestMatchesRoster(roster,date,fromGrade,fromName)){
         return json({error:"変更前の名前が現在の当番表と一致しません。当番表を確認してもう一度選択してください。"},400);
+      }
+      if(requestType==="replace"&&!DutyGradePolicy.gradesForDate(roster?.images,date,rosterTableForImage).includes(Number(toGrade))){
+        return json({error:"変更後の学年が対象月の当番表と一致しません。対象月を確認して選び直してください。"},400);
       }
       if(requestType==="swap"&&!requestMatchesRoster(roster,swapDate,swapGrade,swapName)){
         return json({error:"入れ替える相手のお当番日と担当者が一致しません。"},400);

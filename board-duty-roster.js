@@ -1,3 +1,4 @@
+/* duty-month-grades-integration:20261005-1 */
 (function(){
   const API='/.netlify/functions/site-data?section=duty-roster';
   const REQUEST_API='/.netlify/functions/duty-change-requests';
@@ -31,6 +32,11 @@
   const changeAdminList=document.getElementById('dutyChangeAdminList');
   const CACHE_KEY='yachiyoDutyRosterCacheV2';
   let images=[];
+  let replacementFamilies=null;
+  let replacementFamiliesFailed=false;
+  window.getDutyRosterGradesForMonth=function(year,month){
+    return window.DutyGradePolicy.defaultGrades(images,year,month,window.DutyRosterData.tableForImage);
+  };
   let changes=[];
   let parsedChanges=[];
   let requests=[];
@@ -61,7 +67,7 @@
       const table=image.table;if(!table)return;
       const grades=table.grades||[2,1];
       table.rows.forEach(function(row){
-        row.slice(2,6).forEach(function(candidate,index){
+        row.slice(2,2+grades.length*2).forEach(function(candidate,index){
           if(String(grades[Math.floor(index/2)])!==String(grade))return;
           const normalized=cleanName(candidate);
           if(/\([^()]+\)/.test(normalized)&&normalized.replace(/[()]/g,'')===key)matches.add(normalized);
@@ -214,12 +220,12 @@
   function renderTables(){
     tableList.innerHTML=images.filter(function(item){return item.table&&isPublicRosterActive(item)&&canViewRoster(item)}).map(function(item){const table=item.table;const grades=table.grades||[2,1];
       const rows=table.rows.map(function(row,index){
-        const cells=[appliedCell(table,row,grades[0],0,row[2]),appliedCell(table,row,grades[0],1,row[3]),appliedCell(table,row,grades[1],0,row[4]),appliedCell(table,row,grades[1],1,row[5])];
+        const cells=grades.flatMap(function(grade,group){return [0,1].map(function(column){return appliedCell(table,row,grade,column,row[2+group*2+column]);});});
         const cellMarkup=cells.map(function(cell){const title=cell.changed?' title="変更前：'+escapeHtml(cell.original)+'"':'';return'<td class="'+(cell.changed?'is-changed':'')+'"'+title+'><span>'+escapeHtml(cell.value)+'</span></td>'}).join('');
         return'<tr class="'+(table.activityDays.includes(row[0])?'is-activity':'')+'">'+(index===0?'<th class="duty-month" scope="rowgroup" rowspan="'+table.rows.length+'">'+table.month+'月</th>':'')+'<th scope="row">'+row[0]+'</th><td class="duty-weekday duty-weekday-'+row[1]+'">'+row[1]+'</td>'+cellMarkup+'</tr>';
       }).join('');
       const hasChanges=changes.some(function(item){return item.date.startsWith(table.year+'-'+String(table.month).padStart(2,'0')+'-')});
-      return'<section class="duty-digital-roster" aria-label="'+table.year+'年'+table.month+'月の当番表"><div class="duty-table-scroll"><table><colgroup><col style="width:12%"><col style="width:8%"><col style="width:8%"><col span="4" style="width:18%"></colgroup><thead><tr><th>'+table.year+'年</th><th>日付</th><th>曜日</th><th colspan="2">'+grades[0]+'年生</th><th colspan="2">'+grades[1]+'年生</th></tr></thead><tbody>'+rows+'</tbody></table></div><div class="duty-sheet-note">黄色の日は里山活動日です。駐車場所にご注意ください。'+(hasChanges?'<br>赤字は変更箇所です。':'')+'</div></section>';
+      return'<section class="duty-digital-roster'+(grades.length===3?' has-three-grades':'')+'" aria-label="'+table.year+'年'+table.month+'月の当番表"><div class="duty-table-scroll"><table><colgroup><col style="width:12%"><col style="width:8%"><col style="width:8%"><col span="'+(grades.length*2)+'" style="width:'+(72/(grades.length*2))+'%"></colgroup><thead><tr><th>'+table.year+'年</th><th>日付</th><th>曜日</th>'+grades.map(function(grade){return'<th colspan="2">'+grade+'年生</th>';}).join('')+'</tr></thead><tbody>'+rows+'</tbody></table></div><div class="duty-sheet-note">黄色の日は里山活動日です。駐車場所にご注意ください。'+(hasChanges?'<br>赤字は変更箇所です。':'')+'</div></section>';
     }).join('');
   }
 
@@ -427,7 +433,7 @@
       const row=table.rows.find(function(r){return Number(r&&r[0])===day});
       if(!row)return;
       const grades=table.grades||[2,1];
-      row.slice(2,6).forEach(function(name,index){
+      row.slice(2,2+grades.length*2).forEach(function(name,index){
         const clean=cleanName(name);if(!clean)return;
         const grade=String(grades[Math.floor(index/2)]);
         const current=window.DutyRosterData.applyChanges(table,row[0],grade,clean,changes);
@@ -438,38 +444,7 @@
     return Array.from(map.values()).sort(function(a,b){return Number(b.grade)-Number(a.grade)||a.name.localeCompare(b.name,'ja')});
   }
   function rosterReplacementCandidates(date){
-    const map=new Map();
-    const m=/^(\d{4})-(\d{2})-(\d{2})$/.exec(String(date||''));
-    if(!m)return[];
-
-    const selectedYear=Number(m[1]),selectedMonth=Number(m[2]);
-    const previous=new Date(selectedYear,selectedMonth-2,1);
-    const allowedMonths=new Set([
-      selectedYear+'-'+String(selectedMonth).padStart(2,'0'),
-      previous.getFullYear()+'-'+String(previous.getMonth()+1).padStart(2,'0')
-    ]);
-
-    images.forEach(function(image){
-      if(!canViewRoster(image))return;
-      const table=image.table;if(!table)return;
-      const monthKey=Number(table.year)+'-'+String(Number(table.month)).padStart(2,'0');
-      if(!allowedMonths.has(monthKey))return;
-
-      const grades=table.grades||[2,1];
-      table.rows.forEach(function(row){
-        row.slice(2,6).forEach(function(name,index){
-          const clean=cleanName(name);if(!clean)return;
-          const grade=String(grades[Math.floor(index/2)]);
-          const current=window.DutyRosterData.applyChanges(table,row[0],grade,clean,changes);
-          const currentName=cleanName(current&&current.value)||clean;
-          map.set(grade+'|'+currentName,{grade:grade,name:currentName});
-        });
-      });
-    });
-
-    return Array.from(map.values()).sort(function(a,b){
-      return Number(b.grade)-Number(a.grade)||a.name.localeCompare(b.name,'ja');
-    });
+    return window.DutyGradePolicy.replacementCandidates(images,date,replacementFamilies,window.DutyRosterData.tableForImage,canViewRoster);
   }
   function todayYmd(){const d=new Date();return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0')}
   function rosterDates(){const today=todayYmd(),out=[];images.forEach(function(image){if(!canViewRoster(image))return;const table=image.table;if(!table)return;table.rows.forEach(function(row){const date=tableDate(table,row[0]);if(date>=today)out.push({date:date,label:table.year+'年'+table.month+'月'+row[0]+'日（'+row[1]+'）',table:table,row:row})})});return out.sort(function(a,b){return a.date.localeCompare(b.date)})}
@@ -609,6 +584,8 @@
       const body=await response.json();
       if(!Array.isArray(body&&body.requests))throw new Error('invalid data');
       requests=normalizeRequestList(body.requests);
+      replacementFamilies=Array.isArray(body.replacementFamilies)?body.replacementFamilies:null;
+      replacementFamiliesFailed=replacementFamilies===null;
       partnerApprovalEnabled=body.partnerApprovalEnabled===true;
       const approvalToggle=document.getElementById('dutyPartnerApprovalToggle');
       const approvalStatus=document.getElementById('dutyPartnerApprovalStatus');
@@ -722,7 +699,7 @@
       const row=table.rows.find(function(r){return Number(r&&r[0])===day});
       if(!row)return;
       const grades=table.grades||[2,1];
-      row.slice(2,6).forEach(function(name,index){
+      row.slice(2,2+grades.length*2).forEach(function(name,index){
         const original=cleanName(name);if(!original)return;
         const grade=String(grades[Math.floor(index/2)]);
         const applied=window.DutyRosterData.applyChanges(table,row[0],grade,original,changes);
@@ -786,6 +763,9 @@
     const selectedFrom=fromSel.value;
     const toOptions=requestPersonOptions(dateSel.value,rosterReplacementCandidates(dateSel.value),selectedFrom);
     toSel.innerHTML=toOptions;
+    toSel.disabled=!dateSel.value||replacementFamilies===null;
+    if(!dateSel.value)toSel.innerHTML='<option value="">先に変更日を選択してください</option>';
+    else if(replacementFamilies===null)toSel.innerHTML='<option value="">'+(replacementFamiliesFailed?'名簿を取得できません。ページを再読み込みしてください':'保護者名簿を確認中…')+'</option>';
     if(Array.from(toSel.options).some(function(o){return o.value===toValue}))toSel.value=toValue;
   }
   function approvalLineText(item,url){
