@@ -483,19 +483,16 @@
     let text=String(value||'').trim();
     if(!text)return'';
 
-    // 学年別の場所が連結されている場合は、本人の学年に該当する場所だけを先に抜き出す。
-    if(['1','2','3'].includes(String(grade||''))){
-      const chunks=text
-        .split(/(?<=[）)])[ \t]+(?=[^\s])/)
-        .map(item=>item.trim())
-        .filter(Boolean);
-      const own=chunks.find(item=>new RegExp('[（(]'+grade+'年[）)]').test(item));
-      if(own)text=own;
-    }
+    // 八千代東邦グラウンド / 八千代東邦G は「東邦G」に短縮。
+    text=text.replace(/八千代東邦(?:グラウンド|グランド|G)/g,'東邦G');
 
-    // 表示上は八千代東邦グラウンド / 八千代東邦G を「東邦」に統一。
-    text=text.replace(/八千代東邦(?:グラウンド|グランド|G)/g,'東邦');
-    text=text.replace(/[（(][123]年[）)]/g,'').replace(/\s{2,}/g,' ').trim();
+    // 学年別に複数グラウンドが入っている場合は学年表記を残す。
+    // 例：東邦G（2年） 鹿島市シニアG（1年）
+    text=text
+      .replace(/\(([123]年)\)/g,'（$1）')
+      .replace(/\s{2,}/g,' ')
+      .trim();
+
     return text;
   }
 
