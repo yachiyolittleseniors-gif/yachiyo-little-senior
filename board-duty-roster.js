@@ -645,7 +645,9 @@
         return '<div class="duty-request-status-item">'+(item.requestNo?'<b>申請番号 #'+escapeHtml(item.requestNo)+'</b><br>':'')+
           requestSummaryHtml(item)+'<br>'+
           (item.status==='pending'&&item.approvalMode==='family'&&partnerApprovalEnabled&&!requestExpired(item)
-            ?'<span class="duty-request-pending-actions"><button type="button" class="duty-request-resend" data-resend-duty-request="'+escapeHtml(item.id)+'" data-status="pending">'+escapeHtml(requestStatusLabel(item.status,item))+'<small>タップでLINEを再送</small></button>'+(item.requesterCanCancel?'<button type="button" class="duty-request-self-cancel" data-cancel-own-duty-request="'+escapeHtml(item.id)+'">申請を取り消す</button>':'')+'</span>'
+            ?'<span class="duty-request-pending-actions">'+(item.requesterCanCancel
+              ?'<button type="button" class="duty-request-resend" data-resend-duty-request="'+escapeHtml(item.id)+'" data-status="pending">'+escapeHtml(requestStatusLabel(item.status,item))+'<small>タップでLINEを再送</small></button><button type="button" class="duty-request-self-cancel" data-cancel-own-duty-request="'+escapeHtml(item.id)+'">申請を取り消す</button>'
+              :'<b data-status="pending">'+escapeHtml(requestStatusLabel(item.status,item))+'</b>')+'</span>'
             :item.status==='pending'&&item.approvalMode==='admin'
               ?'<span class="duty-request-pending-actions"><b data-status="pending">確認待ち（管理者承認）</b>'+(item.requesterCanCancel?'<button type="button" class="duty-request-self-cancel" data-cancel-own-duty-request="'+escapeHtml(item.id)+'">申請を取り消す</button>':'')+'</span>'
               :'<b data-status="'+escapeHtml(item.status)+'">'+escapeHtml(requestStatusLabel(item.status,item))+'</b>')+
