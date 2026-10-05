@@ -38,7 +38,7 @@ export function integrateBoard(source){
     return window.DutyGradePolicy.replacementCandidates(images,date,replacementFamilies,window.DutyRosterData.tableForImage,canViewRoster);
   }
 `);
-  source=replace(source,'      partnerApprovalEnabled=body.partnerApprovalEnabled===true;',`      replacementFamilies=Array.isArray(body.replacementFamilies)?body.replacementFamilies:null;
+  source=replace(source,'\n      partnerApprovalEnabled=body.partnerApprovalEnabled===true;',`\n      replacementFamilies=Array.isArray(body.replacementFamilies)?body.replacementFamilies:null;
       replacementFamiliesFailed=replacementFamilies===null;
       partnerApprovalEnabled=body.partnerApprovalEnabled===true;`);
   source=replace(source,'    toSel.innerHTML=toOptions;',`    toSel.innerHTML=toOptions;
