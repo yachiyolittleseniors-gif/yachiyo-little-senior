@@ -106,7 +106,7 @@
     return (Array.isArray(items)?items:[]).filter(function(item){
       return item&&/^\d{4}-\d{2}-\d{2}$/.test(String(item.date||''))&&['1','2','3'].includes(String(item.fromGrade||''))&&['1','2','3'].includes(String(item.toGrade||''))&&cleanName(item.fromName)&&cleanName(item.toName);
     }).slice(0,300).map(function(item,index){
-      return{id:String(item.id||('request-'+index)),requestNo:String(item.requestNo||'').slice(0,20),date:String(item.date),fromGrade:String(item.fromGrade),fromName:cleanName(item.fromName),toGrade:String(item.toGrade),toName:cleanName(item.toName),requestType:String(item.requestType||'replace')==='swap'?'swap':'replace',swapDate:String(item.swapDate||''),swapGrade:String(item.swapGrade||''),swapName:cleanName(item.swapName||''),status:['pending','approved','rejected'].includes(String(item.status))?String(item.status):'pending',createdAt:String(item.createdAt||''),updatedAt:String(item.updatedAt||''),approvalExpiresAt:String(item.approvalExpiresAt||''),approvalMode:String(item.approvalMode||'admin')==='family'?'family':'admin',requesterCanCancel:item.requesterCanCancel===true};
+      return{id:String(item.id||('request-'+index)),requestNo:String(item.requestNo||'').slice(0,20),date:String(item.date),fromGrade:String(item.fromGrade),fromName:cleanName(item.fromName),toGrade:String(item.toGrade),toName:cleanName(item.toName),requestType:String(item.requestType||'replace')==='swap'?'swap':'replace',swapDate:String(item.swapDate||''),swapGrade:String(item.swapGrade||''),swapName:cleanName(item.swapName||''),status:['pending','approved','rejected'].includes(String(item.status))?String(item.status):'pending',createdAt:String(item.createdAt||''),updatedAt:String(item.updatedAt||''),approvalExpiresAt:String(item.approvalExpiresAt||''),approvalMode:String(item.approvalMode||'admin')==='family'?'family':'admin',requesterCanCancel:item.requesterCanCancel===true,noLineFallback:item.noLineFallback===true};
     });
   }
 
@@ -497,6 +497,8 @@
     const summary=document.getElementById('dutyMonitorSummary');
     const pending=document.getElementById('dutyMonitorPending');
     const approved=document.getElementById('dutyMonitorApproved');
+    const rejected=document.getElementById('dutyMonitorRejected');
+    const noLine=document.getElementById('dutyMonitorNoLine');
     const issues=document.getElementById('dutyMonitorIssues');
     const issueList=document.getElementById('dutyMonitorIssueList');
     const recent=document.getElementById('dutyMonitorRecent');
@@ -518,8 +520,13 @@
         ?(monitor.issueCount?'申請フローに確認が必要な項目があります。':'申請・LINE認証・承認・当番表反映に異常は見つかっていません。')
         :'承認リンクは未使用です。監視は待機中です。';
     }
+    const localApproved=requests.filter(function(item){return item.status==='approved'}).length;
+    const localRejected=requests.filter(function(item){return item.status==='rejected'}).length;
+    const localNoLine=requests.filter(function(item){return item.status==='pending'&&item.noLineFallback===true}).length;
     if(pending)pending.textContent=String(monitor.pendingCount||0);
-    if(approved)approved.textContent=String(monitor.approvedCount||0);
+    if(approved)approved.textContent=String(Number.isFinite(Number(monitor.approvedCount))?Number(monitor.approvedCount):localApproved);
+    if(rejected)rejected.textContent=String(localRejected);
+    if(noLine)noLine.textContent=String(localNoLine);
     if(issues)issues.textContent=String(monitor.issueCount||0);
     if(issueList){
       const list=Array.isArray(monitor.issues)?monitor.issues:[];
@@ -664,7 +671,9 @@
     if(admin){
       const pendingItems=ordered.filter(function(item){return item.status==='pending'});
       admin.innerHTML=pendingItems.length?pendingItems.map(function(item){
-        return '<div class="duty-request-admin-item">'+(item.requestNo?'<b>申請番号 #'+escapeHtml(item.requestNo)+'</b><br>':'')+requestSummaryHtml(item)+'<br><span class="duty-request-wait'+(requestExpired(item)&&item.approvalMode==='family'?' is-expired':'')+'">'+escapeHtml(requestExpired(item)&&item.approvalMode==='family'?'承認期限切れ・再申請待ち':'確認待ち')+'</span><span class="duty-request-admin-mode">'+escapeHtml(item.approvalMode==='family'?'ご家族承認':'管理者承認')+'</span><div class="duty-request-admin-actions"><button type="button" data-approve-duty-request="'+escapeHtml(item.id)+'">当番表に反映</button><button class="reject" type="button" data-reject-duty-request="'+escapeHtml(item.id)+'">却下</button></div></div>';
+        return '<div class="duty-request-admin-item">'+(item.requestNo?'<b>申請番号 #'+escapeHtml(item.requestNo)+'</b><br>':'')+
+          (item.noLineFallback===true?'<div class="duty-request-no-line-alert"><span class="duty-request-no-line-badge">LINE利用不可</span><span class="duty-request-no-line-action">管理者確認が必要</span></div>':'')+
+          requestSummaryHtml(item)+'<br><span class="duty-request-wait'+(requestExpired(item)&&item.approvalMode==='family'?' is-expired':'')+'">'+escapeHtml(requestExpired(item)&&item.approvalMode==='family'?'承認期限切れ・再申請待ち':'確認待ち')+'</span><span class="duty-request-admin-mode">'+escapeHtml(item.approvalMode==='family'?'ご家族承認':'管理者承認')+'</span><div class="duty-request-admin-actions"><button type="button" data-approve-duty-request="'+escapeHtml(item.id)+'">当番表に反映</button><button class="reject" type="button" data-reject-duty-request="'+escapeHtml(item.id)+'">却下</button></div></div>';
       }).join(''):'<div class="duty-change-preview">確認待ちの当番変更申請はありません。</div>';
       admin.querySelectorAll('[data-approve-duty-request]').forEach(function(b){b.addEventListener('click',function(){decideRequest(b.dataset.approveDutyRequest,true)})});
       admin.querySelectorAll('[data-reject-duty-request]').forEach(function(b){b.addEventListener('click',function(){decideRequest(b.dataset.rejectDutyRequest,false)})});
