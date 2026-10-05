@@ -492,6 +492,10 @@
   }
   function renderDutySystemMonitor(monitor){
     const card=document.getElementById('dutySystemMonitor');if(!card)return;
+    const existingTrace=document.getElementById('dutyMonitorTrace');
+    const existingRecent=document.getElementById('dutyMonitorRecent');
+    if(existingTrace)existingTrace.hidden=true;
+    if(existingRecent)existingRecent.hidden=false;
     card.hidden=!isAdminViewing();if(card.hidden)return;
     const badge=document.getElementById('dutyMonitorBadge');
     const summary=document.getElementById('dutyMonitorSummary');
@@ -527,14 +531,46 @@
     if(noLineCount)noLineCount.textContent=String(localNoLine);
     if(noLineAlert)noLineAlert.hidden=localNoLine===0;
     if(issues)issues.textContent=String(monitor.issueCount||0);
+    const trace=document.getElementById('dutyMonitorTrace');
+    const traceTitle=document.getElementById('dutyMonitorTraceTitle');
+    const traceReason=document.getElementById('dutyMonitorTraceReason');
+    const traceList=document.getElementById('dutyMonitorTraceList');
+    const traceBack=document.getElementById('dutyMonitorTraceBack');
+    const stageLabel={line_start:'LINE認証開始',request_pending_auth:'LINE認証待ち',request_created:'申請・リンク発行',admin_fallback_created:'LINE利用不可で申請',self_approval_blocked:'自己承認を防止',approved_reflected:'承認・反映完了',reflection_error:'当番表反映エラー',requester_cancelled:'申請者が取消'};
+    const renderTrace=function(requestNo,reason){
+      if(!trace||!traceTitle||!traceReason||!traceList||!recent)return;
+      const history=(Array.isArray(monitor.eventHistory)?monitor.eventHistory:[]).filter(function(item){return String(item.requestNo||'')===String(requestNo||'')}).sort(function(a,b){return String(a.at||'').localeCompare(String(b.at||''))});
+      traceTitle.textContent='#'+requestNo+' の処理履歴';
+      traceReason.textContent=reason||'';
+      traceList.innerHTML=history.length?history.map(function(item){
+        return '<div class="duty-monitor-trace-item"><b>'+escapeHtml(stageLabel[item.stage]||item.stage||'処理')+'</b>'+
+          (item.message?'<br>'+escapeHtml(item.message):'')+
+          (item.device?'<br><span>'+escapeHtml(item.device)+'</span>':'')+
+          (item.at?'<br><small>'+escapeHtml(formatMonitorTime(item.at))+'</small>':'')+
+          '</div>';
+      }).join(''):'<div class="duty-monitor-trace-empty">この申請の処理ログはまだ記録されていません。</div>';
+      trace.hidden=false;
+      recent.hidden=true;
+    };
+    if(traceBack&&traceBack.dataset.ready!=='1'){
+      traceBack.dataset.ready='1';
+      traceBack.addEventListener('click',function(){if(trace)trace.hidden=true;if(recent)recent.hidden=false});
+    }
     if(issueList){
       const list=Array.isArray(monitor.issues)?monitor.issues:[];
       issueList.hidden=!list.length;
-      issueList.innerHTML=list.map(function(item){return'<li>'+(item.requestNo?'#'+escapeHtml(item.requestNo)+' ':'')+escapeHtml(item.message||'確認が必要です。')+'</li>'}).join('');
+      issueList.innerHTML=list.map(function(item){
+        const label=(item.requestNo?'#'+escapeHtml(item.requestNo)+' ':'')+escapeHtml(item.message||'確認が必要です。');
+        return item.requestNo
+          ?'<li><button type="button" class="duty-monitor-issue-button" data-duty-monitor-trace="'+escapeHtml(item.requestNo)+'" data-duty-monitor-reason="'+escapeHtml(item.message||'')+'"><span>'+label+'</span><small>履歴を見る</small></button></li>'
+          :'<li>'+label+'</li>';
+      }).join('');
+      issueList.querySelectorAll('[data-duty-monitor-trace]').forEach(function(button){
+        button.addEventListener('click',function(){renderTrace(button.dataset.dutyMonitorTrace,button.dataset.dutyMonitorReason)});
+      });
     }
     if(recent){
       const events=Array.isArray(monitor.recentEvents)?monitor.recentEvents:[];
-      const stageLabel={line_start:'LINE認証開始',request_created:'申請・リンク発行',self_approval_blocked:'自己承認を防止',reflection_error:'当番表反映エラー',approved_reflected:'承認・反映完了'};
       if(events.length){
         recent.innerHTML=events.map(function(item){
           return '<div class="duty-monitor-recent-item"><b>'+(item.requestNo?'#'+escapeHtml(item.requestNo)+' ':'')+escapeHtml(stageLabel[item.stage]||item.stage||'処理')+'</b>'+

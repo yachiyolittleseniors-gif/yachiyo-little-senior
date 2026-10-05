@@ -238,7 +238,17 @@ html{scroll-padding-top:var(--compact-header-height)}
 .duty-request-no-line-action{color:#9a5b00;font-size:11px;font-weight:900}
 .duty-monitor-toggle{display:block;margin:2px 0 0 auto;padding:5px 2px;border:0;background:transparent;color:#9b7a2e;font:inherit;font-size:11px;font-weight:900;text-decoration:underline;text-underline-offset:3px;cursor:pointer}
 #dutyMonitorDetails[hidden]{display:none!important}
-.duty-monitor-issues{margin:8px 0 0;padding-left:18px;color:#a52a2a;font-size:12px;font-weight:800;line-height:1.55}
+.duty-monitor-issues{margin:8px 0 0;padding:0;list-style:none;color:#a52a2a;font-size:12px;font-weight:800;line-height:1.55}
+.duty-monitor-issue-button{display:flex;width:100%;align-items:flex-start;justify-content:space-between;gap:10px;margin:0 0 7px;padding:9px 10px;border:1px solid rgba(165,42,42,.16);border-radius:10px;background:#fff8f8;color:#8f2525;font:inherit;text-align:left;cursor:pointer}
+.duty-monitor-issue-button span{min-width:0}.duty-monitor-issue-button small{flex:0 0 auto;color:#9b7a2e;font-size:10px;font-weight:900;white-space:nowrap}
+.duty-monitor-trace{margin-top:10px;padding:10px;border:1px solid rgba(199,154,59,.3);border-radius:12px;background:#fffdf8}
+.duty-monitor-trace[hidden]{display:none!important}
+.duty-monitor-trace-head{display:flex;align-items:center;justify-content:space-between;gap:10px}.duty-monitor-trace-head strong{font-size:13px;color:#071426}
+.duty-monitor-trace-head button{padding:4px 0;border:0;background:transparent;color:#9b7a2e;font:inherit;font-size:10px;font-weight:900;text-decoration:underline;text-underline-offset:3px;cursor:pointer}
+.duty-monitor-trace-reason{margin:6px 0 2px;color:#a52a2a;font-size:11px;font-weight:800;line-height:1.5}
+.duty-monitor-trace-item{position:relative;padding:8px 8px 8px 18px;border-bottom:1px solid rgba(7,20,38,.07);font-size:11px;line-height:1.5;color:#4f5967}
+.duty-monitor-trace-item:last-child{border-bottom:0}.duty-monitor-trace-item:before{content:"";position:absolute;left:6px;top:14px;width:6px;height:6px;border-radius:50%;background:#b58a31}
+.duty-monitor-trace-item b{color:#071426}.duty-monitor-trace-empty{padding:10px 2px;color:#6b7482;font-size:11px;font-weight:800}
 .duty-monitor-recent{margin-top:10px;border-top:1px solid rgba(7,20,38,.08);padding-top:8px}
 .duty-monitor-recent-item{padding:8px 0;border-bottom:1px solid rgba(7,20,38,.07);font-size:12px;line-height:1.55;color:#4f5967}
 .duty-monitor-recent-item:last-child{border-bottom:0}.duty-monitor-recent-item b{color:#071426}
@@ -1565,6 +1575,14 @@ main.wrap{padding-bottom:38px!important}
         <button id="dutyMonitorToggle" class="duty-monitor-toggle" type="button" aria-expanded="false" aria-controls="dutyMonitorDetails">システム処理履歴を表示</button>
         <div id="dutyMonitorDetails" hidden>
           <ul id="dutyMonitorIssueList" class="duty-monitor-issues" hidden></ul>
+          <div id="dutyMonitorTrace" class="duty-monitor-trace" hidden>
+            <div class="duty-monitor-trace-head">
+              <strong id="dutyMonitorTraceTitle">申請処理履歴</strong>
+              <button id="dutyMonitorTraceBack" type="button">全体履歴に戻る</button>
+            </div>
+            <p id="dutyMonitorTraceReason" class="duty-monitor-trace-reason"></p>
+            <div id="dutyMonitorTraceList"></div>
+          </div>
           <div id="dutyMonitorRecent" class="duty-monitor-recent"></div>
         </div>
       </div>
