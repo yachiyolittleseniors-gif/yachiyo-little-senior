@@ -41,7 +41,7 @@
     const note=document.getElementById('dutyRequestOperationNote');
     if(!note)return;
     note.textContent=partnerApprovalEnabled
-      ? '※当番表が登録されている月のみ変更申請ができます。通常は変更後のご家庭へ個別LINEで承認リンクを送ってください。LINEを使用していない方は、申請画面の「LINEを使用していない方はこちら」を選ぶと、その申請だけ管理者承認になります。'
+      ? '※当番表が登録されている月のみ変更申請ができます。通常は変更後のご家庭へ個別LINEで承認リンクを送ってください。LINEを利用できない場合は、申請画面の「LINEを利用できない方」を開き、チェックして申請してください。申請後、表示された申請番号を管理者へお知らせください。管理者が確認後、当番表へ反映します。'
       : '※当番表が登録されている月のみ変更申請ができます。申請後は、必ず全体LINEでご連絡ください。全体LINEでの連絡がない場合、変更は完了しません。';
   }
 
@@ -617,7 +617,7 @@
       const noLineToggle=document.getElementById('toggleDutyNoLine');
       const noLineOption=document.getElementById('dutyRequestNoLineOption');
       const noLineInput=document.getElementById('dutyRequestNoLine');
-      if(noLineToggle){noLineToggle.hidden=!partnerApprovalEnabled;noLineToggle.setAttribute('aria-expanded','false');noLineToggle.textContent='LINE未利用の方';}
+      if(noLineToggle){noLineToggle.hidden=!partnerApprovalEnabled;noLineToggle.setAttribute('aria-expanded','false');noLineToggle.textContent='LINEを利用できない方';}
       if(noLineOption)noLineOption.hidden=true;
       if(noLineInput&&!partnerApprovalEnabled)noLineInput.checked=false;
       syncDutyRequestOperationNote();
@@ -886,7 +886,7 @@
     }
 
     const noLineFallback=partnerApprovalEnabled===true&&document.getElementById('dutyRequestNoLine')?.checked===true;
-    if(noLineFallback&&!confirm('この申請は管理者承認になります。\n変更相手のご家庭へ直接ご連絡ください。\nこの内容で申請しますか？'))return;
+    if(noLineFallback&&!confirm('LINEを利用できない場合の申請です。\n申請後、表示された申請番号を管理者へお知らせください。\nこの内容で申請しますか？'))return;
 
     const requestPayload={
       date:date,fromGrade:fromPerson.grade,fromName:fromPerson.name,
@@ -962,7 +962,7 @@
       }
       if(noLineFallback){
         result.hidden=false;
-        result.innerHTML='<div class="duty-request-complete"><b>変更申請を受け付けました</b><p>この申請は管理者承認待ちです。変更相手のご家庭へ直接ご連絡ください。</p><small>管理者が確認後、当番表へ反映します。</small></div>';
+        result.innerHTML='<div class="duty-request-complete"><b>変更申請を受け付けました</b>'+(requestNo?'<p><b>申請番号 #'+escapeHtml(requestNo)+'</b></p>':'')+'<p>申請番号を管理者へお知らせください。</p><small>管理者が内容を確認後、当番表へ反映します。</small></div>';
         const noLineInput=document.getElementById('dutyRequestNoLine');
         if(noLineInput)noLineInput.checked=false;
         return;
@@ -1035,7 +1035,7 @@
         const noLineToggle=document.getElementById('toggleDutyNoLine');
         const noLineOption=document.getElementById('dutyRequestNoLineOption');
         const noLineInput=document.getElementById('dutyRequestNoLine');
-        if(noLineToggle){noLineToggle.hidden=!partnerApprovalEnabled;noLineToggle.setAttribute('aria-expanded','false');noLineToggle.textContent='LINE未利用の方';}
+        if(noLineToggle){noLineToggle.hidden=!partnerApprovalEnabled;noLineToggle.setAttribute('aria-expanded','false');noLineToggle.textContent='LINEを利用できない方';}
         if(noLineOption)noLineOption.hidden=true;
         if(noLineInput&&!partnerApprovalEnabled)noLineInput.checked=false;
         syncDutyRequestOperationNote();
@@ -1185,7 +1185,7 @@
     const open=noLineOption.hidden;
     noLineOption.hidden=!open;
     noLineToggle.setAttribute('aria-expanded',String(open));
-    noLineToggle.textContent=open?'LINE未利用の方を閉じる':'LINE未利用の方';
+    noLineToggle.textContent=open?'LINEを利用できない方を閉じる':'LINEを利用できない方';
   });
   document.getElementById('submitDutyRequest')?.addEventListener('click',submitRequest);
   if(hasLegacyChangeForm)pasteChangeBtn.addEventListener('click',pasteChangeText);
