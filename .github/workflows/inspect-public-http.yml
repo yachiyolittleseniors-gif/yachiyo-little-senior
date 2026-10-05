@@ -102,4 +102,4 @@ jobs:
           NODE
 
 
-# rerun after critical home JS inlining
+# rerun after fixed image delivery
