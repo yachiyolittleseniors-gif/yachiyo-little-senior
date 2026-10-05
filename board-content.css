@@ -302,3 +302,6 @@ body.document-archive-preview-open{overflow:hidden!important}
 }
 
 .duty-request-pending-badge{display:inline-block;margin-top:6px;padding:4px 9px;border-radius:999px;background:#fff4cf;color:#8b6413;font-size:11px;font-weight:900;border:1px solid #d8b35b}.duty-request-pending-badge[hidden]{display:none}
+
+/* 管理パネル表示中は背面の事務局カレンダー予定ラベルを隠す */
+body:has(#densukeAdminPanel.show) .meeting-day-event{visibility:hidden!important}
