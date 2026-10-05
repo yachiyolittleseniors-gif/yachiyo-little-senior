@@ -1,0 +1,40 @@
+name: Fix refresh opening regression
+on:
+  push:
+    branches: [fix/home-refresh-opening-20261005]
+permissions:
+  contents: write
+jobs:
+  fix:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 8
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: main
+      - name: Patch false hero-change detection
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 - <<'PY'
+          from pathlib import Path
+          p=Path('index.html')
+          s=p.read_text()
+          old="window.__yachiyoHeroChanged=isReload&&Boolean(previous)&&!matchingPreview;"
+          new="window.__yachiyoHeroChanged=isReload&&Boolean(serverVersion)&&Boolean(previous)&&!matchingPreview;"
+          assert s.count(old)==1, f'expected one heroChanged line, got {s.count(old)}'
+          s=s.replace(old,new,1)
+          p.write_text(s)
+          PY
+          git diff --check
+          node --test tests/home-csp.test.mjs
+          node netlify/sync-home-csp.mjs
+          node --test tests/home-csp.test.mjs
+      - name: Publish validated fix
+        shell: bash
+        run: |
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add index.html _headers
+          git commit -m 'fix(home): avoid opening animation on ordinary reloads'
+          git push origin HEAD:refs/heads/main
