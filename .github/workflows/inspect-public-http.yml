@@ -101,3 +101,5 @@ jobs:
           }
           NODE
 
+
+# rerun after critical home JS inlining
