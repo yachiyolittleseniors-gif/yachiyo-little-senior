@@ -793,9 +793,9 @@
       '.attendance-card-date-current:after{content:"⌄";position:absolute;right:15px;top:50%;transform:translateY(-50%);color:#536174;font-size:19px;font-weight:900}' +
       '.attendance-card-date-head{display:block;font-size:16px;font-weight:900;line-height:1.35;overflow-wrap:anywhere}' +
       '.attendance-card-date-sub{display:block;margin-top:3px;color:#7b8695;font-size:11px;font-weight:800;line-height:1.35;overflow-wrap:anywhere}' +
-      '.attendance-card-date-dialog{width:min(720px,calc(100% - 12px));max-width:none;height:auto;max-height:calc(100dvh - 20px);margin:auto;padding:0;border:0;border-radius:22px;background:#fff;color:#071426;box-shadow:0 24px 70px rgba(0,0,0,.30);overflow:hidden}' +
+      '.attendance-card-date-dialog{width:min(620px,calc(100% - 28px));max-width:none;height:auto;max-height:min(680px,78dvh);margin:auto;padding:0;border:0;border-radius:22px;background:#fff;color:#071426;box-shadow:0 24px 70px rgba(0,0,0,.30);overflow:hidden}' +
       '.attendance-card-date-dialog::backdrop{background:rgba(3,12,24,.52);backdrop-filter:blur(2px)}' +
-      '.attendance-card-date-shell{display:flex;flex-direction:column;max-height:calc(100dvh - 20px)}' +
+      '.attendance-card-date-shell{display:flex;flex-direction:column;max-height:min(680px,78dvh)}' +
       '.attendance-card-date-top{display:flex;align-items:center;gap:12px;padding:16px 17px 13px;border-bottom:1px solid #e6e9ee;background:#fff;flex:0 0 auto}' +
       '.attendance-card-date-top h3{margin:0;flex:1;font-size:20px;line-height:1.3;color:#071426}' +
       '.attendance-card-date-close{width:38px;height:38px;border:0;border-radius:50%;background:#f0f2f5;color:#26364d;font-size:22px;font-weight:800;cursor:pointer}' +
@@ -808,7 +808,7 @@
       '.attendance-card-date-check{flex:0 0 auto;color:#b78616;font-size:20px;font-weight:900;line-height:1.25}' +
       '.attendance-card-date-info{margin-top:5px;color:#7b8695;font-size:11px;font-weight:800;line-height:1.4;overflow-wrap:anywhere}' +
       '.attendance-card-date-info+.attendance-card-date-info{margin-top:2px}' +
-      '@media(max-width:420px){.attendance-card-date-dialog{width:calc(100% - 8px);border-radius:18px}.attendance-card-date-top{padding:14px 13px 11px}.attendance-card-date-top h3{font-size:18px}.attendance-card-date-list{padding:8px}.attendance-card-date-item{padding:12px}.attendance-card-date-item.selected{padding:11px}.attendance-card-date-item-title{font-size:15px}.attendance-card-date-current{padding-left:11px}.attendance-card-date-head{font-size:15px}}';
+      '@media(max-width:420px){.attendance-card-date-dialog{width:calc(100% - 24px);max-height:76dvh;border-radius:18px}.attendance-card-date-shell{max-height:76dvh}.attendance-card-date-top{padding:14px 13px 11px}.attendance-card-date-top h3{font-size:18px}.attendance-card-date-list{padding:8px}.attendance-card-date-item{padding:12px}.attendance-card-date-item.selected{padding:11px}.attendance-card-date-item-title{font-size:15px}.attendance-card-date-current{padding-left:11px}.attendance-card-date-head{font-size:15px}}';
     document.head.appendChild(style);
 
     const wrap=document.createElement('div');
