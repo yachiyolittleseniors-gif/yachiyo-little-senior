@@ -473,7 +473,110 @@
     setTimeout(syncTrigger,0);
   }
 
-  if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',installCommentDatePicker,{once:true});
-  else installCommentDatePicker();
+
+  function nativeGradeLabel(event){
+    const info=pickerGradeInfo(event);
+    return info.badges.map(badge=>badge.label).join('・');
+  }
+
+  function shortAttendancePlace(value,grade){
+    let text=String(value||'').trim();
+    if(!text)return'';
+
+    // 八千代東邦グラウンド / 八千代東邦G は表示上「東邦」に統一。
+    text=text.replace(/八千代東邦(?:グラウンド|グランド|G)(?:\s*[（(][^）)]*[）)])?/g,'東邦');
+
+    // 「○○G(1年) ○○G(2年)」のように学年別の場所が並ぶ場合は、
+    // 選択中の本人の学年に該当する場所だけを優先して表示する。
+    if(['1','2','3'].includes(String(grade||''))){
+      const parts=text.split(/\s{2,}|[｜|／/]|(?<=\))[ \t]+(?=[^\s])/).map(item=>item.trim()).filter(Boolean);
+      const tagged=parts.filter(item=>/[（(][123]年[）)]/.test(item));
+      if(tagged.length){
+        const own=tagged.find(item=>new RegExp('[（(]'+grade+'年[）)]').test(item));
+        if(own)text=own;
+      }
+    }
+
+    text=text.replace(/[（(][123]年[）)]/g,'').replace(/\s{2,}/g,' ').trim();
+    return text;
+  }
+
+  function nativeOpponent(event){
+    const memo=String(event?.memo||'').trim();
+    if(!memo)return'';
+
+    let match=memo.match(/(?:対戦相手|対戦)[：:\s　]*([^\n｜|／/【\[]+)/);
+    if(!match)match=memo.match(/(?:^|[\s　])vs[\s　]*([^\n｜|／/【\[]+)/i);
+
+    if(match){
+      return String(match[1]||'').replace(/^[\s　]+|[\s　]+$/g,'').replace(/^vs[\s　]*/i,'');
+    }
+
+    // 詳細欄が短いチーム名だけなら対戦相手として扱う。
+    if(memo.length<=28&&!/[★☆【】\[\]@＠]/.test(memo)&&!/(持ち物|集合|運営|開会|閉会|回戦|時間|場所|グラウンド|球場)/.test(memo)){
+      return memo.replace(/^vs[\s　]*/i,'').trim();
+    }
+    return'';
+  }
+
+  function nativeDetailText(event){
+    if(!event)return'';
+    const category=String(event.category||'');
+    if(category!=='official'&&category!=='friendly')return'';
+
+    const opponent=nativeOpponent(event);
+    const place=shortAttendancePlace(event.place,pickerCurrentGrade());
+    const parts=[];
+    if(opponent)parts.push('vs '+opponent);
+    if(place)parts.push(place);
+    return parts.join(' ｜ ');
+  }
+
+  function installNativeCommentDateSelect(){
+    const select=document.getElementById('commentEventDate');
+    if(!select)return;
+
+    // 以前のカスタム全画面ピッカーは使わず、元の対象日selectをそのまま利用する。
+    select.classList.remove('attendance-native-date-select');
+
+    let detail=document.getElementById('attendanceNativeDateDetail');
+    if(!detail){
+      detail=document.createElement('div');
+      detail.id='attendanceNativeDateDetail';
+      detail.style.cssText='margin:5px 8px 0;color:#7b8593;font-size:11px;font-weight:700;line-height:1.45;overflow-wrap:anywhere;';
+      const label=select.closest('.comment-date-field')||select.parentElement;
+      label?.insertAdjacentElement('afterend',detail);
+    }
+
+    function apply(){
+      const byDate=new Map(scheduleCache.map(item=>[String(item?.date||''),item]));
+
+      Array.from(select.options).forEach(option=>{
+        const date=String(option.value||'');
+        const event=byDate.get(date);
+        if(!event)return;
+
+        const grade=nativeGradeLabel(event);
+        const title=String(event.title||'').trim();
+        const label=[grade,formatDate(date),title].filter(Boolean).join(' ');
+        if(option.textContent!==label)option.textContent=label;
+      });
+
+      const current=byDate.get(String(select.value||''));
+      const detailText=nativeDetailText(current);
+      detail.textContent=detailText;
+      detail.hidden=!detailText;
+    }
+
+    select.addEventListener('change',apply);
+    const observer=new MutationObserver(()=>queueMicrotask(apply));
+    observer.observe(select,{childList:true,subtree:true});
+
+    loadSchedule().finally(apply);
+    setTimeout(apply,0);
+  }
+
+  if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',installNativeCommentDateSelect,{once:true});
+  else installNativeCommentDateSelect();
 
 })();
