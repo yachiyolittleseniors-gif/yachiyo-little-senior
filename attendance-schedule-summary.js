@@ -853,10 +853,10 @@
       const event=eventForDate(date);
       const parts=cardDetailParts(event);
       const head=headText(date,event,option?.textContent||'');
+      const gameInfo=[parts.opponent,parts.place].filter(Boolean).join(' ｜ ');
       current.innerHTML=
         '<span class="attendance-card-date-head">'+esc(head||'対象日を選択')+'</span>' +
-        (parts.opponent?'<span class="attendance-card-date-sub">'+esc(parts.opponent)+'</span>':'') +
-        (parts.place?'<span class="attendance-card-date-sub">'+esc(parts.place)+'</span>':'') +
+        (gameInfo?'<span class="attendance-card-date-sub">'+esc(gameInfo)+'</span>':'') +
         (parts.note?'<span class="attendance-card-date-sub">'+esc(parts.note)+'</span>':'');
     }
 
@@ -868,11 +868,11 @@
         const parts=cardDetailParts(event);
         const selected=date===currentDate;
         const head=headText(date,event,option.textContent||'');
+        const gameInfo=[parts.opponent,parts.place].filter(Boolean).join(' ｜ ');
         return '<button type="button" class="attendance-card-date-item '+(selected?'selected':'')+'" data-date="'+esc(date)+'">' +
           '<span class="attendance-card-date-item-head"><span class="attendance-card-date-item-title">'+esc(head)+'</span>' +
           (selected?'<span class="attendance-card-date-check">✓</span>':'')+'</span>' +
-          (parts.opponent?'<span class="attendance-card-date-info">'+esc(parts.opponent)+'</span>':'') +
-          (parts.place?'<span class="attendance-card-date-info">'+esc(parts.place)+'</span>':'') +
+          (gameInfo?'<span class="attendance-card-date-info">'+esc(gameInfo)+'</span>':'') +
           (parts.note?'<span class="attendance-card-date-info">'+esc(parts.note)+'</span>':'') +
         '</button>';
       }).join('');
