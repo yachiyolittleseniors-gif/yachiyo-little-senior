@@ -592,7 +592,7 @@
     function titleFor(date,event){
       const grade=event?nativeGradeLabel(event):'';
       const title=String(event?.title||'').trim();
-      return [grade,formatDate(date),title].filter(Boolean).join(' ');
+      return [formatDate(date),grade,title].filter(Boolean).join(' ');
     }
 
     function detailFor(event){
