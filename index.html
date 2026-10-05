@@ -44,7 +44,7 @@ let previous=null;
 try{previous=JSON.parse(sessionStorage.getItem(previewKey)||'null')}catch(e){}
 const matchingPreview=Boolean(serverVersion&&previous?.version===serverVersion&&validPreview(previous?.image));
 window.__yachiyoHeroPreviewReady=matchingPreview;
-window.__yachiyoHeroChanged=isReload&&Boolean(previous)&&!matchingPreview;
+window.__yachiyoHeroChanged=isReload&&Boolean(serverVersion)&&Boolean(previous)&&!matchingPreview;
 if(isReload&&matchingPreview){
   document.documentElement.style.setProperty('--hero-photo','url("'+previous.image+'")');
   window.__yachiyoHeroPreviewApplied=true;
