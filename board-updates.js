@@ -200,6 +200,7 @@
   const coachPasswordStatus=document.getElementById('coachPasswordStatus');
 
   if(!attendanceBtn || !attendanceCard || !playerAttendanceBtn || !playerAttendanceCard || !legacyCard || !adminBtn || !panel || !endBtn || !resumeBtn || !closeAdminBtn || !warning) return;
+  document.body.classList.remove('board-admin-popup-open');
 
   function setAttendanceEnabled(enabled){
     const targets=[
@@ -317,6 +318,7 @@
 adminBtn.addEventListener('click',async()=>{
     if(panel.classList.contains('show')){
       panel.classList.remove('show');
+      document.body.classList.remove('board-admin-popup-open');
       panel.dataset.adminPassword='';
       adminBtn.textContent='管理';
       adminBtn.style.setProperty('display','none','important');
@@ -360,6 +362,7 @@ adminBtn.addEventListener('click',async()=>{
       panel.dataset.adminPassword=adminPassword;
       document.dispatchEvent(new CustomEvent('yachiyo:admin-authenticated',{detail:{expiresAt:session.expiresAt}}));
       panel.classList.add('show');
+      document.body.classList.add('board-admin-popup-open');
       adminBtn.textContent='管理終了';
     }catch(e){
       alert('管理者認証を確認できませんでした。');
@@ -555,6 +558,7 @@ adminBtn.addEventListener('click',async()=>{
 
   closeAdminBtn.addEventListener('click',()=>{
     panel.classList.remove('show');
+    document.body.classList.remove('board-admin-popup-open');
     panel.dataset.adminPassword='';
     adminBtn.textContent='管理';
     adminBtn.style.setProperty('display','block','important');
