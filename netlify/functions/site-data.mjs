@@ -906,11 +906,13 @@ export default async (request, context) => {
         const photos = await readHeroBootstrapData(store, key, readHeroManifestData);
         const photo = Array.isArray(photos) ? photos[0] : null;
         const version = photo?.image ? String(photo.version || photo.updatedAt || "") : "";
-        const heroUrl = "/.netlify/functions/site-data?section=hero&current=1" + (version ? "&v=" + encodeURIComponent(version) : "");
+        const heroSourceUrl = "/.netlify/functions/site-data?section=hero&current=1" + (version ? "&v=" + encodeURIComponent(version) : "");
+        const heroUrl = "/.netlify/images?url=" + encodeURIComponent(heroSourceUrl) + "&w=1400&q=72&fm=webp";
         const bootstrapScript =
           "(()=>{const v=" + JSON.stringify(version) +
           ",u=" + JSON.stringify(heroUrl) +
-          ";window.__yachiyoHeroVersion=v;window.__yachiyoHeroUrl=u;" +
+          ",s=" + JSON.stringify(heroSourceUrl) +
+          ";window.__yachiyoHeroVersion=v;window.__yachiyoHeroUrl=u;window.__yachiyoHeroSourceUrl=s;" +
           "if(window.__yachiyoHeroRequest)window.__yachiyoHeroRequest.url=u;" +
           "document.documentElement.style.setProperty('--hero-photo','url(\\\"'+u+'\\\")');" +
           "if(v){const l=document.createElement('link');l.rel='preload';l.as='image';l.href=u;l.fetchPriority='high';document.head.appendChild(l);}})();";

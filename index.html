@@ -4225,6 +4225,10 @@ function openProtectedArea(type){
         const ready=showHeroImage(freshImage);
         if(await ready)return true;
       }
+      const originalImage=window.__yachiyoHeroSourceUrl;
+      if(originalImage&&originalImage!==freshImage){
+        if(await showHeroImage(originalImage))return true;
+      }
       if(signal&&signal.aborted)return false;
       const r=await fetch(api+'?section=hero&manifest=1',{cache:'no-store',signal});
       if(r.ok){
