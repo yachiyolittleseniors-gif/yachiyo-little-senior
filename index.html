@@ -42,16 +42,42 @@ const serverVersion=String(window.__yachiyoHeroVersion||'');
 const isReload=performance.getEntriesByType('navigation')[0]?.type==='reload';
 let previous=null;
 try{previous=JSON.parse(sessionStorage.getItem(previewKey)||'null')}catch(e){}
-const matchingPreview=Boolean(serverVersion&&previous?.version===serverVersion&&validPreview(previous?.image));
-window.__yachiyoHeroPreviewReady=matchingPreview;
-window.__yachiyoHeroChanged=isReload&&Boolean(serverVersion)&&Boolean(previous)&&!matchingPreview;
-if(isReload&&matchingPreview){
+const validPrevious=Boolean(previous&&validPreview(previous.image));
+const previousVersion=String(previous?.version||'');
+const matchingPreview=Boolean(serverVersion&&previousVersion===serverVersion&&validPrevious);
+const optimisticReloadPreview=Boolean(isReload&&!serverVersion&&validPrevious);
+window.__yachiyoHeroPreviewReady=matchingPreview||optimisticReloadPreview;
+window.__yachiyoHeroChanged=isReload&&Boolean(serverVersion)&&validPrevious&&!matchingPreview;
+if(matchingPreview||optimisticReloadPreview){
   document.documentElement.style.setProperty('--hero-photo','url("'+previous.image+'")');
   window.__yachiyoHeroPreviewApplied=true;
+  window.__yachiyoHeroPreviewVersion=previousVersion;
   const preload=document.createElement('link');
   preload.rel='preload';preload.as='image';preload.href=previous.image;preload.fetchPriority='high';
   document.head.appendChild(preload);
 }
+let resolveHeroVersion;
+window.__yachiyoHeroVersionReady=new Promise(resolve=>{resolveHeroVersion=resolve;});
+window.__yachiyoHeroVersionResolved=Boolean(serverVersion);
+if(serverVersion)resolveHeroVersion({version:serverVersion,url:window.__yachiyoHeroUrl,source:window.__yachiyoHeroSourceUrl});
+window.__yachiyoOnHeroBootstrap=function(version,url,source){
+  const v=String(version||'');
+  window.__yachiyoHeroVersion=v;
+  window.__yachiyoHeroUrl=url||window.__yachiyoHeroUrl;
+  window.__yachiyoHeroSourceUrl=source||window.__yachiyoHeroSourceUrl;
+  if(window.__yachiyoHeroRequest){
+    window.__yachiyoHeroRequest.url=window.__yachiyoHeroSourceUrl;
+    window.__yachiyoHeroRequest.version=v;
+  }
+  if(window.__yachiyoHeroPreviewApplied===true&&v&&window.__yachiyoHeroPreviewVersion!==v){
+    window.__yachiyoHeroPreviewApplied=false;
+    window.__yachiyoHeroChanged=isReload;
+  }
+  if(!window.__yachiyoHeroVersionResolved){
+    window.__yachiyoHeroVersionResolved=true;
+    resolveHeroVersion({version:v,url:window.__yachiyoHeroUrl,source:window.__yachiyoHeroSourceUrl});
+  }
+};
 let cacheRevision=0;
 window.__yachiyoRememberHeroImage=function(src,explicitVersion){
   const revision=++cacheRevision;
@@ -4576,9 +4602,15 @@ function openProtectedArea(type){
       // On reload, keep the already-painted version-matched preview.
       // Replacing it with the same network image causes a visible background repaint/jump.
       if(window.__yachiyoHeroPreviewApplied===true){
-        return true;
+        if(window.__yachiyoHeroVersionResolved!==true&&window.__yachiyoHeroVersionReady){
+          await Promise.race([
+            window.__yachiyoHeroVersionReady,
+            new Promise(resolve=>setTimeout(resolve,1200))
+          ]);
+        }
+        if(window.__yachiyoHeroPreviewApplied===true)return true;
       }
-      const freshImage=await window.__yachiyoHeroImage;
+      const freshImage=window.__yachiyoHeroUrl||await window.__yachiyoHeroImage;
       if(freshImage){
         const ready=showHeroImage(freshImage);
         if(await ready)return true;
