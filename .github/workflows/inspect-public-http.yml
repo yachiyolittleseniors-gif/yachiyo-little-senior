@@ -102,4 +102,4 @@ jobs:
           NODE
 
 
-# rerun after fixed image delivery
+# rerun after delayed analytics
