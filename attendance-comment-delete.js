@@ -113,11 +113,34 @@ function boot(){
      return originalApi.apply(this,arguments);
    };
  }
+ function findDifferentCommentDate(text,eventDate){
+   var selected=String(eventDate||'').match(/^(\d{4})-(\d{2})-(\d{2})$/);
+   if(!selected)return '';
+   var selectedYear=Number(selected[1]),selectedMonth=Number(selected[2]),selectedDay=Number(selected[3]);
+   var source=String(text||''),regex=/(^|[^\d])(?:(\d{4})\s*[\/年]\s*)?(\d{1,2})\s*[\/月]\s*(\d{1,2})\s*日?(?!\d)/g,match;
+   while((match=regex.exec(source))){
+     var year=match[2]?Number(match[2]):selectedYear,month=Number(match[3]),day=Number(match[4]);
+     if(month<1||month>12||day<1||day>31)continue;
+     var d=new Date(year,month-1,day);
+     if(d.getFullYear()!==year||d.getMonth()!==month-1||d.getDate()!==day)continue;
+     if(year!==selectedYear||month!==selectedMonth||day!==selectedDay){
+       return (match[2]?match[2]+'/':'')+month+'/'+day;
+     }
+   }
+   return '';
+ }
  var saveBtn=document.getElementById('commentSave'),originalSave=saveBtn&&saveBtn.onclick;
  if(saveBtn&&typeof originalSave==='function'){
    saveBtn.onclick=async function(event){
      var id=selected(),day=date.value,text=box.value.trim(),ticket=beginNotice('保存中…','pending');
      if(!id||!day){finishNotice(ticket,'名前と対象日を選択してください。','error');return}
+     var mismatchedDate=findDifferentCommentDate(text,day);
+     if(mismatchedDate){
+       var message='対象日と異なる日付（'+mismatchedDate+'）がコメントに含まれています。\n複数日分は、対象日を切り替えて日付ごとに入力してください。';
+       finishNotice(ticket,message.replace('\n',' '),'error');
+       alert(message);
+       return;
+     }
      var checked=editor.querySelector('[data-escort-grade]:checked');
      if(!text&&!checked){
        finishNotice(ticket,apiInfo().coach||location.pathname.includes('player-attendance')?'コメントを入力してください。':'コメントを入力するか、帯同にチェックを入れてください。','error');
