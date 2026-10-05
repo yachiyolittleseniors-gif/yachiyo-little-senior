@@ -115,7 +115,7 @@ function openingMotion(){
         Object.assign(canvas.style,{position:'absolute',inset:'0',width:'100%',height:'100%',pointerEvents:'none'});
         cover.appendChild(canvas);
         const ctx=canvas.getContext('2d');if(!ctx){finish();return;}
-        let width=0,height=0;
+        let width=0,height=0,logoScale=1,logoLeft=0,logoTop=0;
         const clamp=x=>Math.max(0,Math.min(1,x));
         const ease=x=>{const t=clamp(x);return t*t*(3-2*t);};
   const partition=[[0,0],[445,0],[445,250],[421,300],[402,350],[379,397],[0,397]];
@@ -302,8 +302,7 @@ function openingMotion(){
   function drawFire(ms) {
     ctx.clearRect(0,0,width,height);
     if(!source.complete||!source.naturalWidth)return;
-    const box=source.getBoundingClientRect(),frame=cover.getBoundingClientRect();
-    const scale=box.width/2172,left=box.left-frame.left,top=box.top-frame.top;
+    const scale=logoScale,left=logoLeft,top=logoTop;
     const timeline=Math.min(ms/1400,1)*4000;
     const sphereMix=ease((timeline-400)/320)*(1-ease((timeline-3120)/380));
     const p=ease((timeline-720)/2400);
@@ -326,8 +325,7 @@ function openingMotion(){
   function drawSpin(ms) {
     ctx.clearRect(0,0,width,height);
     if(!source.complete||!source.naturalWidth)return;
-    const box=source.getBoundingClientRect(),frame=cover.getBoundingClientRect();
-    const scale=box.width/2172,left=box.left-frame.left,top=box.top-frame.top;
+    const scale=logoScale,left=logoLeft,top=logoTop;
     const sphereMix=ease((ms-400)/320)*(1-ease((ms-3120)/380));
     const p=ease((ms-720)/2400);
     const angle=p*Math.PI*2;
@@ -346,8 +344,7 @@ function openingMotion(){
   function drawBounce(ms) {
     ctx.clearRect(0,0,width,height);
     if(!source.complete||!source.naturalWidth)return;
-    const box=source.getBoundingClientRect(),frame=cover.getBoundingClientRect();
-    const scale=box.width/2172,left=box.left-frame.left,top=box.top-frame.top;
+    const scale=logoScale,left=logoLeft,top=logoTop;
     const settle=2600;
     const sphereMix=1-ease((ms-2180)/420);
     const angle=-Math.PI*2*(1-ease(ms/2180));
@@ -385,7 +382,12 @@ function openingMotion(){
   }
 
         function resize(){
-          const r=cover.getBoundingClientRect();width=r.width;height=r.height;
+          const frame=cover.getBoundingClientRect();
+          const box=source.getBoundingClientRect();
+          width=frame.width;height=frame.height;
+          logoScale=box.width/2172;
+          logoLeft=box.left-frame.left;
+          logoTop=box.top-frame.top;
           const dpr=Math.min(window.devicePixelRatio||1,2);
           canvas.width=Math.round(width*dpr);canvas.height=Math.round(height*dpr);
           ctx.setTransform(dpr,0,0,dpr,0,0);
