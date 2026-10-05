@@ -233,4 +233,262 @@
     const reportButton=event.target?.closest?.('#openReportBtn');
     if(reportButton)setTimeout(injectForReport,0);
   });
+
+  // Target-date picker: additive UI only. The native select remains the source of truth
+  // so existing comment save / attendance logic is unchanged.
+  function installDatePickerStyle(){
+    if(document.getElementById('attendance-date-picker-style'))return;
+    const style=document.createElement('style');
+    style.id='attendance-date-picker-style';
+    style.textContent=
+      '.attendance-native-date-select{position:absolute!important;width:1px!important;height:1px!important;opacity:0!important;pointer-events:none!important;overflow:hidden!important}' +
+      '.attendance-date-picker-host{margin:6px 0 0}' +
+      '.attendance-date-picker-trigger{width:100%;border:2px solid #b8c9e4;border-radius:14px;background:#fff;padding:10px 12px;text-align:left;color:#0b1a30;box-shadow:0 1px 0 rgba(7,20,38,.04);font:inherit;cursor:pointer}' +
+      '.attendance-date-picker-trigger:focus{outline:3px solid rgba(56,132,255,.22);outline-offset:2px}' +
+      '.attendance-date-picker-trigger-main{display:flex;align-items:center;gap:8px;min-width:0}' +
+      '.attendance-date-picker-trigger-title{min-width:0;flex:1;font-size:15px;font-weight:900;line-height:1.35;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}' +
+      '.attendance-date-picker-trigger-arrow{font-size:18px;line-height:1;color:#526173}' +
+      '.attendance-date-picker-trigger-detail{display:block;margin:4px 0 0 44px;color:#748092;font-size:11px;font-weight:700;line-height:1.4;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}' +
+      '.attendance-date-picker-badges{display:inline-flex;gap:4px;flex:0 0 auto}' +
+      '.attendance-date-badge{display:inline-flex;align-items:center;justify-content:center;min-width:34px;height:27px;padding:0 8px;border-radius:999px;color:#fff;font-size:12px;font-weight:900;line-height:1}' +
+      '.attendance-date-badge.grade-1{background:#d93643}.attendance-date-badge.grade-2{background:#24935d}.attendance-date-badge.grade-3{background:#246bc5}.attendance-date-badge.grade-all{background:#c79a24}.attendance-date-badge.grade-other{background:#666f7b}.attendance-date-badge.grade-plain{background:#8b94a0}' +
+      '.attendance-date-picker-overlay[hidden]{display:none!important}' +
+      '.attendance-date-picker-overlay{position:fixed;inset:0;z-index:2147482500;display:flex;align-items:flex-start;justify-content:center;padding:max(18px,env(safe-area-inset-top)) 12px max(18px,env(safe-area-inset-bottom));background:rgba(4,14,28,.56);backdrop-filter:blur(3px)}' +
+      '.attendance-date-picker-panel{width:min(620px,100%);max-height:calc(100dvh - 36px);overflow:auto;background:#fff;border-radius:24px;box-shadow:0 24px 70px rgba(0,0,0,.28);overscroll-behavior:contain}' +
+      '.attendance-date-picker-head{position:sticky;top:0;z-index:2;display:flex;align-items:center;gap:10px;padding:18px 18px 14px;background:rgba(255,255,255,.96);border-bottom:1px solid #e7eaf0;backdrop-filter:blur(8px)}' +
+      '.attendance-date-picker-head h3{margin:0;flex:1;color:#0a1b35;font-size:20px;line-height:1.3}' +
+      '.attendance-date-picker-pill{border:1px solid #cfd5df;border-radius:999px;background:#f5f7fa;padding:7px 12px;color:#24354d;font-size:12px;font-weight:900;white-space:nowrap}' +
+      '.attendance-date-picker-close{border:0;background:#f1f3f6;width:34px;height:34px;border-radius:50%;font-size:22px;line-height:1;color:#26364d;cursor:pointer}' +
+      '.attendance-date-picker-body{padding:12px 14px 16px}' +
+      '.attendance-date-picker-group{margin:0 0 12px;border:1px solid #e0e5ec;border-radius:14px;overflow:hidden;background:#fff}' +
+      '.attendance-date-picker-group-title{margin:0;padding:10px 12px;background:#eef4fb;border-left:4px solid #2769b3;color:#0d2a50;font-size:14px;font-weight:900;line-height:1.4}' +
+      '.attendance-date-picker-group.all .attendance-date-picker-group-title{background:#fff8e6;border-left-color:#c79a24}' +
+      '.attendance-date-picker-group.other .attendance-date-picker-group-title{background:#f4f5f7;border-left-color:#737b86}' +
+      '.attendance-date-picker-row{display:flex;width:100%;align-items:center;gap:10px;border:0;border-top:1px solid #edf0f4;background:#fff;padding:11px 12px;text-align:left;color:#0b1a30;font:inherit;cursor:pointer}' +
+      '.attendance-date-picker-group .attendance-date-picker-row:first-of-type{border-top:0}' +
+      '.attendance-date-picker-row.selected{background:#fffdf5;box-shadow:inset 3px 0 #c79a24}' +
+      '.attendance-date-picker-row-main{min-width:0;flex:1}' +
+      '.attendance-date-picker-row-title{font-size:14px;font-weight:900;line-height:1.4;overflow-wrap:anywhere}' +
+      '.attendance-date-picker-row-detail{margin-top:3px;color:#788394;font-size:11px;font-weight:700;line-height:1.4;overflow-wrap:anywhere}' +
+      '.attendance-date-picker-row-check{width:20px;flex:0 0 20px;text-align:center;color:#b9891d;font-size:17px;font-weight:900}' +
+      '.attendance-date-picker-empty{padding:24px 10px;text-align:center;color:#7a8490;font-size:13px;font-weight:700}' +
+      '.attendance-date-picker-footer{position:sticky;bottom:0;padding:10px 14px calc(10px + env(safe-area-inset-bottom));background:rgba(255,255,255,.96);border-top:1px solid #e7eaf0;backdrop-filter:blur(8px)}' +
+      '.attendance-date-picker-done{width:100%;border:0;border-radius:999px;background:#eef1f5;color:#0a1b35;padding:12px 16px;font-size:14px;font-weight:900;cursor:pointer}' +
+      '@media(max-width:420px){.attendance-date-picker-panel{border-radius:20px}.attendance-date-picker-head{padding:15px 14px 12px}.attendance-date-picker-head h3{font-size:18px}.attendance-date-picker-body{padding:10px}.attendance-date-picker-row{padding:10px}.attendance-date-picker-trigger-title{font-size:14px}.attendance-date-picker-trigger-detail{margin-left:42px;font-size:10.5px}}';
+    document.head.appendChild(style);
+  }
+
+  function pickerGradeInfo(event){
+    const grades=Array.isArray(event?.grades)?event.grades.map(String):[];
+    const school=['1','2','3'].filter(grade=>grades.includes(grade));
+    const badges=[];
+    if(school.length===3)badges.push({label:'全',kind:'all'});
+    else school.forEach(grade=>badges.push({label:grade+'年',kind:grade}));
+    if(grades.includes('other'))badges.push({label:'他',kind:'other'});
+    if(!badges.length)badges.push({label:'日',kind:'plain'});
+    return {grades,school,badges,isAll:school.length===3,isOtherOnly:school.length===0&&grades.includes('other')};
+  }
+
+  function pickerBadgeHtml(event){
+    return pickerGradeInfo(event).badges.map(badge=>
+      '<span class="attendance-date-badge grade-'+esc(badge.kind)+'">'+esc(badge.label)+'</span>'
+    ).join('');
+  }
+
+  function pickerDetailText(event){
+    if(!event)return'';
+    const category=String(event.category||'');
+    const place=String(event.place||'').trim();
+    const memo=String(event.memo||'').trim();
+    const parts=[];
+    if(category==='official'||category==='friendly'){
+      if(memo)parts.push('対戦：'+memo);
+      if(place)parts.push('G：'+place);
+    }else{
+      if(place)parts.push('場所：'+place);
+      if(memo)parts.push(memo);
+    }
+    return parts.join(' ｜ ');
+  }
+
+  function pickerCurrentGrade(){
+    try{
+      if(typeof selectedMember==='undefined'||typeof data==='undefined')return'';
+      const member=Array.isArray(data?.members)?data.members.find(item=>String(item?.id)===String(selectedMember)) : null;
+      const grade=String(member?.grades?.[0]||member?.grade||'');
+      return ['1','2','3'].includes(grade)?grade:'';
+    }catch(_){return''}
+  }
+
+  function pickerPageKind(){
+    const path=String(location.pathname||'');
+    if(path.includes('coach-attendance'))return'coach';
+    if(path.includes('player-attendance'))return'player';
+    return'parent';
+  }
+
+  function pickerTitleFor(option,event){
+    const date=String(option?.value||event?.date||'');
+    const dateLabel=formatDate(date);
+    const title=String(event?.title||'').trim();
+    if(title)return(dateLabel?dateLabel+' ':'')+title;
+    const raw=String(option?.textContent||'').trim();
+    return raw||dateLabel||'日程';
+  }
+
+  function pickerOptions(select){
+    const byDate=new Map(scheduleCache.map(item=>[String(item?.date||''),item]));
+    return Array.from(select.options).map(option=>{
+      const date=String(option.value||'');
+      const event=byDate.get(date)||{date,title:String(option.textContent||'').replace(formatDate(date),'').trim(),grades:[]};
+      return {date,event,title:pickerTitleFor(option,event),detail:pickerDetailText(event)};
+    });
+  }
+
+  function pickerGroups(items,ownGrade,kind){
+    const groups=[];
+    if(kind==='coach'||!ownGrade){
+      const all=[],grade=[],other=[];
+      items.forEach(item=>{
+        const info=pickerGradeInfo(item.event);
+        if(info.isAll)all.push(item);
+        else if(info.isOtherOnly)other.push(item);
+        else grade.push(item);
+      });
+      if(all.length)groups.push({key:'all',title:'全学年の予定',items:all});
+      if(grade.length)groups.push({key:'grade',title:'学年別の予定',items:grade});
+      if(other.length)groups.push({key:'other',title:'その他の予定',items:other});
+      return groups;
+    }
+
+    const own=[],all=[],other=[];
+    items.forEach(item=>{
+      const info=pickerGradeInfo(item.event);
+      if(info.isAll)all.push(item);
+      else if(info.school.includes(ownGrade))own.push(item);
+      else other.push(item);
+    });
+    if(own.length)groups.push({key:'own',title:ownGrade+'年の予定（あなたの学年）',items:own});
+    if(all.length)groups.push({key:'all',title:'全学年の予定',items:all});
+    if(other.length)groups.push({key:'other',title:'他学年・その他（帯同も可能）',items:other});
+    return groups;
+  }
+
+  function installCommentDatePicker(){
+    const select=document.getElementById('commentEventDate');
+    const editor=document.getElementById('editor');
+    if(!select||!editor||document.getElementById('attendanceDatePickerTrigger'))return;
+
+    installDatePickerStyle();
+    select.classList.add('attendance-native-date-select');
+
+    const host=document.createElement('div');
+    host.className='attendance-date-picker-host';
+    const trigger=document.createElement('button');
+    trigger.id='attendanceDatePickerTrigger';
+    trigger.className='attendance-date-picker-trigger';
+    trigger.type='button';
+    trigger.setAttribute('aria-haspopup','dialog');
+    host.appendChild(trigger);
+
+    const label=select.closest('.comment-date-field')||select.parentElement;
+    if(label?.parentNode)label.parentNode.insertBefore(host,label.nextSibling);
+    else select.insertAdjacentElement('afterend',host);
+
+    const overlay=document.createElement('div');
+    overlay.className='attendance-date-picker-overlay';
+    overlay.hidden=true;
+    overlay.setAttribute('role','dialog');
+    overlay.setAttribute('aria-modal','true');
+    overlay.setAttribute('aria-label','対象日を選択');
+    overlay.innerHTML=
+      '<div class="attendance-date-picker-panel">' +
+        '<div class="attendance-date-picker-head"><h3>対象日を選択</h3><span class="attendance-date-picker-pill">全予定</span><button class="attendance-date-picker-close" type="button" aria-label="閉じる">×</button></div>' +
+        '<div class="attendance-date-picker-body"></div>' +
+        '<div class="attendance-date-picker-footer"><button class="attendance-date-picker-done" type="button">閉じる</button></div>' +
+      '</div>';
+    document.body.appendChild(overlay);
+    const body=overlay.querySelector('.attendance-date-picker-body');
+    let previousOverflow='';
+
+    function modelForDate(date){
+      return pickerOptions(select).find(item=>item.date===String(date||''))||null;
+    }
+
+    function syncTrigger(){
+      const item=modelForDate(select.value);
+      if(!item){
+        trigger.innerHTML='<span class="attendance-date-picker-trigger-main"><span class="attendance-date-picker-trigger-title">対象日を選択</span><span class="attendance-date-picker-trigger-arrow">⌄</span></span>';
+        return;
+      }
+      trigger.innerHTML=
+        '<span class="attendance-date-picker-trigger-main"><span class="attendance-date-picker-badges">'+pickerBadgeHtml(item.event)+'</span><span class="attendance-date-picker-trigger-title">'+esc(item.title)+'</span><span class="attendance-date-picker-trigger-arrow">⌄</span></span>' +
+        (item.detail?'<span class="attendance-date-picker-trigger-detail">'+esc(item.detail)+'</span>':'');
+    }
+
+    function renderOverlay(){
+      const items=pickerOptions(select);
+      const groups=pickerGroups(items,pickerCurrentGrade(),pickerPageKind());
+      if(!groups.length){
+        body.innerHTML='<div class="attendance-date-picker-empty">選択できる予定がありません。</div>';
+        return;
+      }
+      body.innerHTML=groups.map(group=>
+        '<section class="attendance-date-picker-group '+esc(group.key)+'">' +
+          '<h4 class="attendance-date-picker-group-title">'+esc(group.title)+'</h4>' +
+          group.items.map(item=>
+            '<button type="button" class="attendance-date-picker-row '+(item.date===select.value?'selected':'')+'" data-date="'+esc(item.date)+'">' +
+              '<span class="attendance-date-picker-badges">'+pickerBadgeHtml(item.event)+'</span>' +
+              '<span class="attendance-date-picker-row-main"><span class="attendance-date-picker-row-title">'+esc(item.title)+'</span>' +
+              (item.detail?'<span class="attendance-date-picker-row-detail">'+esc(item.detail)+'</span>':'') +
+              '</span><span class="attendance-date-picker-row-check">'+(item.date===select.value?'✓':'›')+'</span>' +
+            '</button>'
+          ).join('') +
+        '</section>'
+      ).join('');
+      body.querySelectorAll('[data-date]').forEach(button=>button.addEventListener('click',()=>{
+        const date=button.getAttribute('data-date')||'';
+        if(!date)return;
+        select.value=date;
+        select.dispatchEvent(new Event('change',{bubbles:true}));
+        syncTrigger();
+        closePicker();
+      }));
+    }
+
+    function openPicker(){
+      void loadSchedule().then(()=>{
+        syncTrigger();
+        renderOverlay();
+        previousOverflow=document.body.style.overflow;
+        document.body.style.overflow='hidden';
+        overlay.hidden=false;
+        overlay.querySelector('.attendance-date-picker-close')?.focus({preventScroll:true});
+      });
+    }
+
+    function closePicker(){
+      overlay.hidden=true;
+      document.body.style.overflow=previousOverflow;
+      trigger.focus({preventScroll:true});
+    }
+
+    trigger.addEventListener('click',openPicker);
+    overlay.querySelector('.attendance-date-picker-close').addEventListener('click',closePicker);
+    overlay.querySelector('.attendance-date-picker-done').addEventListener('click',closePicker);
+    overlay.addEventListener('click',event=>{if(event.target===overlay)closePicker()});
+    document.addEventListener('keydown',event=>{if(event.key==='Escape'&&!overlay.hidden)closePicker()});
+    select.addEventListener('change',syncTrigger);
+
+    const observer=new MutationObserver(()=>queueMicrotask(syncTrigger));
+    observer.observe(select,{childList:true,subtree:true});
+    observer.observe(editor,{attributes:true,attributeFilter:['class']});
+
+    loadSchedule().finally(syncTrigger);
+    setTimeout(syncTrigger,0);
+  }
+
+  if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',installCommentDatePicker,{once:true});
+  else installCommentDatePicker();
+
 })();
