@@ -711,7 +711,8 @@
         if(!event)return;
         const grade=nativeGradeLabel(event);
         const title=String(event.title||'').trim();
-        option.textContent=[formatDate(date),grade,title].filter(Boolean).join(' ');
+        const label=[formatDate(date),grade,title].filter(Boolean).join(' ');
+        if(option.textContent!==label)option.textContent=label;
       });
 
       const current=byDate.get(String(select.value||''));
