@@ -555,7 +555,7 @@
       '.attendance-inline-date-button:after{content:"⌄";position:absolute;right:14px;top:50%;transform:translateY(-50%);color:#526173;font-size:18px;font-weight:900}' +
       '.attendance-inline-date-title{display:block;font-size:16px;font-weight:900;line-height:1.35;overflow-wrap:anywhere}' +
       '.attendance-inline-date-detail{display:block;margin-top:4px;color:#7a8594;font-size:11px;font-weight:800;line-height:1.35;overflow-wrap:anywhere}' +
-      '.attendance-inline-date-menu{position:static;width:100%;margin-top:8px;overflow:visible;border:1px solid #cfd6df;border-radius:14px;background:#fff;box-shadow:0 10px 24px rgba(7,20,38,.10)}' +
+      '.attendance-inline-date-menu{position:absolute;left:0;right:0;top:calc(100% + 6px);z-index:2147482000;max-height:420px;overflow-y:auto;-webkit-overflow-scrolling:touch;touch-action:pan-y;overscroll-behavior:contain;border:1px solid #cfd6df;border-radius:14px;background:#fff;box-shadow:0 14px 34px rgba(7,20,38,.18)}' +
       '.attendance-inline-date-menu[hidden]{display:none!important}' +
       '.attendance-inline-date-option{display:block;width:100%;border:0;border-bottom:1px solid #edf0f4;background:#fff;padding:11px 38px 11px 13px;text-align:left;color:#071426;font:inherit;cursor:pointer;position:relative}' +
       '.attendance-inline-date-option:last-child{border-bottom:0}' +
@@ -620,7 +620,7 @@
         return;
       }
 
-      menu.innerHTML='<div style="padding:8px 12px 6px;color:#7a8594;font-size:11px;font-weight:800">他の日程</div>'+options.map(option=>{
+      menu.innerHTML=options.map(option=>{
         const date=String(option.value||'');
         const event=byDate.get(date)||null;
         const title=event?titleFor(date,event):String(option.textContent||'').trim();
@@ -645,11 +645,31 @@
       });
     }
 
+    function positionMenu(){
+      const rect=button.getBoundingClientRect();
+      const gap=6,edge=12;
+      const below=Math.max(0,window.innerHeight-rect.bottom-gap-edge);
+      const above=Math.max(0,rect.top-gap-edge);
+      const openAbove=below<260&&above>below;
+      const available=Math.max(170,Math.min(420,openAbove?above:below));
+
+      menu.style.maxHeight=available+'px';
+      if(openAbove){
+        menu.style.top='auto';
+        menu.style.bottom='calc(100% + 6px)';
+      }else{
+        menu.style.top='calc(100% + 6px)';
+        menu.style.bottom='auto';
+      }
+    }
+
     function openMenu(){
       void loadSchedule().then(()=>{
         renderMenu();
+        positionMenu();
         menu.hidden=false;
         button.setAttribute('aria-expanded','true');
+        menu.scrollTop=0;
       });
     }
 
@@ -664,6 +684,8 @@
       event.stopPropagation();
       if(menu.hidden)openMenu(); else closeMenu();
     });
+
+    menu.addEventListener('touchmove',event=>event.stopPropagation(),{passive:true});
 
     document.addEventListener('click',event=>{
       if(!wrap.contains(event.target))closeMenu();
@@ -729,7 +751,7 @@
     setTimeout(apply,0);
   }
 
-  if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',installSimpleNativeCommentDateSelect,{once:true});
-  else installSimpleNativeCommentDateSelect();
+  if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',installInlineCommentDatePicker,{once:true});
+  else installInlineCommentDatePicker();
 
 })();
