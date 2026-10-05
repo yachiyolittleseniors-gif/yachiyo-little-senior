@@ -555,7 +555,7 @@
       '.attendance-inline-date-button:after{content:"⌄";position:absolute;right:14px;top:50%;transform:translateY(-50%);color:#526173;font-size:18px;font-weight:900}' +
       '.attendance-inline-date-title{display:block;font-size:16px;font-weight:900;line-height:1.35;overflow-wrap:anywhere}' +
       '.attendance-inline-date-detail{display:block;margin-top:4px;color:#7a8594;font-size:11px;font-weight:800;line-height:1.35;overflow-wrap:anywhere}' +
-      '.attendance-inline-date-menu{position:fixed;z-index:2147482000;overflow-y:auto;-webkit-overflow-scrolling:touch;touch-action:pan-y;border:1px solid #cfd6df;border-radius:14px;background:#fff;box-shadow:0 18px 44px rgba(7,20,38,.22);overscroll-behavior:contain;padding-bottom:calc(10px + env(safe-area-inset-bottom))}' +
+      '.attendance-inline-date-menu{position:static;width:100%;margin-top:8px;overflow:visible;border:1px solid #cfd6df;border-radius:14px;background:#fff;box-shadow:0 10px 24px rgba(7,20,38,.10)}' +
       '.attendance-inline-date-menu[hidden]{display:none!important}' +
       '.attendance-inline-date-option{display:block;width:100%;border:0;border-bottom:1px solid #edf0f4;background:#fff;padding:11px 38px 11px 13px;text-align:left;color:#071426;font:inherit;cursor:pointer;position:relative}' +
       '.attendance-inline-date-option:last-child{border-bottom:0}' +
@@ -563,7 +563,7 @@
       '.attendance-inline-date-option.selected:after{content:"✓";position:absolute;right:14px;top:50%;transform:translateY(-50%);color:#b88717;font-size:18px;font-weight:900}' +
       '.attendance-inline-date-option-title{display:block;font-size:15px;font-weight:900;line-height:1.35;overflow-wrap:anywhere}' +
       '.attendance-inline-date-option-detail{display:block;margin-top:3px;color:#7a8594;font-size:11px;font-weight:800;line-height:1.35;overflow-wrap:anywhere}' +
-      '@media(max-width:420px){.attendance-inline-date-title{font-size:15px}.attendance-inline-date-option-title{font-size:14px}.attendance-inline-date-menu{max-height:52vh}}';
+      '@media(max-width:420px){.attendance-inline-date-title{font-size:15px}.attendance-inline-date-option-title{font-size:14px}}';
     document.head.appendChild(style);
 
     const wrap=document.createElement('div');
@@ -645,78 +645,11 @@
       });
     }
 
-    function positionMenu(){
-      const rect=button.getBoundingClientRect();
-      const viewport=window.visualViewport;
-      const viewportTop=viewport?.offsetTop||0;
-      const viewportHeight=viewport?.height||window.innerHeight;
-      const viewportBottom=viewportTop+viewportHeight;
-      const gap=6,edge=12;
-      const spaceBelow=Math.max(0,viewportBottom-rect.bottom-gap-edge);
-      const spaceAbove=Math.max(0,rect.top-viewportTop-gap-edge);
-      const openBelow=spaceBelow>=220||spaceBelow>=spaceAbove;
-      const maxHeight=Math.max(160,Math.min(520,openBelow?spaceBelow:spaceAbove));
-
-      menu.style.left=Math.max(edge,rect.left)+'px';
-      menu.style.width=Math.max(220,Math.min(rect.width,window.innerWidth-edge*2))+'px';
-      menu.style.maxHeight=maxHeight+'px';
-
-      if(openBelow){
-        menu.style.top=(rect.bottom+gap)+'px';
-        menu.style.bottom='auto';
-      }else{
-        menu.style.top='auto';
-        menu.style.bottom=Math.max(edge,viewportBottom-rect.top+gap)+'px';
-      }
-    }
-
-    let pageLock=null;
-
-    function lockPageScroll(){
-      if(pageLock)return;
-      const body=document.body,html=document.documentElement;
-      const y=window.scrollY||window.pageYOffset||0;
-      pageLock={
-        y,
-        bodyPosition:body.style.position,
-        bodyTop:body.style.top,
-        bodyLeft:body.style.left,
-        bodyRight:body.style.right,
-        bodyWidth:body.style.width,
-        bodyOverflow:body.style.overflow,
-        htmlOverflow:html.style.overflow
-      };
-      body.style.position='fixed';
-      body.style.top=(-y)+'px';
-      body.style.left='0';
-      body.style.right='0';
-      body.style.width='100%';
-      body.style.overflow='hidden';
-      html.style.overflow='hidden';
-    }
-
-    function unlockPageScroll(){
-      if(!pageLock)return;
-      const body=document.body,html=document.documentElement,lock=pageLock;
-      pageLock=null;
-      body.style.position=lock.bodyPosition;
-      body.style.top=lock.bodyTop;
-      body.style.left=lock.bodyLeft;
-      body.style.right=lock.bodyRight;
-      body.style.width=lock.bodyWidth;
-      body.style.overflow=lock.bodyOverflow;
-      html.style.overflow=lock.htmlOverflow;
-      window.scrollTo(0,lock.y);
-    }
-
     function openMenu(){
       void loadSchedule().then(()=>{
         renderMenu();
-        lockPageScroll();
-        positionMenu();
         menu.hidden=false;
         button.setAttribute('aria-expanded','true');
-        menu.scrollTop=0;
       });
     }
 
@@ -724,11 +657,7 @@
       if(menu.hidden)return;
       menu.hidden=true;
       button.setAttribute('aria-expanded','false');
-      unlockPageScroll();
     }
-
-    window.visualViewport?.addEventListener('resize',()=>{if(!menu.hidden)positionMenu()});
-    window.addEventListener('resize',()=>{if(!menu.hidden)positionMenu()});
 
     button.addEventListener('click',event=>{
       event.preventDefault();
