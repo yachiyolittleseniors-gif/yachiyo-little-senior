@@ -1446,12 +1446,21 @@ body:after{display:none!important;content:none!important}
 main.wrap{padding-bottom:38px!important}
 .team-core-signature{
   display:flex;
+  flex-direction:column;
   align-items:center;
   justify-content:center;
   min-height:42px;
   padding:5px 12px 4px;
   background:#f4f3ef;
   border-top:1px solid rgba(199,154,59,.24);
+  cursor:pointer;
+  -webkit-tap-highlight-color:transparent;
+  user-select:none;
+  outline:none;
+}
+.team-core-signature:focus-visible{
+  outline:2px solid rgba(199,154,59,.72);
+  outline-offset:-3px;
 }
 .team-core-logo{
   display:block;
@@ -1459,16 +1468,38 @@ main.wrap{padding-bottom:38px!important}
   max-width:100%;
   height:auto;
 }
+.team-core-credit{
+  max-height:0;
+  margin:0;
+  overflow:hidden;
+  opacity:0;
+  transform:translateY(-2px);
+  color:#8a6b2c;
+  font-size:9px;
+  font-weight:700;
+  letter-spacing:.04em;
+  line-height:1.35;
+  transition:opacity .28s ease,transform .28s ease,max-height .28s ease,margin .28s ease;
+}
+.team-core-credit.is-visible{
+  max-height:22px;
+  margin-top:3px;
+  opacity:.72;
+  transform:translateY(0);
+}
 @media(max-width:520px){
   main.wrap{padding-bottom:34px!important}
   .team-core-signature{min-height:40px;padding:4px 10px 3px}
   .team-core-logo{width:min(145px,48vw)}
+  .team-core-credit{font-size:8.5px}
 }
 </style>
-<div class="team-core-signature" aria-label="TEAM CORE TEAM OPERATIONS SYSTEM">
+<div class="team-core-signature" role="button" tabindex="0" aria-label="TEAM CORE TEAM OPERATIONS SYSTEM" aria-expanded="false">
   <img class="team-core-logo" src="./team-core-logo-site.webp?v=20261005-1" alt="TEAM CORE TEAM OPERATIONS SYSTEM">
+  <div class="team-core-credit" id="teamCoreCreatorCredit" aria-hidden="true">企画・制作：tatsuki.saitoh45</div>
 </div>
 <footer class="footer">© YACHIYO LITTLE SENIOR. All Rights Reserved.</footer>
+<script src="./team-core-credit.js?v=20261005-1" defer></script>
 
 <link rel="stylesheet" href="./board-content.css?v=20261005-admin-popup-calendar2">
 
