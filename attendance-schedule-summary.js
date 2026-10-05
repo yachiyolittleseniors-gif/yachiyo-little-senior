@@ -281,12 +281,18 @@
   function pickerGradeInfo(event){
     const grades=Array.isArray(event?.grades)?event.grades.map(String):[];
     const school=['1','2','3'].filter(grade=>grades.includes(grade));
+    const title=String(event?.title||'');
+    const isExperience=title.includes('体験');
     const badges=[];
-    if(school.length===3)badges.push({label:'全',kind:'all'});
-    else school.forEach(grade=>badges.push({label:grade+'年',kind:grade}));
-    if(grades.includes('other'))badges.push({label:'他',kind:'other'});
+    if(isExperience||grades.includes('other')){
+      badges.push({label:'他',kind:'other'});
+    }else if(school.length===3){
+      badges.push({label:'全',kind:'all'});
+    }else{
+      school.forEach(grade=>badges.push({label:grade+'年',kind:grade}));
+    }
     if(!badges.length)badges.push({label:'日',kind:'plain'});
-    return {grades,school,badges,isAll:school.length===3,isOtherOnly:school.length===0&&grades.includes('other')};
+    return {grades,school,badges,isAll:!isExperience&&!grades.includes('other')&&school.length===3,isOtherOnly:isExperience||grades.includes('other')};
   }
 
   function pickerBadgeHtml(event){
