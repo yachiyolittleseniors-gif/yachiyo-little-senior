@@ -1,0 +1,52 @@
+name: Triple Lighthouse median
+on:
+  push:
+    branches: [debug/http-response-20261005]
+permissions:
+  contents: read
+jobs:
+  measure:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 12
+    steps:
+      - name: Install Lighthouse
+        run: npm install -g lighthouse@latest >/dev/null 2>&1
+      - name: Run three mobile measurements
+        shell: bash
+        run: |
+          set -euo pipefail
+          URL='https://yachiyo-little-senior.netlify.app/'
+          for i in 1 2 3; do
+            lighthouse "$URL"               --output=json               --output-path="/tmp/lhr-$i.json"               --chrome-flags='--headless=new --no-sandbox --disable-gpu'               --only-categories=performance,seo               --quiet
+          done
+          node - <<'NODE'
+          const fs=require('fs');
+          const rows=[1,2,3].map(i=>{
+            const r=JSON.parse(fs.readFileSync('/tmp/lhr-'+i+'.json','utf8'));
+            const v=id=>r.audits?.[id]?.numericValue ?? null;
+            return {
+              run:i,
+              performance:Math.round((r.categories?.performance?.score||0)*100),
+              seo:Math.round((r.categories?.seo?.score||0)*100),
+              fcp:v('first-contentful-paint'),
+              lcp:v('largest-contentful-paint'),
+              tbt:v('total-blocking-time'),
+              speedIndex:v('speed-index'),
+              cls:v('cumulative-layout-shift'),
+              finalUrl:r.finalDisplayedUrl||r.finalUrl
+            };
+          });
+          const med=k=>{
+            const a=rows.map(x=>x[k]).filter(Number.isFinite).sort((x,y)=>x-y);
+            return a[Math.floor(a.length/2)];
+          };
+          console.log('RUNS='+JSON.stringify(rows));
+          console.log('MEDIAN='+JSON.stringify({
+            performance:med('performance'),
+            fcp:med('fcp'),
+            lcp:med('lcp'),
+            tbt:med('tbt'),
+            speedIndex:med('speedIndex'),
+            cls:med('cls')
+          }));
+          NODE
