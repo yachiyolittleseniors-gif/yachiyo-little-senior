@@ -269,6 +269,7 @@ document.addEventListener('DOMContentLoaded',()=>{
 #commentList:not([data-loaded="true"]) > .empty{visibility:hidden}
 </style>
 <script src="./back-to-top.js?v=20260930-padding1" defer></script>
+<style id="attendance-comment-multiday-note-style">.comment-multiday-note{margin:7px 0 0;color:#8a6415;font-size:11px;font-weight:700;line-height:1.55}</style>
 <style id="attendance-comment-popup-style">
 #member-comment-row>td{padding:0!important;text-align:left!important;background:#fffdf6!important;border-bottom:2px solid #c6a052}
 #member-comment-row #editor{box-sizing:border-box;position:sticky;left:0;width:min(640px,calc(100vw - 40px));max-width:640px;margin:0;padding:16px;border:0;border-left:4px solid #c6a052;background:#fffdf6;text-align:left;white-space:normal}
@@ -326,7 +327,7 @@ document.addEventListener('DOMContentLoaded',()=>{
   <section class="locked-card hidden" id="lockedView"></section>
 
   <div id="attendanceView">
-    <div class="notice"><b>回答方法：</b>左の自分の名前をタップしてから、○×を編集してください。選択した本人の行だけ編集できます。<br><b>コメント入力：</b>名前を押すと、その名前のすぐ下に入力欄が開きます。同じ名前をもう一度押すと入力欄が閉じ、編集を解除します。対象日と内容を入力し、「コメントを追加」を押してください。<br><span style="color:#6f7884">※名前はチーム紹介ページの指導者一覧から自動反映されます。</span></div>
+    <div class="notice"><b>回答：</b>名前をタップ → ○×を入力。選択した本人の行だけ編集できます。<br><b>コメント：</b>名前をタップ → 対象日を選択 → 内容を入力 →「コメントを追加」。もう一度名前をタップすると閉じます。<br><span style="color:#6f7884">※名前はチーム紹介の指導者一覧から自動反映します。</span></div>
     <details class="report-launch" id="reportLaunch">
       <summary class="report-launch-title report-launch-summary"><h2>指導者出席一覧の出力</h2><span class="report-launch-summary-meta"><span class="sync" id="syncText"></span><span class="report-launch-chevron" aria-hidden="true"></span></span></summary>
       <div class="report-launch-body">
@@ -339,7 +340,7 @@ document.addEventListener('DOMContentLoaded',()=>{
     </details>
     <dialog class="summary-dialog" id="summaryDialog" aria-labelledby="summaryTitle"><div class="summary-dialog-head"><h2 id="summaryTitle">出欠内訳</h2><button class="summary-close" id="summaryClose" type="button" aria-label="閉じる">×</button></div><div class="breakdown-list" id="summaryBody"></div><p class="breakdown-unset" id="summaryUnset"></p></dialog>
     <div class="board-shell" id="board"><div class="empty">読み込み中...</div></div>
-    <section class="editor" id="editor"><h3 id="editorName"></h3><p>この名前で回答を編集しています。</p><label class="comment-date-field">対象日<select id="commentEventDate" aria-label="コメントの対象日"></select></label><textarea id="commentText" maxlength="500" placeholder="コメントを入力（例：途中参加です／欠席します）"></textarea><div style="margin-top:8px;display:flex;gap:8px;flex-wrap:wrap"><button class="small-btn" id="commentSave">コメントを追加</button><button class="secondary" id="editCancel">コメント欄を閉じる</button></div></section>
+    <section class="editor" id="editor"><h3 id="editorName"></h3><p>この名前で回答を編集しています。</p><label class="comment-date-field">対象日<select id="commentEventDate" aria-label="コメントの対象日"></select></label><textarea id="commentText" maxlength="500" placeholder="コメントを入力（例：途中参加です／欠席します）"></textarea><p class="comment-multiday-note">※複数日分は、対象日を切り替えて日付ごとに入力してください。</p><div style="margin-top:8px;display:flex;gap:8px;flex-wrap:wrap"><button class="small-btn" id="commentSave">コメントを追加</button><button class="secondary" id="editCancel">コメント欄を閉じる</button></div></section>
     <section class="comment-section"><h2>最新コメント一覧</h2><div class="comment-list" id="commentList"></div></section>
     <dialog class="report-dialog" id="reportDialog" aria-labelledby="reportTitle">
       <div class="report-dialog-frame">
@@ -602,7 +603,26 @@ function saveAnswer(ev){
 }
 window.addEventListener('beforeunload',event=>{if(pendingAnswers.size){event.preventDefault();event.returnValue=''}});
 
-$('#commentSave').onclick=async()=>{const text=$('#commentText').value.trim(),memberId=selectedMember,eventDate=$('#commentEventDate').value;if(!memberId||!text||!eventDate||savingMembers.has(memberId))return;savingMembers.add(memberId);$('#syncText').textContent='保存中…';render();try{const j=await api('POST',{action:'comment',memberId,text,eventDate,upperGrade:false});data=normalize(j.data);$('#commentText').value='';$('#syncText').textContent='コメント保存済み'}catch{showError('コメントを保存できませんでした。')}finally{savingMembers.delete(memberId);render()}};
+function findMismatchedCommentDate(text,eventDate){
+  const selected=String(eventDate||'').match(/^(\d{4})-(\d{2})-(\d{2})$/);
+  if(!selected)return '';
+  const selectedYear=Number(selected[1]),selectedMonth=Number(selected[2]),selectedDay=Number(selected[3]);
+  const found=[];
+  const add=(year,month,day,label)=>{
+    year=year?Number(year):null; month=Number(month); day=Number(day);
+    if(month<1||month>12||day<1||day>31)return;
+    const checkYear=year||selectedYear;
+    const d=new Date(checkYear,month-1,day);
+    if(d.getFullYear()!==checkYear||d.getMonth()!==month-1||d.getDate()!==day)return;
+    found.push({year,month,day,label});
+  };
+  const source=String(text||'');
+  source.replace(/(\d{4})\s*[\/年]\s*(\d{1,2})\s*[\/月]\s*(\d{1,2})\s*日?/g,(m,y,mo,d)=>{add(y,mo,d,m);return m});
+  source.replace(/(?<!\d)(\d{1,2})\s*[\/月]\s*(\d{1,2})\s*日?(?!\d)/g,(m,mo,d)=>{add(null,mo,d,m);return m});
+  const mismatch=found.find(x=>(x.year&&x.year!==selectedYear)||x.month!==selectedMonth||x.day!==selectedDay);
+  return mismatch?mismatch.label:'';
+}
+$('#commentSave').onclick=async()=>{const text=$('#commentText').value.trim(),memberId=selectedMember,eventDate=$('#commentEventDate').value;if(!memberId||!text||!eventDate||savingMembers.has(memberId))return;const mismatch=findMismatchedCommentDate(text,eventDate);if(mismatch){const message='対象日と異なる日付（'+mismatch+'）がコメントに含まれています。\n複数日分は、対象日を切り替えて日付ごとに入力してください。';showError(message.replace('\n',' '));alert(message);return}savingMembers.add(memberId);$('#syncText').textContent='保存中…';render();try{const j=await api('POST',{action:'comment',memberId,text,eventDate,upperGrade:false});data=normalize(j.data);$('#commentText').value='';$('#syncText').textContent='コメント保存済み'}catch{showError('コメントを保存できませんでした。')}finally{savingMembers.delete(memberId);render()}};
 $('#editCancel').onclick=()=>{if(pendingAnswers.size){showAnswerWaitNotice();return;}selectedMember='';render()};
 function commentDateValue(comment){if(comment.eventDate){const value=new Date(comment.eventDate+'T00:00:00').getTime();if(Number.isFinite(value))return value}const match=String(comment.text||'').match(/(\d{1,2})\s*(?:\/|月)\s*(\d{1,2})(?:日)?/);if(match){const now=new Date(),dates=[-1,0,1].map(offset=>new Date(now.getFullYear()+offset,Number(match[1])-1,Number(match[2])).getTime());return dates.sort((a,b)=>Math.abs(a-now)-Math.abs(b-now))[0]}return new Date(comment.updatedAt||0).getTime()||0}
 function sortedComments(){return [...data.comments].filter(comment=>comment&&comment.text).sort((a,b)=>commentDateValue(b)-commentDateValue(a)||new Date(b.updatedAt||0)-new Date(a.updatedAt||0))}
