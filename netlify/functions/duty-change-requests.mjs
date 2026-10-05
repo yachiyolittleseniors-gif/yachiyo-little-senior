@@ -404,14 +404,16 @@ function monitorSnapshot(data,roster){
     lineAuthenticated:!!item.requesterLineHash,
     approvalExpiresAt:item.approvalExpiresAt||""
   }));
-  const recentEvents=events.slice().sort((a,b)=>String(b.at).localeCompare(String(a.at))).slice(0,12);
+  const sortedEvents=events.slice().sort((a,b)=>String(b.at).localeCompare(String(a.at)));
+  const recentEvents=sortedEvents.slice(0,12);
+  const eventHistory=sortedEvents.slice(0,120);
   return{
     partnerApprovalEnabled:data.partnerApprovalEnabled===true,
     status:issues.some(x=>x.type==="reflection"||x.type==="line"||x.type==="line_stalled")?"error":(issues.length?"warning":"ok"),
     pendingCount:visible.filter(item=>item.status==="pending").length,
     approvedCount:visible.filter(item=>item.status==="approved").length,
     issueCount:issues.length,
-    issues,recent,recentEvents,
+    issues,recent,recentEvents,eventHistory,
     checkedAt:new Date().toISOString()
   };
 }
