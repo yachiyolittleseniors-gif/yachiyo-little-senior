@@ -1,0 +1,69 @@
+name: Team continuous lines correction
+on:
+  push:
+    branches: [fix/team-continuous-lines-20261005]
+    paths: [.github/workflows/team-continuous-lines.yml]
+permissions:
+  contents: write
+jobs:
+  correct:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 4
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: main
+      - name: Apply only the exact locally rendered CSS change
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          import hashlib, re
+          p=Path('team.html')
+          raw=p.read_bytes()
+          def blob(value):
+              return hashlib.sha1(b'blob '+str(len(value)).encode()+b'\0'+value).hexdigest()
+          assert blob(raw)=='043fee214fc5858be1c0636319d3ac8d51c897a8', 'Source changed: refusing to overwrite another edit'
+          old=raw.decode()
+          start=old.index('<style id="team-action-policy-list-style">')
+          end=old.index('</style>',start)+len('</style>')
+          style=old[start:end]
+          pairs=[
+            ('/* 行動方針・選手目標：グラウンドでのルールと同じ金色の縦線。 */','/* 行動方針は本文全体、選手目標は見出しと本文のまとまりごとに1本の縦線。 */'),
+            ('#team-policy .team-action-policy-list li,\n#teamStandardsV2 .player-goal li{\n  border-left:3px solid #c99a35;\n  padding-left:18px;\n}', '#team-policy .team-action-policy-list,\n#teamStandardsV2 .player-goal > div{\n  border-left:3px solid #c99a35 !important;\n  padding-left:22px !important;\n}'),
+            ('  #team-policy .team-action-policy-list li,\n  #teamStandardsV2 .player-goal li{\n    padding-left:14px;\n  }','  #team-policy .team-action-policy-list,\n  #teamStandardsV2 .player-goal > div{\n    padding-left:15px !important;\n  }')
+          ]
+          for before,after in pairs:
+              assert style.count(before)==1, 'Expected one exact match'
+              style=style.replace(before,after,1)
+          new=old[:start]+style+old[end:]
+          assert old.split('<body',1)[1]==new.split('<body',1)[1], 'Page content must not change'
+          assert re.findall(r'<script\b[\s\S]*?</script>',old)==re.findall(r'<script\b[\s\S]*?</script>',new), 'Scripts must not change'
+          assert blob(new.encode())=='00d4a0ff9dc6f1e75fa02ff21fba5c1c9443ede2', 'Must match the exact locally tested result'
+          p.write_bytes(new.encode())
+          print('Validated: one CSS block only; body and scripts byte-identical.')
+          print('Result matches the locally rendered 375/390/428/768/1280px checks.')
+          PY
+          git diff --check
+          test "$(git diff --name-only)" = 'team.html'
+          node --test tests/home-csp.test.mjs
+          git diff --stat
+      - name: Publish only team.html with a non-force push
+        run: |
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add team.html
+          git commit -m 'style(team): use one continuous gold line per policy or goal group'
+          git push origin HEAD:refs/heads/main
+          git rev-parse HEAD
+      - name: Check the public team page for the corrected CSS
+        run: |
+          for attempt in 1 2 3 4 5 6; do
+            if curl -fsS --max-time 10 -H 'Cache-Control: no-cache' 'https://yachiyo-little-senior.netlify.app/team' -o /tmp/team-live.html; then
+              if grep -q '行動方針は本文全体、選手目標は見出しと本文のまとまりごとに1本の縦線' /tmp/team-live.html; then
+                echo 'PUBLIC_TEAM_CSS_CONFIRMED: continuous group-line CSS is served by the live team page.'
+                exit 0
+              fi
+            fi
+            sleep 10
+          done
+          echo 'PUBLIC_TEAM_CSS_NOT_YET_CONFIRMED: GitHub change is published; live deployment remains unverified.'
