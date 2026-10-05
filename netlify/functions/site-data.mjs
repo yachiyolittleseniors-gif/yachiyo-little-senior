@@ -912,10 +912,9 @@ export default async (request, context) => {
           "(()=>{const v=" + JSON.stringify(version) +
           ",u=" + JSON.stringify(heroUrl) +
           ",s=" + JSON.stringify(heroSourceUrl) +
-          ";window.__yachiyoHeroVersion=v;window.__yachiyoHeroUrl=u;window.__yachiyoHeroSourceUrl=s;" +
-          "if(window.__yachiyoHeroRequest)window.__yachiyoHeroRequest.url=u;" +
-          "document.documentElement.style.setProperty('--hero-photo','url(\\\"'+u+'\\\")');" +
-          "if(v){const l=document.createElement('link');l.rel='preload';l.as='image';l.href=u;l.fetchPriority='high';document.head.appendChild(l);}})();";
+          ";window.__yachiyoHeroVersion=v;window.__yachiyoHeroSourceUrl=s;" +
+          "if(window.__yachiyoHeroRequest){window.__yachiyoHeroRequest.url=s;window.__yachiyoHeroRequest.version=v;}" +
+          "if(!window.__yachiyoHeroInitialUrl){window.__yachiyoHeroUrl=u;document.documentElement.style.setProperty('--hero-photo','url(\\\"'+u+'\\\")');if(v){const l=document.createElement('link');l.rel='preload';l.as='image';l.href=u;l.fetchPriority='high';document.head.appendChild(l);}}})();";
         return new Response(bootstrapScript, {
           status: 200,
           headers: {
