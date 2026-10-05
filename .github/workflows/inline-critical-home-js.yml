@@ -1,0 +1,48 @@
+name: Inline critical home JS safely
+on:
+  push:
+    branches: [perf/home-inline-critical-js-20261005]
+permissions:
+  contents: write
+jobs:
+  rollout:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 8
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: main
+      - name: Inline exact synchronous head scripts
+        shell: bash
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          p=Path('index.html')
+          s=p.read_text()
+          replacements={
+            '<script src="./csp-event-handlers.js?v=20260929-logo-home"></script>': '<script>\n'+Path('csp-event-handlers.js').read_text().rstrip()+'\n</script>',
+            '<script src="./hero-position-prepaint.js?v=20261001-1"></script>': '<script>\n'+Path('hero-position-prepaint.js').read_text().rstrip()+'\n</script>',
+            '<script src="./admin-session-client.js?v=20261003-legacy-admin-session1"></script>': '<script>\n'+Path('admin-session-client.js').read_text().rstrip()+'\n</script>',
+            '<script src="./reading-position.js?v=20261001-visible1"></script>': '<script>\n'+Path('reading-position.js').read_text().rstrip()+'\n</script>',
+          }
+          for old,new in replacements.items():
+            assert s.count(old)==1, f'expected one exact tag: {old}'
+            s=s.replace(old,new,1)
+          for name in ['csp-event-handlers.js','hero-position-prepaint.js','admin-session-client.js','reading-position.js']:
+            assert name not in s.split('</head>',1)[0], f'{name} still externally blocks head'
+          p.write_text(s)
+          PY
+          git diff --check
+          test "$(git diff --name-only)" = "index.html"
+          node --test tests/home-csp.test.mjs
+          node netlify/sync-home-csp.mjs
+          node --test tests/home-csp.test.mjs
+      - name: Publish only validated home change
+        shell: bash
+        run: |
+          git checkout -- _headers
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add index.html
+          git commit -m 'perf(home): inline critical synchronous head scripts'
+          git push origin HEAD:refs/heads/main
