@@ -6,22 +6,72 @@ on:
     paths:
       - .github/workflows/hero-lcp-safe-check.yml
 permissions:
-  contents: read
+  contents: write
 jobs:
   inspect:
     runs-on: ubuntu-24.04
-    timeout-minutes: 5
+    timeout-minutes: 8
     steps:
       - uses: actions/checkout@v4
-      - name: Existing regression checks
-        run: node --test tests/home-csp.test.mjs
-      - name: Export repository text for local regression testing
+      - run: npm ci --ignore-scripts
+      - name: Record existing test results before the server change
+        run: node --test tests/*.test.* > /tmp/hero-before.tap 2>&1 || true
+      - name: Apply two exact changes to the isolated branch
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          import hashlib
+          p = Path('netlify/functions/site-data.mjs')
+          original = p.read_bytes()
+          blob = hashlib.sha1(b'blob ' + str(len(original)).encode() + b'\0' + original).hexdigest()
+          assert blob == 'ccdb75740b118ed8954755af6f1c59dc3cd8912e', 'Source changed: stop rather than overwrite it'
+          source = original.decode()
+          pairs = [
+            ('import { getStore } from "@netlify/blobs";', 'import { getStore } from "@netlify/blobs";\nimport { readHeroBootstrapData } from "./_hero-bootstrap-cache.mjs";'),
+            ('        const photos = await readHeroManifestData(store, key);', '        const photos = await readHeroBootstrapData(store, key, readHeroManifestData);')
+          ]
+          for before, after in pairs:
+            assert source.count(before) == 1, 'Expected a single exact replacement'
+            source = source.replace(before, after, 1)
+          p.write_text(source)
+          PY
+          node --check netlify/functions/site-data.mjs
+          node --check netlify/functions/_hero-bootstrap-cache.mjs
+          git diff --check
+          git diff --stat
+      - name: Required hero and CSP regression tests
+        run: node --test tests/hero-bootstrap-cache.test.mjs tests/home-csp.test.mjs
+      - name: Confirm there are no additional failures in the complete existing test suite
+        run: |
+          node --test tests/*.test.* > /tmp/hero-after.tap 2>&1 || true
+          python3 - <<'PY'
+          from pathlib import Path
+          def failures(path):
+            return [line for line in Path(path).read_text().splitlines() if line.startswith('not ok ')]
+          before = failures('/tmp/hero-before.tap')
+          after = failures('/tmp/hero-after.tap')
+          print('Pre-existing test failures:', len(before))
+          for line in before: print(line)
+          assert before == after, 'Regression: the set of failed tests changed'
+          assert '# tests ' in Path('/tmp/hero-after.tap').read_text(), 'Missing test report'
+          print('No additional test failures after the isolated hero change.')
+          PY
+      - name: Commit the validated server change only to the isolated branch
+        run: |
+          test "$(git diff --name-only)" = 'netlify/functions/site-data.mjs'
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add netlify/functions/site-data.mjs
+          git commit -m 'perf(hero): avoid downloading photo data just to resolve its current URL'
+          git push origin HEAD:refs/heads/fix/hero-lcp-safe-20261005
+      - name: Export validated source and test reports
         run: |
           mkdir -p /tmp/hero-lcp-source
           git archive HEAD | tar -x -C /tmp/hero-lcp-source
+          cp /tmp/hero-before.tap /tmp/hero-after.tap /tmp/hero-lcp-source/
       - uses: actions/upload-artifact@v4
         with:
-          name: hero-lcp-source
+          name: hero-lcp-validated
           path: /tmp/hero-lcp-source
           retention-days: 1
           include-hidden-files: true
