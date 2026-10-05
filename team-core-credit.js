@@ -14,7 +14,7 @@ function boot(){
       credit.classList.remove('is-visible');
       credit.setAttribute('aria-hidden','true');
       trigger.setAttribute('aria-expanded','false');
-    },3000);
+    },2000);
   }
 
   trigger.addEventListener('click',show);
