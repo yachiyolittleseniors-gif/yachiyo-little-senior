@@ -229,8 +229,10 @@ html{scroll-padding-top:var(--compact-header-height)}
 .duty-monitor-summary{margin:0;color:#566173;font-size:13px;font-weight:700;line-height:1.6}
 .duty-monitor-metrics{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px;margin:12px 0}
 .duty-monitor-metric{padding:9px 8px;border-radius:10px;background:#f4f6f8;text-align:center}.duty-monitor-metric b{display:block;color:#071426;font-size:18px}.duty-monitor-metric small{color:#6b7482;font-weight:800}
-.duty-monitor-metric-rejected{background:#fff0f0}.duty-monitor-metric-rejected b,.duty-monitor-metric-rejected small{color:#a52a2a}
-.duty-monitor-metric-noline{background:#fff4df;border:1px solid rgba(212,146,24,.3)}.duty-monitor-metric-noline b,.duty-monitor-metric-noline small{color:#9a5b00}
+.duty-monitor-noline-alert{display:flex;align-items:center;gap:10px;margin:0 0 12px;padding:10px 12px;border:1px solid rgba(212,146,24,.38);border-radius:12px;background:#fff4df;color:#8f5700}
+.duty-monitor-noline-alert[hidden]{display:none!important}
+.duty-monitor-noline-icon{display:grid;place-items:center;flex:0 0 24px;width:24px;height:24px;border-radius:50%;background:#e2a52f;color:#fff;font-weight:900}
+.duty-monitor-noline-alert b{display:block;font-size:13px;line-height:1.35}.duty-monitor-noline-alert small{display:block;margin-top:2px;font-size:11px;font-weight:800;line-height:1.45}
 .duty-request-no-line-alert{display:flex;flex-wrap:wrap;align-items:center;gap:6px;margin:8px 0 2px}
 .duty-request-no-line-badge{display:inline-flex;align-items:center;justify-content:center;padding:4px 8px;border-radius:999px;background:#fff0cf;color:#9a5b00;border:1px solid rgba(212,146,24,.45);font-size:11px;font-weight:900}
 .duty-request-no-line-action{color:#9a5b00;font-size:11px;font-weight:900}
@@ -240,7 +242,7 @@ html{scroll-padding-top:var(--compact-header-height)}
 .duty-monitor-recent{margin-top:10px;border-top:1px solid rgba(7,20,38,.08);padding-top:8px}
 .duty-monitor-recent-item{padding:8px 0;border-bottom:1px solid rgba(7,20,38,.07);font-size:12px;line-height:1.55;color:#4f5967}
 .duty-monitor-recent-item:last-child{border-bottom:0}.duty-monitor-recent-item b{color:#071426}
-@media(max-width:520px){.duty-monitor-metrics{grid-template-columns:repeat(2,minmax(0,1fr))}.duty-monitor-card{padding:12px}}
+@media(max-width:520px){.duty-monitor-metrics{grid-template-columns:repeat(3,minmax(0,1fr))}.duty-monitor-metric{padding:9px 4px}.duty-monitor-metric small{font-size:11px}.duty-monitor-card{padding:12px}}
 </style>
 <style id="passkey-setup-style">
 .passkey-setup{margin:0 0 18px}.passkey-setup[hidden]{display:none}
@@ -1554,9 +1556,11 @@ main.wrap{padding-bottom:38px!important}
         <div class="duty-monitor-metrics">
           <div class="duty-monitor-metric"><b id="dutyMonitorPending">0</b><small>確認待ち</small></div>
           <div class="duty-monitor-metric"><b id="dutyMonitorApproved">0</b><small>承認・反映済み</small></div>
-          <div class="duty-monitor-metric duty-monitor-metric-rejected"><b id="dutyMonitorRejected">0</b><small>否認</small></div>
-          <div class="duty-monitor-metric duty-monitor-metric-noline"><b id="dutyMonitorNoLine">0</b><small>LINE利用不可</small></div>
           <div class="duty-monitor-metric"><b id="dutyMonitorIssues">0</b><small>要確認</small></div>
+        </div>
+        <div id="dutyMonitorNoLineAlert" class="duty-monitor-noline-alert" hidden>
+          <span class="duty-monitor-noline-icon" aria-hidden="true">!</span>
+          <div><b>LINE利用不可の申請 <span id="dutyMonitorNoLineCount">0</span>件</b><small>管理者による確認・反映が必要です</small></div>
         </div>
         <button id="dutyMonitorToggle" class="duty-monitor-toggle" type="button" aria-expanded="false" aria-controls="dutyMonitorDetails">システム処理履歴を表示</button>
         <div id="dutyMonitorDetails" hidden>

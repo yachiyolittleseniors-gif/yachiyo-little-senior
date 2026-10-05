@@ -497,8 +497,8 @@
     const summary=document.getElementById('dutyMonitorSummary');
     const pending=document.getElementById('dutyMonitorPending');
     const approved=document.getElementById('dutyMonitorApproved');
-    const rejected=document.getElementById('dutyMonitorRejected');
-    const noLine=document.getElementById('dutyMonitorNoLine');
+    const noLineAlert=document.getElementById('dutyMonitorNoLineAlert');
+    const noLineCount=document.getElementById('dutyMonitorNoLineCount');
     const issues=document.getElementById('dutyMonitorIssues');
     const issueList=document.getElementById('dutyMonitorIssueList');
     const recent=document.getElementById('dutyMonitorRecent');
@@ -521,12 +521,11 @@
         :'承認リンクは未使用です。監視は待機中です。';
     }
     const localApproved=requests.filter(function(item){return item.status==='approved'}).length;
-    const localRejected=requests.filter(function(item){return item.status==='rejected'}).length;
     const localNoLine=requests.filter(function(item){return item.status==='pending'&&item.noLineFallback===true}).length;
     if(pending)pending.textContent=String(monitor.pendingCount||0);
     if(approved)approved.textContent=String(Number.isFinite(Number(monitor.approvedCount))?Number(monitor.approvedCount):localApproved);
-    if(rejected)rejected.textContent=String(localRejected);
-    if(noLine)noLine.textContent=String(localNoLine);
+    if(noLineCount)noLineCount.textContent=String(localNoLine);
+    if(noLineAlert)noLineAlert.hidden=localNoLine===0;
     if(issues)issues.textContent=String(monitor.issueCount||0);
     if(issueList){
       const list=Array.isArray(monitor.issues)?monitor.issues:[];
