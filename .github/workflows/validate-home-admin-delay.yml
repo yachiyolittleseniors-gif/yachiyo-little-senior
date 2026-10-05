@@ -1,0 +1,41 @@
+name: Validate delayed home admin
+on:
+  push:
+    branches: [perf/home-delay-admin-js-20261005]
+permissions:
+  contents: write
+jobs:
+  validate-and-publish:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 8
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: perf/home-delay-admin-js-20261005
+      - name: Validate delayed admin loader
+        shell: bash
+        run: |
+          set -euo pipefail
+          node --check home-admin-delayed.js
+          grep -q 'home-admin-delayed.js?v=20261005-1' index.html
+          ! grep -q '<script src="./admin-button-config.js?v=20261003-rebuild1"></script>' index.html
+          ! grep -q '<script src="./admin-button-controller.js?v=20261004-unified3"></script>' index.html
+          node --test tests/home-csp.test.mjs
+          node netlify/sync-home-csp.mjs
+          node --test tests/home-csp.test.mjs
+          git diff --check
+      - name: Publish validated files
+        shell: bash
+        run: |
+          set -euo pipefail
+          git fetch origin main
+          git checkout main
+          git pull --ff-only origin main
+          git checkout perf/home-delay-admin-js-20261005 -- index.html home-admin-delayed.js
+          node netlify/sync-home-csp.mjs
+          node --test tests/home-csp.test.mjs
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add index.html home-admin-delayed.js _headers
+          git commit -m 'perf(home): delay admin scripts after initial render'
+          git push origin main
