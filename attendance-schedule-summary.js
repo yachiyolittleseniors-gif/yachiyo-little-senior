@@ -670,9 +670,49 @@
       }
     }
 
+    let pageLock=null;
+
+    function lockPageScroll(){
+      if(pageLock)return;
+      const body=document.body,html=document.documentElement;
+      const y=window.scrollY||window.pageYOffset||0;
+      pageLock={
+        y,
+        bodyPosition:body.style.position,
+        bodyTop:body.style.top,
+        bodyLeft:body.style.left,
+        bodyRight:body.style.right,
+        bodyWidth:body.style.width,
+        bodyOverflow:body.style.overflow,
+        htmlOverflow:html.style.overflow
+      };
+      body.style.position='fixed';
+      body.style.top=(-y)+'px';
+      body.style.left='0';
+      body.style.right='0';
+      body.style.width='100%';
+      body.style.overflow='hidden';
+      html.style.overflow='hidden';
+    }
+
+    function unlockPageScroll(){
+      if(!pageLock)return;
+      const body=document.body,html=document.documentElement,lock=pageLock;
+      pageLock=null;
+      body.style.position=lock.bodyPosition;
+      body.style.top=lock.bodyTop;
+      body.style.left=lock.bodyLeft;
+      body.style.right=lock.bodyRight;
+      body.style.width=lock.bodyWidth;
+      body.style.overflow=lock.bodyOverflow;
+      html.style.overflow=lock.htmlOverflow;
+      window.scrollTo(0,lock.y);
+    }
+
     function openMenu(){
       void loadSchedule().then(()=>{
         renderMenu();
+        lockPageScroll();
         positionMenu();
         menu.hidden=false;
         button.setAttribute('aria-expanded','true');
@@ -681,8 +721,10 @@
     }
 
     function closeMenu(){
+      if(menu.hidden)return;
       menu.hidden=true;
       button.setAttribute('aria-expanded','false');
+      unlockPageScroll();
     }
 
     window.visualViewport?.addEventListener('resize',()=>{if(!menu.hidden)positionMenu()});
