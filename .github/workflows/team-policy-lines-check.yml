@@ -1,0 +1,95 @@
+name: Team policy line styling
+on:
+  push:
+    branches:
+      - fix/team-policy-lines-20261005
+    paths:
+      - .github/workflows/team-policy-lines-check.yml
+permissions:
+  contents: write
+jobs:
+  style-only:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 4
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: 03e6510c3102391d1679e860bcd8112b23e3b2d4
+      - name: Apply exactly the locally verified CSS-only change
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          import hashlib
+          import re
+          path = Path('team.html')
+          original = path.read_bytes()
+          def blob(data):
+            return hashlib.sha1(b'blob ' + str(len(data)).encode() + b'\0' + data).hexdigest()
+          assert blob(original) == '26dc8650b8b67dc0193b6124a785c48cdad343b4', 'team.html changed: stop rather than overwrite it'
+          source = original.decode('utf-8')
+          pattern = re.compile(r'<style id="team-action-policy-list-style">[\s\S]*?</style>')
+          assert len(pattern.findall(source)) == 1
+          replacement = '''<style id="team-action-policy-list-style">
+          /* 行動方針・選手目標：グラウンドでのルールと同じ金色の縦線。 */
+          #team-policy .team-action-policy-list{
+            margin:0;
+            padding:0;
+            list-style:none;
+            display:grid;
+            gap:12px;
+          }
+          #team-policy .team-action-policy-list li{
+            color:#55606d;
+            font-size:15px;
+            font-weight:600;
+            line-height:1.9;
+          }
+          #team-policy .team-action-policy-list li::before{
+            content:none;
+          }
+          #teamStandardsV2 .player-goal ul{
+            padding-left:0 !important;
+            list-style:none;
+            display:grid;
+            gap:8px;
+          }
+          #team-policy .team-action-policy-list li,
+          #teamStandardsV2 .player-goal li{
+            border-left:3px solid #c99a35;
+            padding-left:18px;
+          }
+          @media(max-width:700px){
+            #team-policy .team-action-policy-list{gap:10px}
+            #team-policy .team-action-policy-list li{
+              font-size:14px;
+              line-height:1.9;
+            }
+            #team-policy .team-action-policy-list li,
+            #teamStandardsV2 .player-goal li{
+              padding-left:14px;
+            }
+          }
+          </style>'''
+          updated = pattern.sub(lambda _: replacement, source)
+          assert pattern.sub('', source) == pattern.sub('', updated), 'Unexpected change outside the targeted CSS block'
+          assert re.findall(r'<script\b[\s\S]*?</script>', source) == re.findall(r'<script\b[\s\S]*?</script>', updated)
+          output = updated.encode('utf-8')
+          assert blob(output) == '043fee214fc5858be1c0636319d3ac8d51c897a8', 'Output differs from the locally browser-tested version'
+          path.write_bytes(output)
+          print('Only the targeted CSS block changed. Text, HTML, scripts and all other styles are unchanged.')
+          print('Exact output matches local Chromium layout checks at 320, 375, 390, 700 and 1440px.')
+          PY
+      - name: Verify existing CSP tests and exact diff
+        run: |
+          node --test tests/home-csp.test.mjs
+          git diff --check
+          test "$(git diff --name-only)" = 'team.html'
+          git diff --stat
+      - name: Commit only team.html to main without overwriting concurrent changes
+        run: |
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add team.html
+          git commit -m 'style(team): unify policy and player-goal bullets as gold vertical lines'
+          git push origin HEAD:refs/heads/main
+          git log -1 --format='%H %s'
