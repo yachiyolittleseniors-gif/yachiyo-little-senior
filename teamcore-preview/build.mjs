@@ -29,6 +29,20 @@ html = html.replace('version:3', 'version:4').replace("const STORE='teamcore-ui-
 html = html.replace('予定と学年の切り替え、出欠入力、コメント・帯同、お知らせの確認', '予定を見ながらの出欠入力、学年切り替え、コメント・帯同、お知らせの確認');
 if (!html.includes('予定を見ながら出欠') || !html.includes('function attPlan(e)')) throw new Error('Attendance v4 patch failed. Nothing will be published.');
 
+// Preview v4.1: make duty-change entry explicit and reliable on touch devices.
+html = html.replace(
+  '<button class="btn" data-action="request-start" data-id="${d.id}">${icon(\'swap\')} 当番変更を申請</button>',
+  '<div class="two space"><button type="button" class="btn" data-action="request-start" data-id="${d.id}">${icon(\'swap\')} 入れ替える</button><button type="button" class="btn outline" data-action="request-start-replace" data-id="${d.id}">${icon(\'replace\')} 交代してもらう</button></div>'
+);
+html = html.replaceAll('<button class="method ', '<button type="button" class="method ');
+html = html.replace(
+  "case 'request-start':quickContext=null;startRequest(id);break;",
+  "case 'request-start':quickContext=null;startRequest(id);break;case 'request-start-replace':quickContext=null;startRequest(id);requestDraft.type='replace';requestForm();break;"
+);
+html = html.replaceAll('UI PROTOTYPE 04', 'UI PROTOTYPE 04.1');
+if (!html.includes('request-start-replace') || !html.includes('交代してもらう</button>')) {
+  throw new Error('Duty replace-entry patch failed. Nothing will be published.');
+}
 if (/(?:fetch\s*\(|XMLHttpRequest|sendBeacon|WebSocket|serviceWorker|\/\.netlify\/functions\/)/.test(html)) {
   throw new Error('Unexpected network or production API code in the sample prototype.');
 }
