@@ -116,16 +116,19 @@
   }
 
   function setVisible(show){
+    // HOME has its own collapsible panel and modal visibility rules.
+    // Keep its inline display normal so those CSS rules remain authoritative.
+    const displayPriority=KEY==='index.html'?'':'important';
     if(show){
-      button.style.setProperty('display','block','important');
+      button.style.setProperty('display','block',displayPriority);
       button.removeAttribute('aria-hidden');
       button.dataset.ylsAdminVisible='1';
       if(cfg.container){
         const container=document.querySelector(cfg.container);
-        if(container)container.style.setProperty('display','flex','important');
+        if(container)container.style.setProperty('display','flex',displayPriority);
       }
     }else if(!isEditing()){
-      button.style.setProperty('display','none','important');
+      button.style.setProperty('display','none',displayPriority);
       button.setAttribute('aria-hidden','true');
       delete button.dataset.ylsAdminVisible;
       if(cfg.container){

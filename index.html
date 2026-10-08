@@ -4642,7 +4642,10 @@ function openProtectedArea(type){
     if(on){
       sessionStorage.setItem('yachiyoAdminMode','1');
       change.style.display='inline-block';
-      adminPanel.style.setProperty('display',window.matchMedia('(max-width:600px)').matches?'grid':'flex','important');
+      // The outer panel is flex; only the four actions inside it use a grid.
+      // Let the home panel CSS control collapsed/expanded and modal visibility.
+      adminPanel.style.setProperty('display','flex');
+      toggle.style.removeProperty('display');
       toggle.textContent='管理終了';
     }else{
       sessionStorage.removeItem('yachiyoAdminMode');
