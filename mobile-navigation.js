@@ -138,3 +138,120 @@
   else init();
 })();
 
+
+// Shared compact footer: preserve existing copyright and management elements.
+(() => {
+  'use strict';
+
+  const currentScript = document.currentScript;
+  const siteBase = new URL('./', currentScript && currentScript.src ? currentScript.src : location.href);
+  const groundMap = 'https://www.google.com/maps/search/?api=1&query=%E5%85%AB%E5%8D%83%E4%BB%A3%E3%83%AA%E3%83%88%E3%83%AB%E3%82%B7%E3%83%8B%E3%82%A2%E3%82%B0%E3%83%A9%E3%82%A6%E3%83%B3%E3%83%89&query_place_id=ChIJP8kykQ5-ImARHFM8jqcihPs';
+  const socialLinks = [
+    ['Instagram', 'https://www.instagram.com/yachiyo_little_senior/'],
+    ['Facebook', 'https://www.facebook.com/874baseball']
+  ];
+
+  function installFooterStyle() {
+    if (document.getElementById('yls-compact-footer-style')) return;
+    const style = document.createElement('style');
+    style.id = 'yls-compact-footer-style';
+    style.textContent = [
+      'footer.yls-compact-footer{display:block!important;box-sizing:border-box!important;width:100%!important;max-width:none!important;margin:0!important;padding:22px 18px 18px!important;background:#071426!important;color:#b8c3cf!important;border:0!important;border-top:1px solid rgba(199,154,59,.38)!important;border-radius:0!important;text-align:center!important;line-height:1.6!important}',
+      'footer.yls-compact-footer>.restored-footer-inner{display:block!important;box-sizing:border-box!important;width:100%!important;max-width:1180px!important;margin:0 auto!important;padding:0!important}',
+      'footer.yls-compact-footer .yls-compact-footer-details{display:flex!important;flex-direction:column!important;align-items:center!important;gap:0!important;margin:0!important;padding:0!important}',
+      'footer.yls-compact-footer .yls-compact-footer-details a{box-sizing:border-box!important;max-width:100%!important;margin:0!important;border:0!important;background:none!important;text-decoration:none!important;letter-spacing:.02em!important;line-height:1.65!important}',
+      'footer.yls-compact-footer .yls-compact-footer-address{display:inline-flex!important;align-items:center!important;justify-content:center!important;gap:6px!important;min-height:32px!important;padding:5px 4px!important;color:#dec38a!important;font-size:13px!important;font-weight:600!important}',
+      'footer.yls-compact-footer .yls-compact-footer-address span:last-child{flex:none;font-size:12px!important}',
+      'footer.yls-compact-footer .yls-compact-footer-alias{margin:4px 0 0!important;padding:0!important;color:#b8c3cf!important;font-size:12px!important;font-weight:500!important;letter-spacing:.02em!important;line-height:1.7!important}',
+      'footer.yls-compact-footer .yls-compact-footer-privacy{display:inline-flex!important;align-items:center!important;justify-content:center!important;min-height:32px!important;padding:6px 8px!important;color:#aab6c4!important;font-size:11px!important;font-weight:400!important}',
+      'footer.yls-compact-footer .yls-compact-footer-details a:hover{color:#f0d89e!important}',
+      'footer.yls-compact-footer .yls-compact-footer-details a:focus-visible{outline:2px solid #dec38a;outline-offset:2px;border-radius:3px}',
+      'footer.yls-compact-footer .yls-compact-footer-copy{display:block!important;max-width:100%!important;margin:10px 0 0!important;padding:9px 0 0!important;border:0!important;border-top:1px solid rgba(255,255,255,.08)!important;color:#8f9eae!important;font-size:10px!important;font-weight:400!important;letter-spacing:.02em!important;line-height:1.6!important;text-align:center!important;white-space:normal!important;overflow-wrap:anywhere}',
+      '@media(min-width:901px){footer.yls-compact-footer{padding:26px 24px 20px!important}}',
+      '@media(min-width:1200px){.site-header .site-menu>a.yls-footer-social-link{display:none!important}}'
+    ].join('\n');
+    document.head.appendChild(style);
+  }
+
+  function addSocialLinks() {
+    document.querySelectorAll('.mobile-links,.site-menu').forEach(menu => {
+      socialLinks.forEach(([label, href]) => {
+        const exists = Array.from(menu.querySelectorAll('a[href]')).some(link =>
+          link.href.replace(/\/$/, '') === href.replace(/\/$/, '')
+        );
+        if (exists) return;
+        const link = document.createElement('a');
+        link.className = 'yls-footer-social-link';
+        link.href = href;
+        link.textContent = label;
+        link.target = '_blank';
+        link.rel = 'noopener noreferrer';
+        menu.appendChild(link);
+      });
+    });
+  }
+
+  function simplifyFooter(footer) {
+    if (footer.dataset.ylsCompactFooter === 'true') return;
+    const container = footer.querySelector('.restored-footer-inner') || footer;
+    let copyright = footer.querySelector('.restored-footer-copy,.footer-copy,#adminReveal');
+
+    // Bare footers contain a text node, or a text node and the live #year span.
+    if (!copyright) {
+      copyright = document.createElement('div');
+      copyright.className = 'restored-footer-copy';
+      Array.from(container.childNodes).forEach(node => copyright.appendChild(node));
+      container.appendChild(copyright);
+    }
+
+    footer.querySelectorAll('.restored-footer-nav,.ground-address,.restored-footer-alias,.footer-privacy-link,.footer-privacy').forEach(node => node.remove());
+
+    const details = document.createElement('div');
+    details.className = 'yls-compact-footer-details';
+
+    const address = document.createElement('a');
+    address.className = 'yls-compact-footer-address';
+    address.href = groundMap;
+    address.target = '_blank';
+    address.rel = 'noopener noreferrer';
+    address.setAttribute('aria-label', '千葉県八千代市島田台775のグラウンドをGoogleマップで開く（新しいタブ）');
+    const addressText = document.createElement('span');
+    addressText.textContent = '千葉県八千代市島田台775';
+    const arrow = document.createElement('span');
+    arrow.textContent = '↗';
+    arrow.setAttribute('aria-hidden', 'true');
+    address.appendChild(addressText);
+    address.appendChild(arrow);
+
+    const alias = document.createElement('div');
+    alias.className = 'yls-compact-footer-alias';
+    alias.textContent = '八千代リトルシニア 公式サイト';
+
+    const privacy = document.createElement('a');
+    privacy.className = 'yls-compact-footer-privacy';
+    privacy.href = new URL('privacy', siteBase).href;
+    privacy.textContent = 'プライバシーポリシー';
+
+    details.appendChild(address);
+    details.appendChild(alias);
+    details.appendChild(privacy);
+    container.insertBefore(details, copyright);
+    copyright.classList.add('yls-compact-footer-copy');
+    footer.classList.add('yls-compact-footer');
+    footer.dataset.ylsCompactFooter = 'true';
+  }
+
+  function initCompactFooters() {
+    const footers = document.querySelectorAll('body > footer');
+    if (!footers.length) return;
+    installFooterStyle();
+    addSocialLinks();
+    footers.forEach(simplifyFooter);
+  }
+
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', initCompactFooters, { once: true });
+  } else {
+    initCompactFooters();
+  }
+})();
