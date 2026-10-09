@@ -1479,7 +1479,7 @@ body.staff-editing:after{display:none!important;content:none!important}
 </div>
 <div class="staff-list" id="staffPublic"></div>
 <p class="staff-note">※上記以外にも卒団生を中心としたコーチが不定期で訪れ指導にあたっています。</p>
-<div class="staff-admin" id="staffAdmin">
+<div class="staff-admin" id="staffAdmin" data-nosnippet>
 <div id="staffEditor"></div>
 <div class="staff-admin-actions">
 <button class="staff-add" id="staffAdd" type="button">＋ 追加</button>
@@ -1495,7 +1495,7 @@ body.staff-editing:after{display:none!important;content:none!important}
 </header>
 <div class="major-achievements-list" id="majorAchievementsList"></div>
 <div class="major-achievements-empty" id="majorAchievementsEmpty">現在、掲載中の大会実績はありません。</div>
-<div class="major-achievements-admin" id="majorAchievementsAdmin">
+<div class="major-achievements-admin" id="majorAchievementsAdmin" data-nosnippet>
 <div id="majorAchievementsEditor"></div>
 <div class="major-achievements-admin-actions">
 <button class="major-achievement-add" id="majorAchievementAdd" type="button">＋ 実績を追加</button>
@@ -1533,7 +1533,7 @@ body.staff-editing:after{display:none!important;content:none!important}
 <p id="graduatePublic">我孫子東高校、印旛明誠高校、柏井高校、京葉工業高校、佐倉高校、市立習志野高校、市立船橋高校、市立松戸高校、白井高校、千葉商業高校、津田沼高校、船橋芝山高校、船橋東高校、松戸六実高校、実籾高校、八千代高校、八千代西高校、八千代東高校など</p>
 </div>
 <p class="path-note"></p>
-<div class="graduate-admin" id="graduateAdmin">
+<div class="graduate-admin" id="graduateAdmin" data-nosnippet>
 <label>県外私立高校<textarea id="graduateOutsidePrivateEdit"></textarea></label>
 <label>県内私立高校<textarea id="graduateInsidePrivateEdit"></textarea></label>
 <label>県内公立高校<textarea id="graduatePublicEdit"></textarea></label>
@@ -1551,7 +1551,7 @@ body.staff-editing:after{display:none!important;content:none!important}
 <p id="teamMovieDescription">雨の日は室内練習場を利用して練習を行っています。選手たちの練習風景をご覧ください。</p>
 <video id="teamMovieVideo" controls playsinline preload="metadata" style="width:100%;max-width:760px;border-radius:8px;background:#000" hidden></video>
 </div>
-<div class="team-interview-admin" id="teamMovieAdmin">
+<div class="team-interview-admin" id="teamMovieAdmin" data-nosnippet>
 <div class="team-interview-status" id="teamMovieStatus"></div>
 <label>タイトル<input id="teamMovieTitleEdit" maxlength="80" type="text" value="雨天時の室内練習"></label>
 <label>説明文<textarea id="teamMovieDescriptionEdit" maxlength="300" rows="4">雨の日は室内練習場を利用して練習を行っています。選手たちの練習風景をご覧ください。</textarea></label>
@@ -1572,7 +1572,7 @@ body.staff-editing:after{display:none!important;content:none!important}
       YouTube動画を見る
     </a>
 </div>
-<div class="team-interview-admin" id="teamInterviewAdmin">
+<div class="team-interview-admin" id="teamInterviewAdmin" data-nosnippet>
 <div class="team-interview-status" id="teamInterviewStatus"></div>
 <label>見出し
       <input id="teamInterviewTitleEdit" maxlength="80" type="text"/>
@@ -1594,7 +1594,7 @@ body.staff-editing:after{display:none!important;content:none!important}
 </div>
 </div>
 </div></section>
-<div aria-hidden="true" class="calendar-editor" id="calendarEditor">
+<div aria-hidden="true" class="calendar-editor" id="calendarEditor" data-nosnippet>
 <div class="calendar-editor-box">
 <button aria-label="閉じる" class="calendar-editor-close" data-nosnippet="" id="calendarEditorClose" type="button">×</button>
 <h2 id="calendarEditorDate">スケジュール入力</h2>
@@ -1651,7 +1651,7 @@ function closeModal(){
 <a href="./terms">サイト利用について</a>
 <a href="./board.html">チーム専用ページ 🔒</a>
 </nav>
-<button class="staff-edit-btn" data-nosnippet="" id="staffEditBtn" type="button">管理</button>
+<button class="staff-edit-btn" data-nosnippet="" id="staffEditBtn" type="button"><span data-nosnippet>管理</span></button>
 <div class="ground-address"><div class="ground-access-address">アクセス：千葉県八千代市島田台775</div><a class="ground-map-link" href="https://www.google.com/maps/search/?api=1&amp;query=%E5%8D%83%E8%91%89%E7%9C%8C%E5%85%AB%E5%8D%83%E4%BB%A3%E5%B8%82%E5%B3%B6%E7%94%B0%E5%8F%B0%EF%BC%97%EF%BC%97%EF%BC%95" rel="noopener noreferrer" target="_blank">Googleマップで見る <span aria-hidden="true">↗</span></a></div>
 <div class="footer-privacy-link" style="text-align:center;margin-top:10px;font-size:11px;"><a href="./privacy" style="color:#8f9aa7;text-decoration:none;">プライバシーポリシー</a></div>
 <div class="restored-footer-copy">© YACHIYO LITTLE SENIOR. All Rights Reserved.</div>

@@ -4195,7 +4195,7 @@ body.photo-admin-on .recruit-mode-admin{display:block}
 <section class="home-news" id="homeNews">
 <div class="home-news-head">
 <div><div class="home-news-en">NEWS</div><h2><span class="pc-reference-news-title">最新情報</span><span class="mobile-reference-news-title">新着NEWS</span></h2></div>
-<button class="news-admin-btn" data-nosnippet="" id="newsAddBtn" type="button">＋ NEWSを追加</button>
+<button class="news-admin-btn" data-nosnippet="" id="newsAddBtn" type="button"><span data-nosnippet>＋ NEWSを追加</span></button>
 </div>
 <div class="home-news-list" id="newsList"><p class="news-empty">現在、新着NEWSはありません。</p></div>
 </section>
@@ -4238,10 +4238,10 @@ body.photo-admin-on .recruit-mode-admin{display:block}
 <div class="seniorcup-home-copy"><b class="seniorcup-home-cta">大会概要・参加申込み <span aria-hidden="true">›</span></b></div>
 </a>
 </section>
-<div class="seniorcup-admin-control" id="seniorcupAdminControl">
+<div class="seniorcup-admin-control" id="seniorcupAdminControl" data-nosnippet>
 <button id="seniorcupVisibilityBtn" type="button">八千代リトルシニア杯を非表示</button>
 </div>
-<div class="news-modal" hidden="" id="newsModal">
+<div class="news-modal" hidden="" id="newsModal" data-nosnippet>
 <div class="news-modal-card">
 <button class="news-close" id="newsClose" type="button">×</button>
 <h3 id="newsModalTitle">新着NEWSを追加</h3>
@@ -4258,7 +4258,7 @@ body.photo-admin-on .recruit-mode-admin{display:block}
 <p class="hero-announcement-detail-body" id="heroAnnouncementDetailBody"></p>
 </div>
 </div>
-<div aria-labelledby="heroAnnouncementModalTitle" aria-modal="true" class="news-modal" hidden="" id="heroAnnouncementModal" role="dialog">
+<div aria-labelledby="heroAnnouncementModalTitle" aria-modal="true" class="news-modal" hidden="" id="heroAnnouncementModal" role="dialog" data-nosnippet>
 <div class="news-modal-card">
 <button aria-label="閉じる" class="news-close" id="heroAnnouncementClose" type="button">×</button>
 <h3 id="heroAnnouncementModalTitle">トップのお知らせを編集</h3>
@@ -4300,10 +4300,10 @@ body.photo-admin-on .recruit-mode-admin{display:block}
 <div class="btns"><a class="btn primary" href="/join" style="color:#fff!important;">体験・入団案内　›</a></div>
 </div>
 </div>
-<div class="recruit-mode-admin" id="recruitModeAdmin"><button id="recruitModeToggle" type="button">通常の選手募集に戻す</button></div>
+<div class="recruit-mode-admin" id="recruitModeAdmin" data-nosnippet><button id="recruitModeToggle" type="button">通常の選手募集に戻す</button></div>
 </section>
 </main>
-<div aria-hidden="true" class="calendar-editor" id="calendarEditor">
+<div aria-hidden="true" class="calendar-editor" id="calendarEditor" data-nosnippet>
 <div class="calendar-editor-box">
 <button aria-label="閉じる" class="calendar-editor-close" data-nosnippet="" id="calendarEditorClose" type="button">×</button>
 <h2 id="calendarEditorDate">スケジュール入力</h2>
@@ -5774,7 +5774,7 @@ body:not(.photo-admin-on) #heroAdminToggle.unified-admin-toggle:focus-visible{co
 #heroImageEditCancel{display:flex;align-items:center;justify-content:center;text-decoration:none;background:transparent;color:#e2bd67}
 #heroImageEditSave{background:#c79a3b;color:#071426}
 </style>
-<div id="heroImageEditModal" aria-hidden="true">
+<div id="heroImageEditModal" aria-hidden="true" data-nosnippet>
   <div id="heroImageEditCard" role="dialog" aria-modal="true" aria-labelledby="heroImageEditTitle">
     <h3 id="heroImageEditTitle">トップ画像を編集</h3>
     <div id="heroEditWorkspace">

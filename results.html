@@ -901,12 +901,12 @@ body.admin-mode .game-admin-actions{display:flex!important}
 <main class="wrap">
 <div class="toolbar">
 <div>登録した試合結果を新しい順に表示します。</div>
-<div class="admin-only results-admin-toolbar">
+<div class="admin-only results-admin-toolbar" data-nosnippet>
 <button class="admin-btn" data-nosnippet="" data-csp-onclick="toggleSquadSettings()" type="button">出場チーム設定</button>
 <button class="admin-btn" data-nosnippet="" data-csp-onclick="togglePanel()" type="button">＋ 試合結果を入力</button>
 </div>
 </div>
-<section class="panel" id="squadSettingsPanel">
+<section class="panel" id="squadSettingsPanel" data-nosnippet>
 <div class="form-mode-title">出場チーム設定</div>
 <p class="squad-settings-note">複数チームで出場する学年だけ設定してください。名称は試合登録時の内容で保存されます。</p>
 <form id="squadSettingsForm">
@@ -930,7 +930,7 @@ body.admin-mode .game-admin-actions{display:flex!important}
 </div>
 </form>
 </section>
-<section class="panel" id="panel">
+<section class="panel" id="panel" data-nosnippet>
 <div class="form-mode-title" id="formModeTitle">新しい試合結果</div>
 <form id="resultForm">
 <div class="grid">
@@ -1016,7 +1016,7 @@ body.admin-mode .game-admin-actions{display:flex!important}
 <div class="ground-address"><div class="ground-access-address">アクセス：千葉県八千代市島田台775</div><a class="ground-map-link" href="https://www.google.com/maps/search/?api=1&amp;query=%E5%8D%83%E8%91%89%E7%9C%8C%E5%85%AB%E5%8D%83%E4%BB%A3%E5%B8%82%E5%B3%B6%E7%94%B0%E5%8F%B0%EF%BC%97%EF%BC%97%EF%BC%95" rel="noopener noreferrer" target="_blank">Googleマップで見る <span aria-hidden="true">↗</span></a></div>
 <div class="footer-privacy-link" style="text-align:center;margin-top:10px;font-size:11px;"><a href="./privacy" style="color:#8f9aa7;text-decoration:none;">プライバシーポリシー</a></div>
 <div class="restored-footer-copy">© YACHIYO LITTLE SENIOR. All Rights Reserved.</div>
-<button class="admin-toggle" data-nosnippet="" id="adminModeToggle" data-csp-onclick="enableAdminMode()" type="button">管理</button>
+<button class="admin-toggle" data-nosnippet="" id="adminModeToggle" data-csp-onclick="enableAdminMode()" type="button"><span data-nosnippet>管理</span></button>
 </div>
 </footer>
 <script>
