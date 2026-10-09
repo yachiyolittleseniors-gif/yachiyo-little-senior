@@ -120,7 +120,13 @@ function openingMotion(){
         const ease=x=>{const t=clamp(x);return t*t*(3-2*t);};
   const partition=[[0,0],[445,0],[445,250],[421,300],[402,350],[379,397],[0,397]];
   let ballPixels=null,sphereLayer=null,sphereContext=null,sphereFrame=null;
-  const resolution=224,renderHeight=199;
+  // The intro runs while the real home page is loading. Cap the 3D raster
+  // size on phones so its CPU work doesn't delay hero image decode / Safari UI.
+  const compactDevice=window.matchMedia('(max-width: 900px)').matches ||
+    (typeof navigator.hardwareConcurrency==='number'&&navigator.hardwareConcurrency<=4) ||
+    navigator.connection?.saveData===true;
+  const resolution=compactDevice?120:224;
+  const renderHeight=compactDevice?107:199;
   const sphereSamples=[];
   for(let y=0;y<renderHeight;y++)for(let x=0;x<resolution;x++) {
     const sx=(x+.5)/resolution*448,sy=(y+.5)/renderHeight*397;
@@ -398,9 +404,20 @@ function openingMotion(){
         observer=new ResizeObserver(resize);observer.observe(cover);
         const timelineDuration=variant==='fire'?1400:variant==='bounce'?3100:4000;
         const duration=1400;
+        let lastFrame=0;
         function tick(now){
           if(finished||closed)return;
-          try{const elapsed=now-openedAt;draw(Math.min(elapsed/duration,1)*timelineDuration);if(elapsed>=duration){finish();return;}raf=requestAnimationFrame(tick);}catch(_){finish();}
+          try{
+            const elapsed=now-openedAt;
+            if(compactDevice&&lastFrame&&now-lastFrame<32&&elapsed<duration){
+              raf=requestAnimationFrame(tick);
+              return;
+            }
+            lastFrame=now;
+            draw(Math.min(elapsed/duration,1)*timelineDuration);
+            if(elapsed>=duration){finish();return;}
+            raf=requestAnimationFrame(tick);
+          }catch(_){finish();}
         }
         raf=requestAnimationFrame(tick);
       }catch(_){finish();}

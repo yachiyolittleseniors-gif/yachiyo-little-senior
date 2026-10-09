@@ -14,7 +14,8 @@
     }catch(_){return''}
   }
   async function applyDutyRequestPublicSetting(){const box=document.getElementById('dutyRequestBox'),note=document.getElementById('dutyRequestPublicNote');try{const r=await fetch('/.netlify/functions/site-data?section=admin-visibility-settings',{cache:'no-store'}),j=await r.json();const enabled=!!(r.ok&&j&&j.data&&j.data.dutyRequestPublic===true);if(box)box.hidden=!enabled;if(note)note.hidden=!enabled}catch(e){if(box)box.hidden=true;if(note)note.hidden=true}}
-  applyDutyRequestPublicSetting();
+  // This setting is not needed before the member is logged in.
+  // Its request is started after authorization in the initial-load handler below.
   const list=document.getElementById('dutyRosterList');
   const tableList=document.getElementById('dutyRosterTableList');
   const adminList=document.getElementById('dutyRosterAdminList');
@@ -1226,5 +1227,19 @@
       if(isAdminViewing())load();else{render();syncPendingRequestCount();}
     }).observe(panel,{attributes:true,attributeFilter:['data-admin-password']});
   }catch(e){}
-  loadCache();render();syncPendingRequestCount();loadRequests();load();
+  // Initialize visible data after login, then let the first paint happen
+  // before parallel, lower-priority roster/request GETs start.
+  Promise.resolve(window.boardAccessReady).then(allowed=>{
+    if(!allowed)return;
+    loadCache();
+    render();
+    const loadInitial=()=>{
+      applyDutyRequestPublicSetting();
+      syncPendingRequestCount();
+      loadRequests();
+      load();
+    };
+    if(typeof requestIdleCallback==='function')requestIdleCallback(loadInitial,{timeout:1200});
+    else setTimeout(loadInitial,200);
+  }).catch(()=>{});
 })();

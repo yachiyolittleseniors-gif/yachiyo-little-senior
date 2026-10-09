@@ -232,8 +232,17 @@ window.boardAccessReady=(async function requireBoardPassword(){
   // do not redirect the person in a loop. Ask for an explicit user action.
   // A passive Safari restoration still cannot launch the passkey UI by itself.
   async function manualLoginChoice(){
-    if(document.readyState==='loading'){
-      await new Promise(resolve=>document.addEventListener('DOMContentLoaded',resolve,{once:true}));
+    // Waiting for every unrelated script to finish made the first login
+    // choice needlessly late on mobile Safari. Only the <body> is required.
+    if(!document.body){
+      await new Promise(resolve=>{
+        const observer=new MutationObserver(()=>{
+          if(!document.body)return;
+          observer.disconnect();
+          resolve();
+        });
+        observer.observe(document.documentElement,{childList:true});
+      });
     }
     if(boardLoginExitStarted||boardDocumentSuspended)return 'exit';
     const gate=document.createElement('div');

@@ -23,5 +23,10 @@
  document.getElementById('dutyHistoryHide')?.addEventListener('click',()=>setDutyVisibility('dutyHistoryVisible',false));
  const featureSave=document.getElementById('featureVisibilitySave'),featureStatus=document.getElementById('featureVisibilityStatus'),dutyPublic=document.getElementById('dutyRequestPublicEnabled');
  if(featureSave&&dutyPublic){featureSave.addEventListener('click',async()=>{const pw=document.getElementById('densukeAdminPanel')?.dataset.adminPassword||'';if(!pw){if(featureStatus)featureStatus.textContent='管理認証後に保存してください。';return}if(dutyPublic.checked&&!state.dutyRequestPublic&&!confirm('当番変更申請を一般画面に公開します。よろしいですか？')){dutyPublic.checked=false;return}const data={pages:state.pages,desktopEnabled:state.desktopEnabled===true,autoEnableOnLogin:true,autoOffEnabled:false,expiresAt:{},dutyRequestPublic:dutyPublic.checked===true,dutyLinePasteVisible:state.dutyLinePasteVisible===true,dutyHistoryVisible:state.dutyHistoryVisible===true};featureSave.disabled=true;if(featureStatus)featureStatus.textContent='保存中…';try{const r=await fetch('/.netlify/functions/site-data?section=admin-visibility-settings',{method:'POST',headers:{'content-type':'application/json','x-admin-password':pw},body:JSON.stringify({data})});if(!r.ok)throw new Error();state=data;if(featureStatus)featureStatus.textContent=data.dutyRequestPublic?'当番変更申請を公開しました。':'当番変更申請を非公開にしました。'}catch(e){dutyPublic.checked=state.dutyRequestPublic===true;if(featureStatus)featureStatus.textContent='保存できませんでした。'}finally{featureSave.disabled=false}})}
- load();
+ // Don't compete with the initial login/password verification network request.
+ Promise.resolve(window.boardAccessReady).then(allowed=>{
+   if(!allowed)return;
+   if(typeof requestIdleCallback==='function')requestIdleCallback(load,{timeout:1500});
+   else setTimeout(load,250);
+ }).catch(()=>{});
 })();

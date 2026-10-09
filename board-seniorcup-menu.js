@@ -31,16 +31,21 @@
   try{visible=localStorage.getItem('yachiyoSeniorCupVisible')!=='false'}catch(e){}
   apply(visible);
 
-  fetch('/.netlify/functions/site-data?section=seniorcup-settings',{cache:'no-store'})
-    .then(response=>response.ok?response.json():null)
-    .then(json=>{
-      if(json&&json.data&&typeof json.data.visible==='boolean'){
-        visible=json.data.visible;
-        try{localStorage.setItem('yachiyoSeniorCupVisible',String(visible))}catch(e){}
-        apply(visible);
-      }
-    })
-    .catch(()=>{});
+  // Keep locally cached visibility immediate; refresh after login.
+  Promise.resolve(window.boardAccessReady).then(allowed=>{
+    if(!allowed)return;
+    const refresh=()=>fetch('/.netlify/functions/site-data?section=seniorcup-settings',{cache:'no-store'})
+      .then(response=>response.ok?response.json():null)
+      .then(json=>{
+        if(json&&json.data&&typeof json.data.visible==='boolean'){
+          visible=json.data.visible;
+          try{localStorage.setItem('yachiyoSeniorCupVisible',String(visible))}catch(e){}
+          apply(visible);
+        }
+      }).catch(()=>{});
+    if(typeof requestIdleCallback==='function')requestIdleCallback(refresh,{timeout:2000});
+    else setTimeout(refresh,300);
+  }).catch(()=>{});
 
   new MutationObserver(()=>{
     if(document.documentElement.classList.contains('seniorcup-hidden'))apply(false);
