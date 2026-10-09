@@ -10,10 +10,52 @@ function returnToTeamHome(){
   location.replace('./');
   return false;
 }
+// Hidden pages kept by Safari must not resume with a previous login UI state.
+// A normal return from an internal team screen can re-validate the existing
+// session; a return from Home or any untrusted navigation must authenticate anew.
+let boardAccessAuthorized=false;
+let boardDocumentSuspended=false;
+let teamReturnCandidate='';
+let teamReturnCaptured='';
+let teamReturnClickedAt=0;
+const teamReturnPages={
+  '/attendance.html':'attendance',
+  '/player-attendance.html':'player',
+  '/coach-attendance.html':'coach',
+  '/secretariat-documents.html':'documents'
+};
+document.addEventListener('click',function(event){
+  const link=event.target?.closest?.('a[href]');
+  teamReturnCandidate='';
+  if(!link||event.defaultPrevented||event.button>0||event.metaKey||event.ctrlKey||event.shiftKey||event.altKey)return;
+  try{
+    const next=new URL(link.href,location.href);
+    if(next.origin===location.origin&&teamReturnPages[next.pathname]){
+      teamReturnCandidate=teamReturnPages[next.pathname];
+      teamReturnClickedAt=Date.now();
+    }
+  }catch(_){}
+},true);
+window.addEventListener('pagehide',function(){
+  // Mobile Safari saves DOM visibility in the back/forward cache.
+  // Conceal content before it can be cached or displayed in a restored tab.
+  teamReturnCaptured=teamReturnCandidate&&Date.now()-teamReturnClickedAt<5000?teamReturnCandidate:'';
+  boardDocumentSuspended=true;
+  document.documentElement.style.visibility='hidden';
+});
 window.addEventListener('pageshow',function(event){
-  if(event.persisted&&document.documentElement.style.visibility==='hidden'){
+  if(!event.persisted)return;
+  document.documentElement.style.visibility='hidden';
+  if(boardLoginExitStarted)return;
+  if(!boardAccessAuthorized){
+    // An authentication ceremony was interrupted by Safari.
     returnToTeamHome();
+    return;
   }
+  boardLoginExitStarted=true;
+  // Force a fresh document instead of continuing an old authorized snapshot.
+  const target=teamReturnCaptured?'./board.html?from='+teamReturnCaptured:'./board.html?entry=home';
+  location.replace(target);
 });
 window.boardAccessReady=(async function requireBoardPassword(){
   const accessKey='yachiyoAttendancePass';
@@ -75,9 +117,10 @@ window.boardAccessReady=(async function requireBoardPassword(){
     }
     if(!response.ok)return false;
     const result=await response.json().catch(()=>({}));
-    if(boardLoginExitStarted)return false;
+    if(boardLoginExitStarted||boardDocumentSuspended)return false;
     saveAccess(result.token||value);
     grantAdminReveal();
+    boardAccessAuthorized=true;
     document.documentElement.style.visibility='';
     return true;
   }
@@ -91,11 +134,12 @@ window.boardAccessReady=(async function requireBoardPassword(){
     passkeyAttempt=(async()=>{
       try{
         const result=await window.YLSPasskeys.authenticate();
-        if(!result?.token||boardLoginExitStarted)return false;
+        if(!result?.token||boardLoginExitStarted||boardDocumentSuspended)return false;
         saveAccess(result.token);
         grantAdminReveal();
         rememberPasskeyVerification()
         try{localStorage.setItem(passkeyKey,'1')}catch(_){}
+        boardAccessAuthorized=true;
         document.documentElement.style.visibility='';
         return true;
       }catch(e){
@@ -144,7 +188,8 @@ window.boardAccessReady=(async function requireBoardPassword(){
   // iPhone/Safari can immediately perform another board navigation after a
   // successful WebAuthn ceremony. Reuse the just-issued board session instead
   // of opening Face ID / passkey a second time.
-  if(!freshHomeEntry&&hasFreshPasskeyVerification()){
+  const trustedResume=returningFromProtectedPage||returningFromUpdateHistory||returningFromLineLogin||isPageReload;
+  if(!freshHomeEntry&&trustedResume&&hasFreshPasskeyVerification()){
     try{
       const saved=sessionStorage.getItem(accessKey)||readReloadAccess();
       if(saved&&await verify(saved)){
@@ -156,7 +201,7 @@ window.boardAccessReady=(async function requireBoardPassword(){
       clearAccess();
     }
   }
-  if(!freshHomeEntry&&(returningFromProtectedPage||returningFromUpdateHistory||returningFromLineLogin||isPageReload)){
+  if(!freshHomeEntry&&trustedResume){
     try{
       const saved=sessionStorage.getItem(accessKey)||readReloadAccess();
       if(saved&&await verify(saved)){
@@ -169,7 +214,7 @@ window.boardAccessReady=(async function requireBoardPassword(){
     clearAccess();
   }
   const passkeyResult=await verifyPasskey();
-  if(boardLoginExitStarted)return false;
+  if(boardLoginExitStarted||boardDocumentSuspended)return false;
   if(passkeyResult===true)return true;
   if(passkeyResult==='cancelled')return returnToTeamHome();
   const p=prompt('パスワードを入力してください。');
@@ -177,9 +222,11 @@ window.boardAccessReady=(async function requireBoardPassword(){
   try{
     if(await verify(p))return true;
   }catch(e){
+    if(boardLoginExitStarted||boardDocumentSuspended)return false;
     alert(e.rateLimited?e.message:'パスワードを確認できませんでした。通信状況を確認してください。');
     return returnToTeamHome();
   }
+  if(boardLoginExitStarted||boardDocumentSuspended)return false;
   alert('パスワードが違います。');
   return returnToTeamHome();
 })();
