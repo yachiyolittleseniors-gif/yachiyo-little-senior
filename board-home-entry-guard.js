@@ -27,8 +27,22 @@
   }
   // Catch dynamically-created lock links, even if the user taps immediately.
   document.addEventListener('click',function(event){
+    if(event.isTrusted===false||event.defaultPrevented||event.button>0||
+       event.metaKey||event.ctrlKey||event.shiftKey||event.altKey)return;
     const link=event.target?.closest?.('a[href]');
+    if(!link||link.target&&link.target!=='_self')return;
     setFreshBoardEntry(link);
+    try{
+      const url=new URL(link.href,location.href);
+      if(url.origin!==location.origin||url.pathname!==TEAM_PATH)return;
+      const nonce=(typeof crypto!=='undefined'&&crypto.randomUUID)
+        ?crypto.randomUUID():Array.from(crypto.getRandomValues(new Uint8Array(16)),
+          byte=>byte.toString(16).padStart(2,'0')).join('');
+      sessionStorage.setItem('yachiyoBoardEntryIntentV2',JSON.stringify({nonce,at:Date.now()}));
+      url.searchParams.set('entry','home');
+      url.searchParams.set('yls_intent',nonce);
+      link.setAttribute('href',url.pathname+url.search+url.hash);
+    }catch(_){}
   },true);
   // A new home visit, including a Safari Back restoration, ends the old
   // client-side board session. A new Home->Board entry asks for a passkey.
