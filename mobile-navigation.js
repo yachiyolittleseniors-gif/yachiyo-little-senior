@@ -1,5 +1,35 @@
 (() => {
   'use strict';
+  // Only a real, deliberate click may start passkey authentication.
+  // Store a short-lived one-use nonce and include it in that navigation URL,
+  // so Safari's passive tab restoration can never re-trigger a passkey sheet.
+  const boardIntentKey='yachiyoBoardEntryIntentV2';
+  function makeBoardIntent(){
+    if(typeof crypto!=='undefined'&&crypto.randomUUID)return crypto.randomUUID();
+    const bytes=new Uint8Array(16);
+    if(typeof crypto!=='undefined'&&crypto.getRandomValues)crypto.getRandomValues(bytes);
+    else bytes.forEach((_,i)=>{bytes[i]=Math.floor(Math.random()*256)});
+    return Array.from(bytes,byte=>byte.toString(16).padStart(2,'0')).join('');
+  }
+  document.addEventListener('click',event=>{
+    if(event.isTrusted===false||event.defaultPrevented||event.button>0||
+      event.metaKey||event.ctrlKey||event.shiftKey||event.altKey)return;
+    const link=event.target?.closest?.('a[href]');
+    if(!link||link.target&&link.target!=='_self')return;
+    try{
+      const url=new URL(link.href,location.href);
+      if(url.origin!==location.origin||url.pathname!=='/board.html')return;
+      // Child pages return to their parent board via their existing saved session.
+      // Do not transform these normal in-app navigation links into a new login.
+      const from=url.searchParams.get('from');
+      if(['attendance','player','coach','documents'].includes(from))return;
+      const nonce=makeBoardIntent();
+      sessionStorage.setItem(boardIntentKey,JSON.stringify({nonce,at:Date.now()}));
+      url.searchParams.set('entry','home');
+      url.searchParams.set('yls_intent',nonce);
+      link.setAttribute('href',url.pathname+url.search+url.hash);
+    }catch(_){}
+  },true);
   const pageKey = url => {
     const path = new URL(url, location.href).pathname.replace(/\/+$/, '');
     const name = path.split('/').pop() || 'index';

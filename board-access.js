@@ -52,10 +52,14 @@ window.addEventListener('pageshow',function(event){
     returnToTeamHome();
     return;
   }
-  boardLoginExitStarted=true;
-  // Force a fresh document instead of continuing an old authorized snapshot.
-  const target=teamReturnCaptured?'./board.html?from='+teamReturnCaptured:'./board.html?entry=home';
-  location.replace(target);
+  // A page restored from Safari's back/forward cache is not a user request to log in.
+  // Only internal child-page returns may resume a still-valid existing session.
+  // Never navigate to ?entry=home here: that used to pop Face ID unexpectedly.
+  if(!teamReturnCaptured)returnToTeamHome();
+  else{
+    boardLoginExitStarted=true;
+    location.replace('./board.html?from='+teamReturnCaptured);
+  }
 });
 window.boardAccessReady=(async function requireBoardPassword(){
   const accessKey='yachiyoAttendancePass';
@@ -158,24 +162,30 @@ window.boardAccessReady=(async function requireBoardPassword(){
   const searchParams=new URLSearchParams(location.search);
   const navigationEntry=performance.getEntriesByType&&performance.getEntriesByType('navigation')[0];
   const isPageReload=!!(navigationEntry&&navigationEntry.type==='reload');
-  let cameFromHome=false;
+  // One-use proof that the user actually clicked a link to the team page.
+  // A restored Safari tab, stale referrer, or bookmarked URL must never
+  // start navigator.credentials.get() by itself.
+  const entryIntentKey='yachiyoBoardEntryIntentV2';
+  const incomingIntent=searchParams.get('yls_intent')||'';
+  let freshHomeEntry=false;
   try{
-    const ref=document.referrer?new URL(document.referrer):null;
-    cameFromHome=!!ref&&ref.origin===location.origin&&(ref.pathname==='/'||/\/index\.html$/.test(ref.pathname));
+    const recorded=JSON.parse(sessionStorage.getItem(entryIntentKey)||'null');
+    sessionStorage.removeItem(entryIntentKey);
+    const age=Date.now()-Number(recorded?.at||0);
+    freshHomeEntry=!!incomingIntent&&incomingIntent===recorded?.nonce&&
+      /^[a-f0-9-]{16,64}$/i.test(incomingIntent)&&
+      Number.isFinite(age)&&age>=0&&age<=30*1000&&!isPageReload;
   }catch(_){}
-  // document.referrer can remain Home even after an iPhone/Safari refresh.
-  // Treat Home as a fresh entry only on a real navigation, never on reload.
-  const freshHomeEntry=searchParams.get('entry')==='home'||(!isPageReload&&cameFromHome);
-  if(freshHomeEntry){
-    // A deliberate tap from Home must authenticate once every time.
-    // Strip the marker immediately so any iPhone/Safari follow-up navigation
-    // from the same successful login can reuse the fresh-auth marker instead
-    // of opening the passkey sheet a second time.
+  // Strip entry parameters even when restoring an abandoned authentication URL.
+  if(searchParams.has('entry')||searchParams.has('yls_intent')){
     try{
       const cleanUrl=new URL(location.href);
       cleanUrl.searchParams.delete('entry');
+      cleanUrl.searchParams.delete('yls_intent');
       history.replaceState(history.state,'',cleanUrl.pathname+cleanUrl.search+cleanUrl.hash);
     }catch(_){}
+  }
+  if(freshHomeEntry){
     clearAccess();
     clearFreshPasskeyVerification();
   }
@@ -213,6 +223,9 @@ window.boardAccessReady=(async function requireBoardPassword(){
   }else if(!isPageReload){
     clearAccess();
   }
+  // A passive Safari restore and a direct URL are not user-initiated login.
+  // The user can return Home and tap the team lock to begin authentication.
+  if(!freshHomeEntry)return returnToTeamHome();
   const passkeyResult=await verifyPasskey();
   if(boardLoginExitStarted||boardDocumentSuspended)return false;
   if(passkeyResult===true)return true;
