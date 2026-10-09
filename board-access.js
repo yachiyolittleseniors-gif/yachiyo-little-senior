@@ -1,4 +1,20 @@
 document.documentElement.style.visibility='hidden';
+// Safari can restore an unfinished authentication page from its back/forward cache.
+// Such a page must never expose the protected content or stay blank indefinitely.
+let boardLoginExitStarted=false;
+function returnToTeamHome(){
+  if(boardLoginExitStarted)return false;
+  boardLoginExitStarted=true;
+  // Do not use history.back(): the previous history entry may be a hidden
+  // board page, especially when Safari restores tabs after being closed.
+  location.replace('./');
+  return false;
+}
+window.addEventListener('pageshow',function(event){
+  if(event.persisted&&document.documentElement.style.visibility==='hidden'){
+    returnToTeamHome();
+  }
+});
 window.boardAccessReady=(async function requireBoardPassword(){
   const accessKey='yachiyoAttendancePass';
   const reloadKey='yachiyoAttendanceReloadPass';
@@ -59,6 +75,7 @@ window.boardAccessReady=(async function requireBoardPassword(){
     }
     if(!response.ok)return false;
     const result=await response.json().catch(()=>({}));
+    if(boardLoginExitStarted)return false;
     saveAccess(result.token||value);
     grantAdminReveal();
     document.documentElement.style.visibility='';
@@ -74,7 +91,7 @@ window.boardAccessReady=(async function requireBoardPassword(){
     passkeyAttempt=(async()=>{
       try{
         const result=await window.YLSPasskeys.authenticate();
-        if(!result?.token)return false;
+        if(!result?.token||boardLoginExitStarted)return false;
         saveAccess(result.token);
         grantAdminReveal();
         rememberPasskeyVerification()
@@ -85,7 +102,11 @@ window.boardAccessReady=(async function requireBoardPassword(){
         if(e?.status===404){
           try{localStorage.removeItem(passkeyKey)}catch(_){}
         }
-        return false;
+        // A user-cancelled passkey must not trigger a second password dialog.
+        // Other failures keep the existing password fallback available.
+        const cancelled=e?.name==='NotAllowedError'||e?.name==='AbortError'||
+          /キャンセル|cancelled|canceled/i.test(String(e?.message||''));
+        return cancelled?'cancelled':false;
       }
     })();
     return passkeyAttempt;
@@ -147,20 +168,18 @@ window.boardAccessReady=(async function requireBoardPassword(){
   }else if(!isPageReload){
     clearAccess();
   }
-  if(await verifyPasskey())return true;
+  const passkeyResult=await verifyPasskey();
+  if(boardLoginExitStarted)return false;
+  if(passkeyResult===true)return true;
+  if(passkeyResult==='cancelled')return returnToTeamHome();
   const p=prompt('パスワードを入力してください。');
-  if(p===null){
-    if(history.length>1){history.back()}else{location.replace('./')}
-    return false;
-  }
+  if(p===null)return returnToTeamHome();
   try{
     if(await verify(p))return true;
   }catch(e){
     alert(e.rateLimited?e.message:'パスワードを確認できませんでした。通信状況を確認してください。');
-    location.replace('./');
-    return false;
+    return returnToTeamHome();
   }
   alert('パスワードが違います。');
-  location.replace('./');
-  return false;
+  return returnToTeamHome();
 })();
