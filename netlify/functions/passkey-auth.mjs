@@ -20,7 +20,7 @@ const DEFAULT_ACCESS_SALT = "yachiyo-access-v1";
 const DEFAULT_ACCESS_HASH =
   "19eb403934ae615b2961d9f6b5ddd86aab32a0fdf4e96adeb8aa2fcb351276ba";
 const CHALLENGE_LIFETIME = 5 * 60 * 1000;
-const MAX_CREDENTIALS = 40;
+const MAX_CREDENTIALS = 300;
 
 function json(data, status = 200, headers = {}) {
   return new Response(JSON.stringify(data), {
@@ -116,13 +116,14 @@ export default async request => {
         userName: "yachiyo-little-senior",
         userDisplayName: "八千代リトルシニア チーム専用ページ",
         attestationType: "none",
-        // Do not exclude previously registered credentials here.  Android /
-        // Credential Manager can retain a credential while the browser-local
-        // registration marker is lost.  Excluding every server credential then
-        // produces InvalidStateError ("credential already registered") and traps
-        // the user.  A fresh passkey may safely be created and stored alongside
-        // the old credential.
-        excludeCredentials: [],
+        // Prevent duplicate registrations on the same authenticator.
+        // board-passkey.js catches InvalidStateError and authenticates with the
+        // already-existing Yachiyo passkey instead. This keeps Android devices
+        // from creating a new server credential every time they re-register.
+        excludeCredentials: credentials.map(item => ({
+          id: item.id,
+          transports: item.transports,
+        })),
         authenticatorSelection: {
           authenticatorAttachment: "platform",
           residentKey: "required",
