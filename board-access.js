@@ -227,96 +227,35 @@ window.boardAccessReady=(async function requireBoardPassword(){
   }else if(!isPageReload){
     clearAccess();
   }
-  // If a home navigation lost its one-time intent (for example, old Safari
-  // cache, a direct link, a private browsing window, or cross-app navigation),
-  // do not redirect the person in a loop. Ask for an explicit user action.
-  // A passive Safari restoration still cannot launch the passkey UI by itself.
-  async function manualLoginChoice(){
-    // Waiting for every unrelated script to finish made the first login
-    // choice needlessly late on mobile Safari. Only the <body> is required.
-    if(!document.body){
-      await new Promise(resolve=>{
-        const observer=new MutationObserver(()=>{
-          if(!document.body)return;
-          observer.disconnect();
-          resolve();
-        });
-        observer.observe(document.documentElement,{childList:true});
-      });
-    }
-    if(boardLoginExitStarted||boardDocumentSuspended)return 'exit';
-    const gate=document.createElement('div');
-    gate.id='yls-board-login-gate';
-    gate.setAttribute('role','dialog');
-    gate.setAttribute('aria-modal','true');
-    gate.setAttribute('aria-label','チーム専用ページのログイン');
-    gate.style.cssText='position:fixed;inset:0;z-index:2147483646;box-sizing:border-box;display:flex;align-items:center;justify-content:center;overflow:auto;padding:24px;background:#071426;color:#fff;visibility:visible;font-family:-apple-system,BlinkMacSystemFont,"Hiragino Kaku Gothic ProN",Meiryo,sans-serif';
-    const panel=document.createElement('section');
-    panel.style.cssText='width:100%;max-width:390px;box-sizing:border-box;border:1px solid #ba984f;border-radius:16px;padding:28px 22px;text-align:center;background:#10243d;box-shadow:0 18px 45px rgba(0,0,0,.32)';
-    const heading=document.createElement('h1');
-    heading.textContent='チーム専用ページ';
-    heading.style.cssText='margin:0 0 10px;font-size:22px;font-weight:800;color:#e2bd67';
-    const description=document.createElement('p');
-    description.textContent='ログイン方法を選択してください。';
-    description.style.cssText='margin:0 0 22px;font-size:14px;line-height:1.7;color:#e3eaf2';
-    function makeButton(label,primary){
-      const button=document.createElement('button');
-      button.type='button';
-      button.textContent=label;
-      button.style.cssText='display:block;width:100%;min-height:49px;margin:10px 0;border-radius:10px;border:1px solid #d6b567;padding:12px 8px;font:inherit;font-weight:800;font-size:15px;cursor:pointer;touch-action:manipulation;'+(primary?'background:#d6b567;color:#071426':'background:transparent;color:#fff');
-      return button;
-    }
-    const passwordButton=makeButton('パスワードでログイン',true);
-    const passkeyButton=makeButton('Face ID・パスキーでログイン',false);
-    const homeButton=makeButton('ホームへ戻る',false);
-    homeButton.style.borderColor='rgba(255,255,255,.25)';
-    homeButton.style.color='#cbd5e1';
-    let passkeyAvailable=false;
-    try{passkeyAvailable=!!window.YLSPasskeys?.supported()&&localStorage.getItem(passkeyKey)==='1'}catch(_){}
-    panel.appendChild(heading);
-    panel.appendChild(description);
-    panel.appendChild(passwordButton);
-    if(passkeyAvailable)panel.appendChild(passkeyButton);
-    panel.appendChild(homeButton);
-    gate.appendChild(panel);
-    document.body.appendChild(gate);
-    passwordButton.focus({preventScroll:true});
-    return new Promise(resolve=>{
-      function select(value){gate.remove();resolve(value)}
-      passwordButton.addEventListener('click',()=>select('password'),{once:true});
-      passkeyButton.addEventListener('click',()=>select('passkey'),{once:true});
-      homeButton.addEventListener('click',()=>select('home'),{once:true});
-    });
+  // Authentication should never require a second, full-screen method picker.
+  // A one-use gesture proof from Home allows immediate Face ID; a direct or
+  // legacy navigation gets ONLY the password prompt (never unexpected WebAuthn).
+  // A reload or back/forward restore without a valid saved session returns Home.
+  const directForegroundEntry=!freshHomeEntry&&!isPageReload&&
+    navigationEntry?.type==='navigate'&&document.visibilityState==='visible';
+  if(!freshHomeEntry&&!directForegroundEntry)return returnToTeamHome();
+
+  if(freshHomeEntry){
+    const passkeyResult=await verifyPasskey();
+    if(boardLoginExitStarted||boardDocumentSuspended)return false;
+    if(passkeyResult===true)return true;
+    // Cancelling Face ID must not trigger another native dialog or loop.
+    if(passkeyResult==='cancelled')return returnToTeamHome();
   }
 
-  let loginMethod=freshHomeEntry?'automatic':await manualLoginChoice();
-  while(!boardLoginExitStarted&&!boardDocumentSuspended){
-    if(loginMethod==='home'||loginMethod==='exit')return returnToTeamHome();
-    if(loginMethod==='automatic'||loginMethod==='passkey'){
-      const passkeyResult=await verifyPasskey();
-      if(boardLoginExitStarted||boardDocumentSuspended)return false;
-      if(passkeyResult===true)return true;
-      // Do not launch native password prompts immediately after cancelling a
-      // passkey; offer a deliberate choice to the person instead.
-      if(loginMethod==='passkey'||passkeyResult==='cancelled'){
-        loginMethod=await manualLoginChoice();
-        continue;
-      }
-    }
-    if(loginMethod==='automatic'||loginMethod==='password'){
-      const p=prompt('チーム専用ページのパスワードを入力してください。');
-      if(boardLoginExitStarted||boardDocumentSuspended)return false;
-      if(p!==null){
-        try{
-          if(await verify(p))return true;
-          if(!boardLoginExitStarted&&!boardDocumentSuspended)alert('パスワードが違います。');
-        }catch(e){
-          if(boardLoginExitStarted||boardDocumentSuspended)return false;
-          alert(e.rateLimited?e.message:'パスワードを確認できませんでした。通信状況を確認してください。');
-        }
-      }
-    }
-    loginMethod=await manualLoginChoice();
+  // Unregistered or unsupported passkeys, expired registrations, transient
+  // WebAuthn errors, and direct URL visits all retain password-based entry.
+  const password=prompt('チーム専用ページのパスワードを入力してください。');
+  if(boardLoginExitStarted||boardDocumentSuspended)return false;
+  if(password===null)return returnToTeamHome();
+  try{
+    if(await verify(password))return true;
+  }catch(error){
+    if(boardLoginExitStarted||boardDocumentSuspended)return false;
+    alert(error.rateLimited?error.message:'パスワードを確認できませんでした。通信状況を確認してください。');
+    return returnToTeamHome();
   }
-  return false;
+  if(boardLoginExitStarted||boardDocumentSuspended)return false;
+  alert('パスワードが違います。');
+  return returnToTeamHome();
 })();
