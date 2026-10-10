@@ -1,0 +1,5 @@
+更新するファイルは2つです。
+1. csp-event-handlers.js
+2. yls-pdf-native-sw.js（サイトのルート直下）
+
+今回の方式はiframeを使わず、同一オリジンの仮想.pdf URLをService Workerから返すため、SafariのネイティブPDF表示を維持します。
