@@ -18,7 +18,8 @@
     if(!link||link.target&&link.target!=='_self')return;
     try{
       const url=new URL(link.href,location.href);
-      if(url.origin!==location.origin||url.pathname!=='/board.html')return;
+      // Match deployed Pretty URLs as well as dynamically-created .html links.
+      if(url.origin!==location.origin||!/^\/board(?:\.html)?\/?$/.test(url.pathname))return;
       // Child pages return to their parent board via their existing saved session.
       // Do not transform these normal in-app navigation links into a new login.
       const from=url.searchParams.get('from');

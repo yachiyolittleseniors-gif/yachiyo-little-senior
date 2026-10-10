@@ -1,6 +1,9 @@
 (function(){
   'use strict';
-  const TEAM_PATH='/board.html';
+  // Netlify Pretty URLs rewrites static links to /board. Accept the same
+  // board route with or without .html and a trailing slash. This is only
+  // gesture detection; the server still verifies every login credential.
+  const TEAM_PATH=/^\/board(?:\.html)?\/?$/;
   function clearCachedBoardLogin(){
     try{
       sessionStorage.removeItem('yachiyoAttendancePass');
@@ -16,7 +19,7 @@
     if(!link)return;
     try{
       const url=new URL(link.href,location.href);
-      if(url.origin!==location.origin||url.pathname!==TEAM_PATH)return;
+      if(url.origin!==location.origin||!TEAM_PATH.test(url.pathname))return;
       if(url.searchParams.get('entry')==='home')return;
       url.searchParams.set('entry','home');
       link.setAttribute('href',url.pathname+url.search+url.hash);
@@ -34,7 +37,7 @@
     setFreshBoardEntry(link);
     try{
       const url=new URL(link.href,location.href);
-      if(url.origin!==location.origin||url.pathname!==TEAM_PATH)return;
+      if(url.origin!==location.origin||!TEAM_PATH.test(url.pathname))return;
       const nonce=(typeof crypto!=='undefined'&&crypto.randomUUID)
         ?crypto.randomUUID():Array.from(crypto.getRandomValues(new Uint8Array(16)),
           byte=>byte.toString(16).padStart(2,'0')).join('');
