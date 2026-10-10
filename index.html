@@ -2770,6 +2770,11 @@ body.photo-admin-on .news-actions{display:flex}
 .news-modal{position:fixed;inset:0;z-index:9999;background:rgba(0,0,0,.58);padding:20px;display:grid;place-items:center}
 .news-modal[hidden]{display:none}
 .news-modal-card{width:min(520px,100%);background:#fff;border-radius:18px;padding:24px;position:relative}
+#heroAnnouncementModal{align-items:flex-start;overflow:hidden;padding-top:calc(12px + env(safe-area-inset-top));padding-bottom:calc(12px + env(safe-area-inset-bottom))}
+#heroAnnouncementModal .news-modal-card{box-sizing:border-box;max-height:calc(100dvh - 24px - env(safe-area-inset-top) - env(safe-area-inset-bottom));overflow-y:auto;overscroll-behavior:contain;-webkit-overflow-scrolling:touch;touch-action:pan-y}
+#heroAnnouncementModal .hero-announcement-actions{position:sticky;left:0;right:0;bottom:0;z-index:6;margin:18px -24px -24px;padding:12px 24px calc(12px + env(safe-area-inset-bottom));background:linear-gradient(180deg,rgba(255,255,255,.9),#fff 24%);border-top:1px solid #e5e7eb;box-shadow:0 -10px 22px rgba(7,20,38,.08)}
+#heroAnnouncementModal #heroAnnouncementSave{min-width:124px}
+@media(max-width:600px){#heroAnnouncementModal{padding-left:12px;padding-right:12px}#heroAnnouncementModal .news-modal-card{width:100%;max-height:calc(100dvh - 24px - env(safe-area-inset-top) - env(safe-area-inset-bottom));padding:20px 18px}#heroAnnouncementModal .hero-announcement-actions{margin:18px -18px -20px;padding:12px 18px calc(12px + env(safe-area-inset-bottom))}}
 .news-modal-card h3{margin:0 0 18px}
 .news-modal-card label{display:block;font-size:13px;font-weight:700;margin:12px 0}
 .news-modal-card input,.news-modal-card textarea,.news-modal-card select{box-sizing:border-box;width:100%;margin-top:6px;border:1px solid #ccd1d8;border-radius:10px;padding:11px;font:inherit}
