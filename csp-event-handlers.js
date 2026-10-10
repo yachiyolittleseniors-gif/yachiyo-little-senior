@@ -187,7 +187,10 @@
     ctx.fillStyle = '#071426';
     ctx.fillRect(0, 0, widthPx, heightPx);
 
-    var buttonX = 12, buttonY = 8, buttonW = 220, buttonH = heightPx - 16;
+    // Safari's native PDF page counter (e.g. 1/2) floats over the upper-left corner.
+    // Keep the back button on the upper-right so the browser UI never covers it.
+    var buttonW = 220, buttonH = heightPx - 16;
+    var buttonX = widthPx - buttonW - 12, buttonY = 8;
     ctx.lineWidth = 3;
     ctx.strokeStyle = '#e2bd67';
     ctx.fillStyle = '#071426';
@@ -209,13 +212,15 @@
     ctx.fillStyle = '#e2bd67';
     ctx.font = 'bold 30px -apple-system,BlinkMacSystemFont,"Hiragino Sans","Yu Gothic",Meiryo,sans-serif';
     ctx.textBaseline = 'middle';
-    ctx.fillText('← 一覧に戻る', 34, heightPx / 2 + 1);
+    ctx.fillText('← 一覧に戻る', buttonX + 22, heightPx / 2 + 1);
 
     ctx.fillStyle = '#ffffff';
     ctx.font = 'bold 25px -apple-system,BlinkMacSystemFont,"Hiragino Sans","Yu Gothic",Meiryo,sans-serif';
     var safeTitle = String(title || '資料').replace(/\s+/g, ' ').trim();
     if (safeTitle.length > 28) safeTitle = safeTitle.slice(0, 27) + '…';
-    ctx.fillText(safeTitle || '資料', 260, heightPx / 2 + 1);
+    ctx.textAlign = 'center';
+    ctx.fillText(safeTitle || '資料', widthPx / 2, heightPx / 2 + 1);
+    ctx.textAlign = 'left';
 
     var dataUrl = canvas.toDataURL('image/png');
     var base64 = dataUrl.slice(dataUrl.indexOf(',') + 1);
@@ -273,7 +278,7 @@
         width: oldWidth,
         height: stripHeight
       });
-      addPdfUriLink(pdfDoc, page, backUrl, [6, oldHeight + 4, Math.min(122, oldWidth - 6), oldHeight + stripHeight - 4]);
+      addPdfUriLink(pdfDoc, page, backUrl, [Math.max(6, oldWidth - 122), oldHeight + 4, oldWidth - 6, oldHeight + stripHeight - 4]);
     }
 
     return pdfDoc.save({ useObjectStreams: false });
