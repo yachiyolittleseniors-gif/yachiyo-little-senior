@@ -224,20 +224,38 @@
 
   function addPdfUriLink(pdfDoc, page, backUrl, rect) {
     var PDFLib = window.PDFLib;
+    var action = pdfDoc.context.obj({
+      Type: PDFLib.PDFName.of('Action'),
+      S: PDFLib.PDFName.of('URI'),
+      URI: PDFLib.PDFString.of(String(backUrl || ''))
+    });
     var annotation = pdfDoc.context.obj({
       Type: PDFLib.PDFName.of('Annot'),
       Subtype: PDFLib.PDFName.of('Link'),
       Rect: rect,
       Border: [0, 0, 0],
-      A: pdfDoc.context.obj({
-        Type: PDFLib.PDFName.of('Action'),
-        S: PDFLib.PDFName.of('URI'),
-        URI: PDFLib.PDFString.of(backUrl)
-      })
+      H: PDFLib.PDFName.of('I'),
+      P: page.ref,
+      A: action
     });
     var annotationRef = pdfDoc.context.register(annotation);
     var annotsKey = PDFLib.PDFName.of('Annots');
-    var annots = page.node.get(annotsKey);
+    var annots = null;
+
+    // Annots is often stored as an indirect reference. Resolve it before
+    // appending; replacing a referenced array can make Safari/PDFKit ignore
+    // the newly-added link on some PDFs.
+    try {
+      if (typeof page.node.lookupMaybe === 'function' && PDFLib.PDFArray) {
+        annots = page.node.lookupMaybe(annotsKey, PDFLib.PDFArray);
+      }
+    } catch (_) {}
+    if (!annots) {
+      try {
+        var directAnnots = page.node.get(annotsKey);
+        if (directAnnots && typeof directAnnots.push === 'function') annots = directAnnots;
+      } catch (_) {}
+    }
     if (annots && typeof annots.push === 'function') {
       annots.push(annotationRef);
     } else {
@@ -252,14 +270,17 @@
     var ctx = canvas.getContext('2d');
     ctx.clearRect(0, 0, widthPx, heightPx);
 
-    // Match the simple saved-document style: a centered navy button only.
-    var buttonW = 320, buttonH = 86;
-    var buttonX = Math.round((widthPx - buttonW) / 2);
-    var buttonY = Math.round((heightPx - buttonH) / 2);
-    var r = 22;
+    // A deliberately large phone-friendly button. The previous 6.7:1 image
+    // ratio made the control look tiny after Safari fitted the PDF to screen.
+    var margin = 12;
+    var buttonW = widthPx - margin * 2;
+    var buttonH = heightPx - margin * 2;
+    var buttonX = margin;
+    var buttonY = margin;
+    var r = Math.max(24, Math.round(buttonH * 0.24));
     ctx.fillStyle = '#071426';
     ctx.strokeStyle = '#c79a3b';
-    ctx.lineWidth = 4;
+    ctx.lineWidth = 6;
     ctx.beginPath();
     ctx.moveTo(buttonX + r, buttonY);
     ctx.lineTo(buttonX + buttonW - r, buttonY);
@@ -275,10 +296,10 @@
     ctx.stroke();
 
     ctx.fillStyle = '#e2bd67';
-    ctx.font = 'bold 36px -apple-system,BlinkMacSystemFont,"Hiragino Sans","Yu Gothic",Meiryo,sans-serif';
+    ctx.font = 'bold 64px -apple-system,BlinkMacSystemFont,"Hiragino Sans","Yu Gothic",Meiryo,sans-serif';
     ctx.textAlign = 'center';
     ctx.textBaseline = 'middle';
-    ctx.fillText('一覧へ戻る', widthPx / 2, heightPx / 2 + 2);
+    ctx.fillText('← 一覧に戻る', widthPx / 2, heightPx / 2 + 2);
 
     var dataUrl = canvas.toDataURL('image/png');
     var base64 = dataUrl.slice(dataUrl.indexOf(',') + 1);
@@ -308,11 +329,11 @@
       var cupSize = cupPage.getSize();
       var cupWidth = cupSize.width;
       var cupHeight = cupSize.height;
-      var cupStripHeight = 76;
+      var cupStripHeight = 112;
 
-      // Make room below the original page content. pdf-lib provides
-      // translateContent(); if an unusual PDF does not support it, fall back
-      // to the existing first-page button path below rather than covering text.
+      // Make room below the original page content. The control is intentionally
+      // large on phones, and the *whole grey strip* is a hyperlink so taps do
+      // not have to land on a tiny PDF annotation rectangle.
       if (typeof cupPage.translateContent === 'function') {
         cupPage.setSize(cupWidth, cupHeight + cupStripHeight);
         cupPage.translateContent(0, cupStripHeight);
@@ -323,10 +344,10 @@
           height: cupStripHeight,
           color: PDFLib.rgb(0.93, 0.93, 0.92)
         });
-        var cupButtonBytes = canvasCupBackButtonPngBytes(1200, 180);
+        var cupButtonBytes = canvasCupBackButtonPngBytes(900, 240);
         var cupButtonImage = await pdfDoc.embedPng(cupButtonBytes);
-        var imageW = Math.min(210, Math.max(150, cupWidth * 0.34));
-        var imageH = imageW * (180 / 1200);
+        var imageW = Math.min(300, Math.max(240, cupWidth * 0.46));
+        var imageH = Math.min(76, Math.max(62, imageW * (240 / 900)));
         var imageX = (cupWidth - imageW) / 2;
         var imageY = (cupStripHeight - imageH) / 2;
         cupPage.drawImage(cupButtonImage, {
@@ -335,7 +356,10 @@
           width: imageW,
           height: imageH
         });
-        addPdfUriLink(pdfDoc, cupPage, backUrl, [imageX, imageY, imageX + imageW, imageY + imageH]);
+        // Safari/PDFKit can be unforgiving with very small link annotations.
+        // Make the entire added strip clickable while the visible button shows
+        // the intended target.
+        addPdfUriLink(pdfDoc, cupPage, backUrl, [0, 0, cupWidth, cupStripHeight]);
         return pdfDoc.save({ useObjectStreams: false });
       }
     }
