@@ -50,12 +50,12 @@
     }
   }
 
-  /* ===== Native PDF with embedded back link =====
-   * iPhone Safari must receive a real PDF as the top-level document.
-   * We therefore do NOT use an iframe/PDF.js viewer. For PDF routes only,
-   * pdf-lib adds only a small clickable "← 一覧に戻る" button above the
-   * first page, then Safari opens the resulting Blob as a native PDF.
-   * If anything fails, we immediately fall back to the original PDF URL.
+  /* ===== Document back control =====
+   * Normal browsers receive a native PDF with a small embedded back control.
+   * iOS 26 Safari/PDFKit does not reliably activate link annotations inside PDFs,
+   * so those devices use the original PDF inside Safari with a real HTML back
+   * button outside the PDF. This keeps the PDF untouched and makes the control
+   * reliably tappable. If anything fails, the original document URL still opens.
    */
   var documentViewerLastTrigger = null;
   var documentPdfLibPromise = null;
@@ -130,6 +130,69 @@
       if (access) headers['x-access-password'] = access;
     }
     return headers;
+  }
+
+
+  function isIOS26PdfKit() {
+    var ua = String(navigator.userAgent || '');
+    var platform = String(navigator.platform || '');
+    var touchMac = platform === 'MacIntel' && Number(navigator.maxTouchPoints || 0) > 1;
+    var iphoneIpad = /iPhone|iPad|iPod/i.test(ua) || touchMac;
+    if (!iphoneIpad) return false;
+    // Safari/WKWebView on iOS/iPadOS 26. Links embedded as PDF annotations can
+    // be visually present but ignore taps, so use a real HTML button instead.
+    return /(?:CPU (?:iPhone )?OS|OS) 26[_\.]/i.test(ua) || /Version\/26(?:\.|\s)/i.test(ua);
+  }
+
+  function buildIOS26PdfShell(popup, documentUrl, sourceUrl, title) {
+    if (!popup) return false;
+    try {
+      var doc = popup.document;
+      doc.open();
+      doc.write('<!doctype html><html lang="ja"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><title></title></head><body></body></html>');
+      doc.close();
+      doc.title = String(title || '資料');
+
+      var style = doc.createElement('style');
+      style.textContent =
+        'html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#ececea;font-family:-apple-system,BlinkMacSystemFont,"Hiragino Sans","Yu Gothic",Meiryo,sans-serif}' +
+        '.yls-pdf-frame{position:fixed;inset:0 0 calc(82px + env(safe-area-inset-bottom)) 0;width:100%;height:calc(100dvh - 82px - env(safe-area-inset-bottom));border:0;background:#fff}' +
+        '.yls-pdf-footer{position:fixed;left:0;right:0;bottom:0;height:calc(82px + env(safe-area-inset-bottom));padding-bottom:env(safe-area-inset-bottom);box-sizing:border-box;display:flex;align-items:center;justify-content:center;background:#ececea;border-top:1px solid #dfdfdc}' +
+        '.yls-pdf-back{appearance:none;-webkit-appearance:none;width:116px;height:50px;padding:0 10px;border:2px solid #c79a3b;border-radius:10px;background:#071426;color:#e2bd67;font:800 16px/1 -apple-system,BlinkMacSystemFont,"Hiragino Sans","Yu Gothic",Meiryo,sans-serif;white-space:nowrap;cursor:pointer;-webkit-tap-highlight-color:transparent;touch-action:manipulation}' +
+        '.yls-pdf-back:active{transform:translateY(1px)}';
+      doc.head.appendChild(style);
+
+      var frame = doc.createElement('iframe');
+      frame.className = 'yls-pdf-frame';
+      frame.title = String(title || '資料');
+      frame.src = String(documentUrl || '');
+
+      var footer = doc.createElement('div');
+      footer.className = 'yls-pdf-footer';
+      var back = doc.createElement('button');
+      back.className = 'yls-pdf-back';
+      back.type = 'button';
+      back.textContent = '一覧へ戻る';
+      back.setAttribute('aria-label', '資料一覧へ戻る');
+      back.addEventListener('click', function () {
+        // These document windows are created by this page, so closing them is
+        // the cleanest return path. If the browser refuses, return explicitly.
+        try {
+          if (popup.opener && !popup.opener.closed) {
+            popup.close();
+            return;
+          }
+        } catch (_) {}
+        try { popup.location.replace(String(sourceUrl || '/')); }
+        catch (_) { window.location.assign(String(sourceUrl || '/')); }
+      });
+      footer.appendChild(back);
+      doc.body.appendChild(frame);
+      doc.body.appendChild(footer);
+      return true;
+    } catch (_) {
+      return false;
+    }
   }
 
   function loadExternalScript(src, timeoutMs) {
@@ -270,17 +333,16 @@
     var ctx = canvas.getContext('2d');
     ctx.clearRect(0, 0, widthPx, heightPx);
 
-    // A deliberately large phone-friendly button. The previous 6.7:1 image
-    // ratio made the control look tiny after Safari fitted the PDF to screen.
-    var margin = 12;
+    // Match the compact button used by the secretariat/referee saved files.
+    var margin = 8;
     var buttonW = widthPx - margin * 2;
     var buttonH = heightPx - margin * 2;
     var buttonX = margin;
     var buttonY = margin;
-    var r = Math.max(24, Math.round(buttonH * 0.24));
+    var r = Math.max(18, Math.round(buttonH * 0.20));
     ctx.fillStyle = '#071426';
     ctx.strokeStyle = '#c79a3b';
-    ctx.lineWidth = 6;
+    ctx.lineWidth = 5;
     ctx.beginPath();
     ctx.moveTo(buttonX + r, buttonY);
     ctx.lineTo(buttonX + buttonW - r, buttonY);
@@ -296,10 +358,10 @@
     ctx.stroke();
 
     ctx.fillStyle = '#e2bd67';
-    ctx.font = 'bold 64px -apple-system,BlinkMacSystemFont,"Hiragino Sans","Yu Gothic",Meiryo,sans-serif';
+    ctx.font = 'bold 56px -apple-system,BlinkMacSystemFont,"Hiragino Sans","Yu Gothic",Meiryo,sans-serif';
     ctx.textAlign = 'center';
     ctx.textBaseline = 'middle';
-    ctx.fillText('← 一覧に戻る', widthPx / 2, heightPx / 2 + 2);
+    ctx.fillText('一覧へ戻る', widthPx / 2, heightPx / 2 + 2);
 
     var dataUrl = canvas.toDataURL('image/png');
     var base64 = dataUrl.slice(dataUrl.indexOf(',') + 1);
@@ -344,10 +406,10 @@
           height: cupStripHeight,
           color: PDFLib.rgb(0.93, 0.93, 0.92)
         });
-        var cupButtonBytes = canvasCupBackButtonPngBytes(900, 240);
+        var cupButtonBytes = canvasCupBackButtonPngBytes(720, 300);
         var cupButtonImage = await pdfDoc.embedPng(cupButtonBytes);
-        var imageW = Math.min(300, Math.max(240, cupWidth * 0.46));
-        var imageH = Math.min(76, Math.max(62, imageW * (240 / 900)));
+        var imageW = Math.min(156, Math.max(128, cupWidth * 0.24));
+        var imageH = Math.min(62, Math.max(52, imageW * (300 / 720)));
         var imageX = (cupWidth - imageW) / 2;
         var imageY = (cupStripHeight - imageH) / 2;
         cupPage.drawImage(cupButtonImage, {
@@ -421,6 +483,16 @@
 
     var sourceUrl = location.href;
     var section = documentSectionFromUrl(url);
+
+    // iOS 26 Safari displays PDF link annotations but may ignore taps. Use a
+    // real HTML button outside the original PDF on those devices. The document
+    // itself is still loaded from the untouched PDF URL.
+    if (isIOS26PdfKit()) {
+      if (!popup || popup.closed) popup = nativeWindowOpen('', '_blank');
+      if (popup && buildIOS26PdfShell(popup, url.href, sourceUrl, title || '資料')) return true;
+      navigateDocumentResult(popup, url.href);
+      return true;
+    }
 
     (async function () {
       try {
