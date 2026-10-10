@@ -36,11 +36,16 @@
     };
   }
   function requestOptions(options) {
-    return {
+    const output = {
       ...options,
       challenge: decode(options.challenge),
-      allowCredentials: (options.allowCredentials || []).map(item => ({ ...item, id: decode(item.id) })),
     };
+    if (Array.isArray(options.allowCredentials) && options.allowCredentials.length) {
+      output.allowCredentials = options.allowCredentials.map(item => ({ ...item, id: decode(item.id) }));
+    } else {
+      delete output.allowCredentials;
+    }
+    return output;
   }
   function registrationJSON(credential) {
     return {
@@ -71,7 +76,23 @@
   async function register(accessValue, label = "") {
     if (!supported()) throw new Error("この端末は生体認証に対応していません。");
     const start = await request({ action: "registration-options" }, accessValue);
-    const credential = await navigator.credentials.create({ publicKey: creationOptions(start.options) });
+    let credential;
+    try {
+      credential = await navigator.credentials.create({ publicKey: creationOptions(start.options) });
+    } catch (error) {
+      const duplicate =
+        error?.name === "InvalidStateError" ||
+        /already registered|credentials already registered|contains one of the credentials/i.test(String(error?.message || ""));
+      if (!duplicate) throw error;
+
+      // The authenticator is telling us that a passkey for this RP already
+      // exists.  Do not ask the user to register it again; use it.
+      const proof = await authenticate();
+      if (!proof?.token) throw error;
+      try{localStorage.setItem("yachiyoBoardPasskeyRegistered","1")}catch(_){}
+      try{sessionStorage.removeItem("yachiyoBoardPasskeyNeedsReregister")}catch(_){}
+      return { ok: true, verified: true, existing: true, token: proof.token };
+    }
     if (!credential) throw new Error("生体認証の登録がキャンセルされました。");
     const registered = await request({
       action: "registration-verify", ceremonyID: start.ceremonyID,

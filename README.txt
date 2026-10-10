@@ -1,19 +1,20 @@
-八千代リトルシニア チーム専用ページ
-Android パスキー再登録・実認証確認 修正版 2026-10-10
+八千代リトルシニア パスキー重複エラー修正版 2026-10-10
 
-更新ファイル
-1. board-access.js
-2. board-passkey.js
+対象エラー:
+The user attempted to register an authenticator that contains one of the credentials already registered with the relying party.
 
-修正内容
-- Androidで「利用可能なパスキーがありません」になった場合、
-  壊れたローカルの「登録済み」表示を解除してパスワードへフォールバック。
-- パスワードでログイン後、端末で再登録できる状態に戻す。
-- 生体認証登録時、登録API成功だけで「登録済み」にせず、
-  直後に実際のパスキー認証を1回確認する。
-- 実認証できなければ「登録済み」にしない。
-- 古い登録状態で削除認証できないAndroid端末も、ローカル状態を解除できる。
+更新ファイル:
+- board-passkey.js
+- board-access.js
+- netlify/functions/passkey-auth.mjs
 
-注意
-- 登録時は「登録」→「確認」のため、生体認証/パスキーの画面が2回出る場合があります。
-  2回目まで成功して初めて登録完了扱いになります。
+修正:
+- Androidで端末側に既存パスキーが残っていても再登録で詰まらないように変更。
+- 認証時はサーバー側IDで端末を絞り込まず、端末のCredential Managerから利用可能なパスキーを発見。
+- 今後の新規登録は discoverable passkey (residentKey required) として作成。
+- 既存パスキー重複エラーが出た場合は、再登録せずその既存パスキーで認証を試す。
+- 他端末の登録済みパスキーは削除しない。
+
+反映後:
+問題端末は一度ページを閉じてから、ホーム→チーム専用ページで再度試してください。
+パスワードへフォールバックした場合は、そのまま生体認証登録を押してOKです。
