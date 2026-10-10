@@ -112,9 +112,9 @@ export default async request => {
       const options = await generateRegistrationOptions({
         rpName: "八千代リトルシニア チーム専用ページ",
         rpID: rp.rpID,
-        userID: new TextEncoder().encode("yls-team-board-v1"),
-        userName: "team-board",
-        userDisplayName: "チーム専用ページ",
+        userID: new TextEncoder().encode("yls-team-board-v2"),
+        userName: "yachiyo-little-senior",
+        userDisplayName: "八千代リトルシニア チーム専用ページ",
         attestationType: "none",
         // Do not exclude previously registered credentials here.  Android /
         // Credential Manager can retain a credential while the browser-local
@@ -179,10 +179,14 @@ export default async request => {
       const rp = relyingParty(request);
       const options = await generateAuthenticationOptions({
         rpID: rp.rpID,
-        // Omit allowCredentials so Android Credential Manager / Google Password
-        // Manager can discover the passkey that is actually available on this
-        // device.  The returned credential ID is still checked against the
-        // server-side credential list during authentication-verify.
+        // Restrict the OS passkey chooser to credentials that belong to the
+        // Yachiyo team-board account.  Without this list, iCloud Keychain /
+        // Google Password Manager may also show other passkeys created for the
+        // same RP ID (for example TEAM CORE).
+        allowCredentials: credentials.map(item => ({
+          id: item.id,
+          transports: item.transports,
+        })),
         userVerification: "required",
       });
       return json({ options, ceremonyID: await saveChallenge(store, "authentication", options, rp) });
