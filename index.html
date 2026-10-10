@@ -2698,6 +2698,14 @@ body.photo-admin-on .hero-announcement-admin{display:inline-flex!important}
 .hero-announcement-modal-note{margin:0 0 14px;color:#596573;font-size:13px;line-height:1.7}
 #heroAnnouncementText{width:100%;min-height:82px;font-family:inherit;font-size:16px!important;line-height:1.55;resize:none}
 #heroAnnouncementDetails{width:100%;min-height:150px;font-family:inherit;font-size:16px!important;line-height:1.7;resize:vertical}
+.hero-announcement-link-enabled{display:flex!important;align-items:center;gap:10px;font-size:15px!important}
+.hero-announcement-link-enabled input{width:20px!important;height:20px;margin:0!important}
+#heroAnnouncementLinkSettings{margin:10px 0 0;padding:12px;border:1px solid #ead9aa;border-radius:12px;background:#fffbf1}
+#heroAnnouncementLinkSettings[hidden],#heroAnnouncementCustomUrlWrap[hidden]{display:none!important}
+.hero-announcement-detail-link{display:inline-block;margin-top:12px;color:#1a5fb4!important;-webkit-text-fill-color:#1a5fb4!important;font-size:14px;font-weight:800;line-height:1.5;text-decoration:underline!important;text-underline-offset:3px}
+.hero-announcement-detail-link[hidden]{display:none!important}
+@keyframes heroAnnouncementTargetPulse{0%{box-shadow:0 0 0 0 rgba(226,189,103,0)}25%{box-shadow:0 0 0 5px rgba(226,189,103,.34),0 16px 34px rgba(0,0,0,.24)}100%{box-shadow:0 0 0 0 rgba(226,189,103,0)}}
+.seniorcup-home-banner.announcement-link-highlight .seniorcup-home-link{animation:heroAnnouncementTargetPulse 1.45s ease-out 1}
 .hero-announcement-detail-card{border-top:4px solid var(--gold);color:#17202b}
 .hero-announcement-detail-card h3{padding-right:34px;color:var(--navy);font-family:serif;font-size:24px;line-height:1.5;white-space:pre-line}
 .hero-announcement-detail-body{max-height:min(54vh,440px);margin:0;overflow-y:auto;color:#4d5966;font-size:14px;font-weight:600;line-height:1.9;white-space:pre-wrap;overflow-wrap:anywhere;box-sizing:border-box}
@@ -4219,7 +4227,7 @@ body.photo-admin-on .recruit-mode-admin{display:block}
 <a class="recruit-open-cta" href="/join">体験・入団案内を見る <span aria-hidden="true">›</span></a>
 </div>
 </section>
-<section aria-label="八千代リトルシニア杯" class="seniorcup-home-banner">
+<section aria-label="八千代リトルシニア杯" class="seniorcup-home-banner" id="seniorcupHomeCard">
 <a class="seniorcup-home-link" href="/seniorcup">
 <span aria-hidden="true" class="seniorcup-premium-shine"></span>
 <span aria-hidden="true" class="seniorcup-home-ball">
@@ -4257,6 +4265,7 @@ body.photo-admin-on .recruit-mode-admin{display:block}
 <div class="news-modal-card hero-announcement-detail-card">
 <button aria-label="閉じる" class="news-close" id="heroAnnouncementDetailClose" type="button">×</button>
 <p class="hero-announcement-detail-body" id="heroAnnouncementDetailBody"></p>
+<a class="hero-announcement-detail-link" hidden="" id="heroAnnouncementDetailLink" href="#">リンクはこちら</a>
 </div>
 </div>
 <div aria-labelledby="heroAnnouncementModalTitle" aria-modal="true" class="news-modal" hidden="" id="heroAnnouncementModal" role="dialog" data-nosnippet>
@@ -4266,6 +4275,21 @@ body.photo-admin-on .recruit-mode-admin{display:block}
 <p class="hero-announcement-modal-note">トップの表示文は100文字まで、改行して入力できます。本文の下に「詳しく見る」が表示されます。表示しない場合はチェックを外してください。</p>
 <label>トップに表示する文章<textarea id="heroAnnouncementText" maxlength="100" placeholder="例：祝　関東大会出場 🎉" rows="2"></textarea></label>
 <label>タップ後に表示する詳細内容<textarea id="heroAnnouncementDetails" maxlength="1000" placeholder="お知らせの詳しい内容を入力" rows="6"></textarea></label>
+<label class="hero-announcement-link-enabled"><input id="heroAnnouncementLinkEnabled" type="checkbox"/>リンクを付ける</label>
+<div hidden="" id="heroAnnouncementLinkSettings">
+<label>リンク文字<input id="heroAnnouncementLinkLabel" maxlength="60" placeholder="例：リンクはこちら☑️" type="text"/></label>
+<label>リンク先<select id="heroAnnouncementLinkTarget">
+<option value="seniorcup">ホーム内：八千代リトルシニア杯</option>
+<option value="join">入団案内</option>
+<option value="contact">お問い合わせ</option>
+<option value="team">チーム紹介</option>
+<option value="schedule">スケジュール</option>
+<option value="results">試合結果</option>
+<option value="players">選手紹介</option>
+<option value="custom">URLを指定</option>
+</select></label>
+<label hidden="" id="heroAnnouncementCustomUrlWrap">URL<input id="heroAnnouncementLinkUrl" maxlength="500" placeholder="https://..." type="url"/></label>
+</div>
 <label class="hero-announcement-visible"><input id="heroAnnouncementVisible" type="checkbox"/>トップに表示する</label>
 <div class="hero-announcement-actions">
 <button id="heroAnnouncementCancel" type="button">キャンセル</button>
@@ -5119,22 +5143,51 @@ function openProtectedArea(type){
  const save=document.getElementById('heroAnnouncementSave');
  const textInput=document.getElementById('heroAnnouncementText');
  const detailsInput=document.getElementById('heroAnnouncementDetails');
+ const linkEnabledInput=document.getElementById('heroAnnouncementLinkEnabled');
+ const linkSettings=document.getElementById('heroAnnouncementLinkSettings');
+ const linkLabelInput=document.getElementById('heroAnnouncementLinkLabel');
+ const linkTargetInput=document.getElementById('heroAnnouncementLinkTarget');
+ const customUrlWrap=document.getElementById('heroAnnouncementCustomUrlWrap');
+ const linkUrlInput=document.getElementById('heroAnnouncementLinkUrl');
  const visibleInput=document.getElementById('heroAnnouncementVisible');
  const detailHint=document.getElementById('heroAnnouncementDetailHint');
  const updated=document.getElementById('heroAnnouncementUpdated');
  const detailModal=document.getElementById('heroAnnouncementDetailModal');
  const detailClose=document.getElementById('heroAnnouncementDetailClose');
  const detailBody=document.getElementById('heroAnnouncementDetailBody');
- if(!banner||!message||!updated||!edit||!modal||!close||!cancel||!save||!textInput||!detailsInput||!visibleInput||!detailHint||!detailModal||!detailClose||!detailBody)return;
+ const detailLink=document.getElementById('heroAnnouncementDetailLink');
+ if(!banner||!message||!updated||!edit||!modal||!close||!cancel||!save||!textInput||!detailsInput||!linkEnabledInput||!linkSettings||!linkLabelInput||!linkTargetInput||!customUrlWrap||!linkUrlInput||!visibleInput||!detailHint||!detailModal||!detailClose||!detailBody||!detailLink)return;
 
  const cacheKey='yachiyoHeroAnnouncement';
- let state={text:'祝　関東大会出場 🎉',details:'',visible:false,updatedAt:'2026-10-04T00:00:00+09:00'};
+ const linkTargets=new Set(['seniorcup','join','contact','team','schedule','results','players','custom']);
+ let state={text:'祝　関東大会出場 🎉',details:'',linkEnabled:false,linkLabel:'リンクはこちら☑️',linkTarget:'seniorcup',linkUrl:'',visible:false,updatedAt:'2026-10-04T00:00:00+09:00'};
  function normalizeAnnouncementText(value){
    return String(value||'').replace(/\r\n?/g,'\n').slice(0,100);
  }
  function normalize(value){
    if(!value||Array.isArray(value)||typeof value!=='object')return state;
-   return {text:normalizeAnnouncementText(value.text).trim(),details:String(value.details||'').replace(/\r\n?/g,'\n').trim().slice(0,1000),visible:value.visible===true,updatedAt:String(value.updatedAt||'2026-10-04T00:00:00+09:00')};
+   let details=String(value.details||'').replace(/\r\n?/g,'\n').trim().slice(0,1000);
+   const hasLinkFields=Object.prototype.hasOwnProperty.call(value,'linkEnabled')||Object.prototype.hasOwnProperty.call(value,'linkLabel')||Object.prototype.hasOwnProperty.call(value,'linkTarget')||Object.prototype.hasOwnProperty.call(value,'linkUrl');
+   let linkEnabled=value.linkEnabled===true;
+   let linkLabel=String(value.linkLabel||'').trim().slice(0,60);
+   let linkTarget=linkTargets.has(String(value.linkTarget||''))?String(value.linkTarget):'seniorcup';
+   let linkUrl=String(value.linkUrl||'').trim().slice(0,500);
+
+   // 旧データで本文末尾に「リンクはこちら…」と入力済みの場合だけ、一度だけ構造化リンクへ移行する。
+   if(!hasLinkFields&&details){
+     const lines=details.split('\n');
+     const lastLine=String(lines[lines.length-1]||'').trim();
+     if(/^リンクはこちら/.test(lastLine)){
+       linkEnabled=true;
+       linkLabel=lastLine.slice(0,60);
+       linkTarget='seniorcup';
+       linkUrl='';
+       lines.pop();
+       details=lines.join('\n').trim();
+     }
+   }
+   if(linkEnabled&&!linkLabel)linkLabel='リンクはこちら';
+   return {text:normalizeAnnouncementText(value.text).trim(),details,linkEnabled,linkLabel,linkTarget,linkUrl,visible:value.visible===true,updatedAt:String(value.updatedAt||'2026-10-04T00:00:00+09:00')};
  }
  function render(){
    message.textContent=state.text;
@@ -5148,7 +5201,7 @@ function openProtectedArea(type){
    }
    updated.textContent=updatedText;
    banner.classList.toggle('is-visible',Boolean(state.visible&&state.text));
-   const hasDetails=Boolean(state.visible&&state.text&&state.details);
+   const hasDetails=Boolean(state.visible&&state.text&&(state.details||state.linkEnabled));
    banner.classList.toggle('has-details',hasDetails);
    banner.tabIndex=hasDetails?0:-1;
    detailHint.hidden=!hasDetails;
@@ -5169,10 +5222,39 @@ function openProtectedArea(type){
      render();
    }catch(error){}
  }
+ function safeCustomHref(value){
+   const raw=String(value||'').trim();
+   if(!raw)return '';
+   if(raw.startsWith('/')||raw.startsWith('./')||raw.startsWith('../')||raw.startsWith('#'))return raw;
+   try{
+     const url=new URL(raw,location.href);
+     return (url.protocol==='http:'||url.protocol==='https:')?url.href:'';
+   }catch(error){return ''}
+ }
+ function targetHref(target,url){
+   if(target==='join')return '/join';
+   if(target==='contact')return '/contact';
+   if(target==='team')return '/team';
+   if(target==='schedule')return '/schedule';
+   if(target==='results')return '/results';
+   if(target==='players')return '/players';
+   if(target==='custom')return safeCustomHref(url);
+   return '#seniorcupHomeCard';
+ }
+ function syncLinkEditor(){
+   const enabled=linkEnabledInput.checked;
+   linkSettings.hidden=!enabled;
+   customUrlWrap.hidden=!enabled||linkTargetInput.value!=='custom';
+ }
  function openEditor(){
    textInput.value=state.text;
    detailsInput.value=state.details;
+   linkEnabledInput.checked=state.linkEnabled===true;
+   linkLabelInput.value=state.linkLabel||'リンクはこちら';
+   linkTargetInput.value=linkTargets.has(state.linkTarget)?state.linkTarget:'seniorcup';
+   linkUrlInput.value=state.linkUrl||'';
    visibleInput.checked=state.visible;
+   syncLinkEditor();
    modal.hidden=false;
    setTimeout(()=>textInput.focus({preventScroll:true}),0);
  }
@@ -5183,18 +5265,51 @@ function openProtectedArea(type){
    detailsInput.blur();
    modal.hidden=true;
  }
+ function configureDetailLink(){
+   const enabled=state.linkEnabled===true&&Boolean(state.linkLabel);
+   detailLink.hidden=!enabled;
+   if(!enabled)return;
+   detailLink.textContent=state.linkLabel;
+   const href=targetHref(state.linkTarget,state.linkUrl);
+   detailLink.href=href||'#';
+   const isExternal=state.linkTarget==='custom'&&/^https?:\/\//i.test(href)&&!href.startsWith(location.origin);
+   if(isExternal){
+     detailLink.target='_blank';
+     detailLink.rel='noopener noreferrer';
+   }else{
+     detailLink.removeAttribute('target');
+     detailLink.removeAttribute('rel');
+   }
+ }
  function openDetails(){
-   if(!state.visible||!state.text||!state.details)return;
+   if(!state.visible||!state.text||(!state.details&&!state.linkEnabled))return;
    detailBody.textContent=state.details;
+   detailBody.hidden=!state.details;
+   configureDetailLink();
    detailModal.hidden=false;
    setTimeout(()=>detailClose.focus({preventScroll:true}),0);
  }
  function closeDetails(){detailModal.hidden=true;banner.focus({preventScroll:true})}
+ function scrollToSeniorCupCard(){
+   const target=document.getElementById('seniorcupHomeCard')||document.querySelector('.seniorcup-home-banner');
+   if(!target)return;
+   const header=document.querySelector('.header,.site-header');
+   const offset=(header?header.getBoundingClientRect().height:0)+14;
+   const top=Math.max(0,window.scrollY+target.getBoundingClientRect().top-offset);
+   window.scrollTo({top,behavior:'smooth'});
+   target.classList.remove('announcement-link-highlight');
+   window.setTimeout(()=>{
+     target.classList.add('announcement-link-highlight');
+     window.setTimeout(()=>target.classList.remove('announcement-link-highlight'),1700);
+   },420);
+ }
 
  textInput.addEventListener('input',function(){
    const limited=normalizeAnnouncementText(textInput.value);
    if(textInput.value!==limited)textInput.value=limited;
  });
+ linkEnabledInput.addEventListener('change',syncLinkEditor);
+ linkTargetInput.addEventListener('change',syncLinkEditor);
 
  edit.addEventListener('click',openEditor);
  banner.addEventListener('click',openDetails);
@@ -5204,14 +5319,34 @@ function openProtectedArea(type){
    openDetails();
  });
  detailClose.addEventListener('click',closeDetails);
+ detailLink.addEventListener('click',event=>{
+   if(state.linkTarget==='seniorcup'){
+     event.preventDefault();
+     closeDetails();
+     requestAnimationFrame(scrollToSeniorCupCard);
+     return;
+   }
+   if(state.linkTarget==='custom'&&!safeCustomHref(state.linkUrl)){
+     event.preventDefault();
+     alert('リンク先URLを確認してください。');
+     return;
+   }
+   closeDetails();
+ });
  detailModal.addEventListener('click',event=>{if(event.target===detailModal)closeDetails()});
  document.addEventListener('keydown',event=>{if(event.key==='Escape'&&!detailModal.hidden)closeDetails()});
  close.addEventListener('click',closeEditor);
  cancel.addEventListener('click',closeEditor);
  modal.addEventListener('click',event=>{if(event.target===modal)closeEditor()});
  save.addEventListener('click',async function(){
-   const next={text:normalizeAnnouncementText(textInput.value).trim(),details:String(detailsInput.value||'').replace(/\r\n?/g,'\n').trim().slice(0,1000),visible:visibleInput.checked,updatedAt:new Date().toISOString()};
+   const linkEnabled=linkEnabledInput.checked;
+   const linkTarget=linkTargets.has(linkTargetInput.value)?linkTargetInput.value:'seniorcup';
+   const linkLabel=String(linkLabelInput.value||'').trim().slice(0,60);
+   const linkUrl=String(linkUrlInput.value||'').trim().slice(0,500);
+   const next={text:normalizeAnnouncementText(textInput.value).trim(),details:String(detailsInput.value||'').replace(/\r\n?/g,'\n').trim().slice(0,1000),linkEnabled,linkLabel,linkTarget,linkUrl,visible:visibleInput.checked,updatedAt:new Date().toISOString()};
    if(next.visible&&!next.text){alert('表示する文章を入力してください。');return}
+   if(next.linkEnabled&&!next.linkLabel){alert('リンク文字を入力してください。');return}
+   if(next.linkEnabled&&next.linkTarget==='custom'&&!safeCustomHref(next.linkUrl)){alert('リンク先URLを確認してください。');return}
    const password=sessionStorage.getItem('yachiyoAdminPassword')||'';
    if(!password){alert('管理画面に入り直してください。');return}
    save.disabled=true;
