@@ -53,8 +53,8 @@
   /* ===== Native PDF with embedded back link =====
    * iPhone Safari must receive a real PDF as the top-level document.
    * We therefore do NOT use an iframe/PDF.js viewer. For PDF routes only,
-   * pdf-lib adds a thin header strip + clickable "← 一覧に戻る" link to the
-   * PDF bytes, then Safari opens the resulting Blob as a native PDF.
+   * pdf-lib adds only a small clickable "← 一覧に戻る" button above the
+   * first page, then Safari opens the resulting Blob as a native PDF.
    * If anything fails, we immediately fall back to the original PDF URL.
    */
   var documentViewerLastTrigger = null;
@@ -179,20 +179,20 @@
     return documentPdfLibPromise;
   }
 
-  function canvasPngBytes(widthPx, heightPx, title) {
+  function canvasPngBytes(widthPx, heightPx) {
     var canvas = document.createElement('canvas');
     canvas.width = widthPx;
     canvas.height = heightPx;
     var ctx = canvas.getContext('2d');
-    ctx.fillStyle = '#071426';
-    ctx.fillRect(0, 0, widthPx, heightPx);
 
-    // Safari's native PDF page counter (e.g. 1/2) floats over the upper-left corner.
-    // Keep the back button on the upper-right so the browser UI never covers it.
-    var buttonW = 220, buttonH = heightPx - 16;
-    var buttonX = widthPx - buttonW - 12, buttonY = 8;
+    // Keep the PDF itself clean: no full-width navy header and no "資料" title.
+    // Only the back button is drawn, at the upper-right where Safari's page counter
+    // (e.g. 1/2) will not cover it.
+    ctx.clearRect(0, 0, widthPx, heightPx);
+    var buttonW = 220, buttonH = heightPx - 12;
+    var buttonX = widthPx - buttonW - 10, buttonY = 6;
     ctx.lineWidth = 3;
-    ctx.strokeStyle = '#e2bd67';
+    ctx.strokeStyle = '#c79a3b';
     ctx.fillStyle = '#071426';
     ctx.beginPath();
     var r = 14;
@@ -213,14 +213,6 @@
     ctx.font = 'bold 30px -apple-system,BlinkMacSystemFont,"Hiragino Sans","Yu Gothic",Meiryo,sans-serif';
     ctx.textBaseline = 'middle';
     ctx.fillText('← 一覧に戻る', buttonX + 22, heightPx / 2 + 1);
-
-    ctx.fillStyle = '#ffffff';
-    ctx.font = 'bold 25px -apple-system,BlinkMacSystemFont,"Hiragino Sans","Yu Gothic",Meiryo,sans-serif';
-    var safeTitle = String(title || '資料').replace(/\s+/g, ' ').trim();
-    if (safeTitle.length > 28) safeTitle = safeTitle.slice(0, 27) + '…';
-    ctx.textAlign = 'center';
-    ctx.fillText(safeTitle || '資料', widthPx / 2, heightPx / 2 + 1);
-    ctx.textAlign = 'left';
 
     var dataUrl = canvas.toDataURL('image/png');
     var base64 = dataUrl.slice(dataUrl.indexOf(',') + 1);
@@ -262,24 +254,24 @@
 
     try { pdfDoc.setTitle(String(title || '資料')); } catch (_) {}
 
-    var headerPngBytes = canvasPngBytes(1200, 72, title);
+    var headerPngBytes = canvasPngBytes(1200, 64);
     var headerImage = await pdfDoc.embedPng(headerPngBytes);
-    var stripHeight = 36;
+    var stripHeight = 32;
 
-    for (var i = 0; i < pages.length; i++) {
-      var page = pages[i];
-      var size = page.getSize();
-      var oldWidth = size.width;
-      var oldHeight = size.height;
-      page.setSize(oldWidth, oldHeight + stripHeight);
-      page.drawImage(headerImage, {
-        x: 0,
-        y: oldHeight,
-        width: oldWidth,
-        height: stripHeight
-      });
-      addPdfUriLink(pdfDoc, page, backUrl, [Math.max(6, oldWidth - 122), oldHeight + 4, oldWidth - 6, oldHeight + stripHeight - 4]);
-    }
+    // One PDF file only needs one way back. Add the button to the first page only;
+    // later pages remain byte-for-byte visually unchanged apart from PDF re-save.
+    var page = pages[0];
+    var size = page.getSize();
+    var oldWidth = size.width;
+    var oldHeight = size.height;
+    page.setSize(oldWidth, oldHeight + stripHeight);
+    page.drawImage(headerImage, {
+      x: 0,
+      y: oldHeight,
+      width: oldWidth,
+      height: stripHeight
+    });
+    addPdfUriLink(pdfDoc, page, backUrl, [Math.max(6, oldWidth - 116), oldHeight + 3, oldWidth - 5, oldHeight + stripHeight - 3]);
 
     return pdfDoc.save({ useObjectStreams: false });
   }
