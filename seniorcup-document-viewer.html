@@ -1,16 +1,6 @@
 <!doctype html>
 <html lang="ja">
 <head>
-<script id="page-reload-scroll-reset">
-(function(){
-  if('scrollRestoration' in history)history.scrollRestoration='manual';
-  window.addEventListener('pageshow',function(){
-    window.scrollTo(0,0);
-    requestAnimationFrame(function(){window.scrollTo(0,0)});
-    setTimeout(function(){window.scrollTo(0,0)},120);
-  });
-})();
-</script>
 <meta charset="utf-8">
 <meta name="author" content="tatsuki.saitoh">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
@@ -20,7 +10,8 @@
 <style>
 :root{--navy:#071426;--gold:#c79a3b;--gold2:#e2bd67;--bg:#f4f3ef}
 *{box-sizing:border-box}
-body{min-height:100vh;margin:0;background:#e8e8e6;font-family:-apple-system,BlinkMacSystemFont,"Hiragino Kaku Gothic ProN","Yu Gothic",Meiryo,sans-serif;color:var(--navy)}
+html,body{min-height:100%;margin:0}
+body{min-height:100vh;background:#e8e8e6;font-family:-apple-system,BlinkMacSystemFont,"Hiragino Kaku Gothic ProN","Yu Gothic",Meiryo,sans-serif;color:var(--navy)}
 .loading{width:min(900px,100%);min-height:100vh;margin:auto;background:transparent;text-align:center}
 .loading:not(.ready):not(.error-state) #status{position:fixed;inset:0;z-index:5;display:flex;align-items:center;justify-content:center;padding:20px;background:var(--bg);color:#737d89;font-size:14px;font-weight:800}
 .loading:not(.error-state) #detail,.ready #status{display:none}
@@ -41,109 +32,6 @@ body{min-height:100vh;margin:0;background:#e8e8e6;font-family:-apple-system,Blin
   <div class="pages" id="pages"></div>
   <a class="back" id="backLink" href="./seniorcup.html#cupDocumentsHeading">一覧へ戻る</a>
 </main>
-<script>
-(()=>{
-  const params=new URLSearchParams(location.search);
-  const API='/.netlify/functions/site-data?section=seniorcup-documents';
-  const status=document.getElementById('status');
-  const detail=document.getElementById('detail');
-  const pages=document.getElementById('pages');
-  const panel=document.querySelector('.loading');
-  let workerSource='';
-  let imageObjectUrl='';
-
-  function loadScript(source){
-    return new Promise((resolve,reject)=>{
-      const script=document.createElement('script');
-      const timer=setTimeout(()=>{script.remove();reject(new Error('timeout'))},10000);
-      script.src=source;
-      script.async=true;
-      script.onload=()=>{clearTimeout(timer);resolve()};
-      script.onerror=()=>{clearTimeout(timer);script.remove();reject(new Error('load failed'))};
-      document.head.appendChild(script);
-    });
-  }
-
-  async function loadPdfLibrary(){
-    if(window.pdfjsLib)return;
-    try{
-      await loadScript('https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js');
-      workerSource='https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
-    }catch(error){
-      await loadScript('https://cdn.jsdelivr.net/npm/pdfjs-dist@3.11.174/build/pdf.min.js');
-      workerSource='https://cdn.jsdelivr.net/npm/pdfjs-dist@3.11.174/build/pdf.worker.min.js';
-    }
-  }
-
-  async function renderPdf(bytes){
-    await loadPdfLibrary();
-    if(!window.pdfjsLib)throw new Error('viewer unavailable');
-    window.pdfjsLib.GlobalWorkerOptions.workerSrc=workerSource;
-    const pdf=await window.pdfjsLib.getDocument({data:new Uint8Array(bytes)}).promise;
-    for(let number=1;number<=pdf.numPages;number++){
-      const page=await pdf.getPage(number);
-      const base=page.getViewport({scale:1});
-      const pixelRatio=Math.min(3,Math.max(1,window.devicePixelRatio||1));
-      const targetWidth=Math.min(2000,Math.max(1600,window.innerWidth*pixelRatio));
-      const viewport=page.getViewport({scale:targetWidth/base.width});
-      const canvas=document.createElement('canvas');
-      canvas.className='page';
-      canvas.width=Math.ceil(viewport.width);
-      canvas.height=Math.ceil(viewport.height);
-      canvas.setAttribute('aria-label','大会資料 '+number+'ページ目');
-      pages.appendChild(canvas);
-      await page.render({canvasContext:canvas.getContext('2d'),viewport}).promise;
-    }
-  }
-
-  async function renderImage(blob){
-    const image=document.createElement('img');
-    image.className='page';
-    image.alt='八千代リトルシニア杯 大会資料';
-    imageObjectUrl=URL.createObjectURL(blob);
-    await new Promise((resolve,reject)=>{
-      image.onload=resolve;
-      image.onerror=reject;
-      image.src=imageObjectUrl;
-    });
-    pages.appendChild(image);
-  }
-
-  async function open(){
-    const id=params.get('id')||'';
-    if(!id){showError('資料が指定されていません。');return}
-    try{
-      const response=await fetch(API+'&file='+encodeURIComponent(id),{cache:'no-store'});
-      if(!response.ok)throw new Error('fetch failed');
-      const contentType=String(response.headers.get('content-type')||params.get('type')||'').toLowerCase();
-      if(contentType.startsWith('image/')){
-        const blob=await response.blob();
-        if(!blob.size)throw new Error('empty image');
-        await renderImage(blob);
-      }else{
-        const bytes=await response.arrayBuffer();
-        if(!bytes.byteLength)throw new Error('empty pdf');
-        await renderPdf(bytes);
-      }
-      panel.classList.add('ready');
-    }catch(error){
-      showError('資料を開けませんでした。');
-    }
-  }
-
-  function showError(message){
-    panel.classList.add('error-state');
-    status.textContent=message;
-    status.classList.add('error');
-    detail.textContent='一覧へ戻り、ページを再読み込みしてから再度お試しください。';
-  }
-
-  window.addEventListener('pagehide',()=>{
-    if(imageObjectUrl){try{URL.revokeObjectURL(imageObjectUrl)}catch(_){}imageObjectUrl='';}
-  },{once:true});
-
-  open();
-})();
-</script>
+<script src="./seniorcup-document-viewer.js?v=20261010-1720"></script>
 </body>
 </html>
