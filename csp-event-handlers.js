@@ -50,15 +50,17 @@
     }
   }
 
-  /* ===== Unified document viewer =====
-   * Keep the file response completely native. We do NOT fetch the PDF/image,
-   * convert it to a Blob, or render it with PDF.js. The original same-origin
-   * document URL is loaded directly into an iframe, while this page only adds
-   * the shared "一覧に戻る" header. This avoids the iPhone Safari stall that
-   * occurred when JavaScript tried to read the document bytes first.
+  /* ===== Native PDF with embedded back link =====
+   * iPhone Safari must receive a real PDF as the top-level document.
+   * We therefore do NOT use an iframe/PDF.js viewer. For PDF routes only,
+   * pdf-lib adds a thin header strip + clickable "← 一覧に戻る" link to the
+   * PDF bytes, then Safari opens the resulting Blob as a native PDF.
+   * If anything fails, we immediately fall back to the original PDF URL.
    */
   var documentViewerLastTrigger = null;
-  var documentViewerLoadingTimer = 0;
+  var documentPdfLibPromise = null;
+  var documentPdfObjectUrls = [];
+  var nativeWindowOpen = window.open.bind(window);
 
   function documentSectionFromUrl(url) {
     if (!url || url.origin !== location.origin) return '';
@@ -71,7 +73,6 @@
     if (!section) return false;
     if (url.searchParams.get('download') === '1') return false;
 
-    // These routes return an inline PDF/image and are safe to show directly.
     if (section === 'seniorcup-documents' ||
         section === 'result-documents' ||
         section === 'board-tournaments' ||
@@ -80,8 +81,6 @@
       return url.searchParams.has('file');
     }
 
-    // The tournament guideline uses ?view=1 for inline display. Application /
-    // roster files remain normal downloads and are intentionally not wrapped.
     if (section === 'downloads-guideline') {
       return url.searchParams.get('view') === '1';
     }
@@ -111,8 +110,6 @@
     var itemTitle = item && item.querySelector('.tournament-pdf-name,.name');
     if (itemTitle && itemTitle.textContent.trim()) return itemTitle.textContent.trim();
 
-    // 八千代リトルシニア杯の資料一覧はリンク自身が「資料を開く」なので、
-    // 同じ行にあるファイル名をタイトルとして使う。
     var row = link.parentElement;
     var rowTitle = row && row.querySelector && row.querySelector('.file-name');
     if (rowTitle && rowTitle.textContent.trim()) return rowTitle.textContent.trim();
@@ -125,124 +122,246 @@
     return '資料';
   }
 
-  function ensureDocumentViewer() {
-    var root = document.getElementById('ylsDocumentViewer');
-    if (root) return root;
-
-    var style = document.createElement('style');
-    style.id = 'yls-document-viewer-style';
-    style.textContent =
-      '#ylsDocumentViewer{position:fixed;inset:0;z-index:60000;display:flex;flex-direction:column;background:#e8e8e6;color:#071426;font-family:-apple-system,BlinkMacSystemFont,"Hiragino Kaku Gothic ProN","Yu Gothic",Meiryo,sans-serif}' +
-      '#ylsDocumentViewer[hidden]{display:none!important}' +
-      '#ylsDocumentViewer .yls-doc-bar{position:relative;z-index:3;flex:0 0 auto;min-height:calc(56px + env(safe-area-inset-top));padding:calc(8px + env(safe-area-inset-top)) 10px 8px;display:flex;align-items:center;gap:10px;background:rgba(7,20,38,.99);border-bottom:1px solid rgba(199,154,59,.7);box-shadow:0 5px 18px rgba(0,0,0,.18)}' +
-      '#ylsDocumentViewer .yls-doc-back{appearance:none;flex:0 0 auto;min-height:40px;padding:8px 12px;border:1px solid rgba(226,189,103,.8);border-radius:9px;background:#071426;color:#e2bd67;font:inherit;font-size:12px;font-weight:900;white-space:nowrap;cursor:pointer;-webkit-tap-highlight-color:transparent}' +
-      '#ylsDocumentViewer .yls-doc-title{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:#fff;font-size:12px;font-weight:800}' +
-      '#ylsDocumentViewer .yls-doc-stage{position:relative;flex:1 1 auto;min-height:0;background:#e8e8e6;overflow:hidden}' +
-      '#ylsDocumentViewer .yls-doc-native{display:block;width:100%;height:100%;border:0;background:#fff}' +
-      '#ylsDocumentViewer .yls-doc-status{position:absolute;inset:0;z-index:2;display:flex;align-items:center;justify-content:center;padding:24px;background:#e8e8e6;color:#6f7883;font-size:14px;font-weight:800;text-align:center;pointer-events:none;transition:opacity .15s ease}' +
-      '#ylsDocumentViewer .yls-doc-status[hidden]{display:none!important}' +
-      '@media(max-width:600px){#ylsDocumentViewer .yls-doc-bar{min-height:calc(52px + env(safe-area-inset-top));padding:calc(7px + env(safe-area-inset-top)) 9px 7px}#ylsDocumentViewer .yls-doc-back{min-height:38px;padding:8px 10px}#ylsDocumentViewer .yls-doc-title{font-size:11px}}';
-    (document.head || document.documentElement).appendChild(style);
-
-    root = document.createElement('div');
-    root.id = 'ylsDocumentViewer';
-    root.hidden = true;
-    root.innerHTML =
-      '<div class="yls-doc-bar">' +
-        '<button class="yls-doc-back" type="button">← 一覧に戻る</button>' +
-        '<div class="yls-doc-title">資料</div>' +
-      '</div>' +
-      '<div class="yls-doc-stage">' +
-        '<iframe class="yls-doc-native" title="資料" src="about:blank"></iframe>' +
-        '<div class="yls-doc-status">資料を読み込んでいます。</div>' +
-      '</div>';
-    document.body.appendChild(root);
-    root.querySelector('.yls-doc-back').addEventListener('click', closeDocumentViewer);
-    return root;
-  }
-
-  function clearDocumentViewerLoadingTimer() {
-    if (!documentViewerLoadingTimer) return;
-    clearTimeout(documentViewerLoadingTimer);
-    documentViewerLoadingTimer = 0;
-  }
-
-  function closeDocumentViewer() {
-    var root = document.getElementById('ylsDocumentViewer');
-    if (!root || root.hidden) return;
-    clearDocumentViewerLoadingTimer();
-    var frame = root.querySelector('.yls-doc-native');
-    if (frame) {
-      frame.onload = null;
-      // Stop the native document without reading or revoking any file bytes.
-      frame.src = 'about:blank';
+  function documentViewerHeaders(section) {
+    var headers = {};
+    if (section === 'board-tournaments' || section === 'board-meeting-documents' || section === 'referee-documents') {
+      var access = '';
+      try { access = sessionStorage.getItem('yachiyoAttendancePass') || ''; } catch (_) {}
+      if (access) headers['x-access-password'] = access;
     }
-    root.hidden = true;
-    document.documentElement.style.overflow = root.dataset.htmlOverflow || '';
-    document.body.style.overflow = root.dataset.bodyOverflow || '';
-    delete root.dataset.htmlOverflow;
-    delete root.dataset.bodyOverflow;
+    return headers;
   }
 
-  function openDocumentUrl(urlLike, title) {
+  function loadExternalScript(src, timeoutMs) {
+    return new Promise(function (resolve, reject) {
+      var script = document.createElement('script');
+      var finished = false;
+      var timer = setTimeout(function () {
+        if (finished) return;
+        finished = true;
+        script.remove();
+        reject(new Error('timeout'));
+      }, timeoutMs || 5000);
+      script.src = src;
+      script.async = true;
+      script.onload = function () {
+        if (finished) return;
+        finished = true;
+        clearTimeout(timer);
+        resolve();
+      };
+      script.onerror = function () {
+        if (finished) return;
+        finished = true;
+        clearTimeout(timer);
+        script.remove();
+        reject(new Error('load failed'));
+      };
+      document.head.appendChild(script);
+    });
+  }
+
+  function loadDocumentPdfLib() {
+    if (window.PDFLib && window.PDFLib.PDFDocument) return Promise.resolve(window.PDFLib);
+    if (documentPdfLibPromise) return documentPdfLibPromise;
+    documentPdfLibPromise = loadExternalScript('https://cdn.jsdelivr.net/npm/pdf-lib@1.17.1/dist/pdf-lib.min.js', 4500)
+      .catch(function () {
+        return loadExternalScript('https://cdnjs.cloudflare.com/ajax/libs/pdf-lib/1.17.1/pdf-lib.min.js', 4500);
+      })
+      .then(function () {
+        if (!window.PDFLib || !window.PDFLib.PDFDocument) throw new Error('pdf-lib unavailable');
+        return window.PDFLib;
+      })
+      .catch(function (error) {
+        documentPdfLibPromise = null;
+        throw error;
+      });
+    return documentPdfLibPromise;
+  }
+
+  function canvasPngBytes(widthPx, heightPx, title) {
+    var canvas = document.createElement('canvas');
+    canvas.width = widthPx;
+    canvas.height = heightPx;
+    var ctx = canvas.getContext('2d');
+    ctx.fillStyle = '#071426';
+    ctx.fillRect(0, 0, widthPx, heightPx);
+
+    var buttonX = 12, buttonY = 8, buttonW = 220, buttonH = heightPx - 16;
+    ctx.lineWidth = 3;
+    ctx.strokeStyle = '#e2bd67';
+    ctx.fillStyle = '#071426';
+    ctx.beginPath();
+    var r = 14;
+    ctx.moveTo(buttonX + r, buttonY);
+    ctx.lineTo(buttonX + buttonW - r, buttonY);
+    ctx.quadraticCurveTo(buttonX + buttonW, buttonY, buttonX + buttonW, buttonY + r);
+    ctx.lineTo(buttonX + buttonW, buttonY + buttonH - r);
+    ctx.quadraticCurveTo(buttonX + buttonW, buttonY + buttonH, buttonX + buttonW - r, buttonY + buttonH);
+    ctx.lineTo(buttonX + r, buttonY + buttonH);
+    ctx.quadraticCurveTo(buttonX, buttonY + buttonH, buttonX, buttonY + buttonH - r);
+    ctx.lineTo(buttonX, buttonY + r);
+    ctx.quadraticCurveTo(buttonX, buttonY, buttonX + r, buttonY);
+    ctx.closePath();
+    ctx.fill();
+    ctx.stroke();
+
+    ctx.fillStyle = '#e2bd67';
+    ctx.font = 'bold 30px -apple-system,BlinkMacSystemFont,"Hiragino Sans","Yu Gothic",Meiryo,sans-serif';
+    ctx.textBaseline = 'middle';
+    ctx.fillText('← 一覧に戻る', 34, heightPx / 2 + 1);
+
+    ctx.fillStyle = '#ffffff';
+    ctx.font = 'bold 25px -apple-system,BlinkMacSystemFont,"Hiragino Sans","Yu Gothic",Meiryo,sans-serif';
+    var safeTitle = String(title || '資料').replace(/\s+/g, ' ').trim();
+    if (safeTitle.length > 28) safeTitle = safeTitle.slice(0, 27) + '…';
+    ctx.fillText(safeTitle || '資料', 260, heightPx / 2 + 1);
+
+    var dataUrl = canvas.toDataURL('image/png');
+    var base64 = dataUrl.slice(dataUrl.indexOf(',') + 1);
+    var binary = atob(base64);
+    var bytes = new Uint8Array(binary.length);
+    for (var i = 0; i < binary.length; i++) bytes[i] = binary.charCodeAt(i);
+    return bytes;
+  }
+
+  function addPdfUriLink(pdfDoc, page, backUrl, rect) {
+    var PDFLib = window.PDFLib;
+    var annotation = pdfDoc.context.obj({
+      Type: PDFLib.PDFName.of('Annot'),
+      Subtype: PDFLib.PDFName.of('Link'),
+      Rect: rect,
+      Border: [0, 0, 0],
+      A: pdfDoc.context.obj({
+        Type: PDFLib.PDFName.of('Action'),
+        S: PDFLib.PDFName.of('URI'),
+        URI: PDFLib.PDFString.of(backUrl)
+      })
+    });
+    var annotationRef = pdfDoc.context.register(annotation);
+    var annotsKey = PDFLib.PDFName.of('Annots');
+    var annots = page.node.get(annotsKey);
+    if (annots && typeof annots.push === 'function') {
+      annots.push(annotationRef);
+    } else {
+      page.node.set(annotsKey, pdfDoc.context.obj([annotationRef]));
+    }
+  }
+
+  async function buildNativePdfWithBackButton(arrayBuffer, backUrl, title) {
+    await loadDocumentPdfLib();
+    var PDFLib = window.PDFLib;
+    var pdfDoc = await PDFLib.PDFDocument.load(arrayBuffer, { ignoreEncryption: true, updateMetadata: false });
+    var pages = pdfDoc.getPages();
+    if (!pages.length) throw new Error('empty pdf');
+
+    try { pdfDoc.setTitle(String(title || '資料')); } catch (_) {}
+
+    var headerPngBytes = canvasPngBytes(1200, 72, title);
+    var headerImage = await pdfDoc.embedPng(headerPngBytes);
+    var stripHeight = 36;
+
+    for (var i = 0; i < pages.length; i++) {
+      var page = pages[i];
+      var size = page.getSize();
+      var oldWidth = size.width;
+      var oldHeight = size.height;
+      page.setSize(oldWidth, oldHeight + stripHeight);
+      page.drawImage(headerImage, {
+        x: 0,
+        y: oldHeight,
+        width: oldWidth,
+        height: stripHeight
+      });
+      addPdfUriLink(pdfDoc, page, backUrl, [6, oldHeight + 4, Math.min(122, oldWidth - 6), oldHeight + stripHeight - 4]);
+    }
+
+    return pdfDoc.save({ useObjectStreams: false });
+  }
+
+  function rememberPdfObjectUrl(url) {
+    documentPdfObjectUrls.push(url);
+    while (documentPdfObjectUrls.length > 4) {
+      try { URL.revokeObjectURL(documentPdfObjectUrls.shift()); } catch (_) {}
+    }
+  }
+
+  function writePdfPreparingPage(popup) {
+    if (!popup) return;
+    try {
+      popup.document.open();
+      popup.document.write('<!doctype html><meta name="viewport" content="width=device-width,initial-scale=1"><title>PDFを準備しています</title><style>html,body{height:100%;margin:0;background:#f3f3f1;color:#6f7883;font-family:-apple-system,BlinkMacSystemFont,"Hiragino Sans","Yu Gothic",Meiryo,sans-serif}body{display:grid;place-items:center;font-weight:800}</style><div>PDFを準備しています。</div>');
+      popup.document.close();
+    } catch (_) {}
+  }
+
+  function navigateDocumentResult(popup, url) {
+    if (popup && !popup.closed) {
+      try { popup.location.replace(url); return; } catch (_) {}
+    }
+    window.location.assign(url);
+  }
+
+  function openDocumentUrl(urlLike, title, forceNewTab) {
     var url;
     try { url = new URL(urlLike, location.href); } catch (_) { return false; }
     if (!documentViewerSupportsUrl(url)) return false;
 
-    var root = ensureDocumentViewer();
-    var frame = root.querySelector('.yls-doc-native');
-    var status = root.querySelector('.yls-doc-status');
+    var popup = null;
+    if (forceNewTab) {
+      popup = nativeWindowOpen('', '_blank');
+      if (popup) writePdfPreparingPage(popup);
+    }
 
-    root.dataset.htmlOverflow = document.documentElement.style.overflow || '';
-    root.dataset.bodyOverflow = document.body.style.overflow || '';
-    document.documentElement.style.overflow = 'hidden';
-    document.body.style.overflow = 'hidden';
+    var sourceUrl = location.href;
+    var section = documentSectionFromUrl(url);
 
-    root.querySelector('.yls-doc-title').textContent = title || '資料';
-    frame.title = title || '資料';
-    status.textContent = '資料を読み込んでいます。';
-    status.hidden = false;
-    root.hidden = false;
+    (async function () {
+      try {
+        var response = await fetch(url.href, {
+          cache: 'no-store',
+          credentials: 'same-origin',
+          headers: documentViewerHeaders(section)
+        });
+        if (!response.ok) throw new Error('fetch failed');
 
-    clearDocumentViewerLoadingTimer();
-    frame.onload = function () {
-      clearDocumentViewerLoadingTimer();
-      status.hidden = true;
-    };
+        var contentType = String(response.headers.get('content-type') || '').toLowerCase();
+        if (contentType.indexOf('application/pdf') === -1) {
+          navigateDocumentResult(popup, url.href);
+          return;
+        }
 
-    // Direct navigation only: no fetch(), no Blob, no PDF.js.
-    frame.src = url.href;
+        var sourceBytes = await response.arrayBuffer();
+        if (!sourceBytes.byteLength) throw new Error('empty');
+        var pdfBytes = await buildNativePdfWithBackButton(sourceBytes, sourceUrl, title || '資料');
+        var blobUrl = URL.createObjectURL(new Blob([pdfBytes], { type: 'application/pdf' }));
+        rememberPdfObjectUrl(blobUrl);
+        navigateDocumentResult(popup, blobUrl);
+      } catch (_) {
+        // Safety first: a failed enhancement must never stop the original PDF.
+        navigateDocumentResult(popup, url.href);
+      }
+    })();
 
-    // WebKit does not guarantee a useful load event for every native PDF path.
-    // Never let the loading cover stay on screen indefinitely.
-    documentViewerLoadingTimer = setTimeout(function () {
-      status.hidden = true;
-      documentViewerLoadingTimer = 0;
-    }, 2500);
     return true;
   }
 
   function openDocumentViewer(link) {
     var url;
     try { url = new URL(link.href, location.href); } catch (_) { return false; }
-    return openDocumentUrl(url.href, documentTitleForLink(link));
+    var forceNewTab = String(link.target || '').toLowerCase() === '_blank';
+    return openDocumentUrl(url.href, documentTitleForLink(link), forceNewTab);
   }
 
-  // Remember the trigger during capture. This lets us keep the correct title
-  // even for legacy code that calls window.open() from its own click handler.
   document.addEventListener('click', function (ev) {
     var link = ev.target && ev.target.closest ? ev.target.closest('a') : null;
     if (link) documentViewerLastTrigger = link;
   }, true);
 
-  // Some existing document lists (notably 八千代リトルシニア杯) call
-  // window.open() instead of giving the anchor a real file URL. Intercept only
-  // our known same-origin document routes; every other popup remains native.
-  var nativeWindowOpen = window.open;
   window.open = function (url, target, features) {
     if (typeof url === 'string' && url) {
       var title = documentTitleForLink(documentViewerLastTrigger);
-      if (openDocumentUrl(url, title)) {
+      if (openDocumentUrl(url, title, true)) {
         documentViewerLastTrigger = null;
         return window;
       }
