@@ -20,7 +20,8 @@ const DEFAULT_ACCESS_SALT = "yachiyo-access-v1";
 const DEFAULT_ACCESS_HASH =
   "19eb403934ae615b2961d9f6b5ddd86aab32a0fdf4e96adeb8aa2fcb351276ba";
 const CHALLENGE_LIFETIME = 5 * 60 * 1000;
-const MAX_CREDENTIALS = 300;
+// Capacity for 1,000 members with up to five passkeys each.
+const MAX_CREDENTIALS = 5000;
 
 function json(data, status = 200, headers = {}) {
   return new Response(JSON.stringify(data), {
@@ -150,6 +151,11 @@ export default async request => {
       }
       const credentials = await loadCredentials(store);
       const { credential, credentialDeviceType, credentialBackedUp } = verification.registrationInfo;
+      // A registration may finish after other registrations filled the remaining slots.
+      // Reject the new credential instead of evicting an existing member's passkey.
+      if (credentials.length >= MAX_CREDENTIALS && !credentials.some(item => item.id === credential.id)) {
+        return json({ error: "登録上限に達しました。" }, 409);
+      }
       const savedCredential = {
         id: credential.id,
         publicKey: base64Url(credential.publicKey),
@@ -160,8 +166,7 @@ export default async request => {
         label: String(body?.label || "登録端末").trim().slice(0, 60),
         createdAt: new Date().toISOString(),
       };
-      const updated = [savedCredential, ...credentials.filter(item => item.id !== credential.id)]
-        .slice(0, MAX_CREDENTIALS);
+      const updated = [savedCredential, ...credentials.filter(item => item.id !== credential.id)];
       await store.setJSON(CREDENTIALS_KEY, { credentials: updated });
       return json({ ok: true });
     }
