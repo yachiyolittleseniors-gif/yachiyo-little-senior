@@ -71,25 +71,33 @@
   async function register(accessValue, label = "") {
     if (!supported()) throw new Error("この端末は生体認証に対応していません。");
     const start = await request({ action: "registration-options" }, accessValue);
-    let credential;
-    try {
-      credential = await navigator.credentials.create({ publicKey: creationOptions(start.options) });
-    } catch (error) {
-      if (error?.name !== "InvalidStateError") throw error;
-      // The passkey still exists after site data was cleared. Verify possession
-      // before the existing setup flow restores its local registration marker.
-      const result = await authenticate();
-      if (!result?.token) throw new Error("登録済みの生体認証を確認できませんでした。");
-      return { ...result, recovered: true };
-    }
+    const credential = await navigator.credentials.create({ publicKey: creationOptions(start.options) });
     if (!credential) throw new Error("生体認証の登録がキャンセルされました。");
-    return request({
+    const registered = await request({
       action: "registration-verify", ceremonyID: start.ceremonyID,
       credential: registrationJSON(credential), label,
     }, accessValue);
+
+    // Do not display "registered" until the credential can actually be used
+    // for a fresh sign-in.  This catches Android/Chrome cases where create()
+    // completed but the active credential provider cannot subsequently find
+    // the passkey, which otherwise leaves the UI falsely showing "registered".
+    try {
+      const proof = await authenticate();
+      if (!proof?.token) throw new Error("登録確認に失敗しました。");
+      try{sessionStorage.removeItem("yachiyoBoardPasskeyNeedsReregister")}catch(_){}
+      return { ...registered, verified: true };
+    } catch (error) {
+      try{localStorage.removeItem("yachiyoBoardPasskeyRegistered")}catch(_){}
+      try{sessionStorage.setItem("yachiyoBoardPasskeyNeedsReregister","1")}catch(_){}
+      const verifyError = new Error(
+        "パスキーを端末に保存できたか確認できませんでした。パスワードで入り直し、この端末にもう一度登録してください。"
+      );
+      verifyError.name = error?.name || "PasskeyVerificationError";
+      throw verifyError;
+    }
   }
-  let authenticationInFlight = null;
-  async function authenticateOnce() {
+  async function authenticate() {
     if (!supported()) throw new Error("この端末は生体認証に対応していません。");
     const start = await request({ action: "authentication-options" });
     const credential = await navigator.credentials.get({ publicKey: requestOptions(start.options) });
@@ -99,21 +107,29 @@
       credential: authenticationJSON(credential),
     });
   }
-  async function authenticate() {
-    if (authenticationInFlight) return authenticationInFlight;
-    authenticationInFlight = authenticateOnce();
-    try {
-      return await authenticationInFlight;
-    } finally {
-      authenticationInFlight = null;
-    }
-  }
   async function remove() {
     if (!supported()) throw new Error("この端末は生体認証に対応していません。");
-    const auth = await authenticate();
-    const credentialID = auth?.credentialID;
-    if (!credentialID) throw new Error("削除する生体認証を確認できませんでした。");
-    return request({ action: "delete-credential", credentialID });
+    try {
+      const auth = await authenticate();
+      const credentialID = auth?.credentialID;
+      if (!credentialID) throw new Error("削除する生体認証を確認できませんでした。");
+      const result = await request({ action: "delete-credential", credentialID });
+      try{sessionStorage.removeItem("yachiyoBoardPasskeyNeedsReregister")}catch(_){}
+      return result;
+    } catch (error) {
+      // If Android says the locally registered passkey no longer exists, let
+      // the page clear its local "registered" state.  The stale server record
+      // is harmless and a new credential can be registered on this device.
+      if (
+        /Android/i.test(navigator.userAgent||"") &&
+        (error?.name === "NotAllowedError" ||
+         /利用可能なパスキー|passkey|credential/i.test(String(error?.message||"")))
+      ) {
+        try{sessionStorage.setItem("yachiyoBoardPasskeyNeedsReregister","1")}catch(_){}
+        return { ok: true, stale: true };
+      }
+      throw error;
+    }
   }
   window.YLSPasskeys = { authenticate, register, remove, supported };
 })();

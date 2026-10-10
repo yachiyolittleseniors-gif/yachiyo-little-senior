@@ -176,6 +176,16 @@ window.boardAccessReady=(async function requireBoardPassword(){
         // of bouncing the user back Home, and avoid re-opening the native
         // passkey dialog repeatedly during this session.
         if(e?.name==='NotAllowedError'){
+          // Android/Chrome may report "no passkey on this device" with the same
+          // NotAllowedError used for user cancellation.  When this browser had
+          // previously been marked registered but the credential is no longer
+          // available, clear only the local marker so the user can re-register
+          // after the password fallback instead of being trapped in a broken
+          // "registered" state.
+          if(/Android/i.test(navigator.userAgent||'')){
+            try{localStorage.removeItem(passkeyKey)}catch(_){}
+            try{sessionStorage.setItem('yachiyoBoardPasskeyNeedsReregister','1')}catch(_){}
+          }
           temporarilySkipPasskey();
           return false;
         }
