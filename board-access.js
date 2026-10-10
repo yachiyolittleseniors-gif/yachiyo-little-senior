@@ -228,16 +228,21 @@ window.boardAccessReady=(async function requireBoardPassword(){
   }else if(!isPageReload){
     clearAccess();
   }
-  // Only a one-use gesture proof from Home may start automatic WebAuthn.
-  // This keeps Safari tab restoration/back-forward cache from opening Face ID
-  // unexpectedly, while still allowing a real passkey to work after browser
-  // storage was cleared or when the same iCloud passkey is used on another device.
-  // A reload or back/forward restore without a valid saved session returns Home.
-  const directForegroundEntry=!freshHomeEntry&&!isPageReload&&
-    navigationEntry?.type==='navigate'&&document.visibilityState==='visible';
+  // Safari/Chrome do not always preserve the one-use intent marker when
+  // opening the team page from a cached Home page or a dynamically inserted link.
+  // Treat a visible, same-origin navigation from Home as an equally valid user
+  // gesture so passkey/Face ID is attempted before falling back to the password.
+  let cameFromHome=false;
+  try{
+    const ref=new URL(document.referrer||'',location.href);
+    cameFromHome=ref.origin===location.origin&&(ref.pathname==='/'||ref.pathname==='/index.html');
+  }catch(_){}
+  const directForegroundEntry=!isPageReload&&document.visibilityState==='visible'&&
+    (!navigationEntry||navigationEntry.type==='navigate');
+  const deliberateHomeEntry=freshHomeEntry||(cameFromHome&&directForegroundEntry);
   if(!freshHomeEntry&&!directForegroundEntry)return returnToTeamHome();
 
-  if(freshHomeEntry){
+  if(deliberateHomeEntry){
     const passkeyResult=await verifyPasskey();
     if(boardLoginExitStarted||boardDocumentSuspended)return false;
     if(passkeyResult===true)return true;
