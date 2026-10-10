@@ -130,10 +130,11 @@ window.boardAccessReady=(async function requireBoardPassword(){
   }
   let passkeyAttempt=null;
   async function verifyPasskey(){
-    // Only automatically open WebAuthn on a browser with a successful registration.
-    // Other browsers go directly to password entry instead of a cross-device QR prompt.
+    // A deliberate Home -> Team Page tap is the authority to start WebAuthn.
+    // Do not rely on the browser-local registration marker here: Safari/Chrome,
+    // Home Screen launches, iCloud Keychain restores, and cleared site data can
+    // lose that marker even while the passkey itself still exists.
     if(!window.YLSPasskeys?.supported())return false;
-    try{if(localStorage.getItem(passkeyKey)!=='1')return false}catch(_){return false}
     if(passkeyAttempt)return passkeyAttempt;
     passkeyAttempt=(async()=>{
       try{
@@ -227,9 +228,10 @@ window.boardAccessReady=(async function requireBoardPassword(){
   }else if(!isPageReload){
     clearAccess();
   }
-  // Authentication should never require a second, full-screen method picker.
-  // A one-use gesture proof from Home allows immediate Face ID; a direct or
-  // legacy navigation gets ONLY the password prompt (never unexpected WebAuthn).
+  // Only a one-use gesture proof from Home may start automatic WebAuthn.
+  // This keeps Safari tab restoration/back-forward cache from opening Face ID
+  // unexpectedly, while still allowing a real passkey to work after browser
+  // storage was cleared or when the same iCloud passkey is used on another device.
   // A reload or back/forward restore without a valid saved session returns Home.
   const directForegroundEntry=!freshHomeEntry&&!isPageReload&&
     navigationEntry?.type==='navigate'&&document.visibilityState==='visible';
