@@ -245,7 +245,50 @@
     }
   }
 
-  async function buildNativePdfWithBackButton(arrayBuffer, backUrl, title) {
+  function canvasCupBackButtonPngBytes(widthPx, heightPx) {
+    var canvas = document.createElement('canvas');
+    canvas.width = widthPx;
+    canvas.height = heightPx;
+    var ctx = canvas.getContext('2d');
+    ctx.clearRect(0, 0, widthPx, heightPx);
+
+    // Match the simple saved-document style: a centered navy button only.
+    var buttonW = 320, buttonH = 86;
+    var buttonX = Math.round((widthPx - buttonW) / 2);
+    var buttonY = Math.round((heightPx - buttonH) / 2);
+    var r = 22;
+    ctx.fillStyle = '#071426';
+    ctx.strokeStyle = '#c79a3b';
+    ctx.lineWidth = 4;
+    ctx.beginPath();
+    ctx.moveTo(buttonX + r, buttonY);
+    ctx.lineTo(buttonX + buttonW - r, buttonY);
+    ctx.quadraticCurveTo(buttonX + buttonW, buttonY, buttonX + buttonW, buttonY + r);
+    ctx.lineTo(buttonX + buttonW, buttonY + buttonH - r);
+    ctx.quadraticCurveTo(buttonX + buttonW, buttonY + buttonH, buttonX + buttonW - r, buttonY + buttonH);
+    ctx.lineTo(buttonX + r, buttonY + buttonH);
+    ctx.quadraticCurveTo(buttonX, buttonY + buttonH, buttonX, buttonY + buttonH - r);
+    ctx.lineTo(buttonX, buttonY + r);
+    ctx.quadraticCurveTo(buttonX, buttonY, buttonX + r, buttonY);
+    ctx.closePath();
+    ctx.fill();
+    ctx.stroke();
+
+    ctx.fillStyle = '#e2bd67';
+    ctx.font = 'bold 36px -apple-system,BlinkMacSystemFont,"Hiragino Sans","Yu Gothic",Meiryo,sans-serif';
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    ctx.fillText('一覧へ戻る', widthPx / 2, heightPx / 2 + 2);
+
+    var dataUrl = canvas.toDataURL('image/png');
+    var base64 = dataUrl.slice(dataUrl.indexOf(',') + 1);
+    var binary = atob(base64);
+    var bytes = new Uint8Array(binary.length);
+    for (var i = 0; i < binary.length; i++) bytes[i] = binary.charCodeAt(i);
+    return bytes;
+  }
+
+  async function buildNativePdfWithBackButton(arrayBuffer, backUrl, title, section) {
     await loadDocumentPdfLib();
     var PDFLib = window.PDFLib;
     var pdfDoc = await PDFLib.PDFDocument.load(arrayBuffer, { ignoreEncryption: true, updateMetadata: false });
@@ -254,12 +297,54 @@
 
     try { pdfDoc.setTitle(String(title || '資料')); } catch (_) {}
 
+    var isSeniorCupFile = section === 'seniorcup-documents' || section === 'downloads-guideline';
+
+    if (isSeniorCupFile) {
+      // Yachiyo Little Senior Cup PDFs use the same clean "一覧へ戻る" style
+      // as the saved-document viewer: one centered button, once per PDF.
+      // Put it after the document on the last page so multi-page PDFs do not
+      // repeat the control between pages.
+      var cupPage = pages[pages.length - 1];
+      var cupSize = cupPage.getSize();
+      var cupWidth = cupSize.width;
+      var cupHeight = cupSize.height;
+      var cupStripHeight = 76;
+
+      // Make room below the original page content. pdf-lib provides
+      // translateContent(); if an unusual PDF does not support it, fall back
+      // to the existing first-page button path below rather than covering text.
+      if (typeof cupPage.translateContent === 'function') {
+        cupPage.setSize(cupWidth, cupHeight + cupStripHeight);
+        cupPage.translateContent(0, cupStripHeight);
+        cupPage.drawRectangle({
+          x: 0,
+          y: 0,
+          width: cupWidth,
+          height: cupStripHeight,
+          color: PDFLib.rgb(0.93, 0.93, 0.92)
+        });
+        var cupButtonBytes = canvasCupBackButtonPngBytes(1200, 180);
+        var cupButtonImage = await pdfDoc.embedPng(cupButtonBytes);
+        var imageW = Math.min(210, Math.max(150, cupWidth * 0.34));
+        var imageH = imageW * (180 / 1200);
+        var imageX = (cupWidth - imageW) / 2;
+        var imageY = (cupStripHeight - imageH) / 2;
+        cupPage.drawImage(cupButtonImage, {
+          x: imageX,
+          y: imageY,
+          width: imageW,
+          height: imageH
+        });
+        addPdfUriLink(pdfDoc, cupPage, backUrl, [imageX, imageY, imageX + imageW, imageY + imageH]);
+        return pdfDoc.save({ useObjectStreams: false });
+      }
+    }
+
     var headerPngBytes = canvasPngBytes(1200, 64);
     var headerImage = await pdfDoc.embedPng(headerPngBytes);
     var stripHeight = 32;
 
-    // One PDF file only needs one way back. Add the button to the first page only;
-    // later pages remain byte-for-byte visually unchanged apart from PDF re-save.
+    // Other document sections keep the proven one-button-on-first-page behavior.
     var page = pages[0];
     var size = page.getSize();
     var oldWidth = size.width;
@@ -330,7 +415,7 @@
 
         var sourceBytes = await response.arrayBuffer();
         if (!sourceBytes.byteLength) throw new Error('empty');
-        var pdfBytes = await buildNativePdfWithBackButton(sourceBytes, sourceUrl, title || '資料');
+        var pdfBytes = await buildNativePdfWithBackButton(sourceBytes, sourceUrl, title || '資料', section);
         var blobUrl = URL.createObjectURL(new Blob([pdfBytes], { type: 'application/pdf' }));
         rememberPdfObjectUrl(blobUrl);
         navigateDocumentResult(popup, blobUrl);
