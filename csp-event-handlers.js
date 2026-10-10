@@ -55,8 +55,6 @@
    * "一覧に戻る" control is always available, independent of Safari history.
    * Future files uploaded to the same document sections are handled automatically.
    */
-  var documentViewerPdfPromise = null;
-  var documentViewerWorkerSource = '';
   var documentViewerObjectUrls = [];
 
   function documentSectionFromUrl(url) {
@@ -121,8 +119,9 @@
       '#ylsDocumentViewer .yls-doc-status{min-height:calc(100dvh - 56px - env(safe-area-inset-top));display:flex;align-items:center;justify-content:center;padding:24px;color:#6f7883;font-size:14px;font-weight:800;text-align:center}' +
       '#ylsDocumentViewer .yls-doc-pages{width:min(920px,100%);margin:0 auto;padding:8px 0 24px;display:grid;gap:8px}' +
       '#ylsDocumentViewer .yls-doc-page{display:block;width:100%;height:auto;background:#fff;box-shadow:0 1px 4px rgba(0,0,0,.12)}' +
+      '#ylsDocumentViewer .yls-doc-pdf{display:block;width:100%;height:calc(100dvh - 56px - env(safe-area-inset-top));border:0;background:#fff}' +
       '#ylsDocumentViewer .yls-doc-error{width:min(720px,calc(100% - 24px));margin:18px auto;padding:22px 16px;border:1px solid #ddd9d0;border-top:4px solid #c79a3b;border-radius:12px;background:#fff;color:#9b2727;font-size:14px;font-weight:800;text-align:center}' +
-      '@media(max-width:600px){#ylsDocumentViewer .yls-doc-bar{min-height:calc(52px + env(safe-area-inset-top));padding:calc(7px + env(safe-area-inset-top)) 9px 7px}#ylsDocumentViewer .yls-doc-back{min-height:38px;padding:8px 10px}#ylsDocumentViewer .yls-doc-title{font-size:11px}#ylsDocumentViewer .yls-doc-scroll{height:calc(100dvh - 52px - env(safe-area-inset-top))}}';
+      '@media(max-width:600px){#ylsDocumentViewer .yls-doc-bar{min-height:calc(52px + env(safe-area-inset-top));padding:calc(7px + env(safe-area-inset-top)) 9px 7px}#ylsDocumentViewer .yls-doc-back{min-height:38px;padding:8px 10px}#ylsDocumentViewer .yls-doc-title{font-size:11px}#ylsDocumentViewer .yls-doc-scroll{height:calc(100dvh - 52px - env(safe-area-inset-top))}#ylsDocumentViewer .yls-doc-pdf{height:calc(100dvh - 52px - env(safe-area-inset-top))}}';
     (document.head || document.documentElement).appendChild(style);
 
     root = document.createElement('div');
@@ -163,30 +162,6 @@
     delete root.dataset.bodyOverflow;
   }
 
-  function loadDocumentViewerScript(src) {
-    return new Promise(function (resolve, reject) {
-      var script = document.createElement('script');
-      var timer = setTimeout(function () { script.remove(); reject(new Error('timeout')); }, 10000);
-      script.src = src;
-      script.async = true;
-      script.onload = function () { clearTimeout(timer); resolve(); };
-      script.onerror = function () { clearTimeout(timer); script.remove(); reject(new Error('load failed')); };
-      document.head.appendChild(script);
-    });
-  }
-
-  function loadDocumentViewerPdfLibrary() {
-    if (window.pdfjsLib) return Promise.resolve();
-    if (documentViewerPdfPromise) return documentViewerPdfPromise;
-    documentViewerPdfPromise = loadDocumentViewerScript('https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js')
-      .then(function () { documentViewerWorkerSource = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js'; })
-      .catch(function () {
-        return loadDocumentViewerScript('https://cdn.jsdelivr.net/npm/pdfjs-dist@3.11.174/build/pdf.min.js')
-          .then(function () { documentViewerWorkerSource = 'https://cdn.jsdelivr.net/npm/pdfjs-dist@3.11.174/build/pdf.worker.min.js'; });
-      });
-    return documentViewerPdfPromise;
-  }
-
   function documentViewerHeaders(section) {
     var headers = {};
     if (section === 'board-tournaments' || section === 'board-meeting-documents' || section === 'referee-documents') {
@@ -197,25 +172,35 @@
     return headers;
   }
 
-  async function renderDocumentViewerPdf(arrayBuffer, pages) {
-    await loadDocumentViewerPdfLibrary();
-    if (!window.pdfjsLib) throw new Error('viewer unavailable');
-    window.pdfjsLib.GlobalWorkerOptions.workerSrc = documentViewerWorkerSource;
-    var pdf = await window.pdfjsLib.getDocument({ data: new Uint8Array(arrayBuffer) }).promise;
-    for (var number = 1; number <= pdf.numPages; number++) {
-      var page = await pdf.getPage(number);
-      var base = page.getViewport({ scale: 1 });
-      var pixelRatio = Math.min(3, Math.max(1, window.devicePixelRatio || 1));
-      var targetWidth = Math.min(1900, Math.max(1400, Math.min(window.innerWidth, 920) * pixelRatio));
-      var viewport = page.getViewport({ scale: targetWidth / base.width });
-      var canvas = document.createElement('canvas');
-      canvas.className = 'yls-doc-page';
-      canvas.width = Math.ceil(viewport.width);
-      canvas.height = Math.ceil(viewport.height);
-      canvas.setAttribute('aria-label', '資料 ' + number + 'ページ目');
-      pages.appendChild(canvas);
-      await page.render({ canvasContext: canvas.getContext('2d'), viewport: viewport }).promise;
-    }
+  async function renderDocumentViewerPdf(blob, pages, title) {
+    var frame = document.createElement('iframe');
+    frame.className = 'yls-doc-pdf';
+    frame.title = title || '資料';
+    frame.setAttribute('loading', 'eager');
+    var objectUrl = URL.createObjectURL(blob.type === 'application/pdf' ? blob : new Blob([blob], { type: 'application/pdf' }));
+    documentViewerObjectUrls.push(objectUrl);
+    await new Promise(function (resolve, reject) {
+      var settled = false;
+      var timer = setTimeout(function () {
+        if (settled) return;
+        settled = true;
+        reject(new Error('pdf load timeout'));
+      }, 15000);
+      frame.onload = function () {
+        if (settled) return;
+        settled = true;
+        clearTimeout(timer);
+        resolve();
+      };
+      frame.onerror = function () {
+        if (settled) return;
+        settled = true;
+        clearTimeout(timer);
+        reject(new Error('pdf load failed'));
+      };
+      frame.src = objectUrl + '#view=FitH';
+      pages.appendChild(frame);
+    });
   }
 
   async function renderDocumentViewerImage(blob, pages, title) {
@@ -253,8 +238,15 @@
     root.querySelector('.yls-doc-scroll').scrollTop = 0;
     revokeDocumentViewerUrls();
 
+    var controller = typeof AbortController !== 'undefined' ? new AbortController() : null;
+    var timeout = setTimeout(function () {
+      try { if (controller) controller.abort(); } catch (_) {}
+    }, 30000);
     try {
-      var response = await fetch(url.href, { cache: 'no-store', headers: documentViewerHeaders(section) });
+      var options = { cache: 'no-store', headers: documentViewerHeaders(section) };
+      if (controller) options.signal = controller.signal;
+      var response = await fetch(url.href, options);
+      clearTimeout(timeout);
       if (!response.ok) throw new Error('fetch failed');
       var contentType = String(response.headers.get('content-type') || '').toLowerCase();
       var disposition = String(response.headers.get('content-disposition') || '').toLowerCase();
@@ -267,18 +259,17 @@
         return;
       }
 
+      var fileBlob = await response.blob();
+      if (!fileBlob.size) throw new Error('empty');
       pages.hidden = false;
       if (looksImage) {
-        var imageBlob = await response.blob();
-        if (!imageBlob.size) throw new Error('empty');
-        await renderDocumentViewerImage(imageBlob, pages, title);
+        await renderDocumentViewerImage(fileBlob, pages, title);
       } else {
-        var bytes = await response.arrayBuffer();
-        if (!bytes.byteLength) throw new Error('empty');
-        await renderDocumentViewerPdf(bytes, pages);
+        await renderDocumentViewerPdf(fileBlob, pages, title);
       }
       status.hidden = true;
     } catch (error) {
+      clearTimeout(timeout);
       pages.hidden = true;
       status.hidden = false;
       status.className = 'yls-doc-error';
