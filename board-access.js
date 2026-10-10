@@ -66,6 +66,7 @@ window.boardAccessReady=(async function requireBoardPassword(){
   const reloadKey='yachiyoAttendanceReloadPass';
   const reloadExpiryKey='yachiyoAttendanceReloadPassExpires';
   const passkeyKey='yachiyoBoardPasskeyRegistered';
+  const passkeySkipUntilKey='yachiyoBoardPasskeySkipUntil';
   const passkeyJustVerifiedKey='yachiyoBoardPasskeyJustVerified';
   const passkeyJustVerifiedLifetime=20*1000;
   const reloadLifetime=12*60*60*1000;
@@ -106,6 +107,23 @@ window.boardAccessReady=(async function requireBoardPassword(){
   function clearFreshPasskeyVerification(){
     try{sessionStorage.removeItem(passkeyJustVerifiedKey)}catch(e){}
   }
+
+  function shouldAutoTryPasskey(){
+    // Only auto-launch WebAuthn on a browser/device that has previously
+    // completed passkey setup or authentication. This avoids Android/Chrome's
+    // native "no passkey available" dialog on devices that have none.
+    try{
+      const skipUntil=Number(sessionStorage.getItem(passkeySkipUntilKey)||0);
+      if(Number.isFinite(skipUntil)&&skipUntil>Date.now())return false;
+      return localStorage.getItem(passkeyKey)==='1';
+    }catch(e){return false}
+  }
+  function temporarilySkipPasskey(){
+    try{sessionStorage.setItem(passkeySkipUntilKey,String(Date.now()+10*60*1000))}catch(e){}
+  }
+  function clearPasskeySkip(){
+    try{sessionStorage.removeItem(passkeySkipUntilKey)}catch(e){}
+  }
   async function verify(value){
     const response=await fetch('/.netlify/functions/site-data?section=access-settings',{
       method:'POST',
@@ -135,6 +153,7 @@ window.boardAccessReady=(async function requireBoardPassword(){
     // Home Screen launches, iCloud Keychain restores, and cleared site data can
     // lose that marker even while the passkey itself still exists.
     if(!window.YLSPasskeys?.supported())return false;
+    if(!shouldAutoTryPasskey())return false;
     if(passkeyAttempt)return passkeyAttempt;
     passkeyAttempt=(async()=>{
       try{
@@ -144,6 +163,7 @@ window.boardAccessReady=(async function requireBoardPassword(){
         grantAdminReveal();
         rememberPasskeyVerification()
         try{localStorage.setItem(passkeyKey,'1')}catch(_){}
+        clearPasskeySkip();
         boardAccessAuthorized=true;
         document.documentElement.style.visibility='';
         return true;
@@ -151,10 +171,16 @@ window.boardAccessReady=(async function requireBoardPassword(){
         if(e?.status===404){
           try{localStorage.removeItem(passkeyKey)}catch(_){}
         }
-        // A user-cancelled passkey must not trigger a second password dialog.
-        // Other failures keep the existing password fallback available.
-        const cancelled=e?.name==='NotAllowedError'||e?.name==='AbortError'||
-          /キャンセル|cancelled|canceled/i.test(String(e?.message||''));
+        // Android/Chrome also reports a missing local credential as
+        // NotAllowedError. Treat it as a normal fallback to password instead
+        // of bouncing the user back Home, and avoid re-opening the native
+        // passkey dialog repeatedly during this session.
+        if(e?.name==='NotAllowedError'){
+          temporarilySkipPasskey();
+          return false;
+        }
+        const cancelled=e?.name==='AbortError'||
+          /キャンセル|cancelled|canceled|aborted/i.test(String(e?.message||''));
         return cancelled?'cancelled':false;
       }
     })();
@@ -243,6 +269,8 @@ window.boardAccessReady=(async function requireBoardPassword(){
   if(!freshHomeEntry&&!directForegroundEntry)return returnToTeamHome();
 
   if(deliberateHomeEntry){
+    // Auto WebAuthn only on devices with a local passkey-success marker.
+    // Devices without one go straight to the normal password fallback.
     const passkeyResult=await verifyPasskey();
     if(boardLoginExitStarted||boardDocumentSuspended)return false;
     if(passkeyResult===true)return true;
