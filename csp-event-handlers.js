@@ -64,6 +64,9 @@
   }
 
   function shouldUseDocumentViewer(link) {
+    // Emergency rollback: use the browser's native document navigation.
+    // The custom in-page viewer caused PDFs to stall on iPhone Safari.
+    return false;
     if (!link || link.hasAttribute('download') || link.closest('[data-no-document-viewer]')) return false;
     var url;
     try { url = new URL(link.href, location.href); } catch (_) { return false; }
