@@ -108,15 +108,26 @@ window.boardAccessReady=(async function requireBoardPassword(){
     try{sessionStorage.removeItem(passkeyJustVerifiedKey)}catch(e){}
   }
 
+  function isAppleMobilePasskeyDevice(){
+    const ua=String(navigator.userAgent||'');
+    // iPadOS may identify itself as Macintosh when desktop browsing is used.
+    return /iPhone|iPad|iPod/i.test(ua)||
+      (navigator.platform==='MacIntel'&&Number(navigator.maxTouchPoints||0)>1);
+  }
   function shouldAutoTryPasskey(){
-    // Only auto-launch WebAuthn on a browser/device that has previously
-    // completed passkey setup or authentication. This avoids Android/Chrome's
-    // native "no passkey available" dialog on devices that have none.
+    // Keep the local marker fast path on every platform.
+    // On iPhone/iPad, a valid passkey can remain in iCloud Keychain even when
+    // Safari site data/localStorage was cleared or restored on another device.
+    // This function is reached only after a deliberate Home -> Team Page tap,
+    // so iOS may safely ask for an existing matching passkey even without the marker.
     try{
       const skipUntil=Number(sessionStorage.getItem(passkeySkipUntilKey)||0);
       if(Number.isFinite(skipUntil)&&skipUntil>Date.now())return false;
-      return localStorage.getItem(passkeyKey)==='1';
-    }catch(e){return false}
+      if(localStorage.getItem(passkeyKey)==='1')return true;
+      return isAppleMobilePasskeyDevice();
+    }catch(e){
+      return isAppleMobilePasskeyDevice();
+    }
   }
   function temporarilySkipPasskey(){
     try{sessionStorage.setItem(passkeySkipUntilKey,String(Date.now()+10*60*1000))}catch(e){}
