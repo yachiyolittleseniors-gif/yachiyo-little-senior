@@ -420,10 +420,9 @@ function openingMotion(){
           if(finished||closed)return;
           try{
             const elapsed=now-openedAt;
-            if(compactDevice&&lastFrame&&now-lastFrame<42&&elapsed<duration){
-              raf=requestAnimationFrame(tick);
-              return;
-            }
+            // Internal mobile resolution is already reduced, so do not
+            // throttle visible motion. Let requestAnimationFrame run at the
+            // display cadence to avoid a choppy opening on iPhone.
             lastFrame=now;
             draw(Math.min(elapsed/duration,1)*timelineDuration);
             if(elapsed>=duration){finish();return;}
