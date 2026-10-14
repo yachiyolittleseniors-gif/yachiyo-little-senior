@@ -151,20 +151,29 @@
     return result;
   }
   async function authorize(promptMessage = "パスワードを入力してください。") {
-    if (supported() && isRegistered()) {
+    let shouldTryPasskey = false;
+    if (supported()) {
+      shouldTryPasskey = isRegistered();
+      // Safari can clear site storage while the synced passkey still exists.
+      // Recover the registered state from the server before falling back to a password.
+      if (!shouldTryPasskey) {
+        try {
+          const status = await request({ action: "status" });
+          shouldTryPasskey = status?.registered === true || Number(status?.count || 0) > 0;
+        } catch (_) {}
+      }
+    }
+    if (supported() && shouldTryPasskey) {
       try {
         const result = await authenticate();
         if (result?.token) {
+          rememberRegistration();
           try { sessionStorage.setItem("yachiyoCoachAttendancePass", result.token); } catch (error) {}
           return result.token;
         }
       } catch (error) {
-        // A legacy server-wide marker may be stale on this browser. Do not keep
-        // automatically opening WebAuthn after an unsuccessful migration.
-        try {
-          if (localStorage.getItem(registrationKey) !== '1') clearLegacyRegistration();
-        } catch (_) {}
-        // No registered passkey / cancelled / failed: fall back to password.
+        // If the native passkey sheet is cancelled or unavailable, keep the
+        // normal password fallback instead of trapping the user.
       }
     }
     const entered = prompt(promptMessage);
