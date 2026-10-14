@@ -12,28 +12,19 @@ try{
   heroChanged=heroChanged||sessionStorage.getItem('yachiyo:hero-opening-pending')==='1';
   if(heroChanged)sessionStorage.removeItem('yachiyo:hero-opening-pending');
 }catch(e){}
-if(performance.getEntriesByType('navigation')[0]?.type==='reload'&&!heroChanged&&!forceOpening){cover.remove();return;}
+if(performance.getEntriesByType('navigation')[0]?.type==='reload'&&!heroChanged&&!forceOpening){cover.remove();document.documentElement.classList.remove('skip-first-visit-splash');return;}
 const reduceMotion=window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 const initialSource=cover.querySelector('img');
-let splashPaintReady=reduceMotion;
-// Keep the splash measurable but invisible until the canvas has its first
-// painted frame. This removes the navy/static-logo frame Safari could expose.
-if(!reduceMotion){
-  cover.style.visibility='hidden';
-  cover.style.opacity='0';
-  cover.style.transition='none';
-}
+// The navy splash surface is visible from the first body paint. Only the
+// static logo stays hidden until the canvas has drawn or a fallback is needed.
+document.documentElement.classList.remove('skip-first-visit-splash');
+if(reduceMotion)cover.classList.add('is-static-ready');
 cover.hidden=false;
 const openedAt=performance.now();
 function revealPreparedSplash(){
-  if(splashPaintReady)return;
-  splashPaintReady=true;
-  cover.style.visibility='visible';
-  cover.style.opacity='1';
-  void cover.offsetHeight;
-  cover.style.removeProperty('transition');
-  cover.style.removeProperty('opacity');
-  cover.style.removeProperty('visibility');
+  // Kept as a lightweight hook for the first canvas draw.
+  // The splash background itself is already visible, so there is no light
+  // body-background frame between navigation and the animation.
 }
 let closed=false,stopMotion=()=>{},stopDutySignal=()=>{},exitTimer=0,guardTimer=0;
 let leaving=false;
@@ -121,7 +112,7 @@ function openingMotion(){
   cover.dataset.motion=variant;
   return new Promise(resolve=>{
     let finished=false,raf=0,observer=null,canvas=null;
-    const finish=()=>{if(finished)return;finished=true;cancelAnimationFrame(raf);if(observer){observer.disconnect();observer=null;}if(canvas){try{canvas.width=1;canvas.height=1;}catch(_){}canvas.remove();canvas=null;}source.style.opacity='';revealPreparedSplash();stopMotion=()=>{};resolve();};
+    const finish=()=>{if(finished)return;finished=true;cancelAnimationFrame(raf);if(observer){observer.disconnect();observer=null;}cover.classList.add('is-static-ready');source.style.opacity='';if(canvas){try{canvas.width=1;canvas.height=1;}catch(_){}canvas.remove();canvas=null;}revealPreparedSplash();stopMotion=()=>{};resolve();};
     stopMotion=finish;
     const loadTimeout=setTimeout(finish,1500);
     function begin(){
