@@ -19,11 +19,33 @@ const isiOS=/iP(?:hone|ad|od)/i.test(ua)||
   (navigator.platform==='MacIntel'&&Number(navigator.maxTouchPoints)>1);
 const isiOSSafari=isiOS&&/WebKit/i.test(ua)&&!/(CriOS|FxiOS|EdgiOS|OPiOS)/i.test(ua);
 const initialSource=cover.querySelector('img');
-// Keep the real logo visible from the very first paint. The canvas takes over
-// only after Safari has had time to paint the first canvas frame.
+// Paint the navy splash immediately, but do not reveal SINCE 1982 before the
+// logo image is decoded. The whole logo group appears in the same paint.
 document.documentElement.classList.remove('skip-first-visit-splash');
 cover.hidden=false;
-const openedAt=performance.now();
+let openedAt=0;
+function waitForLogoDecode(){
+  return new Promise(resolve=>{
+    if(!initialSource){resolve();return;}
+    let settled=false;
+    const done=()=>{
+      if(settled)return;
+      settled=true;
+      const finish=()=>resolve();
+      try{
+        if(typeof initialSource.decode==='function'){
+          initialSource.decode().then(finish,finish);
+        }else finish();
+      }catch(_){finish();}
+    };
+    if(initialSource.complete){
+      done();
+      return;
+    }
+    initialSource.addEventListener('load',done,{once:true});
+    initialSource.addEventListener('error',done,{once:true});
+  });
+}
 function revealPreparedSplash(){}
 let closed=false,stopMotion=()=>{},stopDutySignal=()=>{},exitTimer=0,guardTimer=0;
 let leaving=false;
@@ -514,11 +536,16 @@ function leave(){
   cover.classList.add('is-leaving');
   exitTimer=setTimeout(remove,300);
 }
-// Opening duration is fixed: do not block the transition on hero-image readiness.
-// The hero continues preloading behind the opening screen.
-guardTimer=setTimeout(leave,Math.max(0,1500-(performance.now()-openedAt)));
-dutyRequestSignal();
-openingMotion();
+// Start the 1.5s opening only after the logo image is decoded. This keeps
+// SINCE 1982 and the logo synchronized on the very first visible frame.
+waitForLogoDecode().then(()=>{
+  if(closed)return;
+  cover.classList.add('is-logo-ready');
+  openedAt=performance.now();
+  guardTimer=setTimeout(leave,1500);
+  dutyRequestSignal();
+  openingMotion();
+});
 window.addEventListener('pagehide',remove,{once:true});
 })();
 
