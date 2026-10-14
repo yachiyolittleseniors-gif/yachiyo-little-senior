@@ -42,12 +42,35 @@ function init(){
     return [...map.values()];
   }
 
+  function directParentEscortMap(eventDate,fallbackMap){
+    if(isPlayer)return fallbackMap instanceof Map?fallbackMap:new Map();
+    const map=new Map();
+    const latest=new Map();
+    const comments=Array.isArray(data?.comments)?data.comments:[];
+    for(const comment of comments){
+      const sameDate=typeof commentMatchesDate==='function'
+        ?commentMatchesDate(comment,eventDate)
+        :String(comment?.eventDate||'')===String(eventDate||'');
+      if(!sameDate)continue;
+      const grade=String(comment?.escortGrade||'');
+      if(!['2','3'].includes(grade))continue;
+      const memberId=String(comment?.memberId||'');
+      if(!memberId)continue;
+      const time=new Date(comment?.updatedAt||0).getTime()||0;
+      const previous=latest.get(memberId);
+      if(!previous||time>=previous.time)latest.set(memberId,{grade,time});
+    }
+    latest.forEach((value,key)=>map.set(key,value.grade));
+    return map;
+  }
+
   function filteredSnapshot(eventId,grade){
     const base=reportSnapshot(eventId);
     if(!base)return null;
     const target=String(grade||'');
     if(!['1','2','3'].includes(target))return base;
-    const escortMap=base.escortGradeByMember instanceof Map?base.escortGradeByMember:new Map();
+    const fallbackMap=base.escortGradeByMember instanceof Map?base.escortGradeByMember:new Map();
+    const escortMap=directParentEscortMap(base.event.date,fallbackMap);
     const members=allMembersFromReport(base).filter(member=>{
       const ownGrade=String(member.grades?.[0]||'');
       const escortGrade=String(escortMap.get(String(member.id))||'');
@@ -63,7 +86,7 @@ function init(){
     }));
     const comments=(base.comments||[]).filter(comment=>ids.has(String(comment.memberId)));
     const totals=groups.map(group=>group.members.length);
-    return {...base,grades:[{grade:target,groups}],comments,totals,__gradeFilter:target,__gradeLabel:target+'年生＋帯同'};
+    return {...base,grades:[{grade:target,groups}],comments,totals,escortGradeByMember:escortMap,__gradeFilter:target,__gradeLabel:target+'年生＋帯同'};
   }
 
   function statusClass(status){return status==='○'?'o':status==='×'?'x':'u'}
