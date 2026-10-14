@@ -17,13 +17,13 @@ cover.hidden=false;
 const openedAt=performance.now();
 let closed=false,stopMotion=()=>{},stopDutySignal=()=>{},exitTimer=0,guardTimer=0;
 let leaving=false;
-function remove(){if(closed)return;closed=true;clearTimeout(exitTimer);clearTimeout(guardTimer);stopMotion();stopDutySignal();cover.remove();}
+function remove(){if(closed)return;closed=true;window.removeEventListener('pagehide',remove);clearTimeout(exitTimer);clearTimeout(guardTimer);stopMotion();stopDutySignal();stopMotion=()=>{};stopDutySignal=()=>{};cover.remove();}
 function wait(ms){return new Promise(resolve=>setTimeout(resolve,ms));}
 
 function dutyRequestSignal(){
   if(window.matchMedia('(prefers-reduced-motion: reduce)').matches)return;
   let stopped=false,raf=0,canvas=null,observer=null;
-  stopDutySignal=()=>{stopped=true;cancelAnimationFrame(raf);if(observer)observer.disconnect();if(canvas)canvas.remove();};
+  stopDutySignal=()=>{stopped=true;cancelAnimationFrame(raf);if(observer){observer.disconnect();observer=null;}if(canvas){try{canvas.width=1;canvas.height=1;}catch(_){}canvas.remove();canvas=null;}};
   fetch('/.netlify/functions/duty-request-alert',{cache:'no-store'})
     .then(function(response){return response.ok?response.json():null;})
     .then(function(data){
@@ -101,7 +101,7 @@ function openingMotion(){
   cover.dataset.motion=variant;
   return new Promise(resolve=>{
     let finished=false,raf=0,observer=null,canvas=null;
-    const finish=()=>{if(finished)return;finished=true;cancelAnimationFrame(raf);if(observer)observer.disconnect();if(canvas)canvas.remove();source.style.opacity='';resolve();};
+    const finish=()=>{if(finished)return;finished=true;cancelAnimationFrame(raf);if(observer){observer.disconnect();observer=null;}if(canvas){try{canvas.width=1;canvas.height=1;}catch(_){}canvas.remove();canvas=null;}source.style.opacity='';stopMotion=()=>{};resolve();};
     stopMotion=finish;
     const loadTimeout=setTimeout(finish,1500);
     function begin(){
