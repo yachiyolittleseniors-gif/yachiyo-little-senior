@@ -13,7 +13,7 @@
     container.style.position = 'relative';
     var overlay = document.createElement('div');
     overlay.id = 'member-comment-overlay';
-    overlay.style.cssText = 'display:none;position:absolute;z-index:20;width:min(640px,calc(100% - 2px));max-height:min(72dvh,650px);overflow:auto;overscroll-behavior-y:contain;-webkit-overflow-scrolling:touch;background:#fffdf6;border:1px solid #c6a052;border-left:4px solid #c6a052;box-shadow:0 15px 32px rgba(7,20,38,.22);box-sizing:border-box;';
+    overlay.style.cssText = 'display:none;position:absolute;z-index:20;width:min(640px,calc(100% - 2px));max-height:min(72svh,650px);overflow:auto;overscroll-behavior:contain;-webkit-overflow-scrolling:touch;touch-action:pan-y;background:#fffdf6;border:1px solid #c6a052;border-left:4px solid #c6a052;box-shadow:0 15px 32px rgba(7,20,38,.22);box-sizing:border-box;';
     board.after(overlay);
     editor.style.cssText = 'box-sizing:border-box;display:none;width:100%;max-width:none;margin:0;padding:16px;border:0;background:#fffdf6;text-align:left;white-space:normal;';
     var textarea = editor.querySelector('textarea');
@@ -34,15 +34,13 @@
       var row = memberRow.getBoundingClientRect();
       var head = board.querySelector('thead');
       var headHeight = head ? head.getBoundingClientRect().height : 0;
-      // Stop scrolling when the selected row reaches the sticky date header.
-      if (row.top < bounds.top + headHeight - 1) {
-        board.scrollTop = Math.max(0, board.scrollTop + row.top - bounds.top - headHeight);
-        row = memberRow.getBoundingClientRect();
-      }
+      // Never write board.scrollTop from inside the board scroll handler.
+      // Safari can alternate around a fractional sticky-header boundary and
+      // create a visible up/down vibration. Just clamp the editor position.
       var anchor = Math.max(bounds.top + headHeight, Math.min(row.bottom, bounds.bottom));
-      overlay.style.left = (bounds.left - outer.left) + 'px';
-      overlay.style.top = (anchor - outer.top) + 'px';
-      overlay.style.width = Math.min(board.clientWidth, 640) + 'px';
+      overlay.style.left = Math.round(bounds.left - outer.left) + 'px';
+      overlay.style.top = Math.round(anchor - outer.top) + 'px';
+      overlay.style.width = Math.round(Math.min(board.clientWidth, 640)) + 'px';
     }
     window.render = function () {
       var top = board.scrollTop, left = board.scrollLeft;
