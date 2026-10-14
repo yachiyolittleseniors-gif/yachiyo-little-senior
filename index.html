@@ -4136,7 +4136,13 @@ html.skip-first-visit-splash #firstVisitSplash{display:none!important}
 #firstVisitSplash[hidden]{display:none!important}
 #firstVisitSplash{position:fixed;inset:0;z-index:2147483000;display:flex;align-items:center;justify-content:center;background:radial-gradient(circle at 50% 46%,#10243d 0,#071426 58%,#04101e 100%);pointer-events:none;opacity:1;transition:opacity .3s ease}
 #firstVisitSplash.is-leaving{opacity:0}
-#firstVisitSplash .first-visit-logo{position:relative;width:min(84vw,720px);overflow:visible;translate:0 clamp(16px,5vw,38px);opacity:1!important;visibility:visible!important;animation:splashLogoIn .6s ease both}
+#firstVisitSplash .first-visit-logo{position:relative;width:min(84vw,720px);overflow:visible;translate:0 clamp(16px,5vw,38px);opacity:1!important;visibility:hidden!important;animation:splashLogoIn .6s ease both}
+#firstVisitSplash.is-logo-ready .first-visit-logo{visibility:visible!important}
+#firstVisitSplash:not(.is-logo-ready) .first-visit-logo,
+#firstVisitSplash:not(.is-logo-ready) img,
+#firstVisitSplash:not(.is-logo-ready) .first-visit-shine,
+#firstVisitSplash:not(.is-logo-ready) .first-visit-since,
+#firstVisitSplash:not(.is-logo-ready) .first-visit-welcome{animation-play-state:paused!important}
 #firstVisitSplash img{display:block;width:100%;height:auto;opacity:1;animation:splashGoldGlow 1.45s ease-in-out .15s both;-webkit-backface-visibility:hidden;backface-visibility:hidden}
 #firstVisitSplash.is-canvas-active img{
   opacity:1!important;
@@ -4181,7 +4187,7 @@ html.skip-first-visit-splash #firstVisitSplash{display:none!important}
 </head>
 <body id="page-top"><div id="firstVisitSplash" aria-hidden="true"><div class="first-visit-logo"><img src="/.netlify/images?url=%2Fofficial-logo-crisp-final.png&w=800&q=82&fm=webp" alt=""><div class="first-visit-shine"></div><div class="first-visit-since"><span>SINCE 1982</span></div></div></div>
 <script src="./safari-resume-recovery.js?v=20261014-noinitialrepaint1"></script>
-<script src="./first-visit-splash.js?v=20261014-ios3d-retry1"></script>
+<script src="./first-visit-splash.js?v=20261014-sync-logo-since1"></script>
 <header class="header">
 <nav class="nav">
 <div class="brand"><div class="official-brand-wrap" data-home-logo role="link" tabindex="0" aria-label="ホームへ戻る">
