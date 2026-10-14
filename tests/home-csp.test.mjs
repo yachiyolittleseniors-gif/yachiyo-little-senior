@@ -40,18 +40,23 @@ test('changing a script updates its permission without relying on the old hash',
   assert.equal(synchronizeHomeCsp(after, result.content).added, 0);
 });
 
-test('build covers both home and Senior Cup without removing home permissions', () => {
-  assert.deepEqual([...CSP_PAGES], ['index.html', 'seniorcup.html']);
+test('build covers home, Senior Cup and results without removing existing permissions', () => {
+  assert.deepEqual([...CSP_PAGES], ['index.html', 'seniorcup.html', 'results.html']);
   const pages = [
     { name: 'index.html', html: '<script>window.home = true;</script>' },
-    { name: 'seniorcup.html', html: '<script>window.cup = true;</script>' }
+    { name: 'seniorcup.html', html: '<script>window.cup = true;</script>' },
+    { name: 'results.html', html: '<script>window.results = true;</script>' }
   ];
   const homeOnly = synchronizeHomeCsp(pages[0].html, headers).content;
   const result = synchronizePageCsps(pages, homeOnly);
-  assert.equal(result.added, 1);
+  assert.equal(result.added, 2);
   assert.ok(result.content.includes(hash('window.home = true;')));
   assert.ok(result.content.includes(hash('window.cup = true;')));
-  assert.equal(result.content.replace(' ' + hash('window.cup = true;'), ''), homeOnly);
+  assert.ok(result.content.includes(hash('window.results = true;')));
+  const withoutAdded = result.content
+    .replace(' ' + hash('window.cup = true;'), '')
+    .replace(' ' + hash('window.results = true;'), '');
+  assert.equal(withoutAdded, homeOnly);
   assert.equal(synchronizePageCsps(pages, result.content).added, 0);
 });
 
