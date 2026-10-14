@@ -50,7 +50,10 @@ function init(){
     const escortMap=base.escortGradeByMember instanceof Map?base.escortGradeByMember:new Map();
     const members=allMembersFromReport(base).filter(member=>{
       const ownGrade=String(member.grades?.[0]||'');
-      return ownGrade===target||String(escortMap.get(String(member.id))||'')===target;
+      const escortGrade=String(escortMap.get(String(member.id))||'');
+      // If this member is assigned to accompany an upper grade, treat that
+      // assignment as their active group for this day's export.
+      return escortGrade?escortGrade===target:ownGrade===target;
     });
     const ids=new Set(members.map(member=>String(member.id)));
     const statuses=['○','×',''];
@@ -149,6 +152,17 @@ function init(){
     saveBtn.textContent='画像を作成中…';
     try{
       const canvas=createReportCanvas(info);
+      // Core canvas generation stays untouched. Add only a small target label
+      // onto the finished image so the filtered export is unmistakable.
+      try{
+        const ctx=canvas.getContext('2d');
+        ctx.save();
+        ctx.textAlign='right';
+        ctx.fillStyle='#9a6d12';
+        ctx.font='bold 28px "Yu Gothic","Hiragino Kaku Gothic ProN",sans-serif';
+        ctx.fillText('対象：'+info.__gradeLabel,canvas.width-64,106);
+        ctx.restore();
+      }catch(_){}
       const blob=await new Promise(resolve=>canvas.toBlob(resolve,'image/png',1));
       if(!blob)throw new Error('画像を作成できませんでした。');
       const grade=info.__gradeFilter;
