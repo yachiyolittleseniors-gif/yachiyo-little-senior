@@ -14,6 +14,10 @@ try{
 }catch(e){}
 if(performance.getEntriesByType('navigation')[0]?.type==='reload'&&!heroChanged&&!forceOpening){cover.remove();document.documentElement.classList.remove('skip-first-visit-splash');return;}
 const reduceMotion=window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+const ua=String(navigator.userAgent||'');
+const isiOS=/iP(?:hone|ad|od)/i.test(ua)||
+  (navigator.platform==='MacIntel'&&Number(navigator.maxTouchPoints)>1);
+const isiOSSafari=isiOS&&/WebKit/i.test(ua)&&!/(CriOS|FxiOS|EdgiOS|OPiOS)/i.test(ua);
 const initialSource=cover.querySelector('img');
 // Keep the real logo visible from the very first paint. The canvas takes over
 // only after Safari has had time to paint the first canvas frame.
@@ -27,7 +31,9 @@ function remove(){if(closed)return;closed=true;window.removeEventListener('pageh
 function wait(ms){return new Promise(resolve=>setTimeout(resolve,ms));}
 
 function dutyRequestSignal(){
-  if(window.matchMedia('(prefers-reduced-motion: reduce)').matches)return;
+  // No canvas is created during the iPhone Safari opening. This deliberately
+  // trades the decorative star signal for a stable first paint.
+  if(isiOSSafari||window.matchMedia('(prefers-reduced-motion: reduce)').matches)return;
   let stopped=false,raf=0,canvas=null,observer=null;
   stopDutySignal=()=>{stopped=true;cancelAnimationFrame(raf);if(observer){observer.disconnect();observer=null;}if(canvas){try{canvas.width=1;canvas.height=1;}catch(_){}canvas.remove();canvas=null;}};
   fetch('/.netlify/functions/duty-request-alert',{cache:'no-store'})
@@ -98,7 +104,9 @@ function dutyRequestSignal(){
 }
 
 function openingMotion(){
-  if(reduceMotion)return wait(1500);
+  // iPhone Safari gets a compositor-stable static opening. No 3D canvas,
+  // no canvas insertion, no source-logo mutation.
+  if(isiOSSafari||reduceMotion)return wait(1500);
   const source=initialSource||cover.querySelector('img'),wrapper=cover.querySelector('.first-visit-logo');
   if(!source||!wrapper){if(source)source.style.opacity='';return wait(1500);}
   // One draw per opening: 5% fire, 20% bounce, 75% spin.
