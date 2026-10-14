@@ -109,6 +109,13 @@ async function sha256(value){
   const digest=await crypto.subtle.digest("SHA-256",bytes);
   return Array.from(new Uint8Array(digest)).map(b=>b.toString(16).padStart(2,"0")).join("");
 }
+function deviceApprovalNo(hash){
+  const hex=String(hash||"").replace(/[^0-9a-f]/gi,"").slice(0,12);
+  if(!hex)return "";
+  const value=Number.parseInt(hex,16);
+  if(!Number.isFinite(value))return "";
+  return "Y-"+String(value%100000000).padStart(8,"0");
+}
 function newApprovalToken(){
   return crypto.randomUUID().replace(/-/g,"")+crypto.randomUUID().replace(/-/g,"");
 }
@@ -219,7 +226,8 @@ function normalizeItem(item,index=0){
     approvalMode:String(item?.approvalMode||"")==="admin"?"admin":((item?.requesterLineHash||item?.approvalTokenHash||(Array.isArray(item?.approvalTokenHashes)&&item.approvalTokenHashes.length)||item?.approvalExpiresAt)?"family":"admin"),
     requesterDevice:String(item?.requesterDevice||"").slice(0,80),
     requesterDeviceHash:String(item?.requesterDeviceHash||"").slice(0,128),
-    approverDevice:String(item?.approverDevice||"").slice(0,80)
+    approverDevice:String(item?.approverDevice||"").slice(0,80),
+    approverDeviceHash:String(item?.approverDeviceHash||"").slice(0,128)
   };
 }
 function dedupePending(items){
@@ -386,6 +394,12 @@ function monitorSnapshot(data,roster){
     }
     return !matched.length;
   });
+  const sameDeviceApproval=visible.filter(item=>
+    item.status==="approved" &&
+    !!item.requesterDeviceHash &&
+    !!item.approverDeviceHash &&
+    item.requesterDeviceHash===item.approverDeviceHash
+  );
   const events=Array.isArray(data.monitorEvents)?data.monitorEvents.slice():[];
   const latestByFlow=new Map();
   events.forEach(event=>{if(event.flowKey)latestByFlow.set(event.flowKey,event)});
@@ -394,13 +408,17 @@ function monitorSnapshot(data,roster){
     ...expired.map(item=>({type:"expired",requestNo:item.requestNo,message:"承認リンクの有効期限が切れています。"})),
     ...missingLine.map(item=>({type:"line",requestNo:item.requestNo,message:"申請者のLINE識別情報がありません。"})),
     ...approvedMissingChange.map(item=>({type:"reflection",requestNo:item.requestNo,message:"承認済みですが当番表への反映を確認できません。"})),
-    ...stalledLine.map(item=>({type:"line_stalled",requestNo:item.requestNo,message:"LINE認証開始後、申請完了まで到達していません。"}))
+    ...stalledLine.map(item=>({type:"line_stalled",requestNo:item.requestNo,message:"LINE認証開始後、申請完了まで到達していません。"})),
+    ...sameDeviceApproval.map(item=>({type:"same_device",requestNo:item.requestNo,message:"申請端末と承認端末の端末承認番号が一致しています。内容を確認してください。"}))
   ];
   const recent=visible.slice().sort((a,b)=>String(b.updatedAt||b.createdAt).localeCompare(String(a.updatedAt||a.createdAt))).slice(0,10).map(item=>({
     requestNo:item.requestNo,date:item.date,status:item.status,
     createdAt:item.createdAt,updatedAt:item.updatedAt,
     requesterDevice:item.requesterDevice||"",
     approverDevice:item.approverDevice||"",
+    requesterDeviceNo:deviceApprovalNo(item.requesterDeviceHash),
+    approverDeviceNo:deviceApprovalNo(item.approverDeviceHash),
+    sameDeviceApproval:!!item.requesterDeviceHash&&!!item.approverDeviceHash&&item.requesterDeviceHash===item.approverDeviceHash,
     lineAuthenticated:!!item.requesterLineHash,
     approvalExpiresAt:item.approvalExpiresAt||""
   }));
@@ -409,7 +427,7 @@ function monitorSnapshot(data,roster){
   const eventHistory=sortedEvents.slice(0,120);
   return{
     partnerApprovalEnabled:data.partnerApprovalEnabled===true,
-    status:issues.some(x=>x.type==="reflection"||x.type==="line"||x.type==="line_stalled")?"error":(issues.length?"warning":"ok"),
+    status:issues.some(x=>x.type==="reflection"||x.type==="line"||x.type==="line_stalled"||x.type==="same_device")?"error":(issues.length?"warning":"ok"),
     pendingCount:visible.filter(item=>item.status==="pending").length,
     approvedCount:visible.filter(item=>item.status==="approved").length,
     issueCount:issues.length,
@@ -673,6 +691,9 @@ export default async (request,context)=>{
         await store.setJSON(KEY,data);
         return json({error:"申請したLINEアカウントでは承認できません。変更後のご家庭へ承認を依頼してください。",code:"self_approval_blocked"},403);
       }
+      const approverDeviceToken=String(request.headers.get("x-duty-approver-device")||"").trim();
+      const approverDeviceHash=approverDeviceToken?await sha256(approverDeviceToken):"";
+      const sameDeviceApproval=!!item.requesterDeviceHash&&!!approverDeviceHash&&item.requesterDeviceHash===approverDeviceHash;
       const applied=await applyRequestToRoster(store,item);
       if(!applied.ok){
         pushMonitorEvent(data,{stage:"reflection_error",level:"error",requestNo:item.requestNo,device:clientLabel(request),message:"承認後の当番表反映に失敗しました。"});
@@ -681,8 +702,14 @@ export default async (request,context)=>{
       }
       const idx=data.requests.findIndex(x=>x.id===item.id);
       const now=new Date().toISOString();
-      data.requests[idx]={...item,status:"approved",partnerApprovedAt:now,updatedAt:now,approvalTokenHash:"",approvalTokenHashes:[],approvalExpiresAt:"",approverDevice:clientLabel(request)};
-      pushMonitorEvent(data,{stage:"approved_reflected",level:"ok",requestNo:item.requestNo,device:clientLabel(request),message:"交代相手の承認・当番表反映が完了しました。"});
+      data.requests[idx]={...item,status:"approved",partnerApprovedAt:now,updatedAt:now,approvalTokenHash:"",approvalTokenHashes:[],approvalExpiresAt:"",approverDevice:clientLabel(request),approverDeviceHash};
+      pushMonitorEvent(data,{
+        stage:"approved_reflected",
+        level:sameDeviceApproval?"warning":"ok",
+        requestNo:item.requestNo,
+        device:clientLabel(request),
+        message:sameDeviceApproval?"交代相手の承認・当番表反映が完了しました。同一端末の可能性があるため要確認です。":"交代相手の承認・当番表反映が完了しました。"
+      });
       await store.setJSON(KEY,data);
       return json({ok:true,message:"承認しました。\n当番表へ反映されました。"});
     }
