@@ -4133,7 +4133,7 @@ html.skip-first-visit-splash #firstVisitSplash{display:none!important}
 #firstVisitSplash{position:fixed;inset:0;z-index:2147483000;display:flex;align-items:center;justify-content:center;background:radial-gradient(circle at 50% 46%,#10243d 0,#071426 58%,#04101e 100%);pointer-events:none;opacity:1;transition:opacity .3s ease}
 #firstVisitSplash.is-leaving{opacity:0}
 #firstVisitSplash .first-visit-logo{position:relative;width:min(84vw,720px);overflow:visible;translate:0 clamp(16px,5vw,38px);opacity:1!important;visibility:visible!important;animation:splashLogoIn .6s ease both}
-#firstVisitSplash img{display:block;width:100%;height:auto;opacity:1;animation:splashGoldGlow 1.45s ease-in-out .15s both}
+#firstVisitSplash img{display:block;width:100%;height:auto;opacity:1;animation:splashGoldGlow 1.45s ease-in-out .15s both;-webkit-backface-visibility:hidden;backface-visibility:hidden}
 #firstVisitSplash.is-canvas-active img{opacity:0}
 #firstVisitSplash .first-visit-shine{position:absolute;inset:0;pointer-events:none;background:linear-gradient(105deg,transparent 44%,rgba(255,245,206,.68) 50%,transparent 56%);background-size:300% 100%;background-position:100% 0;-webkit-mask-image:url("/.netlify/images?url=%2Fofficial-logo-crisp-final.png&w=800&q=82&fm=webp");mask-image:url("/.netlify/images?url=%2Fofficial-logo-crisp-final.png&w=800&q=82&fm=webp");-webkit-mask-size:100% 100%;mask-size:100% 100%;-webkit-mask-repeat:no-repeat;mask-repeat:no-repeat;opacity:0;animation:splashShine .65s ease .8s forwards}
 #firstVisitSplash .first-visit-since{position:absolute;top:0;left:calc(50% + 5px);transform:translate(-50%,-100%);margin-top:calc(8px - clamp(18px,5vw,43px));display:flex;align-items:center;justify-content:center;gap:clamp(12px,3.5vw,25px);width:max-content;color:#e2bd67;font-family:"Times New Roman",Times,serif;font-variant-numeric:lining-nums tabular-nums;font-feature-settings:"lnum" 1,"tnum" 1;font-size:clamp(12px,3.47vw,25px);font-weight:400;line-height:1.2;white-space:nowrap;animation:splashSinceIn .5s ease .3s both}
@@ -4146,6 +4146,26 @@ html.skip-first-visit-splash #firstVisitSplash{display:none!important}
 @keyframes splashGoldGlow{0%,100%{filter:drop-shadow(0 0 0 rgba(255,201,70,0))}50%{filter:drop-shadow(0 0 3px rgba(255,201,70,.7)) drop-shadow(0 0 8px rgba(255,201,70,.35))}}
 @keyframes splashShine{0%{background-position:100% 0;opacity:0}12%{opacity:1}88%{opacity:1}100%{background-position:0% 0;opacity:0}}
 @keyframes splashSafetyExit{to{visibility:hidden;opacity:0}}
+/* iPhone Safari: animated filter/transform layers on the source logo can
+   briefly drop out during compositor promotion. The canvas already supplies
+   the visible opening motion, so keep the underlying source logo on a stable
+   layer on phones. */
+@media(max-width:900px){
+  #firstVisitSplash .first-visit-logo{
+    animation:none!important;
+    transform:translateZ(0)!important;
+    -webkit-transform:translateZ(0)!important;
+    -webkit-backface-visibility:hidden!important;
+    backface-visibility:hidden!important;
+  }
+  #firstVisitSplash img{
+    animation:none!important;
+    filter:none!important;
+    -webkit-filter:none!important;
+    transform:translateZ(0)!important;
+    -webkit-transform:translateZ(0)!important;
+  }
+}
 @media(prefers-reduced-motion:reduce){#firstVisitSplash .first-visit-logo,#firstVisitSplash .first-visit-shine,#firstVisitSplash img,#firstVisitSplash .first-visit-since,#firstVisitSplash .first-visit-welcome{animation:none}#firstVisitSplash .first-visit-shine{display:none}}
 </style>
 <script src="./back-to-top.js?v=20261001-visible-dialogs" defer></script>
