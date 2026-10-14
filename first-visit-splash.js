@@ -15,11 +15,26 @@ try{
 if(performance.getEntriesByType('navigation')[0]?.type==='reload'&&!heroChanged&&!forceOpening){cover.remove();return;}
 const reduceMotion=window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 const initialSource=cover.querySelector('img');
-// Hide the static logo before the splash becomes paintable. This prevents
-// iPhone Safari from showing one static-image frame before the canvas intro.
-if(initialSource&&!reduceMotion)initialSource.style.opacity='0';
+let splashPaintReady=reduceMotion;
+// Keep the splash measurable but invisible until the canvas has its first
+// painted frame. This removes the navy/static-logo frame Safari could expose.
+if(!reduceMotion){
+  cover.style.visibility='hidden';
+  cover.style.opacity='0';
+  cover.style.transition='none';
+}
 cover.hidden=false;
 const openedAt=performance.now();
+function revealPreparedSplash(){
+  if(splashPaintReady)return;
+  splashPaintReady=true;
+  cover.style.visibility='visible';
+  cover.style.opacity='1';
+  void cover.offsetHeight;
+  cover.style.removeProperty('transition');
+  cover.style.removeProperty('opacity');
+  cover.style.removeProperty('visibility');
+}
 let closed=false,stopMotion=()=>{},stopDutySignal=()=>{},exitTimer=0,guardTimer=0;
 let leaving=false;
 function remove(){if(closed)return;closed=true;window.removeEventListener('pagehide',remove);clearTimeout(exitTimer);clearTimeout(guardTimer);stopMotion();stopDutySignal();stopMotion=()=>{};stopDutySignal=()=>{};cover.remove();}
@@ -106,7 +121,7 @@ function openingMotion(){
   cover.dataset.motion=variant;
   return new Promise(resolve=>{
     let finished=false,raf=0,observer=null,canvas=null;
-    const finish=()=>{if(finished)return;finished=true;cancelAnimationFrame(raf);if(observer){observer.disconnect();observer=null;}if(canvas){try{canvas.width=1;canvas.height=1;}catch(_){}canvas.remove();canvas=null;}source.style.opacity='';stopMotion=()=>{};resolve();};
+    const finish=()=>{if(finished)return;finished=true;cancelAnimationFrame(raf);if(observer){observer.disconnect();observer=null;}if(canvas){try{canvas.width=1;canvas.height=1;}catch(_){}canvas.remove();canvas=null;}source.style.opacity='';revealPreparedSplash();stopMotion=()=>{};resolve();};
     stopMotion=finish;
     const loadTimeout=setTimeout(finish,1500);
     function begin(){
@@ -417,9 +432,10 @@ function openingMotion(){
         resize();prepareBall();
         const draw=variant==='fire'?drawFire:variant==='bounce'?drawBounce:drawSpin;
         draw(0);source.style.opacity='0';
+        revealPreparedSplash();
         observer=new ResizeObserver(resize);observer.observe(cover);
         const timelineDuration=variant==='fire'?1400:variant==='bounce'?3100:4000;
-        const duration=1400;
+        const duration=1500;
         let lastFrame=0;
         function tick(now){
           if(finished||closed)return;
