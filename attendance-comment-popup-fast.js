@@ -24,6 +24,31 @@
     }
     var originalRender = window.render;
     var previousMember = '';
+
+    function pinSelectedRow(selected) {
+      board.querySelectorAll('tr[data-attendance-sticky="1"]').forEach(function (row) {
+        row.removeAttribute('data-attendance-sticky');
+        Array.prototype.forEach.call(row.cells, function (cell) {
+          cell.style.removeProperty('position');
+          cell.style.removeProperty('top');
+          cell.style.removeProperty('z-index');
+          cell.style.removeProperty('background-color');
+        });
+      });
+      if (!selected) return;
+      var selectedRow = selected.closest('tr');
+      if (!selectedRow) return;
+      var header = board.querySelector('thead');
+      var headerHeight = header ? Math.ceil(header.getBoundingClientRect().height) : 0;
+      selectedRow.setAttribute('data-attendance-sticky', '1');
+      Array.prototype.forEach.call(selectedRow.cells, function (cell, index) {
+        cell.style.position = 'sticky';
+        cell.style.top = headerHeight + 'px';
+        cell.style.zIndex = index === 0 ? '9' : '7';
+        cell.style.backgroundColor = index === 0 ? '#fff6df' : '#fff';
+      });
+    }
+
     function positionOverlay() {
       if (overlay.style.display === 'none') return;
       var selected = board.querySelector('[data-select-member].selected');
@@ -31,7 +56,7 @@
       if (!memberRow) return;
       var outer = container.getBoundingClientRect();
       var bounds = board.getBoundingClientRect();
-      var row = memberRow.getBoundingClientRect();
+      var row = memberRow.cells[0] ? memberRow.cells[0].getBoundingClientRect() : memberRow.getBoundingClientRect();
       var head = board.querySelector('thead');
       var headHeight = head ? head.getBoundingClientRect().height : 0;
       // Never write board.scrollTop from inside the board scroll handler.
@@ -48,6 +73,7 @@
       home.parentNode.insertBefore(editor, home.nextSibling);
       var result = originalRender.apply(this, arguments);
       var selected = board.querySelector('[data-select-member].selected');
+      pinSelectedRow(selected);
       board.querySelectorAll('[data-select-member]').forEach(function (button) {
         button.setAttribute('aria-expanded', button === selected ? 'true' : 'false');
         button.setAttribute('aria-controls', 'editor');
@@ -75,6 +101,7 @@
     };
     window.refreshAttendanceEditorOverlay = function () {
       var selected = board.querySelector('[data-select-member].selected');
+      pinSelectedRow(selected);
       board.querySelectorAll('[data-select-member]').forEach(function (button) {
         button.setAttribute('aria-expanded', button === selected ? 'true' : 'false');
         button.setAttribute('aria-controls', 'editor');
