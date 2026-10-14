@@ -45,7 +45,7 @@ export function synchronizeHomeCsp(html, headers) {
   return { content, added, scripts: hashes.length };
 }
 
-export const CSP_PAGES = Object.freeze(['index.html', 'seniorcup.html']);
+export const CSP_PAGES = Object.freeze(['index.html', 'seniorcup.html', 'results.html']);
 
 // Senior Cup's inline application owns overview saving and partner rendering.
 // Its hash must be regenerated whenever that page changes, just like the home page.
