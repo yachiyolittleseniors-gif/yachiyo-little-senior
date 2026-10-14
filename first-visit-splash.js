@@ -432,7 +432,11 @@ function openingMotion(){
         const draw=variant==='fire'?drawFire:variant==='bounce'?drawBounce:drawSpin;
         draw(0);
         revealPreparedSplash();
-        observer=new ResizeObserver(resize);observer.observe(cover);
+        // Do not observe/resize the intro canvas during playback.
+        // ResizeObserver fires once immediately after observe(), and changing
+        // canvas.width/height clears its bitmap. On iPhone Safari that creates
+        // a visible one-frame logo disappearance after the static image hides.
+        // The intro lasts only 1.5s, so keep the initial canvas size stable.
         const timelineDuration=variant==='fire'?1400:variant==='bounce'?3100:4000;
         const duration=1500;
         let lastFrame=0;
