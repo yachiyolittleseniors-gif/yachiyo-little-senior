@@ -15,17 +15,12 @@ try{
 if(performance.getEntriesByType('navigation')[0]?.type==='reload'&&!heroChanged&&!forceOpening){cover.remove();document.documentElement.classList.remove('skip-first-visit-splash');return;}
 const reduceMotion=window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 const initialSource=cover.querySelector('img');
-// The navy splash surface is visible from the first body paint. Only the
-// static logo stays hidden until the canvas has drawn or a fallback is needed.
+// Keep the real logo visible from the very first paint. The canvas takes over
+// only after Safari has had time to paint the first canvas frame.
 document.documentElement.classList.remove('skip-first-visit-splash');
-if(reduceMotion)cover.classList.add('is-static-ready');
 cover.hidden=false;
 const openedAt=performance.now();
-function revealPreparedSplash(){
-  // Kept as a lightweight hook for the first canvas draw.
-  // The splash background itself is already visible, so there is no light
-  // body-background frame between navigation and the animation.
-}
+function revealPreparedSplash(){}
 let closed=false,stopMotion=()=>{},stopDutySignal=()=>{},exitTimer=0,guardTimer=0;
 let leaving=false;
 function remove(){if(closed)return;closed=true;window.removeEventListener('pagehide',remove);clearTimeout(exitTimer);clearTimeout(guardTimer);stopMotion();stopDutySignal();stopMotion=()=>{};stopDutySignal=()=>{};cover.remove();}
@@ -111,8 +106,26 @@ function openingMotion(){
   const variant=drawChance<0.05?'fire':drawChance<0.25?'bounce':'spin';
   cover.dataset.motion=variant;
   return new Promise(resolve=>{
-    let finished=false,raf=0,observer=null,canvas=null;
-    const finish=()=>{if(finished)return;finished=true;cancelAnimationFrame(raf);if(observer){observer.disconnect();observer=null;}cover.classList.add('is-static-ready');source.style.opacity='';if(canvas){try{canvas.width=1;canvas.height=1;}catch(_){}canvas.remove();canvas=null;}revealPreparedSplash();stopMotion=()=>{};resolve();};
+    let finished=false,finishing=false,raf=0,handoffRaf=0,handoffTimer=0,observer=null,canvas=null;
+    const releaseCanvas=()=>{
+      if(finished)return;
+      if(canvas){try{canvas.width=1;canvas.height=1;}catch(_){}canvas.remove();canvas=null;}
+      finished=true;finishing=false;stopMotion=()=>{};resolve();
+    };
+    const finish=()=>{
+      if(finished||finishing)return;
+      finishing=true;
+      cancelAnimationFrame(raf);
+      if(observer){observer.disconnect();observer=null;}
+      // Show the real logo while the final canvas frame is still present.
+      // Wait for two paint opportunities before removing the canvas so there
+      // is never a frame where neither logo is visible on iPhone Safari.
+      cover.classList.remove('is-canvas-active');
+      source.style.opacity='';
+      handoffRaf=requestAnimationFrame(()=>requestAnimationFrame(releaseCanvas));
+      handoffTimer=setTimeout(releaseCanvas,80);
+      revealPreparedSplash();
+    };
     stopMotion=finish;
     const loadTimeout=setTimeout(finish,1500);
     function begin(){
@@ -422,7 +435,7 @@ function openingMotion(){
         }
         resize();prepareBall();
         const draw=variant==='fire'?drawFire:variant==='bounce'?drawBounce:drawSpin;
-        draw(0);source.style.opacity='0';
+        draw(0);
         revealPreparedSplash();
         observer=new ResizeObserver(resize);observer.observe(cover);
         const timelineDuration=variant==='fire'?1400:variant==='bounce'?3100:4000;
@@ -441,7 +454,13 @@ function openingMotion(){
             raf=requestAnimationFrame(tick);
           }catch(_){finish();}
         }
-        raf=requestAnimationFrame(tick);
+        // First paint: static logo + identical canvas frame overlap.
+        // Second paint: canvas owns the animation and the static image hides.
+        requestAnimationFrame(()=>requestAnimationFrame(()=>{
+          if(finished||finishing||closed)return;
+          cover.classList.add('is-canvas-active');
+          raf=requestAnimationFrame(tick);
+        }));
       }catch(_){finish();}
     }
     if(source.complete)begin();else{source.addEventListener('load',begin,{once:true});source.addEventListener('error',finish,{once:true});}
