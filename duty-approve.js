@@ -1,6 +1,17 @@
 (function(){
   const API='/.netlify/functions/duty-change-requests';
   const LIFF_ID='2011836404-Htm3MsCI';
+  const APPROVER_DEVICE_KEY='ylsDutyApproverDeviceToken';
+  function approverDeviceToken(){
+    try{
+      let value=localStorage.getItem(APPROVER_DEVICE_KEY)||'';
+      if(!value){
+        value=(crypto.randomUUID?crypto.randomUUID():Date.now().toString(36)+'-'+Math.random().toString(36).slice(2));
+        localStorage.setItem(APPROVER_DEVICE_KEY,value);
+      }
+      return value;
+    }catch(_){return''}
+  }
   let token='';
   const loading=document.getElementById('loading');
   const content=document.getElementById('content');
@@ -94,9 +105,12 @@
   }
 
   async function call(action){
+    const headers={'content-type':'application/json'};
+    const deviceToken=approverDeviceToken();
+    if(deviceToken)headers['x-duty-approver-device']=deviceToken;
     return fetchJson(API,{
       method:'POST',
-      headers:{'content-type':'application/json'},
+      headers,
       body:JSON.stringify({action,token,idToken,accessToken:String(window.__ylsLiffAccessToken||'')})
     });
   }
