@@ -13,6 +13,11 @@ try{
   if(heroChanged)sessionStorage.removeItem('yachiyo:hero-opening-pending');
 }catch(e){}
 if(performance.getEntriesByType('navigation')[0]?.type==='reload'&&!heroChanged&&!forceOpening){cover.remove();return;}
+const reduceMotion=window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+const initialSource=cover.querySelector('img');
+// Hide the static logo before the splash becomes paintable. This prevents
+// iPhone Safari from showing one static-image frame before the canvas intro.
+if(initialSource&&!reduceMotion)initialSource.style.opacity='0';
 cover.hidden=false;
 const openedAt=performance.now();
 let closed=false,stopMotion=()=>{},stopDutySignal=()=>{},exitTimer=0,guardTimer=0;
@@ -92,9 +97,9 @@ function dutyRequestSignal(){
 }
 
 function openingMotion(){
-  if(window.matchMedia('(prefers-reduced-motion: reduce)').matches)return wait(1500);
-  const source=cover.querySelector('img'),wrapper=cover.querySelector('.first-visit-logo');
-  if(!source||!wrapper)return wait(1500);
+  if(reduceMotion)return wait(1500);
+  const source=initialSource||cover.querySelector('img'),wrapper=cover.querySelector('.first-visit-logo');
+  if(!source||!wrapper){if(source)source.style.opacity='';return wait(1500);}
   // One draw per opening: 5% fire, 20% bounce, 75% spin.
   const drawChance=Math.random();
   const variant=drawChance<0.05?'fire':drawChance<0.25?'bounce':'spin';
