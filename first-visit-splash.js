@@ -106,26 +106,21 @@ function openingMotion(){
   const variant=drawChance<0.05?'fire':drawChance<0.25?'bounce':'spin';
   cover.dataset.motion=variant;
   return new Promise(resolve=>{
-    let finished=false,finishing=false,raf=0,handoffRaf=0,handoffTimer=0,observer=null,canvas=null;
-    const releaseCanvas=()=>{
-      if(finished)return;
-      if(canvas){try{canvas.width=1;canvas.height=1;}catch(_){}canvas.remove();canvas=null;}
-      finished=true;finishing=false;stopMotion=()=>{};resolve();
-    };
+    let finished=false,raf=0,observer=null,canvas=null;
     const finish=()=>{
-      if(finished||finishing)return;
-      finishing=true;
+      if(finished)return;
+      finished=true;
       cancelAnimationFrame(raf);
       if(observer){observer.disconnect();observer=null;}
-      // Show the real logo while the final canvas frame is still present.
-      // Wait for two paint opportunities before removing the canvas so there
-      // is never a frame where neither logo is visible on iPhone Safari.
       cover.classList.remove('is-canvas-active');
       source.style.opacity='';
-      handoffRaf=requestAnimationFrame(()=>requestAnimationFrame(releaseCanvas));
-      handoffTimer=setTimeout(releaseCanvas,80);
+      if(canvas){try{canvas.width=1;canvas.height=1;}catch(_){}canvas.remove();canvas=null;}
       revealPreparedSplash();
+      stopMotion=()=>{};
+      resolve();
     };
+    // Normal playback keeps its final canvas frame on screen through the
+    // splash fade. Cleanup happens only after the overlay is no longer visible.
     stopMotion=finish;
     const loadTimeout=setTimeout(finish,1500);
     function begin(){
@@ -450,14 +445,18 @@ function openingMotion(){
             // display cadence to avoid a choppy opening on iPhone.
             lastFrame=now;
             draw(Math.min(elapsed/duration,1)*timelineDuration);
-            if(elapsed>=duration){finish();return;}
+            if(elapsed>=duration){
+              if(observer){observer.disconnect();observer=null;}
+              raf=0;
+              return;
+            }
             raf=requestAnimationFrame(tick);
           }catch(_){finish();}
         }
         // First paint: static logo + identical canvas frame overlap.
         // Second paint: canvas owns the animation and the static image hides.
         requestAnimationFrame(()=>requestAnimationFrame(()=>{
-          if(finished||finishing||closed)return;
+          if(finished||closed)return;
           cover.classList.add('is-canvas-active');
           raf=requestAnimationFrame(tick);
         }));
@@ -469,7 +468,10 @@ function openingMotion(){
 // Keep the existing motion; reveal the page only when its hero is ready.
 function leave(){
   if(closed||leaving)return;
-  leaving=true;clearTimeout(guardTimer);stopMotion();
+  leaving=true;clearTimeout(guardTimer);
+  // Fade the currently visible canvas/logo as one surface. Do not swap back
+  // to the static image before the fade; Safari can expose that swap as a
+  // one-frame disappearance.
   cover.classList.add('is-leaving');
   exitTimer=setTimeout(remove,300);
 }
