@@ -422,7 +422,18 @@ function monitorSnapshot(data,roster){
     lineAuthenticated:!!item.requesterLineHash,
     approvalExpiresAt:item.approvalExpiresAt||""
   }));
-  const sortedEvents=events.slice().sort((a,b)=>String(b.at).localeCompare(String(a.at)));
+  const requestByNo=new Map(visible.map(item=>[String(item.requestNo||""),item]));
+  const enrichEvent=event=>{
+    const linked=requestByNo.get(String(event?.requestNo||""));
+    if(!linked)return event;
+    return{
+      ...event,
+      requesterDeviceNo:deviceApprovalNo(linked.requesterDeviceHash),
+      approverDeviceNo:deviceApprovalNo(linked.approverDeviceHash),
+      sameDeviceApproval:!!linked.requesterDeviceHash&&!!linked.approverDeviceHash&&linked.requesterDeviceHash===linked.approverDeviceHash
+    };
+  };
+  const sortedEvents=events.slice().sort((a,b)=>String(b.at).localeCompare(String(a.at))).map(enrichEvent);
   const recentEvents=sortedEvents.slice(0,12);
   const eventHistory=sortedEvents.slice(0,120);
   return{
@@ -651,7 +662,7 @@ export default async (request,context)=>{
         item={
           id:`request-${crypto.randomUUID()}`,requestNo:next.value,date,
           fromGrade,fromName,toGrade,toName,requestType,swapDate,swapGrade,swapName,approvalMode:"family",status:"pending",createdAt:now,updatedAt:now,
-          approvalTokenHash,approvalTokenHashes:approvalTokenHash?[approvalTokenHash]:[],approvalExpiresAt,partnerApprovedAt:"",requesterLineHash,requesterDevice:clientLabel(request),requesterDeviceHash:item?.requesterDeviceHash||"",approverDevice:""
+          approvalTokenHash,approvalTokenHashes:approvalTokenHash?[approvalTokenHash]:[],approvalExpiresAt,partnerApprovedAt:"",requesterLineHash,requesterDevice:clientLabel(request),requesterDeviceHash:"",approverDevice:"",approverDeviceHash:""
         };
         data.requests.push(item);
       }
