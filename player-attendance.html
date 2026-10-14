@@ -158,9 +158,9 @@ body{padding-top:var(--fixed-header-height)!important}
 <style id="attendance-report-styles">
 .report-launch{margin:16px 0;padding:18px;background:#fff;border:1px solid #d8dde4;border-radius:16px;box-shadow:0 8px 24px rgba(7,20,38,.06)}
 .report-launch-head{display:flex;align-items:center;justify-content:space-between;gap:12px;margin:0 0 12px}.report-launch-head h2{margin:0;font-size:20px;color:#071426}.report-launch-head .sync{margin-left:auto;white-space:nowrap;font-size:11px;color:#6f7884}
-.report-launch-grid{display:grid;grid-template-columns:minmax(180px,1fr) minmax(220px,1.35fr);gap:12px;align-items:end}
+.report-launch-grid{display:grid;grid-template-columns:minmax(180px,1.15fr) minmax(150px,.7fr) minmax(220px,1.15fr);gap:12px;align-items:end}
 .report-launch label,.comment-date-field{display:grid;gap:6px;font-size:13px;font-weight:800;color:#536072}
-.report-launch select,.comment-date-field select{width:100%;min-height:46px;border:1px solid #cbd2dc;border-radius:10px;background:#fff;color:#071426;padding:0 12px;font:inherit}
+.report-launch select,.comment-date-field select{width:100%;min-height:46px;border:1px solid #cbd2dc;border-radius:10px;background:#fff;color:#071426;padding:0 12px;font:inherit}.report-grade-field select{font-weight:900;border:2px solid #071426}
 .report-launch button{min-height:46px;border:1.5px solid #c79a3b;border-radius:999px;background:#fff;color:#9a6d12;font-weight:900}
 .report-launch p{margin:9px 0 0;color:#788392;font-size:12px}
 .upper-grade-check{display:flex;align-items:center;gap:10px;margin-top:10px;padding:12px 14px;border:1px solid #d8dde4;border-radius:10px;background:#fff;color:#071426;font-weight:800;cursor:pointer}
@@ -314,9 +314,10 @@ body{padding-top:var(--fixed-header-height)!important}
       <div class="report-launch-body">
       <div class="report-launch-grid">
         <label>日程を選択<select id="reportEventSelect" aria-label="出力する日程"></select></label>
+        <label class="report-grade-field">対象学年<select id="reportGradeSelect" aria-label="出力する学年"><option value="">全学年</option><option value="1">1年＋帯同</option><option value="2">2年＋帯同</option><option value="3">3年＋帯同</option></select></label>
         <button id="openReportBtn" type="button">選手出席一覧を出力</button>
       </div>
-      <p>学年ごとの○・×・未入力と、選択した日のコメントを表示します。</p>
+      <p>全学年、または選択した学年＋その学年への帯同選手の○・×・未入力とコメントを表示します。</p>
       </div>
     </details>
     <dialog class="summary-dialog" id="summaryDialog" aria-labelledby="summaryTitle"><div class="summary-dialog-head"><h2 id="summaryTitle">出欠内訳</h2><button class="summary-close" id="summaryClose" type="button" aria-label="閉じる">×</button></div><div class="breakdown-list" id="summaryBody"></div><p class="breakdown-unset" id="summaryUnset"></p></dialog>
@@ -354,7 +355,7 @@ function isReloadNavigation(){const entry=performance.getEntriesByType&&performa
 function readAccessPass(){try{const current=sessionStorage.getItem(ACCESS_KEY)||'';if(current)return current}catch(e){}if(!isReloadNavigation())return'';try{const expires=Number(localStorage.getItem(RELOAD_EXPIRY_KEY)||0);if(expires>Date.now()){const saved=localStorage.getItem(RELOAD_KEY)||'';if(saved){sessionStorage.setItem(ACCESS_KEY,saved);return saved}}localStorage.removeItem(RELOAD_KEY);localStorage.removeItem(RELOAD_EXPIRY_KEY)}catch(e){}return''}
 function rememberAccessPass(password){if(!password)return;try{sessionStorage.setItem(ACCESS_KEY,password)}catch(e){}try{localStorage.setItem(RELOAD_KEY,password);localStorage.setItem(RELOAD_EXPIRY_KEY,String(Date.now()+RELOAD_LIFETIME))}catch(e){}}
 function forgetAccessPass(){try{sessionStorage.removeItem(ACCESS_KEY)}catch(e){}try{localStorage.removeItem(RELOAD_KEY);localStorage.removeItem(RELOAD_EXPIRY_KEY)}catch(e){}}
-let adminPass='',entryAdminPass=sessionStorage.getItem(ENTRY_ADMIN_KEY)||'',accessPass=readAccessPass(),selectedMember='',selectedEscortGrade='',currentReportEventId='',data={events:[],members:[],answers:{},comments:[],gradeOrder:['2','1','3'],densukeImportVersion:0},scheduleEvents=[],appConfig={migrationEnded:true,endedAt:''},memberChangesDirty=false,gradeOrderDirty=false,lastDeletedComment=null,showPastComments=false,savingMembers=new Set();
+let adminPass='',entryAdminPass=sessionStorage.getItem(ENTRY_ADMIN_KEY)||'',accessPass=readAccessPass(),selectedMember='',selectedEscortGrade='',currentReportEventId='',currentReportGrade='',data={events:[],members:[],answers:{},comments:[],gradeOrder:['2','1','3'],densukeImportVersion:0},scheduleEvents=[],appConfig={migrationEnded:true,endedAt:''},memberChangesDirty=false,gradeOrderDirty=false,lastDeletedComment=null,showPastComments=false,savingMembers=new Set();
 sessionStorage.removeItem('yachiyoAdminPassword');
 const $=s=>document.querySelector(s);
 const esc=s=>String(s??'').replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));
@@ -398,13 +399,17 @@ function preferredEvent(events){
 }
 function eventLabel(event){return formatDate(event.date)+(event.title?' '+event.title:'')}
 function renderReportControls(events){
-  const select=$('#reportEventSelect');
+  const select=$('#reportEventSelect'),gradeSelect=$('#reportGradeSelect');
   if(!select)return;
-  const previous=select.value;
+  const previous=select.value,previousGrade=gradeSelect?.value||'';
   select.innerHTML=events.map(event=>'<option value="'+esc(event.id)+'">'+esc(eventLabel(event))+'</option>').join('');
   const fallback=preferredEvent(events);
   const value=events.some(event=>String(event.id)===previous)?previous:String(fallback?.id||'');
   if(value)select.value=value;
+  if(gradeSelect){
+    gradeSelect.innerHTML='<option value="">全学年</option>'+gradeDisplayOrder().map(grade=>'<option value="'+grade+'">'+grade+'年＋帯同</option>').join('');
+    gradeSelect.value=['1','2','3'].includes(previousGrade)?previousGrade:'';
+  }
   $('#reportLaunch').classList.toggle('hidden',!events.length);
 }
 function commentMatchesDate(comment,date){
@@ -437,41 +442,51 @@ async function loadParentEscortForReport(date){
   }
   parentEscortByPlayer=matches;
 }
-function reportSnapshot(eventId){
+function reportSnapshot(eventId,gradeFilter=''){
   const event=visibleEvents().find(item=>String(item.id)===String(eventId));
   if(!event)return null;
   const ordered=sortedMembers();
   const statuses=['○','×',''];
-  const grades=gradeDisplayOrder().map(grade=>({
-    grade,
-    groups:statuses.map(status=>({status,members:ordered.filter(member=>member.grades?.[0]===grade&&(data.answers?.[member.id]?.[event.id]||'')===status)}))
-  }));
+  const targetGrade=['1','2','3'].includes(String(gradeFilter||''))?String(gradeFilter):'';
+  const escortGradeByMember=new Map(parentEscortByPlayer);
+  const included=targetGrade
+    ?ordered.filter(member=>member.grades?.[0]===targetGrade||escortGradeByMember.get(String(member.id))===targetGrade)
+    :ordered;
+  const includedIds=new Set(included.map(member=>String(member.id)));
+  const grades=targetGrade
+    ?[{grade:targetGrade,label:targetGrade+'年生＋帯同',groups:statuses.map(status=>({status,members:included.filter(member=>(data.answers?.[member.id]?.[event.id]||'')===status)}))}]
+    :gradeDisplayOrder().map(grade=>({
+      grade,
+      label:grade+'年生',
+      groups:statuses.map(status=>({status,members:included.filter(member=>member.grades?.[0]===grade&&(data.answers?.[member.id]?.[event.id]||'')===status)}))
+    }));
   const byId=new Map(data.members.map(member=>[String(member.id),member]));
-  const comments=sortedComments().filter(comment=>commentMatchesDate(comment,event.date)).map(comment=>({
+  const allComments=sortedComments().filter(comment=>commentMatchesDate(comment,event.date)).map(comment=>({
     ...comment,
     member:byId.get(String(comment.memberId))
   }));
-  const totals=statuses.map(status=>ordered.filter(member=>(data.answers?.[member.id]?.[event.id]||'')===status).length);
-  const escortGradeByMember=new Map(parentEscortByPlayer);
-  return{event,grades,comments,totals,escortGradeByMember};
+  const comments=targetGrade?allComments.filter(comment=>includedIds.has(String(comment.memberId))):allComments;
+  const totals=statuses.map(status=>included.filter(member=>(data.answers?.[member.id]?.[event.id]||'')===status).length);
+  return{event,grades,comments,totals,escortGradeByMember,gradeFilter:targetGrade,gradeLabel:targetGrade?targetGrade+'年生＋帯同':'全学年'};
 }
 function reportStatusClass(status){return status==='○'?'o':status==='×'?'x':'u'}
 function reportStatusLabel(status){return status==='○'?'参加':status==='×'?'不参加':'未入力'}
-function renderReport(eventId){
-  const info=reportSnapshot(eventId);
+function renderReport(eventId,gradeFilter=''){
+  const info=reportSnapshot(eventId,gradeFilter);
   if(!info)return false;
   currentReportEventId=String(eventId);
-  $('#reportTitle').textContent=formatDate(info.event.date)+' 選手出席一覧';
-  $('#reportSummary').textContent='参加 '+info.totals[0]+'名　不参加 '+info.totals[1]+'名　未入力 '+info.totals[2]+'名';
+  currentReportGrade=info.gradeFilter;
+  $('#reportTitle').textContent=formatDate(info.event.date)+(info.gradeFilter?' '+info.gradeLabel:'')+' 選手出席一覧';
+  $('#reportSummary').textContent=(info.gradeFilter?info.gradeLabel+'　':'')+'参加 '+info.totals[0]+'名　不参加 '+info.totals[1]+'名　未入力 '+info.totals[2]+'名';
   $('#reportGrades').innerHTML=info.grades.map(group=>{
     const cards=group.groups.map(item=>{
       const names=item.members.length?item.members.map(member=>esc(member.name)+(info.escortGradeByMember.has(String(member.id))?'<span class="report-member-accompany">（'+esc(info.escortGradeByMember.get(String(member.id))==='upper'?'上級帯同':info.escortGradeByMember.get(String(member.id))+'帯同')+'）</span>':'')).join('、'):'該当者なし';
       const kind=reportStatusClass(item.status);
       return '<section class="report-status report-status-'+kind+'"><h4>'+(item.status?item.status+' ':'')+reportStatusLabel(item.status)+'（'+item.members.length+'名）</h4><p>'+names+'</p></section>';
     }).join('');
-    return '<section class="report-grade"><h3><span class="grade-color-'+group.grade+'">'+group.grade+'年生</span></h3><div class="report-status-grid">'+cards+'</div></section>';
+    return '<section class="report-grade"><h3><span class="grade-color-'+group.grade+'">'+esc(group.label||group.grade+'年生')+'</span></h3><div class="report-status-grid">'+cards+'</div></section>';
   }).join('');
-  $('#reportCommentsTitle').textContent=formatDate(info.event.date)+'のコメント一覧';
+  $('#reportCommentsTitle').textContent=formatDate(info.event.date)+(info.gradeFilter?' '+info.gradeLabel:'')+'のコメント一覧';
   $('#reportComments').innerHTML=info.comments.length?info.comments.map(comment=>{
     const member=comment.member||{name:'選手',grades:[]};
     const escortLabel=comment.escortGrade?comment.escortGrade+'年生帯同':(comment.upperGrade?'上級生帯同':'');const badge=escortLabel?'<span class="upper-grade-badge">'+esc(escortLabel)+'</span>':'';
@@ -515,15 +530,16 @@ function createReportCanvas(info){
   ctx=canvas.getContext('2d');
   ctx.fillStyle='#f4f3ef';ctx.fillRect(0,0,width,canvas.height);
   roundCanvasRect(ctx,28,28,width-56,canvas.height-56,22,'#ffffff','#dfe4e9');
-  ctx.fillStyle='#071426';ctx.font='bold 48px "Yu Gothic","Hiragino Kaku Gothic ProN",sans-serif';ctx.fillText(formatDate(info.event.date)+' 選手出席一覧',margin,105);
+  ctx.fillStyle='#071426';ctx.font='bold 48px "Yu Gothic","Hiragino Kaku Gothic ProN",sans-serif';ctx.fillText(formatDate(info.event.date)+(info.gradeFilter?' '+info.gradeLabel:'')+' 選手出席一覧',margin,105);
   ctx.font='bold 29px "Yu Gothic","Hiragino Kaku Gothic ProN",sans-serif';ctx.fillText('参加 '+info.totals[0]+'名　不参加 '+info.totals[1]+'名　未入力 '+info.totals[2]+'名',margin,160);
   let y=210;
   const colors={o:{bg:'#f1fbf5',head:'#12823a'},x:{bg:'#fff3f5',head:'#a72e3c'},u:{bg:'#f4f5f7',head:'#66707c'}};
   for(const group of layouts){
     roundCanvasRect(ctx,margin,y,width-margin*2,58,10,'#eef2f5',null);
     const gradeColors={'1':'#c94747','2':'#2d944d','3':'#2878c8'};
-    roundCanvasRect(ctx,margin+8,y+7,130,44,22,gradeColors[group.grade]||'#c79a3b',null);
-    ctx.fillStyle='#fff';ctx.font='bold 27px sans-serif';ctx.fillText(group.grade+'年生',margin+33,y+38);
+    const groupLabel=group.label||group.grade+'年生',badgeWidth=group.label&&group.label.includes('＋')?230:130;
+    roundCanvasRect(ctx,margin+8,y+7,badgeWidth,44,22,gradeColors[group.grade]||'#c79a3b',null);
+    ctx.fillStyle='#fff';ctx.font=(badgeWidth>130?'bold 24px':'bold 27px')+' sans-serif';ctx.fillText(groupLabel,margin+33,y+38);
     y+=72;
     const cardHeight=group.height-82;
     group.cards.forEach((card,index)=>{
@@ -550,17 +566,17 @@ function createReportCanvas(info){
   return canvas;
 }
 async function saveReportImage(){
-  const info=reportSnapshot(currentReportEventId);
+  const info=reportSnapshot(currentReportEventId,currentReportGrade);
   if(!info)return;
   const button=$('#saveReportImageBtn'),original=button.textContent;button.disabled=true;button.textContent='画像を作成中…';
   try{
     const canvas=createReportCanvas(info);
     const blob=await new Promise(resolve=>canvas.toBlob(resolve,'image/png',1));
     if(!blob)throw new Error('image');
-    const fileName='出席一覧_'+String(info.event.date).replaceAll('-','')+'.png';
+    const fileName='選手出席一覧_'+String(info.event.date).replaceAll('-','')+(info.gradeFilter?'_'+info.gradeFilter+'年_帯同':'')+'.png';
     const file=new File([blob],fileName,{type:'image/png'});
     if(navigator.share&&navigator.canShare?.({files:[file]})){
-      try{await navigator.share({files:[file],title:formatDate(info.event.date)+' 選手出席一覧'});return}catch(error){if(error?.name==='AbortError')return}
+      try{await navigator.share({files:[file],title:formatDate(info.event.date)+(info.gradeFilter?' '+info.gradeLabel:'')+' 選手出席一覧'});return}catch(error){if(error?.name==='AbortError')return}
     }
     const url=URL.createObjectURL(blob),link=document.createElement('a');link.href=url;link.download=fileName;document.body.appendChild(link);link.click();link.remove();setTimeout(()=>URL.revokeObjectURL(url),5000);
   }catch(error){alert('画像を保存できませんでした。もう一度お試しください。')}
@@ -635,7 +651,7 @@ function sortedComments(){const actualComments=new Set(data.comments.filter(comm
 function todayDateKey(){const now=new Date(),year=now.getFullYear(),month=String(now.getMonth()+1).padStart(2,'0'),day=String(now.getDate()).padStart(2,'0');return `${year}-${month}-${day}`}
 function isPastComment(comment){const eventDate=String(comment?.eventDate||'');return /^\d{4}-\d{2}-\d{2}$/.test(eventDate)&&eventDate<todayDateKey()}
 function renderComments(){const byId=new Map(data.members.map(m=>[m.id,memberDisplayName(m)]));const list=sortedComments().filter(comment=>!isPastComment(comment)).slice(0,50);$('#commentList').innerHTML=list.length?list.map(c=>`<article class="comment-item"><div class="comment-meta"><span class="comment-name">${esc(byId.get(c.memberId)||'選手')}</span> ${(c.escortGrade||c.upperGrade)?'<span class="upper-grade-badge">'+esc(c.escortGrade?c.escortGrade+'年生帯同':'上級生帯同')+'</span>':''}　${c.eventDate?esc(formatDate(c.eventDate))+'　':''}${esc(new Date(c.updatedAt).toLocaleString('ja-JP'))}</div><div class="comment-text">${esc(c.text||'')}</div></article>`).join(''):'<div class="empty">コメントはまだありません。</div>'}
-$('#openReportBtn').onclick=async()=>{const eventId=$('#reportEventSelect').value,event=visibleEvents().find(item=>String(item.id)===String(eventId));if(!event){alert('出力する日程を選択してください。');return}const button=$('#openReportBtn');button.disabled=true;button.textContent='保護者の帯同を照合中…';try{await loadParentEscortForReport(event.date);if(!renderReport(eventId))throw new Error('選手出席一覧を作成できませんでした。');$('#reportDialog').showModal();document.body.style.overflow='hidden'}catch(error){alert(error.name==='TimeoutError'?'帯同情報の取得に時間がかかっています。もう一度お試しください。':error.message||'帯同情報を確認できませんでした。もう一度お試しください。')}finally{button.disabled=false;button.textContent='選手出席一覧を出力'}};
+$('#openReportBtn').onclick=async()=>{const eventId=$('#reportEventSelect').value,grade=$('#reportGradeSelect')?.value||'',event=visibleEvents().find(item=>String(item.id)===String(eventId));if(!event){alert('出力する日程を選択してください。');return}const button=$('#openReportBtn');button.disabled=true;button.textContent='保護者の帯同を照合中…';try{await loadParentEscortForReport(event.date);if(!renderReport(eventId,grade))throw new Error('選手出席一覧を作成できませんでした。');$('#reportDialog').showModal();document.body.style.overflow='hidden'}catch(error){alert(error.name==='TimeoutError'?'帯同情報の取得に時間がかかっています。もう一度お試しください。':error.message||'帯同情報を確認できませんでした。もう一度お試しください。')}finally{button.disabled=false;button.textContent='選手出席一覧を出力'}};
 $('#closeReportBtn').onclick=()=>{$('#reportDialog').close();document.body.style.overflow=''};
 $('#saveReportImageBtn').onclick=saveReportImage;
 $('#printReportBtn').onclick=()=>window.print();
