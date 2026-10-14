@@ -125,8 +125,11 @@ function openingMotion(){
   const compactDevice=window.matchMedia('(max-width: 900px)').matches ||
     (typeof navigator.hardwareConcurrency==='number'&&navigator.hardwareConcurrency<=4) ||
     navigator.connection?.saveData===true;
-  const resolution=compactDevice?120:224;
-  const renderHeight=compactDevice?107:199;
+  // Keep the same visual treatment on phones, but render the 3D logo at a
+  // lower internal resolution. The canvas is still scaled to the same size,
+  // so the visible composition/timing does not change.
+  const resolution=compactDevice?88:224;
+  const renderHeight=compactDevice?78:199;
   const sphereSamples=[];
   for(let y=0;y<renderHeight;y++)for(let x=0;x<resolution;x++) {
     const sx=(x+.5)/resolution*448,sy=(y+.5)/renderHeight*397;
@@ -148,16 +151,18 @@ function openingMotion(){
     return [(x+y)/Math.SQRT2,(y-x)/Math.SQRT2,2*Math.sqrt(a*b)*Math.sin(2*t)];
   }
   const seamPoints=[],seamLengths=[0],stitches=[];
-  for(let i=0;i<=1024;i++) {
-    seamPoints.push(seam(i/1024*Math.PI*2));
+  const seamResolution=compactDevice?512:1024;
+  const stitchCount=compactDevice?60:108;
+  for(let i=0;i<=seamResolution;i++) {
+    seamPoints.push(seam(i/seamResolution*Math.PI*2));
     if(i)seamLengths.push(seamLengths[i-1]+Math.hypot(...add(seamPoints[i],seamPoints[i-1],-1)));
   }
   let segment=1;
-  for(let i=0;i<108;i++) {
-    const goal=(i+.5)/108*seamLengths[1024];
+  for(let i=0;i<stitchCount;i++) {
+    const goal=(i+.5)/stitchCount*seamLengths[seamResolution];
     while(seamLengths[segment]<goal)segment++;
     const u=(goal-seamLengths[segment-1])/(seamLengths[segment]-seamLengths[segment-1]);
-    const t=(segment-1+u)/1024*Math.PI*2,p=seam(t);
+    const t=(segment-1+u)/seamResolution*Math.PI*2,p=seam(t);
     const tangent=unit(add(seam(t+.001),seam(t-.001),-1)),side=unit(cross(p,tangent));
     stitches.push([
       unit(add(add(p,side,-.031),tangent,-.020)),
@@ -295,7 +300,8 @@ function openingMotion(){
       }
       tongue(1,.78);tongue(.67,.6);
     });
-    for(let i=0;i<65;i++){
+    const sparkCount=compactDevice?28:65;
+    for(let i=0;i<sparkCount;i++){
       const life=(t*(.6+(i%4)*.11)+i*.173)%1;
       const x=cx+Math.sin(i*9.1)*r*1.3+Math.sin(t*4+i)*r*.2*life;
       const y=cy-r*.6-life*r*5.2;
@@ -394,7 +400,12 @@ function openingMotion(){
           logoScale=box.width/2172;
           logoLeft=box.left-frame.left;
           logoTop=box.top-frame.top;
-          const dpr=Math.min(window.devicePixelRatio||1,2);
+          // iPhone Safari pays a large memory/compositing cost at DPR 2+.
+          // A 1.35x backing canvas is visually indistinguishable here while
+          // substantially reducing per-frame work.
+          const dpr=compactDevice
+            ?Math.min(window.devicePixelRatio||1,1.35)
+            :Math.min(window.devicePixelRatio||1,2);
           canvas.width=Math.round(width*dpr);canvas.height=Math.round(height*dpr);
           ctx.setTransform(dpr,0,0,dpr,0,0);
         }
@@ -409,7 +420,7 @@ function openingMotion(){
           if(finished||closed)return;
           try{
             const elapsed=now-openedAt;
-            if(compactDevice&&lastFrame&&now-lastFrame<32&&elapsed<duration){
+            if(compactDevice&&lastFrame&&now-lastFrame<42&&elapsed<duration){
               raf=requestAnimationFrame(tick);
               return;
             }
