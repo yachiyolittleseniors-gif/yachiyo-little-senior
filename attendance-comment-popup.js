@@ -13,7 +13,7 @@
     container.style.position = 'relative';
     var overlay = document.createElement('div');
     overlay.id = 'member-comment-overlay';
-    overlay.style.cssText = 'display:none;position:absolute;z-index:20;width:min(640px,calc(100% - 2px));max-height:min(72dvh,650px);overflow:auto;overscroll-behavior-y:contain;-webkit-overflow-scrolling:touch;background:#fffdf6;border:1px solid #c6a052;border-left:4px solid #c6a052;box-shadow:0 15px 32px rgba(7,20,38,.22);box-sizing:border-box;';
+    overlay.style.cssText = 'display:none;position:absolute;z-index:20;width:min(640px,calc(100% - 2px));max-height:min(72svh,650px);overflow:auto;overscroll-behavior:contain;-webkit-overflow-scrolling:touch;touch-action:pan-y;background:#fffdf6;border:1px solid #c6a052;border-left:4px solid #c6a052;box-shadow:0 15px 32px rgba(7,20,38,.22);box-sizing:border-box;';
     board.after(overlay);
     editor.style.cssText = 'box-sizing:border-box;display:none;width:100%;max-width:none;margin:0;padding:16px;border:0;background:#fffdf6;text-align:left;white-space:normal;';
     var textarea = editor.querySelector('textarea');
@@ -24,6 +24,31 @@
     }
     var originalRender = window.render;
     var previousMember = '';
+
+    function pinSelectedRow(selected) {
+      board.querySelectorAll('tr[data-attendance-sticky="1"]').forEach(function (row) {
+        row.removeAttribute('data-attendance-sticky');
+        Array.prototype.forEach.call(row.cells, function (cell) {
+          cell.style.removeProperty('position');
+          cell.style.removeProperty('top');
+          cell.style.removeProperty('z-index');
+          cell.style.removeProperty('background-color');
+        });
+      });
+      if (!selected) return;
+      var selectedRow = selected.closest('tr');
+      if (!selectedRow) return;
+      var header = board.querySelector('thead');
+      var headerHeight = header ? Math.ceil(header.getBoundingClientRect().height) : 0;
+      selectedRow.setAttribute('data-attendance-sticky', '1');
+      Array.prototype.forEach.call(selectedRow.cells, function (cell, index) {
+        cell.style.position = 'sticky';
+        cell.style.top = headerHeight + 'px';
+        cell.style.zIndex = index === 0 ? '9' : '7';
+        cell.style.backgroundColor = index === 0 ? '#fff6df' : '#fff';
+      });
+    }
+
     function positionOverlay() {
       if (overlay.style.display === 'none') return;
       var selected = board.querySelector('[data-select-member].selected');
@@ -31,18 +56,15 @@
       if (!memberRow) return;
       var outer = container.getBoundingClientRect();
       var bounds = board.getBoundingClientRect();
-      var row = memberRow.getBoundingClientRect();
+      var row = memberRow.cells[0] ? memberRow.cells[0].getBoundingClientRect() : memberRow.getBoundingClientRect();
       var head = board.querySelector('thead');
       var headHeight = head ? head.getBoundingClientRect().height : 0;
-      // Stop scrolling when the selected row reaches the sticky date header.
-      if (row.top < bounds.top + headHeight - 1) {
-        board.scrollTop = Math.max(0, board.scrollTop + row.top - bounds.top - headHeight);
-        row = memberRow.getBoundingClientRect();
-      }
+      // Clamp the editor visually; never write board.scrollTop from the
+      // board scroll handler, which causes iOS Safari feedback jitter.
       var anchor = Math.max(bounds.top + headHeight, Math.min(row.bottom, bounds.bottom));
-      overlay.style.left = (bounds.left - outer.left) + 'px';
-      overlay.style.top = (anchor - outer.top) + 'px';
-      overlay.style.width = Math.min(board.clientWidth, 640) + 'px';
+      overlay.style.left = Math.round(bounds.left - outer.left) + 'px';
+      overlay.style.top = Math.round(anchor - outer.top) + 'px';
+      overlay.style.width = Math.round(Math.min(board.clientWidth, 640)) + 'px';
     }
     window.render = function () {
       var top = board.scrollTop, left = board.scrollLeft;
@@ -50,6 +72,7 @@
       home.parentNode.insertBefore(editor, home.nextSibling);
       var result = originalRender.apply(this, arguments);
       var selected = board.querySelector('[data-select-member].selected');
+      pinSelectedRow(selected);
       board.querySelectorAll('[data-select-member]').forEach(function (button) {
         button.setAttribute('aria-expanded', button === selected ? 'true' : 'false');
         button.setAttribute('aria-controls', 'editor');
