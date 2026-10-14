@@ -544,9 +544,13 @@
       traceTitle.textContent='#'+requestNo+' の処理履歴';
       traceReason.textContent=reason||'';
       traceList.innerHTML=history.length?history.map(function(item){
+        const deviceNos=(item.requesterDeviceNo?'<br><span>申請端末番号：'+escapeHtml(item.requesterDeviceNo)+'</span>':'')+
+          (item.approverDeviceNo?'<br><span>承認端末番号：'+escapeHtml(item.approverDeviceNo)+'</span>':'');
+        const sameWarning=item.sameDeviceApproval?'<br><strong>⚠ 申請端末と承認端末の番号が一致・要確認</strong>':'';
         return '<div class="duty-monitor-trace-item"><b>'+escapeHtml(stageLabel[item.stage]||item.stage||'処理')+'</b>'+
           (item.message?'<br>'+escapeHtml(item.message):'')+
           (item.device?'<br><span>'+escapeHtml(item.device)+'</span>':'')+
+          deviceNos+sameWarning+
           (item.at?'<br><small>'+escapeHtml(formatMonitorTime(item.at))+'</small>':'')+
           '</div>';
       }).join(''):'<div class="duty-monitor-trace-empty">この申請の処理ログはまだ記録されていません。</div>';
@@ -574,9 +578,13 @@
       const events=Array.isArray(monitor.recentEvents)?monitor.recentEvents:[];
       if(events.length){
         recent.innerHTML=events.map(function(item){
+          const deviceNos=(item.requesterDeviceNo?'<br><span>申請端末番号：'+escapeHtml(item.requesterDeviceNo)+'</span>':'')+
+            (item.approverDeviceNo?'<br><span>承認端末番号：'+escapeHtml(item.approverDeviceNo)+'</span>':'');
+          const sameWarning=item.sameDeviceApproval?'<br><strong>⚠ 申請端末と承認端末の番号が一致・要確認</strong>':'';
           return '<div class="duty-monitor-recent-item"><b>'+(item.requestNo?'#'+escapeHtml(item.requestNo)+' ':'')+escapeHtml(stageLabel[item.stage]||item.stage||'処理')+'</b>'+
             (item.message?'<br>'+escapeHtml(item.message):'')+
             (item.device?'<br><span>'+escapeHtml(item.device)+'</span>':'')+
+            deviceNos+sameWarning+
             (item.at?'<br><small>'+escapeHtml(formatMonitorTime(item.at))+'</small>':'')+
             '</div>';
         }).join('');
@@ -586,7 +594,10 @@
           const status=item.status==='approved'?'反映済み':(item.status==='pending'?'確認待ち':item.status);
           const device=item.requesterDevice?('申請：'+escapeHtml(item.requesterDevice)):'申請端末：記録なし';
           const approver=item.approverDevice?(' / 承認：'+escapeHtml(item.approverDevice)):'';
-          return '<div class="duty-monitor-recent-item"><b>'+(item.requestNo?'#'+escapeHtml(item.requestNo)+' ':'')+escapeHtml(status)+'</b>　'+escapeHtml(displayDate(item.date))+'<br><span>'+device+approver+'</span>'+(item.updatedAt?'<br><small>最終更新：'+escapeHtml(formatMonitorTime(item.updatedAt))+'</small>':'')+'</div>';
+          const deviceNos=(item.requesterDeviceNo?'<br><span>申請端末番号：'+escapeHtml(item.requesterDeviceNo)+'</span>':'')+
+            (item.approverDeviceNo?'<br><span>承認端末番号：'+escapeHtml(item.approverDeviceNo)+'</span>':'');
+          const sameWarning=item.sameDeviceApproval?'<br><strong>⚠ 申請端末と承認端末の番号が一致・要確認</strong>':'';
+          return '<div class="duty-monitor-recent-item"><b>'+(item.requestNo?'#'+escapeHtml(item.requestNo)+' ':'')+escapeHtml(status)+'</b>　'+escapeHtml(displayDate(item.date))+'<br><span>'+device+approver+'</span>'+deviceNos+sameWarning+(item.updatedAt?'<br><small>最終更新：'+escapeHtml(formatMonitorTime(item.updatedAt))+'</small>':'')+'</div>';
         }).join(''):'<div class="duty-monitor-recent-item">まだ監視対象の申請はありません。</div>';
       }
     }
