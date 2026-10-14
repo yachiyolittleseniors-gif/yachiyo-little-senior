@@ -4,6 +4,24 @@
 <head>
 <script src="./csp-event-handlers.js?v=20260929-logo-home"></script>
 <script src="./admin-session-client.js?v=20261003-legacy-admin-session1"></script>
+<script id="results-resume-bootstrap">
+(function(){
+  function readStored(name){
+    try{return JSON.parse(sessionStorage.getItem('yachiyo:reload-data:'+name)||'null');}
+    catch(_){return null;}
+  }
+  if(typeof window.yachiyoReadReloadData!=='function')window.yachiyoReadReloadData=readStored;
+  if(typeof window.yachiyoRememberReloadData!=='function'){
+    window.yachiyoRememberReloadData=function(name,data){
+      try{
+        const value=JSON.stringify(data);
+        if(value.length<500000)sessionStorage.setItem('yachiyo:reload-data:'+name,value);
+      }catch(_){}
+    };
+  }
+  window.yachiyoReadResumeData=readStored;
+})();
+</script>
 <script src="./reading-position.js?v=20261001-visible1" data-reading-ready-event="yachiyo:results-ready"></script>
 <!-- Google tag (gtag.js) -->
 <script async="" src="https://www.googletagmanager.com/gtag/js?id=G-L8BMMSXDP9"></script>
@@ -13,7 +31,56 @@ function gtag(){dataLayer.push(arguments);}
 gtag('js',new Date());
 gtag('config','G-L8BMMSXDP9',{allow_google_signals:false,allow_ad_personalization_signals:false});
 </script>
-<style id="initial-paint-style">html{background:#071426}</style>
+<style id="initial-paint-style">
+:root{
+  --navy:#071426;--navy2:#0c1d33;--gold:#c79a3b;--gold2:#e2bd67;
+  --bg:#f4f3ef;--ink:#17202b;--line:rgba(199,154,59,.38);
+}
+html{background:#071426}
+.results{
+  content-visibility:visible!important;
+  contain:none!important;
+  contain-intrinsic-size:none!important;
+}
+.results:empty::before{
+  content:"試合結果を読み込んでいます…";
+  display:block;
+  width:100%;
+  padding:28px 16px;
+  border:1px solid rgba(7,20,38,.08);
+  border-radius:14px;
+  background:#fff;
+  color:#657080;
+  text-align:center;
+  font-size:13px;
+}
+.restored-footer{
+  background:#071426;color:#fff;border-top:1px solid rgba(199,154,59,.55);
+  padding:26px 18px 18px;
+}
+.restored-footer-inner{max-width:1180px;margin:0 auto}
+.restored-footer-nav{display:flex;flex-wrap:wrap;justify-content:center;align-items:center}
+.restored-footer-nav a{
+  display:block;padding:7px 15px;color:#fff;font-size:13px;
+  border-right:1px solid rgba(199,154,59,.55);
+}
+.restored-footer-nav a:last-child{border-right:0}
+.restored-footer-copy{
+  margin-top:18px;padding-top:15px;border-top:1px solid rgba(255,255,255,.12);
+  text-align:center;color:#9eabb9;font-size:11px;letter-spacing:.05em;
+}
+@media(max-width:900px){
+  .restored-footer-nav{display:grid!important;grid-template-columns:repeat(3,minmax(0,1fr))!important}
+  .restored-footer-nav a{
+    display:block!important;text-align:center!important;border-right:0!important;
+    border-bottom:1px solid rgba(255,255,255,.08)!important;padding:11px 6px!important;
+  }
+}
+@media(max-width:600px){
+  .restored-footer{padding:20px 12px 16px}
+  .restored-footer-nav{grid-template-columns:repeat(2,minmax(0,1fr))!important}
+}
+</style>
 <link as="image" fetchpriority="high" href="./official-logo-crisp-final.png" rel="preload"/>
 <meta content="tatsuki.saitoh" name="author"/>
 <meta charset="utf-8"/>
@@ -1677,19 +1744,73 @@ function applyInitialResults(loaded,first){
     }
     renderResults();
 }
-const cachedResults=window.yachiyoReadReloadData('results');
+let cachedResults=null;
+try{
+  cachedResults=typeof window.yachiyoReadResumeData==='function'
+    ?window.yachiyoReadResumeData('results')
+    :window.yachiyoReadReloadData('results');
+}catch(_){}
 const hasCachedResults=Array.isArray(cachedResults)&&Array.isArray(cachedResults[0]);
 if(hasCachedResults)applyInitialResults(cachedResults,true);
 ['yearFilter','tournamentFilter'].forEach(id=>document.getElementById(id)?.addEventListener('change',renderResults));
 window.addEventListener('pagehide',()=>window.yachiyoRememberReloadData('results',[resultsData,resultDocuments,squadSettings]));
-(async()=>{
-  try{
-    const loaded=await Promise.all([sharedLoad('results'),sharedLoad('result-documents'),sharedLoad('result-squad-settings').catch(()=>({}))]);
-    applyInitialResults(loaded,!hasCachedResults);
-  }catch(e){
-    if(!hasCachedResults)document.getElementById('results').innerHTML='<div class="empty">試合結果を読み込めませんでした。</div>';
-  }finally{window.dispatchEvent(new Event('yachiyo:results-ready'));}
-})();</script>
+let resultsLoadInFlight=null;
+async function loadResultsFromServer(first){
+  if(resultsLoadInFlight)return resultsLoadInFlight;
+  resultsLoadInFlight=(async()=>{
+    try{
+      const loaded=await Promise.all([
+        sharedLoad('results'),
+        sharedLoad('result-documents'),
+        sharedLoad('result-squad-settings').catch(()=>({}))
+      ]);
+      applyInitialResults(loaded,first);
+      window.yachiyoRememberReloadData('results',[resultsData,resultDocuments,squadSettings]);
+    }catch(e){
+      const box=document.getElementById('results');
+      if(!box.children.length&&!resultsData.length){
+        box.innerHTML='<div class="empty">試合結果を読み込めませんでした。</div>';
+      }else if(resultsData.length){
+        renderResults();
+      }
+    }finally{
+      resultsLoadInFlight=null;
+      window.dispatchEvent(new Event('yachiyo:results-ready'));
+    }
+  })();
+  return resultsLoadInFlight;
+}
+loadResultsFromServer(!hasCachedResults);
+
+let resultsHiddenAt=0;
+function recoverResultsAfterSafariResume(forceFresh){
+  const box=document.getElementById('results');
+  if(!box)return;
+  // Rebuild the dynamic DOM from the in-memory/cache snapshot first.
+  if(resultsData.length){
+    renderResults();
+    void box.offsetHeight;
+  }else{
+    try{
+      const snapshot=window.yachiyoReadResumeData&&window.yachiyoReadResumeData('results');
+      if(Array.isArray(snapshot)&&Array.isArray(snapshot[0]))applyInitialResults(snapshot,false);
+    }catch(_){}
+  }
+  if(forceFresh||!box.children.length||!resultsData.length)loadResultsFromServer(false);
+}
+window.addEventListener('pageshow',function(event){
+  requestAnimationFrame(()=>requestAnimationFrame(()=>recoverResultsAfterSafariResume(event.persisted===true)));
+});
+document.addEventListener('visibilitychange',function(){
+  if(document.hidden){
+    resultsHiddenAt=Date.now();
+    return;
+  }
+  const slept=resultsHiddenAt?Date.now()-resultsHiddenAt:0;
+  requestAnimationFrame(()=>recoverResultsAfterSafariResume(slept>5000));
+  resultsHiddenAt=0;
+});
+</script>
 <script>
 (function(){
   const btn=document.querySelector('.menu');
