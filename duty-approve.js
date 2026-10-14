@@ -1,7 +1,7 @@
 (function(){
   const API='/.netlify/functions/duty-change-requests';
   const LIFF_ID='2011836404-Htm3MsCI';
-  const APPROVER_DEVICE_KEY='ylsDutyApproverDeviceToken';
+  const APPROVER_DEVICE_KEY='ylsDutyRequesterDeviceToken';
   function approverDeviceToken(){
     try{
       let value=localStorage.getItem(APPROVER_DEVICE_KEY)||'';
