@@ -115,6 +115,7 @@ function openingMotion(){
       cover.classList.remove('is-canvas-active');
       source.style.opacity='';
       if(canvas){try{canvas.width=1;canvas.height=1;}catch(_){}canvas.remove();canvas=null;}
+      try{frameCanvas.width=1;frameCanvas.height=1;}catch(_){}
       revealPreparedSplash();
       stopMotion=()=>{};
       resolve();
@@ -133,7 +134,12 @@ function openingMotion(){
         canvas=document.createElement('canvas');canvas.setAttribute('aria-hidden','true');
         Object.assign(canvas.style,{position:'absolute',inset:'0',width:'100%',height:'100%',pointerEvents:'none'});
         cover.appendChild(canvas);
-        const ctx=canvas.getContext('2d');if(!ctx){finish();return;}
+        const displayCtx=canvas.getContext('2d');if(!displayCtx){finish();return;}
+        // Render every frame off-DOM first, then swap it onto the visible
+        // canvas in one copy operation. Safari never sees the intermediate
+        // clearRect state while the expensive ball frame is being built.
+        const frameCanvas=document.createElement('canvas');
+        const ctx=frameCanvas.getContext('2d');if(!ctx){finish();return;}
         let width=0,height=0,logoScale=1,logoLeft=0,logoTop=0;
         const clamp=x=>Math.max(0,Math.min(1,x));
         const ease=x=>{const t=clamp(x);return t*t*(3-2*t);};
@@ -425,12 +431,21 @@ function openingMotion(){
           const dpr=compactDevice
             ?Math.min(window.devicePixelRatio||1,1.35)
             :Math.min(window.devicePixelRatio||1,2);
-          canvas.width=Math.round(width*dpr);canvas.height=Math.round(height*dpr);
+          const pixelWidth=Math.round(width*dpr),pixelHeight=Math.round(height*dpr);
+          canvas.width=pixelWidth;canvas.height=pixelHeight;
+          frameCanvas.width=pixelWidth;frameCanvas.height=pixelHeight;
           ctx.setTransform(dpr,0,0,dpr,0,0);
+          displayCtx.setTransform(1,0,0,1,0,0);
+        }
+        function present(){
+          displayCtx.save();
+          displayCtx.globalCompositeOperation='copy';
+          displayCtx.drawImage(frameCanvas,0,0);
+          displayCtx.restore();
         }
         resize();prepareBall();
         const draw=variant==='fire'?drawFire:variant==='bounce'?drawBounce:drawSpin;
-        draw(0);
+        draw(0);present();
         revealPreparedSplash();
         // Do not observe/resize the intro canvas during playback.
         // ResizeObserver fires once immediately after observe(), and changing
@@ -449,6 +464,7 @@ function openingMotion(){
             // display cadence to avoid a choppy opening on iPhone.
             lastFrame=now;
             draw(Math.min(elapsed/duration,1)*timelineDuration);
+            present();
             if(elapsed>=duration){
               if(observer){observer.disconnect();observer=null;}
               raf=0;
