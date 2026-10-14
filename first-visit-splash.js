@@ -148,11 +148,11 @@ function openingMotion(){
   const compactDevice=window.matchMedia('(max-width: 900px)').matches ||
     (typeof navigator.hardwareConcurrency==='number'&&navigator.hardwareConcurrency<=4) ||
     navigator.connection?.saveData===true;
-  // Keep the same visual treatment on phones, but render the 3D logo at a
-  // lower internal resolution. The canvas is still scaled to the same size,
-  // so the visible composition/timing does not change.
-  const resolution=compactDevice?88:224;
-  const renderHeight=compactDevice?78:199;
+  // Restore the pre-lightweight mobile raster. The lower 88x78 raster was
+  // introduced in the mobile optimization that preceded the Safari blink.
+  // Keep the current animation structure, but remove that quality handoff.
+  const resolution=compactDevice?120:224;
+  const renderHeight=compactDevice?107:199;
   const sphereSamples=[];
   for(let y=0;y<renderHeight;y++)for(let x=0;x<resolution;x++) {
     const sx=(x+.5)/resolution*448,sy=(y+.5)/renderHeight*397;
@@ -174,8 +174,8 @@ function openingMotion(){
     return [(x+y)/Math.SQRT2,(y-x)/Math.SQRT2,2*Math.sqrt(a*b)*Math.sin(2*t)];
   }
   const seamPoints=[],seamLengths=[0],stitches=[];
-  const seamResolution=compactDevice?512:1024;
-  const stitchCount=compactDevice?60:108;
+  const seamResolution=1024;
+  const stitchCount=108;
   for(let i=0;i<=seamResolution;i++) {
     seamPoints.push(seam(i/seamResolution*Math.PI*2));
     if(i)seamLengths.push(seamLengths[i-1]+Math.hypot(...add(seamPoints[i],seamPoints[i-1],-1)));
@@ -345,7 +345,7 @@ function openingMotion(){
       }
       tongue(1,.78);tongue(.67,.6);
     });
-    const sparkCount=compactDevice?28:65;
+    const sparkCount=65;
     for(let i=0;i<sparkCount;i++){
       const life=(t*(.6+(i%4)*.11)+i*.173)%1;
       const x=cx+Math.sin(i*9.1)*r*1.3+Math.sin(t*4+i)*r*.2*life;
@@ -441,12 +441,10 @@ function openingMotion(){
           logoScale=box.width/2172;
           logoLeft=box.left-frame.left;
           logoTop=box.top-frame.top;
-          // iPhone Safari pays a large memory/compositing cost at DPR 2+.
-          // A 1.35x backing canvas is visually indistinguishable here while
-          // substantially reducing per-frame work.
-          const dpr=compactDevice
-            ?Math.min(window.devicePixelRatio||1,1.35)
-            :Math.min(window.devicePixelRatio||1,2);
+          // Restore the pre-lightweight backing resolution. Keeping the DOM
+          // logo and canvas at the same effective pixel density avoids the
+          // subtle Safari recomposite/quality jump that looked like a blink.
+          const dpr=Math.min(window.devicePixelRatio||1,2);
           const pixelWidth=Math.round(width*dpr),pixelHeight=Math.round(height*dpr);
           canvas.width=pixelWidth;canvas.height=pixelHeight;
           frameCanvas.width=pixelWidth;frameCanvas.height=pixelHeight;
