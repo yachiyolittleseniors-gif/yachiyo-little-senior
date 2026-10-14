@@ -104,9 +104,9 @@ function dutyRequestSignal(){
 }
 
 function openingMotion(){
-  // iPhone Safari gets a compositor-stable static opening. No 3D canvas,
-  // no canvas insertion, no source-logo mutation.
-  if(isiOSSafari||reduceMotion)return wait(1500);
+  // Keep reduced-motion static, but allow the 3D opening on iPhone Safari.
+  // The DOM logo remains fixed throughout; only the ball/emblem canvas moves.
+  if(reduceMotion)return wait(1500);
   const source=initialSource||cover.querySelector('img'),wrapper=cover.querySelector('.first-visit-logo');
   if(!source||!wrapper){if(source)source.style.opacity='';return wait(1500);}
   // One draw per opening: 5% fire, 20% bounce, 75% spin.
