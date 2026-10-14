@@ -106,16 +106,14 @@ function openingMotion(){
   const variant=drawChance<0.05?'fire':drawChance<0.25?'bounce':'spin';
   cover.dataset.motion=variant;
   return new Promise(resolve=>{
-    let finished=false,raf=0,observer=null,canvas=null;
+    let finished=false,raf=0,observer=null,canvas=null,frameCanvas=null;
     const finish=()=>{
       if(finished)return;
       finished=true;
       cancelAnimationFrame(raf);
       if(observer){observer.disconnect();observer=null;}
-      cover.classList.remove('is-canvas-active');
-      source.style.opacity='';
       if(canvas){try{canvas.width=1;canvas.height=1;}catch(_){}canvas.remove();canvas=null;}
-      try{frameCanvas.width=1;frameCanvas.height=1;}catch(_){}
+      if(frameCanvas){try{frameCanvas.width=1;frameCanvas.height=1;}catch(_){}frameCanvas=null;}
       revealPreparedSplash();
       stopMotion=()=>{};
       resolve();
@@ -138,7 +136,7 @@ function openingMotion(){
         // Render every frame off-DOM first, then swap it onto the visible
         // canvas in one copy operation. Safari never sees the intermediate
         // clearRect state while the expensive ball frame is being built.
-        const frameCanvas=document.createElement('canvas');
+        frameCanvas=document.createElement('canvas');
         const ctx=frameCanvas.getContext('2d');if(!ctx){finish();return;}
         let width=0,height=0,logoScale=1,logoLeft=0,logoTop=0;
         const clamp=x=>Math.max(0,Math.min(1,x));
@@ -199,6 +197,28 @@ function openingMotion(){
     target.moveTo(partition[0][0],partition[0][1]);
     for(let i=1;i<partition.length;i++)target.lineTo(partition[i][0],partition[i][1]);
     target.closePath();
+  }
+  // The real DOM logo never disappears. Mask only its home ball/emblem region
+  // inside the animation canvas, then draw the moving 3D ball on top. This
+  // avoids any Safari-sensitive opacity/clip-path handoff between DOM and canvas.
+  function homeBoundary(target=ctx) {
+    target.moveTo(logoLeft+partition[0][0]*logoScale,logoTop+partition[0][1]*logoScale);
+    for(let i=1;i<partition.length;i++) {
+      target.lineTo(logoLeft+partition[i][0]*logoScale,logoTop+partition[i][1]*logoScale);
+    }
+    target.closePath();
+  }
+  function maskStaticBall() {
+    const cx=width*.5,cy=height*.46;
+    const radius=Math.hypot(Math.max(cx,width-cx),Math.max(cy,height-cy));
+    const bg=ctx.createRadialGradient(cx,cy,0,cx,cy,radius);
+    bg.addColorStop(0,'#10243d');
+    bg.addColorStop(.58,'#071426');
+    bg.addColorStop(1,'#04101e');
+    ctx.save();
+    ctx.beginPath();homeBoundary(ctx);ctx.clip();
+    ctx.fillStyle=bg;ctx.fillRect(0,0,width,height);
+    ctx.restore();
   }
   function prepareBall() {
     if(ballPixels||!source.complete||!source.naturalWidth)return;
@@ -339,6 +359,9 @@ function openingMotion(){
   function drawFire(ms) {
     ctx.clearRect(0,0,width,height);
     if(!source.complete||!source.naturalWidth)return;
+    // Keep the DOM logo untouched; cover only the original ball at its home
+    // position so the animated ball can move without exposing a duplicate.
+    maskStaticBall();
     const scale=logoScale,left=logoLeft,top=logoTop;
     const timeline=Math.min(ms/1400,1)*4000;
     const sphereMix=ease((timeline-400)/320)*(1-ease((timeline-3120)/380));
@@ -348,32 +371,26 @@ function openingMotion(){
     flames(ms,left+226*scale,top+198.5*scale,198.5*scale,fire);
     ctx.save();ctx.translate(left,top);ctx.scale(scale,scale);
     if(sphereMix<=0) {
-      // Exact original artwork at the beginning and the end.
-      ctx.drawImage(source,0,0,2172,397);
-    }else{
-      // The wordmark stays fixed throughout the transition.
-      ctx.save();ctx.beginPath();ctx.rect(-100,-100,2372,597);boundary();ctx.clip('evenodd');
+      ctx.save();ctx.beginPath();boundary();ctx.clip();
       ctx.drawImage(source,0,0,2172,397);ctx.restore();
+    }else{
       sphericalTurn(angle,sphereMix);
-
     }
     ctx.restore();
   }
   function drawSpin(ms) {
     ctx.clearRect(0,0,width,height);
     if(!source.complete||!source.naturalWidth)return;
+    maskStaticBall();
     const scale=logoScale,left=logoLeft,top=logoTop;
     const sphereMix=ease((ms-400)/320)*(1-ease((ms-3120)/380));
     const p=ease((ms-720)/2400);
     const angle=p*Math.PI*2;
     ctx.save();ctx.translate(left,top);ctx.scale(scale,scale);
     if(sphereMix<=0) {
-      // Exact original artwork at the beginning and the end.
-      ctx.drawImage(source,0,0,2172,397);
-    }else{
-      // The wordmark stays fixed throughout the transition.
-      ctx.save();ctx.beginPath();ctx.rect(-100,-100,2372,597);boundary();ctx.clip('evenodd');
+      ctx.save();ctx.beginPath();boundary();ctx.clip();
       ctx.drawImage(source,0,0,2172,397);ctx.restore();
+    }else{
       sphericalTurn(angle,sphereMix);
     }
     ctx.restore();
@@ -381,6 +398,7 @@ function openingMotion(){
   function drawBounce(ms) {
     ctx.clearRect(0,0,width,height);
     if(!source.complete||!source.naturalWidth)return;
+    maskStaticBall();
     const scale=logoScale,left=logoLeft,top=logoTop;
     const settle=2600;
     const sphereMix=1-ease((ms-2180)/420);
@@ -402,11 +420,9 @@ function openingMotion(){
     const landing=ms>=2180&&ms<2500?Math.sin((ms-2180)/320*Math.PI):0;
     ctx.save();ctx.translate(left,top);ctx.scale(scale,scale);
     if(ms>=settle) {
-      // Finish with the unmodified official artwork.
-      ctx.drawImage(source,0,0,2172,397);
+      ctx.save();ctx.beginPath();boundary();ctx.clip();
+      ctx.drawImage(source,0,0,2172,397);ctx.restore();
     }else{
-      ctx.save();ctx.beginPath();ctx.rect(-100,-100,2372,597);boundary();ctx.clip('evenodd');
-      ctx.drawImage(source,0,impact*8,2172,397);ctx.restore();
       ctx.save();
       ctx.translate((ballX-homeX)/scale,(ballY-homeY)/scale);
       ctx.translate(226,198.5);
@@ -417,7 +433,7 @@ function openingMotion(){
     }
     ctx.restore();
   }
-
+  
         function resize(){
           const frame=cover.getBoundingClientRect();
           const box=source.getBoundingClientRect();
@@ -473,13 +489,10 @@ function openingMotion(){
             raf=requestAnimationFrame(tick);
           }catch(_){finish();}
         }
-        // First paint: static logo + identical canvas frame overlap.
-        // Second paint: canvas owns the animation and the static image hides.
-        requestAnimationFrame(()=>requestAnimationFrame(()=>{
-          if(finished||closed)return;
-          cover.classList.add('is-canvas-active');
-          raf=requestAnimationFrame(tick);
-        }));
+        // The DOM logo remains visible for the entire opening. The animation
+        // canvas only overlays the ball/emblem area, so no layer handoff is
+        // required and Safari cannot expose a blank transition frame.
+        raf=requestAnimationFrame(tick);
       }catch(_){finish();}
     }
     if(source.complete)begin();else{source.addEventListener('load',begin,{once:true});source.addEventListener('error',finish,{once:true});}
