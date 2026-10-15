@@ -1,113 +1,13 @@
+# TEAM CORE UI preview ONLY. Do not merge this branch into main.
+# Only the isolated sample app is published; no production pages or Functions.
 [build]
-  command = "node --test tests/duty-grades.test.mjs tests/home-csp.test.mjs && node netlify/sync-home-csp.mjs"
-  publish = "."
-  functions = "netlify/functions"
+  base = "teamcore-preview"
+  command = "node build.mjs"
+  publish = "public"
+  functions = "empty-functions"
 
-[functions]
-  node_bundler = "esbuild"
+[build.environment]
+  NODE_VERSION = "22"
 
-# Server sources and test fixtures are not public site assets.
-# The deployed API remains available under /.netlify/functions/.
-[[redirects]]
-  from = "/netlify/*"
-  to = "/404.html"
-  status = 404
-  force = true
-
-[[redirects]]
-  from = "/tests/*"
-  to = "/404.html"
-  status = 404
-  force = true
-
-[[redirects]]
-  from = "/package.json"
-  to = "/404.html"
-  status = 404
-  force = true
-
-[[redirects]]
-  from = "/package-lock.json"
-  to = "/404.html"
-  status = 404
-  force = true
-
-# 公開ページの正規URLは拡張子なしに統一する。
-# 旧URLや既存の検索結果からの評価は301で正規URLへ引き継ぐ。
-[[redirects]]
-  from = "/index.html"
-  to = "/"
-  status = 301
-  force = true
-
-[[redirects]]
-  from = "/team.html"
-  to = "/team"
-  status = 301
-  force = true
-
-[[redirects]]
-  from = "/players.html"
-  to = "/players"
-  status = 301
-  force = true
-
-[[redirects]]
-  from = "/results.html"
-  to = "/results"
-  status = 301
-  force = true
-
-[[redirects]]
-  from = "/schedule.html"
-  to = "/schedule"
-  status = 301
-  force = true
-
-[[redirects]]
-  from = "/join.html"
-  to = "/join"
-  status = 301
-  force = true
-
-[[redirects]]
-  from = "/contact.html"
-  to = "/contact"
-  status = 301
-  force = true
-
-[[redirects]]
-  from = "/seniorcup.html"
-  to = "/seniorcup"
-  status = 301
-  force = true
-
-[[redirects]]
-  from = "/links.html"
-  to = "/links"
-  status = 301
-  force = true
-
-[[redirects]]
-  from = "/privacy.html"
-  to = "/privacy"
-  status = 301
-  force = true
-
-[[redirects]]
-  from = "/terms.html"
-  to = "/terms"
-  status = 301
-  force = true
-
-[[redirects]]
-  from = "/rules"
-  to = "/board.html"
-  status = 301
-  force = true
-
-[[redirects]]
-  from = "/rules.html"
-  to = "/board.html"
-  status = 301
-  force = true
+[build.processing]
+  skip_processing = true
