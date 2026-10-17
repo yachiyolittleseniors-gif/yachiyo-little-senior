@@ -16,7 +16,7 @@ function memoryStorage() {
   };
 }
 
-async function visit({ session, local, nonce = '', referrer = 'https://team.example/', authenticate }) {
+async function visit({ session, local, nonce = '', referrer = 'https://team.example/', userAgent = 'Mozilla/5.0 (iPhone; CPU iPhone OS 18_0 like Mac OS X)', authenticate }) {
   if (nonce) session.setItem(entryKey, JSON.stringify({ nonce, at: Date.now() }));
   const search = nonce ? '?entry=home&yls_intent=' + nonce : '';
   const redirects = [];
@@ -36,8 +36,9 @@ async function visit({ session, local, nonce = '', referrer = 'https://team.exam
       visibilityState: 'visible',
     },
     navigator: {
-      userAgent: 'Mozilla/5.0 (iPhone; CPU iPhone OS 18_0 like Mac OS X)',
-      platform: 'iPhone', maxTouchPoints: 5,
+      userAgent,
+      platform: /Android/i.test(userAgent) ? 'Linux armv8l' : 'iPhone',
+      maxTouchPoints: 5,
     },
     sessionStorage: session,
     localStorage: local,
@@ -101,6 +102,80 @@ test('a direct/non-Home navigation never starts passkey automatically', async ()
   const next = await visit({
     session, local, referrer: 'https://team.example/schedule',
     authenticate: async () => { throw new Error('Passkey should not run'); },
+  });
+  assert.equal(next.allowed, false);
+  assert.equal(next.passkeyCalls, 0);
+  assert.equal(next.passwordCalls, 1);
+});
+
+
+const androidUA = 'Mozilla/5.0 (Linux; Android 16; Pixel 9) AppleWebKit/537.36 Chrome/131 Mobile Safari/537.36';
+function androidCancel() {
+  const error = new Error('The operation either timed out or was not allowed');
+  error.name = 'NotAllowedError';
+  return error;
+}
+
+test('Android: cancel never clears the registered passkey marker', async () => {
+  const session = memoryStorage(), local = memoryStorage();
+  local.setItem('yachiyoBoardPasskeyRegistered', '1');
+  const first = await visit({
+    session, local, userAgent: androidUA,
+    nonce: '33333333-3333-4333-8333-333333333333',
+    authenticate: async () => { throw androidCancel(); },
+  });
+  assert.equal(first.passkeyCalls, 1);
+  assert.equal(first.passwordCalls, 1);
+  assert.equal(local.getItem('yachiyoBoardPasskeyRegistered'), '1');
+  assert.equal(session.getItem('yachiyoBoardPasskeyNeedsReregister'), null);
+  assert.ok(Number(session.getItem(skipKey)) > Date.now());
+
+  const next = await visit({
+    session, local, userAgent: androidUA,
+    nonce: '44444444-4444-4444-8444-444444444444',
+    authenticate: async () => ({ token: 'android-verified-token' }),
+  });
+  assert.equal(next.allowed, true);
+  assert.equal(next.passkeyCalls, 1);
+  assert.equal(next.passwordCalls, 0);
+  assert.equal(session.getItem(skipKey), null);
+  assert.equal(local.getItem('yachiyoBoardPasskeyRegistered'), '1');
+});
+
+test('Android: recover a marker cleared by the previous broken cancellation handler', async () => {
+  const session = memoryStorage(), local = memoryStorage();
+  session.setItem('yachiyoBoardPasskeyNeedsReregister', '1');
+  const next = await visit({
+    session, local, userAgent: androidUA,
+    nonce: '55555555-5555-4555-8555-555555555555',
+    authenticate: async () => ({ token: 'android-restored-token' }),
+  });
+  assert.equal(next.allowed, true);
+  assert.equal(next.passkeyCalls, 1);
+  assert.equal(next.passwordCalls, 0);
+  assert.equal(local.getItem('yachiyoBoardPasskeyRegistered'), '1');
+  assert.equal(session.getItem('yachiyoBoardPasskeyNeedsReregister'), null);
+});
+
+test('Android: a fresh unregistered device still uses ordinary password entry', async () => {
+  const session = memoryStorage(), local = memoryStorage();
+  const next = await visit({
+    session, local, userAgent: androidUA,
+    nonce: '66666666-6666-4666-8666-666666666666',
+    authenticate: async () => { throw new Error('Unregistered device must not try passkey'); },
+  });
+  assert.equal(next.allowed, false);
+  assert.equal(next.passkeyCalls, 0);
+  assert.equal(next.passwordCalls, 1);
+});
+
+test('Android: recovery marker cannot start WebAuthn from a direct/non-Home URL', async () => {
+  const session = memoryStorage(), local = memoryStorage();
+  session.setItem('yachiyoBoardPasskeyNeedsReregister', '1');
+  const next = await visit({
+    session, local, userAgent: androidUA,
+    referrer: 'https://team.example/schedule',
+    authenticate: async () => { throw new Error('Direct visit must not try passkey'); },
   });
   assert.equal(next.allowed, false);
   assert.equal(next.passkeyCalls, 0);

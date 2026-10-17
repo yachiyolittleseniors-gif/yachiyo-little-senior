@@ -124,6 +124,11 @@ window.boardAccessReady=(async function requireBoardPassword(){
       const skipUntil=Number(sessionStorage.getItem(passkeySkipUntilKey)||0);
       if(Number.isFinite(skipUntil)&&skipUntil>Date.now())return false;
       if(localStorage.getItem(passkeyKey)==='1')return true;
+      // Older Android code erased the marker on NotAllowedError, even when
+      // the user merely canceled the OS dialog. Recover that session without
+      // prompting unregistered Android devices on every page entry.
+      if(/Android/i.test(navigator.userAgent||'')&&
+        sessionStorage.getItem('yachiyoBoardPasskeyNeedsReregister')==='1')return true;
       return isAppleMobilePasskeyDevice();
     }catch(e){
       return isAppleMobilePasskeyDevice();
@@ -174,6 +179,7 @@ window.boardAccessReady=(async function requireBoardPassword(){
         grantAdminReveal();
         rememberPasskeyVerification()
         try{localStorage.setItem(passkeyKey,'1')}catch(_){}
+        try{sessionStorage.removeItem('yachiyoBoardPasskeyNeedsReregister')}catch(_){}
         clearPasskeySkip();
         boardAccessAuthorized=true;
         document.documentElement.style.visibility='';
@@ -182,21 +188,11 @@ window.boardAccessReady=(async function requireBoardPassword(){
         if(e?.status===404){
           try{localStorage.removeItem(passkeyKey)}catch(_){}
         }
-        // Android/Chrome also reports a missing local credential as
-        // NotAllowedError. Treat it as a normal fallback to password instead
-        // of bouncing the user back Home, and avoid re-opening the native
-        // passkey dialog repeatedly during this session.
+        // Android/Chrome uses NotAllowedError both for a canceled OS sheet
+        // and for a missing credential. It cannot prove the registered passkey
+        // was deleted: do not clear the device's registered state on cancellation.
+        // Avoid repeat dialogs in this entry, but a new Home lock tap may retry.
         if(e?.name==='NotAllowedError'){
-          // Android/Chrome may report "no passkey on this device" with the same
-          // NotAllowedError used for user cancellation.  When this browser had
-          // previously been marked registered but the credential is no longer
-          // available, clear only the local marker so the user can re-register
-          // after the password fallback instead of being trapped in a broken
-          // "registered" state.
-          if(/Android/i.test(navigator.userAgent||'')){
-            try{localStorage.removeItem(passkeyKey)}catch(_){}
-            try{sessionStorage.setItem('yachiyoBoardPasskeyNeedsReregister','1')}catch(_){}
-          }
           temporarilySkipPasskey();
           return false;
         }
