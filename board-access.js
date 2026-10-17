@@ -115,23 +115,22 @@ window.boardAccessReady=(async function requireBoardPassword(){
       (navigator.platform==='MacIntel'&&Number(navigator.maxTouchPoints||0)>1);
   }
   function shouldAutoTryPasskey(){
-    // Keep the local marker fast path on every platform.
-    // On iPhone/iPad, a valid passkey can remain in iCloud Keychain even when
-    // Safari site data/localStorage was cleared or restored on another device.
-    // This function is reached only after a deliberate Home -> Team Page tap,
-    // so iOS may safely ask for an existing matching passkey even without the marker.
+    // A saved passkey can outlive this site's localStorage marker, on iCloud
+    // Keychain as well as Android's Google Password Manager. In particular,
+    // older Android cancellation code sometimes erased the marker.
+    // This function is called only for a deliberate Home -> Team entry,
+    // never on reload, Safari restoration or an untrusted direct visit.
+    // The passkey verification still happens on the server: no local marker
+    // is treated as an authentication credential.
+    const mobilePasskeyDevice=isAppleMobilePasskeyDevice()||
+      /Android/i.test(navigator.userAgent||'');
     try{
       const skipUntil=Number(sessionStorage.getItem(passkeySkipUntilKey)||0);
       if(Number.isFinite(skipUntil)&&skipUntil>Date.now())return false;
       if(localStorage.getItem(passkeyKey)==='1')return true;
-      // Older Android code erased the marker on NotAllowedError, even when
-      // the user merely canceled the OS dialog. Recover that session without
-      // prompting unregistered Android devices on every page entry.
-      if(/Android/i.test(navigator.userAgent||'')&&
-        sessionStorage.getItem('yachiyoBoardPasskeyNeedsReregister')==='1')return true;
-      return isAppleMobilePasskeyDevice();
+      return mobilePasskeyDevice;
     }catch(e){
-      return isAppleMobilePasskeyDevice();
+      return mobilePasskeyDevice;
     }
   }
   function temporarilySkipPasskey(){
