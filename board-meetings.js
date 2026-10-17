@@ -468,7 +468,7 @@
     if(!target&&title){
       target=events.filter(function(item){return String(item.title||'')===title}).sort(function(a,b){return new Date(b.updatedAt||0)-new Date(a.updatedAt||0)})[0];
     }
-    const card=document.getElementById('boardMeetingCard');
+    const card=document.getElementById('boardCalendarCard');
     if(target){
       const parts=String(target.date||'').split('-').map(Number);
       if(parts.length===3&&parts.every(Number.isFinite)){

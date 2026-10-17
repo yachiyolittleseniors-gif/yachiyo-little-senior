@@ -1116,6 +1116,179 @@ body:after{display:none!important;content:none!important}
     </div>
   </section>
   <div class="grid">
+    <aside class="latest-update" id="latestUpdateAnnouncement" role="button" tabindex="0" aria-expanded="false" aria-controls="updateHistoryPanel" aria-live="polite">
+      <div class="latest-update-heading">
+        <span class="latest-update-kicker">LATEST UPDATE</span>
+        <span class="latest-update-title">最新更新</span>
+      </div>
+      <div class="latest-update-content">
+        <time class="latest-update-date" id="latestUpdateDate"></time>
+        <span class="latest-update-category" id="latestUpdateCategory"></span>
+        <span class="latest-update-message" id="latestUpdateMessage">更新情報を読み込んでいます。</span>
+      </div>
+      <span class="latest-update-hint" id="latestUpdateHint">履歴を見る ▼</span>
+    </aside>
+    <section class="update-history" id="updateHistoryPanel" aria-label="最新20件の更新履歴" hidden>
+      <div class="update-history-head"><strong>更新履歴</strong><span>最新20件</span></div>
+      <div class="update-history-list" id="updateHistoryList"></div>
+    </section>
+
+    <section class="card board-meeting-card" id="boardCalendarCard">
+      <div class="card-kicker">SECRETARIAT CALENDAR</div>
+      <h2>事務局カレンダー</h2>
+
+      <div class="board-meeting-section">
+        <div class="meeting-calendar-toolbar">
+          <button id="meetingPrevMonth" class="meeting-calendar-nav" type="button" aria-label="前の月">‹</button>
+          <div id="meetingCalendarTitle" class="meeting-calendar-title"></div>
+          <button id="meetingNextMonth" class="meeting-calendar-nav" type="button" aria-label="次の月">›</button>
+        </div>
+        <div class="meeting-calendar-week" aria-hidden="true">
+          <div class="sun">日</div><div>月</div><div>火</div><div>水</div><div>木</div><div>金</div><div class="sat">土</div>
+        </div>
+        <div id="meetingCalendarGrid" class="meeting-calendar-grid"></div>
+        <p class="meeting-calendar-note"><span>日付をタップすると予定を閲覧できます。</span><span>入力・編集・削除にはパスワードが必要です。</span></p>
+      </div>
+    </section>
+
+    <section class="card attendance-card" id="coachAttendanceCard">
+      <div class="card-kicker">COACH ATTENDANCE</div>
+      <h2>指導者出欠確認</h2>
+      <p>サイト内で各日程の「○・×」を入力し、指導者の出席状況を確認できます。</p>
+      <a class="btn gold" href="./coach-attendance.html?entry=board">指導者出欠確認を開く</a>
+      <div class="note">※指導者出欠確認にはパスワードがかかっています。</div>
+    </section>
+
+    <section class="card densuke-card" id="densukeLegacyCard" style="display:none">
+      <div class="card-kicker">CURRENT ATTENDANCE</div>
+      <h2>伝助 <span class="densuke-subtitle">（保護者・選手出欠確認サイト）</span></h2>
+      <p>現在使用している出欠確認ページです。新しい保護者出欠確認・選手出欠確認への切り替えが完了するまでは、こちらをご利用ください。</p>
+      <div id="densukeMigrationBlock">
+        <a class="btn densuke-btn" href="https://teamyachiyo8740.web.fc2.com/8740.html" target="_blank" rel="noopener noreferrer">伝助を開く</a>
+      </div>
+      <div class="note">※伝助は外部サイトです。</div>
+    </section>
+
+    <section class="card attendance-card" id="attendanceCard">
+      <div class="card-kicker">NEW ATTENDANCE</div>
+      <h2>保護者出欠確認</h2>
+      <p>サイト内で各日程の「○・×」を入力し、出欠状況を確認できます。</p>
+      <a id="attendanceOpenBtn" class="btn gold" href="./attendance.html" data-href="./attendance.html" aria-disabled="false">保護者出欠確認を開く</a>
+    </section>
+
+    <section class="card attendance-card" id="playerAttendanceCard">
+      <div class="card-kicker">PLAYER ATTENDANCE</div>
+      <h2>選手出欠確認</h2>
+      <p>サイト内で各日程の「○・×」を入力し、選手の出席状況を確認できます。</p>
+      <a id="playerAttendanceOpenBtn" class="btn gold" href="./player-attendance.html" data-href="./player-attendance.html" aria-disabled="false">選手出欠確認を開く</a>
+    </section>
+
+    <section class="card duty-roster-card" id="dutyRosterCard">
+      <div class="card-kicker">DUTY ROSTER</div>
+      <div class="duty-roster-title-row"><h2>当番表</h2><button id="toggleDutyOriginals" type="button" aria-expanded="false" aria-controls="dutyRosterOriginals">原本を見る</button></div>
+      <div id="dutyRosterOriginals" class="duty-roster-originals" hidden>
+        <div id="dutyRosterList" class="duty-roster-list">
+          <div class="duty-roster-loading">当番表を読み込んでいます。</div>
+        </div>
+      </div>
+      <div id="dutyRosterTableList" class="duty-roster-table-list">
+        <div class="duty-roster-loading">当番表を読み込んでいます。</div>
+      </div>
+      <section id="dutyChangeSection" class="duty-change-section" hidden>
+        <button id="toggleDutyHistory" type="button" aria-expanded="false" aria-controls="dutyHistoryContent">変更履歴を確認する</button>
+        <div id="dutyHistoryContent" hidden>
+        <div class="duty-change-heading"><strong>反映済みの当番変更</strong><span>LINE連絡の変更内容</span></div>
+        <div id="dutyChangeList" class="duty-change-list"></div>
+        </div>
+      </section>
+      <div class="duty-request-box" id="dutyRequestBox">
+        <div class="duty-request-head"><div><span class="duty-request-kicker">CHANGE REQUEST</span><h3>当番変更を申請</h3><span id="dutyRequestPendingBadge" class="duty-request-pending-badge" hidden></span></div><button id="toggleDutyRequest" type="button" aria-expanded="false" aria-controls="dutyRequestContent">申請する</button></div>
+        <div id="dutyRequestContent" hidden>
+          <p class="duty-request-help">当番表が登録されている月のみ変更申請ができます。変更内容を選択して申請してください。</p>
+          <label>変更方法
+            <select id="dutyRequestType">
+              <option value="swap">当番日を入れ替える</option>
+              <option value="replace">交代してもらう</option>
+            </select>
+          </label>
+          <div id="dutyRequestReplaceFields" hidden>
+            <label>変更日<select id="dutyRequestRosterDate"></select><input id="dutyRequestDirectDate" type="date" hidden disabled></label>
+            <label>変更前<select id="dutyRequestFrom"><option value="">選択してください</option></select></label>
+            <label id="dutyRequestReplaceToRow">変更後<select id="dutyRequestTo"><option value="">選択してください</option></select></label>
+          </div>
+          <div id="dutyRequestSwapFields">
+            <div class="duty-swap-guide"><b>入れ替えたい2つのお当番を選んでください</b><span>例：10/3 山田さん と 10/10 佐藤さん を入れ替える</span></div>
+            <label>① 入れ替えたいお当番<select id="dutyRequestSwapFromSlot"><option value="">1つ目のお当番を選択してください</option></select></label>
+            <div class="duty-swap-arrow" aria-hidden="true">↕</div>
+            <label>② もう一方のお当番<select id="dutyRequestSwapToSlot"><option value="">2つ目のお当番を選択してください</option></select></label>
+          </div>
+          <button id="toggleDutyNoLine" class="duty-no-line-toggle" type="button" aria-expanded="false" aria-controls="dutyRequestNoLineOption" hidden>LINEを利用できない方</button>
+          <label id="dutyRequestNoLineOption" class="duty-no-line-option" hidden>
+            <input id="dutyRequestNoLine" type="checkbox">
+            <span><b>LINEを利用できない方はこちら</b><small>LINEを利用できない場合も申請できます。<br>申請後、表示された申請番号を管理者へお知らせください。管理者が内容を確認後、当番表へ反映します。</small></span>
+          </label>
+          <button id="submitDutyRequest" class="duty-request-submit" type="button">変更申請を送信</button>
+          <div id="dutyRequestResult" class="duty-request-result" hidden></div>
+        </div>
+      </div>
+      <section class="duty-request-status" id="dutyRequestStatus" hidden>
+        <button id="toggleDutyRequestStatus" type="button" aria-expanded="false" aria-controls="dutyRequestStatusList">申請状況を見る</button>
+        <div id="dutyRequestStatusList" hidden></div>
+      </section>
+      <p class="duty-roster-note" id="dutyRequestOperationNote">※当番表が登録されている月のみ変更申請ができます。申請後は、必ず全体LINEでご連絡ください。全体LINEでの連絡がない場合、変更は完了しません。</p>
+    </section>
+
+    <section class="card board-meeting-card" id="boardMeetingCard">
+      <div class="card-kicker">SECRETARIAT</div>
+      <h2>事務局</h2>
+
+      <div class="board-meeting-section">
+        <h3 class="board-meeting-heading">事務局からのお知らせ</h3>
+        <p class="board-meeting-help"><span>事務局からのお知らせは「保存済み資料を見る」からご覧頂けます。</span><span>資料保存と削除はパスワードが必要です。</span></p>
+        <div class="meeting-save-reveal-wrap"><button id="meetingAdminReveal" class="meeting-save-reveal" type="button" aria-expanded="false">資料保存を表示</button></div>
+        <div class="meeting-admin">
+          <button id="meetingAdminOpen" class="meeting-action meeting-admin-open" type="button" hidden>資料を保存</button>
+          <div id="meetingAdminPanel" class="meeting-admin-panel" hidden>
+            <div class="meeting-upload">
+              <input id="meetingPdfInput" type="file" accept="application/pdf,image/jpeg,image/png,image/webp,.pdf,.jpg,.jpeg,.png,.webp" aria-label="事務局からのお知らせ PDF・画像">
+              <button id="meetingPdfSave" class="meeting-action" type="button">選択した資料を保存</button>
+              <button id="meetingPdfCancel" class="meeting-action meeting-action-cancel" type="button">キャンセル</button>
+            </div>
+            <div id="meetingAdminDocumentList" class="meeting-admin-document-list"></div>
+          </div>
+        </div>
+        <div id="meetingDocumentList" class="meeting-document-list">
+          <button class="meeting-document-library-link" type="button" data-open-secretariat-documents>保存済み資料を見る</button>
+        </div>
+      </div>
+
+    </section>
+
+    <section class="card board-meeting-card" id="refereeCard">
+      <div class="card-kicker">UMPIRE DEPARTMENT</div>
+      <h2>審判部</h2>
+
+      <div class="board-meeting-section">
+        <h3 class="board-meeting-heading">審判部からのお知らせ</h3>
+        <p class="board-meeting-help"><span>審判部からのお知らせは「保存済み資料を見る」からご覧頂けます。</span><span>資料保存と削除はパスワードが必要です。</span></p>
+        <div class="meeting-save-reveal-wrap"><button id="refereeAdminReveal" class="meeting-save-reveal" type="button" aria-expanded="false">資料保存を表示</button></div>
+        <div class="meeting-admin">
+          <button id="refereeAdminOpen" class="meeting-action meeting-admin-open" type="button" hidden>資料を保存</button>
+          <div id="refereeAdminPanel" class="meeting-admin-panel" hidden>
+            <div class="meeting-upload">
+              <input id="refereeFileInput" type="file" accept="application/pdf,image/jpeg,image/png,image/webp,.pdf,.jpg,.jpeg,.png,.webp" aria-label="審判部からのお知らせ PDF・画像">
+              <button id="refereeFileSave" class="meeting-action" type="button">選択した資料を保存</button>
+              <button id="refereeFileCancel" class="meeting-action meeting-action-cancel" type="button">キャンセル</button>
+            </div>
+            <div id="refereeAdminDocumentList" class="meeting-admin-document-list"></div>
+          </div>
+        </div>
+        <div id="refereeDocumentList" class="meeting-document-list">
+          <button class="meeting-document-library-link" type="button" data-open-referee-documents>保存済み資料を見る</button>
+        </div>
+      </div>
+    </section>
+
     <section class="card live-score-card" id="liveScoreCard" aria-labelledby="liveScoreTitle">
       <div class="live-score-idle" id="liveScoreIdle">
         <div class="live-score-idle-head">
@@ -1237,174 +1410,6 @@ body:after{display:none!important;content:none!important}
         </div>
       </div>
     </section>
-    <aside class="latest-update" id="latestUpdateAnnouncement" role="button" tabindex="0" aria-expanded="false" aria-controls="updateHistoryPanel" aria-live="polite">
-      <div class="latest-update-heading">
-        <span class="latest-update-kicker">LATEST UPDATE</span>
-        <span class="latest-update-title">最新更新</span>
-      </div>
-      <div class="latest-update-content">
-        <time class="latest-update-date" id="latestUpdateDate"></time>
-        <span class="latest-update-category" id="latestUpdateCategory"></span>
-        <span class="latest-update-message" id="latestUpdateMessage">更新情報を読み込んでいます。</span>
-      </div>
-      <span class="latest-update-hint" id="latestUpdateHint">履歴を見る ▼</span>
-    </aside>
-    <section class="update-history" id="updateHistoryPanel" aria-label="最新20件の更新履歴" hidden>
-      <div class="update-history-head"><strong>更新履歴</strong><span>最新20件</span></div>
-      <div class="update-history-list" id="updateHistoryList"></div>
-    </section>
-
-    <section class="card attendance-card" id="coachAttendanceCard">
-      <div class="card-kicker">COACH ATTENDANCE</div>
-      <h2>指導者出欠確認</h2>
-      <p>サイト内で各日程の「○・×」を入力し、指導者の出席状況を確認できます。</p>
-      <a class="btn gold" href="./coach-attendance.html?entry=board">指導者出欠確認を開く</a>
-      <div class="note">※指導者出欠確認にはパスワードがかかっています。</div>
-    </section>
-
-    <section class="card densuke-card" id="densukeLegacyCard" style="display:none">
-      <div class="card-kicker">CURRENT ATTENDANCE</div>
-      <h2>伝助 <span class="densuke-subtitle">（保護者・選手出欠確認サイト）</span></h2>
-      <p>現在使用している出欠確認ページです。新しい保護者出欠確認・選手出欠確認への切り替えが完了するまでは、こちらをご利用ください。</p>
-      <div id="densukeMigrationBlock">
-        <a class="btn densuke-btn" href="https://teamyachiyo8740.web.fc2.com/8740.html" target="_blank" rel="noopener noreferrer">伝助を開く</a>
-      </div>
-      <div class="note">※伝助は外部サイトです。</div>
-    </section>
-
-    <section class="card attendance-card" id="attendanceCard">
-      <div class="card-kicker">NEW ATTENDANCE</div>
-      <h2>保護者出欠確認</h2>
-      <p>サイト内で各日程の「○・×」を入力し、出欠状況を確認できます。</p>
-      <a id="attendanceOpenBtn" class="btn gold" href="./attendance.html" data-href="./attendance.html" aria-disabled="false">保護者出欠確認を開く</a>
-    </section>
-
-    <section class="card attendance-card" id="playerAttendanceCard">
-      <div class="card-kicker">PLAYER ATTENDANCE</div>
-      <h2>選手出欠確認</h2>
-      <p>サイト内で各日程の「○・×」を入力し、選手の出席状況を確認できます。</p>
-      <a id="playerAttendanceOpenBtn" class="btn gold" href="./player-attendance.html" data-href="./player-attendance.html" aria-disabled="false">選手出欠確認を開く</a>
-    </section>
-
-    <section class="card duty-roster-card" id="dutyRosterCard">
-      <div class="card-kicker">DUTY ROSTER</div>
-      <div class="duty-roster-title-row"><h2>当番表</h2><button id="toggleDutyOriginals" type="button" aria-expanded="false" aria-controls="dutyRosterOriginals">原本を見る</button></div>
-      <div id="dutyRosterOriginals" class="duty-roster-originals" hidden>
-        <div id="dutyRosterList" class="duty-roster-list">
-          <div class="duty-roster-loading">当番表を読み込んでいます。</div>
-        </div>
-      </div>
-      <div id="dutyRosterTableList" class="duty-roster-table-list">
-        <div class="duty-roster-loading">当番表を読み込んでいます。</div>
-      </div>
-      <section id="dutyChangeSection" class="duty-change-section" hidden>
-        <button id="toggleDutyHistory" type="button" aria-expanded="false" aria-controls="dutyHistoryContent">変更履歴を確認する</button>
-        <div id="dutyHistoryContent" hidden>
-        <div class="duty-change-heading"><strong>反映済みの当番変更</strong><span>LINE連絡の変更内容</span></div>
-        <div id="dutyChangeList" class="duty-change-list"></div>
-        </div>
-      </section>
-      <div class="duty-request-box" id="dutyRequestBox">
-        <div class="duty-request-head"><div><span class="duty-request-kicker">CHANGE REQUEST</span><h3>当番変更を申請</h3><span id="dutyRequestPendingBadge" class="duty-request-pending-badge" hidden></span></div><button id="toggleDutyRequest" type="button" aria-expanded="false" aria-controls="dutyRequestContent">申請する</button></div>
-        <div id="dutyRequestContent" hidden>
-          <p class="duty-request-help">当番表が登録されている月のみ変更申請ができます。変更内容を選択して申請してください。</p>
-          <label>変更方法
-            <select id="dutyRequestType">
-              <option value="swap">当番日を入れ替える</option>
-              <option value="replace">交代してもらう</option>
-            </select>
-          </label>
-          <div id="dutyRequestReplaceFields" hidden>
-            <label>変更日<select id="dutyRequestRosterDate"></select><input id="dutyRequestDirectDate" type="date" hidden disabled></label>
-            <label>変更前<select id="dutyRequestFrom"><option value="">選択してください</option></select></label>
-            <label id="dutyRequestReplaceToRow">変更後<select id="dutyRequestTo"><option value="">選択してください</option></select></label>
-          </div>
-          <div id="dutyRequestSwapFields">
-            <div class="duty-swap-guide"><b>入れ替えたい2つのお当番を選んでください</b><span>例：10/3 山田さん と 10/10 佐藤さん を入れ替える</span></div>
-            <label>① 入れ替えたいお当番<select id="dutyRequestSwapFromSlot"><option value="">1つ目のお当番を選択してください</option></select></label>
-            <div class="duty-swap-arrow" aria-hidden="true">↕</div>
-            <label>② もう一方のお当番<select id="dutyRequestSwapToSlot"><option value="">2つ目のお当番を選択してください</option></select></label>
-          </div>
-          <button id="toggleDutyNoLine" class="duty-no-line-toggle" type="button" aria-expanded="false" aria-controls="dutyRequestNoLineOption" hidden>LINEを利用できない方</button>
-          <label id="dutyRequestNoLineOption" class="duty-no-line-option" hidden>
-            <input id="dutyRequestNoLine" type="checkbox">
-            <span><b>LINEを利用できない方はこちら</b><small>LINEを利用できない場合も申請できます。<br>申請後、表示された申請番号を管理者へお知らせください。管理者が内容を確認後、当番表へ反映します。</small></span>
-          </label>
-          <button id="submitDutyRequest" class="duty-request-submit" type="button">変更申請を送信</button>
-          <div id="dutyRequestResult" class="duty-request-result" hidden></div>
-        </div>
-      </div>
-      <section class="duty-request-status" id="dutyRequestStatus" hidden>
-        <button id="toggleDutyRequestStatus" type="button" aria-expanded="false" aria-controls="dutyRequestStatusList">申請状況を見る</button>
-        <div id="dutyRequestStatusList" hidden></div>
-      </section>
-      <p class="duty-roster-note" id="dutyRequestOperationNote">※当番表が登録されている月のみ変更申請ができます。申請後は、必ず全体LINEでご連絡ください。全体LINEでの連絡がない場合、変更は完了しません。</p>
-    </section>
-
-    <section class="card board-meeting-card" id="refereeCard">
-      <div class="card-kicker">UMPIRE DEPARTMENT</div>
-      <h2>審判部</h2>
-
-      <div class="board-meeting-section">
-        <h3 class="board-meeting-heading">審判部からのお知らせ</h3>
-        <p class="board-meeting-help"><span>審判部からのお知らせは「保存済み資料を見る」からご覧頂けます。</span><span>資料保存と削除はパスワードが必要です。</span></p>
-        <div class="meeting-save-reveal-wrap"><button id="refereeAdminReveal" class="meeting-save-reveal" type="button" aria-expanded="false">資料保存を表示</button></div>
-        <div class="meeting-admin">
-          <button id="refereeAdminOpen" class="meeting-action meeting-admin-open" type="button" hidden>資料を保存</button>
-          <div id="refereeAdminPanel" class="meeting-admin-panel" hidden>
-            <div class="meeting-upload">
-              <input id="refereeFileInput" type="file" accept="application/pdf,image/jpeg,image/png,image/webp,.pdf,.jpg,.jpeg,.png,.webp" aria-label="審判部からのお知らせ PDF・画像">
-              <button id="refereeFileSave" class="meeting-action" type="button">選択した資料を保存</button>
-              <button id="refereeFileCancel" class="meeting-action meeting-action-cancel" type="button">キャンセル</button>
-            </div>
-            <div id="refereeAdminDocumentList" class="meeting-admin-document-list"></div>
-          </div>
-        </div>
-        <div id="refereeDocumentList" class="meeting-document-list">
-          <button class="meeting-document-library-link" type="button" data-open-referee-documents>保存済み資料を見る</button>
-        </div>
-      </div>
-    </section>
-
-    <section class="card board-meeting-card" id="boardMeetingCard">
-      <div class="card-kicker">SECRETARIAT</div>
-      <h2>事務局</h2>
-
-      <div class="board-meeting-section">
-        <h3 class="board-meeting-heading">事務局からのお知らせ</h3>
-        <p class="board-meeting-help"><span>事務局からのお知らせは「保存済み資料を見る」からご覧頂けます。</span><span>資料保存と削除はパスワードが必要です。</span></p>
-        <div class="meeting-save-reveal-wrap"><button id="meetingAdminReveal" class="meeting-save-reveal" type="button" aria-expanded="false">資料保存を表示</button></div>
-        <div class="meeting-admin">
-          <button id="meetingAdminOpen" class="meeting-action meeting-admin-open" type="button" hidden>資料を保存</button>
-          <div id="meetingAdminPanel" class="meeting-admin-panel" hidden>
-            <div class="meeting-upload">
-              <input id="meetingPdfInput" type="file" accept="application/pdf,image/jpeg,image/png,image/webp,.pdf,.jpg,.jpeg,.png,.webp" aria-label="事務局からのお知らせ PDF・画像">
-              <button id="meetingPdfSave" class="meeting-action" type="button">選択した資料を保存</button>
-              <button id="meetingPdfCancel" class="meeting-action meeting-action-cancel" type="button">キャンセル</button>
-            </div>
-            <div id="meetingAdminDocumentList" class="meeting-admin-document-list"></div>
-          </div>
-        </div>
-        <div id="meetingDocumentList" class="meeting-document-list">
-          <button class="meeting-document-library-link" type="button" data-open-secretariat-documents>保存済み資料を見る</button>
-        </div>
-      </div>
-
-      <div class="board-meeting-section">
-        <h3 class="board-meeting-heading">事務局スケジュール</h3>
-        <div class="meeting-calendar-toolbar">
-          <button id="meetingPrevMonth" class="meeting-calendar-nav" type="button" aria-label="前の月">‹</button>
-          <div id="meetingCalendarTitle" class="meeting-calendar-title"></div>
-          <button id="meetingNextMonth" class="meeting-calendar-nav" type="button" aria-label="次の月">›</button>
-        </div>
-        <div class="meeting-calendar-week" aria-hidden="true">
-          <div class="sun">日</div><div>月</div><div>火</div><div>水</div><div>木</div><div>金</div><div class="sat">土</div>
-        </div>
-        <div id="meetingCalendarGrid" class="meeting-calendar-grid"></div>
-        <p class="meeting-calendar-note"><span>日付をタップすると予定を閲覧できます。</span><span>入力・編集・削除にはパスワードが必要です。</span></p>
-      </div>
-    </section>
-
     <section class="card rules-card" id="teamShopCard" aria-labelledby="teamShopTitle">
       <div class="card-kicker">TEAM SHOP</div>
       <h2 id="teamShopTitle">超野球専門店CV</h2>
