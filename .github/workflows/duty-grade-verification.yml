@@ -8,6 +8,9 @@ on:
       - 'netlify/duty-grade-policy.cjs'
       - 'netlify/prepare-duty-grades.mjs'
       - 'netlify/functions/site-data.mjs'
+      - 'netlify/functions/passkey-auth.mjs'
+      - 'tests/passkey-credential-list.test.mjs'
+      - 'netlify.toml'
       - 'netlify/functions/duty-change-requests.mjs'
       - 'tests/duty-grades.test.mjs'
       - '.github/workflows/duty-grade-verification.yml'
@@ -18,6 +21,9 @@ on:
       - 'netlify/duty-grade-policy.cjs'
       - 'netlify/prepare-duty-grades.mjs'
       - 'netlify/functions/site-data.mjs'
+      - 'netlify/functions/passkey-auth.mjs'
+      - 'tests/passkey-credential-list.test.mjs'
+      - 'netlify.toml'
       - 'netlify/functions/duty-change-requests.mjs'
       - 'tests/duty-grades.test.mjs'
       - '.github/workflows/duty-grade-verification.yml'
@@ -44,9 +50,12 @@ jobs:
           node --check duty-image-reader.js
           node --check duty-grade-policy.js
           node --check netlify/functions/site-data.mjs
+          node --check netlify/functions/passkey-auth.mjs
           node --check netlify/functions/duty-change-requests.mjs
           cmp duty-grade-policy.js netlify/duty-grade-policy.cjs
       - name: Test duty-grade behavior and existing CSP checks
         run: node --test tests/duty-grades.test.mjs tests/home-csp.test.mjs
       - name: Test team passkey cancellation and retry
         run: node --test tests/board-passkey-retry.test.mjs
+      - name: Test passkeys above Android's 64-entry option-list limit
+        run: node --test tests/passkey-credential-list.test.mjs

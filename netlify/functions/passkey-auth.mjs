@@ -22,6 +22,9 @@ const DEFAULT_ACCESS_HASH =
 const CHALLENGE_LIFETIME = 5 * 60 * 1000;
 // Capacity for 1,000 members with up to five passkeys each.
 const MAX_CREDENTIALS = 5000;
+// Some Android credential managers reject WebAuthn option lists over 64.
+// This is a per-request limit, not the 5,000-entry server registry limit.
+const MAX_WEBAUTHN_DESCRIPTORS = 64;
 
 function json(data, status = 200, headers = {}) {
   return new Response(JSON.stringify(data), {
@@ -117,11 +120,10 @@ export default async request => {
         userName: "yachiyo-little-senior",
         userDisplayName: "八千代リトルシニア チーム専用ページ",
         attestationType: "none",
-        // Prevent duplicate registrations on the same authenticator.
-        // board-passkey.js catches InvalidStateError and authenticates with the
-        // already-existing Yachiyo passkey instead. This keeps Android devices
-        // from creating a new server credential every time they re-register.
-        excludeCredentials: credentials.map(item => ({
+        // Keep newer-credential duplicate prevention, but do not send more
+        // than 64 excludeCredentials descriptors: Android rejects larger arrays.
+        // Do NOT remove older server credentials, which remain usable for login.
+        excludeCredentials: credentials.slice(0, MAX_WEBAUTHN_DESCRIPTORS).map(item => ({
           id: item.id,
           transports: item.transports,
         })),
@@ -185,14 +187,17 @@ export default async request => {
       const rp = relyingParty(request);
       const options = await generateAuthenticationOptions({
         rpID: rp.rpID,
-        // Restrict the OS passkey chooser to credentials that belong to the
-        // Yachiyo team-board account.  Without this list, iCloud Keychain /
-        // Google Password Manager may also show other passkeys created for the
-        // same RP ID (for example TEAM CORE).
-        allowCredentials: credentials.map(item => ({
-          id: item.id,
-          transports: item.transports,
-        })),
+        // On large registries, omit allowCredentials instead of truncating it:
+        // all board passkeys are discoverable (residentKey: required), so every
+        // legitimate existing device can still sign in. The verification path
+        // below checks that the selected credential ID is in the server registry
+        // and verifies its signature; another RP account cannot authenticate.
+        ...(credentials.length <= MAX_WEBAUTHN_DESCRIPTORS
+          ? { allowCredentials: credentials.map(item => ({
+              id: item.id,
+              transports: item.transports,
+            })) }
+          : {}),
         userVerification: "required",
       });
       return json({ options, ceremonyID: await saveChallenge(store, "authentication", options, rp) });
