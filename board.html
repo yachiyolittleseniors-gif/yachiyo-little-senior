@@ -1116,6 +1116,127 @@ body:after{display:none!important;content:none!important}
     </div>
   </section>
   <div class="grid">
+    <section class="card live-score-card" id="liveScoreCard" aria-labelledby="liveScoreTitle">
+      <div class="live-score-idle" id="liveScoreIdle">
+        <div class="live-score-idle-head">
+          <div>
+            <div class="live-score-kicker">GAME速報</div>
+            <h2 id="liveScoreTitle">試合速報</h2>
+          </div>
+          <div class="live-score-restore-wrap" id="liveScoreRestoreWrap" hidden>
+            <button class="live-score-button live-score-history-button" id="liveScoreRestore" type="button"><span class="live-score-history-icon" aria-hidden="true">↶</span><span>直前の試合を見る</span><span aria-hidden="true">›</span></button>
+          </div>
+          <script src="./board-last-game-state.js?v=20260927-clean2"></script>
+        </div>
+        <p>試合開始後、得点を入力してチーム内へ速報を共有できます。</p>
+        <div class="live-score-idle-actions">
+          <button class="live-score-button primary" id="liveScoreStart" type="button" >試合速報を開始</button>
+        </div>
+        
+        <div class="live-score-start-modal" id="liveScoreStartModal" hidden>
+          <div class="live-score-start-dialog" role="dialog" aria-modal="true" aria-labelledby="liveScoreStartDialogTitle">
+            <strong id="liveScoreStartDialogTitle">⚠ 試合速報を開始する前に</strong>
+            <p>試合当日の入力担当者のみ操作してください。<br>開始すると試合速報がチーム内に公開されます。<br>試合終了後は必ず「試合終了」を押してください。</p>
+            <div class="live-score-start-dialog-actions">
+              <button type="button" id="liveScoreStartCancel">キャンセル</button>
+              <button type="button" id="liveScoreStartConfirm">試合速報を開始</button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="live-score-editor" id="liveScoreEditor" hidden>
+        <div class="live-score-head">
+          <div>
+            <div class="live-score-kicker">GAME速報</div>
+            <h2>試合速報</h2>
+          </div>
+          <div class="live-score-badges">
+            <span class="live-score-badge live" id="liveScoreLiveBadge" hidden>試合中</span>
+            <span class="live-score-badge" id="liveScoreVisibilityBadge">未公開</span>
+            <span class="live-score-viewers" id="liveScoreViewers" hidden>👁 現在 <strong id="liveScoreViewerCount">0</strong>人　最大同時 <strong id="liveScoreViewerMax">0</strong>人</span>
+          </div>
+        </div>
+        <div class="live-score-base-controls" aria-label="試合状況">
+          <div class="live-score-sbo" id="liveScoreSbo" aria-label="SBOカウント"></div>
+          <div class="live-score-diamond-wrap">
+            <div class="live-score-diamond" id="liveScoreDiamond" aria-label="塁状況">
+              <button class="live-score-base first" type="button" data-base="first" aria-label="1塁"></button>
+              <button class="live-score-base second" type="button" data-base="second" aria-label="2塁"></button>
+              <button class="live-score-base third" type="button" data-base="third" aria-label="3塁"></button>
+              <button class="live-score-base home" type="button" data-base="home" aria-label="ホーム"></button>
+            </div>
+            
+          </div>
+        </div>
+        <div class="live-score-reset-stack">
+          <button class="live-score-reset-status" id="liveScoreResetBs" type="button">↻ BSだけをリセット</button>
+          <button class="live-score-reset-status" id="liveScoreResetStatus" type="button">↻ BSO・ランナーをリセット</button>
+        </div>
+
+        <div class="live-score-fields">
+          <label class="live-score-field wide">大会名
+            <input id="liveScoreTournament" type="text" maxlength="100" placeholder="大会名を入力">
+          </label>
+          <label class="live-score-field">試合開始時間
+            <input id="liveScoreStartTime" type="time">
+          </label>
+          <label class="live-score-field">グラウンド名
+            <input id="liveScoreGround" type="text" maxlength="100" placeholder="グラウンド名を入力">
+          </label>
+        </div>
+
+        <div class="live-score-team-settings">
+          <label class="live-score-field">学年
+            <select id="liveScoreGrade">
+              <option value="">学年を選択</option>
+              <option value="1">1年生</option>
+              <option value="2">2年生</option>
+              <option value="3">3年生</option>
+            </select>
+          </label>
+          <label class="live-score-field">対戦相手
+            <input id="liveScoreOpponent" type="text" maxlength="40" placeholder="相手チーム名">
+          </label>
+          <div class="live-score-order">
+            <span>八千代の攻撃順</span>
+            <div class="live-score-segments" id="liveScoreOrder" role="group" aria-label="八千代の攻撃順">
+              <button type="button" data-order="first" aria-pressed="false">先攻</button>
+              <button type="button" data-order="second" class="selected" aria-pressed="true">後攻</button>
+            </div>
+          </div>
+        </div>
+
+        <div class="live-score-board" aria-label="得点板">
+          <div class="live-score-board-head" aria-hidden="true">
+            <span></span><span>1</span><span>2</span><span>3</span><span>4</span><span>5</span><span>6</span><span>7</span><span>TB</span><span>計</span>
+          </div>
+          <div id="liveScoreRows"></div>
+        </div>
+
+        <div class="live-score-tb-actions">
+          <button class="live-score-button" id="liveScoreAddTieBreak" type="button">＋ タイブレークを追加</button>
+          <button class="live-score-button danger" id="liveScoreRemoveTieBreak" type="button" hidden>最後のTBを削除</button>
+        </div>
+        <div class="live-score-tb-list" id="liveScoreTieBreaks" hidden></div>
+
+        <div class="live-score-publish">
+          <button class="live-score-button subdued" id="liveScoreFinish" type="button">試合終了</button>
+          <p class="live-score-finish-warning">⚠ 試合終了後は、入力者が必ず「試合終了」を押してください。<br>押さない場合、試合速報が公開されたままになります。</p>
+          <div class="live-score-status">
+            <span id="liveScoreStatus">まだ他の端末には公開されていません。</span>
+            <time id="liveScoreUpdated"></time>
+          </div>
+          <button class="live-score-button back" id="liveScoreBack" type="button" hidden>戻る</button>
+        </div>
+
+
+        <div class="live-score-lock-panel" id="liveScoreLockPanel" hidden>
+          <span id="liveScoreLockText">閲覧中モード</span>
+          <button class="live-score-button" id="liveScoreLockButton" type="button">この端末で入力する</button>
+        </div>
+      </div>
+    </section>
     <aside class="latest-update" id="latestUpdateAnnouncement" role="button" tabindex="0" aria-expanded="false" aria-controls="updateHistoryPanel" aria-live="polite">
       <div class="latest-update-heading">
         <span class="latest-update-kicker">LATEST UPDATE</span>
@@ -1289,127 +1410,6 @@ body:after{display:none!important;content:none!important}
       </div>
     </section>
 
-    <section class="card live-score-card" id="liveScoreCard" aria-labelledby="liveScoreTitle">
-      <div class="live-score-idle" id="liveScoreIdle">
-        <div class="live-score-idle-head">
-          <div>
-            <div class="live-score-kicker">GAME速報</div>
-            <h2 id="liveScoreTitle">試合速報</h2>
-          </div>
-          <div class="live-score-restore-wrap" id="liveScoreRestoreWrap" hidden>
-            <button class="live-score-button live-score-history-button" id="liveScoreRestore" type="button"><span class="live-score-history-icon" aria-hidden="true">↶</span><span>直前の試合を見る</span><span aria-hidden="true">›</span></button>
-          </div>
-          <script src="./board-last-game-state.js?v=20260927-clean2"></script>
-        </div>
-        <p>試合開始後、得点を入力してチーム内へ速報を共有できます。</p>
-        <div class="live-score-idle-actions">
-          <button class="live-score-button primary" id="liveScoreStart" type="button" >試合速報を開始</button>
-        </div>
-        
-        <div class="live-score-start-modal" id="liveScoreStartModal" hidden>
-          <div class="live-score-start-dialog" role="dialog" aria-modal="true" aria-labelledby="liveScoreStartDialogTitle">
-            <strong id="liveScoreStartDialogTitle">⚠ 試合速報を開始する前に</strong>
-            <p>試合当日の入力担当者のみ操作してください。<br>開始すると試合速報がチーム内に公開されます。<br>試合終了後は必ず「試合終了」を押してください。</p>
-            <div class="live-score-start-dialog-actions">
-              <button type="button" id="liveScoreStartCancel">キャンセル</button>
-              <button type="button" id="liveScoreStartConfirm">試合速報を開始</button>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <div class="live-score-editor" id="liveScoreEditor" hidden>
-        <div class="live-score-head">
-          <div>
-            <div class="live-score-kicker">GAME速報</div>
-            <h2>試合速報</h2>
-          </div>
-          <div class="live-score-badges">
-            <span class="live-score-badge live" id="liveScoreLiveBadge" hidden>試合中</span>
-            <span class="live-score-badge" id="liveScoreVisibilityBadge">未公開</span>
-            <span class="live-score-viewers" id="liveScoreViewers" hidden>👁 現在 <strong id="liveScoreViewerCount">0</strong>人　最大同時 <strong id="liveScoreViewerMax">0</strong>人</span>
-          </div>
-        </div>
-        <div class="live-score-base-controls" aria-label="試合状況">
-          <div class="live-score-sbo" id="liveScoreSbo" aria-label="SBOカウント"></div>
-          <div class="live-score-diamond-wrap">
-            <div class="live-score-diamond" id="liveScoreDiamond" aria-label="塁状況">
-              <button class="live-score-base first" type="button" data-base="first" aria-label="1塁"></button>
-              <button class="live-score-base second" type="button" data-base="second" aria-label="2塁"></button>
-              <button class="live-score-base third" type="button" data-base="third" aria-label="3塁"></button>
-              <button class="live-score-base home" type="button" data-base="home" aria-label="ホーム"></button>
-            </div>
-            
-          </div>
-        </div>
-        <div class="live-score-reset-stack">
-          <button class="live-score-reset-status" id="liveScoreResetBs" type="button">↻ BSだけをリセット</button>
-          <button class="live-score-reset-status" id="liveScoreResetStatus" type="button">↻ BSO・ランナーをリセット</button>
-        </div>
-
-        <div class="live-score-fields">
-          <label class="live-score-field wide">大会名
-            <input id="liveScoreTournament" type="text" maxlength="100" placeholder="大会名を入力">
-          </label>
-          <label class="live-score-field">試合開始時間
-            <input id="liveScoreStartTime" type="time">
-          </label>
-          <label class="live-score-field">グラウンド名
-            <input id="liveScoreGround" type="text" maxlength="100" placeholder="グラウンド名を入力">
-          </label>
-        </div>
-
-        <div class="live-score-team-settings">
-          <label class="live-score-field">学年
-            <select id="liveScoreGrade">
-              <option value="">学年を選択</option>
-              <option value="1">1年生</option>
-              <option value="2">2年生</option>
-              <option value="3">3年生</option>
-            </select>
-          </label>
-          <label class="live-score-field">対戦相手
-            <input id="liveScoreOpponent" type="text" maxlength="40" placeholder="相手チーム名">
-          </label>
-          <div class="live-score-order">
-            <span>八千代の攻撃順</span>
-            <div class="live-score-segments" id="liveScoreOrder" role="group" aria-label="八千代の攻撃順">
-              <button type="button" data-order="first" aria-pressed="false">先攻</button>
-              <button type="button" data-order="second" class="selected" aria-pressed="true">後攻</button>
-            </div>
-          </div>
-        </div>
-
-        <div class="live-score-board" aria-label="得点板">
-          <div class="live-score-board-head" aria-hidden="true">
-            <span></span><span>1</span><span>2</span><span>3</span><span>4</span><span>5</span><span>6</span><span>7</span><span>TB</span><span>計</span>
-          </div>
-          <div id="liveScoreRows"></div>
-        </div>
-
-        <div class="live-score-tb-actions">
-          <button class="live-score-button" id="liveScoreAddTieBreak" type="button">＋ タイブレークを追加</button>
-          <button class="live-score-button danger" id="liveScoreRemoveTieBreak" type="button" hidden>最後のTBを削除</button>
-        </div>
-        <div class="live-score-tb-list" id="liveScoreTieBreaks" hidden></div>
-
-        <div class="live-score-publish">
-          <button class="live-score-button subdued" id="liveScoreFinish" type="button">試合終了</button>
-          <p class="live-score-finish-warning">⚠ 試合終了後は、入力者が必ず「試合終了」を押してください。<br>押さない場合、試合速報が公開されたままになります。</p>
-          <div class="live-score-status">
-            <span id="liveScoreStatus">まだ他の端末には公開されていません。</span>
-            <time id="liveScoreUpdated"></time>
-          </div>
-          <button class="live-score-button back" id="liveScoreBack" type="button" hidden>戻る</button>
-        </div>
-
-
-        <div class="live-score-lock-panel" id="liveScoreLockPanel" hidden>
-          <span id="liveScoreLockText">閲覧中モード</span>
-          <button class="live-score-button" id="liveScoreLockButton" type="button">この端末で入力する</button>
-        </div>
-      </div>
-    </section>
     <section class="card rules-card" id="teamShopCard" aria-labelledby="teamShopTitle">
       <div class="card-kicker">TEAM SHOP</div>
       <h2 id="teamShopTitle">超野球専門店CV</h2>
