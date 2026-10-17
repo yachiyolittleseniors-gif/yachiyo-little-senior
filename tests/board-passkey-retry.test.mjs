@@ -16,7 +16,7 @@ function memoryStorage() {
   };
 }
 
-async function visit({ session, local, nonce = '', referrer = 'https://team.example/', userAgent = 'Mozilla/5.0 (iPhone; CPU iPhone OS 18_0 like Mac OS X)', authenticate }) {
+async function visit({ session, local, nonce = '', referrer = 'https://team.example/', userAgent = 'Mozilla/5.0 (iPhone; CPU iPhone OS 18_0 like Mac OS X)', supported = true, authenticate }) {
   if (nonce) session.setItem(entryKey, JSON.stringify({ nonce, at: Date.now() }));
   const search = nonce ? '?entry=home&yls_intent=' + nonce : '';
   const redirects = [];
@@ -25,7 +25,7 @@ async function visit({ session, local, nonce = '', referrer = 'https://team.exam
     window: {
       addEventListener() {},
       YLSPasskeys: {
-        supported() { return true; },
+        supported() { return supported; },
         async authenticate() { passkeyCalls++; return authenticate(); },
       },
     },
@@ -157,12 +157,39 @@ test('Android: recover a marker cleared by the previous broken cancellation hand
   assert.equal(session.getItem('yachiyoBoardPasskeyNeedsReregister'), null);
 });
 
-test('Android: a fresh unregistered device still uses ordinary password entry', async () => {
+test('Android: without a local registration marker, an existing synced passkey can still authenticate', async () => {
   const session = memoryStorage(), local = memoryStorage();
   const next = await visit({
     session, local, userAgent: androidUA,
     nonce: '66666666-6666-4666-8666-666666666666',
-    authenticate: async () => { throw new Error('Unregistered device must not try passkey'); },
+    authenticate: async () => ({ token: 'verified-synced-android-passkey' }),
+  });
+  assert.equal(next.allowed, true);
+  assert.equal(next.passkeyCalls, 1);
+  assert.equal(next.passwordCalls, 0);
+  assert.equal(local.getItem('yachiyoBoardPasskeyRegistered'), '1');
+  assert.equal(session.getItem('yachiyoAttendancePass'), 'verified-synced-android-passkey');
+});
+
+test('Android: a device with no passkey falls back to password after one attempt', async () => {
+  const session = memoryStorage(), local = memoryStorage();
+  const next = await visit({
+    session, local, userAgent: androidUA,
+    nonce: '77777777-7777-4777-8777-777777777777',
+    authenticate: async () => { throw androidCancel(); },
+  });
+  assert.equal(next.allowed, false);
+  assert.equal(next.passkeyCalls, 1, 'one native attempt, not a repeated dialog loop');
+  assert.equal(next.passwordCalls, 1, 'password login remains available');
+  assert.equal(local.getItem('yachiyoBoardPasskeyRegistered'), null);
+});
+
+test('Android: unsupported browser falls back directly to password', async () => {
+  const session = memoryStorage(), local = memoryStorage();
+  const next = await visit({
+    session, local, userAgent: androidUA, supported: false,
+    nonce: '88888888-8888-4888-8888-888888888888',
+    authenticate: async () => { throw new Error('unsupported browser must not use WebAuthn'); },
   });
   assert.equal(next.allowed, false);
   assert.equal(next.passkeyCalls, 0);
