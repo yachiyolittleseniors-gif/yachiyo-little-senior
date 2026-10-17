@@ -290,8 +290,11 @@ window.boardAccessReady=(async function requireBoardPassword(){
   if(!freshHomeEntry&&!directForegroundEntry)return returnToTeamHome();
 
   if(deliberateHomeEntry){
-    // Auto WebAuthn only on devices with a local passkey-success marker.
-    // Devices without one go straight to the normal password fallback.
+    // A NotAllowedError (often user cancellation) suppresses repeated native
+    // passkey sheets during the current entry attempt. A new intentional
+    // Home -> Team tap must be allowed to try the existing passkey again.
+    // Never reset this safeguard for reloads, direct links, or BFCache restores.
+    clearPasskeySkip();
     const passkeyResult=await verifyPasskey();
     if(boardLoginExitStarted||boardDocumentSuspended)return false;
     if(passkeyResult===true)return true;
