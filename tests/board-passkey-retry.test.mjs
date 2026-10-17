@@ -42,6 +42,7 @@ async function visit({ session, local, nonce = '', referrer = 'https://team.exam
     sessionStorage: session,
     localStorage: local,
     location: {
+      origin: 'https://team.example',
       href: 'https://team.example/board.html' + search,
       search,
       replace(target) { redirects.push(target); },
