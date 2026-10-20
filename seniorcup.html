@@ -137,7 +137,7 @@ h1{font-family:serif;font-weight:600;font-size:clamp(34px,6vw,58px);letter-spaci
 }
 
 
-/* ===== 協力企業紹介 ===== */
+/* ===== 協賛企業紹介 ===== */
 
 
 
@@ -185,7 +185,7 @@ h1{font-family:serif;font-weight:600;font-size:clamp(34px,6vw,58px);letter-spaci
   }
 }
 
-/* ===== 協力企業紹介：大会パートナー専用デザイン ===== */
+/* ===== 協賛企業紹介：大会パートナー専用デザイン ===== */
 .partner-section{
   position:relative;
   overflow:hidden;
@@ -453,7 +453,7 @@ html{scroll-padding-top:var(--fixed-header-height)}
 </nav>
 <div class="mobile-links" id="mobileLinks">
 <a href="./">HOME</a><a href="./team">チーム紹介</a><a href="./players">選手紹介</a><a href="./results">試合結果</a><a href="./schedule">公開スケジュール</a><a href="./join">入団案内</a><a href="./contact">お問い合わせ</a><a href="./links">リンク集</a><a href="./terms">サイト利用について</a>
-<a href="./board.html">チーム専用ページ 🔒</a>
+<a href='/board'>チーム専用ページ 🔒</a>
 </div>
 </header>
 <script>
@@ -584,7 +584,7 @@ G責任：新木戸グリーンモンスターズ／西高津クラブ</textarea
 <section aria-labelledby="partnerTitle" class="partner-section">
 <div class="partner-heading" id="partnerTitle">
 <div class="partner-heading-small">八千代リトルシニア杯</div>
-<div class="partner-heading-main">協力企業様紹介</div>
+<div class="partner-heading-main">協賛企業様紹介</div>
 </div>
 <p class="partner-lead">（当チームの活動にご賛同・ご協力をいただいている企業様）</p>
 <div class="partner-grid" id="partnerGrid"></div>
@@ -618,10 +618,10 @@ G責任：新木戸グリーンモンスターズ／西高津クラブ</textarea
 <p class="admin-note" id="replyModeStatus">現在：大会専用メールアドレス</p>
 <button id="replyModeBtn" type="button">お問い合わせに変更</button>
 </div><div class="admin-box" style="margin-bottom:14px">
-<label>協力企業紹介を編集</label>
+<label>協賛企業紹介を編集</label>
 <div class="partner-editor-list" id="partnerEditorList"></div>
 <button class="partner-add" id="partnerAddBtn" type="button">企業を追加</button>
-<button id="partnerSaveBtn" type="button">協力企業紹介を保存</button>
+<button id="partnerSaveBtn" type="button">協賛企業紹介を保存</button>
 </div></div>
 </main>
 <footer class="restored-footer">
@@ -638,7 +638,7 @@ G責任：新木戸グリーンモンスターズ／西高津クラブ</textarea
 <a href="https://www.instagram.com/yachiyo_little_senior/" rel="noopener noreferrer" target="_blank">Instagram</a>
 <a href="https://www.facebook.com/874baseball" rel="noopener noreferrer" target="_blank">Facebook</a>
 <a href="./terms">サイト利用について</a>
-<a href="./board.html">チーム専用ページ 🔒</a>
+<a href='/board'>チーム専用ページ 🔒</a>
 </nav>
 <div class="ground-address">
 <div class="ground-access-address">アクセス：千葉県八千代市島田台775</div>
@@ -763,7 +763,7 @@ function renderReplyMode(){
   }
   async function savePartners(){
     const next=collectPartnerEditor();
-    if(!next.length){alert('協力企業を1社以上入力してください。');return}
+    if(!next.length){alert('協賛企業を1社以上入力してください。');return}
     if(next.some(x=>!x.name)){alert('企業名を入力してください。');return}
     const pw=sessionStorage.getItem('yachiyoAdminPassword')||'';
     if(!pw){alert('管理者パスワードを入力し直してください。');return}
@@ -772,7 +772,7 @@ function renderReplyMode(){
       const r=await fetch(API+'?section=seniorcup-partners',{method:'POST',headers:{'content-type':'application/json','x-admin-password':pw},body:JSON.stringify({data:{partners:next,updatedAt:new Date().toISOString()}})});
       if(r.status===429)throw new Error('LIMITED');if(r.status===401)throw new Error('PASSWORD');if(!r.ok)throw new Error('SAVE');
       partners=next;renderPartners();renderPartnerEditor();showSaveNotice('保存しました');
-    }catch(e){alert(e.message==='LIMITED'?'試行回数の上限です。15分後に再度お試しください。':e.message==='PASSWORD'?'管理者パスワードが違います。':'協力企業紹介を保存できませんでした。')}
+    }catch(e){alert(e.message==='LIMITED'?'試行回数の上限です。15分後に再度お試しください。':e.message==='PASSWORD'?'管理者パスワードが違います。':'協賛企業紹介を保存できませんでした。')}
     finally{partnerSaveBtn.disabled=false;partnerSaveBtn.textContent=old}
   }
   partnerAddBtn.addEventListener('click',()=>{partners=collectPartnerEditor();partners.push({name:'',url:'',description:''});renderPartnerEditor()});
