@@ -69,7 +69,7 @@
       '.attendance-schedule-meta-line{display:flex;flex-wrap:wrap;align-items:baseline;gap:2px 14px;margin:0;color:#596474;font-size:11px;font-weight:800;line-height:1.55;overflow-wrap:anywhere}' +
       '.attendance-schedule-meta-line+.attendance-schedule-meta-line{margin-top:2px}' +
       '.attendance-schedule-meta-line b{color:#8b671d;white-space:nowrap}' +
-      '.attendance-schedule-meta-item{display:inline-block;white-space:nowrap}' +
+      '.attendance-schedule-meta-item{display:inline-block;min-width:0;max-width:100%;white-space:normal;overflow-wrap:anywhere}' +
       '.summary-dialog .attendance-schedule-meta{margin:0 0 10px;padding:8px 0;border-left:0;border-right:0}' +
       '.summary-dialog .attendance-schedule-meta-line{font-size:11px}' +
       '@media(max-width:420px){.attendance-schedule-meta-line{font-size:10.5px;line-height:1.5}}';
