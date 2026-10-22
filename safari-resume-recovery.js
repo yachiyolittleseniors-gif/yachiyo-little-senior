@@ -20,8 +20,16 @@ function openingVisible(){
   return !!(splash&&splash.isConnected&&!splash.classList.contains('is-leaving'));
 }
 
+function fixedControlsActive(){
+  // A root/body transform makes viewport-fixed controls relative to the long
+  // document for two frames. Keep the editing panel and open dialogs stable
+  // when Safari restores the page or dismisses the keyboard.
+  return !!(document.body&&document.body.classList.contains('photo-admin-on'))||
+    !!document.querySelector('.news-modal:not([hidden]),#heroImageEditModal[aria-hidden="false"]');
+}
+
 function forceRepaint(){
-  if(document.hidden||openingVisible())return;
+  if(document.hidden||openingVisible()||fixedControlsActive())return;
   const now=Date.now();
   if(now-lastPaint<80)return;
   lastPaint=now;

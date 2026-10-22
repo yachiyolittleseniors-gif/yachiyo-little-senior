@@ -2771,11 +2771,11 @@ body.photo-admin-on .news-actions{display:flex}
 .news-modal{position:fixed;inset:0;z-index:9999;background:rgba(0,0,0,.58);padding:20px;display:grid;place-items:center}
 .news-modal[hidden]{display:none}
 .news-modal-card{width:min(520px,100%);background:#fff;border-radius:18px;padding:24px;position:relative}
-#heroAnnouncementModal{align-items:flex-start;overflow:hidden;padding-top:calc(12px + env(safe-area-inset-top));padding-bottom:calc(12px + env(safe-area-inset-bottom))}
-#heroAnnouncementModal .news-modal-card{box-sizing:border-box;max-height:calc(100dvh - 24px - env(safe-area-inset-top) - env(safe-area-inset-bottom));overflow-y:auto;overscroll-behavior:contain;-webkit-overflow-scrolling:touch;touch-action:pan-y}
+#heroAnnouncementModal{top:var(--announcement-viewport-top,0px);bottom:auto;height:var(--announcement-viewport-height,100dvh);box-sizing:border-box;align-items:flex-start;overflow:hidden;padding-top:calc(12px + env(safe-area-inset-top));padding-bottom:calc(12px + env(safe-area-inset-bottom))}
+#heroAnnouncementModal .news-modal-card{box-sizing:border-box;max-height:calc(var(--announcement-viewport-height,100dvh) - 24px - env(safe-area-inset-top) - env(safe-area-inset-bottom));overflow-y:auto;overscroll-behavior:contain;-webkit-overflow-scrolling:touch;touch-action:pan-y}
 #heroAnnouncementModal .hero-announcement-actions{position:sticky;left:0;right:0;bottom:0;z-index:6;margin:18px -24px -24px;padding:12px 24px calc(12px + env(safe-area-inset-bottom));background:linear-gradient(180deg,rgba(255,255,255,.9),#fff 24%);border-top:1px solid #e5e7eb;box-shadow:0 -10px 22px rgba(7,20,38,.08)}
 #heroAnnouncementModal #heroAnnouncementSave{min-width:124px}
-@media(max-width:600px){#heroAnnouncementModal{padding-left:12px;padding-right:12px}#heroAnnouncementModal .news-modal-card{width:100%;max-height:calc(100dvh - 24px - env(safe-area-inset-top) - env(safe-area-inset-bottom));padding:20px 18px}#heroAnnouncementModal .hero-announcement-actions{margin:18px -18px -20px;padding:12px 18px calc(12px + env(safe-area-inset-bottom))}}
+@media(max-width:600px){#heroAnnouncementModal{padding-left:12px;padding-right:12px}#heroAnnouncementModal .news-modal-card{width:100%;max-height:calc(var(--announcement-viewport-height,100dvh) - 24px - env(safe-area-inset-top) - env(safe-area-inset-bottom));padding:20px 18px}#heroAnnouncementModal .hero-announcement-actions{margin:18px -18px -20px;padding:12px 18px calc(12px + env(safe-area-inset-bottom))}}
 .news-modal-card h3{margin:0 0 18px}
 .news-modal-card label{display:block;font-size:13px;font-weight:700;margin:12px 0}
 .news-modal-card input,.news-modal-card textarea,.news-modal-card select{box-sizing:border-box;width:100%;margin-top:6px;border:1px solid #ccd1d8;border-radius:10px;padding:11px;font:inherit}
@@ -4187,7 +4187,7 @@ html.skip-first-visit-splash #firstVisitSplash{display:none!important}
 <script src="./board-home-entry-guard.js?v=20261010-passkey-route1"></script>
 </head>
 <body id="page-top"><div id="firstVisitSplash" aria-hidden="true"><div class="first-visit-logo"><img src="/.netlify/images?url=%2Fofficial-logo-crisp-final.png&w=800&q=82&fm=webp" alt=""><div class="first-visit-shine"></div><div class="first-visit-since"><span>SINCE 1982</span></div></div></div>
-<script src="./safari-resume-recovery.js?v=20261014-noinitialrepaint1"></script>
+<script src="./safari-resume-recovery.js?v=20261022-fixed-controls1"></script>
 <script src="./first-visit-splash.js?v=20261014-sync-logo-since1"></script>
 <header class="header">
 <nav class="nav">
@@ -5304,6 +5304,41 @@ function openProtectedArea(type){
    linkSettings.hidden=!enabled;
    customUrlWrap.hidden=!enabled||linkTargetInput.value!=='custom';
  }
+ let pageLock=null;
+ function lockAnnouncementPage(){
+   if(pageLock)return;
+   const style=document.body.style;
+   const properties=['position','top','left','right','width','overflow-x','overflow-y'];
+   pageLock={x:window.scrollX,y:window.scrollY,styles:properties.map(name=>[name,style.getPropertyValue(name),style.getPropertyPriority(name)])};
+   // Keep the page still when Safari opens the keyboard or the dialog is scrolled.
+   style.setProperty('position','fixed','important');
+   style.setProperty('top',-pageLock.y+'px','important');
+   style.setProperty('left',-pageLock.x+'px','important');
+   style.setProperty('right','0','important');
+   style.setProperty('width','100%','important');
+   style.setProperty('overflow','hidden','important');
+ }
+ function unlockAnnouncementPage(){
+   if(!pageLock||!modal.hidden||!detailModal.hidden)return;
+   const previous=pageLock;
+   pageLock=null;
+   previous.styles.forEach(([name,value,priority])=>{
+     if(value)document.body.style.setProperty(name,value,priority);
+     else document.body.style.removeProperty(name);
+   });
+   window.scrollTo({left:previous.x,top:previous.y,behavior:'instant'});
+ }
+ function syncAnnouncementViewport(){
+   if(modal.hidden)return;
+   const viewport=window.visualViewport;
+   modal.style.setProperty('--announcement-viewport-top',Math.max(0,viewport?viewport.offsetTop:0)+'px');
+   modal.style.setProperty('--announcement-viewport-height',Math.max(1,viewport?viewport.height:window.innerHeight)+'px');
+ }
+ if(window.visualViewport){
+   window.visualViewport.addEventListener('resize',syncAnnouncementViewport,{passive:true});
+   window.visualViewport.addEventListener('scroll',syncAnnouncementViewport,{passive:true});
+ }
+ window.addEventListener('resize',syncAnnouncementViewport,{passive:true});
  function openEditor(){
    textInput.value=state.text;
    detailsInput.value=state.details;
@@ -5313,15 +5348,21 @@ function openProtectedArea(type){
    linkUrlInput.value=state.linkUrl||'';
    visibleInput.checked=state.visible;
    syncLinkEditor();
+   lockAnnouncementPage();
    modal.hidden=false;
-   setTimeout(()=>textInput.focus({preventScroll:true}),0);
+   syncAnnouncementViewport();
+   modal.querySelector('.news-modal-card').scrollTop=0;
+   close.focus({preventScroll:true});
  }
  function closeEditor(){
+   if(modal.hidden)return;
    const active=document.activeElement;
-   if(active&&typeof active.blur==='function')active.blur();
-   textInput.blur();
-   detailsInput.blur();
+   if(active&&modal.contains(active)&&typeof active.blur==='function')active.blur();
    modal.hidden=true;
+   unlockAnnouncementPage();
+   requestAnimationFrame(()=>{
+     if(modal.hidden&&detailModal.hidden)edit.focus({preventScroll:true});
+   });
  }
  function configureDetailLink(){
    const enabled=state.linkEnabled===true&&Boolean(state.linkLabel);
@@ -5344,10 +5385,15 @@ function openProtectedArea(type){
    detailBody.textContent=state.details;
    detailBody.hidden=!state.details;
    configureDetailLink();
+   lockAnnouncementPage();
    detailModal.hidden=false;
-   setTimeout(()=>detailClose.focus({preventScroll:true}),0);
+   detailClose.focus({preventScroll:true});
  }
- function closeDetails(){detailModal.hidden=true;banner.focus({preventScroll:true})}
+ function closeDetails(){
+   detailModal.hidden=true;
+   unlockAnnouncementPage();
+   banner.focus({preventScroll:true});
+ }
  function scrollToSeniorCupCard(){
    const target=document.getElementById('seniorcupHomeCard')||document.querySelector('.seniorcup-home-banner');
    if(!target)return;
@@ -5814,6 +5860,7 @@ document.addEventListener('DOMContentLoaded',function(){
 </style>
 <style id="home-admin-hide-during-modal">
 /* 編集モーダル表示中は下部の管理操作を隠し、保存ボタンとの重なりを防ぐ */
+html body.home-modal-open #heroPhotoAdmin{display:none!important}
 body:has(.news-modal:not([hidden])) #heroPhotoAdmin,
 body:has(#heroImageEditModal[aria-hidden="false"]) #heroPhotoAdmin{
   display:none!important;
@@ -5829,13 +5876,8 @@ body:has(#heroImageEditModal[aria-hidden="false"]) #heroPhotoAdmin{
       })();
   }
   function sync(){
-    const admin=document.getElementById('heroPhotoAdmin');
-    if(!admin)return;
-    if(modalIsOpen()){
-      admin.style.setProperty('display','none','important');
-    }else{
-      admin.style.removeProperty('display');
-    }
+    // Visibility belongs to CSS; preserve the admin controller's inline state.
+    document.body.classList.toggle('home-modal-open',Boolean(modalIsOpen()));
   }
   function boot(){
     document.querySelectorAll('.news-modal').forEach(function(modal){
