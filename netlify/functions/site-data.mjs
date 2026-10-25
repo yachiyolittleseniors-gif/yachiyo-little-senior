@@ -2258,6 +2258,36 @@ export default async (request, context) => {
     }
 
     if (
+      section === "seniorcup-documents" &&
+      body?.action === "renameSeniorCupDocument"
+    ) {
+      const id = String(body.id || "");
+      const displayName = String(body.displayName || "").trim();
+      if (!id || !displayName || displayName.length > 160) {
+        return json({ error: "資料名を確認してください。" }, 400);
+      }
+
+      const current = await store.get(key, {
+        type: "json",
+        consistency: "strong"
+      });
+      const documents = Array.isArray(current) ? current : [];
+      const item = documents.find(entry => String(entry?.id || "") === id);
+      if (!item) {
+        return json({ error: "資料が見つかりません。" }, 404);
+      }
+
+      const renamedAt = new Date().toISOString();
+      const updated = documents.map(entry =>
+        String(entry?.id || "") === id
+          ? { ...entry, tournament: displayName, renamedAt }
+          : entry
+      );
+      await store.setJSON(key, updated);
+      return json({ ok: true, data: updated });
+    }
+
+    if (
       (section === "result-documents" || section === "seniorcup-documents") &&
       body?.action === "deleteResultDocument"
     ) {
