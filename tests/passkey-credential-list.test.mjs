@@ -95,10 +95,9 @@ test('a bound credential uses a one-item allowlist beyond the Android 64 limit',
   assert.deepEqual(body.options.allowCredentials.map(x=>x.id),['board-credential-95']);
   assert.deepEqual(records.get(registryKey).credentials,original);
 });
-test('large-registry discovery is allowed only after team access authentication',async()=>{
+test('large-registry discovery supports first passkey use on an unbound browser',async()=>{
   seed(100);
-  assert.equal((await handle(post('authentication-options',{discovery:true}))).status,401);
-  const r=await handle(post('authentication-options',{discovery:true},{'x-access-password':process.env.ACCESS_PASSWORD}));
+  const r=await handle(post('authentication-options',{discovery:true}));
   assert.equal(r.status,200);
   const body=await r.json();
   assert.ok(!body.options.allowCredentials?.length);
