@@ -196,10 +196,9 @@ export default async request => {
         // Small registries are safe to filter completely in the native sheet.
         allowCredentials = credentials.map(item => ({ id: item.id, transports: item.transports }));
       } else if (discoveryRequested) {
-        // Large-registry discovery may expose every discoverable credential for
-        // this RP in the OS picker. Permit it only after password/session access
-        // and only for an explicit one-time device migration from the setup UI.
-        if (!(await accessIsValid(store, request))) return json({ error: "unauthorized" }, 401);
+        // Existing devices may have a synced passkey but no browser-local ID yet.
+        // Allow one discovery ceremony; after successful verification the client
+        // stores the exact Yachiyo credential ID and future logins use one item.
       } else {
         // Never open an unfiltered native picker during ordinary team-page login.
         // The client falls back to the team password, then binds one credential
