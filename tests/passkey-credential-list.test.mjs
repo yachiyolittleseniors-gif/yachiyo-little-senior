@@ -70,22 +70,43 @@ test('registration options never exceed Android 64-descriptor limit, without del
   assert.equal(full.status,409,'5000 server-side capacity remains unchanged');
   assert.equal(records.get(registryKey).credentials.length,5000);
 });
-test('passkey login with more than 64 saved keys must not truncate older keys',async()=>{
+test('ordinary login never opens an unfiltered picker when more than 64 keys exist',async()=>{
   for (const count of [1,64,65,250,5000]) {
     const original=seed(count);
     const r=await handle(post('authentication-options'));
-    assert.equal(r.status,200,'count '+count);
     const body=await r.json();
-    assert.equal(body.options.userVerification,'required');
-    assert.ok(body.ceremonyID);
-    if (count<=64) assert.deepEqual(body.options.allowCredentials.map(x=>x.id),original.map(x=>x.id));
-    else assert.ok(!body.options.allowCredentials?.length,'use discoverable credentials, not a truncated allowlist');
+    if (count<=64) {
+      assert.equal(r.status,200,'count '+count);
+      assert.equal(body.options.userVerification,'required');
+      assert.ok(body.ceremonyID);
+      assert.deepEqual(body.options.allowCredentials.map(x=>x.id),original.map(x=>x.id));
+    } else {
+      assert.equal(r.status,409,'count '+count);
+      assert.equal(body.code,'PASSKEY_BINDING_REQUIRED');
+    }
     assert.deepEqual(records.get(registryKey).credentials,original);
   }
 });
+test('a bound credential uses a one-item allowlist beyond the Android 64 limit',async()=>{
+  const original=seed(100);
+  const r=await handle(post('authentication-options',{credentialID:'board-credential-95'}));
+  assert.equal(r.status,200);
+  const body=await r.json();
+  assert.deepEqual(body.options.allowCredentials.map(x=>x.id),['board-credential-95']);
+  assert.deepEqual(records.get(registryKey).credentials,original);
+});
+test('large-registry discovery is allowed only after team access authentication',async()=>{
+  seed(100);
+  assert.equal((await handle(post('authentication-options',{discovery:true}))).status,401);
+  const r=await handle(post('authentication-options',{discovery:true},{'x-access-password':process.env.ACCESS_PASSWORD}));
+  assert.equal(r.status,200);
+  const body=await r.json();
+  assert.ok(!body.options.allowCredentials?.length);
+  assert.ok(body.ceremonyID);
+});
 test('unregistered or different-product credential cannot bypass server authentication',async()=>{
   const original=seed(100);
-  const start=await (await handle(post('authentication-options'))).json();
+  const start=await (await handle(post('authentication-options',{credentialID:'board-credential-0'}))).json();
   const r=await handle(post('authentication-verify',{
     ceremonyID:start.ceremonyID,credential:{id:'unregistered-or-other-product-key'},
   }));
@@ -95,7 +116,7 @@ test('unregistered or different-product credential cannot bypass server authenti
 });
 test('a registered credential beyond first 64 is still checked and accepted',async()=>{
   const original=seed(100);
-  const start=await (await handle(post('authentication-options'))).json();
+  const start=await (await handle(post('authentication-options',{credentialID:'board-credential-95'}))).json();
   const r=await handle(post('authentication-verify',{
     ceremonyID:start.ceremonyID,credential:{id:'board-credential-95'},
   }));
