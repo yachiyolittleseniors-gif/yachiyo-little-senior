@@ -170,7 +170,7 @@ export default async request => {
       };
       const updated = [savedCredential, ...credentials.filter(item => item.id !== credential.id)];
       await store.setJSON(CREDENTIALS_KEY, { credentials: updated });
-      return json({ ok: true });
+      return json({ ok: true, credentialID: savedCredential.id });
     }
     if (action === "delete-credential") {
       const credentialID = String(body?.credentialID || "");
@@ -184,20 +184,36 @@ export default async request => {
     if (action === "authentication-options") {
       const credentials = await loadCredentials(store);
       if (!credentials.length) return json({ error: "registered passkey not found" }, 404);
+      const requestedCredentialID = String(body?.credentialID || "");
+      const discoveryRequested = body?.discovery === true;
+      let allowCredentials;
+
+      if (requestedCredentialID) {
+        const credential = credentials.find(item => item.id === requestedCredentialID);
+        if (!credential) return json({ error: "registered passkey not found", code: "PASSKEY_BINDING_STALE" }, 404);
+        allowCredentials = [{ id: credential.id, transports: credential.transports }];
+      } else if (credentials.length <= MAX_WEBAUTHN_DESCRIPTORS) {
+        // Small registries are safe to filter completely in the native sheet.
+        allowCredentials = credentials.map(item => ({ id: item.id, transports: item.transports }));
+      } else if (discoveryRequested) {
+        // Large-registry discovery may expose every discoverable credential for
+        // this RP in the OS picker. Permit it only after password/session access
+        // and only for an explicit one-time device migration from the setup UI.
+        if (!(await accessIsValid(store, request))) return json({ error: "unauthorized" }, 401);
+      } else {
+        // Never open an unfiltered native picker during ordinary team-page login.
+        // The client falls back to the team password, then binds one credential
+        // from the authenticated setup panel for future one-item allowlists.
+        return json({
+          error: "この端末の生体認証を再確認してください。",
+          code: "PASSKEY_BINDING_REQUIRED",
+        }, 409);
+      }
+
       const rp = relyingParty(request);
       const options = await generateAuthenticationOptions({
         rpID: rp.rpID,
-        // On large registries, omit allowCredentials instead of truncating it:
-        // all board passkeys are discoverable (residentKey: required), so every
-        // legitimate existing device can still sign in. The verification path
-        // below checks that the selected credential ID is in the server registry
-        // and verifies its signature; another RP account cannot authenticate.
-        ...(credentials.length <= MAX_WEBAUTHN_DESCRIPTORS
-          ? { allowCredentials: credentials.map(item => ({
-              id: item.id,
-              transports: item.transports,
-            })) }
-          : {}),
+        ...(allowCredentials ? { allowCredentials } : {}),
         userVerification: "required",
       });
       return json({ options, ceremonyID: await saveChallenge(store, "authentication", options, rp) });
