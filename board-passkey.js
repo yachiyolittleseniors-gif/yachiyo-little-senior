@@ -1,5 +1,16 @@
 (() => {
   const endpoint = "/.netlify/functions/passkey-auth";
+  const credentialKey = "yachiyoBoardPasskeyCredentialID";
+  function savedCredentialID() {
+    try { return localStorage.getItem(credentialKey) || ""; } catch (_) { return ""; }
+  }
+  function rememberCredentialID(value) {
+    const id = String(value || "");
+    try {
+      if (id) localStorage.setItem(credentialKey, id);
+      else localStorage.removeItem(credentialKey);
+    } catch (_) {}
+  }
   function supported() {
     return Boolean(window.isSecureContext && window.PublicKeyCredential && navigator.credentials);
   }
@@ -23,6 +34,7 @@
     if (!response.ok) {
       const error = new Error(result.error || "生体認証を完了できませんでした。");
       error.status = response.status;
+      error.code = result.code || "";
       throw error;
     }
     return result;
@@ -86,8 +98,9 @@
       if (!duplicate) throw error;
 
       // The authenticator is telling us that a passkey for this RP already
-      // exists.  Do not ask the user to register it again; use it.
-      const proof = await authenticate();
+      // exists. Use one explicit password-authenticated discovery only to bind
+      // the existing Yachiyo credential to this browser.
+      const proof = await bindExisting(accessValue);
       if (!proof?.token) throw error;
       try{localStorage.setItem("yachiyoBoardPasskeyRegistered","1")}catch(_){}
       try{sessionStorage.removeItem("yachiyoBoardPasskeyNeedsReregister")}catch(_){}
@@ -98,6 +111,7 @@
       action: "registration-verify", ceremonyID: start.ceremonyID,
       credential: registrationJSON(credential), label,
     }, accessValue);
+    rememberCredentialID(registered?.credentialID);
 
     // Do not display "registered" until the credential can actually be used
     // for a fresh sign-in.  This catches Android/Chrome cases where create()
@@ -118,15 +132,35 @@
       throw verifyError;
     }
   }
-  async function authenticate() {
+  async function authenticateWithOptions({ discovery = false, accessValue = "" } = {}) {
     if (!supported()) throw new Error("この端末は生体認証に対応していません。");
-    const start = await request({ action: "authentication-options" });
+    const credentialID = discovery ? "" : savedCredentialID();
+    let start;
+    try {
+      start = await request({
+        action: "authentication-options",
+        ...(credentialID ? { credentialID } : {}),
+        ...(discovery ? { discovery: true } : {}),
+      }, accessValue);
+    } catch (error) {
+      if (error?.code === "PASSKEY_BINDING_STALE") rememberCredentialID("");
+      throw error;
+    }
     const credential = await navigator.credentials.get({ publicKey: requestOptions(start.options) });
     if (!credential) throw new Error("生体認証がキャンセルされました。");
-    return request({
+    const result = await request({
       action: "authentication-verify", ceremonyID: start.ceremonyID,
       credential: authenticationJSON(credential),
     });
+    if (result?.credentialID) rememberCredentialID(result.credentialID);
+    return result;
+  }
+  async function authenticate() {
+    return authenticateWithOptions();
+  }
+  async function bindExisting(accessValue = "") {
+    if (!accessValue) throw new Error("パスワード認証後に生体認証を確認してください。");
+    return authenticateWithOptions({ discovery: true, accessValue });
   }
   async function remove() {
     if (!supported()) throw new Error("この端末は生体認証に対応していません。");
@@ -135,6 +169,7 @@
       const credentialID = auth?.credentialID;
       if (!credentialID) throw new Error("削除する生体認証を確認できませんでした。");
       const result = await request({ action: "delete-credential", credentialID });
+      rememberCredentialID("");
       try{sessionStorage.removeItem("yachiyoBoardPasskeyNeedsReregister")}catch(_){}
       return result;
     } catch (error) {
@@ -152,5 +187,5 @@
       throw error;
     }
   }
-  window.YLSPasskeys = { authenticate, register, remove, supported };
+  window.YLSPasskeys = { authenticate, bindExisting, register, remove, supported };
 })();
