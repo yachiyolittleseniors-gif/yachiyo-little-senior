@@ -35,9 +35,6 @@
       a.style.cssText='display:block;padding:14px 12px;border:1px solid #ddd9cf;border-radius:9px;background:#fff;color:#071426;text-decoration:none;font-weight:800;overflow-wrap:anywhere'+(index?';margin-top:10px':'');
       const label=document.createElement('span');label.textContent=item.tournament||item.fileName||'資料';
       a.appendChild(label);
-      if(item.tournament&&item.fileName&&item.tournament!==item.fileName){
-        const actual=document.createElement('small');actual.style.cssText='display:block;margin-top:5px;color:#697481;font-size:11px;font-weight:500';actual.textContent='元ファイル：'+item.fileName;a.appendChild(actual);
-      }
       a.addEventListener('click',()=>{setTimeout(()=>{modal.style.display='none';document.body.style.overflow='';},120);});
       pickerList.appendChild(a);
     });
@@ -58,11 +55,28 @@
     list.append(summary,download);
     documents.forEach(item=>{
       const adminRow=document.createElement('div');
-      adminRow.style.cssText='padding-top:12px;overflow-wrap:anywhere';
-      const label=document.createElement('span');label.textContent=(item.tournament||item.fileName)+'　';
-      const remove=document.createElement('button');remove.type='button';remove.className='attachment-delete';remove.textContent='添付ファイルを削除';remove.disabled=busy;
+      adminRow.style.cssText='padding:12px 0;border-top:1px solid rgba(7,20,38,.1);overflow-wrap:anywhere';
+      const currentName=item.tournament||item.fileName||'資料';
+      const label=document.createElement('div');
+      label.style.cssText='font-weight:800;color:#071426';
+      label.textContent=currentName;
+      const original=document.createElement('div');
+      original.style.cssText='margin-top:4px;color:#697481;font-size:11px';
+      original.textContent='元ファイル：'+(item.fileName||'不明');
+      const controls=document.createElement('div');
+      controls.style.cssText='display:grid;grid-template-columns:minmax(0,1fr) auto;gap:8px;align-items:center;margin-top:8px';
+      const nameInput=document.createElement('input');
+      nameInput.type='text';nameInput.maxLength=160;nameInput.value=currentName;
+      nameInput.setAttribute('aria-label','資料名を変更');
+      nameInput.style.cssText='min-width:0;width:100%;box-sizing:border-box;padding:9px 10px;border:1px solid #cfd3d8;border-radius:8px;font:inherit';
+      const rename=document.createElement('button');
+      rename.type='button';rename.textContent='資料名を変更';rename.disabled=busy;
+      rename.style.cssText='white-space:nowrap;min-height:40px;padding:8px 12px';
+      rename.addEventListener('click',()=>renameDocument(item,nameInput.value));
+      controls.append(nameInput,rename);
+      const remove=document.createElement('button');remove.type='button';remove.className='attachment-delete';remove.textContent='添付ファイルを削除';remove.disabled=busy;remove.style.marginTop='8px';
       remove.addEventListener('click',()=>removeDocument(item));
-      adminRow.append(label,remove);adminList.append(adminRow);
+      adminRow.append(label,original,controls,remove);adminList.append(adminRow);
     });
     save.disabled=busy;save.textContent=busy?'処理中...':'大会資料を保存';
   }
@@ -89,6 +103,23 @@
       if(typeof showSaveNotice==='function')showSaveNotice('大会資料を保存しました');
     }catch(error){alert(error.message);}finally{busy=false;render();}
   });
+  async function renameDocument(item,nextName){
+    if(busy)return;
+    const displayName=String(nextName||'').trim();
+    if(!displayName){alert('資料名を入力してください。');return;}
+    if(displayName.length>160){alert('資料名は160文字以内で入力してください。');return;}
+    const currentName=String(item.tournament||item.fileName||'');
+    if(displayName===currentName){
+      if(typeof showSaveNotice==='function')showSaveNotice('資料名は変更されていません');
+      return;
+    }
+    busy=true;render();
+    try{
+      await request({action:'renameSeniorCupDocument',id:item.id,displayName});
+      if(typeof showSaveNotice==='function')showSaveNotice('資料名を変更しました');
+    }catch(error){alert(error.message);}finally{busy=false;render();}
+  }
+
   async function removeDocument(item){
     if(busy||!confirm('「'+(item.tournament||item.fileName)+'」を削除しますか？'))return;
     busy=true;render();
