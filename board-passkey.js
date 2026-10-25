@@ -156,10 +156,11 @@
     return result;
   }
   async function authenticate() {
-    return authenticateWithOptions();
+    // Existing devices can have a synced Yachiyo passkey before this browser
+    // knows its exact credential ID. Discover it once, then bind that ID.
+    return authenticateWithOptions({ discovery: !savedCredentialID() });
   }
   async function bindExisting(accessValue = "") {
-    if (!accessValue) throw new Error("パスワード認証後に生体認証を確認してください。");
     return authenticateWithOptions({ discovery: true, accessValue });
   }
   async function remove() {
