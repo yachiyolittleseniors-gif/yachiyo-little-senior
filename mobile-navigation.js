@@ -141,6 +141,23 @@
       link.setAttribute('data-seniorcup-menu-link', '');
       cupLinks.push(link);
     });
+
+    // PC header: use the same Senior Cup visibility setting as the home banner/mobile menu.
+    document.querySelectorAll('.links').forEach(menu => {
+      let link = [...menu.querySelectorAll('a[href]')].find(item => pageKey(item.href) === 'seniorcup');
+      if (!link) {
+        link = document.createElement('a');
+        link.href = './seniorcup';
+        link.textContent = '八千代リトルシニア杯';
+        const team = menu.querySelector('.desktop-team-link');
+        if (team) menu.insertBefore(link, team);
+        else menu.appendChild(link);
+      }
+      link.classList.toggle('active', current === 'seniorcup');
+      link.setAttribute('data-seniorcup-menu-link', '');
+      cupLinks.push(link);
+    });
+
     if (!cupLinks.length) return;
     function apply(visible) {
       cupLinks.forEach(link => {
