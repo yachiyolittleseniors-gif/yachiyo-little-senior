@@ -658,6 +658,7 @@ body.live-score-focused #liveScoreCard{width:100%;box-sizing:border-box}
   line-height:1.45!important;
 }
 .live-score-lock-panel.is-input{border-color:rgba(226,189,103,.8)!important}
+#liveScoreTimeoutNotice[hidden]{display:none!important}
 .live-score-lock-panel .live-score-button{flex:0 0 auto!important;padding:7px 10px!important;font-size:11px!important}
 @media(max-width:700px){
   .live-score-lock-panel{align-items:flex-start!important}
@@ -1136,7 +1137,7 @@ body:after{display:none!important;content:none!important}
         <div class="live-score-start-modal" id="liveScoreStartModal" hidden>
           <div class="live-score-start-dialog" role="dialog" aria-modal="true" aria-labelledby="liveScoreStartDialogTitle">
             <strong id="liveScoreStartDialogTitle">⚠ 試合速報を開始する前に</strong>
-            <p>試合当日の入力担当者のみ操作してください。<br>開始すると試合速報がチーム内に公開されます。<br>試合終了後は必ず「試合終了」を押してください。</p>
+            <p>試合当日の入力担当者のみ操作してください。<br>開始すると試合速報がチーム内に公開されます。<br>開始後3分間、入力がなければ自動終了します。<br>試合終了後は必ず「試合終了」を押してください。</p>
             <div class="live-score-start-dialog-actions">
               <button type="button" id="liveScoreStartCancel">キャンセル</button>
               <button type="button" id="liveScoreStartConfirm">試合速報を開始</button>
@@ -1222,7 +1223,11 @@ body:after{display:none!important;content:none!important}
 
         <div class="live-score-publish">
           <button class="live-score-button subdued" id="liveScoreFinish" type="button">試合終了</button>
-          <p class="live-score-finish-warning">⚠ 試合終了後は、入力者が必ず「試合終了」を押してください。<br>押さない場合、試合速報が公開されたままになります。</p>
+          <p class="live-score-finish-warning">⚠ 試合終了後は、入力者が必ず「試合終了」を押してください。<br>未入力の場合は開始から3分、入力済みの場合は開始から4時間で自動終了します。</p>
+          <div class="live-score-lock-panel" id="liveScoreTimeoutNotice" role="status" hidden>
+            <span id="liveScoreTimeoutText"></span>
+            <button class="live-score-button" id="liveScoreExtend" type="button">1時間延長</button>
+          </div>
           <div class="live-score-status">
             <span id="liveScoreStatus">まだ他の端末には公開されていません。</span>
             <time id="liveScoreUpdated"></time>
@@ -1809,7 +1814,7 @@ main.wrap{padding-bottom:38px!important}
 }
 </style>
 </style>
-<script src="./board-live-score.js?v=20261004-bsreset2"></script>
+<script src="./board-live-score.js?v=20261027-empty-start3min1"></script>
 <script src="./board-updates.js?v=20261005-admin-popup-calendar2"></script>
 <script src="./board-referee-documents.js?v=20261002-hide-save1"></script>
 <script src="./board-tournaments.js?v=20260914-1"></script>
@@ -2356,4 +2361,5 @@ color:#e2bd67;font-size:18px;line-height:1.5;
 .hero .system-brand-sub i:last-child{background:linear-gradient(90deg,#d7ad50,transparent);}
 @media(max-width:420px){.hero .system-brand-main{font-size:16px;letter-spacing:.12em}.hero .system-brand-sub{font-size:9px;letter-spacing:.15em;gap:8px}.hero .system-brand-sub i{width:28px}}
 </style>
+
 

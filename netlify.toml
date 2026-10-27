@@ -1,5 +1,5 @@
 [build]
-  command = "node --test tests/duty-grades.test.mjs tests/home-csp.test.mjs tests/board-passkey-retry.test.mjs tests/passkey-credential-list.test.mjs && node netlify/sync-home-csp.mjs"
+  command = "node --test tests/duty-grades.test.mjs tests/home-csp.test.mjs tests/board-passkey-retry.test.mjs tests/passkey-credential-list.test.mjs tests/live-score-lifecycle.test.mjs && node netlify/sync-home-csp.mjs"
   publish = "."
   functions = "netlify/functions"
 
@@ -111,3 +111,4 @@
   to = "/board.html"
   status = 301
   force = true
+

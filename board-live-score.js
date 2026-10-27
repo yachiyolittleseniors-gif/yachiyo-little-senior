@@ -4,6 +4,8 @@
   const DRAFT_KEY = 'yachiyoLiveScoreDraft';
   const DEVICE_KEY = 'yachiyoLiveScoreEditorDeviceId';
   const INPUT_MODE_KEY = 'yachiyoLiveScoreInputMode';
+  const EMPTY_START_TIMEOUT_MS = 3 * 60 * 1000;
+  const EXTENSION_NOTICE_MS = 30 * 60 * 1000;
   const $ = selector => document.querySelector(selector);
   const root = $('#liveScoreCard');
   if (!root) return;
@@ -28,6 +30,13 @@
   let state = { active: false, visible: false, current: null, lastGame: null, updatedAt: '' };
   let dirty = false;
   let saving = false;
+  let saveInFlight = null;
+  let starting = false;
+  let userInputPending = false;
+  let firstInputNeedsSave = false;
+  let checkingDeadline = false;
+  let extending = false;
+  let serverClockOffset = 0;
   let changeVersion = 0;
   let autoSaveTimer = 0;
   let editorCollapsed = false;
@@ -85,9 +94,11 @@
       body: method === 'POST' ? JSON.stringify(payload) : undefined,
     });
     const result = await response.json().catch(() => ({}));
+    if (Number.isFinite(result.serverNow)) serverClockOffset = result.serverNow - Date.now();
     if (!response.ok) {
       const error = new Error(result.error || '試合速報を保存できませんでした。');
       error.status = response.status;
+      error.data = result.data;
       throw error;
     }
     return result;
@@ -129,8 +140,10 @@
       if (!inputMode || !lockToken || !state.active || replayMode) return;
       try {
         const result = await request('POST', null, { action: 'heartbeatEditorLock', lockToken });
+        if (applyClosedResult(result.data)) return;
         lockToken = result.lockToken || lockToken;
-      } catch (_) {
+      } catch (error) {
+        applyClosedResult(error.data);
         lockToken = '';
         inputMode = false;
         rememberInputMode(false);
@@ -145,6 +158,10 @@
       const result = await request('POST', null, { action: 'claimEditorLock' });
       lockToken = result.lockToken || '';
       if (!lockToken) throw new Error('入力権限を取得できませんでした。');
+      if (!starting && applyClosedResult(result.data)) {
+        await releaseInputLock();
+        return false;
+      }
       inputMode = true;
       rememberInputMode(true);
       startLockHeartbeat();
@@ -288,6 +305,11 @@
       current,
       lastGame,
       updatedAt: String(data.updatedAt || ''),
+      sessionId: String(data.sessionId || ''),
+      startedAt: String(data.startedAt || ''),
+      expiresAt: String(data.expiresAt || ''),
+      hasUserInput: data.hasUserInput === true,
+      endedReason: String(data.endedReason || ''),
       lock,
     };
   }
@@ -324,7 +346,80 @@
     viewers: $('#liveScoreViewers'),
     viewerCount: $('#liveScoreViewerCount'),
     viewerMax: $('#liveScoreViewerMax'),
+    timeoutNotice: $('#liveScoreTimeoutNotice'),
+    timeoutText: $('#liveScoreTimeoutText'),
+    extend: $('#liveScoreExtend'),
   };
+
+  function stopClosedEditor() {
+    clearTimeout(autoSaveTimer);
+    dirty = false;
+    userInputPending = false;
+    firstInputNeedsSave = false;
+    inputMode = false;
+    rememberInputMode(false);
+    stopLockHeartbeat();
+    editorCollapsed = false;
+    selectedScoreCell = null;
+    try { localStorage.removeItem(DRAFT_KEY); } catch (_) {}
+  }
+
+  function applyClosedResult(data) {
+    if (starting || !data || data.active !== false) return false;
+    // An old heartbeat must not close a newer match started on this page.
+    if (state.sessionId && data.sessionId && state.sessionId !== data.sessionId) return false;
+    state = normalize(data);
+    stopClosedEditor();
+    render();
+    return true;
+  }
+
+  function syncLifecycle(saved) {
+    state.sessionId = saved.sessionId;
+    state.startedAt = saved.startedAt;
+    state.expiresAt = saved.expiresAt;
+    state.hasUserInput = saved.hasUserInput || userInputPending;
+    state.endedReason = saved.endedReason;
+    state.updatedAt = saved.updatedAt;
+    state.lastGame = saved.lastGame;
+  }
+
+  function markUserInput() {
+    if (!state.active || !state.current || !inputMode || replayMode) return;
+    if (!state.hasUserInput) firstInputNeedsSave = true;
+    state.hasUserInput = true;
+    userInputPending = true;
+  }
+
+  function renderTimeoutNotice() {
+    if (!elements.timeoutNotice) return;
+    const remaining = Date.parse(state.expiresAt) - (Date.now() + serverClockOffset);
+    const show = state.active && inputMode && !replayMode && state.hasUserInput &&
+      Number.isFinite(remaining) && remaining > 0 && remaining <= EXTENSION_NOTICE_MS;
+    elements.timeoutNotice.hidden = !show;
+    if (show) {
+      elements.timeoutText.textContent = `自動終了まであと${Math.ceil(remaining / 60000)}分です。試合が続く場合は延長してください。`;
+      elements.extend.disabled = extending;
+    }
+  }
+
+  async function checkDeadline() {
+    renderTimeoutNotice();
+    if (!state.active || replayMode || checkingDeadline || saving || starting) return;
+    const startedAt = Date.parse(state.startedAt);
+    const expiresAt = Date.parse(state.expiresAt);
+    if (!Number.isFinite(startedAt) || !Number.isFinite(expiresAt)) return;
+    const deadline = state.hasUserInput ? expiresAt : Math.min(expiresAt, startedAt + EMPTY_START_TIMEOUT_MS);
+    if (Date.now() + serverClockOffset < deadline) return;
+    checkingDeadline = true;
+    try {
+      // Read the authoritative state even while a button/field still has focus.
+      // The server checks the deadline atomically against other devices' input.
+      await load({ silent: true, force: true });
+    } finally {
+      checkingDeadline = false;
+    }
+  }
 
   function renderViewers() {
     if (!elements.viewers) return;
@@ -338,6 +433,7 @@
     if (!state.active || replayMode || document.hidden) return;
     try {
       const result = await request('POST', null, { action: 'heartbeatViewer' });
+      if (applyClosedResult(result.data)) return;
       if (result.viewers) viewerStats = { count: Number(result.viewers.count || 0), max: Number(result.viewers.max || 0) };
       renderViewers();
     } catch (_) {}
@@ -385,9 +481,10 @@
       }
 
       group.addEventListener('click', () => {
-        if (replayMode) return;
+        if (replayMode || !inputMode || !state.current) return;
         const next = state.current.sbo[key] >= max ? 0 : state.current.sbo[key] + 1;
         state.current.sbo[key] = next;
+        markUserInput();
         dirty = true;
         changeVersion += 1;
         renderSbo();
@@ -459,6 +556,7 @@
       const next = score(input.value);
       if (tieBreak) state.current.tieBreaks[index][side] = next;
       else state.current.innings[side][index] = next;
+      markUserInput();
       dirty = true;
       changeVersion += 1;
       updateDisplayedTotals();
@@ -593,6 +691,7 @@
   }
 
   function render() {
+    renderTimeoutNotice();
     const showingEditor = state.active || replayMode;
     document.body.classList.toggle('live-score-focused', Boolean(showingEditor && !editorCollapsed));
     const returnBlocked = Boolean(state.active && inputMode && !replayMode);
@@ -660,13 +759,16 @@
   }
 
   function scheduleAutoSave() {
+    if (!state.active || !state.current) return;
     if (state.current) rememberDraft(state.current);
     clearTimeout(autoSaveTimer);
     updateStatus('自動保存中…');
-    autoSaveTimer = setTimeout(() => save('', { quiet: true, renderAfter: false }), 900);
+    // Send the first real input immediately so the empty-start deadline is
+    // cancelled on the server before the usual typing debounce.
+    autoSaveTimer = setTimeout(() => save('', { quiet: true, renderAfter: false }), firstInputNeedsSave ? 0 : 900);
   }
 
-  async function save(message, { quiet = false, renderAfter = true } = {}) {
+  async function save(message, { quiet = false, renderAfter = true, action = 'saveLiveScore' } = {}) {
     if (saving) return false;
     if (state.current) rememberDraft(state.current);
     clearTimeout(autoSaveTimer);
@@ -675,23 +777,40 @@
     root.classList.add('is-saving');
     try {
       state.updatedAt = new Date().toISOString();
-      const result = await request('POST', state, { action: 'saveLiveScore', lockToken });
+      saveInFlight = request('POST', state, { action, lockToken, userInput: userInputPending });
+      const result = await saveInFlight;
       const saved = normalize(result.data || state);
-      if (renderAfter) state = saved;
-      if (saved.current) rememberDraft(saved.current);
-      else state.updatedAt = saved.updatedAt;
-      if (changeVersion === savingVersion) dirty = false;
-      if (renderAfter) render();
+      const newerInput = changeVersion !== savingVersion;
+      if (!saved.active || (renderAfter && !newerInput)) state = saved;
+      else syncLifecycle(saved);
+      if (saved.hasUserInput) firstInputNeedsSave = false;
+      if (!newerInput) {
+        dirty = false;
+        userInputPending = false;
+      }
+      if (!saved.active) stopClosedEditor();
+      if (state.current) rememberDraft(state.current);
+      if (renderAfter || !saved.active) render();
       else updateStatus(state.visible ? '公開中・自動保存しました。' : '未公開・自動保存しました。');
       if (!quiet && window.showSaveNotice) window.showSaveNotice(message || '試合速報を保存しました');
       return true;
     } catch (error) {
+      if (error.data) {
+        if (!applyClosedResult(error.data)) {
+          state = normalize(error.data);
+          dirty = false;
+          userInputPending = false;
+          firstInputNeedsSave = false;
+          render();
+        }
+      }
       alert(error.message || '試合速報を保存できませんでした。');
       return false;
     } finally {
       saving = false;
+      saveInFlight = null;
       root.classList.remove('is-saving');
-      if (dirty && changeVersion !== savingVersion) scheduleAutoSave();
+      if (state.active && dirty && changeVersion !== savingVersion) scheduleAutoSave();
     }
   }
 
@@ -708,22 +827,41 @@
   }
 
   async function startGame(game = null, visible = true) {
-    if (!await claimInputLock()) return;
-    editorCollapsed = false;
-    replayMode = false;
-    state.active = true;
-    state.visible = visible;
-    state.current = normalizeGame(game) || blankGame();
+    if (starting) return;
+    starting = true;
     try {
-      const draft = rememberedDraft();
-      if (draft && draft.identity !== draftIdentity(state.current)) localStorage.removeItem(DRAFT_KEY);
-    } catch (_) {}
-    rememberDraft(state.current);
-    dirty = true;
-    changeVersion += 1;
-    render();
-    window.scrollTo({ top: 0, behavior: 'smooth' });
-    await save(visible ? '試合速報を開始・公開しました' : '試合速報を開始しました');
+      if (saveInFlight) await saveInFlight.catch(() => {});
+      if (!await claimInputLock()) return;
+      editorCollapsed = false;
+      replayMode = false;
+      state.active = true;
+      state.visible = visible;
+      state.current = normalizeGame(game) || blankGame();
+      state.sessionId = '';
+      state.startedAt = '';
+      state.expiresAt = '';
+      state.hasUserInput = false;
+      state.endedReason = '';
+      userInputPending = false;
+      firstInputNeedsSave = false;
+      try { localStorage.removeItem(DRAFT_KEY); } catch (_) {}
+      rememberDraft(state.current);
+      dirty = true;
+      changeVersion += 1;
+      render();
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+      const ok = await save(visible ? '試合速報を開始・公開しました' : '試合速報を開始しました', { action: 'startLiveScore' });
+      if (!ok && (!state.sessionId || !state.active)) {
+        state.active = false;
+        state.visible = false;
+        state.current = null;
+        stopClosedEditor();
+        await releaseInputLock();
+        render();
+      }
+    } finally {
+      starting = false;
+    }
   }
 
   elements.start.addEventListener('click', async () => {
@@ -757,6 +895,29 @@
       await leaveInputMode();
     } else {
       await enterInputMode();
+    }
+  });
+
+  elements.extend?.addEventListener('click', async () => {
+    if (!inputMode || !state.active || !state.hasUserInput || extending || replayMode) return;
+    extending = true;
+    renderTimeoutNotice();
+    try {
+      if (saveInFlight) await saveInFlight.catch(() => {});
+      if (dirty && !await save('', { quiet: true, renderAfter: false })) return;
+      const result = await request('POST', null, {
+        action: 'extendLiveScore', lockToken, sessionId: state.sessionId,
+      });
+      if (!applyClosedResult(result.data)) {
+        syncLifecycle(normalize(result.data));
+        updateStatus('自動終了までの時間を1時間延長しました。');
+      }
+    } catch (error) {
+      applyClosedResult(error.data);
+      alert(error.message || '速報を延長できませんでした。');
+    } finally {
+      extending = false;
+      renderTimeoutNotice();
     }
   });
 
@@ -833,14 +994,20 @@
 
 
   [elements.tournament, elements.startTime, elements.ground, elements.grade, elements.opponent]
-    .forEach(input => input.addEventListener('input', () => {
-      if (!inputMode || replayMode) return;
-      readFields();
-      dirty = true;
-      changeVersion += 1;      renderScoreRows();
-      renderTieBreaks();
-      scheduleAutoSave();
-    }));
+    .forEach(input => {
+      const recordInput = () => {
+        if (!inputMode || replayMode || !state.current) return;
+        readFields();
+        markUserInput();
+        dirty = true;
+        changeVersion += 1;
+        renderScoreRows();
+        renderTieBreaks();
+        scheduleAutoSave();
+      };
+      input.addEventListener('input', recordInput);
+      input.addEventListener('change', recordInput);
+    });
 
   elements.bases.addEventListener('click', event => {
     const button = event.target.closest('[data-base]');
@@ -848,6 +1015,7 @@
     const base = button.dataset.base;
     if (base === 'home') return;
     state.current.bases[base] = !state.current.bases[base];
+    markUserInput();
     dirty = true;
     changeVersion += 1;
     renderBases();
@@ -873,6 +1041,7 @@
   if (elements.resetBs) {
     elements.resetBs.addEventListener('click', async () => {
       if (!await ensureInputForReset()) return;
+      if (state.current.sbo.strikes || state.current.sbo.balls) markUserInput();
       state.current.sbo = {
         ...state.current.sbo,
         strikes: 0,
@@ -892,6 +1061,7 @@
   if (elements.resetStatus) {
     elements.resetStatus.addEventListener('click', async () => {
       if (!await ensureInputForReset()) return;
+      if (Object.values(state.current.sbo).some(Boolean) || Object.values(state.current.bases).some(Boolean)) markUserInput();
       state.current.sbo = { strikes: 0, balls: 0, outs: 0 };
       state.current.bases = { first: false, second: false, third: false };
       dirty = true;
@@ -909,7 +1079,9 @@
   elements.order.addEventListener('click', event => {
     const button = event.target.closest('[data-order]');
     if (!button || !state.current || replayMode || !inputMode) return;
+    if (state.current.battingOrder === button.dataset.order) return;
     state.current.battingOrder = button.dataset.order;
+    markUserInput();
     dirty = true;
     changeVersion += 1;
     render();
@@ -920,6 +1092,7 @@
     if (!state.current || state.current.tieBreaks.length >= 8 || replayMode || !inputMode) return;
     readFields();
     state.current.tieBreaks.push({ inning: 8 + state.current.tieBreaks.length, ours: '', opponent: '' });
+    markUserInput();
     dirty = true;
     changeVersion += 1;
     renderScoreRows();
@@ -932,6 +1105,7 @@
     const last = state.current.tieBreaks[state.current.tieBreaks.length - 1];
     if (!confirm(`${last.inning}回のタイブレークを削除しますか？`)) return;
     state.current.tieBreaks.pop();
+    markUserInput();
     dirty = true;
     changeVersion += 1;
     renderScoreRows();
@@ -943,6 +1117,9 @@
     if (!inputMode || replayMode) return;
     readFields();
     if (!confirm('この試合の速報を終了しますか？\n直前の試合として保存され、速報は非表示になります。')) return;
+    clearTimeout(autoSaveTimer);
+    if (saveInFlight) await saveInFlight.catch(() => {});
+    if (!state.active || !state.current) return;
     const completed = normalizeGame(state.current);
     completed.completedAt = new Date().toISOString();
     rememberLastGame(completed);
@@ -963,20 +1140,27 @@
   });
 
   async function load({ silent = false, force = false } = {}) {
-    if (!force && (replayMode || dirty || saving || root.contains(document.activeElement))) return;
+    if (starting || (!force && (replayMode || dirty || saving || root.contains(document.activeElement)))) return;
+    const loadingVersion = changeVersion;
+    const loadingSession = state.sessionId || '';
     try {
       const result = await request();
-      const previousActive = state.active;
-      state = normalize(result.data);
+      if (starting || (state.sessionId || '') !== loadingSession) return;
+      const loaded = normalize(result.data);
+      if (loaded.active && loaded.sessionId === state.sessionId &&
+          (dirty || saving || changeVersion !== loadingVersion)) {
+        syncLifecycle(loaded);
+        return;
+      }
+      state = loaded;
       if (result.viewers) viewerStats = { count: Number(result.viewers.count || 0), max: Number(result.viewers.max || 0) };
       selectedScoreCell = state.current?.selectedScoreCell || null;
       // Restore input mode only after reclaiming the server-side editor lock.
       const wantsInput = Boolean(state.active && rememberedInputMode());
       inputMode = false;
       if (!state.active) {
-        rememberInputMode(false);
+        stopClosedEditor();
         lockToken = '';
-        stopLockHeartbeat();
       } else if (wantsInput) {
         await claimInputLock({ quiet: true });
       }
@@ -999,10 +1183,17 @@
     await load();
     render();
     pollTimer = setInterval(() => load({ silent: true }), 5000);
+    setInterval(checkDeadline, 1000);
     await heartbeatViewer();
     viewerHeartbeatTimer = setInterval(heartbeatViewer, 10000);
   })();
   window.addEventListener('resize', () => { fitAllLiveScoreTeamNames(); });
-  document.addEventListener('visibilitychange', () => { if (!document.hidden) heartbeatViewer(); });
+  document.addEventListener('visibilitychange', () => {
+    if (!document.hidden) {
+      heartbeatViewer();
+      checkDeadline();
+    }
+  });
 
 })();
+

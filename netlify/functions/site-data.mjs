@@ -4,6 +4,7 @@ import { verifyAccessPassword } from "./_access-password.mjs";
 import { accessRateLimitResponse } from "./_access-rate-limit.mjs";
 import { getStore } from "@netlify/blobs";
 import { readHeroBootstrapData } from "./_hero-bootstrap-cache.mjs";
+import { updateLiveScoreLifecycle } from "./_live-score-lifecycle.mjs";
 import {
   boardSessionCookie,
   boardSessionIsValid,
@@ -838,19 +839,6 @@ async function claimLiveScoreLock(store, deviceId) {
   return { token, lock: publicLiveScoreLock(confirmed, id) };
 }
 
-function normalizeLiveScoreData(value) {
-  if (!value || typeof value !== "object" || Array.isArray(value)) return null;
-  const current = normalizeLiveScoreGame(value.current);
-  const active = Boolean(value.active && current);
-  return {
-    active,
-    visible: Boolean(value.visible && active),
-    current: active ? current : null,
-    lastGame: normalizeLiveScoreGame(value.lastGame),
-    updatedAt: new Date().toISOString(),
-  };
-}
-
 export default async (request, context) => {
   try {
     const url = new URL(request.url);
@@ -963,6 +951,19 @@ export default async (request, context) => {
         if (!accessGranted) {
           return json({ error: "unauthorized" }, 401);
         }
+      }
+
+      if (section === "live-score") {
+        const deviceId = String(request.headers.get("x-live-score-device-id") || "");
+        const lifecycle = await updateLiveScoreLifecycle(store, key, { normalizeGame: normalizeLiveScoreGame });
+        const lock = await getLiveScoreLock(store);
+        return json({
+          ...lifecycle,
+          lock: publicLiveScoreLock(lock, deviceId),
+          viewers: lifecycle.data?.active
+            ? await publicLiveScoreViewers(store, lock?.deviceId || "")
+            : { count: 0, max: 0 },
+        }, lifecycle.status || 200);
       }
 
       if (section === "board-latest-update") {
@@ -1555,12 +1556,6 @@ export default async (request, context) => {
         });
       }
 
-      if (section === "live-score") {
-        const deviceId = String(request.headers.get("x-live-score-device-id") || "");
-        const lock = await getLiveScoreLock(store);
-        return json({ data: data ?? [], lock: publicLiveScoreLock(lock, deviceId), viewers: await publicLiveScoreViewers(store, lock?.deviceId || "") });
-      }
-
       return json({
         data: data ?? []
       });
@@ -1765,52 +1760,62 @@ export default async (request, context) => {
       const action = String(body?.action || "");
       const deviceId = String(body?.deviceId || "").trim().slice(0, 160);
       if (action === "heartbeatViewer") {
-        const currentData = await store.get(key, { type: "json", consistency: "strong" });
-        if (!currentData?.active) return json({ ok: true, viewers: { count: 0, max: 0 } });
-        const viewers = await heartbeatLiveScoreViewer(store, deviceId);
+        const lifecycle = await updateLiveScoreLifecycle(store, key, { normalizeGame: normalizeLiveScoreGame });
+        if (!lifecycle.ok) return json(lifecycle, lifecycle.status || 409);
+        if (!lifecycle.data?.active) return json({ ...lifecycle, viewers: { count: 0, max: 0 } });
+        await heartbeatLiveScoreViewer(store, deviceId);
         const currentLock = await getLiveScoreLock(store);
-        return json({ ok: true, viewers: await publicLiveScoreViewers(store, currentLock?.deviceId || "") });
+        return json({ ...lifecycle, viewers: await publicLiveScoreViewers(store, currentLock?.deviceId || "") });
       }
       if (action === "claimEditorLock") {
+        const lifecycle = await updateLiveScoreLifecycle(store, key, { normalizeGame: normalizeLiveScoreGame });
+        if (!lifecycle.ok) return json(lifecycle, lifecycle.status || 409);
         const claimed = await claimLiveScoreLock(store, deviceId);
         if (claimed.error) return json({ error: "入力端末を確認してください。" }, 400);
-        if (claimed.conflict) return json({ error: "現在、別の端末で入力中です。", lock: claimed.lock }, 409);
-        return json({ ok: true, lockToken: claimed.token, lock: claimed.lock });
+        if (claimed.conflict) return json({ ...lifecycle, ok: false, error: "現在、別の端末で入力中です。", lock: claimed.lock }, 409);
+        return json({ ...lifecycle, lockToken: claimed.token, lock: claimed.lock });
       }
       if (action === "heartbeatEditorLock" || action === "releaseEditorLock") {
+        const lifecycle = await updateLiveScoreLifecycle(store, key, { normalizeGame: normalizeLiveScoreGame });
+        if (!lifecycle.ok) return json(lifecycle, lifecycle.status || 409);
         const currentLock = await getLiveScoreLock(store);
         const token = String(body?.lockToken || "");
-        if (!currentLock || currentLock.deviceId !== deviceId || currentLock.token !== token) return json({ error: "入力権限がありません。" }, 409);
+        if (!currentLock || currentLock.deviceId !== deviceId || currentLock.token !== token) return json({ ...lifecycle, ok: false, error: "入力権限がありません。", lock: publicLiveScoreLock(currentLock, deviceId) }, 409);
         if (action === "releaseEditorLock") {
           await store.delete(LIVE_SCORE_LOCK_KEY);
-          return json({ ok: true, lock: { active: false, owner: false, expiresAt: 0 } });
+          return json({ ...lifecycle, lock: { active: false, owner: false, expiresAt: 0 } });
         }
+        // Do not keep an abandoned editor lock alive after the match closes.
+        // Let its short TTL expire rather than deleting a possibly newer lock.
+        if (!lifecycle.data?.active) return json({ ...lifecycle, lock: publicLiveScoreLock(currentLock, deviceId) });
         const renewed = { ...currentLock, expiresAt: Date.now() + LIVE_SCORE_LOCK_TTL_MS };
         await store.setJSON(LIVE_SCORE_LOCK_KEY, renewed);
         const confirmed = await getLiveScoreLock(store);
-        if (!confirmed || confirmed.token !== token || confirmed.deviceId !== deviceId) return json({ error: "入力権限がありません。" }, 409);
-        return json({ ok: true, lockToken: token, lock: publicLiveScoreLock(confirmed, deviceId) });
+        if (!confirmed || confirmed.token !== token || confirmed.deviceId !== deviceId) return json({ ...lifecycle, ok: false, error: "入力権限がありません。" }, 409);
+        return json({ ...lifecycle, lockToken: token, lock: publicLiveScoreLock(confirmed, deviceId) });
       }
-      if (action !== "saveLiveScore") return json({ error: "不正な試合速報操作です。" }, 400);
+      if (!["startLiveScore", "saveLiveScore", "extendLiveScore"].includes(action)) return json({ error: "不正な試合速報操作です。" }, 400);
 
       const currentLock = await getLiveScoreLock(store);
       const token = String(body?.lockToken || "");
       if (!currentLock || currentLock.deviceId !== deviceId || currentLock.token !== token) {
-        return json({ error: "現在、別の端末で入力中です。入力モードを取得し直してください。", lock: publicLiveScoreLock(currentLock, deviceId) }, 409);
+        const lifecycle = await updateLiveScoreLifecycle(store, key, { normalizeGame: normalizeLiveScoreGame });
+        return json({ ...lifecycle, ok: false, error: "現在、別の端末で入力中です。入力モードを取得し直してください。", lock: publicLiveScoreLock(currentLock, deviceId) }, 409);
       }
       const serialized = JSON.stringify(body?.data ?? null);
       if (serialized.length > 20000) return json({ error: "試合速報のデータが大きすぎます。" }, 413);
-      const normalized = normalizeLiveScoreData(body?.data);
-      if (!normalized) return json({ error: "試合速報の内容を確認してください。" }, 400);
-      const existing = await store.get(key, { type: "json", consistency: "strong" });
-      if (normalized.active && !existing?.active) {
+      const lifecycle = await updateLiveScoreLifecycle(store, key, {
+        action,
+        data: body?.data,
+        sessionId: body?.sessionId,
+        userInput: body?.userInput === true,
+        normalizeGame: normalizeLiveScoreGame,
+      });
+      if (!lifecycle.ok) return json({ ...lifecycle, lock: publicLiveScoreLock(currentLock, deviceId) }, lifecycle.status || 409);
+      if (lifecycle.started) {
         await store.setJSON(LIVE_SCORE_VIEWERS_KEY, { clients: {}, max: 0 });
-      } else if (!normalized.active && existing?.active) {
-        await store.delete(LIVE_SCORE_VIEWERS_KEY);
       }
-      if (!normalized.lastGame) normalized.lastGame = normalizeLiveScoreGame(existing?.lastGame);
-      await store.setJSON(key, normalized);
-      return json({ ok: true, data: normalized, lock: publicLiveScoreLock(currentLock, deviceId) });
+      return json({ ...lifecycle, lock: publicLiveScoreLock(currentLock, deviceId) });
     }
 
     const boardDirectSection =
@@ -2627,5 +2632,6 @@ export default async (request, context) => {
     }, 500);
   }
 };
+
 
 
