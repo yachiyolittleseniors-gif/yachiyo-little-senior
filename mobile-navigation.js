@@ -4,6 +4,7 @@
   // Store a short-lived one-use nonce and include it in that navigation URL,
   // so Safari's passive tab restoration can never re-trigger a passkey sheet.
   const boardIntentKey='yachiyoBoardEntryIntentV2';
+  const boardPathPattern=/^\/board(?:\.html)?\/?$/;
   function makeBoardIntent(){
     if(typeof crypto!=='undefined'&&crypto.randomUUID)return crypto.randomUUID();
     const bytes=new Uint8Array(16);
@@ -19,11 +20,16 @@
     try{
       const url=new URL(link.href,location.href);
       // Match deployed Pretty URLs as well as dynamically-created .html links.
-      if(url.origin!==location.origin||!/^\/board(?:\.html)?\/?$/.test(url.pathname))return;
+      if(url.origin!==location.origin||!boardPathPattern.test(url.pathname))return;
       // Child pages return to their parent board via their existing saved session.
       // Do not transform these normal in-app navigation links into a new login.
       const from=url.searchParams.get('from');
       if(['attendance','player','coach','documents'].includes(from))return;
+      // Update-history links stay within an already-open team page.
+      // Let board-access revalidate the saved session without a new login intent.
+      const focus=url.searchParams.get('focus');
+      if(boardPathPattern.test(location.pathname)&&
+        ['schedule','duty-roster','rules'].includes(focus))return;
       const nonce=makeBoardIntent();
       sessionStorage.setItem(boardIntentKey,JSON.stringify({nonce,at:Date.now()}));
       url.searchParams.set('entry','home');

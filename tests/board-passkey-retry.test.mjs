@@ -4,6 +4,7 @@ import { readFileSync } from 'node:fs';
 import vm from 'node:vm';
 
 const source = readFileSync(new URL('../board-access.js', import.meta.url), 'utf8');
+const navigationSource = readFileSync(new URL('../mobile-navigation.js', import.meta.url), 'utf8');
 const entryKey = 'yachiyoBoardEntryIntentV2';
 const skipKey = 'yachiyoBoardPasskeySkipUntil';
 
@@ -16,10 +17,16 @@ function memoryStorage() {
   };
 }
 
-async function visit({ session, local, nonce = '', referrer = 'https://team.example/', userAgent = 'Mozilla/5.0 (iPhone; CPU iPhone OS 18_0 like Mac OS X)', supported = true, authenticate }) {
+async function visit({ session, local, nonce = '', destination = 'https://team.example/board.html', referrer = 'https://team.example/', userAgent = 'Mozilla/5.0 (iPhone; CPU iPhone OS 18_0 like Mac OS X)', supported = true, authenticate, verifyAccess }) {
   if (nonce) session.setItem(entryKey, JSON.stringify({ nonce, at: Date.now() }));
-  const search = nonce ? '?entry=home&yls_intent=' + nonce : '';
+  const target = new URL(destination);
+  if (nonce) {
+    target.searchParams.set('entry', 'home');
+    target.searchParams.set('yls_intent', nonce);
+  }
+  const search = target.search;
   const redirects = [];
+  const verifiedPasswords = [];
   let passkeyCalls = 0, passwordCalls = 0;
   const sandbox = {
     window: {
@@ -44,7 +51,8 @@ async function visit({ session, local, nonce = '', referrer = 'https://team.exam
     localStorage: local,
     location: {
       origin: 'https://team.example',
-      href: 'https://team.example/board.html' + search,
+      href: target.href,
+      pathname: target.pathname,
       search,
       replace(target) { redirects.push(target); },
     },
@@ -53,11 +61,59 @@ async function visit({ session, local, nonce = '', referrer = 'https://team.exam
     URL, URLSearchParams,
     prompt() { passwordCalls++; return null; },
     alert() { throw new Error('Unexpected alert'); },
-    fetch() { throw new Error('Unexpected network request'); },
+    async fetch(url, options) {
+      if (!verifyAccess) throw new Error('Unexpected network request');
+      assert.equal(url, '/.netlify/functions/site-data?section=access-settings');
+      assert.equal(options.method, 'POST');
+      const body = JSON.parse(options.body);
+      assert.equal(body.action, 'verifyAccessPassword');
+      verifiedPasswords.push(body.password);
+      const accepted = verifyAccess(body.password);
+      return {
+        ok: accepted,
+        status: accepted ? 200 : 401,
+        async json() { return accepted ? { token: 'renewed-server-token' } : {}; },
+      };
+    },
   };
   vm.runInContext(source, vm.createContext(sandbox));
   const allowed = await sandbox.window.boardAccessReady;
-  return { allowed, passkeyCalls, passwordCalls, redirects };
+  return { allowed, passkeyCalls, passwordCalls, redirects, verifiedPasswords, visibility: sandbox.document.documentElement.style.visibility };
+}
+
+// Run the shipped navigation listener, including its capture phase, before
+// loading the destination's real board-access script. No server data is read.
+function clickBoardLink({ session, fromPath, href }) {
+  const location = new URL(fromPath, 'https://team.example');
+  const handlers = [];
+  const link = {
+    href: new URL(href, location.href).href,
+    target: '',
+    setAttribute(name, value) {
+      assert.equal(name, 'href');
+      this.href = new URL(value, location.href).href;
+    },
+  };
+  const sandbox = {
+    document: {
+      readyState: 'loading',
+      currentScript: null,
+      addEventListener(type, handler, capture) {
+        if (type === 'click') handlers.push({ handler, capture });
+      },
+    },
+    location,
+    sessionStorage: session,
+    crypto: { randomUUID() { return '99999999-9999-4999-8999-999999999999'; } },
+    URL, URLSearchParams,
+  };
+  vm.runInContext(navigationSource, vm.createContext(sandbox));
+  assert.ok(handlers.some(({ capture }) => capture === true), 'the real capture listener is installed');
+  for (const { handler } of handlers) handler({
+    isTrusted: true, defaultPrevented: false, button: 0,
+    target: { closest(selector) { assert.equal(selector, 'a[href]'); return link; } },
+  });
+  return new URL(link.href);
 }
 
 test('canceling a team passkey does not suppress it on the next Home lock tap', async () => {
@@ -208,3 +264,118 @@ test('Android: recovery marker cannot start WebAuthn from a direct/non-Home URL'
   assert.equal(next.passkeyCalls, 0);
   assert.equal(next.passwordCalls, 1);
 });
+
+test('update-history links reuse the server-verified board session without another passkey', async t => {
+  const routes = [
+    ['/board', '/board.html'],
+    ['/board', '/board'],
+    ['/board.html', '/board.html'],
+    ['/board/', '/board/'],
+    ['/board.html/', '/board.html/'],
+  ];
+  for (const [fromPath, targetPath] of routes) {
+    for (const focus of ['schedule', 'duty-roster', 'rules']) {
+      await t.test(`${fromPath} → ${targetPath}, focus=${focus}`, async () => {
+        const session = memoryStorage(), local = memoryStorage();
+        session.setItem('yachiyoAttendancePass', 'existing-server-token');
+        local.setItem('yachiyoBoardPasskeyRegistered', '1');
+        if (fromPath === '/board' && targetPath === '/board.html') {
+          session.setItem('yachiyoBoardPasskeyJustVerified', String(Date.now()));
+        }
+        const params = new URLSearchParams({ focus });
+        if (focus === 'schedule') {
+          params.set('focusTitle', '体験会（小学6年生）');
+          params.set('focusUpdatedAt', '2026-10-30T09:00:00.000Z');
+        }
+        const target = clickBoardLink({ session, fromPath, href: `${targetPath}?${params}` });
+        const entryIntent = session.getItem(entryKey);
+        const next = await visit({
+          session, local, destination: target.href,
+          referrer: new URL(fromPath, 'https://team.example').href,
+          authenticate: async () => ({ token: 'unexpected-native-token' }),
+          verifyAccess: token => token === 'existing-server-token',
+        });
+        assert.equal(next.passkeyCalls, 0, 'viewing an update must not invoke native passkey authentication');
+        assert.equal(next.passwordCalls, 0);
+        assert.equal(next.allowed, true);
+        assert.equal(next.visibility, '');
+        assert.deepEqual(next.verifiedPasswords, ['existing-server-token'], 'the saved credential is verified by the server');
+        assert.equal(session.getItem('yachiyoAttendancePass'), 'renewed-server-token');
+        assert.equal(entryIntent, null);
+        assert.equal(target.searchParams.has('entry'), false);
+        assert.equal(target.searchParams.has('yls_intent'), false);
+        for (const [key, value] of params) assert.equal(target.searchParams.get(key), value);
+      });
+    }
+  }
+});
+
+test('an internal calendar link never grants access with an absent or expired session', async t => {
+  for (const saved of ['', 'expired-server-token']) {
+    await t.test(saved ? 'expired credential' : 'no credential', async () => {
+      const session = memoryStorage(), local = memoryStorage();
+      if (saved) session.setItem('yachiyoAttendancePass', saved);
+      local.setItem('yachiyoBoardPasskeyRegistered', '1');
+      const target = clickBoardLink({ session, fromPath: '/board', href: '/board.html?focus=schedule' });
+      const next = await visit({
+        session, local, destination: target.href, referrer: 'https://team.example/board',
+        authenticate: async () => ({ token: 'unexpected-native-token' }),
+        verifyAccess: () => false,
+      });
+      assert.equal(next.allowed, false);
+      assert.equal(next.visibility, 'hidden');
+      assert.equal(next.passkeyCalls, 0);
+      assert.equal(next.passwordCalls, 1, 'invalid sessions still require a password');
+      assert.deepEqual(next.verifiedPasswords, saved ? [saved] : []);
+      assert.deepEqual(next.redirects, ['./']);
+      assert.equal(session.getItem('yachiyoAttendancePass'), null);
+    });
+  }
+});
+
+test('a Home link to the calendar still starts a fresh authenticated board entry', async () => {
+  const session = memoryStorage(), local = memoryStorage();
+  session.setItem('yachiyoAttendancePass', 'old-server-token');
+  local.setItem('yachiyoBoardPasskeyRegistered', '1');
+  const target = clickBoardLink({ session, fromPath: '/', href: '/board?focus=schedule' });
+  assert.equal(target.searchParams.get('entry'), 'home');
+  assert.ok(target.searchParams.get('yls_intent'));
+  assert.ok(session.getItem(entryKey));
+  const next = await visit({
+    session, local, destination: target.href,
+    authenticate: async () => ({ token: 'fresh-home-passkey-token' }),
+    verifyAccess: () => true,
+  });
+  assert.equal(next.allowed, true);
+  assert.equal(next.passkeyCalls, 1);
+  assert.equal(next.passwordCalls, 0);
+  assert.deepEqual(next.verifiedPasswords, [], 'Home entry cannot reuse an old board session');
+  assert.equal(session.getItem('yachiyoAttendancePass'), 'fresh-home-passkey-token');
+});
+
+test('protected child-page returns continue to verify and reuse the board session', async t => {
+  const children = [
+    ['attendance', 'attendance'],
+    ['player-attendance', 'player'],
+    ['coach-attendance', 'coach'],
+    ['secretariat-documents', 'documents'],
+  ];
+  for (const [page, from] of children) {
+    await t.test(page, async () => {
+      const session = memoryStorage(), local = memoryStorage();
+      session.setItem('yachiyoAttendancePass', 'existing-server-token');
+      const target = clickBoardLink({ session, fromPath: `/${page}`, href: `/board.html?from=${from}` });
+      assert.equal(session.getItem(entryKey), null);
+      const next = await visit({
+        session, local, destination: target.href, referrer: `https://team.example/${page}`,
+        authenticate: async () => ({ token: 'unexpected-native-token' }),
+        verifyAccess: token => token === 'existing-server-token',
+      });
+      assert.equal(next.allowed, true);
+      assert.equal(next.passkeyCalls, 0);
+      assert.equal(next.passwordCalls, 0);
+      assert.deepEqual(next.verifiedPasswords, ['existing-server-token']);
+    });
+  }
+});
+
