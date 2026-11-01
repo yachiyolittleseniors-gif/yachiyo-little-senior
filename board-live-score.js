@@ -6,6 +6,7 @@
   const INPUT_MODE_KEY = 'yachiyoLiveScoreInputMode';
   const EMPTY_START_TIMEOUT_MS = 3 * 60 * 1000;
   const EXTENSION_NOTICE_MS = 30 * 60 * 1000;
+  const SAVE_RETRY_DELAYS = [1000, 2000, 4000];
   const $ = selector => document.querySelector(selector);
   const root = $('#liveScoreCard');
   if (!root) return;
@@ -39,6 +40,9 @@
   let serverClockOffset = 0;
   let changeVersion = 0;
   let autoSaveTimer = 0;
+  let saveRetryTimer = 0;
+  let saveRetryCount = 0;
+  let saveFailureMessage = '';
   let editorCollapsed = false;
   let replayMode = false;
   let beforeReplay = null;
@@ -134,6 +138,52 @@
     lockHeartbeatTimer = 0;
   }
 
+  function isRetryableError(error) {
+    const status = Number(error?.status || 0);
+    return !status || status === 408 || status === 429 || status >= 500;
+  }
+
+  function clearSaveRetry(reset = true) {
+    clearTimeout(saveRetryTimer);
+    saveRetryTimer = 0;
+    if (reset) saveRetryCount = 0;
+  }
+
+  function canRetrySave() {
+    return Boolean(state.active && state.current && inputMode && lockToken && !starting && !replayMode);
+  }
+
+  function scheduleSaveRetry() {
+    clearTimeout(autoSaveTimer);
+    if (!dirty || !canRetrySave() || saveRetryTimer) return;
+    if (saveRetryCount >= SAVE_RETRY_DELAYS.length) {
+      saveFailureMessage = '未保存です。通信を確認し、もう一度入力してください。';
+      updateStatus();
+      return;
+    }
+    const delay = SAVE_RETRY_DELAYS[saveRetryCount++];
+    saveFailureMessage = '未保存・通信を再確認して保存をやり直しています。';
+    updateStatus();
+    saveRetryTimer = setTimeout(() => {
+      saveRetryTimer = 0;
+      if (dirty && canRetrySave()) save('', { quiet: true, renderAfter: false });
+    }, delay);
+  }
+
+  function stopInputAfterError(message) {
+    clearTimeout(autoSaveTimer);
+    clearSaveRetry();
+    lockToken = '';
+    inputMode = false;
+    rememberInputMode(false);
+    stopLockHeartbeat();
+    saveFailureMessage = dirty
+      ? `未保存の入力をこの画面に残しています。${message}`
+      : message;
+    render();
+    updateStatus();
+  }
+
   function startLockHeartbeat() {
     stopLockHeartbeat();
     lockHeartbeatTimer = setInterval(async () => {
@@ -142,18 +192,28 @@
         const result = await request('POST', null, { action: 'heartbeatEditorLock', lockToken });
         if (applyClosedResult(result.data)) return;
         lockToken = result.lockToken || lockToken;
+        if (!dirty && !saving && saveFailureMessage) {
+          saveFailureMessage = '';
+          updateStatus('接続を確認しました。');
+        }
       } catch (error) {
-        applyClosedResult(error.data);
-        lockToken = '';
-        inputMode = false;
-        rememberInputMode(false);
-        stopLockHeartbeat();
-        render();
+        if (applyClosedResult(error.data)) return;
+        if (isRetryableError(error)) {
+          saveFailureMessage = dirty
+            ? '未保存の入力があります。通信を再確認しています。'
+            : '接続を確認できません。再接続を待っています。';
+          updateStatus();
+          return;
+        }
+        stopInputAfterError('入力権限を確認してください。');
       }
     }, 15000);
   }
 
   async function claimInputLock({ quiet = false } = {}) {
+    if (!starting && !inputMode && dirty) {
+      if (quiet || !confirm('この端末に未保存の入力があります。最新の保存内容に切り替えますか？\nキャンセルすると、未保存の内容をこの画面に残します。')) return false;
+    }
     const claimingVersion = changeVersion;
     try {
       const result = await request('POST', null, { action: 'claimEditorLock' });
@@ -176,6 +236,8 @@
         dirty = false;
         userInputPending = false;
         firstInputNeedsSave = false;
+        saveFailureMessage = '';
+        clearSaveRetry();
       }
       inputMode = true;
       rememberInputMode(true);
@@ -368,6 +430,8 @@
 
   function stopClosedEditor() {
     clearTimeout(autoSaveTimer);
+    clearSaveRetry();
+    saveFailureMessage = '';
     dirty = false;
     userInputPending = false;
     firstInputNeedsSave = false;
@@ -677,7 +741,7 @@
   }
 
   function updateStatus(message = '') {
-    elements.status.textContent = message || (state.visible
+    elements.status.textContent = saveFailureMessage || message || (state.visible
       ? '公開中・入力内容は自動保存されます。'
       : '未公開・入力内容は自動保存されます。');
     elements.updated.textContent = formatUpdated(state.updatedAt);
@@ -777,6 +841,11 @@
     if (!state.active || !state.current) return;
     if (state.current) rememberDraft(state.current);
     clearTimeout(autoSaveTimer);
+    if (!canRetrySave()) {
+      if (dirty) updateStatus();
+      return;
+    }
+    clearSaveRetry();
     updateStatus('自動保存中…');
     // Send the first real input immediately so the empty-start deadline is
     // cancelled on the server before the usual typing debounce.
@@ -785,17 +854,34 @@
 
   async function save(message, { quiet = false, renderAfter = true, action = 'saveLiveScore' } = {}) {
     if (saving) return false;
+    if (!inputMode || !lockToken) {
+      clearTimeout(autoSaveTimer);
+      clearSaveRetry();
+      if (dirty) {
+        saveFailureMessage ||= '未保存の入力があります。入力権限を確認してください。';
+        updateStatus();
+      }
+      return false;
+    }
     if (state.current) rememberDraft(state.current);
     clearTimeout(autoSaveTimer);
+    clearSaveRetry(false);
     const savingVersion = changeVersion;
+    const retryableSave = action === 'saveLiveScore' && canRetrySave();
+    const finishingGame = action === 'saveLiveScore' && !state.active
+      ? normalizeGame(state.lastGame) : null;
+    let savedSuccessfully = false;
+    let retrySave = false;
     saving = true;
     root.classList.add('is-saving');
     try {
-      state.updatedAt = new Date().toISOString();
       saveInFlight = request('POST', state, { action, lockToken, userInput: userInputPending });
       const result = await saveInFlight;
       const saved = normalize(result.data || state);
       const newerInput = changeVersion !== savingVersion;
+      savedSuccessfully = true;
+      clearSaveRetry();
+      saveFailureMessage = '';
       if (!saved.active || (renderAfter && !newerInput)) state = saved;
       else syncLifecycle(saved);
       if (saved.hasUserInput) firstInputNeedsSave = false;
@@ -806,26 +892,48 @@
       if (!saved.active) stopClosedEditor();
       if (state.current) rememberDraft(state.current);
       if (renderAfter || !saved.active) render();
-      else updateStatus(state.visible ? '公開中・自動保存しました。' : '未公開・自動保存しました。');
+      else updateStatus(dirty
+        ? '未保存の変更があります。自動保存を続けています。'
+        : (state.visible ? '公開中・自動保存しました。' : '未公開・自動保存しました。'));
       if (!quiet && window.showSaveNotice) window.showSaveNotice(message || '試合速報を保存しました');
       return true;
     } catch (error) {
-      if (error.data) {
-        if (!applyClosedResult(error.data)) {
-          state = normalize(error.data);
-          dirty = false;
-          userInputPending = false;
-          firstInputNeedsSave = false;
+      if (applyClosedResult(error.data)) return false;
+      if (finishingGame) {
+        // A failed finish must leave the entered game available for an
+        // explicit retry. The server session guard prevents reopening a
+        // match if the finish reached the server but its response was lost.
+        state.active = true;
+        state.visible = true;
+        state.current = finishingGame;
+        state.current.completedAt = '';
+        dirty = true;
+        clearSaveRetry();
+        if (isRetryableError(error)) {
+          saveFailureMessage = '試合終了を保存できませんでした。入力内容を残しています。もう一度「試合終了」を押してください。';
           render();
+          updateStatus();
+        } else {
+          stopInputAfterError(error.message || '入力権限を確認してください。');
         }
+      } else if (retryableSave && isRetryableError(error)) {
+        dirty = true;
+        retrySave = true;
+      } else if (retryableSave) {
+        stopInputAfterError(error.message || '入力権限を確認してください。');
+      } else {
+        clearSaveRetry();
+        saveFailureMessage = error.message || '保存できませんでした。';
+        updateStatus();
+        if (!quiet) alert(saveFailureMessage);
       }
-      alert(error.message || '試合速報を保存できませんでした。');
       return false;
     } finally {
       saving = false;
       saveInFlight = null;
       root.classList.remove('is-saving');
-      if (state.active && dirty && changeVersion !== savingVersion) scheduleAutoSave();
+      if (retrySave) scheduleSaveRetry();
+      else if (savedSuccessfully && state.active && dirty && changeVersion !== savingVersion) scheduleAutoSave();
     }
   }
 
@@ -883,6 +991,7 @@
       }
     } finally {
       starting = false;
+      if (dirty && canRetrySave()) scheduleAutoSave();
     }
   }
 

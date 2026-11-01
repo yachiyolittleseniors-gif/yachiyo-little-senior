@@ -56,6 +56,7 @@ function fixture({ inputMode = false, focused = true, starting = false, remote =
   const sandbox = {
     state: match(), remote: copy(remote), inputMode, starting,
     dirty: false, saving: false, saveInFlight: null, replayMode: false, changeVersion: 0,
+    saveFailureMessage: '', saveRetryCount: 0, saveRetryTimer: 0,
     userInputPending: false, firstInputNeedsSave: false, lockToken: '',
     selectedScoreCell: null, autoSaveTimer: 0, editorCollapsed: false,
     pollTimer: 1, viewerStats: { count: 0, max: 0 }, remembered: false,
@@ -81,12 +82,72 @@ function fixture({ inputMode = false, focused = true, starting = false, remote =
     rememberedLastGame() { return null; },
     rememberLastGame() {}, rememberDraft() {}, render() {},
     renderSbo() {}, renderBases() {}, updateStatus() {}, scheduleAutoSave() {},
-    startLockHeartbeat() {}, stopLockHeartbeat() {}, clearTimeout() {},
+    startLockHeartbeat() {}, stopLockHeartbeat() {}, clearTimeout() {}, clearSaveRetry() {},
     heartbeatViewer() {}, checkDeadline() {},
     alert(message) { alerts.push(message); },
   };
   vm.runInContext(`${functions}\n${resetListeners}\n${visibilityListener}`, vm.createContext(sandbox));
   return { sandbox, calls, writes, listeners, alerts, idleMessage };
+}
+
+function saveFixture() {
+  const f = fixture({ inputMode: true });
+  const timeouts = new Map(), intervals = new Map(), statuses = [], drafts = [], replies = [];
+  let nextTimer = 0;
+  Object.assign(f.sandbox, {
+    saveRetryTimer: 0, saveRetryCount: 0, saveFailureMessage: '', lockHeartbeatTimer: 0,
+    lockToken: 'claimed-editor-lock', dirty: true, userInputPending: true,
+    window: {},
+    setTimeout(callback, delay) { const id = ++nextTimer; timeouts.set(id, { callback, delay }); return id; },
+    clearTimeout(id) { timeouts.delete(id); },
+    setInterval(callback, delay) { const id = ++nextTimer; intervals.set(id, { callback, delay }); return id; },
+    clearInterval(id) { intervals.delete(id); },
+    updateStatus(message) { statuses.push(message); },
+    rememberDraft(game) { drafts.push(copy(game)); },
+    async request(method = 'GET', data, extra = {}) {
+      f.calls.push({ method, data: data && copy(data), ...extra });
+      const reply = replies.shift();
+      if (reply instanceof Error) throw reply;
+      if (reply) return copy(reply);
+      if (extra.action === 'saveLiveScore') f.writes.push(copy(data));
+      return { data: copy(data || f.sandbox.remote), lockToken: 'claimed-editor-lock' };
+    },
+  });
+  f.sandbox.root.classList = { add() {}, remove() {} };
+  f.sandbox.state.current.innings.ours[0] = 9;
+  const retryConstant = source.match(/^  const SAVE_RETRY_DELAYS = .*;$/m);
+  assert.ok(retryConstant, 'shipped retry delays are declared');
+  const syncHelpers = [
+    'isRetryableError', 'clearSaveRetry', 'canRetrySave', 'scheduleSaveRetry', 'stopInputAfterError',
+    'stopLockHeartbeat', 'startLockHeartbeat', 'save',
+  ].map(functionSource).join('\n');
+  vm.runInContext(`${retryConstant[0]}\n${syncHelpers}`, f.sandbox);
+  return {
+    ...f, timeouts, intervals, statuses, drafts, replies,
+    async nextRetry() {
+      const entry = timeouts.entries().next().value;
+      assert.ok(entry, 'a delayed retry is scheduled');
+      const [id, timer] = entry;
+      timeouts.delete(id);
+      let saving;
+      const save = f.sandbox.save;
+      f.sandbox.save = (...args) => { saving = save(...args); return saving; };
+      try {
+        await timer.callback();
+        if (saving) await saving;
+      } finally { f.sandbox.save = save; }
+      return timer.delay;
+    },
+    async heartbeat() {
+      const timer = intervals.values().next().value;
+      assert.ok(timer, 'editor heartbeat is active');
+      await timer.callback();
+    },
+  };
+}
+
+function httpError(status, data) {
+  return Object.assign(new Error(`HTTP ${status}`), { status, ...(data ? { data } : {}) });
 }
 
 test('viewer button focus does not freeze the next score refresh', async () => {
@@ -302,4 +363,175 @@ test('a focused viewer observes a finished match on the next refresh', async () 
   assert.equal(f.sandbox.state.active, false);
   assert.equal(f.sandbox.state.current, null);
   assert.equal(f.sandbox.inputMode, false);
+});
+
+for (const [label, failure] of [
+  ['network error', () => new TypeError('Failed to fetch')],
+  ['server error', () => httpError(503)],
+]) {
+  test(`an unchanged pending score retries after a ${label} and stops after success`, async () => {
+    const f = saveFixture();
+    f.sandbox.firstInputNeedsSave = true;
+    f.replies.push(failure());
+    assert.equal(await f.sandbox.save('', { quiet: true, renderAfter: false }), false);
+    assert.equal(f.sandbox.dirty, true);
+    assert.equal(f.sandbox.state.current.innings.ours[0], 9);
+    assert.equal(f.sandbox.changeVersion, 0, 'no further input is needed to trigger retry');
+    assert.equal(f.timeouts.size, 1);
+    const delay = await f.nextRetry();
+    assert.ok(delay >= 1000, 'first-input retries have backoff instead of zero-delay loops');
+    assert.equal(f.writes.length, 1);
+    assert.equal(f.writes[0].current.innings.ours[0], 9);
+    assert.equal(f.sandbox.dirty, false);
+    assert.equal(f.timeouts.size, 0);
+    assert.equal(f.sandbox.saveRetryCount, 0);
+    assert.match(f.statuses.at(-1), /保存しました/);
+    assert.deepEqual(f.alerts, []);
+  });
+}
+
+test('persistent save failure uses bounded backoff and does not show repeated dialogs', async () => {
+  const f = saveFixture();
+  f.sandbox.firstInputNeedsSave = true;
+  f.replies.push(...Array.from({ length: 4 }, () => httpError(502)));
+  await f.sandbox.save('', { quiet: true, renderAfter: false });
+  const delays = [];
+  for (let attempt = 0; attempt < 3; attempt += 1) delays.push(await f.nextRetry());
+  assert.equal(f.calls.length, 4, 'one attempt plus three delayed retries');
+  assert.ok(delays.every(delay => delay >= 1000));
+  assert.ok(delays[1] >= delays[0] && delays[2] >= delays[1]);
+  assert.equal(f.timeouts.size, 0, 'retrying stops at the retry limit');
+  assert.equal(f.sandbox.dirty, true);
+  assert.equal(f.sandbox.state.current.innings.ours[0], 9);
+  assert.deepEqual(f.alerts, []);
+});
+
+for (const [label, failure] of [
+  ['network error', () => new TypeError('Failed to fetch')],
+  ['server error', () => httpError(503)],
+]) {
+  test(`a heartbeat ${label} keeps pending scores and the token used by the next save`, async () => {
+    const f = saveFixture();
+    f.sandbox.startLockHeartbeat();
+    f.replies.push(failure());
+    await f.heartbeat();
+    assert.equal(f.sandbox.inputMode, true);
+    assert.equal(f.sandbox.lockToken, 'claimed-editor-lock');
+    assert.equal(f.sandbox.dirty, true);
+    assert.equal(f.sandbox.state.current.innings.ours[0], 9);
+    assert.equal(f.intervals.size, 1);
+    assert.equal(await f.sandbox.save('', { quiet: true, renderAfter: false }), true);
+    const sent = f.calls.find(call => call.action === 'saveLiveScore');
+    assert.equal(sent.lockToken, 'claimed-editor-lock');
+    assert.equal(sent.data.current.innings.ours[0], 9);
+    assert.equal(f.sandbox.dirty, false);
+    assert.deepEqual(f.alerts, []);
+  });
+}
+
+for (const status of [401, 403, 409]) {
+  test(`terminal heartbeat HTTP ${status} keeps unsaved scores and blocks queued saves without a token`, async () => {
+    const f = saveFixture();
+    f.sandbox.startLockHeartbeat();
+    f.replies.push(httpError(status, match({ scored: true })));
+    await f.heartbeat();
+    assert.equal(f.sandbox.inputMode, false);
+    assert.equal(f.sandbox.lockToken, '');
+    assert.equal(f.intervals.size, 0);
+    assert.equal(f.sandbox.dirty, true);
+    assert.equal(f.sandbox.state.current.innings.ours[0], 9);
+    const callsBeforeAutosave = f.calls.length;
+    assert.equal(await f.sandbox.save('', { quiet: true, renderAfter: false }), false);
+    assert.equal(f.calls.length, callsBeforeAutosave, 'no full-state write is sent with an empty token');
+    assert.equal(f.sandbox.state.current.innings.ours[0], 9);
+    assert.equal(f.sandbox.dirty, true);
+    assert.equal(f.timeouts.size, 0);
+  });
+}
+
+test('a same-session save conflict retains unsaved local scores instead of replacing them', async () => {
+  const f = saveFixture();
+  f.replies.push(httpError(409, match({ scored: true })));
+  assert.equal(await f.sandbox.save('', { quiet: true, renderAfter: false }), false);
+  assert.equal(f.sandbox.state.current.innings.ours[0], 9);
+  assert.equal(f.sandbox.dirty, true);
+  assert.equal(f.sandbox.userInputPending, true);
+  assert.equal(f.timeouts.size, 0);
+});
+
+test('a finished-session save response closes safely and does not retry or reopen the match', async () => {
+  const f = saveFixture();
+  const ended = { ...match({ scored: true }), active: false, visible: false, current: null, endedReason: 'finished' };
+  f.replies.push(httpError(409, ended));
+  assert.equal(await f.sandbox.save('', { quiet: true, renderAfter: false }), false);
+  assert.equal(f.sandbox.state.active, false);
+  assert.equal(f.sandbox.state.current, null);
+  assert.equal(f.sandbox.inputMode, false);
+  assert.equal(f.timeouts.size, 0);
+  assert.equal(f.sandbox.dirty, false);
+});
+
+test('an edit made during the initial start save is scheduled after starting finishes', async () => {
+  const f = fixture({ focused: false });
+  const scheduled = [];
+  let finishStart;
+  let reachedSave;
+  const saveStarted = new Promise(resolve => { reachedSave = resolve; });
+  f.sandbox.blankGame = () => copy(match().current);
+  f.sandbox.window = { scrollTo() {} };
+  f.sandbox.claimInputLock = async () => {
+    f.sandbox.inputMode = true;
+    f.sandbox.lockToken = 'claimed-editor-lock';
+    return true;
+  };
+  f.sandbox.save = async (_message, { action }) => {
+    assert.equal(action, 'startLiveScore');
+    return new Promise(resolve => { finishStart = resolve; reachedSave(); });
+  };
+  f.sandbox.scheduleAutoSave = () => scheduled.push({
+    starting: f.sandbox.starting,
+    dirty: f.sandbox.dirty,
+    score: f.sandbox.state.current.innings.ours[0],
+  });
+  vm.runInContext(`${functionSource('canRetrySave')}\n${functionSource('startGame')}`, f.sandbox);
+  const start = f.sandbox.startGame();
+  await saveStarted;
+  assert.equal(typeof finishStart, 'function');
+  assert.equal(f.sandbox.starting, true);
+  f.sandbox.state.current.innings.ours[0] = 9;
+  f.sandbox.dirty = true;
+  f.sandbox.changeVersion += 1;
+  f.sandbox.userInputPending = true;
+  finishStart(true);
+  await start;
+  assert.deepEqual(scheduled, [{ starting: false, dirty: true, score: 9 }]);
+});
+
+test('a failed finish keeps the scored match editable and permits a later manual finish', async () => {
+  const f = saveFixture();
+  const completed = copy(f.sandbox.state.current);
+  completed.completedAt = '2026-11-01T01:00:00.000Z';
+  Object.assign(f.sandbox.state, { active: false, visible: false, current: null, lastGame: completed });
+  f.sandbox.dirty = false;
+  f.replies.push(httpError(503));
+  assert.equal(await f.sandbox.save('試合速報を終了しました'), false);
+  assert.equal(f.sandbox.state.active, true);
+  assert.equal(f.sandbox.state.current.innings.ours[0], 9);
+  assert.equal(f.sandbox.state.current.completedAt, '');
+  assert.equal(f.sandbox.dirty, true);
+  assert.equal(f.sandbox.inputMode, true);
+  assert.equal(f.sandbox.lockToken, 'claimed-editor-lock');
+  assert.equal(f.timeouts.size, 0, 'a failed finish is not silently retried as an ordinary save');
+
+  // The user retries the finish; only the successful server result closes it.
+  const ended = { ...copy(f.sandbox.state), active: false, visible: false, current: null,
+    lastGame: completed, endedReason: 'finished' };
+  f.sandbox.state = copy(ended);
+  f.sandbox.dirty = false;
+  f.replies.push({ data: ended });
+  assert.equal(await f.sandbox.save('試合速報を終了しました'), true);
+  assert.equal(f.sandbox.state.active, false);
+  assert.equal(f.sandbox.state.lastGame.innings.ours[0], 9);
+  assert.equal(f.timeouts.size, 0);
+  assert.equal(f.calls.length, 2);
 });
