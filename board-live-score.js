@@ -154,13 +154,28 @@
   }
 
   async function claimInputLock({ quiet = false } = {}) {
+    const claimingVersion = changeVersion;
     try {
       const result = await request('POST', null, { action: 'claimEditorLock' });
+      const keepPendingInput = inputMode && lockToken && lockToken === result.lockToken &&
+        state.sessionId === result.data?.sessionId &&
+        (dirty || saving || changeVersion !== claimingVersion);
       lockToken = result.lockToken || '';
       if (!lockToken) throw new Error('入力権限を取得できませんでした。');
       if (!starting && applyClosedResult(result.data)) {
         await releaseInputLock();
         return false;
+      }
+      // A viewer may be behind the current editor. Acquire the latest match
+      // together with its lock before allowing any full-state save or reset.
+      // Renewing our own lock must still preserve unsaved local input.
+      if (!starting && result.data?.active && !keepPendingInput) {
+        state = normalize(result.data);
+        selectedScoreCell = state.current?.selectedScoreCell || null;
+        clearTimeout(autoSaveTimer);
+        dirty = false;
+        userInputPending = false;
+        firstInputNeedsSave = false;
       }
       inputMode = true;
       rememberInputMode(true);
@@ -820,10 +835,17 @@
   }
 
   async function leaveInputMode() {
+    // Keep the lock until the last edit is saved, including an edit made
+    // while an earlier save was in flight.
+    if (saveInFlight) await saveInFlight.catch(() => {});
+    while (dirty && state.active && state.current) {
+      if (!await save('', { quiet: true, renderAfter: false })) return false;
+    }
     inputMode = false;
     rememberInputMode(false);
     render();
     await releaseInputLock();
+    return true;
   }
 
   async function startGame(game = null, visible = true) {
@@ -1140,7 +1162,10 @@
   });
 
   async function load({ silent = false, force = false } = {}) {
-    if (starting || (!force && (replayMode || dirty || saving || root.contains(document.activeElement)))) return;
+    // Focus on a viewer button must not freeze live updates. Only an editor
+    // needs focus protection so a refresh cannot interrupt their input.
+    if (starting || (!force && (replayMode || dirty || saving ||
+        (inputMode && root.contains(document.activeElement))))) return;
     const loadingVersion = changeVersion;
     const loadingSession = state.sessionId || '';
     try {
@@ -1190,6 +1215,9 @@
   window.addEventListener('resize', () => { fitAllLiveScoreTeamNames(); });
   document.addEventListener('visibilitychange', () => {
     if (!document.hidden) {
+      // Mobile browsers pause background timers. Catch up as soon as the
+      // page returns, without discarding any pending editor input.
+      if (pollTimer) load({ silent: true });
       heartbeatViewer();
       checkDeadline();
     }
