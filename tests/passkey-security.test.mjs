@@ -4,12 +4,22 @@ import { registerHooks } from 'node:module';
 
 // The store and WebAuthn dependency are isolated. These tests exercise authorization,
 // revocation and session signatures; authenticator cryptography is not mocked as success.
-const blobs = new Map();
+const blobs = new Map(), revisions = new Map();
 let writes = 0;
+const etag = key => `"${revisions.get(key) || 0}"`;
 globalThis.__passkeySecurityStore = {
   async get(key) { return structuredClone(blobs.get(key) ?? null); },
-  async setJSON(key, value) { writes++; blobs.set(key, structuredClone(value)); },
-  async delete(key) { writes++; blobs.delete(key); },
+  async getWithMetadata(key) {
+    return blobs.has(key) ? { data: structuredClone(blobs.get(key)), etag: etag(key), metadata: {} } : null;
+  },
+  async setJSON(key, value, conditions = {}) {
+    if (conditions.onlyIfNew && blobs.has(key)) return { modified: false };
+    if (conditions.onlyIfMatch && (!blobs.has(key) || conditions.onlyIfMatch !== etag(key))) return { modified: false };
+    writes++; blobs.set(key, structuredClone(value));
+    revisions.set(key, (revisions.get(key) || 0) + 1);
+    return { modified: true, etag: etag(key) };
+  },
+  async delete(key) { writes++; blobs.delete(key); revisions.set(key, (revisions.get(key) || 0) + 1); },
   async list() { return { blobs: [] }; },
 };
 registerHooks({ resolve(specifier, context, next) {
@@ -49,8 +59,10 @@ const roles = [
     cookie: coach.coachSessionCookie, sessionValid: coach.coachSessionIsValid, cookieName: 'yls_coach_session' },
 ];
 function seed(role) {
-  blobs.clear(); writes = 0;
-  blobs.set(role.key, { credentials: [{ id: 'test-credential' }, { id: 'keep-credential' }] });
+  blobs.clear(); revisions.clear(); writes = 0;
+  // These cases isolate authorization. Legacy registry adoption is exercised
+  // separately, so no migration write is mixed into the mutation count.
+  blobs.set(role.key, { authVersion: '', credentials: [{ id: 'test-credential' }, { id: 'keep-credential' }] });
 }
 for (const role of roles) {
   test(`${role.name}: anonymous registration and deletion cannot change stored passkeys`, async () => {
@@ -96,10 +108,13 @@ for (const role of roles) {
   });
   test(`${role.name}: cross-origin passkey mutations are rejected even with a session`, async () => {
     seed(role);
-    const result = await role.handler(request({ action: 'delete-credential', credentialID: 'test-credential' }, {
-      origin: 'https://other.test', cookie: cookieValue(role.cookie(await role.create())),
-    }));
-    assert.equal(result.status, 403);
+    const token = await role.create();
+    for (const action of ['registration-options', 'registration-verify', 'delete-credential']) {
+      const result = await role.handler(request({ action, credentialID: 'test-credential' }, {
+        origin: 'https://other.test', cookie: cookieValue(role.cookie(token)),
+      }));
+      assert.equal(result.status, 403, action);
+    }
     assert.equal(writes, 0);
   });
   test(`${role.name}: malformed cookies are treated as unauthenticated`, async () => {

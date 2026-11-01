@@ -6,7 +6,7 @@ import { readFileSync } from 'node:fs';
 import vm from 'node:vm';
 
 const blobs = new Map(), revisions = new Map();
-let failReads = false, failDeletes = false, authVerification;
+let failReads = false, failDeletes = false, authVerification, registrationVerification;
 let securityWrites = 0, contentWrites = 0, settingsReads = 0;
 const etag = key => `"${revisions.get(key) || 0}"`;
 const store = {
@@ -31,6 +31,7 @@ const store = {
 };
 globalThis.__accessTestStore = store;
 globalThis.__accessTestVerify = (...args) => authVerification(...args);
+globalThis.__accessTestRegister = (...args) => registrationVerification(...args);
 registerHooks({ resolve(specifier, context, next) {
   if (specifier === '@netlify/blobs') return { url: 'data:text/javascript,export function getStore(){return globalThis.__accessTestStore}', shortCircuit: true };
   if (specifier === '@simplewebauthn/server') return {
@@ -38,7 +39,7 @@ registerHooks({ resolve(specifier, context, next) {
       export async function generateAuthenticationOptions(options){return {...options, challenge:'test-challenge'};}
       export async function generateRegistrationOptions(options){return {...options, challenge:'test-challenge'};}
       export async function verifyAuthenticationResponse(options){return globalThis.__accessTestVerify(options);}
-      export async function verifyRegistrationResponse(){throw new Error('Not used');}
+      export async function verifyRegistrationResponse(options){return globalThis.__accessTestRegister(options);}
     `), shortCircuit: true,
   };
   return next(specifier, context);
@@ -64,6 +65,7 @@ const cookie = value => value.split(';')[0];
 function reset() {
   blobs.clear(); revisions.clear(); failReads = false; failDeletes = false;
   securityWrites = 0; contentWrites = 0; settingsReads = 0;
+  authVerification = registrationVerification = async () => { throw new Error('Unexpected authenticator verification'); };
   blobs.set('content/access-settings.json', { salt: 'test-salt', hash: hash(boardPassword) });
   blobs.set('content/coach-attendance-access.json', { salt: 'test-salt', hash: hash(coachPassword) });
   blobs.set('content/attendance-config.json', { migrationEnded: true });
@@ -198,6 +200,8 @@ test('team password change revokes old cookies, bearer tokens and administrator 
   const response = await site(request('site-data?section=access-settings', { action: 'setAccessPassword', password: 'changed-board-password' }, headers), ip);
   assert.equal(response.status, 200);
   assert.ok(blobs.get('content/access-settings.json').authVersion);
+  assert.equal(blobs.get('content/access-settings.json').passkeyVersionRequired, true,
+    'an explicit reset fences legacy registries against later re-adoption');
   assert.equal(await board.boardSessionTokenIsValid(token), false);
   assert.equal(await admin.adminSession(request('admin-session', undefined, headers)), null);
   assert.equal(await coach.coachSessionTokenIsValid(coachToken), true, 'coach access is a separate password');
@@ -255,9 +259,61 @@ test('passkey verification finishing during a password change cannot restore usa
     return { verified: true, authenticationInfo: { newCounter: 1 } };
   };
   const result = await boardPasskeys(request('passkey-auth', { action: 'authentication-verify', ceremonyID, credential: { id: 'test-key' } }), ip);
-  assert.equal(result.status, 200);
-  assert.equal(await board.boardSessionTokenIsValid((await result.json()).token), false);
+  const resultBody = await result.json();
+  assert.ok([200, 400, 401, 409].includes(result.status));
+  assert.equal(await board.boardSessionTokenIsValid(resultBody.token), false,
+    'a reset during verification must never issue a usable session');
+  assert.equal(blobs.get('auth/board-passkeys.json')?.credentials?.some(item => item.id === 'test-key') || false, false,
+    'the revoked credential must not be resurrected');
   assert.equal((await boardPasskeys(request('passkey-auth', { action: 'authentication-options' }), ip)).status, 404);
+});
+
+test('registration finishing during a password reset cannot recreate a revoked registry', async () => {
+  reset();
+  blobs.set('auth/board-passkeys.json', { credentials: [{ id: 'existing-key', publicKey: 'AA', counter: 0 }] });
+  const headers = { 'x-access-password': boardPassword };
+  const start = await boardPasskeys(request('passkey-auth', { action: 'registration-options' }, headers), ip);
+  assert.equal(start.status, 200);
+  const { ceremonyID } = await start.json();
+  registrationVerification = async () => {
+    blobs.set('content/access-settings.json', {
+      salt: 'test-salt', hash: hash('replacement-password'), authVersion: 'reset-during-registration',
+      passkeyVersionRequired: true,
+    });
+    blobs.delete('auth/board-passkeys.json');
+    return { verified: true, registrationInfo: {
+      credential: { id: 'late-key', publicKey: new Uint8Array([1, 2, 3]), counter: 0, transports: ['internal'] },
+      credentialDeviceType: 'singleDevice', credentialBackedUp: false,
+    } };
+  };
+  const result = await boardPasskeys(request('passkey-auth', {
+    action: 'registration-verify', ceremonyID, credential: { id: 'late-key' },
+  }, headers), ip);
+  assert.ok([400, 401, 409].includes(result.status), 'the stale registration is rejected');
+  assert.equal(blobs.get('auth/board-passkeys.json')?.credentials?.some(item => item.id === 'late-key') || false, false);
+  assert.equal((await boardPasskeys(request('passkey-auth', { action: 'authentication-options' }), ip)).status, 404);
+});
+
+test('revoked cookies and token headers cannot delete credentials registered after a password reset', async () => {
+  reset();
+  const oldToken = await board.createBoardSessionToken();
+  const changed = await site(request('site-data?section=access-settings', {
+    action: 'setAccessPassword', password: 'replacement-password',
+  }, await adminHeaders()), ip);
+  assert.equal(changed.status, 200);
+  const currentRegistry = { authVersion: blobs.get('content/access-settings.json').authVersion,
+    credentials: [{ id: 'new-current-key', publicKey: 'AA', counter: 0 }] };
+  await store.setJSON('auth/board-passkeys.json', currentRegistry);
+  for (const headers of [
+    { cookie: cookie(board.boardSessionCookie(oldToken)) },
+    { 'x-access-password': oldToken },
+  ]) {
+    const result = await boardPasskeys(request('passkey-auth', {
+      action: 'delete-credential', credentialID: 'new-current-key',
+    }, headers), ip);
+    assert.equal(result.status, 401);
+    assert.deepEqual(blobs.get('auth/board-passkeys.json'), currentRegistry);
+  }
 });
 
 test('auth settings are reused within a request, refreshed on the next request, and fail closed', async () => {
@@ -286,12 +342,14 @@ for (const name of ['board-access.js', 'coach-access.js']) {
     const alerts = [], redirects = [];
     let prompts = 0;
     const sandbox = vm.createContext({
-      window: {}, document: { documentElement: { style: {} } },
+      window: { addEventListener() {} },
+      document: { documentElement: { style: {} }, addEventListener() {}, referrer: '', visibilityState: 'visible' },
       sessionStorage: { getItem: () => '', removeItem() {}, setItem() {} },
       localStorage: { getItem: () => '', removeItem() {}, setItem() {} },
-      location: { search: '', replace: value => redirects.push(value) },
+      location: { search: '', origin: 'https://example.test', href: 'https://example.test/board.html', pathname: '/board.html', replace: value => redirects.push(value) },
       history: { length: 1 }, performance: { getEntriesByType: () => [] },
-      URLSearchParams, prompt: () => { prompts++; return 'test'; }, alert: value => alerts.push(value),
+      URL, URLSearchParams, navigator: { userAgent: 'test-browser' },
+      prompt: () => { prompts++; return 'test'; }, alert: value => alerts.push(value),
       fetch: async () => new Response(JSON.stringify({ error: '約15分後にお試しください。' }), { status: 429 }),
     });
     vm.runInContext(readFileSync(new URL(`../${name}`, import.meta.url), 'utf8'), sandbox);

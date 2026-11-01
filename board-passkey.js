@@ -169,7 +169,7 @@
       const auth = await authenticate();
       const credentialID = auth?.credentialID;
       if (!credentialID) throw new Error("削除する生体認証を確認できませんでした。");
-      const result = await request({ action: "delete-credential", credentialID });
+      const result = await request({ action: "delete-credential", credentialID }, auth.token);
       rememberCredentialID("");
       try{sessionStorage.removeItem("yachiyoBoardPasskeyNeedsReregister")}catch(_){}
       return result;
@@ -178,7 +178,7 @@
       // the page clear its local "registered" state.  The stale server record
       // is harmless and a new credential can be registered on this device.
       if (
-        /Android/i.test(navigator.userAgent||"") &&
+        !error?.status && /Android/i.test(navigator.userAgent||"") &&
         (error?.name === "NotAllowedError" ||
          /利用可能なパスキー|passkey|credential/i.test(String(error?.message||"")))
       ) {

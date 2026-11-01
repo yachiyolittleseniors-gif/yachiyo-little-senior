@@ -2,12 +2,21 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import { registerHooks } from 'node:module';
 
-const records = new Map();
+const records = new Map(), revisions = new Map();
 let verifyCall = null;
+const etag = key => `"${revisions.get(key) || 0}"`;
 globalThis.__passkeySizeTestStore = {
   async get(key) { return structuredClone(records.get(key) ?? null); },
-  async setJSON(key, value) { records.set(key, structuredClone(value)); return { modified:true }; },
-  async delete(key) { records.delete(key); },
+  async getWithMetadata(key) {
+    return records.has(key) ? { data: structuredClone(records.get(key)), etag: etag(key), metadata: {} } : null;
+  },
+  async setJSON(key, value, conditions = {}) {
+    if (conditions.onlyIfNew && records.has(key)) return { modified:false };
+    if (conditions.onlyIfMatch && (!records.has(key) || conditions.onlyIfMatch !== etag(key))) return { modified:false };
+    records.set(key, structuredClone(value)); revisions.set(key, (revisions.get(key) || 0) + 1);
+    return { modified:true, etag:etag(key) };
+  },
+  async delete(key) { records.delete(key); revisions.set(key, (revisions.get(key) || 0) + 1); },
   async list() { return { blobs:[] }; },
 };
 globalThis.__passkeySizeVerify = options => {
@@ -37,6 +46,7 @@ const handle = (await import('../netlify/functions/passkey-auth.mjs')).default;
 const registryKey = 'auth/board-passkeys.json';
 function seed(count) {
   records.clear();
+  revisions.clear();
   verifyCall = null;
   const credentials = Array.from({ length:count }, (_,i)=>({
     id:'board-credential-'+i,

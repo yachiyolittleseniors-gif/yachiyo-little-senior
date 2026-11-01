@@ -2414,6 +2414,8 @@ export default async (request, context) => {
 
       await store.setJSON(key, {
         authVersion: crypto.randomUUID(),
+        // A future password reset must not adopt leftover unversioned passkeys.
+        passkeyVersionRequired: true,
         salt,
         hash,
         updatedAt: new Date().toISOString()
