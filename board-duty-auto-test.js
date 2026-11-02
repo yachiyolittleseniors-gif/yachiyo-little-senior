@@ -254,10 +254,22 @@ function initTemporaryDuty(){
   var pendingDetails=[];
   function row(){
     var d=document.createElement('div');d.className='temporary-duty-row';
-    d.innerHTML='<label class="tmp-date-field"><span class="tmp-date-placeholder">日付</span><input type="date" class="tmp-date" aria-label="日付"></label><select class="tmp-grade" aria-label="対象学年"><option value="3">3年</option><option value="2" selected>2年</option><option value="1">1年</option></select><select class="tmp-slot" aria-label="時間帯"><option value="午前">午前</option><option value="午後">午後</option><option value="終日" selected>終日</option></select><input class="tmp-names" aria-label="担当者2名" placeholder="担当2名（例：石山・加藤）"><button type="button" class="tmp-remove">削除</button>';
-    var dateInput=d.querySelector('.tmp-date'),dateField=d.querySelector('.tmp-date-field');
-    function syncDatePlaceholder(){dateField.classList.toggle('has-value',!!dateInput.value);}
-    dateInput.addEventListener('input',syncDatePlaceholder);dateInput.addEventListener('change',syncDatePlaceholder);syncDatePlaceholder();
+    d.innerHTML='<label class="tmp-date-field"><span class="tmp-field-label">日付</span><input type="date" class="tmp-date" aria-label="日付"></label><div class="tmp-grade-field"><span class="tmp-field-label">対象学年（複数選択可）</span><div class="tmp-grade-options"><label class="tmp-grade-option"><input type="checkbox" value="3"><span>3年</span></label><label class="tmp-grade-option"><input type="checkbox" value="2" checked><span>2年</span></label><label class="tmp-grade-option"><input type="checkbox" value="1" checked><span>1年</span></label></div><div class="tmp-grade-names"></div></div><label class="tmp-slot-field"><span class="tmp-field-label">時間帯</span><select class="tmp-slot" aria-label="時間帯"><option value="午前">午前</option><option value="午後">午後</option><option value="終日" selected>終日</option></select></label><button type="button" class="tmp-remove">削除</button>';
+    var gradeNames=d.querySelector('.tmp-grade-names');
+    function syncGradeNames(){
+      var selected=Array.from(d.querySelectorAll('.tmp-grade-option input:checked')).map(function(input){return input.value;});
+      var current={};gradeNames.querySelectorAll('input[data-grade]').forEach(function(input){current[input.dataset.grade]=input.value;});
+      gradeNames.replaceChildren();
+      selected.forEach(function(grade){
+        var field=document.createElement('label');field.className='tmp-grade-name-row';
+        var label=document.createElement('span');label.textContent=grade+'年';
+        var input=document.createElement('input');input.type='text';input.className='tmp-names';input.dataset.grade=grade;input.setAttribute('aria-label',grade+'年の担当者2名');input.placeholder='担当2名（例：石山・加藤）';input.value=current[grade]||'';
+        field.append(label,input);gradeNames.appendChild(field);
+      });
+      result.hidden=true;pendingDetails=[];
+    }
+    d.querySelectorAll('.tmp-grade-option input').forEach(function(input){input.addEventListener('change',syncGradeNames);});
+    syncGradeNames();
     d.querySelector('.tmp-remove').onclick=function(){d.remove();result.hidden=true;pendingDetails=[];};rows.appendChild(d);
   }
   function splitNames(value){return String(value||'').normalize('NFKC').split(/[・、,，\/／\s　]+/).map(function(v){return v.trim();}).filter(Boolean);}
@@ -269,37 +281,48 @@ function initTemporaryDuty(){
     ctx.fillStyle='#fff';ctx.fillRect(0,0,canvas.width,canvas.height);
     ctx.fillStyle='#071426';ctx.fillRect(0,0,canvas.width,116);
     ctx.fillStyle='#d4af37';ctx.font='900 42px sans-serif';ctx.textAlign='center';ctx.textBaseline='middle';ctx.fillText('臨時当番表',canvas.width/2,45);
-    ctx.fillStyle='#fff';ctx.font='700 24px sans-serif';ctx.fillText(group.year+'年'+group.month+'月　'+group.grade+'年生',canvas.width/2,86);
-    var left=45,top=140,width=1110,rowH=70,cols=[150,110,160,345,345],headers=['日付','曜日','区分','担当①','担当②'],x=left;
-    ctx.font='800 22px sans-serif';ctx.textAlign='center';ctx.textBaseline='middle';
-    headers.forEach(function(header,index){ctx.fillStyle='#079b51';ctx.fillRect(x,top,cols[index],52);ctx.strokeStyle='#20252b';ctx.lineWidth=2;ctx.strokeRect(x,top,cols[index],52);ctx.fillStyle='#fff';ctx.fillText(header,x+cols[index]/2,top+26);x+=cols[index];});
-    entries.forEach(function(entry,index){var y=top+52+index*rowH,values=[entry.month+'/'+entry.day,entry.weekday,entry.slot,entry.names[0],entry.names[1]],xx=left;values.forEach(function(value,column){ctx.fillStyle='#fff';ctx.fillRect(xx,y,cols[column],rowH);ctx.strokeStyle='#cbd2da';ctx.strokeRect(xx,y,cols[column],rowH);ctx.fillStyle=column===0||column===1?(entry.weekday==='日'?'#c73535':entry.weekday==='土'?'#2c67a8':'#071426'):'#071426';ctx.font=column>=3?'800 25px sans-serif':'700 22px sans-serif';ctx.fillText(String(value),xx+cols[column]/2,y+rowH/2,cols[column]-16);xx+=cols[column];});});
+    ctx.fillStyle='#fff';ctx.font='700 24px sans-serif';ctx.fillText(group.year+'年'+group.month+'月　'+group.grades.join('・')+'年生',canvas.width/2,86);
+    var left=45,top=140,totalW=1110,rowH=70,fixed=[130,100,140],personW=(totalW-fixed[0]-fixed[1]-fixed[2])/(group.grades.length*2),cols=fixed.concat(Array(group.grades.length*2).fill(personW)),headers=['日付','曜日','区分'];
+    group.grades.forEach(function(grade){headers.push(grade+'年①',grade+'年②');});
+    var x=left;ctx.font='800 22px sans-serif';ctx.textAlign='center';ctx.textBaseline='middle';
+    headers.forEach(function(header,index){ctx.fillStyle='#079b51';ctx.fillRect(x,top,cols[index],52);ctx.strokeStyle='#20252b';ctx.lineWidth=2;ctx.strokeRect(x,top,cols[index],52);ctx.fillStyle='#fff';ctx.font=index>=3?'800 19px sans-serif':'800 22px sans-serif';ctx.fillText(header,x+cols[index]/2,top+26,cols[index]-10);x+=cols[index];});
+    entries.forEach(function(entry,index){
+      var y=top+52+index*rowH,values=[entry.month+'/'+entry.day,entry.weekday,entry.slot];
+      group.grades.forEach(function(grade){values.push(entry.namesByGrade[grade][0],entry.namesByGrade[grade][1]);});
+      var xx=left;values.forEach(function(value,column){ctx.fillStyle='#fff';ctx.fillRect(xx,y,cols[column],rowH);ctx.strokeStyle='#cbd2da';ctx.strokeRect(xx,y,cols[column],rowH);ctx.fillStyle=column===0||column===1?(entry.weekday==='日'?'#c73535':entry.weekday==='土'?'#2c67a8':'#071426'):'#071426';ctx.font=column>=3?'800 23px sans-serif':'700 22px sans-serif';ctx.fillText(String(value),xx+cols[column]/2,y+rowH/2,cols[column]-12);xx+=cols[column];});
+    });
     var footY=top+52+entries.length*rowH+38;ctx.fillStyle='#596474';ctx.font='600 18px sans-serif';ctx.textAlign='left';ctx.fillText('※ 急な練習・大会などで追加した臨時のお当番です。',left,footY);
     return canvas.toDataURL('image/png');
   }
   function detailForGroup(group){
     var slots={},entries=group.entries.slice().sort(function(a,b){return a.day-b.day});
     entries.forEach(function(entry){slots[entry.day]=entry.slot;});
-    var first=entries[0].day,last=entries[entries.length-1].day,dateLabel=first===last?String(first):first+'-'+last;
-    return{name:'臨時当番表_'+group.year+'年'+String(group.month).padStart(2,'0')+'月_'+group.grade+'年_'+dateLabel+'日.png',data:makeCanvas(group),table:{year:group.year,month:group.month,grades:[Number(group.grade)],activityDays:[],rows:entries.map(function(entry){return[entry.day,entry.weekday,entry.names[0],entry.names[1]];}),temporary:true,slots:slots}};
+    var first=entries[0].day,last=entries[entries.length-1].day,dateLabel=first===last?String(first):first+'-'+last,gradeLabel=group.grades.join('-');
+    return{name:'臨時当番表_'+group.year+'年'+String(group.month).padStart(2,'0')+'月_'+gradeLabel+'年_'+dateLabel+'日.png',data:makeCanvas(group),table:{year:group.year,month:group.month,grades:group.grades.map(Number),activityDays:[],rows:entries.map(function(entry){var cells=[entry.day,entry.weekday];group.grades.forEach(function(grade){cells.push(entry.namesByGrade[grade][0],entry.namesByGrade[grade][1]);});return cells;}),temporary:true,slots:slots}};
   }
   open.onclick=function(){box.hidden=!box.hidden;open.textContent=box.hidden?'＋ 臨時当番表を作成':'臨時当番表を閉じる ▲';if(!box.hidden&&!rows.children.length)row();};
   add.onclick=row;
   make.onclick=function(){
     var raw=Array.from(rows.querySelectorAll('.temporary-duty-row')),entries=[],seen=new Set();
     for(var i=0;i<raw.length;i++){
-      var r=raw[i],date=r.querySelector('.tmp-date').value,grade=r.querySelector('.tmp-grade').value,slot=r.querySelector('.tmp-slot').value,names=splitNames(r.querySelector('.tmp-names').value);
-      if(!date||names.length!==2){alert((i+1)+'行目の日付と担当者2名を確認してください。担当者は「山田・佐藤」のように入力してください。');return;}
+      var r=raw[i],date=r.querySelector('.tmp-date').value,grades=Array.from(r.querySelectorAll('.tmp-grade-option input:checked')).map(function(input){return input.value;}),slot=r.querySelector('.tmp-slot').value,namesByGrade={};
+      if(!date){alert((i+1)+'行目の日付を選択してください。');return;}
+      if(!grades.length){alert((i+1)+'行目の対象学年を1つ以上選択してください。');return;}
+      for(var g=0;g<grades.length;g++){
+        var grade=grades[g],input=r.querySelector('.tmp-grade-names input[data-grade="'+grade+'"]'),names=splitNames(input&&input.value);
+        if(names.length!==2){alert((i+1)+'行目の'+grade+'年の担当者2名を確認してください。「山田・佐藤」のように入力してください。');return;}
+        namesByGrade[grade]=names;
+      }
       var parts=date.split('-').map(Number),dt=new Date(parts[0],parts[1]-1,parts[2]);if(dt.getFullYear()!==parts[0]||dt.getMonth()+1!==parts[1]||dt.getDate()!==parts[2]){alert((i+1)+'行目の日付を確認してください。');return;}
-      var duplicate=date+'|'+grade;if(seen.has(duplicate)){alert('同じ日・同じ学年は1件までです。'+date+' '+grade+'年を確認してください。');return;}seen.add(duplicate);
-      entries.push({date:date,year:parts[0],month:parts[1],day:parts[2],weekday:weekday(parts[0],parts[1],parts[2]),grade:grade,slot:slot,names:names});
+      for(var g2=0;g2<grades.length;g2++){var duplicate=date+'|'+grades[g2];if(seen.has(duplicate)){alert('同じ日・同じ学年は1件までです。'+date+' '+grades[g2]+'年を確認してください。');return;}seen.add(duplicate);}
+      entries.push({date:date,year:parts[0],month:parts[1],day:parts[2],weekday:weekday(parts[0],parts[1],parts[2]),grades:grades,slot:slot,namesByGrade:namesByGrade});
     }
     if(!entries.length){alert('臨時当番を1件以上入力してください。');return;}
-    var groups=new Map();entries.forEach(function(entry){var key=entry.year+'-'+entry.month+'-'+entry.grade,group=groups.get(key)||{year:entry.year,month:entry.month,grade:entry.grade,entries:[]};group.entries.push(entry);groups.set(key,group);});
+    var groups=new Map();entries.forEach(function(entry){var key=entry.year+'-'+entry.month+'-'+entry.grades.join(','),group=groups.get(key)||{year:entry.year,month:entry.month,grades:entry.grades.slice(),entries:[]};group.entries.push(entry);groups.set(key,group);});
     pendingDetails=Array.from(groups.values()).map(detailForGroup);
     result.replaceChildren();result.hidden=false;
     var heading=document.createElement('b');heading.textContent='臨時当番表（案）';result.appendChild(heading);
-    pendingDetails.forEach(function(detail){var card=document.createElement('div');card.className='temporary-duty-preview-item';var label=document.createElement('strong');label.textContent=detail.table.year+'年'+detail.table.month+'月 '+detail.table.grades[0]+'年生';var img=document.createElement('img');img.src=detail.data;img.alt=label.textContent+' 臨時当番表';card.append(label,img);result.appendChild(card);});
+    pendingDetails.forEach(function(detail){var card=document.createElement('div');card.className='temporary-duty-preview-item';var label=document.createElement('strong');label.textContent=detail.table.year+'年'+detail.table.month+'月 '+detail.table.grades.join('・')+'年生';var img=document.createElement('img');img.src=detail.data;img.alt=label.textContent+' 臨時当番表';card.append(label,img);result.appendChild(card);});
     var confirmBtn=document.createElement('button');confirmBtn.type='button';confirmBtn.className='temporary-duty-confirm';confirmBtn.textContent='この臨時当番表を確定';
     confirmBtn.onclick=async function(){
       if(!window.confirmTemporaryDutyRosters){alert('臨時当番表の登録機能を読み込めませんでした。ページを再読み込みしてください。');return;}

@@ -1826,7 +1826,7 @@ main.wrap{padding-bottom:38px!important}
 <script src="./duty-roster-data.js?v=20260918-1"></script>
 <script id="duty-month-grade-policy" src="./duty-grade-policy.js?v=20261103-temp-roster1"></script>
 <script src="./board-duty-roster.js?v=20261103-temp-roster1"></script>
-<script src="./board-duty-auto-test.js?v=20261103-temp-roster1"></script>
+<script src="./board-duty-auto-test.js?v=20261103-temp-roster2"></script>
 <script src="./board-rules.js?v=20261003-listcollapse1"></script>
 <script src="./board-archive.js?v=20261003-listcollapse1"></script>
 
@@ -2255,24 +2255,139 @@ main.wrap{padding-bottom:38px!important}
   font-size:16px!important;
   line-height:48px!important;
 }
-#temporaryDutyRows .tmp-date-field .tmp-date-placeholder{
-  position:absolute!important;
-  left:14px!important;
-  top:50%!important;
-  transform:translateY(-50%)!important;
-  z-index:2!important;
-  margin:0!important;
-  padding:0!important;
-  color:#a6a9ad!important;
-  -webkit-text-fill-color:#a6a9ad!important;
-  font-size:16px!important;
-  font-weight:700!important;
-  line-height:1!important;
-  pointer-events:none!important;
-}
-#temporaryDutyRows .tmp-date-field.has-value .tmp-date-placeholder{display:none!important}
 #temporaryDutyRows .tmp-date-field .tmp-date::-webkit-date-and-time-value{
   text-align:left!important;
+}
+</style>
+<style id="temporary-duty-ios-and-multigrade-fix">
+#temporaryDutyRows .tmp-date-field,
+#temporaryDutyRows .tmp-slot-field,
+#temporaryDutyRows .tmp-grade-field{
+  display:grid!important;
+  gap:6px!important;
+  width:100%!important;
+  max-width:100%!important;
+  height:auto!important;
+  min-height:0!important;
+  padding:0!important;
+  box-sizing:border-box!important;
+}
+#temporaryDutyRows .tmp-field-label{
+  display:block!important;
+  color:#e9edf3!important;
+  -webkit-text-fill-color:#e9edf3!important;
+  font-size:12px!important;
+  font-weight:900!important;
+  line-height:1.3!important;
+  padding:0 2px!important;
+}
+#temporaryDutyRows .tmp-date-field .tmp-date{
+  display:block!important;
+  width:100%!important;
+  max-width:100%!important;
+  height:52px!important;
+  min-height:52px!important;
+  max-height:52px!important;
+  margin:0!important;
+  padding:0 12px!important;
+  box-sizing:border-box!important;
+  border:1px solid #cfd5dc!important;
+  border-radius:10px!important;
+  background:#fff!important;
+  color:#17202b!important;
+  -webkit-text-fill-color:#17202b!important;
+  font-size:16px!important;
+  line-height:normal!important;
+  font-family:inherit!important;
+  -webkit-appearance:none!important;
+  appearance:none!important;
+}
+#temporaryDutyRows .tmp-date-field .tmp-date::-webkit-date-and-time-value{
+  min-height:20px!important;
+  line-height:20px!important;
+  text-align:left!important;
+}
+#temporaryDutyRows .tmp-grade-options{
+  display:grid!important;
+  grid-template-columns:repeat(3,minmax(0,1fr))!important;
+  gap:7px!important;
+}
+#temporaryDutyRows .tmp-grade-option{
+  display:flex!important;
+  align-items:center!important;
+  justify-content:center!important;
+  gap:7px!important;
+  min-height:46px!important;
+  padding:8px 6px!important;
+  border:1px solid #cfd5dc!important;
+  border-radius:10px!important;
+  background:#fff!important;
+  color:#17202b!important;
+  -webkit-text-fill-color:#17202b!important;
+  font-size:15px!important;
+  font-weight:900!important;
+  cursor:pointer!important;
+}
+#temporaryDutyRows .tmp-grade-option:has(input:checked){
+  border-color:#c79a3b!important;
+  background:#fff7e4!important;
+}
+#temporaryDutyRows .tmp-grade-option input{
+  appearance:auto!important;
+  -webkit-appearance:checkbox!important;
+  width:20px!important;
+  height:20px!important;
+  min-width:20px!important;
+  min-height:20px!important;
+  max-width:20px!important;
+  max-height:20px!important;
+  margin:0!important;
+  padding:0!important;
+  accent-color:#c79a3b!important;
+  flex:0 0 20px!important;
+}
+#temporaryDutyRows .tmp-grade-option span{
+  display:inline!important;
+  width:auto!important;
+  color:#17202b!important;
+  -webkit-text-fill-color:#17202b!important;
+  font-size:15px!important;
+  line-height:1.2!important;
+}
+#temporaryDutyRows .tmp-grade-names{
+  display:grid!important;
+  gap:8px!important;
+  margin-top:2px!important;
+}
+#temporaryDutyRows .tmp-grade-name-row{
+  display:grid!important;
+  grid-template-columns:44px minmax(0,1fr)!important;
+  gap:8px!important;
+  align-items:center!important;
+  width:100%!important;
+}
+#temporaryDutyRows .tmp-grade-name-row>span{
+  display:grid!important;
+  place-items:center!important;
+  min-height:48px!important;
+  border:1px solid rgba(199,154,59,.55)!important;
+  border-radius:9px!important;
+  background:#0b1d33!important;
+  color:#e2bd67!important;
+  -webkit-text-fill-color:#e2bd67!important;
+  font-size:12px!important;
+  font-weight:900!important;
+}
+#temporaryDutyRows .tmp-grade-name-row .tmp-names{
+  width:100%!important;
+  min-width:0!important;
+  min-height:48px!important;
+  margin:0!important;
+}
+#temporaryDutyRows .tmp-slot-field .tmp-slot{
+  width:100%!important;
+  min-height:52px!important;
+  margin:0!important;
 }
 </style>
 <style id="compact-rules-archive-admin-style">

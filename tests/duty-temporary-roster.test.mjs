@@ -42,3 +42,23 @@ test('normal monthly replacement explicitly ignores temporary same-month rosters
   assert.match(roster,/window\.confirmTemporaryDutyRosters=confirmTemporaryDutyRosters/);
   assert.match(roster,/item\.table&&item\.table\.temporary!==true&&item\.table\.year===table\.year/);
 });
+
+test('temporary duty date input uses a normal label instead of an overlaid iPhone placeholder',()=>{
+  assert.match(auto,/tmp-field-label">日付/);
+  assert.doesNotMatch(auto,/tmp-date-placeholder/);
+  assert.match(board,/temporary-duty-ios-and-multigrade-fix/);
+  assert.match(board,/\.tmp-date\{[\s\S]*?height:52px!important/);
+  assert.match(board,/line-height:normal!important/);
+});
+
+test('temporary duty supports multiple grades and two names per selected grade',()=>{
+  assert.match(auto,/tmp-grade-options/);
+  assert.match(auto,/type="checkbox" value="3"/);
+  assert.match(auto,/type="checkbox" value="2" checked/);
+  assert.match(auto,/type="checkbox" value="1" checked/);
+  assert.match(auto,/querySelectorAll\('\.tmp-grade-option input:checked'\)/);
+  assert.match(auto,/namesByGrade/);
+  assert.match(auto,/grades:group\.grades\.map\(Number\)/);
+  assert.match(auto,/group\.grades\.forEach/);
+  assert.match(board,/board-duty-auto-test\.js\?v=20261103-temp-roster2/);
+});
