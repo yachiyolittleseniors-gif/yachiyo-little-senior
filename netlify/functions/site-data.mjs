@@ -2472,7 +2472,8 @@ export default async (request, context) => {
         const t=item?.table;
         if(t){
           if(!Number.isInteger(t.year)||t.year<2020||t.year>2100||!Number.isInteger(t.month)||t.month<1||t.month>12||!Array.isArray(t.rows)||!t.rows.length||t.rows.length>31||!Array.isArray(t.activityDays))return false;
-          if(t.grades&&(!Array.isArray(t.grades)||![2,3].includes(t.grades.length)||new Set(t.grades).size!==t.grades.length||t.grades.some(g=>![1,2,3].includes(g))))return false;
+          const allowedGradeCounts=t.temporary===true?[1,2,3]:[2,3];
+          if(t.grades&&(!Array.isArray(t.grades)||!allowedGradeCounts.includes(t.grades.length)||new Set(t.grades).size!==t.grades.length||t.grades.some(g=>![1,2,3].includes(g))))return false;
           const seen=new Set();
           for(const row of t.rows){
             if(!Array.isArray(row)||row.length!==2+(t.grades||[2,1]).length*2)return false;

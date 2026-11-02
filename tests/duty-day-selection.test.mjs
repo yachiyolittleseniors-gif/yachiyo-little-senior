@@ -26,14 +26,14 @@ test('weekday add is limited to the target month and excludes weekends and holid
   assert.match(source, /土日祝は上の一覧から選択してください/);
 });
 
-test('temporary duty builder is removed while manual image registration remains', () => {
-  assert.doesNotMatch(source, /temporaryDutyCreateBtn|initTemporaryDuty/);
-  assert.doesNotMatch(board, /temporaryDutyCreateBtn|臨時当番表を作成|手動・臨時当番表/);
+test('temporary duty builder and folded manual image fallback coexist', () => {
+  assert.match(source, /temporaryDutyCreateBtn|initTemporaryDuty/);
+  assert.match(board, /id="temporaryDutyCreateBtn"/);
   assert.match(board, />画像を手動登録</);
   assert.match(board, /id="dutyRosterImageInput"/);
   assert.match(board, /id="saveDutyRosterBtn"/);
 });
 
-test('board loads the new day-selection asset', () => {
-  assert.match(board, /board-duty-auto-test\.js\?v=20261103-day-select1/);
+test('board loads the date-selection and temporary-roster asset', () => {
+  assert.match(board, /board-duty-auto-test\.js\?v=20261103-temp-roster1/);
 });

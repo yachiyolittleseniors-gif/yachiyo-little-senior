@@ -123,7 +123,7 @@
   window.setDutyRosterTestModeForMonth=async function(year,month,enabled){
     const y=Number(year),m=Number(month),next=enabled===true;
     const index=images.findIndex(function(item){
-      return item&&item.table&&Number(item.table.year)===y&&Number(item.table.month)===m;
+      return item&&item.table&&item.table.temporary!==true&&Number(item.table.year)===y&&Number(item.table.month)===m;
     });
     if(index<0)return false;
 
@@ -192,7 +192,7 @@
   function isTestDate(date){const key=String(date||'').slice(0,7);return images.some(function(item){return item.testMode===true&&testMonthKey(item)===key})}
   function canViewRoster(item){return !item.testMode||isAdminViewing()}
   function imageSource(item){return item.data||item.src||''}
-  function adminImageLabel(item,index){const table=item&&item.table;const title=table&&Number(table.year)&&Number(table.month)?table.year+'年'+table.month+'月 当番表':String(item&&item.name||('当番表 '+(index+1)));return(index+1)+'番目　'+title+(item&&item.testMode?'　【テスト】':'')}
+  function adminImageLabel(item,index){const table=item&&item.table;const title=table&&Number(table.year)&&Number(table.month)?table.year+'年'+table.month+'月 '+(table.temporary===true?'臨時当番表':'当番表'):String(item&&item.name||('当番表 '+(index+1)));return(index+1)+'番目　'+title+(item&&item.testMode?'　【テスト】':'')}
   function imageSourceKey(item){const source=imageSource(item);return String(item.id)+'-'+source.length+'-'+source.slice(-24)}
   function sortChanges(items){return items.slice().sort(function(a,b){const at=new Date(a.createdAt||'').getTime(),bt=new Date(b.createdAt||'').getTime();if(Number.isFinite(at)&&Number.isFinite(bt)&&at!==bt)return bt-at;if(Number.isFinite(at)!==Number.isFinite(bt))return Number.isFinite(bt)?1:-1;return b.date.localeCompare(a.date)||Number(b.grade)-Number(a.grade)||a.from.localeCompare(b.from,'ja')})}
   function displayDate(value){const parts=String(value||'').split('-').map(Number);if(parts.length!==3)return value;const date=new Date(parts[0],parts[1]-1,parts[2]);return parts[1]+'/'+parts[2]+'（'+'日月火水木金土'[date.getDay()]+'）'}
@@ -219,17 +219,20 @@
     return now<=end;
   }
   function renderTables(){
-    tableList.innerHTML=images.filter(function(item){return item.table&&isPublicRosterActive(item)&&canViewRoster(item)}).map(function(item){const table=item.table;const grades=table.grades||[2,1];
+    tableList.innerHTML=images.filter(function(item){return item.table&&isPublicRosterActive(item)&&canViewRoster(item)}).map(function(item){const table=item.table;const grades=table.grades||[2,1],temporary=table.temporary===true;
       const rows=table.rows.map(function(row,index){
         const cells=grades.flatMap(function(grade,group){return [0,1].map(function(column){return appliedCell(table,row,grade,column,row[2+group*2+column]);});});
         const cellMarkup=cells.map(function(cell){const title=cell.changed?' title="変更前：'+escapeHtml(cell.original)+'"':'';return'<td class="'+(cell.changed?'is-changed':'')+'"'+title+'><span>'+escapeHtml(cell.value)+'</span></td>'}).join('');
-        return'<tr class="'+(table.activityDays.includes(row[0])?'is-activity':'')+'">'+(index===0?'<th class="duty-month" scope="rowgroup" rowspan="'+table.rows.length+'">'+table.month+'月</th>':'')+'<th scope="row">'+row[0]+'</th><td class="duty-weekday duty-weekday-'+row[1]+'">'+row[1]+'</td>'+cellMarkup+'</tr>';
+        const slot=temporary&&table.slots?String(table.slots[row[0]]||''):'';
+        const weekday=escapeHtml(row[1])+(slot?'<small class="duty-temp-slot">【'+escapeHtml(slot)+'】</small>':'');
+        const monthLabel=temporary?table.month+'月<small class="duty-temp-label">臨時</small>':table.month+'月';
+        return'<tr class="'+(table.activityDays.includes(row[0])?'is-activity':'')+'">'+(index===0?'<th class="duty-month" scope="rowgroup" rowspan="'+table.rows.length+'">'+monthLabel+'</th>':'')+'<th scope="row">'+row[0]+'</th><td class="duty-weekday duty-weekday-'+row[1]+'">'+weekday+'</td>'+cellMarkup+'</tr>';
       }).join('');
-      const hasChanges=changes.some(function(item){return item.date.startsWith(table.year+'-'+String(table.month).padStart(2,'0')+'-')});
-      return'<section class="duty-digital-roster'+(grades.length===3?' has-three-grades':'')+'" aria-label="'+table.year+'年'+table.month+'月の当番表"><div class="duty-table-scroll"><table><colgroup><col style="width:12%"><col style="width:8%"><col style="width:8%"><col span="'+(grades.length*2)+'" style="width:'+(72/(grades.length*2))+'%"></colgroup><thead><tr><th>'+table.year+'年</th><th>日付</th><th>曜日</th>'+grades.map(function(grade){return'<th colspan="2">'+grade+'年生</th>';}).join('')+'</tr></thead><tbody>'+rows+'</tbody></table></div><div class="duty-sheet-note">黄色の日は里山活動日です。駐車場所にご注意ください。'+(hasChanges?'<br>赤字は変更箇所です。':'')+'</div></section>';
+      const hasChanges=changes.some(function(change){return change.date.startsWith(table.year+'-'+String(table.month).padStart(2,'0')+'-')});
+      const note=temporary?'臨時で追加した当番表です。時間帯は曜日欄に表示しています。':('黄色の日は里山活動日です。駐車場所にご注意ください。'+(hasChanges?'<br>赤字は変更箇所です。':''));
+      return'<section class="duty-digital-roster'+(grades.length===3?' has-three-grades':'')+(temporary?' is-temporary':'')+'" aria-label="'+table.year+'年'+table.month+'月の'+(temporary?'臨時当番表':'当番表')+'"><div class="duty-table-scroll"><table><colgroup><col style="width:12%"><col style="width:8%"><col style="width:8%"><col span="'+(grades.length*2)+'" style="width:'+(72/(grades.length*2))+'%"></colgroup><thead><tr><th>'+table.year+'年</th><th>日付</th><th>曜日</th>'+grades.map(function(grade){return'<th colspan="2">'+grade+'年生</th>';}).join('')+'</tr></thead><tbody>'+rows+'</tbody></table></div><div class="duty-sheet-note">'+note+'</div></section>';
     }).join('');
   }
-
   function cleanupExpiredImages(now=new Date()){
     const cutoffYear=now.getFullYear()-1,cutoffMonth=now.getMonth()+1;
     const before=images.length;
@@ -394,7 +397,7 @@
   async function confirmGeneratedDutyRoster(detail){
     if(!detail||!detail.table||!detail.data)throw new Error('確定する当番表データがありません。');
     const table=detail.table;
-    const sameIndex=images.findIndex(function(item){return item.table&&Number(item.table.year)===Number(table.year)&&Number(item.table.month)===Number(table.month)});
+    const sameIndex=images.findIndex(function(item){return item.table&&item.table.temporary!==true&&Number(item.table.year)===Number(table.year)&&Number(item.table.month)===Number(table.month)});
     if(sameIndex>=0&&!confirm(table.year+'年'+table.month+'月の当番表はすでに登録されています。\nこの案で置き換えますか？'))return false;
     const previous=images.slice();
     const item={id:sameIndex>=0?images[sameIndex].id:'duty-'+Date.now().toString(36)+'-'+Math.random().toString(36).slice(2,8),name:detail.name||('当番表_'+table.year+'年'+String(table.month).padStart(2,'0')+'月.png'),data:String(detail.data),src:'',testMode:detail.testMode===true,table:table};
@@ -403,6 +406,29 @@
     try{await persist(item.testMode?'テストモードで当番表を登録しました':'当番表を確定・登録しました',item.testMode?'当番表をテスト登録しました':'当番表を更新しました',!item.testMode);return true}catch(e){images=previous;render();throw e}
   }
   window.confirmGeneratedDutyRoster=confirmGeneratedDutyRoster;
+  async function confirmTemporaryDutyRosters(details){
+    if(!Array.isArray(details)||!details.length)throw new Error('確定する臨時当番表がありません。');
+    if(images.length+details.length>8)throw new Error('当番表は通常・臨時を合わせて8枚まで保存できます。古い当番表を整理してください。');
+    const prepared=details.map(function(detail,index){
+      const table=detail&&detail.table;
+      if(!table||table.temporary!==true||!detail.data)throw new Error('臨時当番表データを確認してください。');
+      const overlaps=images.some(function(item){
+        const existing=item&&item.table;
+        if(!existing||existing.temporary!==true||Number(existing.year)!==Number(table.year)||Number(existing.month)!==Number(table.month))return false;
+        const existingGrades=(existing.grades||[2,1]).map(String),grades=(table.grades||[]).map(String);
+        if(!grades.some(function(grade){return existingGrades.includes(grade)}))return false;
+        const days=new Set((existing.rows||[]).map(function(row){return Number(row&&row[0])||0}));
+        return (table.rows||[]).some(function(row){return days.has(Number(row&&row[0])||0)});
+      });
+      if(overlaps)throw new Error(table.month+'月の同じ日・学年に臨時当番表が登録済みです。先に登録済みの臨時当番表を削除してください。');
+      return{id:'duty-temp-'+Date.now().toString(36)+'-'+index+'-'+Math.random().toString(36).slice(2,7),name:String(detail.name||'臨時当番表.png'),data:String(detail.data),src:'',testMode:false,table:table};
+    });
+    const previous=images.slice();
+    images=images.concat(prepared);render();
+    try{await persist('臨時当番表を登録しました','臨時当番表を追加しました',true);return true}
+    catch(e){images=previous;render();throw e}
+  }
+  window.confirmTemporaryDutyRosters=confirmTemporaryDutyRosters;
 
   async function addImages(){
     const files=Array.from(fileInput.files||[]);if(!files.length){alert('追加する画像を選択してください。');return}if(images.length+files.length>8){alert('当番表は8枚まで保存できます。');return}
@@ -413,7 +439,7 @@
       for(const file of files){
         const data=await readAsDataUrl(file),table=await window.readDutyImage(data);
         if(!table)return;
-        if(images.concat(pending).some(item=>item.table&&item.table.year===table.year&&item.table.month===table.month))throw new Error('同じ月の当番表が登録されています。原本一覧を確認してください。');
+        if(images.concat(pending).some(item=>item.table&&item.table.temporary!==true&&item.table.year===table.year&&item.table.month===table.month))throw new Error('同じ月の通常当番表が登録されています。原本一覧を確認してください。');
         pending.push({id:'duty-'+Date.now().toString(36)+'-'+Math.random().toString(36).slice(2,8),name:file.name,data:data,src:'',table:table});
       }
       images=images.concat(pending);await persist('当番表を保存しました','当番表を更新しました',true);fileInput.value='';

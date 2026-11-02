@@ -9,7 +9,8 @@
     if(!table)return [];
     if(table.grades==null)return [2,1];
     const values=table.grades;
-    return Array.isArray(values)&&[2,3].includes(values.length)&&
+    const allowedLengths=table.temporary===true?[1,2,3]:[2,3];
+    return Array.isArray(values)&&allowedLengths.includes(values.length)&&
       values.every(g=>Number.isInteger(g)&&[1,2,3].includes(g))&&
       new Set(values).size===values.length?values.slice():[];
   }
@@ -32,15 +33,20 @@
     const tables=(Array.isArray(images)?images:[]).filter(include).map(tableForImage)
       .filter(t=>t&&monthKey(t)===parts.key);
     if(!tables.length)return [];
-    // Never infer a request month's grades from a different month's upload.
-    const first=grades(tables[0]);
-    if(!first.length||tables.some(t=>grades(t).slice().sort().join(',')!==first.slice().sort().join(',')))return [];
+    // Temporary rosters add emergency duty slots but must not redefine the
+    // month's normal active grades when a regular roster exists.
+    const regular=tables.filter(t=>t.temporary!==true);
+    const candidates=regular.length?regular:tables;
+    const first=grades(candidates[0]);
+    if(!first.length||candidates.some(t=>grades(t).slice().sort().join(',')!==first.slice().sort().join(',')))return [];
     return first;
   }
   function defaultGrades(images,year,month,tableForImage=resolve){
     const key=monthKey({year,month});if(!key)return [2,1];
-    const tables=(Array.isArray(images)?images:[]).filter(i=>i&&i.testMode!==true)
-      .map(tableForImage).filter(t=>monthKey(t)&&monthKey(t)<=key&&grades(t).length)
+    const items=(Array.isArray(images)?images:[]).filter(i=>i&&i.testMode!==true);
+    const regular=items.filter(i=>tableForImage(i)?.temporary!==true);
+    const source=regular.length?regular:items;
+    const tables=source.map(tableForImage).filter(t=>monthKey(t)&&monthKey(t)<=key&&grades(t).length)
       .sort((a,b)=>monthKey(b).localeCompare(monthKey(a)));
     return tables.length?grades(tables[0]):[2,1];
   }

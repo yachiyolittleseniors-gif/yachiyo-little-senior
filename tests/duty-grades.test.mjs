@@ -81,6 +81,17 @@ test('invalid dates, duplicate days and invalid activity days are rejected',()=>
   }
   assert.equal(policy.dateParts('2027-02-29'),null);assert(policy.dateParts('2028-02-29'));
 });
+test('one-grade temporary rosters are valid without changing the normal month grade policy',()=>{
+  const regular={id:'regular',table:table(2027,8,[2,1])};
+  const tempTable=table(2027,8,[1]);tempTable.temporary=true;tempTable.slots={1:'終日'};
+  const temp={id:'temporary',table:tempTable};
+  assert.deepEqual(policy.grades(tempTable),[1]);
+  assert(policy.validTable(tempTable));
+  assert.deepEqual(policy.grades({grades:[1]}),[]);
+  assert.deepEqual(policy.defaultGrades([regular,temp],2027,8),[2,1]);
+  assert.deepEqual(policy.gradesForDate([regular,temp],'2027-08-01'),[2,1]);
+});
+
 test('image review parses both formats and preserves selected grade order',()=>{
   assert.equal(policy.parseRows('1,甲,乙,丙,丁',2027,7,[2,1])[0].length,6);
   assert.equal(policy.parseRows('1,甲,乙,丙,丁,戊,己',2027,7,[3,2,1])[0].length,8);
