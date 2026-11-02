@@ -55,6 +55,8 @@ jobs:
           cmp duty-grade-policy.js netlify/duty-grade-policy.cjs
       - name: Test duty-grade behavior and existing CSP checks
         run: node --test tests/duty-grades.test.mjs tests/home-csp.test.mjs
+      - name: Test duty roster date selection and temporary roster
+        run: node --test tests/duty-day-selection.test.mjs tests/duty-temporary-roster.test.mjs
       - name: Test team passkey cancellation and retry
         run: node --test tests/board-passkey-retry.test.mjs
       - name: Test passkeys above Android's 64-entry option-list limit

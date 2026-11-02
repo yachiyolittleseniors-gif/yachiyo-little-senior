@@ -35,5 +35,5 @@ test('temporary duty builder and folded manual image fallback coexist', () => {
 });
 
 test('board loads the date-selection and temporary-roster asset', () => {
-  assert.match(board, /board-duty-auto-test\.js\?v=20261103-temp-roster1/);
+  assert.match(board, /board-duty-auto-test\.js\?v=20261103-temp-roster2/);
 });
