@@ -26,8 +26,8 @@ function init(){
   gradeNote.textContent='切替月は固定しません。この案で確定した月から、変更後の候補もこの対象学年になります。';
   create.parentNode.insertBefore(gradeNote,create);
   gradeSelect.addEventListener('change',function(){preview.replaceChildren();preview.hidden=true;});
-  prev.onclick=function(e){e.preventDefault();target=new Date(target.getFullYear(),target.getMonth()-1,1);paint();};
-  next.onclick=function(e){e.preventDefault();target=new Date(target.getFullYear(),target.getMonth()+1,1);paint();};
+  prev.onclick=function(e){e.preventDefault();target=new Date(target.getFullYear(),target.getMonth()-1,1);paint();resetDaySelection();preview.replaceChildren();preview.hidden=true;};
+  next.onclick=function(e){e.preventDefault();target=new Date(target.getFullYear(),target.getMonth()+1,1);paint();resetDaySelection();preview.replaceChildren();preview.hidden=true;};
   function familyKey(v){return String(v||'').normalize('NFKC').trim().split(/[\s　（(]/)[0].replace(/[父母]$/,'');}
   function displayName(v){var s=String(v||'').replace(/[父母]$/,'').trim();return s.replace(/^([^\s　（(]+)[\s　]+(.+)$/,function(_,a,b){return a+'（'+b.replace(/[（）()]/g,'')+'）';});}
   function disambiguateDuplicateFamilies(groups){Object.keys(groups).forEach(function(g){var items=Array.from(groups[g].values()),byFamily=new Map();items.forEach(function(item){var kana=String(item.kana||'').normalize('NFKC').replace(/[父母]$/,'').trim(),raw=String(item.rawName||item.name||'').replace(/[父母]$/,'').trim(),fam=String(item.family||familyKey(raw));var key=fam;if(!key&&kana)key=kana.split(/[\s　]/)[0];var arr=byFamily.get(key)||[];arr.push(item);byFamily.set(key,arr);});byFamily.forEach(function(arr,fam){if(arr.length<2)return;arr.forEach(function(item,index){var raw=String(item.rawName||item.name||'').replace(/[父母]$/,'').trim(),kana=String(item.kana||'').normalize('NFKC').replace(/[父母]$/,'').trim(),rest=raw.replace(String(fam),'').replace(/[（）()\s　]/g,'');if(!rest){var parts=kana.split(/[\s　]+/).filter(Boolean);rest=parts.length>1?parts.slice(1).join(''):'';}if(!rest)rest=String(index+1);item.name=String(fam)+'（'+rest+'）';});});});}
@@ -87,6 +87,61 @@ function init(){
   saveEx.onclick=async function(){create.disabled=true;try{await saveExclusions();}catch(err){exStatus.textContent=err.message;}finally{create.disabled=false;}};
   loadExclusions().catch(function(){exStatus.textContent='除外設定を読み込めませんでした。ページを再読み込みしてください。';});
   function holidays(year){var s=new Set(),add=(m,d)=>s.add(year+'-'+String(m).padStart(2,'0')+'-'+String(d).padStart(2,'0')),nth=(m,n)=>1+((8-new Date(year,m-1,1).getDay())%7)+(n-1)*7;add(1,1);add(1,nth(1,2));add(2,11);add(2,23);add(3,Math.floor(20.8431+.242194*(year-1980)-Math.floor((year-1980)/4)));add(4,29);add(5,3);add(5,4);add(5,5);add(7,nth(7,3));add(8,11);add(9,nth(9,3));add(9,Math.floor(23.2488+.242194*(year-1980)-Math.floor((year-1980)/4)));add(10,nth(10,2));add(11,3);add(11,23);return s;}
+  function defaultDutyDays(year,month){
+    var hs=holidays(year),out=[],prefix=year+'-'+String(month).padStart(2,'0')+'-';
+    for(var d=1;d<=new Date(year,month,0).getDate();d++){
+      var dt=new Date(year,month-1,d),date=prefix+String(d).padStart(2,'0');
+      if(dt.getDay()===0||dt.getDay()===6||hs.has(date))out.push(d);
+    }
+    return out;
+  }
+  var selectedDays=new Set(),addedWeekdays=new Set();
+  var daySelection=document.createElement('div');daySelection.className='duty-day-selection';
+  daySelection.innerHTML='<div class="duty-day-selection-head"><b>対象日を選択</b><span id="dutyDaySelectionCount">選択中：0日</span></div><p>土日祝を最初から選択しています。不要な日は外し、必要な平日だけ追加してください。</p><div id="dutyDaySelectionList" class="duty-day-selection-list"></div><button id="dutyAddWeekdayToggle" class="duty-day-add" type="button" aria-expanded="false">＋ 平日を追加</button><div id="dutyAddWeekdayFields" class="duty-day-add-fields" hidden><input id="dutyAddWeekdayDate" type="date" aria-label="追加する平日"><button id="dutyAddWeekdayButton" type="button">追加</button><p id="dutyAddWeekdayStatus" role="status" aria-live="polite"></p></div>';
+  create.parentNode.insertBefore(daySelection,create);
+  var dayList=daySelection.querySelector('#dutyDaySelectionList'),dayCount=daySelection.querySelector('#dutyDaySelectionCount'),weekdayToggle=daySelection.querySelector('#dutyAddWeekdayToggle'),weekdayFields=daySelection.querySelector('#dutyAddWeekdayFields'),weekdayDate=daySelection.querySelector('#dutyAddWeekdayDate'),weekdayAdd=daySelection.querySelector('#dutyAddWeekdayButton'),weekdayStatus=daySelection.querySelector('#dutyAddWeekdayStatus');
+  function invalidateDayDraft(){preview.replaceChildren();preview.hidden=true;}
+  function dutyDayLabel(day){
+    var dt=new Date(target.getFullYear(),target.getMonth(),day),names=['日','月','火','水','木','金','土'];
+    return day+'日（'+names[dt.getDay()]+'）';
+  }
+  function renderDaySelection(){
+    var defaults=defaultDutyDays(target.getFullYear(),target.getMonth()+1),all=Array.from(new Set(defaults.concat(Array.from(addedWeekdays)))).sort(function(a,b){return a-b;});
+    dayList.replaceChildren();
+    all.forEach(function(day){
+      var row=document.createElement('div');row.className='duty-day-option'+(addedWeekdays.has(day)?' is-weekday':'');
+      var label=document.createElement('label'),check=document.createElement('input'),text=document.createElement('span');
+      check.type='checkbox';check.checked=selectedDays.has(day);check.value=String(day);text.textContent=dutyDayLabel(day);
+      check.onchange=function(){if(check.checked)selectedDays.add(day);else selectedDays.delete(day);dayCount.textContent='選択中：'+selectedDays.size+'日';invalidateDayDraft();};
+      label.append(check,text);row.append(label);
+      if(addedWeekdays.has(day)){
+        var remove=document.createElement('button');remove.type='button';remove.textContent='削除';remove.setAttribute('aria-label',dutyDayLabel(day)+'を削除');
+        remove.onclick=function(){addedWeekdays.delete(day);selectedDays.delete(day);renderDaySelection();invalidateDayDraft();};
+        row.append(remove);
+      }
+      dayList.append(row);
+    });
+    dayCount.textContent='選択中：'+selectedDays.size+'日';
+  }
+  function resetDaySelection(){
+    var y=target.getFullYear(),mo=target.getMonth()+1,last=new Date(y,mo,0).getDate(),prefix=y+'-'+String(mo).padStart(2,'0')+'-';
+    addedWeekdays=new Set();selectedDays=new Set(defaultDutyDays(y,mo));
+    weekdayDate.min=prefix+'01';weekdayDate.max=prefix+String(last).padStart(2,'0');weekdayDate.value='';weekdayStatus.textContent='';
+    weekdayFields.hidden=true;weekdayToggle.textContent='＋ 平日を追加';weekdayToggle.setAttribute('aria-expanded','false');
+    renderDaySelection();
+  }
+  weekdayToggle.onclick=function(){
+    weekdayFields.hidden=!weekdayFields.hidden;weekdayToggle.textContent=weekdayFields.hidden?'＋ 平日を追加':'平日追加を閉じる ▲';weekdayToggle.setAttribute('aria-expanded',String(!weekdayFields.hidden));
+  };
+  weekdayAdd.onclick=function(){
+    weekdayStatus.textContent='';
+    var value=weekdayDate.value,parts=value.split('-').map(Number),y=target.getFullYear(),mo=target.getMonth()+1;
+    if(parts.length!==3||parts[0]!==y||parts[1]!==mo){weekdayStatus.textContent='対象月の平日を選択してください。';return;}
+    var day=parts[2],dt=new Date(y,mo-1,day);
+    if(dt.getDay()===0||dt.getDay()===6||holidays(y).has(value)){weekdayStatus.textContent='土日祝は上の一覧から選択してください。';return;}
+    addedWeekdays.add(day);selectedDays.add(day);weekdayDate.value='';weekdayStatus.textContent=dutyDayLabel(day)+'を追加しました。';renderDaySelection();invalidateDayDraft();
+  };
+  resetDaySelection();
   create.onclick=async function(e){
     e.preventDefault();create.disabled=true;create.textContent='作成中…';preview.hidden=false;preview.innerHTML='<div class="duty-simple-status">名簿・スケジュールを確認しています…</div>';
     try{
@@ -118,9 +173,9 @@ function init(){
       var startAfter={'2':'筒井','1':'小池'},pos={};
       function key(v){return String(v||'').replace(/[（）()\s　]/g,'');}
       active.forEach(function(g){var i=lists[g].findIndex(x=>key(x.name).startsWith(key(startAfter[g]))||key(startAfter[g]).startsWith(key(x.name)));pos[g]=i>=0?(i+1)%lists[g].length:0;});
-      var prefix=y+'-'+String(mo).padStart(2,'0')+'-',hs=holidays(y),events=schedule.filter(ev=>String(ev?.date||'').startsWith(prefix)),days=[],satoyama=new Set();
-      for(var d=1;d<=new Date(y,mo,0).getDate();d++){var dt=new Date(y,mo-1,d),date=prefix+String(d).padStart(2,'0'),evs=events.filter(ev=>ev.date===date);if(dt.getDay()===0||dt.getDay()===6||hs.has(date)||evs.length)days.push(d);var saturdayOrdinal=Math.ceil(d/7);
-        if((dt.getDay()===6&&(saturdayOrdinal===2||saturdayOrdinal===4))||evs.some(ev=>/里山/.test(String(ev.title||'')+' '+String(ev.note||'')+' '+String(ev.memo||''))))satoyama.add(d);}
+      var prefix=y+'-'+String(mo).padStart(2,'0')+'-',events=schedule.filter(ev=>String(ev?.date||'').startsWith(prefix)),days=Array.from(selectedDays).sort(function(a,b){return a-b;}),satoyama=new Set();
+      if(!days.length)throw new Error('対象日を1日以上選択してください。');
+      days.forEach(function(d){var dt=new Date(y,mo-1,d),date=prefix+String(d).padStart(2,'0'),evs=events.filter(ev=>ev.date===date),saturdayOrdinal=Math.ceil(d/7);if((dt.getDay()===6&&(saturdayOrdinal===2||saturdayOrdinal===4))||evs.some(ev=>/里山/.test(String(ev.title||'')+' '+String(ev.note||'')+' '+String(ev.memo||''))))satoyama.add(d);});
       var rows=days.map(function(d){var dt=new Date(y,mo-1,d),r=[d,['日','月','火','水','木','金','土'][dt.getDay()]];active.forEach(function(g){for(var z=0;z<2;z++){r.push(lists[g][pos[g]%lists[g].length].name);pos[g]++;}});return r;});
       // 保存画像はA4横（297:210）に近い比率で作成し、印刷時の余白を抑える。
       var canvas=document.createElement('canvas');canvas.width=1400;canvas.height=990;var ctx=canvas.getContext('2d');if(!ctx)throw new Error('画像を生成できませんでした。');
@@ -187,27 +242,12 @@ function init(){
           if(ok){confirmBtn.textContent='確定済み';confirmBtn.disabled=true;}
           else{confirmBtn.textContent='この案で確定';confirmBtn.disabled=false;}
         }catch(err){confirmBtn.textContent='この案で確定';confirmBtn.disabled=false;alert(err?.message||'当番表を登録できませんでした。');}
-      };confirmBtn.style.setProperty('color','#d4af37','important');confirmBtn.style.setProperty('-webkit-text-fill-color','#d4af37','important');confirmBtn.style.fontWeight='900';actions.append(dl,detail,confirmBtn);var detailBox=document.createElement('div');detailBox.className='duty-simple-detail';detailBox.hidden=true;detailBox.textContent='当番対象：'+active.map(function(g){return g+'年 '+lists[g].length+'家庭（除外 '+(groups[g].size-lists[g].length)+'家庭）';}).join('／')+'　／　選手数と家庭数：一致　／　対象日：土日・祝日・スケジュール登録日　／　黄色：里山活動日';preview.append(title,img,actions,detailBox);
+      };confirmBtn.style.setProperty('color','#d4af37','important');confirmBtn.style.setProperty('-webkit-text-fill-color','#d4af37','important');confirmBtn.style.fontWeight='900';actions.append(dl,detail,confirmBtn);var detailBox=document.createElement('div');detailBox.className='duty-simple-detail';detailBox.hidden=true;detailBox.textContent='当番対象：'+active.map(function(g){return g+'年 '+lists[g].length+'家庭（除外 '+(groups[g].size-lists[g].length)+'家庭）';}).join('／')+'　／　選手数と家庭数：一致　／　対象日：'+days.length+'日（選択した日のみ）　／　黄色：里山活動日';preview.append(title,img,actions,detailBox);
     }catch(err){preview.innerHTML='<div class="duty-simple-error"><b>作成できませんでした</b><br>'+String(err?.message||err)+'</div>';}
     finally{create.disabled=false;create.textContent='当番表（案）を作成';paintExclusions();}
   };
 }
 
-function initTemporaryDuty(){
-  var open=document.getElementById('temporaryDutyCreateBtn'),box=document.getElementById('temporaryDutyBuilder'),rows=document.getElementById('temporaryDutyRows'),add=document.getElementById('temporaryDutyAddDate'),make=document.getElementById('temporaryDutyPreview'),result=document.getElementById('temporaryDutyResult');
-  if(!open||!box||!rows||!add||!make||!result||open.dataset.bound==='1')return;open.dataset.bound='1';
-  function row(){
-    var d=document.createElement('div');d.className='temporary-duty-row';
-    d.innerHTML='<label class="tmp-date-field"><span class="tmp-date-placeholder">日付</span><input type="date" class="tmp-date" aria-label="日付"></label><select class="tmp-grade"><option value="3">3年</option><option value="2" selected>2年</option><option value="1">1年</option></select><select class="tmp-slot"><option value="午前">午前</option><option value="午後">午後</option><option value="終日">終日</option></select><input class="tmp-names" placeholder="担当者（例：石山・加藤）"><button type="button" class="tmp-remove">削除</button>';
-    var dateInput=d.querySelector('.tmp-date'),dateField=d.querySelector('.tmp-date-field');
-    function syncDatePlaceholder(){dateField.classList.toggle('has-value',!!dateInput.value);}
-    dateInput.addEventListener('input',syncDatePlaceholder);dateInput.addEventListener('change',syncDatePlaceholder);syncDatePlaceholder();
-    d.querySelector('.tmp-remove').onclick=function(){d.remove();};rows.appendChild(d);
-  }
-  open.onclick=function(){box.hidden=!box.hidden;if(!box.hidden&&!rows.children.length)row();};
-  add.onclick=row;
-  make.onclick=function(){var data=Array.from(rows.querySelectorAll('.temporary-duty-row')).map(function(r){return{date:r.querySelector('.tmp-date').value,grade:r.querySelector('.tmp-grade').value,slot:r.querySelector('.tmp-slot').value,names:r.querySelector('.tmp-names').value.trim()};}).filter(x=>x.date&&x.names);if(!data.length){alert('日付と担当者を入力してください。');return;}result.hidden=false;result.innerHTML='<b>臨時当番表（案）</b>'+data.map(x=>'<div>'+x.date+'　'+x.grade+'年　【'+x.slot+'】 '+x.names+'</div>').join('')+'<p>画像生成・確定保存は次の段階で接続します。</p>';};
-}
-function boot(){init();initTemporaryDuty();setTimeout(function(){init();initTemporaryDuty();},250);setTimeout(function(){init();initTemporaryDuty();},1000);}
+function boot(){init();setTimeout(init,250);setTimeout(init,1000);}
 if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',boot,{once:true});else boot();
 })();
