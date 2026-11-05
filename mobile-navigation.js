@@ -127,7 +127,7 @@
     observeUnifiedMenus();
     const current = pageKey(location.href);
     const menus = document.querySelectorAll('.mobile-links,.site-menu');
-    const cupLinks = [];
+    const desktopCupLinks = [];
     menus.forEach(menu => {
       menu.querySelectorAll('a[href]').forEach(link => {
         const url = new URL(link.getAttribute('href'), location.href);
@@ -145,10 +145,12 @@
         else menu.appendChild(link);
       }
       link.setAttribute('data-seniorcup-menu-link', '');
-      cupLinks.push(link);
+      // Keep the hamburger link available even when the home banner is hidden.
+      link.style.removeProperty('display');
+      link.setAttribute('aria-hidden', 'false');
     });
 
-    // PC header: use the same Senior Cup visibility setting as the home banner/mobile menu.
+    // PC header: continue to use the same visibility setting as the home banner.
     document.querySelectorAll('.links').forEach(menu => {
       let link = [...menu.querySelectorAll('a[href]')].find(item => pageKey(item.href) === 'seniorcup');
       if (!link) {
@@ -161,12 +163,12 @@
       }
       link.classList.toggle('active', current === 'seniorcup');
       link.setAttribute('data-seniorcup-menu-link', '');
-      cupLinks.push(link);
+      desktopCupLinks.push(link);
     });
 
-    if (!cupLinks.length) return;
+    if (!desktopCupLinks.length) return;
     function apply(visible) {
-      cupLinks.forEach(link => {
+      desktopCupLinks.forEach(link => {
         if (visible) link.style.removeProperty('display');
         else link.style.setProperty('display', 'none', 'important');
         link.setAttribute('aria-hidden', String(!visible));
