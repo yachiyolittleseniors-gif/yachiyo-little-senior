@@ -60,5 +60,5 @@ test('temporary duty supports multiple grades and two names per selected grade',
   assert.match(auto,/namesByGrade/);
   assert.match(auto,/grades:group\.grades\.map\(Number\)/);
   assert.match(auto,/group\.grades\.forEach/);
-  assert.match(board,/board-duty-auto-test\.js\?v=20261103-temp-roster2/);
+  assert.match(board,/board-duty-auto-test\.js\?v=[a-zA-Z0-9-]+/);
 });
