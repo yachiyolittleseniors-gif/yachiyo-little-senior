@@ -97,7 +97,7 @@ function init(){
   }
   var selectedDays=new Set(),addedWeekdays=new Set();
   var daySelection=document.createElement('div');daySelection.className='duty-day-selection';
-  daySelection.innerHTML='<div class="duty-day-selection-head"><b>対象日を選択</b><span id="dutyDaySelectionCount">選択中：0日</span></div><p>土日祝を最初から選択しています。不要な日は外し、必要な平日だけ追加してください。</p><div id="dutyDaySelectionList" class="duty-day-selection-list"></div><button id="dutyAddWeekdayToggle" class="duty-day-add" type="button" aria-expanded="false">＋ 平日を追加</button><div id="dutyAddWeekdayFields" class="duty-day-add-fields" hidden><input id="dutyAddWeekdayDate" type="date" aria-label="追加する平日"><button id="dutyAddWeekdayButton" type="button">追加</button><p id="dutyAddWeekdayStatus" role="status" aria-live="polite"></p></div>';
+  daySelection.innerHTML='<div class="duty-day-selection-head"><b>対象日を選択</b><span id="dutyDaySelectionCount">選択中：0日</span></div><p>土日祝を最初から選択しています。不要な日は外し、必要な平日だけ追加してください。</p><div id="dutyDaySelectionList" class="duty-day-selection-list"></div><button id="dutyAddWeekdayToggle" class="duty-day-add" type="button" aria-expanded="false">＋ 平日を追加</button><div id="dutyAddWeekdayFields" class="duty-day-add-fields" hidden><select id="dutyAddWeekdayDate" aria-label="追加する平日"></select><button id="dutyAddWeekdayButton" type="button">追加</button><p id="dutyAddWeekdayStatus" role="status" aria-live="polite"></p></div>';
   create.parentNode.insertBefore(daySelection,create);
   var dayList=daySelection.querySelector('#dutyDaySelectionList'),dayCount=daySelection.querySelector('#dutyDaySelectionCount'),weekdayToggle=daySelection.querySelector('#dutyAddWeekdayToggle'),weekdayFields=daySelection.querySelector('#dutyAddWeekdayFields'),weekdayDate=daySelection.querySelector('#dutyAddWeekdayDate'),weekdayAdd=daySelection.querySelector('#dutyAddWeekdayButton'),weekdayStatus=daySelection.querySelector('#dutyAddWeekdayStatus');
   function invalidateDayDraft(){preview.replaceChildren();preview.hidden=true;}
@@ -122,11 +122,22 @@ function init(){
       dayList.append(row);
     });
     dayCount.textContent='選択中：'+selectedDays.size+'日';
+    renderWeekdayOptions();
   }
+  function renderWeekdayOptions(){
+    var y=target.getFullYear(),mo=target.getMonth()+1,prefix=y+'-'+String(mo).padStart(2,'0')+'-',defaults=new Set(defaultDutyDays(y,mo));
+    weekdayDate.replaceChildren(new Option(mo+'月の平日を選択',''));
+    for(var day=1;day<=new Date(y,mo,0).getDate();day++){
+      if(!defaults.has(day)&&!addedWeekdays.has(day))weekdayDate.add(new Option(mo+'月'+dutyDayLabel(day),prefix+String(day).padStart(2,'0')));
+    }
+    weekdayDate.disabled=weekdayDate.options.length===1;
+    weekdayAdd.disabled=weekdayDate.disabled||!weekdayDate.value;
+  }
+  weekdayDate.onchange=function(){weekdayAdd.disabled=!weekdayDate.value;weekdayStatus.textContent='';};
   function resetDaySelection(){
-    var y=target.getFullYear(),mo=target.getMonth()+1,last=new Date(y,mo,0).getDate(),prefix=y+'-'+String(mo).padStart(2,'0')+'-';
+    var y=target.getFullYear(),mo=target.getMonth()+1;
     addedWeekdays=new Set();selectedDays=new Set(defaultDutyDays(y,mo));
-    weekdayDate.min=prefix+'01';weekdayDate.max=prefix+String(last).padStart(2,'0');weekdayDate.value='';weekdayStatus.textContent='';
+    weekdayStatus.textContent='';
     weekdayFields.hidden=true;weekdayToggle.textContent='＋ 平日を追加';weekdayToggle.setAttribute('aria-expanded','false');
     renderDaySelection();
   }
