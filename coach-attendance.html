@@ -360,7 +360,7 @@ document.addEventListener('DOMContentLoaded',()=>{
 </main>
 <footer class="footer"><strong id="adminReveal">© YACHIYO LITTLE SENIOR. All Rights Reserved.</strong><button class="manage-btn" id="manageBtn" type="button">管理</button></footer>
 <div class="modal" id="adminModal"><div class="modal-card"><button class="close" id="adminClose">×</button><h2>出欠表 管理</h2><div id="adminBody">
-<section class="admin-panel" id="eventAdminPanel" style="margin-bottom:16px"><h3>日程</h3><p style="font-size:13px;line-height:1.7;color:#6f7884">スケジュールページに登録した日程を自動反映しています。</p><form class="admin-form event-form" id="eventForm" hidden><label class="event-date-field"><span class="event-date-placeholder" id="eventDateLabel">日付を選択</span><input id="eventDate" type="date" aria-label="日付"><button class="small-btn">日程を追加</button></label></form><div class="item-list" id="eventList"></div></section>
+<section class="admin-panel" id="eventAdminPanel" style="margin-bottom:16px"><h3>日程</h3><p style="font-size:13px;line-height:1.7;color:#6f7884">土日・祝日を自動表示します。平日もスケジュールページに予定があれば表示します。</p><form class="admin-form event-form" id="eventForm" hidden><label class="event-date-field"><span class="event-date-placeholder" id="eventDateLabel">日付を選択</span><input id="eventDate" type="date" aria-label="日付"><button class="small-btn">日程を追加</button></label></form><div class="item-list" id="eventList"></div></section>
 <div class="admin-grid hidden" id="adminEditGrid"><section class="admin-panel"><h3>指導者</h3><p style="font-size:13px;line-height:1.7;color:#6f7884">チーム紹介ページの監督・ヘッドコーチ・コーチを自動反映しています。追加・変更・削除はチーム紹介ページから行ってください。</p><form class="admin-form" id="memberForm" hidden><input id="memberName" maxlength="30" required><select id="memberGrade" required><option value="1" selected>1年生</option></select><button class="small-btn">指導者を追加</button></form><div class="member-bulk-actions" hidden><button class="secondary" id="promoteMemberGrades" type="button">更新</button></div><div class="item-list" id="memberList"></div><div class="member-save-bar" hidden><button class="small-btn member-save-btn" id="saveMemberChanges" type="button" disabled>変更を保存</button><span class="member-save-status" id="memberSaveStatus" role="status" aria-live="polite"></span></div></section><section class="admin-panel"><h3>コメント管理</h3><button class="secondary past-comments-toggle" id="togglePastCommentsBtn" type="button" aria-expanded="false">過去のコメントを表示</button><div class="item-list" id="adminCommentList"></div><button class="secondary comment-restore" id="restoreCommentBtn" type="button">直前に削除したコメントを復元</button><div class="member-save-status" id="commentAdminStatus" role="status" aria-live="polite"></div></section></div>
 </div></div></div>
 <script>
@@ -873,7 +873,7 @@ body.photo-admin-on #accessPasswordChange{
 </script>
 <script src="./mobile-navigation.js?v=20261003-unifiedmenu1" defer></script>
 <script src="./operator-passkey-setup.js?v=20261014-recoverstate1"></script>
-<script src="./attendance-future-only.js?v=20260927"></script>
+<script src="./attendance-future-only.js?v=20261107-weekends-holidays1"></script>
 <script src="./attendance-comment-delete.js?v=20261005-date-guard2" defer></script>
 <script src="./attendance-comment-popup.js?v=20261014-jittersticky1" defer></script>
 <script src="./coach-selection-unlock.js?v=20261001-1"></script>

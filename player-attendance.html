@@ -307,7 +307,7 @@ body{padding-top:var(--fixed-header-height)!important}
   <section class="locked-card hidden" id="lockedView"></section>
 
   <div id="attendanceView">
-    <div class="notice"><b>回答：</b>名前をタップ → ○×を入力。選択した本人の行だけ編集できます。<br><b>コメント：</b>名前をタップ → 対象日を選択 → 内容を入力 →「コメントを追加」。もう一度名前をタップすると閉じます。<br><span style="color:#6f7884">※選手名・学年は選手紹介、日程はスケジュールから自動反映します。</span></div>
+    <div class="notice"><b>回答：</b>名前をタップ → ○×を入力。選択した本人の行だけ編集できます。<br><b>コメント：</b>名前をタップ → 対象日を選択 → 内容を入力 →「コメントを追加」。もう一度名前をタップすると閉じます。<br><span style="color:#6f7884">※選手名・学年は選手紹介、日程は土日・祝日を自動表示し、平日の予定もスケジュールから反映します。</span></div>
     
     <details class="report-launch" id="reportLaunch">
       <summary class="report-launch-head report-launch-summary"><h2>選手出席一覧の出力</h2><span class="report-launch-summary-meta"><span class="sync" id="syncText"></span><span class="report-launch-chevron" aria-hidden="true"></span></span></summary>
@@ -342,7 +342,7 @@ body{padding-top:var(--fixed-header-height)!important}
 <footer class="footer"><strong id="adminReveal">© YACHIYO LITTLE SENIOR. All Rights Reserved.</strong><button class="manage-btn" id="manageBtn" type="button">管理</button></footer>
 <div class="modal" id="adminModal"><div class="modal-card"><button class="close" id="adminClose">×</button><h2>出欠表 管理</h2><div id="adminBody">
 <section class="admin-panel" id="gradeOrderAdminPanel" style="margin-bottom:16px"><h3>学年の表示順</h3><p style="font-size:13px;line-height:1.7;color:#6f7884">選手一覧・学年別内訳・一覧出力の並び順を変更できます。</p><div class="grade-order-list" id="gradeOrderList"></div><div class="grade-order-save"><button class="small-btn" id="saveGradeOrder" type="button">この順番で保存</button><span class="grade-order-status" id="gradeOrderStatus" role="status" aria-live="polite"></span></div></section>
-<section class="admin-panel" id="eventAdminPanel" style="margin-bottom:16px"><h3>日程</h3><p style="font-size:13px;line-height:1.7;color:#6f7884">スケジュールページに登録した日程を自動反映しています。</p><form class="admin-form event-form" id="eventForm" hidden><label class="event-date-field"><span class="event-date-placeholder" id="eventDateLabel">日付を選択</span><input id="eventDate" type="date" aria-label="日付"><button class="small-btn">日程を追加</button></label></form><div class="item-list" id="eventList"></div></section>
+<section class="admin-panel" id="eventAdminPanel" style="margin-bottom:16px"><h3>日程</h3><p style="font-size:13px;line-height:1.7;color:#6f7884">土日・祝日を自動表示します。平日もスケジュールページに予定があれば表示します。</p><form class="admin-form event-form" id="eventForm" hidden><label class="event-date-field"><span class="event-date-placeholder" id="eventDateLabel">日付を選択</span><input id="eventDate" type="date" aria-label="日付"><button class="small-btn">日程を追加</button></label></form><div class="item-list" id="eventList"></div></section>
 <div class="admin-grid hidden" id="adminEditGrid"><section class="admin-panel"><h3>選手</h3><p style="font-size:13px;line-height:1.7;color:#6f7884">選手紹介ページの名前・学年を自動反映しています。選手の追加・変更・削除は選手紹介ページから行ってください。</p><form class="admin-form" id="memberForm" hidden><input id="memberName" maxlength="30" required><select id="memberGrade" required><option value="1" selected>1年生</option><option value="2">2年生</option><option value="3">3年生</option></select><button class="small-btn">選手を追加</button></form><div class="member-bulk-actions" hidden><button class="secondary" id="promoteMemberGrades" type="button">学年繰り上げ</button></div><div class="item-list" id="memberList"></div><div class="member-save-bar" hidden><button class="small-btn member-save-btn" id="saveMemberChanges" type="button" disabled>変更を保存</button><span class="member-save-status" id="memberSaveStatus" role="status" aria-live="polite"></span></div></section><section class="admin-panel"><h3>コメント管理</h3><button class="secondary past-comments-toggle" id="togglePastCommentsBtn" type="button" aria-expanded="false">過去のコメントを表示</button><div class="item-list" id="adminCommentList"></div><button class="secondary comment-restore" id="restoreCommentBtn" type="button">直前に削除したコメントを復元</button><div class="member-save-status" id="commentAdminStatus" role="status" aria-live="polite"></div></section></div>
 </div></div></div>
 <script>
@@ -902,7 +902,7 @@ body.photo-admin-on #accessPasswordChange{
 })();
 </script>
 <script src="./mobile-navigation.js?v=20261003-unifiedmenu1" defer></script>
-<script src="./attendance-future-only.js?v=20260927"></script>
+<script src="./attendance-future-only.js?v=20261107-weekends-holidays1"></script>
 <script src="./attendance-comment-delete.js?v=20261005-date-guard2" defer></script>
 <script src="./attendance-comment-popup-fast.js?v=20261014-stickyrow1" defer></script>
 <script src="./attendance-fast-ui.js?v=20261001-1"></script>
