@@ -86,6 +86,29 @@ function init(){
   addEx.onclick=function(){if(select.value==='')return;var item=families[Number(select.value)];if(!item||isExcluded(item,excluded))return;excluded.push({grade:item.grade,name:item.rawName,kana:item.kana,memberIds:item.memberIds.slice()});invalidateDraft();paintExclusions();};
   saveEx.onclick=async function(){create.disabled=true;try{await saveExclusions();}catch(err){exStatus.textContent=err.message;}finally{create.disabled=false;}};
   loadExclusions().catch(function(){exStatus.textContent='除外設定を読み込めませんでした。ページを再読み込みしてください。';});
+  // Continue the original rotation, without applying one-off duty exchanges.
+  function nextDutyPosition(images,year,month,grade,list){
+    var key=function(value){return window.DutyRosterData.nameKey(value);};
+    var tables=images.filter(function(image){return image&&image.testMode!==true;}).map(window.DutyRosterData.tableForImage).filter(function(table){
+      return table&&table.temporary!==true&&Number(table.year)*12+Number(table.month)<year*12+month&&
+        (table.grades||[2,1]).map(String).includes(String(grade))&&Array.isArray(table.rows)&&table.rows.length;
+    }).sort(function(a,b){return (Number(b.year)*12+Number(b.month))-(Number(a.year)*12+Number(a.month));});
+    if(!tables.length)throw new Error(grade+'年の前月以前の当番表が見つかりません。開始順を確認してください。');
+    var table=tables[0],column=2+(table.grades||[2,1]).map(String).indexOf(String(grade))*2;
+    var rows=table.rows.slice().sort(function(a,b){return Number(b[0])-Number(a[0]);});
+    for(var r=0;r<rows.length;r++){
+      for(var slot=1;slot>=0;slot--){
+        var name=key(rows[r][column+slot]);
+        if(!name)continue;
+        var matches=list.map(function(item,index){return {name:key(item.name),index:index};}).filter(function(item){return item.name===name;});
+        // Older tables sometimes omit a given name; accept only a unique match.
+        if(!matches.length)matches=list.map(function(item,index){return {name:key(item.name),index:index};}).filter(function(item){return item.name.startsWith(name)||name.startsWith(item.name);});
+        if(matches.length>1)throw new Error(grade+'年の「'+name+'」を名簿と照合できません。担当順を確認してください。');
+        if(matches.length===1)return (matches[0].index+1)%list.length;
+      }
+    }
+    throw new Error(grade+'年の前月末の担当者を名簿と照合できません。担当順を確認してください。');
+  }
   function holidays(year){var s=new Set(),add=(m,d)=>s.add(year+'-'+String(m).padStart(2,'0')+'-'+String(d).padStart(2,'0')),nth=(m,n)=>1+((8-new Date(year,m-1,1).getDay())%7)+(n-1)*7;add(1,1);add(1,nth(1,2));add(2,11);add(2,23);add(3,Math.floor(20.8431+.242194*(year-1980)-Math.floor((year-1980)/4)));add(4,29);add(5,3);add(5,4);add(5,5);add(7,nth(7,3));add(8,11);add(9,nth(9,3));add(9,Math.floor(23.2488+.242194*(year-1980)-Math.floor((year-1980)/4)));add(10,nth(10,2));add(11,3);add(11,23);return s;}
   function defaultDutyDays(year,month){
     var hs=holidays(year),out=[],prefix=year+'-'+String(month).padStart(2,'0')+'-';
@@ -164,7 +187,8 @@ function init(){
         fetch('/.netlify/functions/attendance-data',{cache:'no-store',credentials:'same-origin',headers:headers}),
         fetch('/.netlify/functions/site-data?section=players',{cache:'no-store',credentials:'same-origin'}),
         fetch('/.netlify/functions/site-data?section=schedule',{cache:'no-store',credentials:'same-origin'}),
-        fetch('/.netlify/functions/duty-change-requests',{cache:'no-store',credentials:'same-origin',headers:headers})
+        fetch('/.netlify/functions/duty-change-requests',{cache:'no-store',credentials:'same-origin',headers:headers}),
+        fetch('/.netlify/functions/site-data?section=duty-roster',{cache:'no-store',credentials:'same-origin',headers:headers})
       ]);
       if(results.slice(0,3).some(r=>!r.ok))throw new Error('必要なデータを取得できませんでした。');
       var att=await results[0].json(),pj=await results[1].json(),sj=await results[2].json(),requestSettings=results[3].ok?await results[3].json():{},members=att?.data?.members||[],players=Array.isArray(pj?.data)?pj.data:[],schedule=Array.isArray(sj?.data)?sj.data:[];
@@ -181,9 +205,9 @@ function init(){
         }).sort(function(a,b){return a.kana.localeCompare(b.kana,'ja')});
       });
       var empty=active.filter(function(g){return !lists[g].length;});if(empty.length)throw new Error(empty.join('・')+'年の当番対象が0家庭です。除外設定を確認してください。');
-      var startAfter={'2':'筒井','1':'小池'},pos={};
-      function key(v){return String(v||'').replace(/[（）()\s　]/g,'');}
-      active.forEach(function(g){var i=lists[g].findIndex(x=>key(x.name).startsWith(key(startAfter[g]))||key(startAfter[g]).startsWith(key(x.name)));pos[g]=i>=0?(i+1)%lists[g].length:0;});
+      if(!results[4].ok)throw new Error('前月の当番表を取得できませんでした。再度作成してください。');
+      var rosterHistory=await results[4].json(),pos={};
+      active.forEach(function(g){pos[g]=nextDutyPosition(rosterHistory?.data?.images||[],y,mo,g,lists[g]);});
       var prefix=y+'-'+String(mo).padStart(2,'0')+'-',events=schedule.filter(ev=>String(ev?.date||'').startsWith(prefix)),days=Array.from(selectedDays).sort(function(a,b){return a-b;}),satoyama=new Set();
       if(!days.length)throw new Error('対象日を1日以上選択してください。');
       days.forEach(function(d){var dt=new Date(y,mo-1,d),date=prefix+String(d).padStart(2,'0'),evs=events.filter(ev=>ev.date===date),saturdayOrdinal=Math.ceil(d/7);if((dt.getDay()===6&&(saturdayOrdinal===2||saturdayOrdinal===4))||evs.some(ev=>/里山/.test(String(ev.title||'')+' '+String(ev.note||'')+' '+String(ev.memo||''))))satoyama.add(d);});
