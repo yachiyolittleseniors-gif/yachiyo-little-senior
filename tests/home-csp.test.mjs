@@ -41,7 +41,7 @@ test('changing a script updates its permission without relying on the old hash',
 });
 
 test('build covers home, Senior Cup and results without removing existing permissions', () => {
-  assert.deepEqual([...CSP_PAGES], ['index.html', 'seniorcup.html', 'results.html']);
+  assert.deepEqual([...CSP_PAGES], ['index.html', 'seniorcup.html', 'results.html', 'attendance.html', 'coach-attendance.html', 'player-attendance.html']);
   const pages = [
     { name: 'index.html', html: '<script>window.home = true;</script>' },
     { name: 'seniorcup.html', html: '<script>window.cup = true;</script>' },
@@ -75,4 +75,12 @@ test('Senior Cup edit and delete controls retain their click handlers', () => {
   const source = readFileSync(new URL('../seniorcup-winners.js', import.meta.url), 'utf8');
   assert.match(source, /editToggle\.addEventListener\('click'/);
   assert.match(source, /deleteToggle\.addEventListener\('click'/);
+});
+
+test('all attendance application scripts are allowed by generated CSP', () => {
+  const pages = ['attendance.html', 'coach-attendance.html', 'player-attendance.html'].map(name => ({name, html: readFileSync(new URL('../' + name, import.meta.url), 'utf8')}));
+  const result = synchronizePageCsps(pages, headers);
+  for (const page of pages) {
+    for (const hash of inlineScriptHashes(page.html)) assert.ok(result.content.includes(hash), page.name);
+  }
 });
