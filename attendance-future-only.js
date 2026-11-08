@@ -55,7 +55,7 @@
   function futureOnlyVisibleEvents(){
     const now=new Date(),start=new Date(now),end=new Date(now);
     start.setHours(0,0,0,0);
-    end.setMonth(end.getMonth()+1);
+    end.setDate(1);end.setMonth(end.getMonth()+2);end.setDate(Math.min(now.getDate(),new Date(end.getFullYear(),end.getMonth()+1,0).getDate()));
     const withinRange=item=>{
       const date=new Date(String(item?.date||'')+'T00:00:00');
       return !Number.isNaN(date.getTime())&&date>=start&&date<=end;

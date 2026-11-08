@@ -24,5 +24,17 @@ test('substitute, citizen holidays and year boundary',()=>{
  for(const [start,date] of [['2026-05-01','2026-05-06'],['2026-09-01','2026-09-22'],['2027-03-01','2027-03-22'],['2026-12-15','2027-01-01']])assert.ok(events(start).some(e=>e.date===date),date);
 });
 test('all three attendance pages use the updated shared calendar',()=>{
- for(const page of ['attendance','player-attendance','coach-attendance'])assert.match(readFileSync(new URL('../'+page+'.html',import.meta.url),'utf8'),/attendance-future-only.js\?v=20261107-weekends-holidays1/);
+ for(const page of ['attendance','player-attendance','coach-attendance'])assert.match(readFileSync(new URL('../'+page+'.html',import.meta.url),'utf8'),/attendance-future-only.js\?v=20261108-two-months1/);
+});
+
+test('two-month window includes endpoint and excludes later dates',()=>{
+ const result=events('2026-11-08',[],[{date:'2027-01-08'},{date:'2027-01-09'}]).map(e=>e.date);
+ assert.ok(result.includes('2026-12-27'));
+ assert.ok(result.includes('2027-01-08'));
+ assert.ok(!result.includes('2027-01-09'));
+});
+test('two months from month end clamps to last day of target month',()=>{
+ const result=events('2026-12-31',[],[{date:'2027-02-28'},{date:'2027-03-01'}]).map(e=>e.date);
+ assert.ok(result.includes('2027-02-28'));
+ assert.ok(!result.includes('2027-03-01'));
 });
