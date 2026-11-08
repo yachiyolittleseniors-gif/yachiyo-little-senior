@@ -766,6 +766,8 @@ function normalizeLiveScoreGame(value) {
         context: String(e.context || '').slice(0, 100),
         at: String(e.at || '').slice(0, 40),
         dhRelease: e.dhRelease === true,
+        ...(Number.isInteger(e.batterBefore) && e.batterBefore >= 1 && e.batterBefore <= 9
+          ? { batterBefore: e.batterBefore, batterAfter: e.batterBefore % 9 + 1 } : {}),
       })).filter(e => e.text) : [],
 
     selectedScoreCell: value.selectedScoreCell && ["ours", "opponent"].includes(String(value.selectedScoreCell.side || "")) ? {

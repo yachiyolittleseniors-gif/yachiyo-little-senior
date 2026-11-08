@@ -25,3 +25,30 @@ test('phase follows first/second batting order and supports tie breaks',()=>{
   assert.equal(ctx.phase({battingOrder:'second',selectedScoreCell:{side:'ours',index:1,tieBreak:false}}).label,'2回裏');
   assert.equal(ctx.phase({battingOrder:'first',selectedScoreCell:{side:'ours',index:2,tieBreak:true}}).label,'10回表');
 });
+
+vm.runInContext([fn(front,'completesPlateAppearance','  '),fn(front,'undoCommentary','  '),fn(front,'commentaryContext','  '),fn(front,'postCommentary','  ')].join('\n'),ctx);
+const init = (batter=3,side='ours') => {
+  Object.assign(ctx,{inputMode:true,replayMode:false,closeExtraDialog(){},commitExtraChange(){},state:{active:true,current:ctx.normalizeGame({batter,battingOrder:'first',selectedScoreCell:{side,index:0,tieBreak:false}})}});
+};
+test('hits, batter outs and walks advance once, with the original batter in history',()=>{
+  for(const text of ['ヒット！','ホームラン！','三振','ゴロ','フライ','ダブルプレー','四球で出塁！']){
+    init(9); ctx.postCommentary(text,false,ctx.completesPlateAppearance(text));
+    assert.equal(ctx.state.current.batter,1);
+    const entry=ctx.state.current.commentary[0];assert.match(entry.context,/9番/);assert.equal(entry.batterBefore,9);
+    assert.equal(ctx.state.current.sbo.outs,0);assert.equal(ctx.state.current.sbo.balls,0);
+    // Undo still works after persistence and reload.
+    const saved=ctx.normalizeGame(ctx.normalizeLiveScoreGame(ctx.state.current));
+    ctx.undoCommentary(saved);assert.equal(saved.batter,9);assert.equal(saved.commentary.length,0);
+  }
+});
+test('runner events, match notices, free text and opponent results keep our batter',()=>{
+  for(const text of ['盗塁成功！','盗塁失敗','牽制アウト','先制！','同点！','DH解除','雨天中断']){
+    init();ctx.postCommentary(text,false,ctx.completesPlateAppearance(text));assert.equal(ctx.state.current.batter,3);
+  }
+  init();ctx.postCommentary('ヒット！');assert.equal(ctx.state.current.batter,3,'free text does not infer outcomes');
+  init(3,'opponent');ctx.postCommentary('三振',false,true);assert.equal(ctx.state.current.batter,3);assert.doesNotMatch(ctx.state.current.commentary[0].context,/3番/);
+});
+test('undo does not erase a later manual batter correction and viewers cannot post',()=>{
+  init();ctx.postCommentary('ヒット！',false,true);ctx.state.current.batter=7;ctx.undoCommentary(ctx.state.current);assert.equal(ctx.state.current.batter,7);
+  init();ctx.inputMode=false;ctx.postCommentary('ヒット！',false,true);assert.equal(ctx.state.current.batter,3);assert.equal(ctx.state.current.commentary.length,0);
+});

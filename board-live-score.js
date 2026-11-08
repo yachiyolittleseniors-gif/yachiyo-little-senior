@@ -290,6 +290,8 @@
         context: String(e.context || '').slice(0, 100),
         at: String(e.at || '').slice(0, 40),
         dhRelease: e.dhRelease === true,
+        ...(Number.isInteger(e.batterBefore) && e.batterBefore >= 1 && e.batterBefore <= 9
+          ? { batterBefore: e.batterBefore, batterAfter: e.batterBefore % 9 + 1 } : {}),
       })).filter(e => e.text) : [],
 
       selectedScoreCell: game.selectedScoreCell && ['ours','opponent'].includes(game.selectedScoreCell.side) ? {
@@ -1403,15 +1405,32 @@
     scheduleAutoSave();
   }
 
-  function postCommentary(text, dhRelease = false) {
+  function completesPlateAppearance(text) {
+    return ['ヒット！', 'ツーベース！', 'スリーベース！', 'タイムリーヒット！', 'ホームラン！',
+      '犠牲フライ', '三振', 'ゴロ', 'フライ', '内野フライ', '外野フライ', 'ライナー',
+      'ファウルフライ', 'ダブルプレー', '四球で出塁！'].includes(text);
+  }
+
+  function undoCommentary(game) {
+    const removed = game.commentary.pop();
+    if (!removed) return;
+    if (removed.dhRelease && game.dh === 'released') game.dh = 'active';
+    // Only reverse our own automatic advance, not a later manual correction.
+    if (removed.batterBefore && game.batter === removed.batterAfter) game.batter = removed.batterBefore;
+  }
+
+  function postCommentary(text, dhRelease = false, advanceBatter = false) {
     if (!inputMode || replayMode || !state.active || !state.current) return;
     text = String(text).trim().slice(0, 80);
     if (!text) return;
+    const batterBefore = advanceBatter && !dhRelease && phase().side === 'ours' ? state.current.batter : null;
     state.current.commentary.push({
       id: `${Date.now()}-${Math.random().toString(36).slice(2)}`,
       text, context: dhRelease ? `${phase().label}｜${state.current.ourName}` : commentaryContext(),
       at: new Date().toISOString(), dhRelease,
+      ...(batterBefore ? { batterBefore, batterAfter: batterBefore % 9 + 1 } : {}),
     });
+    if (batterBefore) state.current.batter = batterBefore % 9 + 1;
     state.current.commentary = state.current.commentary.slice(-300);
     closeExtraDialog();
     commitExtraChange();
@@ -1472,7 +1491,7 @@
       // Short labels prevent awkward line breaks; history keeps the full wording.
       if (text === 'タイムリーヒット！') b.textContent = 'タイムリー';
       if (text === '四球で出塁！') b.textContent = '四球';
-      b.addEventListener('click', () => postCommentary(text)); x('lsNewsChoices').append(b);
+      b.addEventListener('click', () => postCommentary(text, false, completesPlateAppearance(text))); x('lsNewsChoices').append(b);
     }
   }
   newsCategories.forEach(([label], index) => {
@@ -1507,9 +1526,8 @@
   x('lsCustomForm').addEventListener('submit', e => { e.preventDefault(); postCommentary(x('lsCustom').value); });
   x('lsUndo').addEventListener('click', () => {
     if (!inputMode || replayMode || !state.current?.commentary.length) return;
-    if (!confirm('直前の速報を取り消しますか？')) return;
-    const removed = state.current.commentary.pop();
-    if (removed.dhRelease && state.current.dh === 'released') state.current.dh = 'active';
+    if (!confirm('直前の速報を取り消しますか？自動で進めた打順も戻します（その後に手動変更した場合を除きます）。')) return;
+    undoCommentary(state.current);
     closeExtraDialog(); commitExtraChange();
   });
   x('lsDhSettings').addEventListener('click', e => {
