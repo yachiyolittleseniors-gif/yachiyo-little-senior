@@ -1,5 +1,5 @@
 [build]
-  command = "node --test tests/duty-grades.test.mjs tests/duty-day-selection.test.mjs tests/duty-temporary-roster.test.mjs tests/home-csp.test.mjs tests/board-passkey-retry.test.mjs tests/passkey-credential-list.test.mjs tests/live-score-lifecycle.test.mjs tests/live-score-sync.test.mjs tests/access-hardening.test.mjs tests/passkey-security.test.mjs tests/passkey-compatibility.test.mjs tests/board-passkey-remove.test.mjs tests/passkey-crypto-compatibility.test.mjs && node netlify/sync-home-csp.mjs"
+  command = "node --test tests/duty-grades.test.mjs tests/duty-day-selection.test.mjs tests/duty-temporary-roster.test.mjs tests/home-csp.test.mjs tests/board-passkey-retry.test.mjs tests/passkey-credential-list.test.mjs tests/live-score-lifecycle.test.mjs tests/live-score-sync.test.mjs tests/live-score-commentary.test.mjs tests/access-hardening.test.mjs tests/passkey-security.test.mjs tests/passkey-compatibility.test.mjs tests/board-passkey-remove.test.mjs tests/passkey-crypto-compatibility.test.mjs && node netlify/sync-home-csp.mjs"
   publish = "."
   functions = "netlify/functions"
 

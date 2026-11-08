@@ -383,3 +383,25 @@ test('a stored record without an ETag cannot be overwritten unconditionally', as
   assert.equal(f.state.writes.length, writes);
   assert.equal(f.state.data.active, true);
 });
+
+test('a pre-update editor keeps new batting, DH and commentary fields on save and finish', async () => {
+  const f = fixture();
+  const current = { ...blankGame(), batter: 4, dh: 'released', commentary: [{ text: 'DH解除' }] };
+  await f.start(current);
+  const legacy = blankGame(); legacy.innings.ours[0] = 2;
+  const saved = await f.save(legacy);
+  assert.equal(saved.data.current.batter, 4);
+  assert.equal(saved.data.current.dh, 'released');
+  assert.deepEqual(saved.data.current.commentary, current.commentary);
+  assert.equal(saved.data.current.innings.ours[0], 2);
+  const finished = await f.run('saveLiveScore', { data: { active: false, lastGame: legacy } });
+  assert.deepEqual(finished.data.lastGame.commentary, current.commentary);
+});
+
+test('an explicit commentary undo remains empty instead of resurrecting history', async () => {
+  const f = fixture();
+  await f.start({ ...blankGame(), batter: 2, dh: 'released', commentary: [{text:'DH解除'}] });
+  const result = await f.save({ ...f.state.data.current, dh: 'active', commentary: [] });
+  assert.equal(result.data.current.dh, 'active');
+  assert.deepEqual(result.data.current.commentary, []);
+});

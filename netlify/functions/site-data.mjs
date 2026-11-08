@@ -758,6 +758,16 @@ function normalizeLiveScoreGame(value) {
     ourName: normalizeLiveScoreText(value.ourName, 40) || "八千代",
     opponent: normalizeLiveScoreText(value.opponent, 40),
     battingOrder: value.battingOrder === "first" ? "first" : "second",
+      batter: Math.max(1, Math.min(9, Math.trunc(Number(value.batter) || 1))),
+      dh: ['active', 'released'].includes(value.dh) ? value.dh : 'none',
+      commentary: Array.isArray(value.commentary) ? value.commentary.slice(-300).filter(e => e && typeof e === 'object').map(e => ({
+        id: String(e.id || '').slice(0, 80),
+        text: String(e.text || '').replace(/[\u0000-\u001f]/g, ' ').trim().slice(0, 80),
+        context: String(e.context || '').slice(0, 100),
+        at: String(e.at || '').slice(0, 40),
+        dhRelease: e.dhRelease === true,
+      })).filter(e => e.text) : [],
+
     selectedScoreCell: value.selectedScoreCell && ["ours", "opponent"].includes(String(value.selectedScoreCell.side || "")) ? {
       side: String(value.selectedScoreCell.side),
       index: Math.max(0, Math.min(7, Number(value.selectedScoreCell.index) || 0)),

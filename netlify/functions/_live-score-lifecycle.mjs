@@ -20,6 +20,7 @@ export function hasLiveScoreInput(game) {
     .some(key => String(game[key] || "").trim())) return true;
   if (String(game.ourName || "八千代").trim() !== "八千代") return true;
   if (game.battingOrder === "first") return true;
+  if (Number(game.batter || 1) !== 1 || ["active", "released"].includes(game.dh) || game.commentary?.length) return true;
   if (["ours", "opponent"].some(side => (game.innings?.[side] || [])
     .some(value => value !== "" && value !== null && value !== undefined))) return true;
   if (Array.isArray(game.tieBreaks) && game.tieBreaks.length) return true;
@@ -127,8 +128,17 @@ function applyAction(state, { action, data, sessionId, userInput }, normalizeGam
     };
   }
   if (action !== "saveLiveScore") return rejected(state, "invalid-action", "不正な試合速報操作です。", 400);
+  // A still-open pre-update editor must not erase the newer commentary fields.
+  const withExistingExtras = game => {
+    if (!game || typeof game !== 'object') return game;
+    const merged = { ...game };
+    for (const key of ['batter', 'dh', 'commentary']) {
+      if (!Object.hasOwn(game, key) && Object.hasOwn(state.current, key)) merged[key] = state.current[key];
+    }
+    return merged;
+  };
   if (data?.active === false) {
-    const completed = normalizeGame(data.lastGame) || state.current;
+    const completed = normalizeGame(withExistingExtras(data.lastGame)) || state.current;
     return {
       state: {
         ...state,
@@ -142,7 +152,7 @@ function applyAction(state, { action, data, sessionId, userInput }, normalizeGam
       response: { ok: true, ended: true },
     };
   }
-  const current = normalizeGame(data?.current);
+  const current = normalizeGame(withExistingExtras(data?.current));
   if (!current) return rejected(state, "invalid-game", "試合速報の内容を確認してください。", 400);
   const changedInput = JSON.stringify(editableGame(current)) !== JSON.stringify(editableGame(state.current));
   return {

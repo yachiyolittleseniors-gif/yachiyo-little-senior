@@ -14,7 +14,7 @@
 <meta name="theme-color" content="#071426">
 <title>チーム専用ページ｜八千代リトルシニア</title>
 <link rel="stylesheet" href="./board-base.css?v=20260918-1">
-<link rel="stylesheet" href="./board-live-score.css?v=20260919-finishoutline1">
+<link rel="stylesheet" href="./board-live-score.css?v=20261108-commentary1">
 <script src="./board-passkey.js?v=20261101-passkey-security1"></script>
 <script src="./operator-passkey.js?v=20260930-existing-passkey1"></script>
 <script src="./board-access.js?v=20261017-android-passkey-start1"></script>
@@ -1170,11 +1170,35 @@ body:after{display:none!important;content:none!important}
             
           </div>
         </div>
+        <div class="live-score-board" aria-label="得点板">
+          <div class="live-score-board-head" aria-hidden="true">
+            <span></span><span>1</span><span>2</span><span>3</span><span>4</span><span>5</span><span>6</span><span>7</span><span>TB</span><span>計</span>
+          </div>
+          <div id="liveScoreRows"></div>
+        </div>
+
+        <div class="live-score-tb-list" id="liveScoreTieBreaks" hidden></div>
+
+        <section class="ls-batter" aria-label="八千代の打順">
+          <button type="button" id="lsBatterOpen" aria-label="回・攻撃・打順を変更"><span id="lsPhase"></span><strong id="lsBatter"></strong></button>
+          <span id="lsDhBadge" class="ls-dh-badge"></span>
+        </section>
+        <section class="ls-news" aria-label="ひとこと速報">
+          <small>最新速報</small><p id="lsLatest" aria-live="polite">速報はまだありません</p>
+          <details id="lsHistory"><summary>速報履歴を見る</summary><ol id="lsHistoryList"></ol></details>
+        </section>
+        <div class="ls-actions ls-editor-only">
+          <button class="live-score-button primary" id="lsNewsOpen" type="button">速報を入力</button>
+          <button class="live-score-button" id="lsNext" type="button">次の打者 ▶</button>
+        </div>
         <div class="live-score-reset-stack">
           <button class="live-score-reset-status" id="liveScoreResetBs" type="button">↻ BSだけをリセット</button>
           <button class="live-score-reset-status" id="liveScoreResetStatus" type="button">↻ BSO・ランナーをリセット</button>
         </div>
 
+        <details id="lsInfo" class="ls-info">
+          <summary><span id="lsInfoTitle">試合情報・DH設定</span><small id="lsInfoSummary"></small></summary>
+          <div class="ls-editor-only">
         <div class="live-score-fields">
           <label class="live-score-field wide">大会名
             <input id="liveScoreTournament" type="text" maxlength="100" placeholder="大会名を入力">
@@ -1208,19 +1232,30 @@ body:after{display:none!important;content:none!important}
           </div>
         </div>
 
-        <div class="live-score-board" aria-label="得点板">
-          <div class="live-score-board-head" aria-hidden="true">
-            <span></span><span>1</span><span>2</span><span>3</span><span>4</span><span>5</span><span>6</span><span>7</span><span>TB</span><span>計</span>
-          </div>
-          <div id="liveScoreRows"></div>
-        </div>
-
+          <div class="ls-dh-settings"><span>八千代のDH</span><div class="live-score-segments" id="lsDhSettings"><button type="button" data-dh="active">あり</button><button type="button" data-dh="none">なし</button></div><button type="button" class="live-score-button" id="lsDhRelease">DH解除</button></div>
         <div class="live-score-tb-actions">
           <button class="live-score-button" id="liveScoreAddTieBreak" type="button">＋ タイブレークを追加</button>
           <button class="live-score-button danger" id="liveScoreRemoveTieBreak" type="button" hidden>最後のTBを削除</button>
         </div>
-        <div class="live-score-tb-list" id="liveScoreTieBreaks" hidden></div>
-
+          <button type="button" class="live-score-button" id="lsInfoDone">入力完了・閉じる</button>
+          </div>
+          <p id="lsInfoReadOnly" class="ls-viewer-only"></p>
+        </details>
+        <dialog id="lsDialog" aria-labelledby="lsDialogTitle">
+          <div class="ls-dialog-head"><strong id="lsDialogTitle">速報を入力</strong><button type="button" id="lsDialogClose" aria-label="閉じる">×</button></div>
+          <section id="lsBatterPanel">
+            <div class="ls-phase-fields"><label>回<select id="lsInning"></select></label><label>攻撃<select id="lsSide"><option value="ours">八千代</option><option value="opponent">相手</option></select></label></div>
+            <p>八千代の打順</p><div id="lsBatterChoices" class="ls-batter-choices"></div>
+            <button type="button" class="live-score-button primary" id="lsPhaseDone">この状況に変更</button>
+          </section>
+          <section id="lsNewsPanel">
+            <p id="lsNewsContext"></p><div id="lsNewsChoices" class="ls-news-choices"></div>
+            <details><summary>その他の速報</summary><div id="lsMoreNews" class="ls-news-choices"></div></details>
+            <form id="lsCustomForm"><label for="lsCustom">自由入力（80文字まで）</label><input id="lsCustom" maxlength="80" placeholder="雨天中断など"><button class="live-score-button" type="submit">投稿</button></form>
+            <button type="button" class="live-score-button" id="lsUndo">直前の速報を取り消す</button>
+            <small>点数・カウント・打順は自動では変わりません。</small>
+          </section>
+        </dialog>
         <div class="live-score-publish">
           <button class="live-score-button subdued" id="liveScoreFinish" type="button">試合終了</button>
           <p class="live-score-finish-warning">⚠ 試合終了後は、入力者が必ず「試合終了」を押してください。<br>未入力の場合は開始から3分、入力済みの場合は開始から4時間で自動終了します。</p>
@@ -1817,7 +1852,7 @@ main.wrap{padding-bottom:38px!important}
 }
 </style>
 </style>
-<script src="./board-live-score.js?v=20261101-live-sync2"></script>
+<script src="./board-live-score.js?v=20261108-commentary1"></script>
 <script src="./board-updates.js?v=20261005-admin-popup-calendar2"></script>
 <script src="./board-referee-documents.js?v=20261002-hide-save1"></script>
 <script src="./board-tournaments.js?v=20260914-1"></script>

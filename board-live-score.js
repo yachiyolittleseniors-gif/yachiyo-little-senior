@@ -19,6 +19,7 @@
     ourName: '八千代',
     opponent: '',
     battingOrder: 'second',
+    batter: 1, dh: 'none', commentary: [],
     innings: {
       ours: ['', '', '', '', '', '', ''],
       opponent: ['', '', '', '', '', '', ''],
@@ -281,6 +282,16 @@
       ourName: String(game.ourName || '八千代').slice(0, 40) || '八千代',
       opponent: String(game.opponent || '').slice(0, 40),
       battingOrder: game.battingOrder === 'first' ? 'first' : 'second',
+      batter: Math.max(1, Math.min(9, Math.trunc(Number(game.batter) || 1))),
+      dh: ['active', 'released'].includes(game.dh) ? game.dh : 'none',
+      commentary: Array.isArray(game.commentary) ? game.commentary.slice(-300).filter(e => e && typeof e === 'object').map(e => ({
+        id: String(e.id || '').slice(0, 80),
+        text: String(e.text || '').replace(/[\u0000-\u001f]/g, ' ').trim().slice(0, 80),
+        context: String(e.context || '').slice(0, 100),
+        at: String(e.at || '').slice(0, 40),
+        dhRelease: e.dhRelease === true,
+      })).filter(e => e.text) : [],
+
       selectedScoreCell: game.selectedScoreCell && ['ours','opponent'].includes(game.selectedScoreCell.side) ? {
         side: game.selectedScoreCell.side,
         index: Math.max(0, Math.min(7, Number(game.selectedScoreCell.index) || 0)),
@@ -621,6 +632,7 @@
         cell.classList.remove('is-selected');
       });
       input.classList.add('is-selected');
+      renderExtras();
       scheduleAutoSave();
     };
     const sharedSelected = state.current?.selectedScoreCell || selectedScoreCell;
@@ -770,6 +782,7 @@
   }
 
   function render() {
+    if (!state.active || replayMode) document.getElementById('lsDialog')?.close();
     renderTimeoutNotice();
     const showingEditor = state.active || replayMode;
     document.body.classList.toggle('live-score-focused', Boolean(showingEditor && !editorCollapsed));
@@ -794,7 +807,7 @@
     renderTieBreaks();
     elements.liveBadge.hidden = replayMode || !state.visible;
     elements.visibilityBadge.hidden = replayMode;
-    elements.visibilityBadge.textContent = state.visible ? '公開中' : '未公開';
+    elements.visibilityBadge.textContent = !inputMode ? '閲覧中' : (state.visible ? '公開中' : '未公開');
     elements.visibilityBadge.classList.toggle('is-visible', state.visible);
     elements.finish.hidden = replayMode;
     elements.addTieBreak.hidden = replayMode;
@@ -821,6 +834,7 @@
       if (disabled) control.tabIndex = -1;
       else control.removeAttribute('tabindex');
     });
+    renderExtras();
     renderLock();
     renderViewers();
     updateStatus(inputMode && !replayMode
@@ -1310,6 +1324,186 @@
   }
 
 
+
+  // Match commentary uses the same locked, retryable save as scores.
+  let infoSession = null;
+  let infoWasInput = false;
+  let dialogOpener = null;
+  let draftBatter = 1;
+  const x = id => document.getElementById(id);
+  const dialog = x('lsDialog');
+
+  function phase(game = state.current) {
+    const cell = game?.selectedScoreCell;
+    const side = cell?.side || (game?.battingOrder === 'first' ? 'ours' : 'opponent');
+    const inning = cell ? (cell.tieBreak ? 8 : 1) + cell.index : 1;
+    const top = side === (game?.battingOrder === 'first' ? 'ours' : 'opponent');
+    return { side, inning, label: `${inning}回${top ? '表' : '裏'}` };
+  }
+
+  function commentaryContext(includeBatter = true) {
+    const p = phase();
+    const g = state.current;
+    return `${p.label}｜${p.side === 'ours' ? g.ourName : (g.opponent || '相手チーム')}${includeBatter && p.side === 'ours' ? `｜${g.batter}番` : ''}`;
+  }
+
+  function closeExtraDialog() {
+    if (dialog.open) dialog.close();
+  }
+
+  function renderExtras() {
+    const g = state.current;
+    if (!g) return;
+    const editable = inputMode && !replayMode;
+    const p = phase(g);
+    x('lsPhase').textContent = `${p.label}｜${p.side === 'ours' ? `${g.ourName}の攻撃` : `${g.ourName}は守備中`}`;
+    x('lsBatter').textContent = p.side === 'ours' ? `いま${g.batter}番打者` : `次は${g.batter}番から`;
+    x('lsBatterOpen').disabled = !editable;
+    x('lsBatterOpen').setAttribute('aria-label', editable ? '回・攻撃・八千代の打順を変更' : '八千代の打順');
+    x('lsDhBadge').textContent = g.dh === 'active' ? 'DH使用中' : g.dh === 'released' ? 'DH解除' : 'DHなし';
+    x('lsNext').disabled = !editable || p.side !== 'ours';
+    x('lsDhRelease').hidden = g.dh !== 'active';
+    x('lsDhSettings').querySelectorAll('button').forEach(b => {
+      b.classList.toggle('selected', b.dataset.dh === g.dh);
+      b.setAttribute('aria-pressed', String(b.dataset.dh === g.dh));
+      b.disabled = !editable || g.dh === 'released';
+    });
+    const latest = g.commentary.at(-1);
+    x('lsLatest').textContent = latest ? `${latest.context}\n${latest.text}` : '速報はまだありません';
+    x('lsHistoryList').replaceChildren();
+    for (const entry of [...g.commentary].reverse()) {
+      const li = document.createElement('li');
+      const text = document.createElement('span');
+      text.textContent = `${entry.context}：${entry.text}`;
+      li.append(text);
+      x('lsHistoryList').append(li);
+    }
+    if (!latest) {
+      const li = document.createElement('li'); li.textContent = '速報はまだありません'; x('lsHistoryList').append(li);
+    }
+    const summary = [g.grade && `${g.grade}年生`, g.opponent && `${g.opponent}戦`, g.startTime && `${g.startTime}開始`].filter(Boolean).join('｜');
+    x('lsInfoSummary').textContent = summary || '大会名・対戦相手などを設定';
+    x('lsInfoTitle').textContent = editable ? '試合情報・DH設定' : '試合情報を見る';
+    x('lsInfoReadOnly').textContent = [g.tournament || '大会名未入力', summary, g.ground, g.battingOrder === 'first' ? '八千代：先攻' : '八千代：後攻', x('lsDhBadge').textContent].filter(Boolean).join('\n');
+    if (infoSession !== state.sessionId || editable !== infoWasInput) {
+      x('lsInfo').open = editable && !state.hasUserInput;
+      infoSession = state.sessionId;
+      infoWasInput = editable;
+    }
+    if (!editable) closeExtraDialog();
+    x('lsUndo').disabled = !latest;
+  }
+
+  function commitExtraChange() {
+    if (!inputMode || replayMode || !state.active || !state.current) return;
+    markUserInput();
+    dirty = true;
+    changeVersion += 1;
+    renderExtras();
+    scheduleAutoSave();
+  }
+
+  function postCommentary(text, dhRelease = false) {
+    if (!inputMode || replayMode || !state.active || !state.current) return;
+    text = String(text).trim().slice(0, 80);
+    if (!text) return;
+    state.current.commentary.push({
+      id: `${Date.now()}-${Math.random().toString(36).slice(2)}`,
+      text, context: dhRelease ? `${phase().label}｜${state.current.ourName}` : commentaryContext(),
+      at: new Date().toISOString(), dhRelease,
+    });
+    state.current.commentary = state.current.commentary.slice(-300);
+    closeExtraDialog();
+    commitExtraChange();
+  }
+
+  function openExtraDialog(kind, opener) {
+    if (!inputMode || replayMode || !state.active || !state.current) return;
+    dialogOpener = opener;
+    x('lsBatterPanel').hidden = kind !== 'batter';
+    x('lsNewsPanel').hidden = kind !== 'news';
+    x('lsDialogTitle').textContent = kind === 'batter' ? '回・攻撃・八千代の打順' : 'ひとこと速報を入力';
+    const p = phase();
+    draftBatter = state.current.batter;
+    x('lsInning').value = String(p.inning);
+    x('lsSide').value = p.side;
+    x('lsBatterChoices').querySelectorAll('button').forEach(b => {
+      b.classList.toggle('selected', Number(b.dataset.batter) === draftBatter);
+      b.setAttribute('aria-pressed', String(Number(b.dataset.batter) === draftBatter));
+    });
+    x('lsNewsContext').textContent = commentaryContext();
+    x('lsCustom').value = '';
+    renderExtras();
+    dialog.showModal();
+  }
+
+  for (let n = 1; n <= 15; n++) {
+    const option = document.createElement('option'); option.value = String(n); option.textContent = `${n}回${n > 7 ? '（TB）' : ''}`; x('lsInning').append(option);
+  }
+  for (let n = 1; n <= 9; n++) {
+    const b = document.createElement('button'); b.type = 'button'; b.textContent = String(n); b.dataset.batter = String(n);
+    b.addEventListener('click', () => {
+      draftBatter = n;
+      x('lsBatterChoices').querySelectorAll('button').forEach(btn => {
+        btn.classList.toggle('selected', btn === b); btn.setAttribute('aria-pressed', String(btn === b));
+      });
+    });
+    x('lsBatterChoices').append(b);
+  }
+  const commonNews = ['ヒット！', '三振', 'ゴロ', 'フライ', '四球で出塁！'];
+  const moreNews = ['ツーベース！', 'スリーベース！', 'タイムリーヒット！', 'ホームラン！', '犠牲フライ', '内野フライ', '外野フライ', 'ライナー', 'ファウルフライ', 'ダブルプレー', '盗塁成功！', '盗塁失敗', '牽制アウト', 'ナイスプレー！', '先制！', '同点！', '勝ち越し！', '逆転！', '雨天中断', '試合再開'];
+  for (const [id, options] of [['lsNewsChoices', commonNews], ['lsMoreNews', moreNews]]) {
+    for (const text of options) {
+      const b = document.createElement('button'); b.type = 'button'; b.textContent = text;
+      b.addEventListener('click', () => postCommentary(text)); x(id).append(b);
+    }
+  }
+  x('lsBatterOpen').addEventListener('click', e => openExtraDialog('batter', e.currentTarget));
+  x('lsNewsOpen').addEventListener('click', e => openExtraDialog('news', e.currentTarget));
+  x('lsDialogClose').addEventListener('click', closeExtraDialog);
+  dialog.addEventListener('close', () => { dialogOpener?.focus(); });
+  x('lsPhaseDone').addEventListener('click', () => {
+    if (!inputMode || replayMode || !state.current) return;
+    const inning = Number(x('lsInning').value);
+    const tieBreak = inning > 7;
+    while (tieBreak && state.current.tieBreaks.length < inning - 7) {
+      state.current.tieBreaks.push({ inning: 8 + state.current.tieBreaks.length, ours: '', opponent: '' });
+    }
+    state.current.selectedScoreCell = { side: x('lsSide').value, index: inning - (tieBreak ? 8 : 1), tieBreak };
+    selectedScoreCell = { ...state.current.selectedScoreCell };
+    state.current.batter = draftBatter;
+    closeExtraDialog();
+    commitExtraChange();
+    render();
+  });
+  x('lsNext').addEventListener('click', () => {
+    if (!inputMode || replayMode || !state.current || phase().side !== 'ours') return;
+    state.current.batter = state.current.batter % 9 + 1;
+    commitExtraChange();
+  });
+  x('lsCustomForm').addEventListener('submit', e => { e.preventDefault(); postCommentary(x('lsCustom').value); });
+  x('lsUndo').addEventListener('click', () => {
+    if (!inputMode || replayMode || !state.current?.commentary.length) return;
+    if (!confirm('直前の速報を取り消しますか？')) return;
+    const removed = state.current.commentary.pop();
+    if (removed.dhRelease && state.current.dh === 'released') state.current.dh = 'active';
+    closeExtraDialog(); commitExtraChange();
+  });
+  x('lsDhSettings').addEventListener('click', e => {
+    const b = e.target.closest('[data-dh]');
+    if (!b || !inputMode || replayMode || !state.current || state.current.dh === 'released') return;
+    if (state.current.dh === 'active' && b.dataset.dh === 'none' && !confirm('開始時のDH設定を「なし」に訂正しますか？途中で解除した場合は「DH解除」を使ってください。')) return;
+    state.current.dh = b.dataset.dh; commitExtraChange();
+  });
+  x('lsDhRelease').addEventListener('click', () => {
+    if (!inputMode || replayMode || state.current?.dh !== 'active') return;
+    if (!confirm('八千代のDHを解除して、速報履歴に記録しますか？')) return;
+    state.current.dh = 'released'; postCommentary('DH解除', true);
+  });
+  x('lsInfoDone').addEventListener('click', () => {
+    if (!inputMode || replayMode) return;
+    readFields(); commitExtraChange(); x('lsInfo').open = false;
+  });
 
   (async () => {
     const allowed = await window.boardAccessReady;
