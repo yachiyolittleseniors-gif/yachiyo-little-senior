@@ -14,7 +14,7 @@
 <meta name="theme-color" content="#071426">
 <title>チーム専用ページ｜八千代リトルシニア</title>
 <link rel="stylesheet" href="./board-base.css?v=20260918-1">
-<link rel="stylesheet" href="./board-live-score.css?v=20261108-commentary3">
+<link rel="stylesheet" href="./board-live-score.css?v=20261108-input-polish1">
 <script src="./board-passkey.js?v=20261101-passkey-security1"></script>
 <script src="./operator-passkey.js?v=20260930-existing-passkey1"></script>
 <script src="./board-access.js?v=20261017-android-passkey-start1"></script>
@@ -1171,12 +1171,12 @@ body:after{display:none!important;content:none!important}
           </div>
         </div>
         <div class="ls-actions ls-editor-only">
-          <button class="live-score-button primary" id="lsNewsOpen" type="button">速報を入力</button>
-          <button class="live-score-button" id="lsNext" type="button">次の打者 ▶</button>
+          <button class="live-score-button primary" id="lsNewsOpen" type="button"><span id="lsNewsButtonLabel">速報を入力</span><small id="lsNewsButtonHint">打順も自動で次へ</small></button>
+          <button class="live-score-button" id="lsNext" type="button" title="速報を投稿せず、打順だけを進める">手動で次へ ▶</button>
         </div>
         <div class="live-score-reset-stack">
-          <button class="live-score-reset-status" id="liveScoreResetBs" type="button">↻ BSだけをリセット</button>
-          <button class="live-score-reset-status" id="liveScoreResetStatus" type="button">↻ BSO・ランナーをリセット</button>
+          <button class="live-score-reset-status" id="liveScoreResetBs" type="button">↻ BSリセット</button>
+          <button class="live-score-reset-status" id="liveScoreResetStatus" type="button">↻ BSO・走者リセット</button>
         </div>
 
         <div class="live-score-board" aria-label="得点板">
@@ -1852,7 +1852,7 @@ main.wrap{padding-bottom:38px!important}
 }
 </style>
 </style>
-<script src="./board-live-score.js?v=20261108-commentary3"></script>
+<script src="./board-live-score.js?v=20261108-input-polish1"></script>
 <script src="./board-updates.js?v=20261005-admin-popup-calendar2"></script>
 <script src="./board-referee-documents.js?v=20261002-hide-save1"></script>
 <script src="./board-tournaments.js?v=20260914-1"></script>

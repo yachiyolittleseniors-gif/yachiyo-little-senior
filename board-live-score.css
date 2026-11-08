@@ -58,7 +58,7 @@
 .live-score-tb-block{padding:8px 10px;border:1px solid #596b81;border-radius:8px;background:rgba(255,255,255,.04)}.live-score-tb-block>strong{display:block;margin-bottom:5px;color:#e2bd67;font-size:12px}.live-score-tb-block label{display:grid;grid-template-columns:minmax(0,1fr) 46px;align-items:center;gap:7px;margin-top:4px;color:#fff;font-size:12px;font-weight:800}.live-score-tb-block .live-score-number{height:32px;border-radius:6px}
 .live-score-publish{display:grid;gap:8px;margin-top:12px}.live-score-publish>.live-score-button{width:100%}.live-score-publish>.primary{font-size:15px}.live-score-status{display:flex;justify-content:space-between;gap:10px;margin:0 2px;color:#bac3cf;font-size:11px;font-weight:700}.live-score-status time{flex:0 0 auto}
 .live-score-status[hidden]{display:none}
-.live-score-card.is-saving{opacity:.72;pointer-events:none}
+.live-score-card.is-saving{opacity:1}
 .live-score-card.is-replay .live-score-field input:disabled,
 .live-score-card.is-replay .live-score-number:disabled,
 .live-score-card.is-replay .live-score-segments button:disabled{opacity:1;cursor:default;-webkit-text-fill-color:currentColor}
@@ -226,3 +226,21 @@
 #lsCustomForm{margin:8px 0}
 #lsDialog .ls-dialog-head{position:sticky;top:-18px;background:#101e31;z-index:2;padding:10px 0;margin-top:-10px}
 @media(max-width:350px){#lsNewsCategories{grid-template-columns:repeat(2,minmax(0,1fr))}}
+
+/* Keep the operator's batting context and controls together. */
+#liveScoreCard:not(.live-score-view-mode) .live-score-head{align-items:center!important;margin-bottom:10px}
+#liveScoreCard:not(.live-score-view-mode) .live-score-head h2{font-size:23px!important}
+#liveScoreCard:not(.live-score-view-mode) .ls-batter{margin:0 0 10px;padding:10px 12px;background:#102139}
+#liveScoreCard:not(.live-score-view-mode) #lsBatterOpen{min-height:44px;gap:3px;flex:1}
+#liveScoreCard:not(.live-score-view-mode) #lsBatter{font-size:21px}
+#liveScoreCard:not(.live-score-view-mode) .live-score-base-controls{margin:0 0 8px!important}
+#liveScoreCard .ls-actions{grid-template-columns:1.35fr 1fr;margin-top:8px;gap:8px}
+#liveScoreCard .ls-actions button{min-height:52px;touch-action:manipulation}
+#lsNewsOpen{display:grid;place-content:center;gap:2px}
+#lsNewsOpen small{font-size:10px;font-weight:600;line-height:1.4}
+#liveScoreCard .live-score-reset-stack{margin-top:8px}
+#liveScoreCard .live-score-reset-stack button{font-size:11px!important;min-height:44px!important}
+#liveScoreCard #lsLatest{color:#071426!important;font-size:16px;line-height:1.5;margin:6px 0 8px}
+#liveScoreCard .ls-news{padding:10px 12px}
+#liveScoreCard .ls-actions button:disabled{opacity:.45}
+#liveScoreCard .live-score-count{min-height:44px}

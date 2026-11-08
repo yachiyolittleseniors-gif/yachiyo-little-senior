@@ -52,3 +52,12 @@ test('undo does not erase a later manual batter correction and viewers cannot po
   init();ctx.postCommentary('ヒット！',false,true);ctx.state.current.batter=7;ctx.undoCommentary(ctx.state.current);assert.equal(ctx.state.current.batter,7);
   init();ctx.inputMode=false;ctx.postCommentary('ヒット！',false,true);assert.equal(ctx.state.current.batter,3);assert.equal(ctx.state.current.commentary.length,0);
 });
+
+vm.runInContext(fn(front,'clearBatterUndo','  '),ctx);
+test('manual correction back to the same batter cannot revive an old auto-advance undo',()=>{
+  init(3);ctx.postCommentary('ヒット！',false,true);
+  ctx.clearBatterUndo(ctx.state.current);ctx.state.current.batter=5;
+  ctx.clearBatterUndo(ctx.state.current);ctx.state.current.batter=4;
+  const persisted=ctx.normalizeGame(ctx.normalizeLiveScoreGame(ctx.state.current));
+  ctx.undoCommentary(persisted);assert.equal(persisted.batter,4);assert.equal(persisted.commentary.length,0);
+});

@@ -1358,6 +1358,11 @@
     if (!g) return;
     const editable = inputMode && !replayMode;
     const p = phase(g);
+    const batterPanel = root.querySelector('.ls-batter');
+    const anchor = root.querySelector(editable ? '.live-score-base-controls' : '.ls-news');
+    if (batterPanel.nextElementSibling !== anchor) elements.editor.insertBefore(batterPanel, anchor);
+    x('lsNewsButtonLabel').textContent = p.side === 'ours' ? '速報を入力' : '相手の速報を入力';
+    x('lsNewsButtonHint').textContent = p.side === 'ours' ? '打撃結果で打順も次へ' : '八千代の打順は保持';
     x('lsPhase').textContent = `${p.label}｜${p.side === 'ours' ? `${g.ourName}の攻撃` : `${g.ourName}は守備中`}`;
     x('lsBatter').textContent = p.side === 'ours' ? `いま${g.batter}番打者` : `次は${g.batter}番から`;
     x('lsBatterOpen').disabled = !editable;
@@ -1409,6 +1414,13 @@
     return ['ヒット！', 'ツーベース！', 'スリーベース！', 'タイムリーヒット！', 'ホームラン！',
       '犠牲フライ', '三振', 'ゴロ', 'フライ', '内野フライ', '外野フライ', 'ライナー',
       'ファウルフライ', 'ダブルプレー', '四球で出塁！'].includes(text);
+  }
+
+  function clearBatterUndo(game) {
+    for (const entry of game.commentary) {
+      delete entry.batterBefore;
+      delete entry.batterAfter;
+    }
   }
 
   function undoCommentary(game) {
@@ -1513,6 +1525,7 @@
     }
     state.current.selectedScoreCell = { side: x('lsSide').value, index: inning - (tieBreak ? 8 : 1), tieBreak };
     selectedScoreCell = { ...state.current.selectedScoreCell };
+    if (state.current.batter !== draftBatter) clearBatterUndo(state.current);
     state.current.batter = draftBatter;
     closeExtraDialog();
     commitExtraChange();
@@ -1520,6 +1533,7 @@
   });
   x('lsNext').addEventListener('click', () => {
     if (!inputMode || replayMode || !state.current || phase().side !== 'ours') return;
+    clearBatterUndo(state.current);
     state.current.batter = state.current.batter % 9 + 1;
     commitExtraChange();
   });
