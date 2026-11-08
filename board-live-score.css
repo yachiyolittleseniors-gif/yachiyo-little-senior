@@ -215,3 +215,14 @@
 @media(max-width:390px){#lsBatter{font-size:20px}.ls-dh-badge{font-size:10px;padding:4px}#lsPhase{font-size:12px}}
 #liveScoreCard:not(.live-score-view-mode) #lsBatter::after{content:' ›';font-size:18px;color:#e2bd67}
 #lsNewsContext{color:#e2bd67;font-size:13px;font-weight:800;line-height:1.6}
+
+/* Show one compact event category at a time. */
+#lsNewsCategories{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:5px;margin:10px 0}
+#lsNewsCategories button{min-width:0;min-height:42px;padding:6px 2px;border:1px solid #708197;border-radius:8px;background:transparent;color:#e2e8f0;font:inherit;font-size:12px;font-weight:800;white-space:nowrap}
+#lsNewsCategories button.selected{background:#d6af52;color:#071426;border-color:#d6af52}
+#lsNewsChoices{gap:7px;margin:10px 0}
+#lsNewsChoices button{min-height:44px;font-size:13px;padding:8px 3px}
+#lsCustomDetails{margin:10px 0;font-size:13px}
+#lsCustomForm{margin:8px 0}
+#lsDialog .ls-dialog-head{position:sticky;top:-18px;background:#101e31;z-index:2;padding:10px 0;margin-top:-10px}
+@media(max-width:350px){#lsNewsCategories{grid-template-columns:repeat(2,minmax(0,1fr))}}

@@ -1433,8 +1433,11 @@
     });
     x('lsNewsContext').textContent = commentaryContext();
     x('lsCustom').value = '';
+    x('lsCustomDetails').open = false;
+    if (kind === 'news') selectNewsCategory(0);
     renderExtras();
     dialog.showModal();
+    dialog.scrollTop = 0;
   }
 
   for (let n = 1; n <= 15; n++) {
@@ -1450,14 +1453,34 @@
     });
     x('lsBatterChoices').append(b);
   }
-  const commonNews = ['ヒット！', '三振', 'ゴロ', 'フライ', '四球で出塁！'];
-  const moreNews = ['ツーベース！', 'スリーベース！', 'タイムリーヒット！', 'ホームラン！', '犠牲フライ', '内野フライ', '外野フライ', 'ライナー', 'ファウルフライ', 'ダブルプレー', '盗塁成功！', '盗塁失敗', '牽制アウト', 'ナイスプレー！', '先制！', '同点！', '勝ち越し！', '逆転！', '雨天中断', '試合再開'];
-  for (const [id, options] of [['lsNewsChoices', commonNews], ['lsMoreNews', moreNews]]) {
+  const newsCategories = [
+    ['打撃', ['ヒット！', 'ツーベース！', 'スリーベース！', 'タイムリーヒット！', 'ホームラン！', '犠牲フライ']],
+    ['アウト', ['三振', 'ゴロ', 'フライ', '内野フライ', '外野フライ', 'ライナー', 'ファウルフライ', 'ダブルプレー']],
+    ['出塁・走塁', ['四球で出塁！', '盗塁成功！', '盗塁失敗', '牽制アウト']],
+    ['試合状況', ['ナイスプレー！', '先制！', '同点！', '勝ち越し！', '逆転！', '雨天中断', '試合再開']],
+  ];
+  function selectNewsCategory(index) {
+    x('lsNewsCategories').querySelectorAll('button').forEach((b, i) => {
+      b.classList.toggle('selected', i === index);
+      b.setAttribute('aria-pressed', String(i === index));
+    });
+    const [label, options] = newsCategories[index];
+    x('lsNewsChoices').setAttribute('aria-label', `${label}の速報`);
+    x('lsNewsChoices').replaceChildren();
     for (const text of options) {
       const b = document.createElement('button'); b.type = 'button'; b.textContent = text;
-      b.addEventListener('click', () => postCommentary(text)); x(id).append(b);
+      // Short labels prevent awkward line breaks; history keeps the full wording.
+      if (text === 'タイムリーヒット！') b.textContent = 'タイムリー';
+      if (text === '四球で出塁！') b.textContent = '四球';
+      b.addEventListener('click', () => postCommentary(text)); x('lsNewsChoices').append(b);
     }
   }
+  newsCategories.forEach(([label], index) => {
+    const b = document.createElement('button'); b.type = 'button'; b.textContent = label;
+    b.setAttribute('aria-controls', 'lsNewsChoices');
+    b.addEventListener('click', () => selectNewsCategory(index)); x('lsNewsCategories').append(b);
+  });
+  selectNewsCategory(0);
   x('lsBatterOpen').addEventListener('click', e => openExtraDialog('batter', e.currentTarget));
   x('lsNewsOpen').addEventListener('click', e => openExtraDialog('news', e.currentTarget));
   x('lsDialogClose').addEventListener('click', closeExtraDialog);
