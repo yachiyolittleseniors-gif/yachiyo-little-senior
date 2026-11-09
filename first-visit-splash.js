@@ -53,9 +53,9 @@ function remove(){if(closed)return;closed=true;window.removeEventListener('pageh
 function wait(ms){return new Promise(resolve=>setTimeout(resolve,ms));}
 
 function dutyRequestSignal(){
-  // No canvas is created during the iPhone Safari opening. This deliberately
-  // trades the decorative star signal for a stable first paint.
-  if(isiOSSafari||window.matchMedia('(prefers-reduced-motion: reduce)').matches)return;
+  // Pending-request signals also run on iPhone Safari. Keep the source logo
+  // untouched and honor the user's reduced-motion preference.
+  if(window.matchMedia('(prefers-reduced-motion: reduce)').matches)return;
   let stopped=false,raf=0,canvas=null,observer=null;
   stopDutySignal=()=>{stopped=true;cancelAnimationFrame(raf);if(observer){observer.disconnect();observer=null;}if(canvas){try{canvas.width=1;canvas.height=1;}catch(_){}canvas.remove();canvas=null;}};
   fetch('/.netlify/functions/duty-request-alert',{cache:'no-store'})
