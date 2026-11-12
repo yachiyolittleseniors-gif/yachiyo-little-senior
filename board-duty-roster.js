@@ -249,7 +249,7 @@
     // 通常表示は「今日以降」の変更だけにする。履歴データ自体は削除せず管理画面に保持する。
     const today=new Date(),todayKey=today.getFullYear()+'-'+String(today.getMonth()+1).padStart(2,'0')+'-'+String(today.getDate()).padStart(2,'0');
     const ordered=sortChanges(changes),activeOrdered=ordered.filter(function(item){return item.status!=='cancelled'&&item.date>=todayKey&&(!isTestDate(item.date)||isAdminViewing())});changeSection.hidden=false;
-    changeList.innerHTML=activeOrdered.map(function(item){return'<div class="duty-change-item">'+changeMarkup(item)+changeUpdatedMarkup(item)+'</div>'}).join('')||'<div class="duty-change-preview">表示できる変更履歴はありません。</div>';
+    changeList.innerHTML=activeOrdered.map(function(item){return'<div class="duty-change-item">'+(item.requestNo?'<span class="duty-change-updated">申請番号 #'+escapeHtml(item.requestNo)+'</span>':'')+changeMarkup(item)+changeUpdatedMarkup(item)+'</div>'}).join('')||'<div class="duty-change-preview">表示できる変更履歴はありません。</div>';
     // 管理画面の「登録済み変更履歴」も、公開中の当番表が存在する月だけ表示する。
     // 当番表の最終日を過ぎて公開表示から消えた月（例：9月）は履歴も同時に非表示にする。
     const activeRosterMonths=new Set(images.filter(function(item){return item.table&&isPublicRosterActive(item)}).map(function(item){return item.table.year+'-'+String(item.table.month).padStart(2,'0')}));
