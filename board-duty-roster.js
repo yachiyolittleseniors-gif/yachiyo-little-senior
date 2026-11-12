@@ -248,8 +248,8 @@
   function renderChanges(){
     // 通常表示は「今日以降」の変更だけにする。履歴データ自体は削除せず管理画面に保持する。
     const today=new Date(),todayKey=today.getFullYear()+'-'+String(today.getMonth()+1).padStart(2,'0')+'-'+String(today.getDate()).padStart(2,'0');
-    const ordered=sortChanges(changes),activeOrdered=ordered.filter(function(item){return item.status!=='cancelled'&&item.date>=todayKey&&(!isTestDate(item.date)||isAdminViewing())});changeSection.hidden=!activeOrdered.length;
-    changeList.innerHTML=activeOrdered.map(function(item){return'<div class="duty-change-item">'+changeMarkup(item)+changeUpdatedMarkup(item)+'</div>'}).join('');
+    const ordered=sortChanges(changes),activeOrdered=ordered.filter(function(item){return item.status!=='cancelled'&&item.date>=todayKey&&(!isTestDate(item.date)||isAdminViewing())});changeSection.hidden=false;
+    changeList.innerHTML=activeOrdered.map(function(item){return'<div class="duty-change-item">'+changeMarkup(item)+changeUpdatedMarkup(item)+'</div>'}).join('')||'<div class="duty-change-preview">表示できる変更履歴はありません。</div>';
     // 管理画面の「登録済み変更履歴」も、公開中の当番表が存在する月だけ表示する。
     // 当番表の最終日を過ぎて公開表示から消えた月（例：9月）は履歴も同時に非表示にする。
     const activeRosterMonths=new Set(images.filter(function(item){return item.table&&isPublicRosterActive(item)}).map(function(item){return item.table.year+'-'+String(item.table.month).padStart(2,'0')}));
@@ -673,6 +673,8 @@
       return true;
     }catch(e){
       requestsLoaded=false;
+      const statusList=document.getElementById('dutyRequestStatusList');
+      if(statusList)statusList.innerHTML='<div class="duty-change-preview">申請状況を取得できません。ページを再読み込みしてください。</div>';
       const admin=document.getElementById('dutyRequestAdminList');
       if(admin)admin.innerHTML='<div class="duty-change-preview">申請データを確認できません。再読み込みしてください。</div>';
       return false;
@@ -688,7 +690,7 @@
       const requestBadge=document.getElementById('dutyRequestPendingBadge');
       if(requestBadge){requestBadge.hidden=false;requestBadge.textContent='申請中 '+count+'件'}
       const statusToggle=document.getElementById('toggleDutyRequestStatus');
-      if(statusToggle&&statusToggle.getAttribute('aria-expanded')!=='true')statusToggle.textContent=count?'申請内容を見る（申請中 '+count+'件）':'申請内容を見る';
+      if(statusToggle)statusToggle.textContent=statusToggle.getAttribute('aria-expanded')==='true'?'申請状況・変更履歴を閉じる':'申請状況・変更履歴を見る';
     }catch(e){}
   }
   function renderRequests(){
@@ -707,9 +709,9 @@
     if(requestBadge){requestBadge.hidden=false;requestBadge.textContent='申請中 '+pendingCount+'件'}
     const statusBox=document.getElementById('dutyRequestStatus'),statusList=document.getElementById('dutyRequestStatusList'),statusToggle=document.getElementById('toggleDutyRequestStatus');
     if(statusBox&&statusList&&statusToggle){
-      const publicItems=ordered.filter(function(item){return item.status!=='rejected'});
-      statusBox.hidden=publicItems.length===0;
-      statusToggle.textContent=pendingCount?'申請内容を見る（申請中 '+pendingCount+'件）':'申請内容を見る';
+      const publicItems=ordered.filter(function(item){return item.status==='pending'});
+      statusBox.hidden=false;
+      statusToggle.textContent=statusToggle.getAttribute('aria-expanded')==='true'?'申請状況・変更履歴を閉じる':'申請状況・変更履歴を見る';
       statusList.innerHTML=publicItems.length?publicItems.map(function(item){
         return '<div class="duty-request-status-item">'+(item.requestNo?'<b>申請番号 #'+escapeHtml(item.requestNo)+'</b><br>':'')+
           requestSummaryHtml(item)+'<br>'+
@@ -722,7 +724,7 @@
               :'<b data-status="'+escapeHtml(item.status)+'">'+escapeHtml(requestStatusLabel(item.status,item))+'</b>')+
           (item.createdAt?'<br><small>申請日時：'+escapeHtml(new Intl.DateTimeFormat('ja-JP',{timeZone:'Asia/Tokyo',year:'numeric',month:'numeric',day:'numeric',hour:'2-digit',minute:'2-digit',hourCycle:'h23'}).format(new Date(item.createdAt)))+'</small>':'')+
           '</div>';
-      }).join(''):'';
+      }).join(''):'<div class="duty-change-preview">申請中の変更はありません。</div>';
       statusList.querySelectorAll('[data-resend-duty-request]').forEach(function(button){
         button.addEventListener('click',function(){resendPendingRequestToLine(button.dataset.resendDutyRequest,button)});
       });
@@ -1162,9 +1164,9 @@
       return;
     }
     if(mode==='resend'&&params.get('line_resume')==='duty-resend'){
-      const box=document.getElementById('dutyRequestStatus'),list=document.getElementById('dutyRequestStatusList'),toggle=document.getElementById('toggleDutyRequestStatus');
+      const box=document.getElementById('dutyRequestStatus'),list=document.getElementById('dutyRequestStatusContent'),toggle=document.getElementById('toggleDutyRequestStatus');
       if(!box||!list||!toggle)return;
-      box.hidden=false;list.hidden=false;toggle.setAttribute('aria-expanded','true');toggle.textContent='申請内容を閉じる';
+      box.hidden=false;list.hidden=false;toggle.setAttribute('aria-expanded','true');toggle.textContent='申請状況・変更履歴を閉じる';
       if(window.showSaveNotice)showSaveNotice('LINE認証が完了しました。「確認待ち」をタップしてLINEを再送してください。');
       try{sessionStorage.removeItem('ylsDutyLineResume')}catch(_){}
       try{localStorage.removeItem('ylsDutyLineResume')}catch(_){}
@@ -1205,14 +1207,6 @@
       adminHistoryToggle.textContent=open?'非表示 ▲':'表示 ▼';
     });
   }
-  const historyToggle=document.getElementById('toggleDutyHistory');
-  const historyContent=document.getElementById('dutyHistoryContent');
-  if(historyToggle&&historyContent)historyToggle.addEventListener('click',function(){
-    const open=historyContent.hidden;
-    historyContent.hidden=!open;
-    historyToggle.setAttribute('aria-expanded',String(open));
-    historyToggle.textContent=open?'変更履歴を閉じる':'変更履歴を確認する';
-  });
   const originalsToggle=document.getElementById('toggleDutyOriginals');
   const originalsPanel=document.getElementById('dutyRosterOriginals');
   if(originalsToggle&&originalsPanel)originalsToggle.addEventListener('click',function(){
@@ -1225,8 +1219,8 @@
   if(hasLegacyChangeForm)changeGrade.addEventListener('change',function(){updateChangePreview(true)});
   const requestToggle=document.getElementById('toggleDutyRequest'),requestContent=document.getElementById('dutyRequestContent');
   if(requestToggle&&requestContent)requestToggle.addEventListener('click',function(){const open=requestContent.hidden;requestContent.hidden=!open;requestToggle.setAttribute('aria-expanded',String(open));requestToggle.textContent=open?'閉じる':'申請する';populateRequestForm()});
-  const requestStatusToggle=document.getElementById('toggleDutyRequestStatus'),requestStatusList=document.getElementById('dutyRequestStatusList');
-  if(requestStatusToggle&&requestStatusList)requestStatusToggle.addEventListener('click',function(){const open=requestStatusList.hidden;requestStatusList.hidden=!open;requestStatusToggle.setAttribute('aria-expanded',String(open));const pending=requests.filter(function(item){return item.status==='pending'}).length;requestStatusToggle.textContent=open?'申請内容を閉じる':(pending?'申請内容を見る（申請中 '+pending+'件）':'申請内容を見る')});
+  const requestStatusToggle=document.getElementById('toggleDutyRequestStatus'),requestStatusContent=document.getElementById('dutyRequestStatusContent');
+  if(requestStatusToggle&&requestStatusContent)requestStatusToggle.addEventListener('click',function(){const open=requestStatusContent.hidden;requestStatusContent.hidden=!open;requestStatusToggle.setAttribute('aria-expanded',String(open));requestStatusToggle.textContent=open?'申請状況・変更履歴を閉じる':'申請状況・変更履歴を見る'});
   document.getElementById('dutyRequestType')?.addEventListener('change',populateRequestForm);
   document.getElementById('dutyRequestRosterDate')?.addEventListener('change',populateRequestForm);
   document.getElementById('dutyRequestFrom')?.addEventListener('change',populateRequestForm);

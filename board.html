@@ -1355,13 +1355,6 @@ body:after{display:none!important;content:none!important}
       <div id="dutyRosterTableList" class="duty-roster-table-list">
         <div class="duty-roster-loading">当番表を読み込んでいます。</div>
       </div>
-      <section id="dutyChangeSection" class="duty-change-section" hidden>
-        <button id="toggleDutyHistory" type="button" aria-expanded="false" aria-controls="dutyHistoryContent">変更履歴を確認する</button>
-        <div id="dutyHistoryContent" hidden>
-        <div class="duty-change-heading"><strong>反映済みの当番変更</strong><span>LINE連絡の変更内容</span></div>
-        <div id="dutyChangeList" class="duty-change-list"></div>
-        </div>
-      </section>
       <div class="duty-request-box" id="dutyRequestBox">
         <div class="duty-request-head"><div><span class="duty-request-kicker">CHANGE REQUEST</span><h3>当番変更を申請</h3><span id="dutyRequestPendingBadge" class="duty-request-pending-badge" hidden></span></div><button id="toggleDutyRequest" type="button" aria-expanded="false" aria-controls="dutyRequestContent">申請する</button></div>
         <div id="dutyRequestContent" hidden>
@@ -1392,9 +1385,16 @@ body:after{display:none!important;content:none!important}
           <div id="dutyRequestResult" class="duty-request-result" hidden></div>
         </div>
       </div>
-      <section class="duty-request-status" id="dutyRequestStatus" hidden>
-        <button id="toggleDutyRequestStatus" type="button" aria-expanded="false" aria-controls="dutyRequestStatusList">申請状況を見る</button>
-        <div id="dutyRequestStatusList" hidden></div>
+      <section class="duty-request-status" id="dutyRequestStatus">
+        <button id="toggleDutyRequestStatus" type="button" aria-expanded="false" aria-controls="dutyRequestStatusContent">申請状況・変更履歴を見る</button>
+        <div id="dutyRequestStatusContent" hidden>
+          <div class="duty-change-heading"><strong>申請中</strong></div>
+          <div id="dutyRequestStatusList"><div class="duty-change-preview">申請状況を読み込んでいます。</div></div>
+          <section id="dutyChangeSection" class="duty-change-section">
+            <div class="duty-change-heading"><strong>変更履歴</strong><span>反映済みの当番変更</span></div>
+            <div id="dutyChangeList" class="duty-change-list"></div>
+          </section>
+        </div>
       </section>
       <p class="duty-roster-note" id="dutyRequestOperationNote">※当番表が登録されている月のみ変更申請ができます。申請後は、必ず全体LINEでご連絡ください。全体LINEでの連絡がない場合、変更は完了しません。</p>
     </section>
@@ -1860,7 +1860,7 @@ main.wrap{padding-bottom:38px!important}
 <script src="./duty-image-reader.js?v=20261005-month1"></script>
 <script src="./duty-roster-data.js?v=20260918-1"></script>
 <script id="duty-month-grade-policy" src="./duty-grade-policy.js?v=20261103-temp-roster1"></script>
-<script src="./board-duty-roster.js?v=20261103-temp-roster1"></script>
+<script src="./board-duty-roster.js?v=20261112-unified-history1"></script>
 <script src="./board-duty-auto-test.js?v=20261107-month-continuation1"></script>
 <script src="./board-rules.js?v=20261003-listcollapse1"></script>
 <script src="./board-archive.js?v=20261003-listcollapse1"></script>
