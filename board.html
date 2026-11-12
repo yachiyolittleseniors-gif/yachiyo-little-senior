@@ -1072,6 +1072,10 @@ body:after{display:none!important;content:none!important}
 </style>
 <script src="./reading-position.js?v=20261001-refresh1"></script>
 <link rel="stylesheet" href="./duty-month-grades.css?v=20261005-month1">
+<style>
+#dutyRequestStatusContent > .duty-change-section{margin-top:16px;padding:13px}
+#dutyRequestStatusContent .duty-change-preview{color:#5b6572;border:0;background:transparent}
+</style>
 </head>
 <body id="page-top">
 <header class="site-header">
@@ -1388,8 +1392,10 @@ body:after{display:none!important;content:none!important}
       <section class="duty-request-status" id="dutyRequestStatus">
         <button id="toggleDutyRequestStatus" type="button" aria-expanded="false" aria-controls="dutyRequestStatusContent">申請状況・変更履歴を見る</button>
         <div id="dutyRequestStatusContent" hidden>
-          <div class="duty-change-heading"><strong>申請中</strong></div>
-          <div id="dutyRequestStatusList"><div class="duty-change-preview">申請状況を読み込んでいます。</div></div>
+          <section class="duty-change-section" id="dutyPendingSection">
+            <div class="duty-change-heading"><strong>申請中</strong></div>
+            <div id="dutyRequestStatusList"><div class="duty-change-preview">申請状況を読み込んでいます。</div></div>
+          </section>
           <section id="dutyChangeSection" class="duty-change-section">
             <div class="duty-change-heading"><strong>変更履歴</strong><span>反映済みの当番変更</span></div>
             <div id="dutyChangeList" class="duty-change-list"></div>
