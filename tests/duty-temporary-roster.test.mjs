@@ -18,7 +18,7 @@ test('manual image registration stays folded below the temporary builder',()=>{
   const temporary=board.indexOf('id="temporaryDutyCreateBtn"'),manual=board.indexOf('>画像を手動登録<');
   assert(temporary>=0&&manual>temporary);
   assert.match(board,/class="duty-manual-upload"/);
-  assert.match(board,/board-duty-roster\.js\?v=20261103-temp-roster1/);
+  assert.match(board,/<script\s+src="\.\/board-duty-roster\.js\?v=[^"\s]+"><\/script>/);
   assert.match(board,/duty-grade-policy\.js\?v=20261103-temp-roster1/);
 });
 
