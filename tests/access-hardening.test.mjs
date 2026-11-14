@@ -360,3 +360,45 @@ for (const name of ['board-access.js', 'coach-access.js']) {
     assert.equal(redirects.length, 1);
   });
 }
+
+
+test('password change button routes to the settings handler and revokes board passkeys', async () => {
+  reset();
+  blobs.set('auth/board-passkeys.json', { credentials: [{ id: 'old-device' }] });
+  const headers = await adminHeaders();
+  const source = readFileSync(new URL('../board-updates.js', import.meta.url), 'utf8');
+  const handler = source.slice(source.indexOf("  saveAccessPasswordBtn.addEventListener('click'"), source.indexOf("  saveCoachPasswordBtn.addEventListener('click'"));
+  let click, calledUrl, notice;
+  const button = { addEventListener: (_, fn) => { click = fn; } };
+  const status = { textContent: '' };
+  const input = { value: 'replacement-board-password' };
+  vm.runInNewContext(handler, {
+    API: '/.netlify/functions/attendance-data',
+    saveAccessPasswordBtn: button,
+    panel: { dataset: { adminPassword: process.env.ADMIN_PASSWORD } },
+    accessPasswordInput: input,
+    accessPasswordConfirmInput: { value: input.value },
+    accessPasswordStatus: status,
+    confirm: () => true,
+    alert: message => assert.fail(message),
+    sessionStorage: { removeItem() {} }, localStorage: { removeItem() {} },
+    showSaveNotice: message => { notice = message; },
+    fetch: async (url, options) => {
+      calledUrl = url;
+      const req = new Request('https://example.test' + url, {
+        ...options, headers: { ...options.headers, ...headers, origin: 'https://example.test' },
+      });
+      return url.startsWith('/.netlify/functions/site-data?') ? site(req, ip) : parents(req, ip);
+    },
+  });
+  await click();
+  assert.equal(calledUrl, '/.netlify/functions/site-data?section=access-settings');
+  assert.equal(blobs.has('auth/board-passkeys.json'), false);
+  assert.equal(blobs.get('content/access-settings.json').passkeyVersionRequired, true);
+  assert.ok(notice);
+  assert.match(status.textContent, /生体認証を再登録/);
+  assert.equal(button.disabled, false);
+  assert.equal(input.value, '');
+  assert.equal((await login('board', boardPassword)).status, 401);
+  assert.equal((await login('board', 'replacement-board-password')).status, 200);
+});

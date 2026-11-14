@@ -382,7 +382,7 @@ adminBtn.addEventListener('click',async()=>{
     saveAccessPasswordBtn.textContent='変更中...';
     accessPasswordStatus.textContent='';
     try{
-      const response=await fetch(API+'?section=access-settings',{
+      const response=await fetch('/.netlify/functions/site-data?section=access-settings',{
         method:'POST',
         headers:{'content-type':'application/json','x-admin-password':adminPassword},
         body:JSON.stringify({action:'setAccessPassword',password:password})
@@ -395,7 +395,7 @@ adminBtn.addEventListener('click',async()=>{
       localStorage.removeItem('yachiyoAttendanceReloadPass');
       localStorage.removeItem('yachiyoAttendanceReloadPassExpires');
       localStorage.removeItem('yachiyoBoardPasskeyRegistered');
-      accessPasswordStatus.textContent='パスワードを変更しました。次回から新しいパスワードで入室してください。';
+      accessPasswordStatus.textContent='パスワードを変更しました。次回は新しいパスワードで入室し、生体認証を再登録してください。';
       showSaveNotice('チーム専用ページのパスワードを変更しました');
     }catch(e){
       accessPasswordStatus.textContent=e.message||'パスワードを変更できませんでした。';
