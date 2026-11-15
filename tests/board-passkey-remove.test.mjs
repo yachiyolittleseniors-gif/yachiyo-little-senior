@@ -69,3 +69,52 @@ for (const status of [403, 503]) {
     assert.equal(f.session.getItem('yachiyoBoardPasskeyNeedsReregister'), '1');
   });
 }
+
+const setupSource = readFileSync(new URL('../board-passkey-setup.js', import.meta.url), 'utf8');
+async function setupBrowser() {
+  const elements = new Map(), local = storage(), session = storage();
+  function element() {
+    const classes = new Set();
+    return { hidden: false, disabled: false, style: {}, handlers: {},
+      classList: { add: x => classes.add(x), remove: x => classes.delete(x), contains: x => classes.has(x), toggle(x, on) { on ? classes.add(x) : classes.delete(x); } },
+      setAttribute() {}, addEventListener(name, fn) { this.handlers[name] = fn; },
+      insertAdjacentElement(_, el) { elements.set(el.id, el); },
+    };
+  }
+  for (const id of ['Panel', 'Summary', 'Chevron', 'Button', 'Title', 'Text']) elements.set('passkeySetup' + id, element());
+  local.setItem('yachiyoBoardPasskeyRegistered', '1');
+  session.setItem('yachiyoAttendancePass', 'valid-session');
+  let registrations = 0, removals = 0;
+  const sandbox = {
+    window: { boardAccessReady: Promise.resolve(true), YLSPasskeys: {
+      supported: () => true,
+      async bindExisting() { throw Object.assign(new Error('No credential'), { name: 'NotAllowedError' }); },
+      async register(token) { assert.equal(token, 'valid-session'); registrations++; local.setItem(key, 'new-device-key'); },
+      async remove() { removals++; },
+    } },
+    document: { getElementById: id => elements.get(id), createElement: element },
+    navigator: { platform: 'Android' }, localStorage: local, sessionStorage: session,
+    confirm: () => true, alert: message => assert.fail(message),
+  };
+  await vm.runInNewContext(setupSource, sandbox);
+  return { elements, local, session, counts: () => ({ registrations, removals }) };
+}
+test('missing Android passkey can leave reconfirmation and explicitly register again', async () => {
+  const f = await setupBrowser();
+  const button = f.elements.get('passkeySetupButton');
+  const recovery = f.elements.get('passkeySetupRecoverButton');
+  assert.equal(recovery.hidden, false);
+  await button.handlers.click();
+  assert.equal(f.local.getItem('yachiyoBoardPasskeyRegistered'), '1', 'cancellation alone does not erase registration');
+  assert.equal(button.disabled, false);
+  assert.equal(recovery.disabled, false);
+  assert.match(f.elements.get('passkeySetupText').textContent, /登録し直して/);
+  recovery.handlers.click();
+  assert.equal(f.local.getItem('yachiyoBoardPasskeyRegistered'), null);
+  assert.equal(button.textContent, 'この端末に登録');
+  await button.handlers.click();
+  assert.deepEqual(f.counts(), { registrations: 1, removals: 0 });
+  assert.equal(f.local.getItem('yachiyoBoardPasskeyRegistered'), '1');
+  assert.equal(recovery.hidden, true);
+  assert.equal(f.elements.get('passkeySetupTitle').textContent, '生体認証を登録済み');
+});

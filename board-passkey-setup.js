@@ -19,7 +19,36 @@
     summary.setAttribute('aria-expanded',collapsed?'false':'true');
     if(chevron)chevron.textContent=collapsed?'▼':'▲';
   }
+  const recoverButton=document.createElement('button');
+  recoverButton.type='button';
+  recoverButton.id='passkeySetupRecoverButton';
+  recoverButton.className=button.className;
+  recoverButton.textContent='使えるパスキーがない場合は登録し直す';
+  recoverButton.hidden=true;
+  recoverButton.style.marginTop='12px';
+  button.insertAdjacentElement('afterend',recoverButton);
+  function showRegistrationState(){
+    panel.classList.remove('is-registered');
+    title.textContent='生体認証を登録';
+    text.textContent='この端末に生体認証を登録すると、次回から生体認証でログインできます。';
+    button.textContent='この端末に登録';
+    recoverButton.hidden=true;
+    setCollapsed(false);
+  }
+  recoverButton.addEventListener('click',()=>{
+    if(button.disabled)return;
+    if(!confirm('この端末で生体認証を登録し直しますか？\n他の端末の登録は削除しません。'))return;
+    try{
+      localStorage.removeItem('yachiyoBoardPasskeyRegistered');
+      localStorage.removeItem(credentialKey);
+      sessionStorage.setItem('yachiyoBoardPasskeyNeedsReregister','1');
+    }catch(e){}
+    registered=false;
+    showRegistrationState();
+    text.textContent='「この端末に登録」を押して、新しいパスキーを保存してください。';
+  });
   function showRegisteredState(){
+    recoverButton.hidden=true;
     panel.classList.add('is-registered');
     title.textContent='生体認証を登録済み';
     text.textContent='次回からこの端末では、八千代リトルシニアの登録済み生体認証だけを指定してログインします。';
@@ -31,6 +60,7 @@
     title.textContent='生体認証を再確認';
     text.textContent='候補が混ざらないよう、この端末で使う八千代リトルシニアの生体認証を一度だけ確認します。';
     button.textContent='この端末の生体認証を確認';
+    recoverButton.hidden=false;
     setCollapsed(false);
   }
   try{registered=localStorage.getItem('yachiyoBoardPasskeyRegistered')==='1'}catch(e){}
@@ -40,6 +70,7 @@
   button.addEventListener('click',async()=>{
     if(registered&&!hasCredentialBinding()){
       button.disabled=true;
+      recoverButton.disabled=true;
       button.textContent='端末で認証してください';
       try{
         const accessValue=sessionStorage.getItem('yachiyoAttendancePass')||localStorage.getItem('yachiyoAttendanceReloadPass')||'';
@@ -50,7 +81,8 @@
         const cancelled=error?.name==='NotAllowedError'||/キャンセル/.test(error?.message||'');
         if(!cancelled)alert(error?.message||'生体認証を確認できませんでした。');
         showBindingState();
-      }finally{button.disabled=false}
+        text.textContent='生体認証を確認できませんでした。「利用可能なパスキーがありません」と表示された場合は、下のボタンから登録し直してください。';
+      }finally{button.disabled=false;recoverButton.disabled=false}
       return;
     }
     if(registered){
