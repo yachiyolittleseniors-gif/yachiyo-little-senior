@@ -151,6 +151,7 @@
     return result;
   }
   async function authorize(promptMessage = "パスワードを入力してください。") {
+    try { sessionStorage.removeItem("yachiyoOperatorVerifiedSession"); } catch (_) {}
     let shouldTryPasskey = false;
     if (supported()) {
       shouldTryPasskey = isRegistered();
@@ -168,6 +169,7 @@
         const result = await authenticate();
         if (result?.token) {
           rememberRegistration();
+          try { sessionStorage.setItem("yachiyoOperatorVerifiedSession", result.token); } catch (_) {}
           try { sessionStorage.setItem("yachiyoCoachAttendancePass", result.token); } catch (error) {}
           return result.token;
         }
