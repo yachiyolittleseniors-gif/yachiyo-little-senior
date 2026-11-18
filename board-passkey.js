@@ -42,6 +42,8 @@
   function creationOptions(options) {
     return {
       ...options,
+      authenticatorSelection: { ...options.authenticatorSelection, authenticatorAttachment: "platform" },
+      hints: ["client-device"],
       challenge: decode(options.challenge),
       user: { ...options.user, id: decode(options.user.id) },
       excludeCredentials: (options.excludeCredentials || []).map(item => ({ ...item, id: decode(item.id) })),
