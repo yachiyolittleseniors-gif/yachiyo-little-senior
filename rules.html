@@ -479,20 +479,7 @@ document.addEventListener('DOMContentLoaded',()=>{
   b.textContent='管理';
   b.style.display='none';
 
-  let tapCount=0,tapTimer=null;
-  const copyright=document.querySelector('.footer-copy');
-  if(!copyright)return;
-  copyright.addEventListener('pointerup',function(e){
-    if(e.target.closest('#adminBtn'))return;
-    tapCount++;
-    clearTimeout(tapTimer);
-    tapTimer=setTimeout(()=>{tapCount=0},2000);
-    if(tapCount>=5){
-      tapCount=0;
-      clearTimeout(tapTimer);
-      b.style.display='block';
-    }
-  },{passive:true});
+
 });
 </script>
 <script id="compact-site-header-script">
@@ -539,7 +526,28 @@ document.addEventListener('DOMContentLoaded',()=>{
     clearTimeout(timer);
     timer=null;
   }
+  const grantKey='yachiyoAdminRevealUntil';
+  let expiryTimer;
+  function syncExpiry(){
+    clearTimeout(expiryTimer);
+    let until=0;
+    try{until=Number(localStorage.getItem(grantKey))}catch(_){}
+    if(Number.isFinite(until)&&until>Date.now()){
+      expiryTimer=setTimeout(syncExpiry,Math.min(until-Date.now(),2147483647));
+      return true;
+    }
+    reset();
+    if(document.body.classList.contains('admin-mode'))toggleAdmin();
+    button.classList.remove('show');
+    button.style.setProperty('display','none','important');
+    return false;
+  }
+  window.addEventListener('pageshow',syncExpiry);
+  window.addEventListener('storage',syncExpiry);
+  document.addEventListener('visibilitychange',syncExpiry);
+  syncExpiry();
   function countTap(){
+    if(!syncExpiry())return;
     taps++;
     clearTimeout(timer);
     timer=setTimeout(reset,2200);
