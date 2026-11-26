@@ -52,7 +52,15 @@
   const clean=items=>(Array.isArray(items)?items:[]).map(x=>({edition:Number(x.edition)||0,year:Number(x.year)||0,team:String(x.team||'').trim()})).filter(x=>x.edition&&x.year&&x.team).sort((a,b)=>a.edition-b.edition);
   function renderList(){
     list.replaceChildren();
-    [...data].sort((a,b)=>b.edition-a.edition).forEach(item=>{
+    const winners = clean(data).reverse();
+    const range = document.getElementById('winnersRange');
+    if (range) {
+      const latest = winners[0];
+      const first = winners[winners.length - 1];
+      const label = item => '第' + item.edition + '回（' + item.year + '年）';
+      range.textContent = winners.length > 1 ? label(first) + 'から' + label(latest) + 'までの' : latest ? label(latest) + 'の' : '';
+    }
+    winners.forEach(item=>{
       const row=document.createElement('div');row.className='winner-row';
       const ed=document.createElement('div');ed.className='winner-edition';ed.textContent='第'+item.edition+'回';
       const yr=document.createElement('div');yr.className='winner-year';yr.textContent=item.year+'年';
