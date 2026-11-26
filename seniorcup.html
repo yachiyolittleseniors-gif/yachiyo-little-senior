@@ -482,7 +482,7 @@ html{scroll-padding-top:var(--fixed-header-height)}
   </div>
 <section aria-labelledby="winnersTitle" class="winners-section">
 <div class="winners-head"><h2 class="winners-title" id="winnersTitle">🏆 歴代優勝チーム</h2></div>
-<p class="winners-lead">第1回（1996年）から第30回（2025年）までの八千代リトルシニア杯（八千代シニア杯）歴代優勝チームを掲載しています。</p>
+<p class="winners-lead"><span id="winnersRange"></span>八千代リトルシニア杯（八千代シニア杯）歴代優勝チームを掲載しています。</p>
 <button aria-controls="winnersList" aria-expanded="false" class="winners-toggle" id="winnersToggle" type="button">歴代優勝チームを見る</button>
 <div aria-live="polite" class="winners-list" id="winnersList"></div>
 <div class="winners-admin" id="winnersAdmin" data-nosnippet>
@@ -653,7 +653,7 @@ G責任：新木戸グリーンモンスターズ／西高津クラブ</textarea
 </footer>
 <button data-nosnippet="" id="cupAdminBtn" type="button"><span data-nosnippet>管理</span></button>
 <script src="./seniorcup-documents.js?v=20261025-nameedit1"></script>
-<script src="./seniorcup-winners.js?v=20261004-editor-toggle3"></script>
+<script src="./seniorcup-winners.js?v=20261126-range"></script>
 <script>
 (function(){
   const API='/.netlify/functions/site-data';
