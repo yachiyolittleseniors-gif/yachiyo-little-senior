@@ -5,7 +5,26 @@
 <script src="./admin-session-client.js?v=20261003-legacy-admin-session1"></script>
 <script src="./board-reload-reset.js?v=20260927-clean1"></script>
 
-<style id="initial-paint-style">html{background:#071426}</style>
+<style id="initial-paint-style">html{background:#071426}.baseball-score-link {
+  grid-column: 1 / -1;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  min-height: 48px;
+  padding: 10px 20px;
+  box-sizing: border-box;
+  border: 1px solid #b68e3b;
+  border-radius: 12px;
+  background: #fffdf7;
+  color: #0c1b30;
+  font-weight: 700;
+  text-decoration: none;
+}
+.baseball-score-link span { color: #88651e; }
+.baseball-score-link:hover { background: #fbf2da; }
+.baseball-score-link:focus-visible { outline: 3px solid #916b21; outline-offset: 2px; }
+</style>
 <link rel="preload" as="image" href="./official-logo-board-fast.webp" type="image/webp" fetchpriority="high">
 <meta charset="utf-8">
 <meta name="author" content="tatsuki.saitoh">
@@ -1283,6 +1302,9 @@ body:after{display:none!important;content:none!important}
         </div>
       </div>
     </section>
+    <a class="baseball-score-link" href="https://baseball-score.jp/app/?" target="_blank" rel="noopener noreferrer" aria-label="野球スコアアプリを開く（新しいタブ）">
+      野球スコアアプリを開く <span aria-hidden="true">↗</span>
+    </a>
     <aside class="latest-update" id="latestUpdateAnnouncement" role="button" tabindex="0" aria-expanded="false" aria-controls="updateHistoryPanel" aria-live="polite">
       <div class="latest-update-heading">
         <span class="latest-update-kicker">LATEST UPDATE</span>
